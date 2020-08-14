@@ -356,15 +356,13 @@ public class ExpandoSearchTest {
 
 	protected User addUser(ServiceContext serviceContext) throws Exception {
 		long creatorUserId = TestPropsValues.getUserId();
-		long companyId = TestPropsValues.getCompanyId();
+
 		boolean autoPassword = true;
 		String password1 = null;
 		String password2 = null;
 		boolean autoScreenName = false;
 		String screenName = RandomTestUtil.randomString();
 		String emailAddress = RandomTestUtil.randomString() + "@liferay.com";
-		long facebookId = 0;
-		String openId = null;
 		Locale locale = LocaleUtil.getDefault();
 		String firstName = RandomTestUtil.randomString();
 		String middleName = RandomTestUtil.randomString();
@@ -383,8 +381,8 @@ public class ExpandoSearchTest {
 		boolean sendMail = false;
 
 		User user = _userLocalService.addUser(
-			creatorUserId, companyId, autoPassword, password1, password2,
-			autoScreenName, screenName, emailAddress, facebookId, openId,
+			creatorUserId, TestPropsValues.getCompanyId(), autoPassword,
+			password1, password2, autoScreenName, screenName, emailAddress,
 			locale, firstName, middleName, lastName, prefixId, suffixId, male,
 			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
 			organizationIds, roleIds, userGroupIds, sendMail, serviceContext);
@@ -463,12 +461,10 @@ public class ExpandoSearchTest {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext();
 
-		Map<String, Serializable> expandoBridgeAttributes =
+		serviceContext.setExpandoBridgeAttributes(
 			HashMapBuilder.<String, Serializable>put(
 				columnName, columnValue
-			).build();
-
-		serviceContext.setExpandoBridgeAttributes(expandoBridgeAttributes);
+			).build());
 
 		return serviceContext;
 	}

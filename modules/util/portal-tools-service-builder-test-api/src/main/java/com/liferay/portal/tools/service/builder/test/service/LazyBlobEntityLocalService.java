@@ -63,11 +63,15 @@ public interface LazyBlobEntityLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LazyBlobEntityLocalServiceUtil} to access the lazy blob entity local service. Add custom service methods to <code>com.liferay.portal.tools.service.builder.test.service.impl.LazyBlobEntityLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.tools.service.builder.test.service.impl.LazyBlobEntityLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the lazy blob entity local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LazyBlobEntityLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the lazy blob entity to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LazyBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param lazyBlobEntity the lazy blob entity
 	 * @return the lazy blob entity that was added
@@ -96,6 +100,10 @@ public interface LazyBlobEntityLocalService
 	/**
 	 * Deletes the lazy blob entity from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LazyBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param lazyBlobEntity the lazy blob entity
 	 * @return the lazy blob entity that was removed
 	 */
@@ -104,6 +112,10 @@ public interface LazyBlobEntityLocalService
 
 	/**
 	 * Deletes the lazy blob entity with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LazyBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param lazyBlobEntityId the primary key of the lazy blob entity
 	 * @return the lazy blob entity that was removed
@@ -286,6 +298,10 @@ public interface LazyBlobEntityLocalService
 
 	/**
 	 * Updates the lazy blob entity in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LazyBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param lazyBlobEntity the lazy blob entity
 	 * @return the lazy blob entity that was updated

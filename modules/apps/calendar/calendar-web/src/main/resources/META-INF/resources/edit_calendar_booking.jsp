@@ -257,7 +257,7 @@ while (manageableCalendarsIterator.hasNext()) {
 
 <liferay-portlet:actionURL name="updateFormCalendarBooking" var="updateFormCalendarBookingURL" />
 
-<aui:form action="<%= updateFormCalendarBookingURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "updateCalendarBooking();" %>'>
+<aui:form action="<%= updateFormCalendarBookingURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updateCalendarBooking();" %>'>
 	<aui:input name="mvcPath" type="hidden" value="/edit_calendar_booking.jsp" />
 
 	<liferay-portlet:renderURL var="redirectURL">
@@ -288,11 +288,11 @@ while (manageableCalendarsIterator.hasNext()) {
 			<aui:fieldset markupView="lexicon">
 				<aui:input defaultLanguageId="<%= themeDisplay.getLanguageId() %>" name="title" />
 
-				<div class='<%= allDay ? "allday-class-active" : "" %>' id="<portlet:namespace />startDateContainer">
+				<div class="<%= allDay ? "allday-class-active" : "" %>" id="<portlet:namespace />startDateContainer">
 					<aui:input ignoreRequestValue="<%= true %>" label="starts" name="startTime" timeFormat="<%= timeFormat %>" value="<%= startTimeJCalendar %>" />
 				</div>
 
-				<div class='<%= allDay ? "allday-class-active" : "" %>' id="<portlet:namespace />endDateContainer">
+				<div class="<%= allDay ? "allday-class-active" : "" %>" id="<portlet:namespace />endDateContainer">
 					<aui:input ignoreRequestValue="<%= true %>" label="ends" name="endTime" timeFormat="<%= timeFormat %>" value="<%= endTimeJCalendar %>" />
 				</div>
 
@@ -446,7 +446,7 @@ while (manageableCalendarsIterator.hasNext()) {
 										<liferay-util:include page="/scheduler.jsp" servletContext="<%= application %>">
 											<liferay-util:param name="activeView" value="<%= activeView %>" />
 											<liferay-util:param name="date" value="<%= String.valueOf(startTime) %>" />
-											<liferay-util:param name="filterCalendarBookings" value='<%= renderResponse.getNamespace() + "filterCalendarBookings" %>' />
+											<liferay-util:param name="filterCalendarBookings" value='<%= liferayPortletResponse.getNamespace() + "filterCalendarBookings" %>' />
 											<liferay-util:param name="hideAgendaView" value="<%= Boolean.TRUE.toString() %>" />
 											<liferay-util:param name="hideMonthView" value="<%= Boolean.TRUE.toString() %>" />
 											<liferay-util:param name="preventPersistence" value="<%= Boolean.TRUE.toString() %>" />
@@ -512,7 +512,7 @@ while (manageableCalendarsIterator.hasNext()) {
 	</div>
 
 	<aui:button-row cssClass="d-block">
-		<div class='alert alert-info <%= (hasWorkflowDefinitionLink && approved) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />approvalProcessAlert">
+		<div class="alert alert-info <%= (hasWorkflowDefinitionLink && approved) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />approvalProcessAlert">
 			<liferay-ui:message arguments="<%= ResourceActionsUtil.getModelResource(locale, CalendarBooking.class.getName()) %>" key="this-x-is-approved.-publishing-these-changes-will-cause-it-to-be-unpublished-and-go-through-the-approval-process-again" translateArguments="<%= false %>" />
 		</div>
 

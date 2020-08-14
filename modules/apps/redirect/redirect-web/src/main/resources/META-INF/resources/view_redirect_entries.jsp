@@ -30,7 +30,7 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 
 <clay:container-fluid
 	cssClass="closed redirect-entries sidenav-container sidenav-right"
-	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 >
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/redirect/info_panel" var="sidebarPanelURL" />
 
@@ -111,11 +111,17 @@ RedirectManagementToolbarDisplayContext redirectManagementToolbarDisplayContext 
 						</c:choose>
 					</liferay-ui:search-container-column-text>
 
-					<liferay-ui:search-container-column-text>
-						<clay:dropdown-actions
-							dropdownItems="<%= redirectDisplayContext.getActionDropdownItems(redirectEntry) %>"
-						/>
-					</liferay-ui:search-container-column-text>
+					<%
+					List<DropdownItem> dropdownItems = redirectDisplayContext.getActionDropdownItems(redirectEntry);
+					%>
+
+					<c:if test="<%= ListUtil.isNotEmpty(dropdownItems) %>">
+						<liferay-ui:search-container-column-text>
+							<clay:dropdown-actions
+								dropdownItems="<%= dropdownItems %>"
+							/>
+						</liferay-ui:search-container-column-text>
+					</c:if>
 				</liferay-ui:search-container-row>
 
 				<liferay-ui:search-iterator

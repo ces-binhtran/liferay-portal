@@ -11,6 +11,7 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayLink from '@clayui/link';
 import classNames from 'classnames';
 import {useEventListener} from 'frontend-js-react-web';
@@ -118,18 +119,23 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 				<h4 className="mb-3 mt-4 sheet-subtitle">
 					{Liferay.Language.get('click-goal')}
 					<ClayIcon
-						className="ml-1 reference-mark text-warning"
+						className="lexicon-icon-sm ml-1 reference-mark text-warning"
+						style={{verticalAlign: 'super'}}
 						symbol="asterisk"
 					/>
 				</h4>
 
 				{state.selectedTarget && (
-					<dl className="autofit-row">
-						<dt className="autofit-col">
+					<ClayLayout.ContentRow containerElement="dl">
+						<ClayLayout.ContentCol containerElement="dt">
 							{Liferay.Language.get('element')}:
-						</dt>
+						</ClayLayout.ContentCol>
 
-						<dd className="autofit-col autofit-col-expand mb-0 ml-2 text-truncate-inline">
+						<ClayLayout.ContentCol
+							className="mb-0 ml-2 text-truncate-inline"
+							containerElement="dd"
+							expand
+						>
 							<ClayLink
 								className="text-truncate"
 								href={state.selectedTarget}
@@ -138,8 +144,8 @@ function ClickGoalPicker({allowEdit = true, onSelectClickGoalTarget, target}) {
 							>
 								{state.selectedTarget}
 							</ClayLink>
-						</dd>
-					</dl>
+						</ClayLayout.ContentCol>
+					</ClayLayout.ContentRow>
 				)}
 
 				{!state.selectedTarget && (

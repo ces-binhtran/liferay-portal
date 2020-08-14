@@ -351,11 +351,7 @@
 					},
 					'liferay-logo-editor': {
 						path: 'logo_editor.js',
-						requires: [
-							'aui-image-cropper',
-							'liferay-alert',
-							'liferay-portlet-base',
-						],
+						requires: ['aui-image-cropper', 'liferay-portlet-base'],
 					},
 					'liferay-logo-selector': {
 						path: 'logo_selector.js',
@@ -521,9 +517,11 @@
 					'liferay-session': {
 						path: 'session.js',
 						requires: [
+							'aui-base',
+							'aui-component',
 							'aui-timer',
 							'cookie',
-							'liferay-notification',
+							'plugin',
 						],
 					},
 					'liferay-sign-in-modal': {

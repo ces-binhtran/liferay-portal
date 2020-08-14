@@ -30,7 +30,7 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 
 		<clay:container-fluid
 			cssClass="closed sidenav-container sidenav-right"
-			id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+			id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 		>
 			<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/trash/info_panel" var="sidebarPanelURL" />
 
@@ -55,7 +55,9 @@ TrashHandler trashHandler = trashDisplayContext.getTrashHandler();
 					>
 
 						<%
-						String modelClassName = ((ClassedModel)curTrashedModel).getModelClassName();
+						ClassedModel classedModel = (ClassedModel)curTrashedModel;
+
+						String modelClassName = classedModel.getModelClassName();
 
 						TrashHandler curTrashHandler = TrashHandlerRegistryUtil.getTrashHandler(modelClassName);
 

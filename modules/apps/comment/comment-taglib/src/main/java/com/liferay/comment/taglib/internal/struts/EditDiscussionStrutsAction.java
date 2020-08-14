@@ -98,15 +98,13 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 					String randomNamespace = ParamUtil.getString(
 						namespacedHttpServletRequest, "randomNamespace");
 
-					JSONObject jsonObject = JSONUtil.put(
-						"commentId", commentId
-					).put(
-						"randomNamespace", randomNamespace
-					);
-
 					writeJSON(
 						namespacedHttpServletRequest, httpServletResponse,
-						jsonObject);
+						JSONUtil.put(
+							"commentId", commentId
+						).put(
+							"randomNamespace", randomNamespace
+						));
 
 					return null;
 				}
@@ -280,12 +278,12 @@ public class EditDiscussionStrutsAction implements StrutsAction {
 
 	protected void writeJSON(
 			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, Object jsonObj)
+			HttpServletResponse httpServletResponse, Object object)
 		throws IOException {
 
 		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		ServletResponseUtil.write(httpServletResponse, jsonObj.toString());
+		ServletResponseUtil.write(httpServletResponse, object.toString());
 
 		httpServletResponse.flushBuffer();
 	}

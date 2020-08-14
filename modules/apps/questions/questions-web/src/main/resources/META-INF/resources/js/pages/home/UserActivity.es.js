@@ -13,7 +13,6 @@
  */
 
 import {useQuery} from '@apollo/client';
-import ClayButton from '@clayui/button';
 import React, {useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
@@ -46,6 +45,10 @@ export default withRouter(
 			setPage(isNaN(pageNumber) ? 1 : parseInt(pageNumber, 10));
 		}, [queryParams]);
 
+		useEffect(() => {
+			setPageSize(queryParams.get('pagesize') || 20);
+		}, [queryParams]);
+
 		const {data, loading} = useQuery(getUserActivityQuery, {
 			variables: {
 				filter: `creatorId eq ${creatorId}`,
@@ -65,7 +68,11 @@ export default withRouter(
 			rank: context.defaultRank,
 		};
 
-		if (data && data.messageBoardThreads) {
+		if (
+			data &&
+			data.messageBoardThreads.items &&
+			data.messageBoardThreads.items.length
+		) {
 			const {
 				creator,
 				creatorStatistics,
@@ -80,13 +87,16 @@ export default withRouter(
 			};
 		}
 
-		const changePage = (number) => {
-			historyPushParser(`/activity/${creatorId}?page=${number}`);
+		const changePage = (page, pageSize) => {
+			historyPushParser(
+				`/activity/${creatorId}?page=${page}&pagesize=${pageSize}`
+			);
 		};
 
 		return (
 			<>
 				<NavigationBar />
+
 				<section className="questions-section questions-section-list">
 					<div className="questions-container">
 						<div className="c-p-5 row">
@@ -127,14 +137,6 @@ export default withRouter(
 								</span>
 							</div>
 						</div>
-						<div className="flex-column justify-content-end">
-							<ClayButton
-								className="d-none"
-								displayType="secondary"
-							>
-								Manage Subscriptions
-							</ClayButton>
-						</div>
 					</div>
 					<div className="border-bottom c-mt-5">
 						<h2>Latest Questions Asked</h2>
@@ -149,8 +151,8 @@ export default withRouter(
 					<PaginatedList
 						activeDelta={pageSize}
 						activePage={page}
-						changeDelta={setPageSize}
-						changePage={changePage}
+						changeDelta={(pageSize) => changePage(page, pageSize)}
+						changePage={(page) => changePage(page, pageSize)}
 						data={data && data.messageBoardThreads}
 						loading={loading}
 					>

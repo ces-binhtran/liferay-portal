@@ -30,11 +30,13 @@ double priority = message.getPriority();
 if (threadId > 0) {
 	try {
 		if (Validator.isNull(subject)) {
-			if (message.getSubject().startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
-				subject = message.getSubject();
+			String messageSubject = message.getSubject();
+
+			if (messageSubject.startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
+				subject = messageSubject;
 			}
 			else {
-				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + message.getSubject();
+				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + messageSubject;
 			}
 		}
 	}
@@ -65,7 +67,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 <div class="panel-heading">
 	<clay:content-row
 		cssClass="card-body"
-		padded="true"
+		padded="<%= true %>"
 	>
 		<clay:content-col>
 			<div class="list-group-card-icon">
@@ -76,7 +78,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 		</clay:content-col>
 
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 
 			<%
@@ -96,7 +98,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 			<h4 title="<%= HtmlUtil.escape(message.getSubject()) %>">
 				<c:choose>
 					<c:when test="<%= showPermanentLink %>">
-						<a href="#<portlet:namespace />message_<%= message.getMessageId() %>" title='<liferay-ui:message key="permanent-link-to-this-item" />'>
+						<a href="#<portlet:namespace />message_<%= message.getMessageId() %>" title="<liferay-ui:message key="permanent-link-to-this-item" />">
 							<%= HtmlUtil.escape(message.getSubject()) %>
 						</a>
 					</c:when>
@@ -128,7 +130,7 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 <div class="divider"></div>
 
 <div class="panel-body">
-	<div class="card-body message-content" id='<%= liferayPortletResponse.getNamespace() + "addQuickReply" + parentMessageId %>'>
+	<div class="card-body message-content" id="<%= liferayPortletResponse.getNamespace() + "addQuickReply" + parentMessageId %>">
 		<portlet:actionURL name="/message_boards/edit_message" var="editMessageURL" />
 
 		<aui:form action="<%= editMessageURL %>" method="post" name='<%= "addQuickReplyFm" + parentMessageId %>' onSubmit='<%= "event.preventDefault(); " %>'>
@@ -165,7 +167,12 @@ boolean showPermanentLink = GetterUtil.getBoolean(request.getAttribute("edit-mes
 				<liferay-captcha:captcha />
 			</c:if>
 
-			<aui:button cssClass="advanced-reply btn btn-link btn-sm" value="advanced-reply" />
+			<clay:button
+				cssClass="advanced-reply"
+				displayType="link"
+				label="advanced-reply"
+				small="<%= true %>"
+			/>
 
 			<c:if test="<%= themeDisplay.isSignedIn() && !SubscriptionLocalServiceUtil.isSubscribed(themeDisplay.getCompanyId(), user.getUserId(), MBThread.class.getName(), threadId) && !SubscriptionLocalServiceUtil.isSubscribed(themeDisplay.getCompanyId(), user.getUserId(), MBCategory.class.getName(), categoryId) %>">
 				<aui:input helpMessage="message-boards-message-subscribe-me-help" label="subscribe-me" name="subscribe" type='<%= (mbGroupServiceSettings.isEmailMessageAddedEnabled() || mbGroupServiceSettings.isEmailMessageUpdatedEnabled()) ? "checkbox" : "hidden" %>' value="<%= subscribeByDefault %>" />

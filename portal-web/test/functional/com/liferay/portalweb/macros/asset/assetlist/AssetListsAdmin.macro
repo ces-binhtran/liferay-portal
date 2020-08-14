@@ -27,6 +27,14 @@ definition {
 	}
 
 	macro addKeywordsFilter {
+		Panel.expandPanel(panel = "Source");
+
+		if (!(IsSelectedLabel(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT", value1 = "All Types"))) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "All Types");
+		}
+
 		Panel.expandPanel(panel = "Filter");
 
 		Select(
@@ -78,6 +86,28 @@ definition {
 		Alert.viewSuccessMessage();
 	}
 
+	macro addSelection {
+		Click(locator1 = "Button#NEW");
+
+		MenuItem.click(menuItem = "${menuItem}");
+
+		PortletEntry.inputText(
+			fieldLabel = "Title",
+			text = "${collectionName}");
+
+		Button.clickSave();
+
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+			value1 = "${selectedAsset}");
+
+		Pause(locator1 = "3000");
+
+		PortletEntry.save();
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro addTagsFilter {
 		Panel.expandPanel(panel = "Filter");
 
@@ -102,6 +132,18 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro configureAssetEntrySubtype {
+		Panel.expandPanel(panel = "Source");
+
+		Select(
+			locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+			value1 = "${selectedSubtype}");
+
+		Pause(locator1 = "3000");
+
+		PortletEntry.save();
+	}
+
 	macro configureAssetEntryType {
 		Panel.expandPanel(panel = "Source");
 
@@ -114,10 +156,38 @@ definition {
 		PortletEntry.save();
 	}
 
+	macro configureItemTypeInManualCollection {
+		if (isSet(itemType)) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "${itemType}");
+
+			Pause(locator1 = "3000");
+		}
+
+		if (isSet(itemSubtype)) {
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+				value1 = "${itemSubtype}");
+
+			Pause(locator1 = "3000");
+		}
+
+		PortletEntry.save();
+	}
+
 	macro configureScope {
 		Click(
 			key_title = "${assetListTitle}",
 			locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
+
+		if (isSet(selectedAsset)) {
+			Panel.expandPanel(panel = "Source");
+
+			Select(
+				locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+				value1 = "${selectedAsset}");
+		}
 
 		Panel.expandPanel(panel = "Scope");
 
@@ -173,6 +243,12 @@ definition {
 		AssetListsAdmin.gotoEntryMenuItem(
 			assetListTitle = "${assetListTitle}",
 			item = "Edit");
+	}
+
+	macro gotoEntry {
+		Click(
+			key_title = "${assetListName}",
+			locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
 	}
 
 	macro gotoEntryMenuItem {
@@ -231,6 +307,14 @@ definition {
 		var key_assetType = "${assetType}";
 
 		Click(locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
+
+		Pause(locator1 = "3000");
+
+		if (IsElementPresent(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT")) {
+			AssetListsAdmin.configureItemTypeInManualCollection(
+				itemSubtype = "${itemSubtype}",
+				itemType = "${itemType}");
+		}
 
 		Click(locator1 = "AssetLists#ASSET_LIST_SELECT_BUTTON");
 
@@ -292,6 +376,24 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ENTRY_TITLE");
 
 		if (isSet(manualSelection)) {
+			if (IsElementPresent(locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT")) {
+				if (isSet(itemType)) {
+					Select(
+						locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_TYPE_SELECT",
+						value1 = "${itemType}");
+				}
+
+				if (isSet(itemSubtype)) {
+					Select(
+						locator1 = "APConfiguration#SOURCE_SCOPE_ASSET_SUBTYPE_SELECT",
+						value1 = "${itemSubtype}");
+				}
+
+				Pause(locator1 = "3000");
+
+				PortletEntry.save();
+			}
+
 			if (isSet(allAssetsDisabled)) {
 				AssertElementNotPresent(locator1 = "AssetLists#ASSET_LIST_SELECT_BUTTON");
 			}
@@ -336,7 +438,7 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ELLIPSIS");
 
 		Click(
-			key_menuItem = "View Content",
+			key_menuItem = "View Items",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
@@ -364,7 +466,7 @@ definition {
 		Click(locator1 = "AssetLists#ASSET_LIST_ELLIPSIS");
 
 		Click(
-			key_menuItem = "View Content",
+			key_menuItem = "View Items",
 			locator1 = "AssetLists#PERSONALIZATION_DROPDOWN_ITEM");
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");

@@ -166,6 +166,8 @@ DDMStructure ddmStructure = recordSet.getDDMStructure();
 			sortBy: '<liferay-ui:message arguments="{column}" key="sort-by-x" />',
 		},
 		structure: structure,
+		updateRecordURL:
+			'<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/ddl/update_record" />',
 		width: '100%',
 	});
 

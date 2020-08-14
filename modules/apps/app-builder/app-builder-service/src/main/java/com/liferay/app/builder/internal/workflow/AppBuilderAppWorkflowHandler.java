@@ -50,7 +50,8 @@ public class AppBuilderAppWorkflowHandler
 
 	@Override
 	public String getClassName() {
-		return AppBuilderApp.class.getName();
+		return ResourceActionsUtil.getCompositeModelName(
+			AppBuilderApp.class.getName(), DDLRecord.class.getName());
 	}
 
 	@Override
@@ -84,7 +85,7 @@ public class AppBuilderAppWorkflowHandler
 			_ddlRecordLocalService.getRecord(classPK));
 
 		return _workflowDefinitionLinkLocalService.fetchWorkflowDefinitionLink(
-			companyId, groupId, getClassName(),
+			companyId, appBuilderApp.getGroupId(), getClassName(),
 			appBuilderApp.getAppBuilderAppId(), 0);
 	}
 

@@ -17,13 +17,12 @@ import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted, useStateSafe} from 'frontend-js-react-web';
 import React from 'react';
 
 import useLazy from '../../core/hooks/useLazy';
 import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
-import useStateSafe from '../../core/hooks/useStateSafe';
 import * as Actions from '../actions/index';
 import {config} from '../config/index';
 import selectAvailablePanels from '../selectors/selectAvailablePanels';
@@ -52,7 +51,6 @@ export default function Sidebar() {
 	const sidebarId = useId();
 	const store = useSelector((state) => state);
 
-	const languageId = useSelector((state) => state.languageId);
 	const panels = useSelector(selectAvailablePanels(config.panels));
 	const sidebarPanels = useSelector(
 		selectAvailableSidebarPanels(config.sidebarPanels)
@@ -260,7 +258,10 @@ export default function Sidebar() {
 					className={classNames({
 						'page-editor__sidebar__content': true,
 						'page-editor__sidebar__content--open': sidebarOpen,
-						rtl: config.languageDirection[languageId] === 'rtl',
+						rtl:
+							config.languageDirection[
+								themeDisplay?.getLanguageId()
+							] === 'rtl',
 					})}
 					onClick={deselectItem}
 				>

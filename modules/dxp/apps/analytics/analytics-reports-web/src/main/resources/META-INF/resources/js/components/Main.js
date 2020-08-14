@@ -10,9 +10,8 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {useContext} from 'react';
+import React from 'react';
 
-import {StoreContext} from '../context/store';
 import BasicInformation from './BasicInformation';
 import Chart from './Chart';
 import TotalCount from './TotalCount';
@@ -20,6 +19,8 @@ import TrafficSources from './TrafficSources';
 
 export default function Main({
 	authorName,
+	authorPortraitURL,
+	authorUserId,
 	chartDataProviders,
 	defaultTimeRange,
 	defaultTimeSpanOption,
@@ -32,12 +33,12 @@ export default function Main({
 	totalViewsDataProvider,
 	trafficSources,
 }) {
-	const [{readsEnabled}] = useContext(StoreContext);
-
 	return (
-		<>
+		<div className="c-p-3">
 			<BasicInformation
 				authorName={authorName}
+				authorPortraitURL={authorPortraitURL}
+				authorUserId={authorUserId}
 				languageTag={languageTag}
 				publishDate={pagePublishDate}
 				title={pageTitle}
@@ -51,24 +52,22 @@ export default function Main({
 				className="mb-2"
 				dataProvider={totalViewsDataProvider}
 				label={Liferay.Util.sub(Liferay.Language.get('total-views'))}
+				languageTag={languageTag}
 				popoverHeader={Liferay.Language.get('total-views')}
 				popoverMessage={Liferay.Language.get(
 					'this-number-refers-to-the-total-number-of-views-since-the-content-was-published'
 				)}
 			/>
 
-			{readsEnabled && (
-				<TotalCount
-					dataProvider={totalReadsDataProvider}
-					label={Liferay.Util.sub(
-						Liferay.Language.get('total-reads')
-					)}
-					popoverHeader={Liferay.Language.get('total-reads')}
-					popoverMessage={Liferay.Language.get(
-						'this-number-refers-to-the-total-number-of-reads-since-the-content-was-published'
-					)}
-				/>
-			)}
+			<TotalCount
+				dataProvider={totalReadsDataProvider}
+				label={Liferay.Util.sub(Liferay.Language.get('total-reads'))}
+				languageTag={languageTag}
+				popoverHeader={Liferay.Language.get('total-reads')}
+				popoverMessage={Liferay.Language.get(
+					'this-number-refers-to-the-total-number-of-reads-since-the-content-was-published'
+				)}
+			/>
 
 			<Chart
 				dataProviders={chartDataProviders}
@@ -86,12 +85,14 @@ export default function Main({
 					trafficSources={trafficSources}
 				/>
 			)}
-		</>
+		</div>
 	);
 }
 
 Main.proptypes = {
 	authorName: PropTypes.string.isRequired,
+	authorPortraitURL: PropTypes.string.isRequired,
+	authorUserId: PropTypes.string.isRequired,
 	chartDataProviders: PropTypes.arrayOf(PropTypes.func.isRequired).isRequired,
 	defaultTimeRange: PropTypes.object.isRequired,
 	defaultTimeSpanOption: PropTypes.string.isRequired,

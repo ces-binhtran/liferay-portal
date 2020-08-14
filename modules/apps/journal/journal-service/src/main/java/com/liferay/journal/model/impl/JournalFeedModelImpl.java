@@ -74,13 +74,14 @@ public class JournalFeedModelImpl
 	public static final String TABLE_NAME = "JournalFeed";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"id_", Types.BIGINT}, {"groupId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"feedId", Types.VARCHAR},
-		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"DDMStructureKey", Types.VARCHAR}, {"DDMTemplateKey", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"id_", Types.BIGINT},
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"feedId", Types.VARCHAR}, {"name", Types.VARCHAR},
+		{"description", Types.VARCHAR}, {"DDMStructureKey", Types.VARCHAR},
+		{"DDMTemplateKey", Types.VARCHAR},
 		{"DDMRendererTemplateKey", Types.VARCHAR}, {"delta", Types.INTEGER},
 		{"orderByCol", Types.VARCHAR}, {"orderByType", Types.VARCHAR},
 		{"targetLayoutFriendlyUrl", Types.VARCHAR},
@@ -94,6 +95,7 @@ public class JournalFeedModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("id_", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -120,7 +122,7 @@ public class JournalFeedModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table JournalFeed (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,id_ LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,feedId VARCHAR(75) null,name VARCHAR(75) null,description STRING null,DDMStructureKey VARCHAR(75) null,DDMTemplateKey VARCHAR(75) null,DDMRendererTemplateKey VARCHAR(75) null,delta INTEGER,orderByCol VARCHAR(75) null,orderByType VARCHAR(75) null,targetLayoutFriendlyUrl VARCHAR(255) null,targetPortletId VARCHAR(200) null,contentField VARCHAR(75) null,feedFormat VARCHAR(75) null,feedVersion DOUBLE,lastPublishDate DATE null)";
+		"create table JournalFeed (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,id_ LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,feedId VARCHAR(75) null,name VARCHAR(75) null,description STRING null,DDMStructureKey VARCHAR(75) null,DDMTemplateKey VARCHAR(75) null,DDMRendererTemplateKey VARCHAR(75) null,delta INTEGER,orderByCol VARCHAR(75) null,orderByType VARCHAR(75) null,targetLayoutFriendlyUrl VARCHAR(255) null,targetPortletId VARCHAR(200) null,contentField VARCHAR(75) null,feedFormat VARCHAR(75) null,feedVersion DOUBLE,lastPublishDate DATE null,primary key (id_, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table JournalFeed";
 
@@ -144,12 +146,18 @@ public class JournalFeedModelImpl
 
 	public static final long UUID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -157,7 +165,9 @@ public class JournalFeedModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static JournalFeed toModel(JournalFeedSoap soapModel) {
 		if (soapModel == null) {
 			return null;
@@ -166,6 +176,7 @@ public class JournalFeedModelImpl
 		JournalFeed model = new JournalFeedImpl();
 
 		model.setMvccVersion(soapModel.getMvccVersion());
+		model.setCtCollectionId(soapModel.getCtCollectionId());
 		model.setUuid(soapModel.getUuid());
 		model.setId(soapModel.getId());
 		model.setGroupId(soapModel.getGroupId());
@@ -199,7 +210,9 @@ public class JournalFeedModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<JournalFeed> toModels(JournalFeedSoap[] soapModels) {
 		if (soapModels == null) {
 			return null;
@@ -266,9 +279,6 @@ public class JournalFeedModelImpl
 				attributeName,
 				attributeGetterFunction.apply((JournalFeed)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -347,6 +357,11 @@ public class JournalFeedModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<JournalFeed, Long>)JournalFeed::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", JournalFeed::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<JournalFeed, Long>)JournalFeed::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", JournalFeed::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid", (BiConsumer<JournalFeed, String>)JournalFeed::setUuid);
@@ -461,6 +476,17 @@ public class JournalFeedModelImpl
 	@Override
 	public void setMvccVersion(long mvccVersion) {
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -895,6 +921,7 @@ public class JournalFeedModelImpl
 		JournalFeedImpl journalFeedImpl = new JournalFeedImpl();
 
 		journalFeedImpl.setMvccVersion(getMvccVersion());
+		journalFeedImpl.setCtCollectionId(getCtCollectionId());
 		journalFeedImpl.setUuid(getUuid());
 		journalFeedImpl.setId(getId());
 		journalFeedImpl.setGroupId(getGroupId());
@@ -939,16 +966,16 @@ public class JournalFeedModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof JournalFeed)) {
+		if (!(object instanceof JournalFeed)) {
 			return false;
 		}
 
-		JournalFeed journalFeed = (JournalFeed)obj;
+		JournalFeed journalFeed = (JournalFeed)object;
 
 		long primaryKey = journalFeed.getPrimaryKey();
 
@@ -965,14 +992,22 @@ public class JournalFeedModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -1003,6 +1038,8 @@ public class JournalFeedModelImpl
 			new JournalFeedCacheModel();
 
 		journalFeedCacheModel.mvccVersion = getMvccVersion();
+
+		journalFeedCacheModel.ctCollectionId = getCtCollectionId();
 
 		journalFeedCacheModel.uuid = getUuid();
 
@@ -1236,10 +1273,8 @@ public class JournalFeedModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
 	private String _originalUuid;
 	private long _id;

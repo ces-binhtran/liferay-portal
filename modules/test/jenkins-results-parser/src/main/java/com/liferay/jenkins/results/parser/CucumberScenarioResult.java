@@ -14,6 +14,11 @@
 
 package com.liferay.jenkins.results.parser;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -27,18 +32,28 @@ import org.dom4j.Node;
 /**
  * @author Michael Hashimoto
  */
-public class CucumberScenarioResult {
+public class CucumberScenarioResult implements Serializable {
+
+	public long getBackgroundDuration() {
+		return _getDuration(_getBackgroundDocument());
+	}
 
 	public String getBackgroundName() {
-		if (_backgroundDocument == null) {
+		Document backgroundDocument = _getBackgroundDocument();
+
+		if (backgroundDocument == null) {
 			return null;
 		}
 
-		return "Background: " + _getName(_backgroundDocument);
+		return "Background: " + _getName(backgroundDocument);
 	}
 
 	public String getBackgroundStatus() {
-		return _getStatus(_backgroundDocument);
+		return _getStatus(_getBackgroundDocument());
+	}
+
+	public List<Step> getBackgroundSteps() {
+		return _getSteps(_getBackgroundDocument());
 	}
 
 	public CucumberFeatureResult getCucumberFeatureResult() {
@@ -46,8 +61,7 @@ public class CucumberScenarioResult {
 	}
 
 	public long getDuration() {
-		return _getDuration(_backgroundDocument) +
-			_getDuration(_scenarioDocument);
+		return getBackgroundDuration() + getScenarioDuration();
 	}
 
 	public String getErrorDetails() {
@@ -86,12 +100,20 @@ public class CucumberScenarioResult {
 		return null;
 	}
 
+	public long getScenarioDuration() {
+		return _getDuration(_getScenarioDocument());
+	}
+
 	public String getScenarioName() {
-		return "Scenario: " + _getName(_scenarioDocument);
+		return "Scenario: " + _getName(_getScenarioDocument());
 	}
 
 	public String getScenarioStatus() {
-		return _getStatus(_scenarioDocument);
+		return _getStatus(_getScenarioDocument());
+	}
+
+	public List<Step> getScenarioSteps() {
+		return _getSteps(_getScenarioDocument());
 	}
 
 	public String getStatus() {
@@ -110,35 +132,26 @@ public class CucumberScenarioResult {
 	public List<Step> getSteps() {
 		List<Step> steps = new ArrayList<>();
 
-		List<Node> nodes = new ArrayList<>();
-
-		if (_backgroundDocument != null) {
-			nodes.addAll(
-				Dom4JUtil.getNodesByXPath(
-					_backgroundDocument, "//div[@class='step']"));
-		}
-
-		nodes.addAll(
-			Dom4JUtil.getNodesByXPath(
-				_scenarioDocument, "//div[@class='step']"));
-
-		for (Node node : nodes) {
-			Document document;
-
-			try {
-				document = Dom4JUtil.parse(node.asXML());
-			}
-			catch (DocumentException documentException) {
-				continue;
-			}
-
-			steps.add(new Step(document));
-		}
+		steps.addAll(getBackgroundSteps());
+		steps.addAll(getScenarioSteps());
 
 		return steps;
 	}
 
-	public static class Step {
+	public static class Step implements Serializable {
+
+		public long getDuration() {
+			Element element = (Element)Dom4JUtil.getNodeByXPath(
+				_getDocument(),
+				"//div[@class='step']/div/span[contains(@class,'duration')]");
+
+			if (element == null) {
+				return 0;
+			}
+
+			return CucumberScenarioResult._getDurationFromString(
+				element.getTextTrim());
+		}
 
 		public String getErrorDetails() {
 			String status = getStatus();
@@ -153,7 +166,7 @@ public class CucumberScenarioResult {
 			sb.append("/div[contains(@class,'message')]/div/a");
 
 			Element element = (Element)Dom4JUtil.getNodeByXPath(
-				_document, sb.toString());
+				_getDocument(), sb.toString());
 
 			if (element == null) {
 				return null;
@@ -175,7 +188,7 @@ public class CucumberScenarioResult {
 			sb.append("/div[contains(@class,'message')]/div/pre");
 
 			Element element = (Element)Dom4JUtil.getNodeByXPath(
-				_document, sb.toString());
+				_getDocument(), sb.toString());
 
 			if (element == null) {
 				return null;
@@ -184,9 +197,20 @@ public class CucumberScenarioResult {
 			return element.getText();
 		}
 
+		public String getName() {
+			Element element = (Element)Dom4JUtil.getNodeByXPath(
+				_getDocument(), "//div[@class='step']/div/span[@class='name']");
+
+			if (element == null) {
+				return "";
+			}
+
+			return element.getStringValue();
+		}
+
 		public String getStatus() {
 			Element element = (Element)Dom4JUtil.getNodeByXPath(
-				_document,
+				_getDocument(),
 				"//div[@class='step']/div[contains(@class,'brief')]");
 
 			if (element == null) {
@@ -206,7 +230,33 @@ public class CucumberScenarioResult {
 			_document = document;
 		}
 
-		private final Document _document;
+		private Document _getDocument() {
+			return _document;
+		}
+
+		private void readObject(ObjectInputStream objectInputStream)
+			throws ClassNotFoundException, IOException {
+
+			objectInputStream.defaultReadObject();
+
+			try {
+				_document = Dom4JUtil.parse(objectInputStream.readUTF());
+			}
+			catch (DocumentException documentException) {
+				throw new RuntimeException(
+					"Unable to deserialize document", documentException);
+			}
+		}
+
+		private void writeObject(ObjectOutputStream objectOutputStream)
+			throws IOException {
+
+			objectOutputStream.defaultWriteObject();
+
+			objectOutputStream.writeUTF(_document.asXML());
+		}
+
+		private transient Document _document;
 
 	}
 
@@ -223,16 +273,8 @@ public class CucumberScenarioResult {
 		}
 	}
 
-	private long _getDuration(Document document) {
-		Element element = (Element)Dom4JUtil.getNodeByXPath(
-			document,
-			"//div[@class='element']/span[contains(@class,'duration')]");
-
-		if (element == null) {
-			return 0;
-		}
-
-		Matcher matcher = _pattern.matcher(element.getTextTrim());
+	private static long _getDurationFromString(String durationString) {
+		Matcher matcher = _durationPattern.matcher(durationString);
 
 		if (!matcher.find()) {
 			return 0;
@@ -255,6 +297,22 @@ public class CucumberScenarioResult {
 		return duration;
 	}
 
+	private Document _getBackgroundDocument() {
+		return _backgroundDocument;
+	}
+
+	private long _getDuration(Document document) {
+		Element element = (Element)Dom4JUtil.getNodeByXPath(
+			document,
+			"//div[@class='element']/span[contains(@class,'duration')]");
+
+		if (element == null) {
+			return 0;
+		}
+
+		return _getDurationFromString(element.getTextTrim());
+	}
+
 	private String _getName(Document document) {
 		if (document == null) {
 			return null;
@@ -272,6 +330,10 @@ public class CucumberScenarioResult {
 		}
 
 		return node.getText();
+	}
+
+	private Document _getScenarioDocument() {
+		return _scenarioDocument;
 	}
 
 	private String _getStatus(Document document) {
@@ -300,10 +362,58 @@ public class CucumberScenarioResult {
 		return "FAILED";
 	}
 
-	private final Document _backgroundDocument;
-	private final CucumberFeatureResult _cucumberFeatureResult;
-	private Pattern _pattern = Pattern.compile(
+	private List<Step> _getSteps(Document document) {
+		List<Step> steps = new ArrayList<>();
+
+		List<Node> nodes = Dom4JUtil.getNodesByXPath(
+			document, "//div[@class='step']");
+
+		for (Node node : nodes) {
+			Document stepDocument;
+
+			try {
+				stepDocument = Dom4JUtil.parse(node.asXML());
+			}
+			catch (DocumentException documentException) {
+				continue;
+			}
+
+			steps.add(new Step(stepDocument));
+		}
+
+		return steps;
+	}
+
+	private void readObject(ObjectInputStream objectInputStream)
+		throws ClassNotFoundException, IOException {
+
+		objectInputStream.defaultReadObject();
+
+		try {
+			_backgroundDocument = Dom4JUtil.parse(objectInputStream.readUTF());
+
+			_scenarioDocument = Dom4JUtil.parse(objectInputStream.readUTF());
+		}
+		catch (DocumentException documentException) {
+			throw new RuntimeException(documentException);
+		}
+	}
+
+	private void writeObject(ObjectOutputStream objectOutputStream)
+		throws IOException {
+
+		objectOutputStream.defaultWriteObject();
+
+		objectOutputStream.writeUTF(_backgroundDocument.asXML());
+
+		objectOutputStream.writeUTF(_scenarioDocument.asXML());
+	}
+
+	private static final Pattern _durationPattern = Pattern.compile(
 		"((?<mins>\\d+)\\:)?(?<secs>\\d+)\\.(?<ms>\\d{3})");
-	private final Document _scenarioDocument;
+
+	private transient Document _backgroundDocument;
+	private final CucumberFeatureResult _cucumberFeatureResult;
+	private transient Document _scenarioDocument;
 
 }

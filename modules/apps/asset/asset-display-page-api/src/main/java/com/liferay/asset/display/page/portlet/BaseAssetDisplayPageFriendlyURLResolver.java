@@ -30,6 +30,14 @@ import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
 import com.liferay.info.display.url.provider.InfoEditURLProvider;
 import com.liferay.info.display.url.provider.InfoEditURLProviderTracker;
+import com.liferay.info.exception.NoSuchInfoItemException;
+import com.liferay.info.field.InfoFieldValue;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemIdentifier;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.string.CharPool;
@@ -46,13 +54,16 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.osgi.service.component.annotations.Reference;
 
@@ -75,51 +86,78 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		InfoDisplayContributor<?> infoDisplayContributor =
 			_getInfoDisplayContributor(friendlyURL);
 
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
-			_getInfoDisplayObjectProvider(
-				infoDisplayContributor, groupId, friendlyURL);
-
-		if (infoDisplayObjectProvider != null) {
-			httpServletRequest.setAttribute(
-				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER,
-				infoDisplayObjectProvider);
-
-			InfoEditURLProvider infoEditURLProvider =
-				infoEditURLProviderTracker.getInfoEditURLProvider(
-					portal.getClassName(
-						infoDisplayObjectProvider.getClassNameId()));
-
-			httpServletRequest.setAttribute(
-				AssetDisplayPageWebKeys.INFO_EDIT_URL_PROVIDER,
-				infoEditURLProvider);
-		}
-
 		httpServletRequest.setAttribute(
 			InfoDisplayWebKeys.INFO_DISPLAY_CONTRIBUTOR,
 			infoDisplayContributor);
 
+		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
+			_getInfoDisplayObjectProvider(
+				infoDisplayContributor, groupId, friendlyURL);
+
 		httpServletRequest.setAttribute(
-			InfoDisplayWebKeys.VERSION_CLASS_PK,
-			_getVersionClassPK(friendlyURL));
+			AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER,
+			infoDisplayObjectProvider);
+
+		String infoItemClassName = portal.getClassName(
+			infoDisplayObjectProvider.getClassNameId());
+
+		InfoEditURLProvider<?> infoEditURLProvider =
+			infoEditURLProviderTracker.getInfoEditURLProvider(
+				infoItemClassName);
+
+		httpServletRequest.setAttribute(
+			AssetDisplayPageWebKeys.INFO_EDIT_URL_PROVIDER,
+			infoEditURLProvider);
+
+		Object infoItem = _getInfoItem(friendlyURL, infoDisplayObjectProvider);
+
+		httpServletRequest.setAttribute(InfoDisplayWebKeys.INFO_ITEM, infoItem);
+
+		InfoItemDetailsProvider infoItemDetailsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemDetailsProvider.class, infoItemClassName);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_DETAILS,
+			infoItemDetailsProvider.getInfoItemDetails(infoItem));
+
+		InfoItemFieldValuesProvider<?> infoItemFieldValuesProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFieldValuesProvider.class, infoItemClassName);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_FIELD_VALUES_PROVIDER,
+			infoItemFieldValuesProvider);
+
+		httpServletRequest.setAttribute(
+			InfoDisplayWebKeys.INFO_ITEM_SERVICE_TRACKER,
+			infoItemServiceTracker);
 
 		Locale locale = portal.getLocale(httpServletRequest);
+		Layout layout = _getInfoDisplayObjectProviderLayout(
+			infoDisplayObjectProvider);
 
 		portal.setPageDescription(
 			HtmlUtil.unescape(
 				HtmlUtil.stripHtml(
-					infoDisplayObjectProvider.getDescription(locale))),
+					_getMappedField(
+						infoDisplayObjectProvider, locale,
+						layout.getTypeSettingsProperty("mapped-description"),
+						infoDisplayObjectProvider::getDescription))),
 			httpServletRequest);
+
 		portal.setPageKeywords(
 			infoDisplayObjectProvider.getKeywords(locale), httpServletRequest);
 		portal.setPageTitle(
-			infoDisplayObjectProvider.getTitle(locale), httpServletRequest);
+			_getMappedField(
+				infoDisplayObjectProvider, locale,
+				layout.getTypeSettingsProperty("mapped-title"),
+				infoDisplayObjectProvider::getTitle),
+			httpServletRequest);
 
 		AssetEntry assetEntry = _getAssetEntry(infoDisplayObjectProvider);
 
 		httpServletRequest.setAttribute(WebKeys.LAYOUT_ASSET_ENTRY, assetEntry);
-
-		Layout layout = _getInfoDisplayObjectProviderLayout(
-			infoDisplayObjectProvider);
 
 		return portal.getLayoutActualURL(layout, mainPath);
 	}
@@ -145,6 +183,21 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		Layout layout = _getInfoDisplayObjectProviderLayout(
 			infoDisplayObjectProvider);
 
+		HttpServletRequest httpServletRequest =
+			(HttpServletRequest)requestContext.get("request");
+
+		HttpSession httpSession = httpServletRequest.getSession();
+
+		Locale locale = (Locale)httpSession.getAttribute(WebKeys.LOCALE);
+
+		if (locale != null) {
+			String urlTitle = infoDisplayObjectProvider.getURLTitle(locale);
+
+			if (Validator.isNotNull(urlTitle)) {
+				friendlyURL = getURLSeparator() + urlTitle;
+			}
+		}
+
 		return new LayoutFriendlyURLComposite(layout, friendlyURL);
 	}
 
@@ -163,6 +216,9 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 
 	@Reference
 	protected InfoEditURLProviderTracker infoEditURLProviderTracker;
+
+	@Reference
+	protected InfoItemServiceTracker infoItemServiceTracker;
 
 	@Reference
 	protected LayoutLocalService layoutLocalService;
@@ -276,10 +332,60 @@ public abstract class BaseAssetDisplayPageFriendlyURLResolver
 		return null;
 	}
 
+	private Object _getInfoItem(
+			String friendlyURL,
+			InfoDisplayObjectProvider<?> infoDisplayObjectProvider)
+		throws NoSuchInfoItemException {
+
+		long classPK = _getVersionClassPK(friendlyURL);
+
+		if (classPK <= 0) {
+			return infoDisplayObjectProvider.getDisplayObject();
+		}
+
+		InfoItemObjectProvider<Object> infoItemObjectProvider =
+			(InfoItemObjectProvider<Object>)
+				infoItemServiceTracker.getFirstInfoItemService(
+					InfoItemObjectProvider.class,
+					portal.getClassName(
+						infoDisplayObjectProvider.getClassNameId()));
+
+		InfoItemIdentifier infoItemIdentifier = new ClassPKInfoItemIdentifier(
+			infoDisplayObjectProvider.getClassPK());
+
+		infoItemIdentifier.setVersion(InfoItemIdentifier.VERSION_LATEST);
+
+		return infoItemObjectProvider.getInfoItem(infoItemIdentifier);
+	}
+
 	private String _getInfoURLSeparator(String friendlyURL) {
 		List<String> paths = StringUtil.split(friendlyURL, CharPool.SLASH);
 
 		return CharPool.SLASH + paths.get(0) + CharPool.SLASH;
+	}
+
+	private String _getMappedField(
+		InfoDisplayObjectProvider<?> infoDisplayObjectProvider, Locale locale,
+		String mappedFieldName, Function<Locale, String> defaultValueFunction) {
+
+		if (infoDisplayObjectProvider != null) {
+			InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider =
+				infoItemServiceTracker.getFirstInfoItemService(
+					InfoItemFieldValuesProvider.class,
+					portal.getClassName(
+						infoDisplayObjectProvider.getClassNameId()));
+
+			InfoFieldValue<Object> infoFieldValue =
+				infoItemFieldValuesProvider.getInfoItemFieldValue(
+					infoDisplayObjectProvider.getDisplayObject(),
+					mappedFieldName);
+
+			if (infoFieldValue != null) {
+				return String.valueOf(infoFieldValue.getValue(locale));
+			}
+		}
+
+		return defaultValueFunction.apply(locale);
 	}
 
 	private String _getUrlTitle(String friendlyURL) {

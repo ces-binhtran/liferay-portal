@@ -40,7 +40,7 @@ public class JournalDataLayoutBuilderDefinition
 
 	@Override
 	public boolean allowRules() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -51,6 +51,13 @@ public class JournalDataLayoutBuilderDefinition
 	@Override
 	public String[] getDisabledTabs() {
 		return new String[] {"Autocomplete"};
+	}
+
+	@Override
+	public String[] getUnimplementedProperties() {
+		return new String[] {
+			"fieldNamespace", "readOnly", "validation", "visibilityExpression"
+		};
 	}
 
 }

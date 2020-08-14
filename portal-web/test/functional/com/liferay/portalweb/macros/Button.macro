@@ -42,6 +42,10 @@ definition {
 		Button.click(button = "Edit");
 	}
 
+	macro clickImport {
+		Button.click(button = "Import");
+	}
+
 	macro clickInstall {
 		Button.click(button = "Install");
 	}
@@ -70,10 +74,6 @@ definition {
 			locator1 = "Button#ANY");
 
 		Button.click(button = "Publish");
-	}
-
-	macro clickPublishToChangeList {
-		Button.click(button = "Publish to Change List");
 	}
 
 	macro clickRemove {

@@ -43,7 +43,7 @@ CustomFacetPortletInstanceConfiguration customFacetPortletInstanceConfiguration 
 Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
 	"customFacetDisplayContext", customFacetDisplayContext
 ).put(
-	"namespace", renderResponse.getNamespace()
+	"namespace", liferayPortletResponse.getNamespace()
 ).build();
 
 List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacetDisplayContext.getTermDisplayContexts();
@@ -67,14 +67,14 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 			>
 				<liferay-ui:panel-container
 					extended="<%= true %>"
-					id='<%= renderResponse.getNamespace() + "facetCustomPanelContainer" %>'
+					id='<%= liferayPortletResponse.getNamespace() + "facetCustomPanelContainer" %>'
 					markupView="lexicon"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
 						cssClass="search-facet"
-						id='<%= renderResponse.getNamespace() + "facetCustomPanel" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "facetCustomPanel" %>'
 						markupView="lexicon"
 						persistState="<%= true %>"
 						title="<%= customFacetDisplayContext.getDisplayCaption() %>"
@@ -94,7 +94,7 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 											<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= i %>">
 												<input class="custom-control-input facet-term" data-term-id="<%= customFacetTermDisplayContext.getFieldName() %>" disabled id="<portlet:namespace />term_<%= i %>" name="<portlet:namespace />term_<%= i %>" onChange="Liferay.Search.FacetUtil.changeSelection(event);" type="checkbox" <%= customFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %> />
 
-												<span class='custom-control-label term-name <%= customFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>'>
+												<span class="custom-control-label term-name <%= customFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 													<span class="custom-control-label-text"><%= HtmlUtil.escape(customFacetTermDisplayContext.getFieldName()) %></span>
 												</span>
 

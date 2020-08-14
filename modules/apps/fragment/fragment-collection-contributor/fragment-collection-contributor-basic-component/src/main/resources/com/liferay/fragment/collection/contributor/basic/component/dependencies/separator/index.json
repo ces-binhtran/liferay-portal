@@ -1,6 +1,7 @@
 {
 	"fieldSets": [
 		{
+			"configurationRole": "style",
 			"fields": [
 				{
 					"dataType": "string",
@@ -27,12 +28,6 @@
 							}
 						]
 					}
-				},
-				{
-					"dataType": "object",
-					"label": "border-color",
-					"name": "borderColor",
-					"type": "colorPalette"
 				}
 			]
 		}

@@ -14,6 +14,7 @@
 
 package com.liferay.headless.delivery.client.resource.v1_0;
 
+import com.liferay.headless.delivery.client.aggregation.Aggregation;
 import com.liferay.headless.delivery.client.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.client.dto.v1_0.Rating;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
@@ -46,13 +47,15 @@ public interface MessageBoardThreadResource {
 
 	public Page<MessageBoardThread>
 			getMessageBoardSectionMessageBoardThreadsPage(
-				Long messageBoardSectionId, String search, String filterString,
+				Long messageBoardSectionId, String search,
+				Aggregation aggregation, String filterString,
 				Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getMessageBoardSectionMessageBoardThreadsPageHttpResponse(
-				Long messageBoardSectionId, String search, String filterString,
+				Long messageBoardSectionId, String search,
+				Aggregation aggregation, String filterString,
 				Pagination pagination, String sortString)
 		throws Exception;
 
@@ -179,13 +182,15 @@ public interface MessageBoardThreadResource {
 		throws Exception;
 
 	public Page<MessageBoardThread> getSiteMessageBoardThreadsPage(
-			Long siteId, Boolean flatten, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long siteId, Boolean flatten, String search,
+			Aggregation aggregation, String filterString, Pagination pagination,
+			String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getSiteMessageBoardThreadsPageHttpResponse(
-			Long siteId, Boolean flatten, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long siteId, Boolean flatten, String search,
+			Aggregation aggregation, String filterString, Pagination pagination,
+			String sortString)
 		throws Exception;
 
 	public MessageBoardThread postSiteMessageBoardThread(
@@ -258,8 +263,8 @@ public interface MessageBoardThreadResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "test@liferay.com";
-		private String _password = "test";
+		private String _login = "";
+		private String _password = "";
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -272,14 +277,14 @@ public interface MessageBoardThreadResource {
 		public Page<MessageBoardThread>
 				getMessageBoardSectionMessageBoardThreadsPage(
 					Long messageBoardSectionId, String search,
-					String filterString, Pagination pagination,
-					String sortString)
+					Aggregation aggregation, String filterString,
+					Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getMessageBoardSectionMessageBoardThreadsPageHttpResponse(
-					messageBoardSectionId, search, filterString, pagination,
-					sortString);
+					messageBoardSectionId, search, aggregation, filterString,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -304,8 +309,8 @@ public interface MessageBoardThreadResource {
 		public HttpInvoker.HttpResponse
 				getMessageBoardSectionMessageBoardThreadsPageHttpResponse(
 					Long messageBoardSectionId, String search,
-					String filterString, Pagination pagination,
-					String sortString)
+					Aggregation aggregation, String filterString,
+					Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -331,6 +336,17 @@ public interface MessageBoardThreadResource {
 
 			if (search != null) {
 				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if ((aggregation != null) &&
+				(aggregation.getAggregationTerms() != null)) {
+
+				Map<String, String> aggregationTerms =
+					aggregation.getAggregationTerms();
+
+				httpInvoker.parameter(
+					"aggregationTerms",
+					String.join(",", aggregationTerms.values()));
 			}
 
 			if (filterString != null) {
@@ -1382,13 +1398,14 @@ public interface MessageBoardThreadResource {
 
 		public Page<MessageBoardThread> getSiteMessageBoardThreadsPage(
 				Long siteId, Boolean flatten, String search,
-				String filterString, Pagination pagination, String sortString)
+				Aggregation aggregation, String filterString,
+				Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getSiteMessageBoardThreadsPageHttpResponse(
-					siteId, flatten, search, filterString, pagination,
-					sortString);
+					siteId, flatten, search, aggregation, filterString,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
@@ -1413,8 +1430,8 @@ public interface MessageBoardThreadResource {
 		public HttpInvoker.HttpResponse
 				getSiteMessageBoardThreadsPageHttpResponse(
 					Long siteId, Boolean flatten, String search,
-					String filterString, Pagination pagination,
-					String sortString)
+					Aggregation aggregation, String filterString,
+					Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1444,6 +1461,17 @@ public interface MessageBoardThreadResource {
 
 			if (search != null) {
 				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if ((aggregation != null) &&
+				(aggregation.getAggregationTerms() != null)) {
+
+				Map<String, String> aggregationTerms =
+					aggregation.getAggregationTerms();
+
+				httpInvoker.parameter(
+					"aggregationTerms",
+					String.join(",", aggregationTerms.values()));
 			}
 
 			if (filterString != null) {

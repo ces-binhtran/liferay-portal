@@ -18,84 +18,58 @@ import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 
 import java.util.Objects;
 
 /**
  * @author Eudaldo Alonso
  */
-public class ContainerLayoutStructureItem extends LayoutStructureItem {
+public class ContainerLayoutStructureItem extends StyledLayoutStructureItem {
 
 	public ContainerLayoutStructureItem(String parentItemId) {
 		super(parentItemId);
 
-		_backgroundImageJSONObject = JSONFactoryUtil.createJSONObject();
+		_linkJSONObject = JSONFactoryUtil.createJSONObject();
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ContainerLayoutStructureItem)) {
+		if (!(object instanceof ContainerLayoutStructureItem)) {
 			return false;
 		}
 
 		ContainerLayoutStructureItem containerLayoutStructureItem =
-			(ContainerLayoutStructureItem)obj;
+			(ContainerLayoutStructureItem)object;
 
 		if (!Objects.equals(
-				_backgroundColorCssClass,
-				containerLayoutStructureItem._backgroundColorCssClass) ||
+				_linkJSONObject.toJSONString(),
+				containerLayoutStructureItem._linkJSONObject.toJSONString()) ||
 			!Objects.equals(
-				_backgroundImageJSONObject.toJSONString(),
-				containerLayoutStructureItem._backgroundImageJSONObject.
-					toJSONString()) ||
-			!Objects.equals(
-				_containerType, containerLayoutStructureItem._containerType) ||
-			!Objects.equals(
-				_paddingBottom, containerLayoutStructureItem._paddingBottom) ||
-			!Objects.equals(
-				_paddingHorizontal,
-				containerLayoutStructureItem._paddingHorizontal) ||
-			!Objects.equals(
-				_paddingTop, containerLayoutStructureItem._paddingTop)) {
+				_widthType, containerLayoutStructureItem._widthType)) {
 
 			return false;
 		}
 
-		return super.equals(obj);
+		return super.equals(object);
 	}
 
-	public String getBackgroundColorCssClass() {
-		return _backgroundColorCssClass;
-	}
-
-	public JSONObject getBackgroundImageJSONObject() {
-		return _backgroundImageJSONObject;
-	}
-
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getWidthType()}
+	 */
+	@Deprecated
 	public String getContainerType() {
-		return _containerType;
+		return _widthType;
 	}
 
 	@Override
 	public JSONObject getItemConfigJSONObject() {
-		return JSONUtil.put(
-			"backgroundColorCssClass", _backgroundColorCssClass
-		).put(
-			"backgroundImage", _backgroundImageJSONObject
-		).put(
-			"paddingBottom", _paddingBottom
-		).put(
-			"paddingHorizontal", _paddingHorizontal
-		).put(
-			"paddingTop", _paddingTop
-		).put(
-			"type", _containerType
-		);
+		JSONObject jsonObject = super.getItemConfigJSONObject();
+
+		return jsonObject.put("widthType", _widthType);
 	}
 
 	@Override
@@ -103,16 +77,21 @@ public class ContainerLayoutStructureItem extends LayoutStructureItem {
 		return LayoutDataItemTypeConstants.TYPE_CONTAINER;
 	}
 
-	public int getPaddingBottom() {
-		return _paddingBottom;
+	public JSONObject getLinkJSONObject() {
+		return _linkJSONObject;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getPaddingLeft()} and {@link #getPaddingRight()}
+	 */
+	@Deprecated
 	public int getPaddingHorizontal() {
-		return _paddingHorizontal;
+		return 0;
 	}
 
-	public int getPaddingTop() {
-		return _paddingTop;
+	public String getWidthType() {
+		return _widthType;
 	}
 
 	@Override
@@ -120,79 +99,175 @@ public class ContainerLayoutStructureItem extends LayoutStructureItem {
 		return HashUtil.hash(0, getItemId());
 	}
 
-	public void setBackgroundColorCssClass(String backgroundColorCssClass) {
-		_backgroundColorCssClass = backgroundColorCssClass;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setAlign(String align) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setBackgroundColorCssClass(String backgroundColorCssClass) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setBackgroundImageJSONObject(
 		JSONObject backgroundImageJSONObject) {
-
-		_backgroundImageJSONObject = backgroundImageJSONObject;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setBorderColor(String borderColor) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setBorderRadius(String borderRadius) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setBorderWidth(int borderWidth) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #setWidthType(String)}
+	 */
+	@Deprecated
 	public void setContainerType(String containerType) {
-		_containerType = containerType;
+		_widthType = containerType;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setContentDisplay(String contentDisplay) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setJustify(String justify) {
+	}
+
+	public void setLinkJSONObject(JSONObject linkJSONObject) {
+		_linkJSONObject = linkJSONObject;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setMarginBottom(int marginBottom) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setMarginLeft(int marginLeft) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setMarginRight(int marginRight) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setMarginTop(int marginTop) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setOpacity(int opacity) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setPaddingBottom(int paddingBottom) {
-		_paddingBottom = paddingBottom;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #setPaddingLeft(int)} and {@link #setPaddingRight(int)}
+	 */
+	@Deprecated
 	public void setPaddingHorizontal(int paddingHorizontal) {
-		_paddingHorizontal = paddingHorizontal;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setPaddingLeft(int paddingLeft) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setPaddingRight(int paddingRight) {
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setPaddingTop(int paddingTop) {
-		_paddingTop = paddingTop;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setShadow(String shadow) {
+	}
+
+	public void setWidthType(String widthType) {
+		_widthType = widthType;
 	}
 
 	@Override
 	public void updateItemConfig(JSONObject itemConfigJSONObject) {
-		if (itemConfigJSONObject.has("backgroundColorCssClass")) {
-			setBackgroundColorCssClass(
-				itemConfigJSONObject.getString("backgroundColorCssClass"));
-		}
+		super.updateItemConfig(itemConfigJSONObject);
 
-		if (itemConfigJSONObject.has("backgroundImage")) {
-			JSONObject backgroundImageJSONObject = null;
+		if (itemConfigJSONObject.has("widthType") ||
+			itemConfigJSONObject.has("type")) {
 
-			Object backgroundImage = itemConfigJSONObject.get(
-				"backgroundImage");
-
-			if (backgroundImage instanceof JSONObject) {
-				backgroundImageJSONObject = (JSONObject)backgroundImage;
+			if (itemConfigJSONObject.has("widthType")) {
+				setWidthType(itemConfigJSONObject.getString("widthType"));
 			}
 			else {
-				backgroundImageJSONObject = JSONUtil.put(
-					"url", backgroundImage);
+				setWidthType(itemConfigJSONObject.getString("type"));
 			}
-
-			setBackgroundImageJSONObject(backgroundImageJSONObject);
-		}
-
-		if (itemConfigJSONObject.has("paddingBottom")) {
-			setPaddingBottom(itemConfigJSONObject.getInt("paddingBottom"));
-		}
-
-		if (itemConfigJSONObject.has("paddingHorizontal")) {
-			setPaddingHorizontal(
-				itemConfigJSONObject.getInt("paddingHorizontal"));
-		}
-
-		if (itemConfigJSONObject.has("paddingTop")) {
-			setPaddingTop(itemConfigJSONObject.getInt("paddingTop"));
-		}
-
-		if (itemConfigJSONObject.has("type")) {
-			setContainerType(itemConfigJSONObject.getString("type"));
 		}
 	}
 
-	private String _backgroundColorCssClass;
-	private JSONObject _backgroundImageJSONObject;
-	private String _containerType = "fixed";
-	private int _paddingBottom = 3;
-	private int _paddingHorizontal = 3;
-	private int _paddingTop = 3;
+	private JSONObject _linkJSONObject;
+	private String _widthType = "fluid";
 
 }

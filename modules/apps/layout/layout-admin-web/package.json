@@ -1,14 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.3.3",
-		"@clayui/button": "3.3.1",
-		"@clayui/drop-down": "3.4.3",
-		"@clayui/form": "3.8.0",
+		"@clayui/alert": "3.4.0",
+		"@clayui/button": "3.4.0",
+		"@clayui/drop-down": "3.5.0",
+		"@clayui/form": "3.10.0",
 		"@clayui/icon": "3.0.5",
-		"@clayui/label": "3.3.0",
-		"@clayui/link": "3.1.1",
-		"@clayui/list": "3.2.5",
-		"@clayui/modal": "3.5.0",
+		"@clayui/label": "3.3.1",
+		"@clayui/layout": "3.1.1",
+		"@clayui/link": "3.2.0",
+		"@clayui/list": "3.3.0",
+		"@clayui/modal": "3.6.4",
 		"classnames": "2.2.6",
 		"clay-badge": "2.21.3",
 		"clay-checkbox": "2.21.3",
@@ -24,8 +25,8 @@
 		"metal-throttle": "3.0.1",
 		"prop-types": "15.7.2",
 		"react": "16.12.0",
-		"react-dnd": "10.0.1",
-		"react-dnd-html5-backend": "10.0.1"
+		"react-dnd": "11.1.1",
+		"react-dnd-html5-backend": "11.1.1"
 	},
 	"name": "layout-admin-web",
 	"scripts": {
@@ -34,5 +35,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "4.0.26"
+	"version": "4.0.38"
 }

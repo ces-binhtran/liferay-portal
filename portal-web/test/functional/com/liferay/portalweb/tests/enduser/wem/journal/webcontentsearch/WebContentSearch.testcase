@@ -36,7 +36,7 @@ definition {
 
 			Vocabulary.tearDownCP();
 
-			Tag.tearDownCP(site = "Guest");
+			Tag.tearDownCP();
 
 			Page.tearDownCP();
 		}
@@ -350,6 +350,7 @@ definition {
 
 	@priority = "5"
 	test SearchWebContentTag {
+		property portal.acceptance = "true";
 		property testray.component.names = "Tags,Training,Web Content Display";
 
 		JSONLayout.addPublicLayout(

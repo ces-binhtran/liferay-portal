@@ -148,7 +148,7 @@ const RuleEditorModalContent = ({onClose, rule}) => {
 			<ClayModal.Header>
 				{rule
 					? Liferay.Language.get('edit-rule')
-					: Liferay.Language.get('add-rule')}
+					: Liferay.Language.get('create-new-rule')}
 			</ClayModal.Header>
 			<ClayModal.Header withTitle={false}>
 				<ClayInput.Group className="pl-4 pr-4">
@@ -203,7 +203,7 @@ const RuleEditorModal = ({isVisible, onClose, rule}) => {
 
 	return (
 		<ClayModal
-			className="data-layout-builder-rule-editor-modal"
+			className="data-layout-builder-editor-modal"
 			observer={observer}
 			size="full-screen"
 		>

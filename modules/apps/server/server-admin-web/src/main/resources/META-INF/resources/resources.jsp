@@ -19,7 +19,9 @@
 <%
 String[] installedPatches = PatcherUtil.getInstalledPatches();
 
-long uptimeDiff = System.currentTimeMillis() - PortalUtil.getUptime().getTime();
+Date modifiedDate = PortalUtil.getUptime();
+
+long uptimeDiff = System.currentTimeMillis() - modifiedDate.getTime();
 long days = uptimeDiff / Time.DAY;
 long hours = (uptimeDiff / Time.HOUR) % 24;
 long minutes = (uptimeDiff / Time.MINUTE) % 60;
@@ -67,7 +69,7 @@ long usedMemory = totalMemory - runtime.freeMemory();
 					<portlet:param name="usedMemory" value="<%= String.valueOf(usedMemory) %>" />
 				</portlet:resourceURL>
 
-				<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="memory-used-vs-total-memory" />' src="<%= totalMemoryChartURL %>" />
+				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="memory-used-vs-total-memory" />" src="<%= totalMemoryChartURL %>" />
 
 				<portlet:resourceURL id="/server_admin/view_chart" var="maxMemoryChartURL">
 					<portlet:param name="type" value="max" />
@@ -75,7 +77,7 @@ long usedMemory = totalMemory - runtime.freeMemory();
 					<portlet:param name="usedMemory" value="<%= String.valueOf(usedMemory) %>" />
 				</portlet:resourceURL>
 
-				<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="memory-used-vs-max-memory" />' src="<%= maxMemoryChartURL %>" />
+				<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="memory-used-vs-max-memory" />" src="<%= maxMemoryChartURL %>" />
 			</div>
 
 			<br />

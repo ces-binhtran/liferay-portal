@@ -67,7 +67,8 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 		{"mvccVersion", Types.BIGINT},
 		{"appBuilderWorkflowTaskLinkId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"appBuilderAppId", Types.BIGINT},
-		{"ddmStructureLayoutId", Types.BIGINT},
+		{"appBuilderAppVersionId", Types.BIGINT},
+		{"ddmStructureLayoutId", Types.BIGINT}, {"readOnly", Types.BOOLEAN},
 		{"workflowTaskName", Types.VARCHAR}
 	};
 
@@ -79,12 +80,14 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 		TABLE_COLUMNS_MAP.put("appBuilderWorkflowTaskLinkId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("appBuilderAppId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("appBuilderAppVersionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ddmStructureLayoutId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("readOnly", Types.BOOLEAN);
 		TABLE_COLUMNS_MAP.put("workflowTaskName", Types.VARCHAR);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AppBuilderWorkflowTaskLink (mvccVersion LONG default 0 not null,appBuilderWorkflowTaskLinkId LONG not null primary key,companyId LONG,appBuilderAppId LONG,ddmStructureLayoutId LONG,workflowTaskName VARCHAR(75) null)";
+		"create table AppBuilderWorkflowTaskLink (mvccVersion LONG default 0 not null,appBuilderWorkflowTaskLinkId LONG not null primary key,companyId LONG,appBuilderAppId LONG,appBuilderAppVersionId LONG,ddmStructureLayoutId LONG,readOnly BOOLEAN,workflowTaskName VARCHAR(75) null)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table AppBuilderWorkflowTaskLink";
@@ -103,18 +106,26 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 
 	public static final long APPBUILDERAPPID_COLUMN_BITMASK = 1L;
 
-	public static final long DDMSTRUCTURELAYOUTID_COLUMN_BITMASK = 2L;
+	public static final long APPBUILDERAPPVERSIONID_COLUMN_BITMASK = 2L;
 
-	public static final long WORKFLOWTASKNAME_COLUMN_BITMASK = 4L;
+	public static final long DDMSTRUCTURELAYOUTID_COLUMN_BITMASK = 4L;
 
-	public static final long APPBUILDERWORKFLOWTASKLINKID_COLUMN_BITMASK = 8L;
+	public static final long WORKFLOWTASKNAME_COLUMN_BITMASK = 8L;
 
+	public static final long APPBUILDERWORKFLOWTASKLINKID_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public AppBuilderWorkflowTaskLinkModelImpl() {
@@ -169,9 +180,6 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 				attributeGetterFunction.apply(
 					(AppBuilderWorkflowTaskLink)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -278,12 +286,25 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 			(BiConsumer<AppBuilderWorkflowTaskLink, Long>)
 				AppBuilderWorkflowTaskLink::setAppBuilderAppId);
 		attributeGetterFunctions.put(
+			"appBuilderAppVersionId",
+			AppBuilderWorkflowTaskLink::getAppBuilderAppVersionId);
+		attributeSetterBiConsumers.put(
+			"appBuilderAppVersionId",
+			(BiConsumer<AppBuilderWorkflowTaskLink, Long>)
+				AppBuilderWorkflowTaskLink::setAppBuilderAppVersionId);
+		attributeGetterFunctions.put(
 			"ddmStructureLayoutId",
 			AppBuilderWorkflowTaskLink::getDdmStructureLayoutId);
 		attributeSetterBiConsumers.put(
 			"ddmStructureLayoutId",
 			(BiConsumer<AppBuilderWorkflowTaskLink, Long>)
 				AppBuilderWorkflowTaskLink::setDdmStructureLayoutId);
+		attributeGetterFunctions.put(
+			"readOnly", AppBuilderWorkflowTaskLink::getReadOnly);
+		attributeSetterBiConsumers.put(
+			"readOnly",
+			(BiConsumer<AppBuilderWorkflowTaskLink, Boolean>)
+				AppBuilderWorkflowTaskLink::setReadOnly);
 		attributeGetterFunctions.put(
 			"workflowTaskName",
 			AppBuilderWorkflowTaskLink::getWorkflowTaskName);
@@ -355,6 +376,28 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 	}
 
 	@Override
+	public long getAppBuilderAppVersionId() {
+		return _appBuilderAppVersionId;
+	}
+
+	@Override
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId) {
+		_columnBitmask |= APPBUILDERAPPVERSIONID_COLUMN_BITMASK;
+
+		if (!_setOriginalAppBuilderAppVersionId) {
+			_setOriginalAppBuilderAppVersionId = true;
+
+			_originalAppBuilderAppVersionId = _appBuilderAppVersionId;
+		}
+
+		_appBuilderAppVersionId = appBuilderAppVersionId;
+	}
+
+	public long getOriginalAppBuilderAppVersionId() {
+		return _originalAppBuilderAppVersionId;
+	}
+
+	@Override
 	public long getDdmStructureLayoutId() {
 		return _ddmStructureLayoutId;
 	}
@@ -374,6 +417,21 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 
 	public long getOriginalDdmStructureLayoutId() {
 		return _originalDdmStructureLayoutId;
+	}
+
+	@Override
+	public boolean getReadOnly() {
+		return _readOnly;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return _readOnly;
+	}
+
+	@Override
+	public void setReadOnly(boolean readOnly) {
+		_readOnly = readOnly;
 	}
 
 	@Override
@@ -444,8 +502,11 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 			getAppBuilderWorkflowTaskLinkId());
 		appBuilderWorkflowTaskLinkImpl.setCompanyId(getCompanyId());
 		appBuilderWorkflowTaskLinkImpl.setAppBuilderAppId(getAppBuilderAppId());
+		appBuilderWorkflowTaskLinkImpl.setAppBuilderAppVersionId(
+			getAppBuilderAppVersionId());
 		appBuilderWorkflowTaskLinkImpl.setDdmStructureLayoutId(
 			getDdmStructureLayoutId());
+		appBuilderWorkflowTaskLinkImpl.setReadOnly(isReadOnly());
 		appBuilderWorkflowTaskLinkImpl.setWorkflowTaskName(
 			getWorkflowTaskName());
 
@@ -483,17 +544,17 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AppBuilderWorkflowTaskLink)) {
+		if (!(object instanceof AppBuilderWorkflowTaskLink)) {
 			return false;
 		}
 
 		AppBuilderWorkflowTaskLink appBuilderWorkflowTaskLink =
-			(AppBuilderWorkflowTaskLink)obj;
+			(AppBuilderWorkflowTaskLink)object;
 
 		long primaryKey = appBuilderWorkflowTaskLink.getPrimaryKey();
 
@@ -510,14 +571,22 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -529,6 +598,12 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 			appBuilderWorkflowTaskLinkModelImpl._appBuilderAppId;
 
 		appBuilderWorkflowTaskLinkModelImpl._setOriginalAppBuilderAppId = false;
+
+		appBuilderWorkflowTaskLinkModelImpl._originalAppBuilderAppVersionId =
+			appBuilderWorkflowTaskLinkModelImpl._appBuilderAppVersionId;
+
+		appBuilderWorkflowTaskLinkModelImpl._setOriginalAppBuilderAppVersionId =
+			false;
 
 		appBuilderWorkflowTaskLinkModelImpl._originalDdmStructureLayoutId =
 			appBuilderWorkflowTaskLinkModelImpl._ddmStructureLayoutId;
@@ -558,8 +633,13 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 		appBuilderWorkflowTaskLinkCacheModel.appBuilderAppId =
 			getAppBuilderAppId();
 
+		appBuilderWorkflowTaskLinkCacheModel.appBuilderAppVersionId =
+			getAppBuilderAppVersionId();
+
 		appBuilderWorkflowTaskLinkCacheModel.ddmStructureLayoutId =
 			getDdmStructureLayoutId();
+
+		appBuilderWorkflowTaskLinkCacheModel.readOnly = isReadOnly();
 
 		appBuilderWorkflowTaskLinkCacheModel.workflowTaskName =
 			getWorkflowTaskName();
@@ -650,18 +730,19 @@ public class AppBuilderWorkflowTaskLinkModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private long _appBuilderWorkflowTaskLinkId;
 	private long _companyId;
 	private long _appBuilderAppId;
 	private long _originalAppBuilderAppId;
 	private boolean _setOriginalAppBuilderAppId;
+	private long _appBuilderAppVersionId;
+	private long _originalAppBuilderAppVersionId;
+	private boolean _setOriginalAppBuilderAppVersionId;
 	private long _ddmStructureLayoutId;
 	private long _originalDdmStructureLayoutId;
 	private boolean _setOriginalDdmStructureLayoutId;
+	private boolean _readOnly;
 	private String _workflowTaskName;
 	private String _originalWorkflowTaskName;
 	private long _columnBitmask;

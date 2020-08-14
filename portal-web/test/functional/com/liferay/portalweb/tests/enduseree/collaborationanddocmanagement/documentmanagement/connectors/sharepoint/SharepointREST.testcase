@@ -32,7 +32,7 @@ definition {
 			configurationName = "Sharepoint OAuth2",
 			configurationScope = "System Scope");
 
-		Click(locator1 = "Button#ADD");
+		Button.clickAdd();
 
 		Type(
 			key_text = "name",
@@ -85,7 +85,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Documents and Media");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
@@ -258,12 +257,11 @@ definition {
 		DMNavigator.gotoDocumentCP(dmDocumentTitle = "Document_3.doc");
 
 		DMDocument.viewCP(
-			dmDocumentSize = "34 KB",
+			dmDocumentSize = "36 KB",
 			dmDocumentTitle = "Document_3.doc");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Documents and Media");
 
 		DMRepository.gotoCP(dmRepositoryName = "Collaboration Test Application");
@@ -276,7 +274,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Documents and Media");
 
 		DMRepository.gotoCP(dmRepositoryName = "Collaboration Test Application");
@@ -309,6 +306,8 @@ definition {
 		DMFolder.addCP(dmFolderName = "Sharepoint Subfolder");
 
 		DMFolder.viewCP(dmFolderName = "Sharepoint Subfolder");
+
+		DMRepository.cleanRepository(dmDocumentTitle = "Document_1.txt");
 
 		Navigator.openSpecificURL(url = "https://localhost:8443/group/guest/~/control_panel/manage?p_p_id=com_liferay_document_library_web_portlet_DLAdminPortlet");
 
@@ -410,7 +409,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(
@@ -448,13 +446,24 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
-		var key_dmFolderName = "Collaboration Test Application";
-
 		AssertClick(
+			key_dmFolderName = "Collaboration Test Application",
 			locator1 = "DocumentsAndMedia#DESCRIPTIVE_LIST_FOLDER_TITLE",
 			value1 = "Collaboration Test Application");
 
-		AssertElementPresent(locator1 = "MicrosoftLogin#LOGIN_EMAIL_FIELD");
+		if (IsElementNotPresent(locator1 = "MicrosoftLogin#LOGIN_EMAIL_FIELD")) {
+			Navigator.openURL();
+
+			Navigator.gotoPage(pageName = "Documents and Media Page");
+
+			LexiconEntry.changeDisplayStyle(displayStyle = "list");
+
+			Pause(locator1 = "3000");
+
+			DMNavigator.gotoRepository(
+				dmRepositoryName = "Collaboration Test Application",
+				guest = "true");
+		}
 
 		User.loginUserPG(
 			password = "test",
@@ -579,6 +588,8 @@ definition {
 	@priority = "4"
 	test ViewRepository {
 		property test.name.skip.portal.instance = "SharepointREST#ViewRepository";
+
+		Navigator.openSpecificURL(url = "https://localhost:8443/group/guest/~/control_panel/manage?p_p_id=com_liferay_document_library_web_portlet_DLAdminPortlet");
 
 		DMRepository.gotoCP(dmRepositoryName = "Collaboration Test Application");
 

@@ -32,6 +32,7 @@ import com.liferay.portal.vulcan.pagination.Pagination;
 import java.io.Serializable;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +74,7 @@ public class KnowledgeBaseFolderResourceImpl
 			parentKnowledgeBaseFolderId);
 
 		return Page.of(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_KB_FOLDER",
@@ -101,7 +102,7 @@ public class KnowledgeBaseFolderResourceImpl
 		throws Exception {
 
 		return Page.of(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_KB_FOLDER", "postSiteKnowledgeBaseFolder",
@@ -198,7 +199,7 @@ public class KnowledgeBaseFolderResourceImpl
 
 		return new KnowledgeBaseFolder() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+				actions = HashMapBuilder.put(
 					"delete",
 					addAction("DELETE", kbFolder, "deleteKnowledgeBaseFolder")
 				).put(
@@ -208,7 +209,8 @@ public class KnowledgeBaseFolderResourceImpl
 					addAction("UPDATE", kbFolder, "putKnowledgeBaseFolder")
 				).build();
 				creator = CreatorUtil.toCreator(
-					_portal, _userLocalService.fetchUser(kbFolder.getUserId()));
+					_portal, Optional.of(contextUriInfo),
+					_userLocalService.fetchUser(kbFolder.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					contextAcceptLanguage.isAcceptAllLanguages(),
 					KBFolder.class.getName(), kbFolder.getKbFolderId(),

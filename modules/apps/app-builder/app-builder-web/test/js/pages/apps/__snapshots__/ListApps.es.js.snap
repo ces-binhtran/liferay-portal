@@ -27,7 +27,6 @@ exports[`ListApps renders 1`] = `
             <button
               class="dropdown-toggle nav-link btn btn-unstyled"
               id="filter-and-order"
-              style=""
               type="button"
             >
               <span
@@ -234,7 +233,7 @@ exports[`ListApps renders 1`] = `
                   class="table-list-title"
                 >
                   <a
-                    href="#/custom-object/123/apps/1"
+                    href="#/custom-object/123/apps/1?backUrl=/"
                   >
                     Item 1
                   </a>
@@ -276,7 +275,6 @@ exports[`ListApps renders 1`] = `
                 >
                   <button
                     class="dropdown-toggle page-link btn btn-unstyled"
-                    style=""
                     type="button"
                   >
                     <svg

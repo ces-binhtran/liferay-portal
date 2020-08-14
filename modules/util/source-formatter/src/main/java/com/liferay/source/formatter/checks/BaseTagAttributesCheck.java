@@ -269,8 +269,7 @@ public abstract class BaseTagAttributesCheck extends BaseFileCheck {
 
 				if (_escapeQuotes ||
 					!attributeValue.contains(StringPool.QUOTE) ||
-					(attributeValue.contains("'\"") &&
-					 attributeValue.contains("\"'"))) {
+					!_name.contains(StringPool.COLON)) {
 
 					delimeter = StringPool.QUOTE;
 				}
@@ -411,6 +410,10 @@ public abstract class BaseTagAttributesCheck extends BaseFileCheck {
 
 				String attributeValue = s.substring(0, x);
 
+				if (attributeName.equals("class")) {
+					attributeValue = StringUtil.trim(attributeValue);
+				}
+
 				if ((attributeValue.startsWith("<%") &&
 					 (getLevel(attributeValue, "<%", "%>") == 0)) ||
 					(!attributeValue.startsWith("<%") &&
@@ -435,7 +438,7 @@ public abstract class BaseTagAttributesCheck extends BaseFileCheck {
 	private static final Pattern _attributeNamePattern = Pattern.compile(
 		"[a-z]+[-_:a-zA-Z0-9]*");
 	private static final Pattern _incorrectLineBreakPattern = Pattern.compile(
-		"\n(\t*)(<\\w[-_:\\w]*) (.*)[\"']\n[\\s\\S]*?>\n");
+		"\n(\t*)(<\\w[-_:\\w]*) (.*)([\"']|%=)\n[\\s\\S]*?>\n");
 	private static final Pattern _multilineTagPattern = Pattern.compile(
 		"(([ \t]*)<[-\\w:]+\n.*?([^%])(/?>))(\n|$)", Pattern.DOTALL);
 

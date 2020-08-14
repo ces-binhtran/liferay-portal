@@ -49,7 +49,9 @@ public class AppBuilderWorkflowTaskLinkWrapper
 			"appBuilderWorkflowTaskLinkId", getAppBuilderWorkflowTaskLinkId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("appBuilderAppId", getAppBuilderAppId());
+		attributes.put("appBuilderAppVersionId", getAppBuilderAppVersionId());
 		attributes.put("ddmStructureLayoutId", getDdmStructureLayoutId());
+		attributes.put("readOnly", isReadOnly());
 		attributes.put("workflowTaskName", getWorkflowTaskName());
 
 		return attributes;
@@ -82,11 +84,24 @@ public class AppBuilderWorkflowTaskLinkWrapper
 			setAppBuilderAppId(appBuilderAppId);
 		}
 
+		Long appBuilderAppVersionId = (Long)attributes.get(
+			"appBuilderAppVersionId");
+
+		if (appBuilderAppVersionId != null) {
+			setAppBuilderAppVersionId(appBuilderAppVersionId);
+		}
+
 		Long ddmStructureLayoutId = (Long)attributes.get(
 			"ddmStructureLayoutId");
 
 		if (ddmStructureLayoutId != null) {
 			setDdmStructureLayoutId(ddmStructureLayoutId);
+		}
+
+		Boolean readOnly = (Boolean)attributes.get("readOnly");
+
+		if (readOnly != null) {
+			setReadOnly(readOnly);
 		}
 
 		String workflowTaskName = (String)attributes.get("workflowTaskName");
@@ -104,6 +119,16 @@ public class AppBuilderWorkflowTaskLinkWrapper
 	@Override
 	public long getAppBuilderAppId() {
 		return model.getAppBuilderAppId();
+	}
+
+	/**
+	 * Returns the app builder app version ID of this app builder workflow task link.
+	 *
+	 * @return the app builder app version ID of this app builder workflow task link
+	 */
+	@Override
+	public long getAppBuilderAppVersionId() {
+		return model.getAppBuilderAppVersionId();
 	}
 
 	/**
@@ -157,6 +182,16 @@ public class AppBuilderWorkflowTaskLinkWrapper
 	}
 
 	/**
+	 * Returns the read only of this app builder workflow task link.
+	 *
+	 * @return the read only of this app builder workflow task link
+	 */
+	@Override
+	public boolean getReadOnly() {
+		return model.getReadOnly();
+	}
+
+	/**
 	 * Returns the workflow task name of this app builder workflow task link.
 	 *
 	 * @return the workflow task name of this app builder workflow task link
@@ -164,6 +199,16 @@ public class AppBuilderWorkflowTaskLinkWrapper
 	@Override
 	public String getWorkflowTaskName() {
 		return model.getWorkflowTaskName();
+	}
+
+	/**
+	 * Returns <code>true</code> if this app builder workflow task link is read only.
+	 *
+	 * @return <code>true</code> if this app builder workflow task link is read only; <code>false</code> otherwise
+	 */
+	@Override
+	public boolean isReadOnly() {
+		return model.isReadOnly();
 	}
 
 	@Override
@@ -179,6 +224,16 @@ public class AppBuilderWorkflowTaskLinkWrapper
 	@Override
 	public void setAppBuilderAppId(long appBuilderAppId) {
 		model.setAppBuilderAppId(appBuilderAppId);
+	}
+
+	/**
+	 * Sets the app builder app version ID of this app builder workflow task link.
+	 *
+	 * @param appBuilderAppVersionId the app builder app version ID of this app builder workflow task link
+	 */
+	@Override
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId) {
+		model.setAppBuilderAppVersionId(appBuilderAppVersionId);
 	}
 
 	/**
@@ -231,6 +286,16 @@ public class AppBuilderWorkflowTaskLinkWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets whether this app builder workflow task link is read only.
+	 *
+	 * @param readOnly the read only of this app builder workflow task link
+	 */
+	@Override
+	public void setReadOnly(boolean readOnly) {
+		model.setReadOnly(readOnly);
 	}
 
 	/**

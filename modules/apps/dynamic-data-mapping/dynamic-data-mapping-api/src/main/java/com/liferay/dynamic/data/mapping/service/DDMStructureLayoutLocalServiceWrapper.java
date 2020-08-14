@@ -39,6 +39,10 @@ public class DDMStructureLayoutLocalServiceWrapper
 	/**
 	 * Adds the ddm structure layout to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLayoutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStructureLayout the ddm structure layout
 	 * @return the ddm structure layout that was added
 	 */
@@ -50,6 +54,12 @@ public class DDMStructureLayoutLocalServiceWrapper
 			ddmStructureLayout);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addStructureLayout(long, long, long, String, long,
+	 DDMFormLayout, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public DDMStructureLayout addStructureLayout(
 			long userId, long groupId, long structureVersionId,
@@ -59,6 +69,19 @@ public class DDMStructureLayoutLocalServiceWrapper
 
 		return _ddmStructureLayoutLocalService.addStructureLayout(
 			userId, groupId, structureVersionId, ddmFormLayout, serviceContext);
+	}
+
+	@Override
+	public DDMStructureLayout addStructureLayout(
+			long userId, long groupId, long classNameId,
+			String structureLayoutKey, long structureVersionId,
+			com.liferay.dynamic.data.mapping.model.DDMFormLayout ddmFormLayout,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmStructureLayoutLocalService.addStructureLayout(
+			userId, groupId, classNameId, structureLayoutKey,
+			structureVersionId, ddmFormLayout, serviceContext);
 	}
 
 	@Override
@@ -103,6 +126,10 @@ public class DDMStructureLayoutLocalServiceWrapper
 	/**
 	 * Deletes the ddm structure layout from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLayoutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStructureLayout the ddm structure layout
 	 * @return the ddm structure layout that was removed
 	 */
@@ -116,6 +143,10 @@ public class DDMStructureLayoutLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm structure layout with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLayoutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param structureLayoutId the primary key of the ddm structure layout
 	 * @return the ddm structure layout that was removed
@@ -557,6 +588,10 @@ public class DDMStructureLayoutLocalServiceWrapper
 
 	/**
 	 * Updates the ddm structure layout in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLayoutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStructureLayout the ddm structure layout
 	 * @return the ddm structure layout that was updated

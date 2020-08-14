@@ -93,6 +93,16 @@ public class TaxonomyVocabularyResourceImpl
 	}
 
 	@Override
+	public Page<TaxonomyVocabulary> getAssetLibraryTaxonomyVocabulariesPage(
+			Long assetLibraryId, String search, Filter filter,
+			Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		return getSiteTaxonomyVocabulariesPage(
+			assetLibraryId, search, filter, pagination, sorts);
+	}
+
+	@Override
 	public EntityModel getEntityModel(MultivaluedMap multivaluedMap) {
 		return _entityModel;
 	}
@@ -104,7 +114,7 @@ public class TaxonomyVocabularyResourceImpl
 		throws Exception {
 
 		return SearchUtil.search(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_VOCABULARY", "postSiteTaxonomyVocabulary",
@@ -193,6 +203,14 @@ public class TaxonomyVocabularyResourceImpl
 					taxonomyVocabulary.getDescription_i18n()),
 				_getSettings(assetTypes, assetVocabulary.getGroupId()),
 				new ServiceContext()));
+	}
+
+	@Override
+	public TaxonomyVocabulary postAssetLibraryTaxonomyVocabulary(
+			Long assetLibraryId, TaxonomyVocabulary taxonomyVocabulary)
+		throws Exception {
+
+		return postSiteTaxonomyVocabulary(assetLibraryId, taxonomyVocabulary);
 	}
 
 	@Override
@@ -483,12 +501,11 @@ public class TaxonomyVocabularyResourceImpl
 	}
 
 	private TaxonomyVocabulary _toTaxonomyVocabulary(
-			AssetVocabulary assetVocabulary)
-		throws Exception {
+		AssetVocabulary assetVocabulary) {
 
 		return new TaxonomyVocabulary() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+				actions = HashMapBuilder.put(
 					"delete",
 					addAction(
 						"DELETE", assetVocabulary, "deleteTaxonomyVocabulary")

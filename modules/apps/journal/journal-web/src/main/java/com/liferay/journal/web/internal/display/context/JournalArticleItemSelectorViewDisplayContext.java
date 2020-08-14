@@ -15,10 +15,10 @@
 package com.liferay.journal.web.internal.display.context;
 
 import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
@@ -30,9 +30,12 @@ import com.liferay.journal.web.internal.configuration.JournalWebConfiguration;
 import com.liferay.journal.web.internal.item.selector.JournalArticleItemSelectorView;
 import com.liferay.journal.web.internal.search.JournalSearcher;
 import com.liferay.journal.web.internal.util.JournalPortletUtil;
+import com.liferay.journal.web.internal.util.SiteConnectedGroupUtil;
 import com.liferay.portal.kernel.bean.BeanParamUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
@@ -41,6 +44,7 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.GroupServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.BreadcrumbEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -126,6 +130,20 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			_httpServletRequest, "displayStyle", "descriptive");
 
 		return _displayStyle;
+	}
+
+	public String getGroupCssIcon(long groupId) throws PortalException {
+		Group group = GroupServiceUtil.getGroup(groupId);
+
+		return group.getIconCssClass();
+	}
+
+	public String getGroupLabel(long groupId, Locale locale)
+		throws PortalException {
+
+		Group group = GroupServiceUtil.getGroup(groupId);
+
+		return group.getDescriptiveName(locale);
 	}
 
 	public String getItemSelectedEventName() {
@@ -233,7 +251,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 
 		if (Validator.isNotNull(getDDMStructureKey())) {
 			SearchContainer<JournalArticle> articleSearchContainer =
-				new SearchContainer(
+				new SearchContainer<>(
 					_portletRequest, getPortletURL(), null, null);
 
 			OrderByComparator<JournalArticle> orderByComparator =
@@ -265,7 +283,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		}
 
 		SearchContainer<Object> articleAndFolderSearchContainer =
-			new SearchContainer(_portletRequest, getPortletURL(), null, null);
+			new SearchContainer<>(_portletRequest, getPortletURL(), null, null);
 
 		articleAndFolderSearchContainer.setOrderByCol(_getOrderByCol());
 		articleAndFolderSearchContainer.setOrderByType(_getOrderByType());
@@ -388,7 +406,29 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	}
 
 	public boolean isSearch() {
+		if (_isEverywhereScopeFilter()) {
+			return true;
+		}
+
 		return _search;
+	}
+
+	public boolean isSearchEverywhere() {
+		if (_searchEverywhere != null) {
+			return _searchEverywhere;
+		}
+
+		if (Objects.equals(
+				ParamUtil.getString(_httpServletRequest, "scope"),
+				"everywhere")) {
+
+			_searchEverywhere = true;
+		}
+		else {
+			_searchEverywhere = false;
+		}
+
+		return _searchEverywhere;
 	}
 
 	public boolean showArticleId() {
@@ -402,7 +442,8 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	}
 
 	protected SearchContext buildSearchContext(
-		List<Long> folderIds, int start, int end, Sort sort) {
+			List<Long> folderIds, int start, int end, Sort sort)
+		throws PortalException {
 
 		SearchContext searchContext = new SearchContext();
 
@@ -443,7 +484,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		searchContext.setCompanyId(_themeDisplay.getCompanyId());
 		searchContext.setEnd(end);
 		searchContext.setFolderIds(folderIds);
-		searchContext.setGroupIds(new long[] {_themeDisplay.getScopeGroupId()});
+		searchContext.setGroupIds(_getGroupIds());
 		searchContext.setKeywords(getKeywords());
 
 		QueryConfig queryConfig = searchContext.getQueryConfig();
@@ -482,6 +523,17 @@ public class JournalArticleItemSelectorViewDisplayContext {
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 		return _folderId;
+	}
+
+	private long[] _getGroupIds() throws PortalException {
+		if (_isEverywhereScopeFilter()) {
+			return SiteConnectedGroupUtil.
+				getCurrentAndAncestorSiteAndDepotGroupIds(
+					_themeDisplay.getScopeGroupId());
+		}
+
+		return PortalUtil.getCurrentAndAncestorSiteGroupIds(
+			_themeDisplay.getScopeGroupId());
 	}
 
 	private BreadcrumbEntry _getHomeBreadcrumb() throws Exception {
@@ -552,6 +604,17 @@ public class JournalArticleItemSelectorViewDisplayContext {
 		return _journalArticleItemSelectorView.getTitle(locale);
 	}
 
+	private boolean _isEverywhereScopeFilter() {
+		if (Objects.equals(
+				ParamUtil.getString(_httpServletRequest, "scope"),
+				"everywhere")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
 	private SearchContainer<?> _articleSearchContainer;
 	private String _ddmStructureKey;
 	private String _displayStyle;
@@ -570,6 +633,7 @@ public class JournalArticleItemSelectorViewDisplayContext {
 	private final PortletResponse _portletResponse;
 	private final PortletURL _portletURL;
 	private final boolean _search;
+	private Boolean _searchEverywhere;
 	private final ThemeDisplay _themeDisplay;
 
 }

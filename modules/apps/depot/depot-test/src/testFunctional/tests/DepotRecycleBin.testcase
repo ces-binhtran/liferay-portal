@@ -57,7 +57,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Recycle Bin",
 			depotName = "Test Depot Name",
 			portlet = "Recycle Bin");
 
@@ -127,7 +126,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Configuration",
 			depotName = "Test Depot Name",
 			portlet = "Settings");
 
@@ -162,7 +160,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Recycle Bin",
 			depotName = "Test Depot Name",
 			portlet = "Recycle Bin");
 
@@ -193,7 +190,7 @@ definition {
 	@description = "This ensures that the web content can be restored from recycle bin."
 	@priority = "5"
 	test RestoreWebContent {
-		property portal.acceptance = "quarantine";
+		property portal.acceptance = "true";
 
 		JSONWebcontent.addWebContent(
 			content = "WC WebContent Content",
@@ -210,7 +207,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "Recycle Bin",
 			depotName = "Test Depot Name",
 			portlet = "Recycle Bin");
 

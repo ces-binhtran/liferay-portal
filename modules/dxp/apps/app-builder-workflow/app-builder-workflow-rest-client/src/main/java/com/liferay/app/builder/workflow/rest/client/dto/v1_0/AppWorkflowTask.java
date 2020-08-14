@@ -32,67 +32,79 @@ public class AppWorkflowTask implements Cloneable {
 		return AppWorkflowTaskSerDes.toDTO(json);
 	}
 
-	public Long getAppId() {
-		return appId;
+	public AppWorkflowDataLayoutLink[] getAppWorkflowDataLayoutLinks() {
+		return appWorkflowDataLayoutLinks;
 	}
 
-	public void setAppId(Long appId) {
-		this.appId = appId;
+	public void setAppWorkflowDataLayoutLinks(
+		AppWorkflowDataLayoutLink[] appWorkflowDataLayoutLinks) {
+
+		this.appWorkflowDataLayoutLinks = appWorkflowDataLayoutLinks;
 	}
 
-	public void setAppId(UnsafeSupplier<Long, Exception> appIdUnsafeSupplier) {
+	public void setAppWorkflowDataLayoutLinks(
+		UnsafeSupplier<AppWorkflowDataLayoutLink[], Exception>
+			appWorkflowDataLayoutLinksUnsafeSupplier) {
+
 		try {
-			appId = appIdUnsafeSupplier.get();
+			appWorkflowDataLayoutLinks =
+				appWorkflowDataLayoutLinksUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Long appId;
+	protected AppWorkflowDataLayoutLink[] appWorkflowDataLayoutLinks;
 
-	public AppWorkflowAction[] getAppWorkflowActions() {
-		return appWorkflowActions;
+	public AppWorkflowRoleAssignment[] getAppWorkflowRoleAssignments() {
+		return appWorkflowRoleAssignments;
 	}
 
-	public void setAppWorkflowActions(AppWorkflowAction[] appWorkflowActions) {
-		this.appWorkflowActions = appWorkflowActions;
+	public void setAppWorkflowRoleAssignments(
+		AppWorkflowRoleAssignment[] appWorkflowRoleAssignments) {
+
+		this.appWorkflowRoleAssignments = appWorkflowRoleAssignments;
 	}
 
-	public void setAppWorkflowActions(
-		UnsafeSupplier<AppWorkflowAction[], Exception>
-			appWorkflowActionsUnsafeSupplier) {
+	public void setAppWorkflowRoleAssignments(
+		UnsafeSupplier<AppWorkflowRoleAssignment[], Exception>
+			appWorkflowRoleAssignmentsUnsafeSupplier) {
 
 		try {
-			appWorkflowActions = appWorkflowActionsUnsafeSupplier.get();
+			appWorkflowRoleAssignments =
+				appWorkflowRoleAssignmentsUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected AppWorkflowAction[] appWorkflowActions;
+	protected AppWorkflowRoleAssignment[] appWorkflowRoleAssignments;
 
-	public Long[] getDataLayoutIds() {
-		return dataLayoutIds;
+	public AppWorkflowTransition[] getAppWorkflowTransitions() {
+		return appWorkflowTransitions;
 	}
 
-	public void setDataLayoutIds(Long[] dataLayoutIds) {
-		this.dataLayoutIds = dataLayoutIds;
+	public void setAppWorkflowTransitions(
+		AppWorkflowTransition[] appWorkflowTransitions) {
+
+		this.appWorkflowTransitions = appWorkflowTransitions;
 	}
 
-	public void setDataLayoutIds(
-		UnsafeSupplier<Long[], Exception> dataLayoutIdsUnsafeSupplier) {
+	public void setAppWorkflowTransitions(
+		UnsafeSupplier<AppWorkflowTransition[], Exception>
+			appWorkflowTransitionsUnsafeSupplier) {
 
 		try {
-			dataLayoutIds = dataLayoutIdsUnsafeSupplier.get();
+			appWorkflowTransitions = appWorkflowTransitionsUnsafeSupplier.get();
 		}
 		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	protected Long[] dataLayoutIds;
+	protected AppWorkflowTransition[] appWorkflowTransitions;
 
 	public String getName() {
 		return name;

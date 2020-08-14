@@ -104,7 +104,7 @@ else {
 			<aui:field-wrapper>
 				<aui:input cssClass="template-report" name="templateReport" style='<%= Validator.isNull(reportName) ? "display: block;" : "display: none;" %>' type="file" />
 
-				<span class="existing-report" style='<%= Validator.isNull(reportName) ? "display: none;" : "display: block;" %>'>
+				<span class="existing-report" style="<%= Validator.isNull(reportName) ? "display: none;" : "display: block;" %>">
 					<%= HtmlUtil.escape(reportName) %>
 
 					<img class="remove-existing-report" src="<%= themeDisplay.getPathThemeImages() %>/arrows/02_x.png" />
@@ -195,12 +195,12 @@ else {
 
 		<c:if test="<%= definition != null %>">
 			<c:if test="<%= DefinitionPermissionChecker.contains(permissionChecker, definition, ReportsActionKeys.ADD_REPORT) %>">
-				<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "addReport();" %>' value="add-report" />
+				<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "addReport();" %>' value="add-report" />
 
-				<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "addScheduler();" %>' value="add-schedule" />
+				<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "addScheduler();" %>' value="add-schedule" />
 			</c:if>
 
-			<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "deleteDefinition();" %>' value="delete" />
+			<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "deleteDefinition();" %>' value="delete" />
 		</c:if>
 
 		<aui:button cssClass="btn-lg" href="<%= viewURL %>" type="cancel" />

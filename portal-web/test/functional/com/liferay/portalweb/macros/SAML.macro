@@ -14,8 +14,8 @@ definition {
 			Navigator.openSpecificURL(url = "${idpURL}");
 		}
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "SAML Admin");
 
@@ -52,8 +52,8 @@ definition {
 
 		Navigator.openSpecificURL(url = "${spURL}");
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "SAML Admin");
 
@@ -100,8 +100,8 @@ definition {
 				userEmailAddress = "test@liferay.com");
 		}
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "SAML Admin");
 
@@ -132,8 +132,8 @@ definition {
 				userEmailAddress = "test@liferay.com");
 		}
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "SAML Admin");
 
@@ -165,7 +165,7 @@ definition {
 				userEmailAddress = "${userEmailAddress}");
 		}
 
-		Pause(locator1 = "2000");
+		Pause(locator1 = "1000");
 
 		AssertLocation.assertPartialLocation(value1 = "${spURL}");
 	}
@@ -187,7 +187,7 @@ definition {
 				userEmailAddress = "test@liferay.com");
 		}
 
-		Pause(locator1 = "2000");
+		Pause(locator1 = "1000");
 
 		AssertLocation.assertPartialLocation(value1 = "${specificURL}");
 	}

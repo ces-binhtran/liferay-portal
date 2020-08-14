@@ -203,6 +203,7 @@ create table AssetVocabulary (
 	title STRING null,
 	description STRING null,
 	settings_ STRING null,
+	visibilityType INTEGER,
 	lastPublishDate DATE null,
 	primary key (vocabularyId, ctCollectionId)
 );
@@ -349,6 +350,7 @@ create table DLFileEntryType (
 	userName VARCHAR(75) null,
 	createDate DATE null,
 	modifiedDate DATE null,
+	dataDefinitionId LONG,
 	fileEntryTypeKey VARCHAR(75) null,
 	name STRING null,
 	description STRING null,
@@ -632,6 +634,7 @@ create table Layout (
 	iconImageId LONG,
 	themeId VARCHAR(75) null,
 	colorSchemeId VARCHAR(75) null,
+	styleBookEntryId LONG,
 	css TEXT null,
 	priority INTEGER,
 	masterLayoutPlid LONG,
@@ -1291,7 +1294,8 @@ create table SocialRequest (
 
 create table SystemEvent (
 	mvccVersion LONG default 0 not null,
-	systemEventId LONG not null primary key,
+	ctCollectionId LONG default 0 not null,
+	systemEventId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -1304,7 +1308,8 @@ create table SystemEvent (
 	parentSystemEventId LONG,
 	systemEventSetKey LONG,
 	type_ INTEGER,
-	extraData TEXT null
+	extraData TEXT null,
+	primary key (systemEventId, ctCollectionId)
 );
 
 create table Team (

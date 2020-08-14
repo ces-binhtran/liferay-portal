@@ -283,19 +283,20 @@ public class KaleoTaskInstanceTokenFinderImpl
 				sql, kaleoTaskInstanceTokenQuery.isAndOperator());
 		}
 
-		OrderByComparator<KaleoTaskInstanceToken> obc =
+		OrderByComparator<KaleoTaskInstanceToken> orderByComparator =
 			kaleoTaskInstanceTokenQuery.getOrderByComparator();
 
-		if (obc != null) {
+		if (orderByComparator != null) {
 			StringBundler sb = new StringBundler(sql);
 
-			appendOrderByComparator(sb, _ORDER_BY_ENTITY_ALIAS, obc);
+			appendOrderByComparator(
+				sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
 
 			sql = sb.toString();
 
-			String[] orderByFields = obc.getOrderByFields();
+			String[] orderByFields = orderByComparator.getOrderByFields();
 
-			sb = new StringBundler(orderByFields.length * 3 + 1);
+			sb = new StringBundler((orderByFields.length * 3) + 1);
 
 			sb.append(
 				"DISTINCT KaleoTaskInstanceToken.kaleoTaskInstanceTokenId");
@@ -381,7 +382,7 @@ public class KaleoTaskInstanceTokenFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(assetTitles.length * 2 + 1);
+		StringBundler sb = new StringBundler((assetTitles.length * 2) + 1);
 
 		if (!firstCriteria) {
 			sb.append("[$AND_OR_CONNECTOR$] (");
@@ -773,7 +774,7 @@ public class KaleoTaskInstanceTokenFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(taskNames.length * 2 + 1);
+		StringBundler sb = new StringBundler((taskNames.length * 2) + 1);
 
 		if (!firstCriteria) {
 			sb.append("[$AND_OR_CONNECTOR$] (");

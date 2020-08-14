@@ -18,9 +18,12 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 
 import java.util.Locale;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Jorge Ferrer
  */
+@ProviderType
 public interface InfoFieldType {
 
 	public default String getLabel(Locale locale) {
@@ -28,5 +31,8 @@ public interface InfoFieldType {
 	}
 
 	public String getName();
+
+	public final class Attribute<T extends InfoFieldType, V> {
+	}
 
 }

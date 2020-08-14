@@ -20,7 +20,7 @@ Here are some of the types of changes documented in this file:
   replaces an old API, in spite of the old API being kept in Liferay Portal for
   backwards compatibility.
 
-*This document has been reviewed through commit `b0f131f64818`.*
+*This document has been reviewed through commit `20bb08f47603`.*
 
 ## Breaking Changes Contribution Guidelines
 
@@ -714,5 +714,131 @@ The classes, some of which referred to outdated browsers, were being added to
 the top `<html>` element via legacy JavaScript that depended on Alloy UI. This
 change, which removes the outdated browser references, is now done on the server
 side, improving page loading times.
+
+---------------------------------------
+
+### Remove Support for Blocking Cache
+- **Date:** 2020-Jun-17
+- **JIRA Ticket:** [LPS-115687](https://issues.liferay.com/browse/LPS-115687)
+
+#### What changed?
+
+Blocking cache support was removed. These properties can no longer be used to
+enable blocking cache:
+
+- `ehcache.blocking.cache.allowed`
+- `permissions.object.blocking.cache`
+- `value.object.entity.blocking.cache`
+
+#### Who is affected?
+
+This affects anyone using the properties listed above.
+
+#### How should I update my code?
+
+There's no direct replacement for the removed feature. If you have code that
+depends on it, you must implement it yourself.
+
+#### Why was this change made?
+
+This change was made to improve performance because blocking caches should never be enabled.
+
+---------------------------------------
+
+### Remove Support for Setting Cache Properties for Each Entity Model
+- **Date:** 2020-Jun-24
+- **JIRA Ticket:** [LPS-116049](https://issues.liferay.com/browse/LPS-116049)
+
+#### What changed?
+
+Support was removed for setting these cache properties for an entity:
+
+- `value.object.entity.cache.enabled*`
+- `value.object.finder.cache.enabled*`
+- `value.object.column.bitmask.enabled*`
+
+For example, these properties are for entity
+`com.liferay.portal.kernel.model.User`:
+
+- `value.object.entity.cache.enabled.com.liferay.portal.kernel.model.User`
+- `value.object.finder.cache.enabled.com.liferay.portal.kernel.model.User`
+- `value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.User`
+
+#### Who is affected?
+
+This affects anyone using the properties listed above for an entity.
+
+#### How should I update my code?
+
+There's no direct replacement for the removed feature. You must remove
+these properties from your entities.
+
+#### Why was this change made?
+
+This change was made because these properties are not useful for an entity.
+
+---------------------------------------
+
+### Dynamic Data Mapping fields in Elasticsearch have changed to a nested document
+- **Date:** 2020-Jul-27
+- **JIRA Ticket:** [LPS-103224](https://issues.liferay.com/browse/LPS-103224)
+
+#### What changed?
+
+Dynamic Data Mapping fields in Elasticsearch that start with `ddm__keyword__` and `ddm__text__` have been moved to a new nested document `ddmFieldArray`.
+
+The new nested document `ddmFieldArray` has several entries with following fields:
+ - `ddmFieldName`: Contains the Dynamic Data Mapping structure field name. This name is generated using `DDMIndexer.encodeName` methods.
+ - `ddmFieldValue*`: Contains the indexed data. The name of this field is generated using `DDMIndexer.getValueFieldName` and depends on its data type and language.
+ - `ddmValueFieldName`: Contains the index field name where the indexed data is stored.
+
+ This change is not applied if you are using SOLR search engine.
+
+#### Who is affected?
+
+This affects anyone with custom developments that execute queries in the Elasticsearch index using `ddm__keyword__*` and `ddm__text__*` fields.
+
+#### How should I update my code?
+
+You have to use the new nested document `ddmFieldArray` in your Elasticsearch queries.
+
+There are some examples in Liferay code, for example, you can see the usage of DDM_FIELD_ARRAY constant in [DDMIndexerImpl](https://github.com/liferay/liferay-portal/blob/master/modules/apps/dynamic-data-mapping/dynamic-data-mapping-service/src/main/java/com/liferay/dynamic/data/mapping/internal/util/DDMIndexerImpl.java) and [AssetHelperImpl](https://github.com/liferay/liferay-portal/blob/master/modules/apps/asset/asset-service/src/main/java/com/liferay/asset/internal/util/AssetHelperImpl.java) java classes.
+
+You can also restore the legacy behavior from System Settings and continue using `ddm__keyword__*` and `ddm__text__*` fields.
+ - Go to "System Settings" => "Dynamic Data Mapping" => "Dynamic Data Mapping Indexer"
+ - Check "Enable Legacy Dynamic Data Mapping Index Fields"
+ - It is necessary to execute a full reindex after changing this configuration.
+
+#### Why was this change made?
+
+This change was made to avoid Elasticsearch "Limit of total fields has been exceeded" error that can be produced if you have a large number of Dynamic Data Mapping structures.
+
+For more information about this error, see [LPS-103224](https://issues.liferay.com/browse/LPS-103224).
+
+---------------------------------------
+
+### Removed liferay-editor-image-uploader Plugin
+- **Date:** 2020-Mar-27
+- **JIRA Ticket:** [LPS-110734](https://issues.liferay.com/browse/LPS-110734)
+
+### What changed?
+
+`liferay-editor-image-uploader` AUI plugin was removed. Its code was merged
+into `addimages` CKEditor plugin, used by Alloy Editor and CKEditor.
+
+### Who is affected
+
+This affects custom solutions that use the plugin directly.
+
+### How should I update my code?
+
+There's no direct replacement for the `liferay-editor-image-uploader` plugin.
+If you have a component that relies on it, you can co-locate a copy of the old
+implementation and use it locally within your module.
+
+#### Why was this change made?
+
+This change was made to enable image drag and drop handling in CKEditor, and
+have a common solution for both Alloy Editor and CKEditor.
 
 ---------------------------------------

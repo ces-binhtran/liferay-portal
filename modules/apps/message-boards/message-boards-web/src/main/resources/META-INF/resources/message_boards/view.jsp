@@ -203,7 +203,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 						floatElements="end"
 					>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<c:choose>
 								<c:when test="<%= category != null %>">
@@ -236,10 +236,11 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 
 									<div class="btn-group-item">
 										<clay:link
-											buttonStyle="secondary"
-											elementClasses="btn-sm"
+											displayType="secondary"
 											href="<%= editCategoryURL %>"
-											label='<%= LanguageUtil.get(request, "add-category[message-board]") %>'
+											label="add-category[message-board]"
+											small="<%= true %>"
+											type="button"
 										/>
 									</div>
 								</c:if>
@@ -253,10 +254,11 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 
 									<div class="btn-group-item">
 										<clay:link
-											buttonStyle="primary"
-											elementClasses="btn-sm"
+											displayType="primary"
 											href="<%= editMessageURL %>"
-											label='<%= LanguageUtil.get(request, "new-thread") %>'
+											label="new-thread"
+											small="<%= true %>"
+											type="button"
 										/>
 									</div>
 								</c:if>
@@ -445,7 +447,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 								floatElements="end"
 							>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<h3><liferay-ui:message key="recent-posts" /></h3>
 								</clay:content-col>
@@ -491,7 +493,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 								floatElements="end"
 							>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<h3><liferay-ui:message key="my-posts" /></h3>
 								</clay:content-col>

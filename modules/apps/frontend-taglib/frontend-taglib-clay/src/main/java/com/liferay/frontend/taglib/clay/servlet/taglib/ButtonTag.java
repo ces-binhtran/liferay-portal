@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.jsp.JspException;
@@ -44,6 +45,14 @@ public class ButtonTag extends BaseContainerTag {
 
 		if (_disabled) {
 			setDynamicAttribute(StringPool.BLANK, "disabled", _disabled);
+		}
+
+		if (Validator.isNotNull(_title)) {
+			setDynamicAttribute(
+				StringPool.BLANK, "title",
+				LanguageUtil.get(
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					_title));
 		}
 
 		setDynamicAttribute(StringPool.BLANK, "type", _type);
@@ -99,6 +108,18 @@ public class ButtonTag extends BaseContainerTag {
 		return _outline;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getLarge()}
+	 */
+	@Deprecated
+	public String getSize() {
+		if (_small) {
+			return "sm";
+		}
+
+		return null;
+	}
+
 	public boolean getSmall() {
 		return _small;
 	}
@@ -110,6 +131,14 @@ public class ButtonTag extends BaseContainerTag {
 	@Deprecated
 	public String getStyle() {
 		return getDisplayType();
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public String getTitle() {
+		return _title;
 	}
 
 	/**
@@ -168,6 +197,15 @@ public class ButtonTag extends BaseContainerTag {
 		_outline = outline;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #setLarge(boolean)}
+	 */
+	@Deprecated
+	public void setSize(String size) {
+		setSmall(size.equals("sm"));
+	}
+
 	public void setSmall(boolean small) {
 		_small = small;
 	}
@@ -179,6 +217,14 @@ public class ButtonTag extends BaseContainerTag {
 	@Deprecated
 	public void setStyle(String style) {
 		setDisplayType(style);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public void setTitle(String title) {
+		_title = title;
 	}
 
 	/**
@@ -204,7 +250,31 @@ public class ButtonTag extends BaseContainerTag {
 		_monospaced = false;
 		_outline = false;
 		_small = false;
+		_title = null;
 		_type = "button";
+	}
+
+	@Override
+	protected Map<String, Object> prepareProps(Map<String, Object> props) {
+		props.put("block", _block);
+		props.put("borderless", _borderless);
+		props.put("displayType", _displayType);
+		props.put("icon", _icon);
+
+		if (Validator.isNotNull(_label)) {
+			props.put(
+				"label",
+				LanguageUtil.get(
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					_label));
+		}
+
+		props.put("monospaced", _monospaced);
+		props.put("outline", _outline);
+		props.put("small", _small);
+		props.put("type", _type);
+
+		return super.prepareProps(props);
 	}
 
 	@Override
@@ -219,7 +289,9 @@ public class ButtonTag extends BaseContainerTag {
 			cssClasses.add("btn-block");
 		}
 
-		if (Validator.isNotNull(_icon) || _monospaced) {
+		if ((Validator.isNotNull(_icon) && Validator.isNull(_label)) ||
+			_monospaced) {
+
 			cssClasses.add("btn-monospaced");
 		}
 
@@ -251,7 +323,13 @@ public class ButtonTag extends BaseContainerTag {
 			JspWriter jspWriter = pageContext.getOut();
 
 			if (Validator.isNotNull(_icon)) {
-				jspWriter.write("<svg class=\"lexicon-icon lexicon-icon");
+				jspWriter.write("<span class=\"inline-item");
+
+				if (Validator.isNotNull(_label)) {
+					jspWriter.write(" inline-item-before");
+				}
+
+				jspWriter.write("\"><svg class=\"lexicon-icon lexicon-icon-");
 				jspWriter.write(_icon);
 				jspWriter.write("\" role=\"presentation\" viewBox=\"0 0 512 ");
 				jspWriter.write("512\"><use xlink:href=\"");
@@ -267,7 +345,7 @@ public class ButtonTag extends BaseContainerTag {
 
 				jspWriter.write("#");
 				jspWriter.write(_icon);
-				jspWriter.write("\" /></svg>");
+				jspWriter.write("\" /></svg></span>");
 			}
 
 			if (Validator.isNotNull(_label)) {
@@ -296,6 +374,7 @@ public class ButtonTag extends BaseContainerTag {
 	private boolean _monospaced;
 	private boolean _outline;
 	private boolean _small;
+	private String _title;
 	private String _type = "button";
 
 }

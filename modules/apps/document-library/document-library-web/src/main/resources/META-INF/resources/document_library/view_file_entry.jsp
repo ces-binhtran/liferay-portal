@@ -99,7 +99,7 @@ if (portletTitleBasedNavigation) {
 
 <clay:container-fluid
 	cssClass='<%= portletTitleBasedNavigation ? StringPool.BLANK : "closed sidenav-container sidenav-right" %>'
-	id='<%= renderResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : "infoPanelId") %>'
+	id='<%= liferayPortletResponse.getNamespace() + (portletTitleBasedNavigation ? "FileEntry" : "infoPanelId") %>'
 >
 	<portlet:actionURL name="/document_library/edit_file_entry" var="editFileEntry" />
 
@@ -147,7 +147,7 @@ if (portletTitleBasedNavigation) {
 		</c:otherwise>
 	</c:choose>
 
-	<div class='<%= portletTitleBasedNavigation ? "contextual-sidebar-content" : "sidenav-content" %>'>
+	<div class="<%= portletTitleBasedNavigation ? "contextual-sidebar-content" : "sidenav-content" %>">
 		<div class="alert alert-danger hide" id="<portlet:namespace />openMSOfficeError"></div>
 
 		<c:if test="<%= !portletTitleBasedNavigation %>">

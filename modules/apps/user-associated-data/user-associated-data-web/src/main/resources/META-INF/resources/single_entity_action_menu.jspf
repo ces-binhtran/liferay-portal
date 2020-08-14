@@ -64,10 +64,13 @@
 	}
 	else {
 		autoAnonymizeURL.setParameter(ActionRequest.ACTION_NAME, "/anonymize_uad_entities");
-		autoAnonymizeURL.setParameter("primaryKey__" + uadEntity.getTypeClass().getSimpleName(), String.valueOf(uadEntity.getPrimaryKey()));
+
+		Class<?> typeClass = uadEntity.getTypeClass();
+
+		autoAnonymizeURL.setParameter("primaryKey__" + typeClass.getSimpleName(), String.valueOf(uadEntity.getPrimaryKey()));
 
 		deleteURL.setParameter(ActionRequest.ACTION_NAME, "/delete_uad_entities");
-		deleteURL.setParameter("primaryKey__" + uadEntity.getTypeClass().getSimpleName(), String.valueOf(uadEntity.getPrimaryKey()));
+		deleteURL.setParameter("primaryKey__" + typeClass.getSimpleName(), String.valueOf(uadEntity.getPrimaryKey()));
 	}
 	%>
 
@@ -84,7 +87,7 @@
 
 	<liferay-ui:icon
 		message="anonymize"
-		onClick="<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + autoAnonymizeURL.toString() + "', '" + UnicodeLanguageUtil.get(request, anonymizeSingleMessage) + "')" %>"
+		onClick='<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + autoAnonymizeURL.toString() + "', '" + UnicodeLanguageUtil.get(request, anonymizeSingleMessage) + "')" %>'
 		url="javascript:;"
 	/>
 
@@ -101,7 +104,7 @@
 
 	<liferay-ui:icon
 		message="delete"
-		onClick="<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + deleteURL.toString() + "', '" + UnicodeLanguageUtil.get(request, deleteSingleMessage) + "')" %>"
+		onClick='<%= liferayPortletResponse.getNamespace() + "confirmAction('viewUADEntitiesFm', '" + deleteURL.toString() + "', '" + UnicodeLanguageUtil.get(request, deleteSingleMessage) + "')" %>'
 		url="javascript:;"
 	/>
 </liferay-ui:icon-menu>

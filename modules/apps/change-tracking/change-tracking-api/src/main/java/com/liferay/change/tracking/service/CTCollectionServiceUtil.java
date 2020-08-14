@@ -60,6 +60,14 @@ public class CTCollectionServiceUtil {
 		return getService().deleteCTCollection(ctCollection);
 	}
 
+	public static void discardCTEntries(
+			long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		getService().discardCTEntries(
+			ctCollectionId, modelClassNameId, modelClassPK);
+	}
+
 	public static void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -83,10 +91,11 @@ public class CTCollectionServiceUtil {
 		getCTCollections(
 			long companyId, int status, String keywords, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.change.tracking.model.CTCollection> obc) {
+				<com.liferay.change.tracking.model.CTCollection>
+					orderByComparator) {
 
 		return getService().getCTCollections(
-			companyId, status, keywords, start, end, obc);
+			companyId, status, keywords, start, end, orderByComparator);
 	}
 
 	public static int getCTCollectionsCount(

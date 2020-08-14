@@ -66,7 +66,7 @@
 							boolean removedScope = scopeAliases.isEmpty() && globalScopeAliases.isEmpty();
 						%>
 
-							<li class='list-group-item list-group-item-flex<c:if test="<%= removedScope %>"> removed-scope</c:if>'>
+							<li class="list-group-item list-group-item-flex<c:if test="<%= removedScope %>"> removed-scope</c:if>">
 								<div class="autofit-col">
 									<c:choose>
 										<c:when test="<%= assignedScopeAliases.isEmpty() && scopeAliases.isEmpty() %>">
@@ -85,7 +85,7 @@
 											}
 											%>
 
-											<aui:input checked="<%= !assignedScopeAliases.isEmpty() %>" data="<%= data %>" id="<%= id %>" label="" name="scopeAliases" onChange='<%= renderResponse.getNamespace() + "recalculateDependants(this)" %>' title="<%= scopeAliasesString %>" type="checkbox" value="<%= scopeAliasesString %>" />
+											<aui:input checked="<%= !assignedScopeAliases.isEmpty() %>" data="<%= data %>" id="<%= id %>" label="" name="scopeAliases" onChange='<%= liferayPortletResponse.getNamespace() + "recalculateDependants(this)" %>' title="<%= scopeAliasesString %>" type="checkbox" value="<%= scopeAliasesString %>" />
 										</c:otherwise>
 									</c:choose>
 								</div>
@@ -112,7 +112,9 @@
 												AssignableScopes newAssignableScopes = assignableScopes.subtract(assignedAssignableScopes);
 												AssignableScopes removedAssignableScopes = assignedAssignableScopes.subtract(assignableScopes);
 
-												AssignableScopes unchangedAssignableScopes = assignableScopes.subtract(newAssignableScopes).subtract(removedAssignableScopes);
+												AssignableScopes subtractAssignableScopes = assignableScopes.subtract(newAssignableScopes);
+
+												AssignableScopes unchangedAssignableScopes = subtractAssignableScopes.subtract(removedAssignableScopes);
 
 												String applicationScopeDescription = assignScopesDisplayContext.getApplicationScopeDescription(applicationName, unchangedAssignableScopes, "<br />+ ");
 												%>
@@ -188,8 +190,8 @@
 										for (String relatedScopeAlias : relatedScopeAliasesList) {
 										%>
 
-											<span class='badge badge-secondary<c:if test="<%= !scopeAliases.contains(relatedScopeAlias) && !globalScopeAliases.contains(relatedScopeAlias) %>"> removed-scope-alias</c:if>'>
-												<span class='badge-item<c:if test="<%= !scopeAliases.contains(relatedScopeAlias) %>"> global-scope-alias-reference</c:if>'>
+											<span class="badge badge-secondary<c:if test="<%= !scopeAliases.contains(relatedScopeAlias) && !globalScopeAliases.contains(relatedScopeAlias) %>"> removed-scope-alias</c:if>">
+												<span class="badge-item<c:if test="<%= !scopeAliases.contains(relatedScopeAlias) %>"> global-scope-alias-reference</c:if>">
 													<%= HtmlUtil.escapeAttribute(relatedScopeAlias) %>
 												</span>
 											</span>
@@ -201,6 +203,10 @@
 									</div>
 
 								</div>
+
+								<c:if test="<%= removedScope %>">
+									<div class="autofit-col"><liferay-ui:message key="this-scope-is-no-longer-available" /></div>
+								</c:if>
 							</li>
 
 						<%

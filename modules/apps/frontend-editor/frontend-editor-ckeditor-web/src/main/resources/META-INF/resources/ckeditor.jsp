@@ -120,6 +120,10 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 </div>
 
 <script type="text/javascript">
+	CKEDITOR.ADDITIONAL_RESOURCE_PARAMS = {
+		languageId: themeDisplay.getLanguageId(),
+	};
+
 	CKEDITOR.disableAutoInline = true;
 
 	CKEDITOR.dtd.$removeEmpty.i = 0;
@@ -620,10 +624,15 @@ name = HtmlUtil.escapeJS(name);
 
 		ckEditor.on('drop', function (event) {
 			var data = event.data.dataTransfer.getData('text/html');
-			var fragment = CKEDITOR.htmlParser.fragment.fromHtml(data);
-			var name = fragment.children[0].name;
-			if (name) {
-				return this.pasteFilter.check(name);
+
+			if (data) {
+				var fragment = CKEDITOR.htmlParser.fragment.fromHtml(data);
+
+				var name = fragment.children[0].name;
+
+				if (name) {
+					return this.pasteFilter.check(name);
+				}
 			}
 		});
 

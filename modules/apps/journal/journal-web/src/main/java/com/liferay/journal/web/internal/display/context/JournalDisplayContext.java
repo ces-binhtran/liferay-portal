@@ -22,13 +22,14 @@ import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
+import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalArticleDisplay;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
@@ -49,9 +50,12 @@ import com.liferay.journal.web.internal.security.permission.resource.JournalArti
 import com.liferay.journal.web.internal.security.permission.resource.JournalFolderPermission;
 import com.liferay.journal.web.internal.servlet.taglib.util.JournalArticleActionDropdownItemsProvider;
 import com.liferay.journal.web.internal.servlet.taglib.util.JournalFolderActionDropdownItems;
+import com.liferay.journal.web.internal.translation.exporter.TranslationInfoItemFieldValuesExporterTrackerUtil;
+import com.liferay.journal.web.internal.util.ExportTranslationUtil;
 import com.liferay.journal.web.internal.util.JournalArticleTranslation;
 import com.liferay.journal.web.internal.util.JournalArticleTranslationRowChecker;
 import com.liferay.journal.web.internal.util.JournalPortletUtil;
+import com.liferay.journal.web.internal.util.SiteConnectedGroupUtil;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
 import com.liferay.petra.string.StringBundler;
@@ -99,19 +103,24 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporter;
 import com.liferay.trash.TrashHelper;
 
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.portlet.PortletURL;
+import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -357,6 +366,13 @@ public class JournalDisplayContext {
 			availableActions.add("moveEntries");
 		}
 
+		if (JournalArticlePermission.contains(
+				_themeDisplay.getPermissionChecker(), article,
+				ActionKeys.VIEW)) {
+
+			availableActions.add("exportTranslation");
+		}
+
 		return com.liferay.petra.string.StringUtil.merge(
 			availableActions, StringPool.COMMA);
 	}
@@ -401,10 +417,9 @@ public class JournalDisplayContext {
 	}
 
 	public Map<String, Object> getComponentContext() throws Exception {
-		return HashMapBuilder.<String, Object>put(
+		return Collections.singletonMap(
 			"trashEnabled",
-			_trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId())
-		).build();
+			_trashHelper.isTrashEnabled(_themeDisplay.getScopeGroupId()));
 	}
 
 	public String getDDMStructureKey() {
@@ -458,13 +473,13 @@ public class JournalDisplayContext {
 		}
 
 		_ddmStructures = JournalFolderServiceUtil.getDDMStructures(
-			PortalUtil.getCurrentAndAncestorSiteGroupIds(
-				_themeDisplay.getScopeGroupId()),
+			SiteConnectedGroupUtil.getCurrentAndAncestorSiteAndDepotGroupIds(
+				_themeDisplay.getScopeGroupId(), true),
 			getFolderId(), restrictionType);
 
-		Locale locale = _themeDisplay.getLocale();
-
 		if (_journalWebConfiguration.journalBrowseByStructuresSortedByName()) {
+			Locale locale = _themeDisplay.getLocale();
+
 			_ddmStructures.sort(
 				(ddmStructure1, ddmStructure2) -> {
 					String name1 = ddmStructure1.getName(locale);
@@ -530,6 +545,59 @@ public class JournalDisplayContext {
 		return _journalWebConfiguration.displayViews();
 	}
 
+	public Map<String, Object> getExportTranslationData() {
+		ResourceURL exportTranslationURL =
+			_liferayPortletResponse.createResourceURL();
+
+		exportTranslationURL.setResourceID("/journal/export_translation");
+
+		ResourceURL getExportTranslationAvailableLocalesURL =
+			_liferayPortletResponse.createResourceURL();
+
+		getExportTranslationAvailableLocalesURL.setResourceID(
+			"/journal/get_export_translation_available_locales");
+
+		return HashMapBuilder.<String, Object>put(
+			"context",
+			Collections.singletonMap(
+				"namespace", _liferayPortletResponse.getNamespace())
+		).put(
+			"props",
+			HashMapBuilder.<String, Object>put(
+				"availableExportFileFormats",
+				() -> {
+					Collection<TranslationInfoItemFieldValuesExporter>
+						translationInfoItemFieldValuesExporters =
+							TranslationInfoItemFieldValuesExporterTrackerUtil.
+								getTranslationInfoItemFieldValuesExporters();
+
+					Stream<TranslationInfoItemFieldValuesExporter>
+						translationInfoItemFieldValuesExporterStream =
+							translationInfoItemFieldValuesExporters.stream();
+
+					return translationInfoItemFieldValuesExporterStream.map(
+						this::_getExportFileFormatJSONObject
+					).collect(
+						Collectors.toList()
+					);
+				}
+			).put(
+				"availableTargetLocales",
+				ExportTranslationUtil.getLocalesJSONJArray(
+					_themeDisplay.getLocale(),
+					LanguageUtil.getAvailableLocales(
+						_themeDisplay.getSiteGroupId()))
+			).put(
+				"exportTranslationURL", exportTranslationURL.toString()
+			).put(
+				"getExportTranslationAvailableLocalesURL",
+				getExportTranslationAvailableLocalesURL.toString()
+			).put(
+				"pathModule", PortalUtil.getPathModule()
+			).build()
+		).build();
+	}
+
 	public JournalFolder getFolder() {
 		if (_folder != null) {
 			return _folder;
@@ -589,17 +657,16 @@ public class JournalDisplayContext {
 			_themeDisplay.getScopeGroupId(),
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
-		JSONObject jsonObject = JSONUtil.put(
-			"children", jsonArray
-		).put(
-			"icon", "folder"
-		).put(
-			"id", JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID
-		).put(
-			"name", LanguageUtil.get(_themeDisplay.getLocale(), "home")
-		);
-
-		return JSONUtil.put(jsonObject);
+		return JSONUtil.put(
+			JSONUtil.put(
+				"children", jsonArray
+			).put(
+				"icon", "folder"
+			).put(
+				"id", JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID
+			).put(
+				"name", LanguageUtil.get(_themeDisplay.getLocale(), "home")
+			));
 	}
 
 	public String getFolderTitle() {
@@ -616,7 +683,6 @@ public class JournalDisplayContext {
 		return NavigationItemListBuilder.add(
 			navigationItem -> {
 				navigationItem.setActive(true);
-				navigationItem.setHref(StringPool.BLANK);
 				navigationItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "details"));
 			}
@@ -657,7 +723,7 @@ public class JournalDisplayContext {
 		return _navigation;
 	}
 
-	public List<NavigationItem> getNavigationBarItems(String currentItem) {
+	public List<NavigationItem> getNavigationItems(String currentItem) {
 		Group group = _themeDisplay.getScopeGroup();
 
 		return NavigationItemListBuilder.add(
@@ -774,7 +840,7 @@ public class JournalDisplayContext {
 		return orderColumns;
 	}
 
-	public String getOriginalAuthor(JournalArticle article) {
+	public String getOriginalAuthorUser(JournalArticle article) {
 		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
 			JournalArticle.class.getName(),
 			JournalArticleAssetRenderer.getClassPK(article));
@@ -1363,6 +1429,21 @@ public class JournalDisplayContext {
 				"redirect).*(folderId=", getFolderId(), ")"));
 
 		return entriesChecker;
+	}
+
+	private JSONObject _getExportFileFormatJSONObject(
+		TranslationInfoItemFieldValuesExporter
+			translationInfoItemFieldValuesExporter) {
+
+		InfoLocalizedValue<String> labelInfoLocalizedValue =
+			translationInfoItemFieldValuesExporter.getLabelInfoLocalizedValue();
+
+		return JSONUtil.put(
+			"displayName",
+			labelInfoLocalizedValue.getValue(_themeDisplay.getLocale())
+		).put(
+			"mimeType", translationInfoItemFieldValuesExporter.getMimeType()
+		);
 	}
 
 	private String _getFeedsURL() {

@@ -18,9 +18,9 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 	}
 
@@ -524,7 +524,7 @@ definition {
 			formViewName = "My Form View",
 			tableViewName = "My Table View");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App");
 
 		AppBuilderAdmin.addEntry();
 
@@ -534,9 +534,9 @@ definition {
 
 		AppBuilderAdmin.save();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.deleteEntry(itemName = "my custom object");
@@ -788,7 +788,7 @@ definition {
 			formViewName = "My Form View 2",
 			tableViewName = "My Table View 2");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App 1");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App 1");
 
 		AppBuilderAdmin.addEntry();
 
@@ -800,7 +800,7 @@ definition {
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "content of form 1");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App 2");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App 2");
 
 		AppBuilderAdmin.addEntry();
 
@@ -907,9 +907,9 @@ definition {
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "Content of form deployed as widget.");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "Custom Object Title");
@@ -930,9 +930,9 @@ definition {
 
 		AppBuilderAdmin.validateFieldIsOnTable(fieldLabel = "Upload");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "Custom Object Title");
@@ -1501,7 +1501,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
-			panel = "Site Administration",
 			portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
@@ -1512,11 +1511,11 @@ definition {
 
 		AppBuilderAdmin.validateAppIsNotPresentOnSite(portlet = "Test App A");
 
-		AppBuilderAdmin.validateAppIsNotPresentOnControlPanel(portlet = "Test App A");
+		AppBuilderAdmin.validateAppIsNotPresentOnApplicationsMenuApplications(portlet = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Table Views");
@@ -1540,14 +1539,13 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
-			panel = "Site Administration",
 			portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "Table Views");
@@ -1575,7 +1573,7 @@ definition {
 			appTitle = "Test App B",
 			deployOption = "Product Menu",
 			formViewName = "Form View Title",
-			menuOption = "Control Panel and Site Menu",
+			menuOption = "Applications and Site Menu",
 			siteOptionList = "App Builder Site 1",
 			tableViewName = "Table View Title");
 
@@ -1585,14 +1583,12 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
-			panel = "Site Administration",
 			portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
-			panel = "Site Administration",
 			portlet = "Test App B");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App B");
@@ -1603,22 +1599,21 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content & Data",
-			panel = "Site Administration",
 			portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
 
 		AppBuilderAdmin.validateAppIsNotPresentOnSite(portlet = "Test App B");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App B");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App B");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App B");
 
-		AppBuilderAdmin.validateAppIsNotPresentOnControlPanel(portlet = "Test App A");
+		AppBuilderAdmin.validateAppIsNotPresentOnApplicationsMenuApplications(portlet = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object 1");
@@ -1651,16 +1646,15 @@ definition {
 
 		AppBuilderAdmin.validateAppIsNotPresentOnSite(portlet = "Test App B");
 
-		AppBuilderAdmin.validateAppIsNotPresentOnControlPanel(portlet = "Test App A");
+		AppBuilderAdmin.validateAppIsNotPresentOnApplicationsMenuApplications(portlet = "Test App A");
 
-		AppBuilderAdmin.validateAppIsNotPresentOnControlPanel(portlet = "Test App B");
+		AppBuilderAdmin.validateAppIsNotPresentOnApplicationsMenuApplications(portlet = "Test App B");
 	}
 
 	@description = "Publish apps in the product menu and reuse its views"
 	@priority = "5"
 	test PublishAppsInProductMenuAndReuseItsViews {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		var myFormViewName_1 = "My Form View 1";
 		var myFormViewName_2 = "My Form View 2";
@@ -1713,16 +1707,16 @@ definition {
 		App.selectTableView(tableViewName = "${myTableViewName_1}");
 		App.toggleDeploy(deployOption = "Product Menu");
 		App.openProductMenuPlaceItDropdown();
-		App.validateProductMenuPlaceItDropdownList(menuOption = "Control Panel");
+		App.validateProductMenuPlaceItDropdownList(menuOption = "Applications");
 		App.validateProductMenuPlaceItDropdownList(menuOption = "Site Menu");
-		App.validateProductMenuPlaceItDropdownList(menuOption = "Control Panel and Site Menu");
+		App.validateProductMenuPlaceItDropdownList(menuOption = "Applications and Site Menu");
 
 		App.selectProductMenuPlaceItDropdownOption(menuOption = "Site Menu");
 		App.validateProductMenuSiteDropdownPresent();
-		App.selectProductMenuPlaceItDropdownOption(menuOption = "Control Panel and Site Menu");
+		App.selectProductMenuPlaceItDropdownOption(menuOption = "Applications and Site Menu");
 		App.validateProductMenuSiteDropdownPresent();
 
-		App.selectProductMenuPlaceItDropdownOption(menuOption = "Control Panel");
+		App.selectProductMenuPlaceItDropdownOption(menuOption = "Applications");
 		App.clickDeploy();
 
 		App.add(
@@ -1737,7 +1731,7 @@ definition {
 			formViewName = "${myFormViewName_1}",
 			tableViewName = "${myTableViewName_2}");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "${myAppName_1}");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "${myAppName_1}");
 
 		AppBuilderAdmin.addEntry();
 
@@ -1749,7 +1743,7 @@ definition {
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "Content from Form 1");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "${myAppName_2}");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "${myAppName_2}");
 
 		AppBuilderAdmin.addEntry();
 
@@ -1761,7 +1755,7 @@ definition {
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "Content from Form 2");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "${myAppName_3}");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "${myAppName_3}");
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "Content from Form 2");
 
@@ -1771,7 +1765,6 @@ definition {
 	}
 
 	@description = "Publish apps in standalone mode and reuse its views"
-	@ignore = "true"
 	@priority = "4"
 	test PublishAppsInStandaloneAndReuseItsViews {
 		property portal.acceptance = "true";
@@ -1909,7 +1902,6 @@ definition {
 	@description = "Remove fields from the Form View through the 'Remove' option"
 	@priority = "5"
 	test RemoveFormViewFields {
-		property portal.upstream = "quarantine";
 
 		AppBuilderAdmin.addCustomObject(
 			customObjectName = "my custom object",
@@ -2184,7 +2176,7 @@ definition {
 	@description = "Set App Builder manage permission for User and Portal Content Reviewer and perform CRUD operations"
 	@priority = "5"
 	test SetAppBuilderManagePermissionFor2RolesAndPerformCRUD {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 		property portal.upstream = "quarantine";
 
 		JSONUser.addUser(
@@ -2193,8 +2185,8 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
-			category = "Users",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "Password Policies");
 
@@ -2203,9 +2195,9 @@ definition {
 			passwordPolicyName = "Default Password Policy",
 			passwordPolicyPanel = "Password Changes");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Users and Organizations");
 
 		User.editPasswordCP(
@@ -2227,9 +2219,9 @@ definition {
 			resourceName = "com.liferay.app.builder",
 			roleTitle = "User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.addCustomObject(
@@ -2255,13 +2247,13 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "App Admin");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "App Admin");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "App Admin");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.validateItemNameOnTable(itemName = "Admin object");
@@ -2338,8 +2330,8 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
-			category = "Users",
+		ApplicationsMenu.gotoPortlet(
+			category = "Security",
 			panel = "Control Panel",
 			portlet = "Password Policies");
 
@@ -2348,7 +2340,7 @@ definition {
 			passwordPolicyName = "Default Password Policy",
 			passwordPolicyPanel = "Password Changes");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -2357,9 +2349,9 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.addCustomObject(
@@ -2426,9 +2418,9 @@ definition {
 					userLoginEmailAddress = "test@liferay.com",
 					userLoginFullName = "Test Test");
 
-				GlobalMenu.gotoPortlet(
+				ApplicationsMenu.gotoPortlet(
 					category = "App Builder",
-					panel = "Control Panel",
+					panel = "Applications",
 					portlet = "Objects");
 
 				LexiconEntry.gotoVerticalEllipsisMenuItemNoError(menuItem = "App Permissions");
@@ -2606,7 +2598,7 @@ definition {
 			formViewName = "Form View Title",
 			tableViewName = "Table View Title");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App A");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
 
@@ -2629,9 +2621,9 @@ definition {
 
 		AppBuilderAdmin.validateWidgetApp(appName = "Test App B");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2646,9 +2638,9 @@ definition {
 
 		Navigator.closeWindow();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2657,11 +2649,11 @@ definition {
 
 		AppBuilderAdmin.undeployApp(itemName = "Test App A");
 
-		AppBuilderAdmin.validateAppIsNotPresentOnControlPanel(portlet = "Test App A");
+		AppBuilderAdmin.validateAppIsNotPresentOnApplicationsMenuApplications(portlet = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2670,13 +2662,13 @@ definition {
 
 		AppBuilderAdmin.deployApp(itemName = "Test App A");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App A");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App A");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2691,9 +2683,9 @@ definition {
 
 		AppBuilderAdmin.validateUndeployedApp();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2708,9 +2700,9 @@ definition {
 
 		AppBuilderAdmin.validateWidgetApp(appName = "Test App B");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2719,13 +2711,7 @@ definition {
 
 		AppBuilderAdmin.undeployApp(itemName = "Test App C");
 
-		AppBuilderAdmin.openStandAloneApp(itemName = "Test App C");
-
-		SelectWindow.selectPopUp(locator1 = "null");
-
-		AppBuilderAdmin.validateStandAlone404();
-
-		Navigator.closeWindow();
+		AppBuilderAdmin.validateStandAloneOptionNotPresent(itemName = "Test App C");
 
 		AppBuilderAdmin.deployApp(itemName = "Test App C");
 
@@ -2781,7 +2767,7 @@ definition {
 			formViewName = "Form View Title",
 			tableViewName = "Table View Title");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Test App C");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Test App C");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Test App C");
 
@@ -2804,9 +2790,9 @@ definition {
 
 		AppBuilderAdmin.validateWidgetApp(appName = "Test App A");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2857,13 +2843,13 @@ definition {
 			pageName = "App Builder Test Page",
 			siteName = "App Builder Site Name");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "Changed Name");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "Changed Name");
 
 		AppBuilderAdmin.validateProductMenuApp(appName = "Changed Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -2888,9 +2874,9 @@ definition {
 
 		AppBuilderAdmin.validateWidgetApp(appName = "Changed Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "App Builder",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Objects");
 
 		AppBuilderAdmin.openItem(itemName = "my custom object");
@@ -3026,7 +3012,6 @@ definition {
 	@description = "View details of an entry in an App"
 	@priority = "5"
 	test ViewEntryDetails {
-		property portal.upstream = "quarantine";
 
 		var myFormViewName = "My Registration form";
 		var myTableViewName = "My display table";
@@ -3071,7 +3056,7 @@ definition {
 			formViewName = "${myFormViewName}",
 			tableViewName = "${myTableViewName}");
 
-		AppBuilderAdmin.gotoCustomAppCP(portlet = "${myAppName}");
+		AppBuilderAdmin.gotoCustomAppApplicationsMenuApplications(portlet = "${myAppName}");
 
 		AppBuilderAdmin.addEntry();
 

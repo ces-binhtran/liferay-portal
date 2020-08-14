@@ -99,7 +99,8 @@ public class FTLTagCheck extends BaseFileCheck {
 				delimeter = "\n" + tabs + "\t";
 			}
 
-			StringBundler sb = new StringBundler(attributesMap.size() * 4 + 4);
+			StringBundler sb = new StringBundler(
+				(attributesMap.size() * 4) + 4);
 
 			sb.append(_getTagName(match));
 			sb.append(delimeter);

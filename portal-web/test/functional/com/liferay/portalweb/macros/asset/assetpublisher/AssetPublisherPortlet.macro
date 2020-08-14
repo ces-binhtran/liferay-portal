@@ -321,8 +321,6 @@ definition {
 			locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON",
 			value1 = "Select");
 
-		SelectFrame();
-
 		SelectFrame(locator1 = "IFrame#SELECT_STRUCTURE_FIELD");
 
 		var key_fieldName = "${fieldFilter}";
@@ -664,9 +662,16 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		AssertClick(
-			locator1 = "Button#ADD",
-			value1 = "Add");
+		if (IsElementPresent(locator1 = "//button[contains(.,'Add')]")) {
+			AssertClick(
+				locator1 = "//button[contains(.,'Add')]",
+				value1 = "Add");
+		}
+		else if (IsElementPresent(locator1 = "Button#DONE")) {
+			AssertClick(
+				locator1 = "Button#DONE",
+				value1 = "Done");
+		}
 
 		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -1242,8 +1247,6 @@ definition {
 			AssertClick(
 				locator1 = "APConfiguration#SOURCE_SCOPE_FILTER_BY_FIELD_SELECT_BUTTON",
 				value1 = "Select");
-
-			SelectFrame();
 
 			SelectFrame(locator1 = "IFrame#SELECT_STRUCTURE_FIELD");
 

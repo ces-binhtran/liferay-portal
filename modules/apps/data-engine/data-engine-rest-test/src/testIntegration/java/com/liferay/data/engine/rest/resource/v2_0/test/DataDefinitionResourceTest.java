@@ -15,28 +15,38 @@
 package com.liferay.data.engine.rest.resource.v2_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.data.engine.nativeobject.tracker.DataEngineNativeObjectTracker;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataDefinitionField;
 import com.liferay.data.engine.rest.client.dto.v2_0.DataLayout;
 import com.liferay.data.engine.rest.client.pagination.Page;
 import com.liferay.data.engine.rest.client.pagination.Pagination;
+import com.liferay.data.engine.rest.client.permission.Permission;
 import com.liferay.data.engine.rest.client.problem.Problem;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataDefinitionTestUtil;
 import com.liferay.data.engine.rest.resource.v2_0.test.util.DataLayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -52,6 +62,54 @@ public class DataDefinitionResourceTest
 	extends BaseDataDefinitionResourceTestCase {
 
 	@Override
+	@Test
+	public void testDeleteDataDefinition() throws Exception {
+		super.testDeleteDataDefinition();
+
+		DataDefinition parentDataDefinition =
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), _CONTENT_TYPE,
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-parent.json")));
+
+		DataDefinition childDataDefinition = DataDefinition.toDTO(
+			DataDefinitionTestUtil.read("data-definition-child.json"));
+
+		DataDefinitionField[] dataDefinitionFields =
+			childDataDefinition.getDataDefinitionFields();
+
+		for (DataDefinitionField dataDefinitionField : dataDefinitionFields) {
+			dataDefinitionField.setCustomProperties(
+				HashMapBuilder.<String, Object>put(
+					"collapsible", true
+				).put(
+					"ddmStructureId", parentDataDefinition.getId()
+				).put(
+					"ddmStructureLayoutId", ""
+				).put(
+					"rows",
+					new String[] {
+						"[{\"columns\":[{\"fields\":[\"Text\"],\"size\": 12}]}]"
+					}
+				).build());
+		}
+
+		dataDefinitionResource.postSiteDataDefinitionByContentType(
+			testGroup.getGroupId(), _CONTENT_TYPE, childDataDefinition);
+
+		assertHttpResponseStatusCode(
+			204,
+			dataDefinitionResource.deleteDataDefinitionHttpResponse(
+				parentDataDefinition.getId()));
+		assertHttpResponseStatusCode(
+			404,
+			dataDefinitionResource.getDataDefinitionHttpResponse(
+				parentDataDefinition.getId()));
+	}
+
+	@Override
+	@Test
 	public void testGetDataDefinitionDataDefinitionFieldFieldTypes()
 		throws Exception {
 
@@ -63,17 +121,16 @@ public class DataDefinitionResourceTest
 	}
 
 	@Override
-	public void testGetDataDefinitionDataDefinitionFieldLinks()
-		throws Exception {
-
+	@Test
+	public void testGetDataDefinitionPermissionsPage() throws Exception {
 		DataDefinition postDataDefinition =
 			testGetDataDefinition_addDataDefinition();
 
-		String fieldLinks =
-			dataDefinitionResource.getDataDefinitionDataDefinitionFieldLinks(
-				postDataDefinition.getId(), "");
+		Page<Permission> page =
+			dataDefinitionResource.getDataDefinitionPermissionsPage(
+				postDataDefinition.getId(), RoleConstants.GUEST);
 
-		Assert.assertTrue(Validator.isNotNull(fieldLinks));
+		Assert.assertNotNull(page);
 	}
 
 	@Override
@@ -181,6 +238,7 @@ public class DataDefinitionResourceTest
 	}
 
 	@Override
+	@Test
 	public void testGraphQLGetSiteDataDefinitionByContentTypeByDataDefinitionKeyNotFound()
 		throws Exception {
 
@@ -266,6 +324,30 @@ public class DataDefinitionResourceTest
 			Assert.assertEquals(
 				"MustSetDefaultLocaleAsAvailableLocale", problem.getType());
 		}
+
+		// MustSetFields
+
+		try {
+			dataDefinitionResource.postDataDefinitionByContentType(
+				"journal",
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-must-set-fields.json")));
+
+			Assert.fail("An exception must be thrown");
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
+			Assert.assertEquals("MustSetFields", problem.getType());
+		}
+
+		dataDefinitionResource.postDataDefinitionByContentType(
+			"app-builder",
+			DataDefinition.toDTO(
+				DataDefinitionTestUtil.read(
+					"data-definition-must-set-fields.json")));
 
 		// MustSetFieldType
 
@@ -410,6 +492,20 @@ public class DataDefinitionResourceTest
 			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
 			Assert.assertEquals("MustSetValidName", problem.getType());
 		}
+
+		// Fill the data layout name with the data definition's name when no
+		// name is set
+
+		DataDefinition dataDefinition =
+			dataDefinitionResource.postSiteDataDefinitionByContentType(
+				testGroup.getGroupId(), _CONTENT_TYPE,
+				DataDefinition.toDTO(
+					DataDefinitionTestUtil.read(
+						"data-definition-must-set-data-layout-name.json")));
+
+		DataLayout dataLayout = dataDefinition.getDefaultDataLayout();
+
+		Assert.assertEquals(dataDefinition.getName(), dataLayout.getName());
 	}
 
 	@Override
@@ -438,6 +534,39 @@ public class DataDefinitionResourceTest
 
 		assertEquals(randomDataDefinition, getDataDefinition);
 		assertValid(getDataDefinition);
+
+		// MustNotRemoveNativeFields
+
+		try {
+			DataDefinition userDataDefinition = _getUserDataDefinition();
+
+			List<DataDefinitionField> dataDefinitionFields = ListUtil.fromArray(
+				userDataDefinition.getDataDefinitionFields());
+
+			Stream<DataDefinitionField> stream = dataDefinitionFields.stream();
+
+			userDataDefinition.setDataDefinitionFields(
+				stream.filter(
+					dataDefinitionField -> !StringUtil.equals(
+						dataDefinitionField.getName(), "emailAddress")
+				).collect(
+					Collectors.toList()
+				).toArray(
+					new DataDefinitionField[0]
+				));
+
+			dataDefinitionResource.putDataDefinition(
+				userDataDefinition.getId(), userDataDefinition);
+
+			Assert.fail("An exception must be thrown");
+		}
+		catch (Problem.ProblemException problemException) {
+			Problem problem = problemException.getProblem();
+
+			Assert.assertEquals("emailAddress", problem.getDetail());
+			Assert.assertEquals("BAD_REQUEST", problem.getStatus());
+			Assert.assertEquals("MustNotRemoveNativeField", problem.getType());
+		}
 	}
 
 	@Rule
@@ -627,6 +756,25 @@ public class DataDefinitionResourceTest
 		return dataDefinition;
 	}
 
+	private DataDefinition _getUserDataDefinition() throws Exception {
+		Page<DataDefinition> dataDefinitionPage =
+			dataDefinitionResource.
+				getDataDefinitionByContentTypeContentTypePage(
+					"native-object", null, Pagination.of(1, 2), null);
+
+		Collection<DataDefinition> dataDefinitions =
+			dataDefinitionPage.getItems();
+
+		Stream<DataDefinition> stream = dataDefinitions.stream();
+
+		Optional<DataDefinition> dataDefinitionOptional = stream.filter(
+			dataDefinition -> StringUtil.equalsIgnoreCase(
+				dataDefinition.getDataDefinitionKey(), User.class.getName())
+		).findFirst();
+
+		return dataDefinitionOptional.get();
+	}
+
 	private void _testGetSiteDataDefinitionsPage(
 			String description, String keywords, String name)
 		throws Exception {
@@ -658,6 +806,9 @@ public class DataDefinitionResourceTest
 	}
 
 	private static final String _CONTENT_TYPE = "app-builder";
+
+	@Inject(type = DataEngineNativeObjectTracker.class)
+	private DataEngineNativeObjectTracker _dataEngineNativeObjectTracker;
 
 	@Inject(type = Portal.class)
 	private Portal _portal;

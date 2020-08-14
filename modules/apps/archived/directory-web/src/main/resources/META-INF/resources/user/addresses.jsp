@@ -29,9 +29,9 @@ if (classPK > 0) {
 	personalAddresses = AddressServiceUtil.getAddresses(className, classPK);
 }
 
-for (int i = 0; i < organizations.size(); i++) {
+for (Organization organization : organizations) {
 	try {
-		organizationAddresses.addAll(AddressServiceUtil.getAddresses(Organization.class.getName(), organizations.get(i).getOrganizationId()));
+		organizationAddresses.addAll(AddressServiceUtil.getAddresses(Organization.class.getName(), organization.getOrganizationId()));
 	}
 	catch (Exception e) {
 	}
@@ -51,7 +51,7 @@ for (int i = 0; i < organizations.size(); i++) {
 				for (Address address : organizationAddresses) {
 				%>
 
-					<li class='<%= address.isPrimary() ? "icon-star" : StringPool.BLANK %>'>
+					<li class="<%= address.isPrimary() ? "icon-star" : StringPool.BLANK %>">
 						<%@ include file="/common/addresses_address.jspf" %>
 					</li>
 
@@ -73,7 +73,7 @@ for (int i = 0; i < organizations.size(); i++) {
 				for (Address address : personalAddresses) {
 				%>
 
-					<li class='<%= (address.isPrimary() && !personalAddresses.isEmpty()) ? "icon-star" : StringPool.BLANK %>'>
+					<li class="<%= (address.isPrimary() && !personalAddresses.isEmpty()) ? "icon-star" : StringPool.BLANK %>">
 						<%@ include file="/common/addresses_address.jspf" %>
 					</li>
 

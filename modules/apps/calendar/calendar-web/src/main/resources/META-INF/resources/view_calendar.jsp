@@ -88,7 +88,7 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 		<c:if test="<%= !displaySchedulerOnly %>">
 			<clay:col
 				cssClass='<%= "calendar-portlet-column-options " + (columnOptionsVisible ? StringPool.BLANK : "hide") %>'
-				id='<%= renderResponse.getNamespace() + "columnOptions" %>'
+				id='<%= liferayPortletResponse.getNamespace() + "columnOptions" %>'
 				md="3"
 			>
 				<div class="calendar-portlet-mini-calendar" id="<portlet:namespace />miniCalendarContainer"></div>
@@ -115,7 +115,7 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 							<div class="calendar-portlet-list-header toggler-header-expanded">
 								<span class="calendar-portlet-list-arrow"></span>
 
-								<span class="calendar-portlet-list-text"><liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(groupCalendarResource.getName(locale))} %>" key="x-calendars" /></span>
+								<span class="calendar-portlet-list-text"><liferay-ui:message arguments="<%= HtmlUtil.escape(groupCalendarResource.getName(locale)) %>" key="x-calendars" /></span>
 							</div>
 
 							<c:if test="<%= CalendarResourcePermission.contains(permissionChecker, groupCalendarResource, CalendarActionKeys.ADD_CALENDAR) %>">
@@ -135,7 +135,7 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 							</div>
 
 							<div class="calendar-portlet-calendar-list" id="<portlet:namespace />otherCalendarList">
-								<input class="calendar-portlet-add-calendars-input" id="<portlet:namespace />addOtherCalendar" placeholder='<liferay-ui:message key="add-other-calendars" />' type="text" />
+								<input class="calendar-portlet-add-calendars-input" id="<portlet:namespace />addOtherCalendar" placeholder="<liferay-ui:message key="add-other-calendars" />" type="text" />
 							</div>
 						</c:if>
 					</div>
@@ -145,13 +145,13 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 
 		<clay:col
 			cssClass="calendar-portlet-column-grid"
-			id='<%= renderResponse.getNamespace() + "columnGrid" %>'
+			id='<%= liferayPortletResponse.getNamespace() + "columnGrid" %>'
 			md="<%= (columnOptionsVisible && !displaySchedulerOnly) ? String.valueOf(9) : String.valueOf(12) %>"
 		>
 			<c:if test="<%= !displaySchedulerOnly %>">
 				<div class="calendar-portlet-column-toggler" id="<portlet:namespace />columnToggler">
 					<clay:icon
-						id='<%= renderResponse.getNamespace() + "columnTogglerIcon" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "columnTogglerIcon" %>'
 						symbol='<%= columnOptionsVisible ? "caret-left" : "caret-right" %>'
 					/>
 				</div>
@@ -371,7 +371,7 @@ boolean columnOptionsVisible = GetterUtil.getBoolean(SessionClicks.get(request, 
 			.get('node')
 			.attr(
 				'title',
-				A.Lang.String.unescapeHTML(schedulerEvent.get('content'))
+				Liferay.Util.unescapeHTML(schedulerEvent.get('content'))
 			);
 	};
 

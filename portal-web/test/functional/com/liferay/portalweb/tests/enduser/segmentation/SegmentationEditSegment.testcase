@@ -14,7 +14,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "People",
-			panel = "Site Administration",
 			portlet = "Segments");
 
 		LexiconEntry.gotoAdd();
@@ -33,13 +32,14 @@ definition {
 	tearDown {
 		var testPortalInstance = PropsUtil.get("test.portal.instance");
 
+		Navigator.openURL();
+
 		if ("${testPortalInstance}" == "true") {
 			PortalInstances.tearDownCP();
 		}
 		else {
 			ProductMenu.gotoPortlet(
 				category = "People",
-				panel = "Site Administration",
 				portlet = "Segments",
 				site = "Guest");
 
@@ -72,21 +72,22 @@ definition {
 	@description = "Validate if the user can edit a segment with Organization Tag"
 	@priority = "5"
 	test EditSegmentUserByOrganizationTag {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.addCPWithTag(
+		User.addCP(
 			userEmailAddress = "OrganizationTag@liferay.com",
 			userFirstName = "OrganizationTag",
 			userLastName = "OrganizationTag",
 			userScreenName = "OrganizationTag",
 			userTag = "organizationtagtest");
 
+		Navigator.openURL();
+
 		ProductMenu.gotoPortlet(
 			category = "People",
-			panel = "Site Administration",
 			portlet = "Segments",
 			site = "Guest");
 
@@ -106,7 +107,7 @@ definition {
 
 		Button.clickSave();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -161,21 +162,22 @@ definition {
 	@description = "Validate if the user can edit a segment with User Tag"
 	@priority = "5"
 	test EditSegmentUserByUserTag {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.addCPWithTag(
+		User.addCP(
 			userEmailAddress = "Tag@liferay.com",
 			userFirstName = "UserTag",
 			userLastName = "UserTag",
 			userScreenName = "UserTag",
 			userTag = "tagtest");
 
+		Navigator.openURL();
+
 		ProductMenu.gotoPortlet(
 			category = "People",
-			panel = "Site Administration",
 			portlet = "Segments",
 			site = "Guest");
 
@@ -193,7 +195,7 @@ definition {
 
 		Button.clickSave();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");

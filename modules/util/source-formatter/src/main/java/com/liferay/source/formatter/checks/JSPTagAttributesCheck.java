@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.TextFormatter;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.checks.util.TaglibUtil;
 import com.liferay.source.formatter.parser.JavaClass;
@@ -116,6 +117,14 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 				continue;
 			}
 
+			if (tagName.equals("liferay-ui:message") &&
+				attributeName.equals("arguments")) {
+
+				tag.putAttribute(
+					attributeName,
+					_formatMessageArgumentsValue(attributeValue));
+			}
+
 			if (attributeName.equals("style") &&
 				(!tagName.contains(StringPool.COLON) ||
 				 tagName.startsWith("aui:"))) {
@@ -179,6 +188,23 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 		}
 
 		return tag;
+	}
+
+	private String _formatMessageArgumentsValue(String attributeValue) {
+		Matcher matcher = _messageArgumentArrayPattern.matcher(attributeValue);
+
+		if (!matcher.find()) {
+			return attributeValue;
+		}
+
+		List<String> parametersList = JavaSourceUtil.splitParameters(
+			matcher.group(2));
+
+		if (parametersList.size() == 1) {
+			return matcher.replaceFirst("$1$2$3");
+		}
+
+		return attributeValue;
 	}
 
 	private String _formatSingleLineTagAttributes(
@@ -348,7 +374,11 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 		throws Exception {
 
 		if (_tagSetMethodsMap != null) {
-			return _tagSetMethodsMap.get(tagName);
+			if (_tagSetMethodsMap.containsKey(tagName)) {
+				return _tagSetMethodsMap.get(tagName);
+			}
+
+			return _tagSetMethodsMap.get("liferay-" + tagName);
 		}
 
 		_tagSetMethodsMap = new HashMap<>();
@@ -405,12 +435,16 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 				}
 
 				if (srcDir == null) {
-					if (tldFileName.contains("/src/")) {
-						srcDir = SourceUtil.getAbsolutePath(tldFile);
+					String absolutePath = SourceUtil.getAbsolutePath(tldFile);
 
-						srcDir =
-							srcDir.substring(0, srcDir.lastIndexOf("/src/")) +
-								"/src/";
+					int x = absolutePath.lastIndexOf("/src/");
+
+					if (x != -1) {
+						srcDir = absolutePath.substring(0, x + 5);
+
+						if (tldFileName.contains("/modules/")) {
+							srcDir += "main/java/";
+						}
 					}
 					else {
 						srcDir = utilTaglibSrcDirName;
@@ -563,6 +597,8 @@ public class JSPTagAttributesCheck extends BaseTagAttributesCheck {
 		"<%.*?%>");
 	private static final Pattern _jspTaglibPattern = Pattern.compile(
 		"\t*<[-\\w]+:[-\\w]+ .");
+	private static final Pattern _messageArgumentArrayPattern = Pattern.compile(
+		"^(<%= )new \\w+\\[\\] \\{([^<>]+)\\}( %>)$");
 	private static final Pattern _styleAttributePattern = Pattern.compile(
 		"(\\A|\\W)([a-z\\-]+)\\s*:");
 

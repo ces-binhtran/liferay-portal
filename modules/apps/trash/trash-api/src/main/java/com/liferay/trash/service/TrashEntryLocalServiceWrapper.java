@@ -71,6 +71,10 @@ public class TrashEntryLocalServiceWrapper
 	/**
 	 * Adds the trash entry to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was added
 	 */
@@ -160,6 +164,10 @@ public class TrashEntryLocalServiceWrapper
 	/**
 	 * Deletes the trash entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param entryId the primary key of the trash entry
 	 * @return the trash entry that was removed
 	 * @throws PortalException if a trash entry with the primary key could not be found
@@ -173,6 +181,10 @@ public class TrashEntryLocalServiceWrapper
 
 	/**
 	 * Deletes the trash entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was removed
@@ -346,17 +358,19 @@ public class TrashEntryLocalServiceWrapper
 	 * @param start the lower bound of the range of trash entries to return
 	 * @param end the upper bound of the range of trash entries to return (not
 	 inclusive)
-	 * @param obc the comparator to order the trash entries (optionally
-	 <code>null</code>)
+	 * @param orderByComparator the comparator to order the trash entries
+	 (optionally <code>null</code>)
 	 * @return the range of matching trash entries ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 */
 	@Override
 	public java.util.List<TrashEntry> getEntries(
 		long groupId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<TrashEntry> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<TrashEntry>
+			orderByComparator) {
 
-		return _trashEntryLocalService.getEntries(groupId, start, end, obc);
+		return _trashEntryLocalService.getEntries(
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -493,6 +507,10 @@ public class TrashEntryLocalServiceWrapper
 
 	/**
 	 * Updates the trash entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was updated

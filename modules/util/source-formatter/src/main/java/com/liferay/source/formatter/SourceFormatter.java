@@ -35,6 +35,7 @@ import com.liferay.source.formatter.checks.util.SourceUtil;
 import com.liferay.source.formatter.util.CheckType;
 import com.liferay.source.formatter.util.DebugUtil;
 import com.liferay.source.formatter.util.FileUtil;
+import com.liferay.source.formatter.util.JIRAUtil;
 import com.liferay.source.formatter.util.SourceFormatterUtil;
 
 import com.puppycrawl.tools.checkstyle.api.CheckstyleException;
@@ -118,6 +119,18 @@ public class SourceFormatter {
 
 			sourceFormatterArgs.setCheckName(checkName);
 
+			boolean failOnAutoFix = ArgumentsUtil.getBoolean(
+				arguments, "source.fail.on.auto.fix",
+				SourceFormatterArgs.FAIL_ON_AUTO_FIX);
+
+			sourceFormatterArgs.setFailOnAutoFix(failOnAutoFix);
+
+			boolean failOnHasWarning = ArgumentsUtil.getBoolean(
+				arguments, "source.fail.on.has.warning",
+				SourceFormatterArgs.FAIL_ON_HAS_WARNING);
+
+			sourceFormatterArgs.setFailOnHasWarning(failOnHasWarning);
+
 			boolean formatCurrentBranch = ArgumentsUtil.getBoolean(
 				arguments, "format.current.branch",
 				SourceFormatterArgs.FORMAT_CURRENT_BRANCH);
@@ -136,14 +149,13 @@ public class SourceFormatter {
 
 			sourceFormatterArgs.setFormatLocalChanges(formatLocalChanges);
 
+			String gitWorkingBranchName = ArgumentsUtil.getString(
+				arguments, "git.working.branch.name",
+				SourceFormatterArgs.GIT_WORKING_BRANCH_NAME);
+
+			sourceFormatterArgs.setGitWorkingBranchName(gitWorkingBranchName);
+
 			if (formatCurrentBranch) {
-				String gitWorkingBranchName = ArgumentsUtil.getString(
-					arguments, "git.working.branch.name",
-					SourceFormatterArgs.GIT_WORKING_BRANCH_NAME);
-
-				sourceFormatterArgs.setGitWorkingBranchName(
-					gitWorkingBranchName);
-
 				sourceFormatterArgs.addRecentChangesFileNames(
 					GitUtil.getCurrentBranchFileNames(
 						baseDirName, gitWorkingBranchName, false),
@@ -251,12 +263,6 @@ public class SourceFormatter {
 					Arrays.asList(skipCheckNames));
 			}
 
-			boolean throwException = ArgumentsUtil.getBoolean(
-				arguments, "source.throw.exception",
-				SourceFormatterArgs.THROW_EXCEPTION);
-
-			sourceFormatterArgs.setThrowException(throwException);
-
 			SourceFormatter sourceFormatter = new SourceFormatter(
 				sourceFormatterArgs);
 
@@ -297,6 +303,8 @@ public class SourceFormatter {
 		_printProgressStatusMessage("Scanning for files...");
 
 		_init();
+
+		_validateCommitMessages();
 
 		_printProgressStatusMessage("Initializing checks...");
 
@@ -389,53 +397,55 @@ public class SourceFormatter {
 			throw executionException1;
 		}
 
-		if (_sourceFormatterArgs.isThrowException() &&
-			(!_sourceFormatterMessages.isEmpty() ||
-			 !_sourceMismatchExceptions.isEmpty())) {
+		if ((!_sourceFormatterArgs.isFailOnAutoFix() ||
+			 _sourceMismatchExceptions.isEmpty()) &&
+			(!_sourceFormatterArgs.isFailOnHasWarning() ||
+			 _sourceFormatterMessages.isEmpty())) {
 
-			int size =
-				_sourceFormatterMessages.size() +
-					_sourceMismatchExceptions.size();
+			return;
+		}
 
-			StringBundler sb = new StringBundler(size * 4);
+		int size =
+			_sourceFormatterMessages.size() + _sourceMismatchExceptions.size();
 
-			int index = 1;
+		StringBundler sb = new StringBundler(size * 4);
 
-			if (!_sourceFormatterMessages.isEmpty()) {
-				for (SourceFormatterMessage sourceFormatterMessage :
-						_sourceFormatterMessages) {
+		int index = 1;
 
+		if (_sourceFormatterArgs.isFailOnHasWarning()) {
+			for (SourceFormatterMessage sourceFormatterMessage :
+					_sourceFormatterMessages) {
+
+				sb.append(index);
+				sb.append(": ");
+				sb.append(sourceFormatterMessage.toString());
+				sb.append("\n");
+
+				index = index + 1;
+			}
+		}
+
+		if (_sourceFormatterArgs.isFailOnAutoFix()) {
+			for (SourceMismatchException sourceMismatchException :
+					_sourceMismatchExceptions) {
+
+				String message = sourceMismatchException.getMessage();
+
+				if (!Objects.isNull(message)) {
 					sb.append(index);
 					sb.append(": ");
-					sb.append(sourceFormatterMessage.toString());
+					sb.append(message);
 					sb.append("\n");
 
 					index = index + 1;
 				}
 			}
-
-			if (!_sourceMismatchExceptions.isEmpty()) {
-				for (SourceMismatchException sourceMismatchException :
-						_sourceMismatchExceptions) {
-
-					String message = sourceMismatchException.getMessage();
-
-					if (!Objects.isNull(message)) {
-						sb.append(index);
-						sb.append(": ");
-						sb.append(message);
-						sb.append("\n");
-
-						index = index + 1;
-					}
-				}
-			}
-
-			String message = StringBundler.concat(
-				"Found ", index - 1, " formatting issues:\n", sb.toString());
-
-			throw new Exception(message);
 		}
+
+		String message = StringBundler.concat(
+			"Found ", index - 1, " formatting issues:\n", sb.toString());
+
+		throw new Exception(message);
 	}
 
 	public List<String> getModifiedFileNames() {
@@ -457,18 +467,18 @@ public class SourceFormatter {
 	private static CheckstyleException _getNestedCheckstyleException(
 		Exception exception) {
 
-		Throwable cause = exception;
+		Throwable throwable = exception;
 
 		while (true) {
-			if (cause == null) {
+			if (throwable == null) {
 				return null;
 			}
 
-			if (cause instanceof CheckstyleException) {
-				return (CheckstyleException)cause;
+			if (throwable instanceof CheckstyleException) {
+				return (CheckstyleException)throwable;
 			}
 
-			cause = cause.getCause();
+			throwable = throwable.getCause();
 		}
 	}
 
@@ -527,6 +537,17 @@ public class SourceFormatter {
 				}
 
 				buildPropertiesAdded = true;
+			}
+
+			if (recentChangesFileName.contains("/modules/apps/archived/")) {
+				dependentFileNames.addAll(
+					SourceFormatterUtil.filterFileNames(
+						_allFileNames, new String[0],
+						new String[] {
+							"**/source-formatter.properties",
+							"**/test.properties"
+						},
+						_sourceFormatterExcludes, false));
 			}
 
 			if (recentChangesFileName.endsWith(".java") &&
@@ -738,6 +759,22 @@ public class SourceFormatter {
 		return properties;
 	}
 
+	private List<String> _getPropertyValues(String key) {
+		List<String> propertyValues = new ArrayList<>();
+
+		for (Map.Entry<String, Properties> entry : _propertiesMap.entrySet()) {
+			Properties properties = entry.getValue();
+
+			if (properties.containsKey(key)) {
+				propertyValues.addAll(
+					ListUtil.fromString(
+						properties.getProperty(key), StringPool.COMMA));
+			}
+		}
+
+		return propertyValues;
+	}
+
 	private void _init() throws Exception {
 		_sourceFormatterExcludes = new SourceFormatterExcludes(
 			SetUtil.fromArray(DEFAULT_EXCLUDE_SYNTAX_PATTERNS));
@@ -946,6 +983,24 @@ public class SourceFormatter {
 		_sourceMismatchExceptions.addAll(
 			sourceProcessor.getSourceMismatchExceptions());
 		_modifiedFileNames.addAll(sourceProcessor.getModifiedFileNames());
+	}
+
+	private void _validateCommitMessages() throws Exception {
+		if (!_sourceFormatterArgs.isFormatCurrentBranch()) {
+			return;
+		}
+
+		List<String> commitMessages = GitUtil.getCurrentBranchCommitMessages(
+			_sourceFormatterArgs.getBaseDirName(),
+			_sourceFormatterArgs.getGitWorkingBranchName());
+
+		JIRAUtil.validateJIRAProjectNames(
+			commitMessages, _getPropertyValues("jira.project.keys"));
+		JIRAUtil.validateJIRATicketIds(commitMessages, 20);
+
+		JIRAUtil.validateJIRASecurityKeywords(
+			commitMessages,
+			_getPropertyValues("jira.security.vulnerability.keywords"), 20);
 	}
 
 	private static final String _PROPERTIES_FILE_NAME =

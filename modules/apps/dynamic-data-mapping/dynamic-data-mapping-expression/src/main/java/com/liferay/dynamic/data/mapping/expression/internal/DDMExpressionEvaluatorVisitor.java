@@ -159,10 +159,9 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitFunctionCallExpression(
 		@NotNull FunctionCallExpressionContext context) {
 
-		String functionName = getFunctionName(context.functionName);
-
 		DDMExpressionFunctionFactory ddmExpressionFunctionFactory =
-			_ddmExpressionFunctionFactories.get(functionName);
+			_ddmExpressionFunctionFactories.get(
+				getFunctionName(context.functionName));
 
 		DDMExpressionFunction ddmExpressionFunction =
 			ddmExpressionFunctionFactory.create();
@@ -511,6 +510,10 @@ public class DDMExpressionEvaluatorVisitor
 	}
 
 	protected BigDecimal getBigDecimal(Comparable<?> comparable) {
+		if (comparable == null) {
+			return BigDecimal.ZERO;
+		}
+
 		if (comparable instanceof BigDecimal) {
 			return (BigDecimal)comparable;
 		}

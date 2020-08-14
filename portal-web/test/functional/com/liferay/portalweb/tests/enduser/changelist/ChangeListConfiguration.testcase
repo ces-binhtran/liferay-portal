@@ -1,8 +1,7 @@
 @component-name = "portal-change-list"
-@ignore = "true"
 definition {
 
-	property portal.release = "true";
+	property portal.release = "false";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Change List";
 
@@ -21,58 +20,42 @@ definition {
 	}
 
 	@description = "Change list cannot be enabled when staging is turned on"
+	@ignore = "true"
 	@priority = "5"
 	test CannotEnableChangeListWhenStagingIsTurnedOn {
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging",
 			site = "Guest");
 
 		Staging.activateStagingCP(siteName = "${siteName}");
 
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
-			panel = "Control Panel",
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
+			panel = "Applications",
 			portlet = "Settings");
 
 		Alert.viewWarningSpecific(warningMessage = "Staging is enabled for at least one site in the current virtual instance. Staging and change lists cannot be used together.");
 	}
 
-	@description = "Check Supported Content Types"
-	@priority = "4"
-	test CheckSupportedContentTypes {
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
-			panel = "Applications",
-			portlet = "Settings");
-
-		for (var changeListContentType : list "Web Content") {
-			var key_changeListContentType = "${changeListContentType}";
-
-			AssertHTMLSourceTextPresent(
-				locator1 = "ChangeListSettings#SUPPORTED_CONTENT_TYPES",
-				value1 = "${changeListContentType}");
-		}
-	}
-
 	@description = "Enable Change List and go to Overview"
+	@ignore = "true"
 	@priority = "5"
 	test EnableChangeListAndGoToOverview {
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
 			panel = "Applications",
 			portlet = "Settings");
 
 		ChangeList.enableChangeList(gotoOverview = "true");
 
 		AssertTextEquals(
-			locator1 = "ChangeList#OVERVIEW_PAGE_TITLE",
-			value1 = "Select Change List");
+			locator1 = "ChangeList#MANGE_PUBLICATIONS_PAGE_TITLE",
+			value1 = "Manage Publications");
 
 		AssertElementPresent(
 			locator1 = "ChangeList#PRODUCTION_CARD_TITLE",
@@ -94,8 +77,8 @@ definition {
 			portletName = "Web Content",
 			site = "Guest");
 
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
 			panel = "Applications",
 			portlet = "Settings",
 			site = "Guest");
@@ -110,15 +93,17 @@ definition {
 	@description = "Enable and Disable Change List"
 	@priority = "5"
 	test EnableDisableChangeList {
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
+		property test.name.skip.portal.instance = "ChangeListConfiguration#EnableDisableChangeList";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
 			panel = "Applications",
 			portlet = "Settings");
 
 		ChangeList.enableChangeList();
 
-		GlobalMenu.gotoPortlet(
-			category = "Change Lists",
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
 			panel = "Applications",
 			portlet = "Settings");
 

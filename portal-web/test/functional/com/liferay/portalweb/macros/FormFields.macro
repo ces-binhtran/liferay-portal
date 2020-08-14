@@ -12,6 +12,7 @@ definition {
 	}
 
 	macro changeFieldType {
+		Pause(locator1 = "2000");
 
 		while (IsElementNotPresent(locator1 = "FormFields#CHANGE_FIELD_TYPE_BUTTON_DROPDOWN")) {
 			Click(locator1 = "FormFields#CHANGE_FIELD_TYPE_BUTTON");
@@ -80,7 +81,6 @@ definition {
 	}
 
 	macro editFieldName {
-
 		Form.gotoAdvancedTab();
 
 		var key_fieldValue = "${fieldValue}";
@@ -113,6 +113,10 @@ definition {
 	macro editOptionsRow {
 		var key_rowNumber = "${rowNumber}";
 
+		WaitForElementPresent(
+			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
+			value1 = "${optionValue}");
+
 		Type(
 			locator1 = "FormFields#OPTIONS_OPTION_VALUE_FIELD",
 			value1 = "${optionValue}");
@@ -122,6 +126,10 @@ definition {
 
 	macro editOptionsRowNameField {
 		var key_rowNumber = "${rowNumber}";
+
+		WaitForElementPresent(
+			locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD_EDIT",
+			value1 = "${optionValue}");
 
 		Type.clickAtType(
 			locator1 = "FormFields#OPTIONS_OPTION_NAME_FIELD_EDIT",
@@ -155,6 +163,8 @@ definition {
 	}
 
 	macro editRepeatingText {
+		Pause(locator1 = "2000");
+
 		var key_fieldName = "${fieldName}";
 
 		Type(
@@ -388,6 +398,9 @@ definition {
 	macro selectGridRadioOption {
 		var key_categoryColumnName = "${categoryColumnName}";
 		var key_optionRowName = "${optionRowName}";
+		var optionNumber = ${optionNumber} - 1;
+		var key_optionNumber = "grid_${optionNumber}_${optionNumber}";
+		var key_fieldName = "${fieldName}";
 
 		Click.clickNoWaitForVisible(locator1 = "FormFields#GRID_RADIO_OPTIONS");
 	}
@@ -400,6 +413,8 @@ definition {
 	}
 
 	macro selectSelectOption {
+		Pause(locator1 = "1000");
+
 		var key_fieldName = "${fieldName}";
 		var key_selectOption = "${selectOption}";
 
@@ -679,6 +694,8 @@ definition {
 	}
 
 	macro viewRepeatableTextFieldLabel {
+		Pause(locator1 = "2000");
+
 		var key_fieldLabel = "${fieldLabel}";
 		var key_fieldName = "${fieldName}";
 
@@ -760,6 +777,8 @@ definition {
 	}
 
 	macro viewSelectOptionsList {
+		Pause(locator1 = "2000");
+
 		var key_fieldName = "${fieldName}";
 
 		Click(locator1 = "FormFields#SELECT_FIELD");

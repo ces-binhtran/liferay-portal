@@ -125,18 +125,22 @@ export default function TrafficSources({
 												)
 											}
 										>
-											<ClayButton
-												className="font-weight-semi-bold px-0 py-1 text-primary"
-												displayType="link"
-												onClick={() =>
-													onTrafficSourceClick(
-														entry.name
-													)
-												}
-												small
-											>
-												{entry.title}
-											</ClayButton>
+											{entry.value > 0 ? (
+												<ClayButton
+													className="font-weight-semi-bold px-0 py-1 text-primary"
+													displayType="link"
+													onClick={() =>
+														onTrafficSourceClick(
+															entry.name
+														)
+													}
+													small
+												>
+													{entry.title}
+												</ClayButton>
+											) : (
+												<span>{entry.title}</span>
+											)}
 										</td>
 										<td className="text-secondary">
 											<Hint
@@ -213,6 +217,7 @@ export default function TrafficSources({
 							</Pie>
 
 							<Tooltip
+								animationDuration={0}
 								content={<TrafficSourcesCustomTooltip />}
 								formatter={(value, name, iconType) => {
 									return [

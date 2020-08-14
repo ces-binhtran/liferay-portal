@@ -1074,9 +1074,9 @@ public class NettyFabricWorkerExecutionChannelHandlerTest {
 			Assert.fail();
 		}
 		catch (ExecutionException executionException) {
-			Throwable t = executionException.getCause();
+			throwable = executionException.getCause();
 
-			Assert.assertSame(NullPointerException.class, t.getClass());
+			Assert.assertSame(NullPointerException.class, throwable.getClass());
 		}
 
 		// Finish with result
@@ -1302,12 +1302,11 @@ public class NettyFabricWorkerExecutionChannelHandlerTest {
 	protected NettyFabricWorkerStub<Serializable>
 		installNettyFabricWorkerStub() {
 
-		NettyFabricAgentStub nettyFabricAgentStub =
-			NettyChannelAttributes.getNettyFabricAgentStub(_embeddedChannel);
-
 		Map<Long, NettyFabricWorkerStub<?>> nettyFabricWorkerStubs =
 			ReflectionTestUtil.getFieldValue(
-				nettyFabricAgentStub, "_nettyFabricWorkerStubs");
+				NettyChannelAttributes.getNettyFabricAgentStub(
+					_embeddedChannel),
+				"_nettyFabricWorkerStubs");
 
 		NettyFabricWorkerStub<Serializable> nettyFabricWorkerStub =
 			new NettyFabricWorkerStub<>(

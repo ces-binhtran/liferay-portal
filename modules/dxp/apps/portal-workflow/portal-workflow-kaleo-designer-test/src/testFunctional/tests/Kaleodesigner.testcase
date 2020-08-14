@@ -21,7 +21,7 @@ definition {
 		else {
 			Workflow.tearDownSpecificWorkflowDefinition(workflowDefinitionTitle = "Edited Workflow Definition");
 
-			Workflow.tearDownWorkflowDefinitions(workflowDefinitionTitle = "Edited Workflow Definition");
+			Workflow.tearDownWorkflowDefinitions();
 		}
 	}
 
@@ -29,7 +29,7 @@ definition {
 	test AddConditionNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddConditionNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -53,7 +53,7 @@ definition {
 	test AddEndNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddEndNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -78,7 +78,7 @@ definition {
 
 		property test.name.skip.portal.instance = "Kaleodesigner#AddForkNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -102,7 +102,7 @@ definition {
 	test AddJoinNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddJoinNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -126,7 +126,7 @@ definition {
 	test AddJoinXORNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddJoinXORNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -153,7 +153,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddJoinXORNodeEditNameAndDesciptionAndDeleteViaViewTab";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -237,7 +237,7 @@ definition {
 	test AddNewWorkflowDefinitionViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddNewWorkflowDefinitionViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -276,7 +276,7 @@ definition {
 
 		PortletEntry.publish();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -298,7 +298,7 @@ definition {
 	test AddStartNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddStartNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -324,7 +324,7 @@ definition {
 	test AddStateNodeEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddStateNodeEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -353,7 +353,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddTaskNodeEditNameAndDesciptionAndNotificationsAndDeleteViaViewTab";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -403,7 +403,7 @@ definition {
 	test AddTaskNodeViaSourceTabAndEditNameAndDesciptionAndDeleteViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#AddTaskNodeViaSourceTabAndEditNameAndDesciptionAndDeleteViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -433,7 +433,7 @@ definition {
 
 		var fileContent = TestCase.getFileContent(fileName = "workflow_definition_task_timers.xml");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -457,7 +457,7 @@ definition {
 	test ConfigureTaskTimersViaViewTab {
 		property test.name.skip.portal.instance = "Kaleodesigner#ConfigureTaskTimersViaViewTab";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -491,24 +491,23 @@ definition {
 			timerDescription = "Timer Description",
 			timerName = "Timer Name");
 
+		for (var iterator : list "1,2,3,4,5,6,7,8,9,10") {
+
+			KaleoDesigner.editSourceXML(
+				kdSourceXML = " ",
+				line = "12");
+		}
+
 		KaleoDesigner.viewSourceXMLLine(
 			kdSourceXML = '''<name>Timer Name</name>''',
-			line = "13");
-
-		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<description>Timer Description</description>''',
-			line = "14");
-
-		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<duration>5</duration>''',
-			line = "16");
-
-		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<scale>hour</scale>''',
 			line = "17");
 
 		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<duration>6</duration>''',
+			kdSourceXML = '''<description>Timer Description</description>''',
+			line = "18");
+
+		KaleoDesigner.viewSourceXMLLine(
+			kdSourceXML = '''<duration>5</duration>''',
 			line = "20");
 
 		KaleoDesigner.viewSourceXMLLine(
@@ -516,37 +515,44 @@ definition {
 			line = "21");
 
 		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<blocking>true</blocking>''',
-			line = "23");
+			kdSourceXML = '''<duration>6</duration>''',
+			line = "24");
 
 		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<timer-action>''',
+			kdSourceXML = '''<scale>hour</scale>''',
 			line = "25");
 
 		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<name>Blocker Name</name>''',
-			line = "26");
-
-		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<description>Blocker Description</description>''',
+			kdSourceXML = '''<blocking>true</blocking>''',
 			line = "27");
 
 		KaleoDesigner.viewSourceXMLLine(
-			kdSourceXML = '''<script><![CDATA[Test Script]]></script>''',
-			line = "28");
+			kdSourceXML = '''<timer-action>''',
+			line = "29");
+
+		KaleoDesigner.viewSourceXMLLine(
+			kdSourceXML = '''<name>Blocker Name</name>''',
+			line = "30");
+
+		KaleoDesigner.viewSourceXMLLine(
+			kdSourceXML = '''<description>Blocker Description</description>''',
+			line = "31");
+
+		KaleoDesigner.viewSourceXMLLine(
+			kdSourceXML = '''<![CDATA[Test Script]]>''',
+			line = "33");
 
 		KaleoDesigner.viewSourceXMLLine(
 			kdSourceXML = '''<script-language>groovy</script-language>''',
-			line = "29");
+			line = "35");
 	}
 
 	@priority = "5"
 	test DeleteConnectors {
-		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "Kaleodesigner#DeleteConnectors";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -595,7 +601,7 @@ definition {
 
 		Workflow.saveDefinition();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -617,7 +623,7 @@ definition {
 	test DeleteWorkflowDefinitionDraft {
 		property test.name.skip.portal.instance = "Kaleodesigner#DeleteWorkflowDefinitionDraft";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -628,7 +634,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -646,7 +652,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#EditAssignmentsForTaskNodeKDCP";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -679,16 +685,32 @@ definition {
 	test PublishDefaultWorkflowDefinition {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishDefaultWorkflowDefinition";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
 
 		Workflow.addNewDefinition(workflowDefinitionTitle = "New Workflow Definition Title");
 
+		for (var iterator : list "1,2,3,4,5,6,7,8,9,10,11,12,13,14") {
+
+			var isLessThan10 = MathUtil.isLessThanOrEqualTo("${iterator}", "10");
+
+			if ("${isLessThan10}" == "true") {
+				KaleoDesigner.editSourceXML(
+					kdSourceXML = " ",
+					line = "11");
+			}
+			else {
+				KaleoDesigner.editSourceXML(
+					kdSourceXML = " ",
+					line = "26");
+			}
+		}
+
 		KaleoDesigner.viewSourceXMLLine(
 			kdSourceXML = '''<script-language>groovy</script-language>''',
-			line = "24");
+			line = "36");
 
 		PortletEntry.publish();
 	}
@@ -698,7 +720,7 @@ definition {
 	test PublishFromSourceTabAndViewNameChange {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishFromSourceTabAndViewNameChange";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -707,11 +729,11 @@ definition {
 
 		KaleoDesigner.editSourceXML(
 			kdSourceXML = '''<name>NAME EDIT''',
-			line = "3");
+			line = "8");
 
 		PortletEntry.publish();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -724,7 +746,7 @@ definition {
 
 		KaleoDesigner.viewSourceXMLLine(
 			kdSourceXML = '''<name>NAME EDIT</name>''',
-			line = "3");
+			line = "8");
 	}
 
 	@priority = "3"
@@ -732,7 +754,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithConnectorPointingToStartNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -775,7 +797,7 @@ definition {
 	test PublishWorkflowDefinitionWithInvalidConditionNodeAndViewErrorMessage {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidConditionNodeAndViewErrorMessage";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -855,7 +877,7 @@ definition {
 
 ''';
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -903,7 +925,7 @@ definition {
 	test PublishWorkflowDefinitionWithInvalidForkNodeAndViewErrorMessage {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidForkNodeAndViewErrorMessage";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -947,7 +969,7 @@ definition {
 	test PublishWorkflowDefinitionWithInvalidJoinNodeAndViewErrorMessage {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidJoinNodeAndViewErrorMessage";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -991,7 +1013,7 @@ definition {
 	test PublishWorkflowDefinitionWithInvalidJoinXORNodeAndViewErrorMessage {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithInvalidJoinXORNodeAndViewErrorMessage";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1035,7 +1057,7 @@ definition {
 	test PublishWorkflowDefinitionWithMultipleStartNodesAndViewErrorMessage {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithMultipleStartNodesAndViewErrorMessage";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1056,7 +1078,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoConnectorsAndViewErrorMessage";
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1073,7 +1095,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoEndNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1092,7 +1114,7 @@ definition {
 		property test.name.skip.portal.instance = "Kaleodesigner#PublishWorkflowDefinitionWithNoStartNodeAndViewErrorMessage";
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1110,7 +1132,7 @@ definition {
 	test SaveInvalidWorkflowDefinitionAsDraft {
 		property test.name.skip.portal.instance = "Kaleodesigner#SaveInvalidWorkflowDefinitionAsDraft";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1128,7 +1150,7 @@ definition {
 	test UndoDraftDefinition {
 		property test.name.skip.portal.instance = "Kaleodesigner#UndoDraftDefinition";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1191,7 +1213,7 @@ definition {
 
 		KaleoDesigner.viewConnectorNotPresent(connectorLabel = "Complete");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1225,7 +1247,7 @@ definition {
 	test ViewAndPublishWorkflowDefinitionDraft {
 		property test.name.skip.portal.instance = "Kaleodesigner#ViewAndPublishWorkflowDefinitionDraft";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1236,7 +1258,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1245,7 +1267,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1256,7 +1278,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1269,7 +1291,7 @@ definition {
 	test ViewSourceXMLNotErasedWhenInvalid {
 		property test.name.skip.portal.instance = "Kaleodesigner#ViewSourceXMLNotErasedWhenInvalid";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1278,15 +1300,17 @@ definition {
 
 		KaleoDesigner.editSourceXML(
 			kdSourceXML = " ",
-			line = "14");
+			line = "22");
+
+		takeScreenshot();
 
 		KaleoDesigner.viewViewTab();
 
-		KaleoDesigner.viewNodeNotPresent(nodeNodeLabel = "EndNode");
-
 		KaleoDesigner.editSourceXML(
-			kdSourceXML = '''</transitions>''',
-			line = "14");
+			kdSourceXML = '''<transitions>''',
+			line = "22");
+
+		takeScreenshot();
 
 		KaleoDesigner.viewViewTab();
 
@@ -1296,11 +1320,11 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-47352 and LPS-48912."
-	@priority = "2"
+	@priority = "3"
 	test ViewWorkflowDefinitionButtons {
 		property test.name.skip.portal.instance = "Kaleodesigner#ViewWorkflowDefinitionButtons";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1311,16 +1335,14 @@ definition {
 	}
 
 	@description = "This is a use case for LPS-47352 and LPS-48912."
-	@priority = "2"
+	@priority = "3"
 	test ViewWorkflowDefinitionButtonsViaKaleoFormsAdmin {
-		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "Kaleodesigner#ViewWorkflowDefinitionButtonsViaKaleoFormsAdmin";
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.addProcess();

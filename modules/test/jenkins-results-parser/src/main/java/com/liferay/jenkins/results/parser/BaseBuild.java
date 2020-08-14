@@ -154,16 +154,16 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof BaseBuild)) {
+		if (!(object instanceof BaseBuild)) {
 			return false;
 		}
 
-		BaseBuild baseBuild = (BaseBuild)obj;
+		BaseBuild baseBuild = (BaseBuild)object;
 
 		if (Objects.equals(getBuildURL(), baseBuild.getBuildURL())) {
 			return true;
@@ -944,6 +944,29 @@ public abstract class BaseBuild implements Build {
 		return _parentBuild;
 	}
 
+	public long getQueuingDuration() {
+		JSONObject buildJSONObject = getBuildJSONObject(
+			"actions[queuingDurationMillis]");
+
+		JSONArray actionsJSONArray = buildJSONObject.getJSONArray("actions");
+
+		for (int i = 0; i < actionsJSONArray.length(); i++) {
+			Object actions = actionsJSONArray.get(i);
+
+			if (actions == JSONObject.NULL) {
+				continue;
+			}
+
+			JSONObject actionJSONObject = actionsJSONArray.getJSONObject(i);
+
+			if (actionJSONObject.has("queuingDurationMillis")) {
+				return actionJSONObject.getLong("queuingDurationMillis");
+			}
+		}
+
+		return 0;
+	}
+
 	@Override
 	public String getResult() {
 		if ((_result == null) && (getBuildURL() != null)) {
@@ -1368,6 +1391,10 @@ public abstract class BaseBuild implements Build {
 
 	@Override
 	public void reinvoke(ReinvokeRule reinvokeRule) {
+		if (badBuildNumbers.size() >= REINVOCATIONS_SIZE_MAX) {
+			return;
+		}
+
 		Build parentBuild = getParentBuild();
 
 		String parentBuildStatus = parentBuild.getStatus();
@@ -1464,10 +1491,16 @@ public abstract class BaseBuild implements Build {
 			return;
 		}
 
+		String pinnedMessage = "";
+
+		if (!slaveOfflineRule.shutdown) {
+			pinnedMessage = "PINNED\n";
+		}
+
 		JenkinsSlave jenkinsSlave = getJenkinsSlave();
 
 		String message = JenkinsResultsParserUtil.combine(
-			"PINNED\n", slaveOfflineRule.getName(), " failure detected at ",
+			pinnedMessage, slaveOfflineRule.getName(), " failure detected at ",
 			getBuildURL(), ". ", jenkinsSlave.getName(),
 			" will be taken offline.\n\n", slaveOfflineRule.toString(),
 			"\n\n\nOffline Slave URL: https://", _jenkinsMaster.getName(),
@@ -1497,7 +1530,7 @@ public abstract class BaseBuild implements Build {
 	}
 
 	@Override
-	public void update() {
+	public synchronized void update() {
 		String status = getStatus();
 
 		if ((status.equals("completed") &&
@@ -1632,52 +1665,38 @@ public abstract class BaseBuild implements Build {
 	public static class DefaultBranchInformation implements BranchInformation {
 
 		@Override
-		public RemoteGitRef getCachedRemoteGitRef() {
-			String cachedBranchName = JenkinsResultsParserUtil.combine(
+		public String getCachedRemoteGitRefName() {
+			return JenkinsResultsParserUtil.combine(
 				"cache-", getReceiverUsername(), "-", getUpstreamBranchSHA(),
-				"-", getSenderUsername(), "-", getSenderBranchSHA());
-
-			String remoteURL = JenkinsResultsParserUtil.combine(
-				"git@github-dev.liferay.com:liferay/", getRepositoryName(),
-				".git");
-
-			return GitUtil.getRemoteGitRef(
-				cachedBranchName, new File("."), remoteURL);
+				"-", getOriginName(), "-", getSenderBranchSHA());
 		}
 
 		@Override
-		public LocalGitBranch getLocalGitBranch(
-			GitWorkingDirectory gitWorkingDirectory) {
+		public String getOriginName() {
+			String branchInformationString = _getBranchInformationString();
 
-			gitWorkingDirectory.checkoutUpstreamLocalGitBranch();
+			String regex = "[\\S\\s]*github.origin.name=(.+)\\n[\\S\\s]*";
 
-			LocalGitBranch localGitBranch =
-				gitWorkingDirectory.createLocalGitBranch(
-					JenkinsResultsParserUtil.combine(
-						getUpstreamBranchName(), "-temp-",
-						String.valueOf(System.currentTimeMillis())),
-					true);
-
-			try {
-				localGitBranch = gitWorkingDirectory.fetch(
-					localGitBranch, true, getCachedRemoteGitRef());
-			}
-			catch (Exception exception) {
-				localGitBranch = gitWorkingDirectory.fetch(
-					localGitBranch, true, getSenderRemoteGitRef());
-
-				LocalGitBranch upstreamLocalGitBranch =
-					gitWorkingDirectory.createLocalGitBranch(
-						JenkinsResultsParserUtil.combine(
-							getUpstreamBranchName(), "-temp-upstream-",
-							String.valueOf(System.currentTimeMillis())),
-						true, getUpstreamBranchSHA());
-
-				localGitBranch = gitWorkingDirectory.rebase(
-					true, upstreamLocalGitBranch, localGitBranch);
+			if (branchInformationString.matches(regex)) {
+				return branchInformationString.replaceAll(regex, "$1");
 			}
 
-			return localGitBranch;
+			return null;
+		}
+
+		@Override
+		public Integer getPullRequestNumber() {
+			String branchInformationString = _getBranchInformationString();
+
+			String regex =
+				"[\\S\\s]*github.pull.request.number=(\\d+)\\n[\\S\\s]*";
+
+			if (branchInformationString.matches(regex)) {
+				return Integer.valueOf(
+					branchInformationString.replaceAll(regex, "$1"));
+			}
+
+			return 0;
 		}
 
 		@Override
@@ -1695,15 +1714,26 @@ public abstract class BaseBuild implements Build {
 
 		@Override
 		public String getRepositoryName() {
-			String branchInformationString = _getBranchInformationString();
+			Properties buildProperties;
 
-			String regex = "[\\S\\s]*prepare.repositories.([^\\(]+)[\\S\\s]*";
-
-			if (branchInformationString.matches(regex)) {
-				return branchInformationString.replaceAll(regex, "$1");
+			try {
+				buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+			}
+			catch (IOException ioException) {
+				throw new RuntimeException(ioException);
 			}
 
-			return null;
+			String repositoryType = _repositoryType;
+
+			if (repositoryType.equals("portal.base") ||
+				repositoryType.equals("portal.ee")) {
+
+				repositoryType = "portal";
+			}
+
+			return JenkinsResultsParserUtil.getProperty(
+				buildProperties, repositoryType + ".repository",
+				getUpstreamBranchName());
 		}
 
 		@Override
@@ -1814,6 +1844,10 @@ public abstract class BaseBuild implements Build {
 			}
 
 			int y = consoleText.indexOf("prepare.repositories.", x);
+
+			if (y == -1) {
+				y = consoleText.indexOf("Deleting:", x);
+			}
 
 			y = consoleText.indexOf("\n", y);
 
@@ -2897,14 +2931,7 @@ public abstract class BaseBuild implements Build {
 	}
 
 	protected String getReinvokedMessage() {
-		StringBuffer sb = new StringBuffer();
-
-		sb.append("Reinvoked: ");
-		sb.append(getBuildURL());
-		sb.append(" at ");
-		sb.append(getInvocationURL());
-
-		return sb.toString();
+		return "Reinvoked: " + getBuildURL();
 	}
 
 	protected JSONObject getRunningBuildJSONObject() throws IOException {

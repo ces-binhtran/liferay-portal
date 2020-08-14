@@ -88,7 +88,7 @@ public class DDMFormInstanceModelImpl
 		{"versionUserId", Types.BIGINT}, {"versionUserName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"structureId", Types.BIGINT}, {"version", Types.VARCHAR},
-		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
+		{"name", Types.VARCHAR}, {"description", Types.CLOB},
 		{"settings_", Types.CLOB}, {"lastPublishDate", Types.TIMESTAMP}
 	};
 
@@ -111,13 +111,13 @@ public class DDMFormInstanceModelImpl
 		TABLE_COLUMNS_MAP.put("structureId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("version", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("description", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("settings_", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table DDMFormInstance (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,formInstanceId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,versionUserId LONG,versionUserName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,structureId LONG,version VARCHAR(75) null,name STRING null,description STRING null,settings_ TEXT null,lastPublishDate DATE null,primary key (formInstanceId, ctCollectionId))";
+		"create table DDMFormInstance (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,formInstanceId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,versionUserId LONG,versionUserName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,structureId LONG,version VARCHAR(75) null,name STRING null,description TEXT null,settings_ TEXT null,lastPublishDate DATE null,primary key (formInstanceId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table DDMFormInstance";
 
@@ -141,12 +141,18 @@ public class DDMFormInstanceModelImpl
 
 	public static final long FORMINSTANCEID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -154,7 +160,9 @@ public class DDMFormInstanceModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static DDMFormInstance toModel(DDMFormInstanceSoap soapModel) {
 		if (soapModel == null) {
 			return null;
@@ -189,7 +197,9 @@ public class DDMFormInstanceModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<DDMFormInstance> toModels(
 		DDMFormInstanceSoap[] soapModels) {
 
@@ -258,9 +268,6 @@ public class DDMFormInstanceModelImpl
 				attributeName,
 				attributeGetterFunction.apply((DDMFormInstance)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -1096,16 +1103,16 @@ public class DDMFormInstanceModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDMFormInstance)) {
+		if (!(object instanceof DDMFormInstance)) {
 			return false;
 		}
 
-		DDMFormInstance ddmFormInstance = (DDMFormInstance)obj;
+		DDMFormInstance ddmFormInstance = (DDMFormInstance)object;
 
 		long primaryKey = ddmFormInstance.getPrimaryKey();
 
@@ -1122,14 +1129,22 @@ public class DDMFormInstanceModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -1334,9 +1349,6 @@ public class DDMFormInstanceModelImpl
 			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
 
 	}
-
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
 
 	private long _mvccVersion;
 	private long _ctCollectionId;

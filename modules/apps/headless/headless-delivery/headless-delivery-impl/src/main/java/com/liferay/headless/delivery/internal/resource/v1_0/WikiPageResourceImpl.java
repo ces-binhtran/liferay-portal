@@ -49,6 +49,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
@@ -57,8 +58,8 @@ import com.liferay.portal.vulcan.util.SearchUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.ratings.kernel.service.RatingsStatsLocalService;
 import com.liferay.subscription.service.SubscriptionLocalService;
+import com.liferay.wiki.constants.WikiPageConstants;
 import com.liferay.wiki.model.WikiNode;
-import com.liferay.wiki.model.WikiPageConstants;
 import com.liferay.wiki.service.WikiNodeService;
 import com.liferay.wiki.service.WikiPageLocalService;
 import com.liferay.wiki.service.WikiPageService;
@@ -105,14 +106,14 @@ public class WikiPageResourceImpl
 
 	@Override
 	public Page<WikiPage> getWikiNodeWikiPagesPage(
-			Long wikiNodeId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long wikiNodeId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		WikiNode wikiNode = _wikiNodeService.getNode(wikiNodeId);
 
 		return SearchUtil.search(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-page",
 				addAction("ADD_PAGE", wikiNode, "postWikiNodeWikiPage")
 			).put(
@@ -129,8 +130,10 @@ public class WikiPageResourceImpl
 			filter, com.liferay.wiki.model.WikiPage.class, search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			searchContext -> searchContext.setCompanyId(
-				contextCompany.getCompanyId()),
+			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+			},
 			sorts,
 			document -> _toWikiPage(
 				_wikiPageService.getPage(
@@ -161,7 +164,7 @@ public class WikiPageResourceImpl
 			ActionKeys.VIEW);
 
 		return Page.of(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-page",
 				addAction(
 					"UPDATE", wikiPage.getResourcePrimKey(),
@@ -307,7 +310,7 @@ public class WikiPageResourceImpl
 
 		return new WikiPage() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+				actions = HashMapBuilder.put(
 					"add-page",
 					addAction(
 						"UPDATE", wikiPage.getResourcePrimKey(),
@@ -354,7 +357,8 @@ public class WikiPageResourceImpl
 						wikiPage.getResourcePrimKey()));
 				content = wikiPage.getContent();
 				creator = CreatorUtil.toCreator(
-					_portal, _userLocalService.fetchUser(wikiPage.getUserId()));
+					_portal, Optional.of(contextUriInfo),
+					_userLocalService.fetchUser(wikiPage.getUserId()));
 				customFields = CustomFieldsUtil.toCustomFields(
 					contextAcceptLanguage.isAcceptAllLanguages(),
 					com.liferay.wiki.model.WikiPage.class.getName(),

@@ -136,12 +136,18 @@ public class PollsChoiceModelImpl
 
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -149,7 +155,9 @@ public class PollsChoiceModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static PollsChoice toModel(PollsChoiceSoap soapModel) {
 		if (soapModel == null) {
 			return null;
@@ -179,7 +187,9 @@ public class PollsChoiceModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<PollsChoice> toModels(PollsChoiceSoap[] soapModels) {
 		if (soapModels == null) {
 			return null;
@@ -246,9 +256,6 @@ public class PollsChoiceModelImpl
 				attributeName,
 				attributeGetterFunction.apply((PollsChoice)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -871,16 +878,16 @@ public class PollsChoiceModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PollsChoice)) {
+		if (!(object instanceof PollsChoice)) {
 			return false;
 		}
 
-		PollsChoice pollsChoice = (PollsChoice)obj;
+		PollsChoice pollsChoice = (PollsChoice)object;
 
 		long primaryKey = pollsChoice.getPrimaryKey();
 
@@ -897,14 +904,22 @@ public class PollsChoiceModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -1082,9 +1097,6 @@ public class PollsChoiceModelImpl
 			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
 
 	}
-
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
 
 	private long _mvccVersion;
 	private String _uuid;

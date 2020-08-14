@@ -292,10 +292,10 @@ public class AccountEntryLocalServiceImpl
 	@Override
 	public List<AccountEntry> getAccountEntries(
 		long companyId, int status, int start, int end,
-		OrderByComparator<AccountEntry> obc) {
+		OrderByComparator<AccountEntry> orderByComparator) {
 
 		return accountEntryPersistence.findByC_S(
-			companyId, status, start, end, obc);
+			companyId, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -497,6 +497,12 @@ public class AccountEntryLocalServiceImpl
 			return;
 		}
 
+		long[] accountGroupIds = (long[])params.get("accountGroupIds");
+
+		if (ArrayUtil.isNotEmpty(accountGroupIds)) {
+			searchContext.setAttribute("accountGroupIds", accountGroupIds);
+		}
+
 		long[] accountUserIds = (long[])params.get("accountUserIds");
 
 		if (ArrayUtil.isNotEmpty(accountUserIds)) {
@@ -527,7 +533,13 @@ public class AccountEntryLocalServiceImpl
 		int status = GetterUtil.getInteger(
 			params.get("status"), WorkflowConstants.STATUS_APPROVED);
 
-		searchContext.setAttribute("status", status);
+		searchContext.setAttribute(Field.STATUS, status);
+
+		String type = (String)params.get("type");
+
+		if (Validator.isNotNull(type)) {
+			searchContext.setAttribute(Field.TYPE, type);
+		}
 	}
 
 	private void _updateAsset(

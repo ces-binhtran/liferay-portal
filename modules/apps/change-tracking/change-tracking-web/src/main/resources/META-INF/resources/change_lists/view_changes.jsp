@@ -29,7 +29,7 @@ portletDisplay.setURLBack(viewChangesDisplayContext.getBackURL());
 portletDisplay.setShowBackIcon(true);
 %>
 
-<nav class="change-lists-tbar component-tbar subnav-tbar-light tbar ">
+<nav class="change-lists-tbar component-tbar subnav-tbar-light tbar">
 	<clay:container-fluid>
 		<ul class="tbar-nav">
 			<c:choose>
@@ -87,7 +87,7 @@ portletDisplay.setShowBackIcon(true);
 							<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctCollection.getCtCollectionId()) %>" />
 						</liferay-portlet:renderURL>
 
-						<a class='btn btn-primary btn-sm <%= viewChangesDisplayContext.hasChanges() ? StringPool.BLANK : "disabled" %>' href="<%= conflictsURL %>" type="button">
+						<a class="btn btn-primary btn-sm <%= viewChangesDisplayContext.hasChanges() ? StringPool.BLANK : "disabled" %>" href="<%= conflictsURL %>" type="button">
 							<liferay-ui:message key="prepare-to-publish" />
 						</a>
 					</li>
@@ -140,15 +140,20 @@ portletDisplay.setShowBackIcon(true);
 	</clay:container-fluid>
 </nav>
 
-<clay:navigation-bar
-	navigationItems="<%= viewChangesDisplayContext.getViewNavigationItems() %>"
-/>
-
-<c:choose>
-	<c:when test='<%= Objects.equals(viewChangesDisplayContext.getDisplayStyle(), "all-items") %>'>
-		<liferay-util:include page="/change_lists/view_all_items.jsp" servletContext="<%= application %>" />
-	</c:when>
-	<c:otherwise>
-		<liferay-util:include page="/change_lists/view_tree.jsp" servletContext="<%= application %>" />
-	</c:otherwise>
-</c:choose>
+<div class="change-lists-view-changes-wrapper">
+	<c:choose>
+		<c:when test="<%= viewChangesDisplayContext.hasChanges() %>">
+			<react:component
+				module="change_lists/js/ChangeTrackingChangesView"
+				props="<%= viewChangesDisplayContext.getReactData() %>"
+			/>
+		</c:when>
+		<c:otherwise>
+			<clay:container-fluid>
+				<liferay-ui:empty-result-message
+					message="no-changes-were-found"
+				/>
+			</clay:container-fluid>
+		</c:otherwise>
+	</c:choose>
+</div>

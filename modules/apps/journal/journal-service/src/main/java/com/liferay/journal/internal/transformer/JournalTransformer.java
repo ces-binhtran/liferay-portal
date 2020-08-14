@@ -265,7 +265,10 @@ public class JournalTransformer {
 					template.prepare(httpServletRequest);
 				}
 				finally {
-					if (portletRequestModel != null) {
+					if ((originalPortletRequest != null) &&
+						(originalPortletResponse != null) &&
+						(portletRequestModel != null)) {
+
 						httpServletRequest.setAttribute(
 							JavaConstants.JAVAX_PORTLET_REQUEST,
 							originalPortletRequest);
@@ -626,6 +629,8 @@ public class JournalTransformer {
 					String optionLabel = localizedLabel.getString(locale);
 
 					templateNode.appendOptionMap(optionValue, optionLabel);
+
+					templateNode.appendOption(optionValue);
 				}
 			}
 

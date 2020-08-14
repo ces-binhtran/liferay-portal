@@ -75,7 +75,7 @@ definition {
 
 	@priority = "5"
 	test AvailableSiteLocalesSubsetNotAllowed {
-		property portal.acceptance = "false";
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "LocalizationWithSites#AvailableSiteLocalesSubsetOfAvailablePortalLocales";
 		property testray.component.names = "Site Localization";
 
@@ -244,7 +244,7 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Usuarios",
 			panel = "Panel de control",
 			portlet = "Usuarios y organizaciones");
@@ -260,7 +260,7 @@ definition {
 			password = "test",
 			userEmailAddress = "userea@liferay.com");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Usuarios",
 			panel = "Panel de control",
 			portlet = "Usuarios y organizaciones");
@@ -399,7 +399,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(
@@ -420,7 +419,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(
@@ -439,7 +437,7 @@ definition {
 
 		ProductMenuHelper.closeProductMenu();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuración",
 			panel = "Panel de control",
 			portlet = "Configuración de instancia");
@@ -455,7 +453,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuración",
-			panel = "Site Administration",
 			portlet = "Ajustes del sitio");
 
 		Site.configureCurrentLanguagesCP(
@@ -492,7 +489,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuración",
-			panel = "Site Administration",
 			portlet = "Ajustes del sitio");
 
 		Site.configureCurrentLanguagesCP(
@@ -566,14 +562,14 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
 
 		SiteTemplates.viewNoSiteOrWorkflowLinksCP();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -760,7 +756,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Generador del sitio",
-			panel = "Site Administration",
 			portlet = "Páginas del sitio web");
 
 		SitePages.gotoPageMenuItem(

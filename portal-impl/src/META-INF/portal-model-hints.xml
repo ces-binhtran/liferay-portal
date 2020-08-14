@@ -209,6 +209,7 @@
 		<field name="settings" type="String">
 			<hint name="max-length">4000</hint>
 		</field>
+		<field name="visibilityType" type="int" />
 		<field name="lastPublishDate" type="Date" />
 	</model>
 	<model name="com.liferay.counter.kernel.model.Counter">
@@ -284,6 +285,7 @@
 		<field name="userName" type="String" />
 		<field name="createDate" type="Date" />
 		<field name="modifiedDate" type="Date" />
+		<field name="dataDefinitionId" type="long" />
 		<field name="fileEntryTypeKey" type="String" />
 		<field localized="true" name="name" type="String">
 			<hint name="max-length">4000</hint>
@@ -731,6 +733,7 @@
 		<field name="iconImageId" type="long" />
 		<field name="themeId" type="String" />
 		<field name="colorSchemeId" type="String" />
+		<field name="styleBookEntryId" type="long" />
 		<field name="css" type="String">
 			<hint-collection name="CLOB" />
 		</field>
@@ -1330,6 +1333,7 @@
 	</model>
 	<model name="com.liferay.portal.kernel.model.SystemEvent">
 		<field name="mvccVersion" type="long" />
+		<field name="ctCollectionId" type="long" />
 		<field name="systemEventId" type="long" />
 		<field name="groupId" type="long" />
 		<field name="companyId" type="long" />

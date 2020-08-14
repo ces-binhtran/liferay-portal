@@ -59,6 +59,9 @@ public class SelectOrganizationsDisplayContext {
 		_renderRequest = renderRequest;
 		_renderResponse = renderResponse;
 		_organizationLocalService = organizationLocalService;
+
+		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 	}
 
 	public String getClearResultsURL() {
@@ -165,13 +168,10 @@ public class SelectOrganizationsDisplayContext {
 			return _organizationSearchContainer;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		OrganizationSearch organizationSearchContainer = new OrganizationSearch(
 			_renderRequest, getPortletURL());
 
+		organizationSearchContainer.setId(getSearchContainerId());
 		organizationSearchContainer.setRowChecker(
 			new EmptyOnClickRowChecker(_renderResponse));
 
@@ -183,7 +183,7 @@ public class SelectOrganizationsDisplayContext {
 			new LinkedHashMap<>();
 
 		int organizationsCount = _organizationLocalService.searchCount(
-			themeDisplay.getCompanyId(),
+			_themeDisplay.getCompanyId(),
 			OrganizationConstants.ANY_PARENT_ORGANIZATION_ID,
 			searchTerms.getKeywords(), searchTerms.getType(),
 			searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(),
@@ -192,7 +192,7 @@ public class SelectOrganizationsDisplayContext {
 		organizationSearchContainer.setTotal(organizationsCount);
 
 		List<Organization> organizations = _organizationLocalService.search(
-			themeDisplay.getCompanyId(),
+			_themeDisplay.getCompanyId(),
 			OrganizationConstants.ANY_PARENT_ORGANIZATION_ID,
 			searchTerms.getKeywords(), searchTerms.getType(),
 			searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(),
@@ -245,6 +245,10 @@ public class SelectOrganizationsDisplayContext {
 		PortletURL searchActionURL = getPortletURL();
 
 		return searchActionURL.toString();
+	}
+
+	public String getSearchContainerId() {
+		return "selectSegmentsEntryOrganizations";
 	}
 
 	public String getSortingURL() {
@@ -345,5 +349,6 @@ public class SelectOrganizationsDisplayContext {
 	private SearchContainer<Organization> _organizationSearchContainer;
 	private final RenderRequest _renderRequest;
 	private final RenderResponse _renderResponse;
+	private final ThemeDisplay _themeDisplay;
 
 }

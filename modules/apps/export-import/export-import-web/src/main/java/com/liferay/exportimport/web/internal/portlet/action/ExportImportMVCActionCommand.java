@@ -17,8 +17,8 @@ package com.liferay.exportimport.web.internal.portlet.action;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.dynamic.data.mapping.exception.StructureDuplicateStructureKeyException;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.exception.LARFileException;
 import com.liferay.exportimport.kernel.exception.LARFileNameException;
 import com.liferay.exportimport.kernel.exception.LARFileSizeException;
@@ -147,12 +147,6 @@ public class ExportImportMVCActionCommand extends BaseMVCActionCommand {
 					actionRequest,
 					ExportImportHelper.TEMP_FOLDER_NAME +
 						portlet.getPortletId());
-
-				SessionMessages.add(
-					actionRequest,
-					_portal.getPortletId(actionRequest) +
-						SessionMessages.KEY_SUFFIX_CLOSE_REFRESH_PORTLET,
-					portlet.getPortletId());
 
 				sendRedirect(actionRequest, actionResponse);
 			}

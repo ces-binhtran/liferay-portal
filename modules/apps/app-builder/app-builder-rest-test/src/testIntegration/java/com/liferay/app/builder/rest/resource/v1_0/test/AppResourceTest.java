@@ -23,8 +23,8 @@ import com.liferay.app.builder.service.AppBuilderAppLocalService;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.data.engine.model.DEDataListView;
 import com.liferay.data.engine.service.DEDataListViewLocalService;
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -52,6 +52,7 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -81,6 +82,7 @@ public class AppResourceTest extends BaseAppResourceTestCase {
 	}
 
 	@Override
+	@Test
 	public void testGetAppsPage() throws Exception {
 		super.testGetAppsPage();
 
@@ -92,7 +94,8 @@ public class AppResourceTest extends BaseAppResourceTestCase {
 				new AppDeployment() {
 					{
 						settings = HashMapBuilder.<String, Object>put(
-							"scope", new String[] {"control_panel"}
+							"scope",
+							new String[] {"applications_menu.applications"}
 						).build();
 						type = "productMenu";
 					}
@@ -181,6 +184,7 @@ public class AppResourceTest extends BaseAppResourceTestCase {
 	}
 
 	@Override
+	@Test
 	public void testPutAppDeploy() throws Exception {
 		App postApp = testPutApp_addApp();
 
@@ -192,6 +196,7 @@ public class AppResourceTest extends BaseAppResourceTestCase {
 	}
 
 	@Override
+	@Test
 	public void testPutAppUndeploy() throws Exception {
 		App postApp = testPutApp_addApp();
 
@@ -219,7 +224,8 @@ public class AppResourceTest extends BaseAppResourceTestCase {
 					new AppDeployment() {
 						{
 							settings = HashMapBuilder.<String, Object>put(
-								"scope", new String[] {"control_panel"}
+								"scope",
+								new String[] {"applications_menu.applications"}
 							).build();
 							type = "productMenu";
 						}

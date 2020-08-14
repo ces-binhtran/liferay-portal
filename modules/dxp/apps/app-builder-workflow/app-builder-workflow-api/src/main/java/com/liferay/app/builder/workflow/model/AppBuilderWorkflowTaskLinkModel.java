@@ -118,6 +118,20 @@ public interface AppBuilderWorkflowTaskLinkModel
 	public void setAppBuilderAppId(long appBuilderAppId);
 
 	/**
+	 * Returns the app builder app version ID of this app builder workflow task link.
+	 *
+	 * @return the app builder app version ID of this app builder workflow task link
+	 */
+	public long getAppBuilderAppVersionId();
+
+	/**
+	 * Sets the app builder app version ID of this app builder workflow task link.
+	 *
+	 * @param appBuilderAppVersionId the app builder app version ID of this app builder workflow task link
+	 */
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId);
+
+	/**
 	 * Returns the ddm structure layout ID of this app builder workflow task link.
 	 *
 	 * @return the ddm structure layout ID of this app builder workflow task link
@@ -130,6 +144,27 @@ public interface AppBuilderWorkflowTaskLinkModel
 	 * @param ddmStructureLayoutId the ddm structure layout ID of this app builder workflow task link
 	 */
 	public void setDdmStructureLayoutId(long ddmStructureLayoutId);
+
+	/**
+	 * Returns the read only of this app builder workflow task link.
+	 *
+	 * @return the read only of this app builder workflow task link
+	 */
+	public boolean getReadOnly();
+
+	/**
+	 * Returns <code>true</code> if this app builder workflow task link is read only.
+	 *
+	 * @return <code>true</code> if this app builder workflow task link is read only; <code>false</code> otherwise
+	 */
+	public boolean isReadOnly();
+
+	/**
+	 * Sets whether this app builder workflow task link is read only.
+	 *
+	 * @param readOnly the read only of this app builder workflow task link
+	 */
+	public void setReadOnly(boolean readOnly);
 
 	/**
 	 * Returns the workflow task name of this app builder workflow task link.

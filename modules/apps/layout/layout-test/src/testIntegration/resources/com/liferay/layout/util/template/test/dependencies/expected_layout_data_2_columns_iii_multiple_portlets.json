@@ -15,12 +15,34 @@
 				"ROOT-CONTAINER0-ROW0"
 			],
 			"config": {
-				"backgroundImage": {
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
 				},
-				"paddingBottom": 3,
-				"paddingHorizontal": 3,
-				"paddingTop": 3,
-				"type": "fixed"
+				"widthType": "fluid"
 			},
 			"itemId": "ROOT-CONTAINER0",
 			"parentId": "ROOT",
@@ -46,6 +68,33 @@
 					"verticalAlignment": "top"
 				},
 				"reverseOrder": false,
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
+				},
 				"tablet": {
 					"modulesPerRow": 2,
 					"reverseOrder": false,
@@ -73,7 +122,34 @@
 			"children": [
 			],
 			"config": {
-				"fragmentEntryLinkId": "column-1:com_liferay_hello_velocity_web_portlet_HelloVelocityPortlet"
+				"fragmentEntryLinkId": "column-1:${TEST_PORTLET_NAME_1}",
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
+				}
 			},
 			"itemId": "ROOT-CONTAINER0-ROW0-COLUMN0-FRAGMENT0",
 			"parentId": "ROOT-CONTAINER0-ROW0-COLUMN0",
@@ -83,7 +159,34 @@
 			"children": [
 			],
 			"config": {
-				"fragmentEntryLinkId": "column-1:com_liferay_chart_sample_web_portlet_ChartSamplePortlet"
+				"fragmentEntryLinkId": "column-1:${TEST_PORTLET_NAME_4}",
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
+				}
 			},
 			"itemId": "ROOT-CONTAINER0-ROW0-COLUMN0-FRAGMENT1",
 			"parentId": "ROOT-CONTAINER0-ROW0-COLUMN0",
@@ -105,7 +208,34 @@
 			"children": [
 			],
 			"config": {
-				"fragmentEntryLinkId": "column-2:com_liferay_hello_world_web_portlet_HelloWorldPortlet"
+				"fragmentEntryLinkId": "column-2:${TEST_PORTLET_NAME_2}",
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
+				}
 			},
 			"itemId": "ROOT-CONTAINER0-ROW0-COLUMN1-FRAGMENT0",
 			"parentId": "ROOT-CONTAINER0-ROW0-COLUMN1",
@@ -115,7 +245,34 @@
 			"children": [
 			],
 			"config": {
-				"fragmentEntryLinkId": "column-2:com_liferay_announcements_web_portlet_AnnouncementsPortlet"
+				"fragmentEntryLinkId": "column-2:${TEST_PORTLET_NAME_3}",
+				"styles": {
+					"backgroundImage": {
+					},
+					"borderRadius": "rounded-0",
+					"borderWidth": 0,
+					"fontFamily": "sans-serif",
+					"fontSize": "medium",
+					"fontWeight": "font-weight-normal",
+					"height": "h-auto",
+					"marginBottom": "0",
+					"marginLeft": "0",
+					"marginRight": "0",
+					"marginTop": "0",
+					"maxHeight": "none",
+					"maxWidth": "none",
+					"minHeight": "auto",
+					"minWidth": "auto",
+					"opacity": 1,
+					"overflow": "visible",
+					"paddingBottom": "0",
+					"paddingLeft": "0",
+					"paddingRight": "0",
+					"paddingTop": "0",
+					"shadow": "shadow-none",
+					"textAlign": "none",
+					"width": "w-auto"
+				}
 			},
 			"itemId": "ROOT-CONTAINER0-ROW0-COLUMN1-FRAGMENT1",
 			"parentId": "ROOT-CONTAINER0-ROW0-COLUMN1",

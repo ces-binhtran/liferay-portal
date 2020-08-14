@@ -57,8 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see FragmentEntryServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 public class FragmentEntryServiceSoap {
 
 	public static com.liferay.fragment.model.FragmentEntrySoap addFragmentEntry(
@@ -184,6 +186,24 @@ public class FragmentEntryServiceSoap {
 		}
 	}
 
+	public static com.liferay.fragment.model.FragmentEntrySoap fetchDraft(
+			long primaryKey)
+		throws RemoteException {
+
+		try {
+			com.liferay.fragment.model.FragmentEntry returnValue =
+				FragmentEntryServiceUtil.fetchDraft(primaryKey);
+
+			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
 	public static com.liferay.fragment.model.FragmentEntrySoap
 			fetchFragmentEntry(long fragmentEntryId)
 		throws RemoteException {
@@ -191,6 +211,24 @@ public class FragmentEntryServiceSoap {
 		try {
 			com.liferay.fragment.model.FragmentEntry returnValue =
 				FragmentEntryServiceUtil.fetchFragmentEntry(fragmentEntryId);
+
+			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.fragment.model.FragmentEntrySoap getDraft(
+			long primaryKey)
+		throws RemoteException {
+
+		try {
+			com.liferay.fragment.model.FragmentEntry returnValue =
+				FragmentEntryServiceUtil.getDraft(primaryKey);
 
 			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
 				returnValue);
@@ -604,6 +642,67 @@ public class FragmentEntryServiceSoap {
 			com.liferay.fragment.model.FragmentEntry returnValue =
 				FragmentEntryServiceUtil.moveFragmentEntry(
 					fragmentEntryId, fragmentCollectionId);
+
+			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.fragment.model.FragmentEntrySoap publishDraft(
+			com.liferay.fragment.model.FragmentEntrySoap draftFragmentEntry)
+		throws RemoteException {
+
+		try {
+			com.liferay.fragment.model.FragmentEntry returnValue =
+				FragmentEntryServiceUtil.publishDraft(
+					com.liferay.fragment.model.impl.FragmentEntryModelImpl.
+						toModel(draftFragmentEntry));
+
+			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.fragment.model.FragmentEntrySoap updateDraft(
+			com.liferay.fragment.model.FragmentEntrySoap draftFragmentEntry)
+		throws RemoteException {
+
+		try {
+			com.liferay.fragment.model.FragmentEntry returnValue =
+				FragmentEntryServiceUtil.updateDraft(
+					com.liferay.fragment.model.impl.FragmentEntryModelImpl.
+						toModel(draftFragmentEntry));
+
+			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
+				returnValue);
+		}
+		catch (Exception exception) {
+			_log.error(exception, exception);
+
+			throw new RemoteException(exception.getMessage());
+		}
+	}
+
+	public static com.liferay.fragment.model.FragmentEntrySoap
+			updateFragmentEntry(
+				com.liferay.fragment.model.FragmentEntrySoap fragmentEntry)
+		throws RemoteException {
+
+		try {
+			com.liferay.fragment.model.FragmentEntry returnValue =
+				FragmentEntryServiceUtil.updateFragmentEntry(
+					com.liferay.fragment.model.impl.FragmentEntryModelImpl.
+						toModel(fragmentEntry));
 
 			return com.liferay.fragment.model.FragmentEntrySoap.toSoapModel(
 				returnValue);

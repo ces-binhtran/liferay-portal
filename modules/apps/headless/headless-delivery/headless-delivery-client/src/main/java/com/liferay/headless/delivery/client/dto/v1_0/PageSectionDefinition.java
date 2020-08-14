@@ -17,6 +17,7 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.PageSectionDefinitionSerDes;
 
+import java.util.Map;
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -53,16 +54,41 @@ public class PageSectionDefinition implements Cloneable {
 
 	protected String backgroundColor;
 
-	public FragmentImage getBackgroundImage() {
+	public FragmentImage getBackgroundFragmentImage() {
+		return backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		FragmentImage backgroundFragmentImage) {
+
+		this.backgroundFragmentImage = backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		UnsafeSupplier<FragmentImage, Exception>
+			backgroundFragmentImageUnsafeSupplier) {
+
+		try {
+			backgroundFragmentImage =
+				backgroundFragmentImageUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentImage backgroundFragmentImage;
+
+	public BackgroundImage getBackgroundImage() {
 		return backgroundImage;
 	}
 
-	public void setBackgroundImage(FragmentImage backgroundImage) {
+	public void setBackgroundImage(BackgroundImage backgroundImage) {
 		this.backgroundImage = backgroundImage;
 	}
 
 	public void setBackgroundImage(
-		UnsafeSupplier<FragmentImage, Exception>
+		UnsafeSupplier<BackgroundImage, Exception>
 			backgroundImageUnsafeSupplier) {
 
 		try {
@@ -73,7 +99,28 @@ public class PageSectionDefinition implements Cloneable {
 		}
 	}
 
-	protected FragmentImage backgroundImage;
+	protected BackgroundImage backgroundImage;
+
+	public FragmentLink getFragmentLink() {
+		return fragmentLink;
+	}
+
+	public void setFragmentLink(FragmentLink fragmentLink) {
+		this.fragmentLink = fragmentLink;
+	}
+
+	public void setFragmentLink(
+		UnsafeSupplier<FragmentLink, Exception> fragmentLinkUnsafeSupplier) {
+
+		try {
+			fragmentLink = fragmentLinkUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentLink fragmentLink;
 
 	public Layout getLayout() {
 		return layout;
@@ -95,6 +142,27 @@ public class PageSectionDefinition implements Cloneable {
 	}
 
 	protected Layout layout;
+
+	public Map<String, Object> getStyles() {
+		return styles;
+	}
+
+	public void setStyles(Map<String, Object> styles) {
+		this.styles = styles;
+	}
+
+	public void setStyles(
+		UnsafeSupplier<Map<String, Object>, Exception> stylesUnsafeSupplier) {
+
+		try {
+			styles = stylesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Map<String, Object> styles;
 
 	@Override
 	public PageSectionDefinition clone() throws CloneNotSupportedException {

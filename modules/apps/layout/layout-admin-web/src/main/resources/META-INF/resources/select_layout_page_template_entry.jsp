@@ -35,7 +35,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 
 <clay:container-fluid
 	cssClass="container-view"
-	id='<%= renderResponse.getNamespace() + "layoutPageTemplateEntries" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "layoutPageTemplateEntries" %>'
 >
 	<clay:row>
 		<clay:col
@@ -59,7 +59,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 
 								<c:if test="<%= layoutPageTemplateEntriesCount > 0 %>">
 									<li class="nav-item">
-										<a class='nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
+										<a class="nav-link text-truncate <%= (selectLayoutPageTemplateEntryDisplayContext.getLayoutPageTemplateCollectionId() == layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(), layoutsAdminDisplayContext.isPrivateLayout()) %>">
 											<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
 										</a>
 									</li>
@@ -70,12 +70,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 							%>
 
 							<li class="nav-item">
-								<a class='nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() ? "active" : StringPool.BLANK %>' href='<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>'>
+								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isBasicTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "basic-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
 									<liferay-ui:message key="basic-templates" />
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class='nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() ? "active" : StringPool.BLANK %>' href='<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "global-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>'>
+								<a class="nav-link text-truncate <%= selectLayoutPageTemplateEntryDisplayContext.isGlobalTemplates() ? "active" : StringPool.BLANK %>" href="<%= layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(0, layoutsAdminDisplayContext.getSelPlid(), "global-templates", layoutsAdminDisplayContext.isPrivateLayout()) %>">
 									<liferay-ui:message key="global-templates" />
 								</a>
 							</li>
@@ -94,7 +94,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 						verticalAlign="center"
 					>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<span class="text-uppercase">
 								<c:choose>
@@ -175,21 +175,10 @@ renderResponse.setTitle(LanguageUtil.get(request, "select-template"));
 		'click',
 		'.add-layout-action-option',
 		function (event) {
-			var actionElement = event.delegateTarget;
-
-			Liferay.Util.openWindow({
-				dialog: {
-					destroyOnHide: true,
-					height: 480,
-					resizable: false,
-					width: 640,
-				},
-				dialogIframe: {
-					bodyCssClass: 'dialog-with-footer',
-				},
+			Liferay.Util.openModal({
 				id: '<portlet:namespace />addLayoutDialog',
 				title: '<liferay-ui:message key="add-page" />',
-				uri: actionElement.dataset.addLayoutUrl,
+				url: event.delegateTarget.dataset.addLayoutUrl,
 			});
 		}
 	);

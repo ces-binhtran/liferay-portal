@@ -14,8 +14,10 @@
 
 package com.liferay.app.builder.workflow.rest.client.serdes.v1_0;
 
-import com.liferay.app.builder.workflow.rest.client.dto.v1_0.AppWorkflowAction;
+import com.liferay.app.builder.workflow.rest.client.dto.v1_0.AppWorkflowDataLayoutLink;
+import com.liferay.app.builder.workflow.rest.client.dto.v1_0.AppWorkflowRoleAssignment;
 import com.liferay.app.builder.workflow.rest.client.dto.v1_0.AppWorkflowTask;
+import com.liferay.app.builder.workflow.rest.client.dto.v1_0.AppWorkflowTransition;
 import com.liferay.app.builder.workflow.rest.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -57,32 +59,27 @@ public class AppWorkflowTaskSerDes {
 
 		sb.append("{");
 
-		if (appWorkflowTask.getAppId() != null) {
+		if (appWorkflowTask.getAppWorkflowDataLayoutLinks() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"appId\": ");
-
-			sb.append(appWorkflowTask.getAppId());
-		}
-
-		if (appWorkflowTask.getAppWorkflowActions() != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"appWorkflowActions\": ");
+			sb.append("\"appWorkflowDataLayoutLinks\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < appWorkflowTask.getAppWorkflowActions().length;
+			for (int i = 0;
+				 i < appWorkflowTask.getAppWorkflowDataLayoutLinks().length;
 				 i++) {
 
 				sb.append(
-					String.valueOf(appWorkflowTask.getAppWorkflowActions()[i]));
+					String.valueOf(
+						appWorkflowTask.getAppWorkflowDataLayoutLinks()[i]));
 
-				if ((i + 1) < appWorkflowTask.getAppWorkflowActions().length) {
+				if ((i + 1) <
+						appWorkflowTask.
+							getAppWorkflowDataLayoutLinks().length) {
+
 					sb.append(", ");
 				}
 			}
@@ -90,21 +87,53 @@ public class AppWorkflowTaskSerDes {
 			sb.append("]");
 		}
 
-		if (appWorkflowTask.getDataLayoutIds() != null) {
+		if (appWorkflowTask.getAppWorkflowRoleAssignments() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"dataLayoutIds\": ");
+			sb.append("\"appWorkflowRoleAssignments\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < appWorkflowTask.getDataLayoutIds().length;
+			for (int i = 0;
+				 i < appWorkflowTask.getAppWorkflowRoleAssignments().length;
 				 i++) {
 
-				sb.append(appWorkflowTask.getDataLayoutIds()[i]);
+				sb.append(
+					String.valueOf(
+						appWorkflowTask.getAppWorkflowRoleAssignments()[i]));
 
-				if ((i + 1) < appWorkflowTask.getDataLayoutIds().length) {
+				if ((i + 1) <
+						appWorkflowTask.
+							getAppWorkflowRoleAssignments().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (appWorkflowTask.getAppWorkflowTransitions() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"appWorkflowTransitions\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < appWorkflowTask.getAppWorkflowTransitions().length; i++) {
+
+				sb.append(
+					String.valueOf(
+						appWorkflowTask.getAppWorkflowTransitions()[i]));
+
+				if ((i + 1) <
+						appWorkflowTask.getAppWorkflowTransitions().length) {
+
 					sb.append(", ");
 				}
 			}
@@ -145,29 +174,33 @@ public class AppWorkflowTaskSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
-		if (appWorkflowTask.getAppId() == null) {
-			map.put("appId", null);
-		}
-		else {
-			map.put("appId", String.valueOf(appWorkflowTask.getAppId()));
-		}
-
-		if (appWorkflowTask.getAppWorkflowActions() == null) {
-			map.put("appWorkflowActions", null);
+		if (appWorkflowTask.getAppWorkflowDataLayoutLinks() == null) {
+			map.put("appWorkflowDataLayoutLinks", null);
 		}
 		else {
 			map.put(
-				"appWorkflowActions",
-				String.valueOf(appWorkflowTask.getAppWorkflowActions()));
+				"appWorkflowDataLayoutLinks",
+				String.valueOf(
+					appWorkflowTask.getAppWorkflowDataLayoutLinks()));
 		}
 
-		if (appWorkflowTask.getDataLayoutIds() == null) {
-			map.put("dataLayoutIds", null);
+		if (appWorkflowTask.getAppWorkflowRoleAssignments() == null) {
+			map.put("appWorkflowRoleAssignments", null);
 		}
 		else {
 			map.put(
-				"dataLayoutIds",
-				String.valueOf(appWorkflowTask.getDataLayoutIds()));
+				"appWorkflowRoleAssignments",
+				String.valueOf(
+					appWorkflowTask.getAppWorkflowRoleAssignments()));
+		}
+
+		if (appWorkflowTask.getAppWorkflowTransitions() == null) {
+			map.put("appWorkflowTransitions", null);
+		}
+		else {
+			map.put(
+				"appWorkflowTransitions",
+				String.valueOf(appWorkflowTask.getAppWorkflowTransitions()));
 		}
 
 		if (appWorkflowTask.getName() == null) {
@@ -198,31 +231,49 @@ public class AppWorkflowTaskSerDes {
 			AppWorkflowTask appWorkflowTask, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "appId")) {
-				if (jsonParserFieldValue != null) {
-					appWorkflowTask.setAppId(
-						Long.valueOf((String)jsonParserFieldValue));
-				}
-			}
-			else if (Objects.equals(
-						jsonParserFieldName, "appWorkflowActions")) {
+			if (Objects.equals(
+					jsonParserFieldName, "appWorkflowDataLayoutLinks")) {
 
 				if (jsonParserFieldValue != null) {
-					appWorkflowTask.setAppWorkflowActions(
+					appWorkflowTask.setAppWorkflowDataLayoutLinks(
 						Stream.of(
 							toStrings((Object[])jsonParserFieldValue)
 						).map(
-							object -> AppWorkflowActionSerDes.toDTO(
+							object -> AppWorkflowDataLayoutLinkSerDes.toDTO(
 								(String)object)
 						).toArray(
-							size -> new AppWorkflowAction[size]
+							size -> new AppWorkflowDataLayoutLink[size]
 						));
 				}
 			}
-			else if (Objects.equals(jsonParserFieldName, "dataLayoutIds")) {
+			else if (Objects.equals(
+						jsonParserFieldName, "appWorkflowRoleAssignments")) {
+
 				if (jsonParserFieldValue != null) {
-					appWorkflowTask.setDataLayoutIds(
-						toLongs((Object[])jsonParserFieldValue));
+					appWorkflowTask.setAppWorkflowRoleAssignments(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> AppWorkflowRoleAssignmentSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new AppWorkflowRoleAssignment[size]
+						));
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "appWorkflowTransitions")) {
+
+				if (jsonParserFieldValue != null) {
+					appWorkflowTask.setAppWorkflowTransitions(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> AppWorkflowTransitionSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new AppWorkflowTransition[size]
+						));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {

@@ -15,12 +15,15 @@
 import ClayAlert from '@clayui/alert';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import {useModal} from '@clayui/modal';
 import {useIsMounted} from 'frontend-js-react-web';
 import React, {useEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 
 import {config} from '../../../app/config/index';
+import selectCanUpdateExperiences from '../../../app/selectors/selectCanUpdateExperiences';
+import selectCanUpdateSegments from '../../../app/selectors/selectCanUpdateSegments';
 import {useDispatch, useSelector} from '../../../app/store/index';
 import createExperience from '../thunks/createExperience';
 import removeExperience from '../thunks/removeExperience';
@@ -79,13 +82,8 @@ const ExperienceSelector = ({
 }) => {
 	const dispatch = useDispatch();
 
-	const hasEditSegmentsEntryPermission = useSelector(
-		({permissions}) => permissions.EDIT_SEGMENTS_ENTRY
-	);
-
-	const hasUpdatePermissions = useSelector(
-		({permissions}) => permissions.UPDATE
-	);
+	const canUpdateExperiences = useSelector(selectCanUpdateExperiences);
+	const canUpdateSegments = useSelector(selectCanUpdateSegments);
 
 	const buttonRef = useRef();
 	const [buttonBoundingClientRect, setButtonBoundingClientRect] = useState({
@@ -282,7 +280,7 @@ const ExperienceSelector = ({
 	return (
 		<>
 			<ClayButton
-				className="align-items-end d-inline-flex form-control-select justify-content-between mr-2 text-left text-truncate"
+				className="form-control-select pr-4 text-left text-truncate"
 				displayType="secondary"
 				id={selectId}
 				onBlur={handleDropdownButtonBlur}
@@ -291,17 +289,24 @@ const ExperienceSelector = ({
 				small
 				type="button"
 			>
-				<span className="text-truncate">{selectedExperience.name}</span>
-
-				{selectedExperience.hasLockedSegmentsExperiment && (
-					<ClayIcon className="mr-3" symbol="lock" />
-				)}
+				<ClayLayout.ContentRow verticalAlign="center">
+					<ClayLayout.ContentCol expand>
+						<span className="text-truncate">
+							{selectedExperience.name}
+						</span>
+					</ClayLayout.ContentCol>
+					<ClayLayout.ContentCol>
+						{selectedExperience.hasLockedSegmentsExperiment && (
+							<ClayIcon symbol="lock" />
+						)}
+					</ClayLayout.ContentCol>
+				</ClayLayout.ContentRow>
 			</ClayButton>
 
 			{open &&
 				createPortal(
 					<div
-						className="dropdown-menu p-4 page-editor__toolbar-experience__dropdown-menu rounded toggled"
+						className="dropdown-menu p-4 page-editor__toolbar-experience__dropdown-menu toggled"
 						onBlur={handleDropdownBlur}
 						onFocus={handleDropdownFocus}
 						style={{
@@ -311,7 +316,7 @@ const ExperienceSelector = ({
 						tabIndex="-1"
 					>
 						<ExperiencesSelectorHeader
-							canCreateExperiences={true}
+							canCreateExperiences={canUpdateExperiences}
 							onNewExperience={handleOnNewExperiecneClick}
 							showEmptyStateMessage={experiences.length <= 1}
 						/>
@@ -321,11 +326,11 @@ const ExperienceSelector = ({
 								activeExperienceId={
 									selectedExperience.segmentsExperienceId
 								}
+								canUpdateExperiences={canUpdateExperiences}
 								defaultExperienceId={
 									config.defaultSegmentsExperienceId
 								}
 								experiences={experiences}
-								hasUpdatePermissions={hasUpdatePermissions}
 								onDeleteExperience={deleteExperience}
 								onEditExperience={handleEditExperienceClick}
 								onPriorityDecrease={decreasePriority}
@@ -338,9 +343,9 @@ const ExperienceSelector = ({
 
 			{openModal && (
 				<ExperienceModal
+					canUpdateSegments={canUpdateSegments}
 					errorMessage={editingExperience.error}
 					experienceId={editingExperience.segmentsExperienceId}
-					hasSegmentsPermission={hasEditSegmentsEntryPermission}
 					initialName={editingExperience.name}
 					observer={modalObserver}
 					onClose={onModalClose}
@@ -362,25 +367,28 @@ const ExperiencesSelectorHeader = ({
 }) => {
 	return (
 		<>
-			<div className="align-items-end d-flex justify-content-between mb-4">
-				<h3 className="mb-0">
-					{Liferay.Language.get('select-experience')}
-				</h3>
-
-				{canCreateExperiences === true && (
-					<ClayButton
-						aria-label={Liferay.Language.get('new-experience')}
-						displayType="secondary"
-						onClick={onNewExperience}
-						small
-					>
-						{Liferay.Language.get('new-experience')}
-					</ClayButton>
-				)}
-			</div>
+			<ClayLayout.ContentRow className="mb-3" verticalAlign="center">
+				<ClayLayout.ContentCol expand>
+					<h3 className="mb-0">
+						{Liferay.Language.get('select-experience')}
+					</h3>
+				</ClayLayout.ContentCol>
+				<ClayLayout.ContentCol>
+					{canCreateExperiences === true && (
+						<ClayButton
+							aria-label={Liferay.Language.get('new-experience')}
+							displayType="secondary"
+							onClick={onNewExperience}
+							small
+						>
+							{Liferay.Language.get('new-experience')}
+						</ClayButton>
+					)}
+				</ClayLayout.ContentCol>
+			</ClayLayout.ContentRow>
 
 			{canCreateExperiences && (
-				<p className="mb-4 text-secondary">
+				<p className="text-secondary">
 					{showEmptyStateMessage
 						? Liferay.Language.get(
 								'experience-help-message-empty-state'
@@ -392,7 +400,7 @@ const ExperiencesSelectorHeader = ({
 			)}
 
 			<ClayAlert
-				className="mt-4 mx-0"
+				className="mx-0"
 				displayType="warning"
 				title={Liferay.Language.get('warning')}
 			>

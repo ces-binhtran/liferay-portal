@@ -74,7 +74,7 @@ pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptions
 								trees="<%= (Collection)scopeAliasTreeNode.getTrees() %>"
 							>
 								<oauth2-tree:node>
-									<li class='borderless list-group-item<c:if test="${assignedDeletedScopeAliases.contains(tree.value)}"> removed-scope</c:if>' id="${tree.value}-container">
+									<li class="borderless list-group-item<c:if test="${assignedDeletedScopeAliases.contains(tree.value)}"> removed-scope</c:if>" id="${tree.value}-container">
 										<clay:row>
 												<c:choose>
 													<c:when test="${parentNodes.size() > 0}">
@@ -90,9 +90,17 @@ pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptions
 													</div>
 													</c:otherwise>
 												</c:choose>
-											<div class="col-md-6 text-left">
-												${scopeAliasesDescriptionsMap.get(tree.value)}
-											</div>
+
+												<div class="col-md-6 text-left">
+													<c:choose>
+														<c:when test="${assignedDeletedScopeAliases.contains(tree.value)}">
+															<liferay-ui:message key="this-scope-is-no-longer-available" />
+														</c:when>
+														<c:otherwise>
+															${scopeAliasesDescriptionsMap.get(tree.value)}
+														</c:otherwise>
+													</c:choose>
+												</div>
 										</clay:row>
 									</li>
 
@@ -100,24 +108,32 @@ pageContext.setAttribute("scopeAliasesDescriptionsMap", scopeAliasesDescriptions
 								</oauth2-tree:node>
 
 								<oauth2-tree:leaf>
-									<li class='borderless list-group-item<c:if test="${assignedDeletedScopeAliases.contains(tree.value)}"> removed-scope</c:if>' id="${tree.value}-container">
+									<li class="borderless list-group-item<c:if test="${assignedDeletedScopeAliases.contains(tree.value)}"> removed-scope</c:if>" id="${tree.value}-container">
 										<clay:row>
-												<c:choose>
-													<c:when test="${parentNodes.size() > 0}">
-													<div class="col-md-6">
-														<div class="scope-children-${parentNodes.size()}">
-															<aui:input checked="${assignedScopeAliases.contains(tree.value)}" data-parent="${parentNodes.getFirst().value}" disabled="${assignedDeletedScopeAliases.contains(tree.value)}" id="${tree.value}" label="${tree.value}" name="scopeAliases" type="checkbox" value="${tree.value}" />
-														</div>
+											<c:choose>
+												<c:when test="${parentNodes.size() > 0}">
+												<div class="col-md-6">
+													<div class="scope-children-${parentNodes.size()}">
+														<aui:input checked="${assignedScopeAliases.contains(tree.value)}" data-parent="${parentNodes.getFirst().value}" disabled="${assignedDeletedScopeAliases.contains(tree.value)}" id="${tree.value}" label="${tree.value}" name="scopeAliases" type="checkbox" value="${tree.value}" />
 													</div>
+												</div>
+												</c:when>
+												<c:otherwise>
+												<div class="col-md-6">
+													<aui:input checked="${assignedScopeAliases.contains(tree.value)}" disabled="${assignedDeletedScopeAliases.contains(tree.value)}" id="${tree.value}" label="${tree.value}" name="scopeAliases" type="checkbox" value="${tree.value}" />
+												</div>
+												</c:otherwise>
+											</c:choose>
+
+											<div class="col-md-6 text-left">
+												<c:choose>
+													<c:when test="${assignedDeletedScopeAliases.contains(tree.value)}">
+														<liferay-ui:message key="this-scope-is-no-longer-available" />
 													</c:when>
 													<c:otherwise>
-													<div class="col-md-6">
-														<aui:input checked="${assignedScopeAliases.contains(tree.value)}" disabled="${assignedDeletedScopeAliases.contains(tree.value)}" id="${tree.value}" label="${tree.value}" name="scopeAliases" type="checkbox" value="${tree.value}" />
-													</div>
+														${scopeAliasesDescriptionsMap.get(tree.value)}
 													</c:otherwise>
 												</c:choose>
-											<div class="col-md-6 text-left">
-												${scopeAliasesDescriptionsMap.get(tree.value)}
 											</div>
 										</clay:row>
 									</li>

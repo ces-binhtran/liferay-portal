@@ -13,7 +13,12 @@
  */
 
 export const concatValues = (values) =>
-	values.join(', ').replace(/, ([^,]*)$/, ' and $1');
+	values
+		.join(', ')
+		.replace(
+			/, ([^,]*)$/,
+			` ${Liferay.Language.get('and').toLowerCase()} $1`
+		);
 
 export const isEqualObjects = (firstObj = {}, secondObj = {}) => {
 	if (typeof firstObj !== 'object' || typeof secondObj !== 'object') {

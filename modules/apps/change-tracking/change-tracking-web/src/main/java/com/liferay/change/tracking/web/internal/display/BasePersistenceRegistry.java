@@ -14,7 +14,7 @@
 
 package com.liferay.change.tracking.web.internal.display;
 
-import com.liferay.change.tracking.reference.TableReferenceDefinition;
+import com.liferay.change.tracking.spi.reference.TableReferenceDefinition;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.reflect.ReflectionUtil;
@@ -30,9 +30,8 @@ import com.liferay.portal.spring.transaction.TransactionExecutor;
 
 import java.io.Serializable;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -65,20 +64,23 @@ public class BasePersistenceRegistry {
 	}
 
 	public <T extends BaseModel<T>> Map<Serializable, T> fetchBaseModelMap(
-		long classNameId, List<Long> primaryKeys) {
+		long classNameId, Set<Long> primaryKeys) {
 
 		return _applyBasePersistence(
 			classNameId,
 			basePersistence ->
 				(Map<Serializable, T>)basePersistence.fetchByPrimaryKeys(
-					new HashSet<>(primaryKeys)));
+					(Set)primaryKeys));
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_tableReferenceDefinitionServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, TableReferenceDefinition.class, null,
+				bundleContext,
+				(Class<TableReferenceDefinition<?>>)
+					(Class<?>)TableReferenceDefinition.class,
+				null,
 				(serviceReference, emitter) -> {
 					TableReferenceDefinition<?> tableReferenceDefinition =
 						bundleContext.getService(serviceReference);
@@ -150,7 +152,7 @@ public class BasePersistenceRegistry {
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
-	private ServiceTrackerMap<Long, TableReferenceDefinition>
+	private ServiceTrackerMap<Long, TableReferenceDefinition<?>>
 		_tableReferenceDefinitionServiceTrackerMap;
 	private final Map<Object, TransactionExecutor> _transactionExecutorMap =
 		new ConcurrentHashMap<>();

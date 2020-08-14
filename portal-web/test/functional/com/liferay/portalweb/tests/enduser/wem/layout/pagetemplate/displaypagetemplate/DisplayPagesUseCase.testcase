@@ -93,10 +93,15 @@ definition {
 		}
 
 		task ("Add a web content article") {
-			JSONWebcontent.addWebContent(
-				content = "Webcontent Content",
-				groupName = "Test Site Name",
-				title = "Webcontent Title");
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(
+				webContentContent = "Webcontent Content",
+				webContentTitle = "Webcontent Title");
+
+			PortletEntry.publish();
 		}
 
 		task ("Add a user with permission to edit web content articles and display pages") {
@@ -148,7 +153,8 @@ definition {
 		task ("Edit the display page by adding a Static Text fragment to the display page") {
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
-				fragmentName = "Static Text");
+				fragmentName = "Static Text",
+				targetFragmentName = "Rich Text");
 
 			Button.clickPublish();
 		}
@@ -161,19 +167,16 @@ definition {
 			AssertVisible(
 				key_content = "Webcontent Title",
 				key_fragmentClass = "header",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "Webcontent Content",
 				key_fragmentClass = "rich-text",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "This is static text.",
 				key_fragmentClass = "static-text",
-				key_position = "3",
 				locator1 = "Fragment#FRAGMENT");
 		}
 
@@ -199,19 +202,16 @@ definition {
 			AssertVisible(
 				key_content = "Webcontent Title Edit",
 				key_fragmentClass = "header",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "Webcontent Content Edit",
 				key_fragmentClass = "rich-text",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "This is static text.",
 				key_fragmentClass = "static-text",
-				key_position = "3",
 				locator1 = "Fragment#FRAGMENT");
 		}
 
@@ -233,6 +233,8 @@ definition {
 	@description = "This ensures that images can be added to the fragment background via the file URL when mapping a document."
 	@priority = "5"
 	test MapDMImageToFragmentBackground {
+		property portal.acceptance = "true";
+
 		JSONDocument.addFileWithUploadedFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "Document_1.jpg",
@@ -251,13 +253,15 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Layout Elements",
-			fragmentName = "Section");
+			fragmentName = "Container");
 
-		PageEditor.editLayoutSection(
+		PageEditor.editLayoutContainer(
 			backgroundImage = "Content Mapping",
 			entryTitle = "Document_1.jpg",
 			fieldName = "File URL",
-			navItem = "Documents and Media");
+			navItem = "Documents and Media",
+			paddingTop = "2",
+			panel = "Styles");
 
 		PageEditor.clickPublish();
 
@@ -271,6 +275,8 @@ definition {
 	@description = "This is a test for LPS-86550. Users should be able to map author name and author profile image to a fragment editable field in a display page."
 	@priority = "5"
 	test MapWebContentAuthor {
+		property portal.acceptance = "true";
+
 		task ("Add a display page with author name and profile fields mapped") {
 			JSONLayoutpagetemplate.addDisplayPageTemplateEntry(
 				contentType = "Web Content Article",
@@ -338,13 +344,11 @@ definition {
 			AssertVisible(
 				key_content = "Test Test",
 				key_fragmentClass = "rich-text",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "",
 				key_fragmentClass = "image",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 
 			SikuliAssertElementPresent(locator1 = "Fragment#MARKETPLACE_ICON_PNG");
@@ -354,6 +358,8 @@ definition {
 	@description = "This case ensures a user can map the editable background image of a fragment to an existing image content."
 	@priority = "5"
 	test MapWebContentImageToFragmentBackground {
+		property portal.acceptance = "true";
+
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
@@ -439,6 +445,8 @@ definition {
 	@description = "This case ensures a user can map the layout of a fragment to an existing image content."
 	@priority = "5"
 	test MapWebContentImageToLayoutSection {
+		property portal.acceptance = "true";
+
 		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
 
 		NavItem.gotoStructures();
@@ -487,12 +495,13 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Layout Elements",
-			fragmentName = "Section");
+			fragmentName = "Container");
 
-		PageEditor.editLayoutSection(
+		PageEditor.editLayoutContainer(
 			backgroundImage = "Content Mapping",
 			entryTitle = "WC WebContent Title",
-			navItem = "Web Content");
+			navItem = "Web Content",
+			panel = "Styles");
 
 		task ("Assert the layout background field contains the mapped image.") {
 			PageEditor.clickPublish();
@@ -604,13 +613,11 @@ definition {
 			AssertVisible(
 				key_content = "Test Test",
 				key_fragmentClass = "rich-text",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "",
 				key_fragmentClass = "image",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 		}
 
@@ -636,13 +643,11 @@ definition {
 			AssertVisible(
 				key_content = "Userfn Userln",
 				key_fragmentClass = "rich-text",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "",
 				key_fragmentClass = "image",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 
 			SikuliAssertElementPresent(locator1 = "Fragment#DOCUMENT_4_PNG");
@@ -793,6 +798,7 @@ definition {
 		DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
 
 		DisplayPageTemplatesAdmin.addDisplayPage(
+			contentType = "Web Content Article",
 			displayPageName = "Display Page Name",
 			subType = "WC Structure Name");
 
@@ -892,7 +898,8 @@ definition {
 
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
-				fragmentName = "Title");
+				fragmentName = "Title",
+				targetFragmentName = "Language Selector");
 
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -951,13 +958,11 @@ definition {
 			AssertVisible(
 				key_content = "Webcontent Title",
 				key_fragmentClass = "header",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "Webcontent Content",
 				key_fragmentClass = "rich-text",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 		}
 
@@ -976,13 +981,11 @@ definition {
 			AssertVisible(
 				key_content = "Webcontent Title",
 				key_fragmentClass = "header",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			AssertVisible(
 				key_content = "Webcontent Content",
 				key_fragmentClass = "rich-text",
-				key_position = "2",
 				locator1 = "Fragment#FRAGMENT");
 		}
 	}

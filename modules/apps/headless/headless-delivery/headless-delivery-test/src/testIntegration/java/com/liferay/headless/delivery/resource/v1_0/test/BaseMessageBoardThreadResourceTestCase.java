@@ -122,7 +122,9 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		MessageBoardThreadResource.Builder builder =
 			MessageBoardThreadResource.builder();
 
-		messageBoardThreadResource = builder.locale(
+		messageBoardThreadResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -220,8 +222,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			messageBoardThreadResource.
 				getMessageBoardSectionMessageBoardThreadsPage(
 					testGetMessageBoardSectionMessageBoardThreadsPage_getMessageBoardSectionId(),
-					RandomTestUtil.randomString(), null, Pagination.of(1, 2),
-					null);
+					RandomTestUtil.randomString(), null, null,
+					Pagination.of(1, 2), null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -239,7 +241,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			page =
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						irrelevantMessageBoardSectionId, null, null,
+						irrelevantMessageBoardSectionId, null, null, null,
 						Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
@@ -261,8 +263,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		page =
 			messageBoardThreadResource.
 				getMessageBoardSectionMessageBoardThreadsPage(
-					messageBoardSectionId, null, null, Pagination.of(1, 2),
-					null);
+					messageBoardSectionId, null, null, null,
+					Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -302,7 +304,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			Page<MessageBoardThread> page =
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						messageBoardSectionId, null,
+						messageBoardSectionId, null, null,
 						getFilterString(
 							entityField, "between", messageBoardThread1),
 						Pagination.of(1, 2), null);
@@ -340,7 +342,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			Page<MessageBoardThread> page =
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						messageBoardSectionId, null,
+						messageBoardSectionId, null, null,
 						getFilterString(entityField, "eq", messageBoardThread1),
 						Pagination.of(1, 2), null);
 
@@ -372,8 +374,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		Page<MessageBoardThread> page1 =
 			messageBoardThreadResource.
 				getMessageBoardSectionMessageBoardThreadsPage(
-					messageBoardSectionId, null, null, Pagination.of(1, 2),
-					null);
+					messageBoardSectionId, null, null, null,
+					Pagination.of(1, 2), null);
 
 		List<MessageBoardThread> messageBoardThreads1 =
 			(List<MessageBoardThread>)page1.getItems();
@@ -384,8 +386,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		Page<MessageBoardThread> page2 =
 			messageBoardThreadResource.
 				getMessageBoardSectionMessageBoardThreadsPage(
-					messageBoardSectionId, null, null, Pagination.of(2, 2),
-					null);
+					messageBoardSectionId, null, null, null,
+					Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -398,8 +400,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		Page<MessageBoardThread> page3 =
 			messageBoardThreadResource.
 				getMessageBoardSectionMessageBoardThreadsPage(
-					messageBoardSectionId, null, null, Pagination.of(1, 3),
-					null);
+					messageBoardSectionId, null, null, null,
+					Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(
@@ -523,8 +525,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			Page<MessageBoardThread> ascPage =
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						messageBoardSectionId, null, null, Pagination.of(1, 2),
-						entityField.getName() + ":asc");
+						messageBoardSectionId, null, null, null,
+						Pagination.of(1, 2), entityField.getName() + ":asc");
 
 			assertEquals(
 				Arrays.asList(messageBoardThread1, messageBoardThread2),
@@ -533,8 +535,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 			Page<MessageBoardThread> descPage =
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						messageBoardSectionId, null, null, Pagination.of(1, 2),
-						entityField.getName() + ":desc");
+						messageBoardSectionId, null, null, null,
+						Pagination.of(1, 2), entityField.getName() + ":desc");
 
 			assertEquals(
 				Arrays.asList(messageBoardThread2, messageBoardThread1),
@@ -1107,7 +1109,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		Page<MessageBoardThread> page =
 			messageBoardThreadResource.getSiteMessageBoardThreadsPage(
 				testGetSiteMessageBoardThreadsPage_getSiteId(), null,
-				RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
+				RandomTestUtil.randomString(), null, null, Pagination.of(1, 2),
+				null);
 
 		Assert.assertEquals(0, page.getTotalCount());
 
@@ -1121,7 +1124,8 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 					irrelevantSiteId, randomIrrelevantMessageBoardThread());
 
 			page = messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null, null, Pagination.of(1, 2),
+				null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -1140,7 +1144,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 				siteId, randomMessageBoardThread());
 
 		page = messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-			siteId, null, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, null, Pagination.of(1, 2), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -1178,7 +1182,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<MessageBoardThread> page =
 				messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-					siteId, null, null,
+					siteId, null, null, null,
 					getFilterString(
 						entityField, "between", messageBoardThread1),
 					Pagination.of(1, 2), null);
@@ -1214,7 +1218,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<MessageBoardThread> page =
 				messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-					siteId, null, null,
+					siteId, null, null, null,
 					getFilterString(entityField, "eq", messageBoardThread1),
 					Pagination.of(1, 2), null);
 
@@ -1244,7 +1248,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 		Page<MessageBoardThread> page1 =
 			messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-				siteId, null, null, null, Pagination.of(1, 2), null);
+				siteId, null, null, null, null, Pagination.of(1, 2), null);
 
 		List<MessageBoardThread> messageBoardThreads1 =
 			(List<MessageBoardThread>)page1.getItems();
@@ -1254,7 +1258,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 		Page<MessageBoardThread> page2 =
 			messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-				siteId, null, null, null, Pagination.of(2, 2), null);
+				siteId, null, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -1266,7 +1270,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 		Page<MessageBoardThread> page3 =
 			messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-				siteId, null, null, null, Pagination.of(1, 3), null);
+				siteId, null, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(
@@ -1388,7 +1392,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<MessageBoardThread> ascPage =
 				messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":asc");
 
 			assertEquals(
@@ -1397,7 +1401,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 
 			Page<MessageBoardThread> descPage =
 				messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-					siteId, null, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":desc");
 
 			assertEquals(
@@ -1980,6 +1984,14 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("seen", additionalAssertFieldName)) {
+				if (messageBoardThread.getSeen() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("showAsQuestion", additionalAssertFieldName)) {
 				if (messageBoardThread.getShowAsQuestion() == null) {
 					valid = false;
@@ -2424,6 +2436,17 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 				continue;
 			}
 
+			if (Objects.equals("seen", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardThread1.getSeen(),
+						messageBoardThread2.getSeen())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
 			if (Objects.equals("showAsQuestion", additionalAssertFieldName)) {
 				if (!Objects.deepEquals(
 						messageBoardThread1.getShowAsQuestion(),
@@ -2842,6 +2865,11 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 				"Invalid entity field " + entityFieldName);
 		}
 
+		if (entityFieldName.equals("seen")) {
+			throw new IllegalArgumentException(
+				"Invalid entity field " + entityFieldName);
+		}
+
 		if (entityFieldName.equals("showAsQuestion")) {
 			throw new IllegalArgumentException(
 				"Invalid entity field " + entityFieldName);
@@ -2944,6 +2972,7 @@ public abstract class BaseMessageBoardThreadResourceTestCase {
 				messageBoardSectionId = RandomTestUtil.randomLong();
 				numberOfMessageBoardAttachments = RandomTestUtil.randomInt();
 				numberOfMessageBoardMessages = RandomTestUtil.randomInt();
+				seen = RandomTestUtil.randomBoolean();
 				showAsQuestion = RandomTestUtil.randomBoolean();
 				siteId = testGroup.getGroupId();
 				subscribed = RandomTestUtil.randomBoolean();

@@ -12,10 +12,11 @@
  * details.
  */
 
-import {FormSupport} from 'dynamic-data-mapping-form-renderer';
+import {FormSupport, PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 
 import {FIELD_TYPE_FIELDSET} from '../../../util/constants.es';
 import {getParentField} from '../../../util/fieldSupport.es';
+import {updateField} from '../util/settingsContext.es';
 import {addField} from './fieldAddedHandler.es';
 import handleFieldDeleted from './fieldDeletedHandler.es';
 import handleSectionAdded from './sectionAddedHandler.es';
@@ -29,16 +30,18 @@ export default (props, state, event) => {
 		targetParentFieldName,
 	} = event;
 
-	const deletedState = handleFieldDeleted(props, state, {
-		activePage: sourceFieldPage,
-		fieldName: sourceFieldName,
-	});
 	const sourceField = FormSupport.findFieldByFieldName(
 		state.pages,
 		sourceFieldName
 	);
 
-	let mergedState = {...deletedState};
+	let mergedState = {
+		...handleFieldDeleted(props, state, {
+			activePage: sourceFieldPage,
+			fieldName: sourceFieldName,
+			removeEmptyRows: false,
+		}),
+	};
 	let parentField = getParentField(state.pages, sourceFieldName);
 
 	if (
@@ -61,17 +64,23 @@ export default (props, state, event) => {
 			parentField.nestedFields.length === 1
 		);
 
-		if (parentFieldName) {
+		if (parentFieldName && parentFieldName !== targetParentFieldName) {
 			mergedState = {
 				...handleFieldDeleted(props, state, {
 					activePage: sourceFieldPage,
 					fieldName: parentFieldName,
+					removeEmptyRows: false,
 				}),
 			};
 		}
 	}
 
 	if (targetFieldName) {
+		const deletedState = handleFieldDeleted(props, state, {
+			activePage: sourceFieldPage,
+			fieldName: sourceFieldName,
+		});
+
 		return {
 			...handleSectionAdded(
 				props,
@@ -91,12 +100,39 @@ export default (props, state, event) => {
 		};
 	}
 
+	const addedState = addField(props, {
+		indexes: targetIndexes,
+		newField: sourceField,
+		pages: mergedState.pages,
+		parentFieldName: targetParentFieldName,
+	});
+
+	const visitor = new PagesVisitor(addedState.pages);
+
+	const pages = visitor.mapFields((field) => {
+		if (field.type != 'grid' && field.rows) {
+			return updateField(
+				props,
+				field,
+				'rows',
+				FormSupport.removeEmptyRows([field], 0)
+			);
+		}
+
+		return field;
+	});
+
 	return {
-		...addField(props, {
-			indexes: targetIndexes,
-			newField: sourceField,
-			pages: mergedState.pages,
-			parentFieldName: targetParentFieldName,
+		...addedState,
+		pages: pages.map((page, pageIndex) => {
+			if (sourceFieldPage === pageIndex) {
+				return {
+					...page,
+					rows: FormSupport.removeEmptyRows(pages, pageIndex),
+				};
+			}
+
+			return page;
 		}),
 	};
 };

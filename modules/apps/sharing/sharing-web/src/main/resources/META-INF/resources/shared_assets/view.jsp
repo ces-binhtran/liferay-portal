@@ -26,7 +26,7 @@ SharedAssetsViewDisplayContext sharedAssetsViewDisplayContext = (SharedAssetsVie
 />
 
 <clay:management-toolbar
-	defaultEventHandler='<%= renderResponse.getNamespace() + "SharedAssets" %>'
+	defaultEventHandler='<%= liferayPortletResponse.getNamespace() + "SharedAssets" %>'
 	filterDropdownItems="<%= sharedAssetsViewDisplayContext.getFilterDropdownItems() %>"
 	selectable="<%= false %>"
 	showSearch="<%= false %>"
@@ -114,16 +114,16 @@ PortletURL viewAssetTypeURL = PortletURLUtil.clone(currentURLObj, liferayPortlet
 viewAssetTypeURL.setParameter("className", (String)null);
 
 PortletURL selectAssetTypeURL = sharedAssetsViewDisplayContext.getSelectAssetTypeURL();
-
-Map<String, Object> context = HashMapBuilder.<String, Object>put(
-	"selectAssetTypeURL", selectAssetTypeURL.toString()
-).put(
-	"viewAssetTypeURL", viewAssetTypeURL.toString()
-).build();
 %>
 
 <liferay-frontend:component
-	componentId='<%= renderResponse.getNamespace() + "SharedAssets" %>'
-	context="<%= context %>"
+	componentId='<%= liferayPortletResponse.getNamespace() + "SharedAssets" %>'
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"selectAssetTypeURL", selectAssetTypeURL.toString()
+		).put(
+			"viewAssetTypeURL", viewAssetTypeURL.toString()
+		).build()
+	%>'
 	module="SharedAssets.es"
 />

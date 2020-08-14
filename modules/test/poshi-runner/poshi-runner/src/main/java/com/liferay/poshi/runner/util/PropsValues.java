@@ -84,6 +84,9 @@ public class PropsValues {
 
 	public static final String PROJECT_DIR = PropsUtil.get("project.dir");
 
+	public static final Boolean PROXY_SERVER_ENABLED = GetterUtil.getBoolean(
+		PropsUtil.get("proxy.server.enabled"));
+
 	public static final boolean SAVE_SCREENSHOT = GetterUtil.getBoolean(
 		PropsUtil.get("save.screenshot"));
 
@@ -95,6 +98,9 @@ public class PropsValues {
 
 	public static final String SELENIUM_DESIRED_CAPABILITIES_PLATFORM =
 		PropsUtil.get("selenium.desired.capabilities.platform");
+
+	public static final String SELENIUM_EDGE_DRIVER_EXECUTABLE = PropsUtil.get(
+		"selenium.edge.driver.executable");
 
 	public static final String SELENIUM_EXECUTABLE_DIR_NAME = PropsUtil.get(
 		"selenium.executable.dir.name");

@@ -65,13 +65,11 @@ public class CreateIndexRequestExecutorImpl
 				new org.elasticsearch.action.admin.indices.create.
 					CreateIndexRequest(createIndexRequest.getIndexName());
 
-		Class<? extends CreateIndexRequestExecutorImpl> clazz = getClass();
-
 		if (createIndexRequest.getSource() != null) {
 			ClassLoaderUtil.getWithContextClassLoader(
 				() -> elasticsearchCreateIndexRequest.source(
 					createIndexRequest.getSource(), XContentType.JSON),
-				clazz);
+				getClass());
 		}
 
 		return elasticsearchCreateIndexRequest;
@@ -85,7 +83,8 @@ public class CreateIndexRequestExecutorImpl
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				createIndexRequest.getConnectionId(), false);
+				createIndexRequest.getConnectionId(),
+				createIndexRequest.isPreferLocalCluster());
 
 		IndicesClient indicesClient = restHighLevelClient.indices();
 

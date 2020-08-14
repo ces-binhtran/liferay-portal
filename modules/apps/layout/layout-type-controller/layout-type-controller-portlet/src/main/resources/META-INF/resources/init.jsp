@@ -33,6 +33,8 @@ page import="com.liferay.info.list.renderer.InfoListRenderer" %><%@
 page import="com.liferay.layout.responsive.ResponsiveLayoutStructureUtil" %><%@
 page import="com.liferay.layout.type.controller.portlet.internal.constants.PortletLayoutTypeControllerWebKeys" %><%@
 page import="com.liferay.layout.type.controller.portlet.internal.display.context.PortletLayoutDisplayContext" %><%@
+page import="com.liferay.layout.util.constants.LayoutDataItemTypeConstants" %><%@
+page import="com.liferay.layout.util.structure.CollectionItemLayoutStructureItem" %><%@
 page import="com.liferay.layout.util.structure.CollectionLayoutStructureItem" %><%@
 page import="com.liferay.layout.util.structure.ColumnLayoutStructureItem" %><%@
 page import="com.liferay.layout.util.structure.ContainerLayoutStructureItem" %><%@
@@ -41,9 +43,10 @@ page import="com.liferay.layout.util.structure.FragmentDropZoneLayoutStructureIt
 page import="com.liferay.layout.util.structure.FragmentLayoutStructureItem" %><%@
 page import="com.liferay.layout.util.structure.LayoutStructure" %><%@
 page import="com.liferay.layout.util.structure.LayoutStructureItem" %><%@
+page import="com.liferay.layout.util.structure.LayoutStructureItemUtil" %><%@
 page import="com.liferay.layout.util.structure.RootLayoutStructureItem" %><%@
 page import="com.liferay.layout.util.structure.RowLayoutStructureItem" %><%@
-page import="com.liferay.petra.string.StringBundler" %><%@
+page import="com.liferay.layout.util.structure.StyledLayoutStructureItem" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.layoutconfiguration.util.RuntimePageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Layout" %><%@
@@ -59,8 +62,7 @@ page import="com.liferay.portal.kernel.util.Validator" %><%@
 page import="com.liferay.portal.kernel.util.WebKeys" %><%@
 page import="com.liferay.portal.util.PropsValues" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Objects" %>
+<%@ page import="java.util.List" %>
 
 <liferay-frontend:defineObjects />
 

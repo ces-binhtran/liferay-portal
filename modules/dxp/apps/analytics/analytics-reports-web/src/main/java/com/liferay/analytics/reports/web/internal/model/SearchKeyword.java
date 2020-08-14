@@ -28,7 +28,7 @@ public class SearchKeyword {
 	}
 
 	public SearchKeyword(
-		String keyword, int position, int searchVolume, int traffic) {
+		String keyword, int position, int searchVolume, long traffic) {
 
 		_keyword = keyword;
 		_position = position;
@@ -37,16 +37,16 @@ public class SearchKeyword {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SearchKeyword)) {
+		if (!(object instanceof SearchKeyword)) {
 			return false;
 		}
 
-		SearchKeyword searchKeyword = (SearchKeyword)obj;
+		SearchKeyword searchKeyword = (SearchKeyword)object;
 
 		if (Objects.equals(_keyword, searchKeyword._keyword) &&
 			Objects.equals(_position, searchKeyword._position) &&
@@ -71,7 +71,7 @@ public class SearchKeyword {
 		return _searchVolume;
 	}
 
-	public int getTraffic() {
+	public long getTraffic() {
 		return _traffic;
 	}
 
@@ -92,7 +92,7 @@ public class SearchKeyword {
 		_searchVolume = searchVolume;
 	}
 
-	public void setTraffic(int traffic) {
+	public void setTraffic(long traffic) {
 		_traffic = traffic;
 	}
 
@@ -104,13 +104,13 @@ public class SearchKeyword {
 		).put(
 			"searchVolume", getSearchVolume()
 		).put(
-			"traffic", getTraffic()
+			"traffic", Math.toIntExact(getTraffic())
 		);
 	}
 
 	private String _keyword;
 	private int _position;
 	private int _searchVolume;
-	private int _traffic;
+	private long _traffic;
 
 }

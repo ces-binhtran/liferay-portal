@@ -123,15 +123,21 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 			layoutPageTemplateEntryIds);
 
 		try (ZipFile zipFile = new ZipFile(file)) {
+			int count = 0;
+
 			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
 
 			while (enumeration.hasMoreElements()) {
 				ZipEntry zipEntry = enumeration.nextElement();
 
-				_validateZipEntry(zipEntry, zipFile);
+				if (!zipEntry.isDirectory()) {
+					_validateZipEntry(zipEntry, zipFile);
+
+					count++;
+				}
 			}
 
-			Assert.assertEquals(3, zipFile.size());
+			Assert.assertEquals(3, count);
 		}
 	}
 

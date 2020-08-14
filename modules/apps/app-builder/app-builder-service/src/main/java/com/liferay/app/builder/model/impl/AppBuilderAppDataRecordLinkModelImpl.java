@@ -64,8 +64,9 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"appBuilderAppDataRecordLinkId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"appBuilderAppId", Types.BIGINT},
-		{"ddlRecordId", Types.BIGINT}
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"appBuilderAppId", Types.BIGINT},
+		{"appBuilderAppVersionId", Types.BIGINT}, {"ddlRecordId", Types.BIGINT}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -73,13 +74,15 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("appBuilderAppDataRecordLinkId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("appBuilderAppId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("appBuilderAppVersionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ddlRecordId", Types.BIGINT);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AppBuilderAppDataRecordLink (appBuilderAppDataRecordLinkId LONG not null primary key,companyId LONG,appBuilderAppId LONG,ddlRecordId LONG)";
+		"create table AppBuilderAppDataRecordLink (appBuilderAppDataRecordLinkId LONG not null primary key,groupId LONG,companyId LONG,appBuilderAppId LONG,appBuilderAppVersionId LONG,ddlRecordId LONG)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table AppBuilderAppDataRecordLink";
@@ -102,12 +105,18 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 	public static final long APPBUILDERAPPDATARECORDLINKID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public AppBuilderAppDataRecordLinkModelImpl() {
@@ -162,9 +171,6 @@ public class AppBuilderAppDataRecordLinkModelImpl
 				attributeGetterFunction.apply(
 					(AppBuilderAppDataRecordLink)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -253,6 +259,12 @@ public class AppBuilderAppDataRecordLinkModelImpl
 			(BiConsumer<AppBuilderAppDataRecordLink, Long>)
 				AppBuilderAppDataRecordLink::setAppBuilderAppDataRecordLinkId);
 		attributeGetterFunctions.put(
+			"groupId", AppBuilderAppDataRecordLink::getGroupId);
+		attributeSetterBiConsumers.put(
+			"groupId",
+			(BiConsumer<AppBuilderAppDataRecordLink, Long>)
+				AppBuilderAppDataRecordLink::setGroupId);
+		attributeGetterFunctions.put(
 			"companyId", AppBuilderAppDataRecordLink::getCompanyId);
 		attributeSetterBiConsumers.put(
 			"companyId",
@@ -264,6 +276,13 @@ public class AppBuilderAppDataRecordLinkModelImpl
 			"appBuilderAppId",
 			(BiConsumer<AppBuilderAppDataRecordLink, Long>)
 				AppBuilderAppDataRecordLink::setAppBuilderAppId);
+		attributeGetterFunctions.put(
+			"appBuilderAppVersionId",
+			AppBuilderAppDataRecordLink::getAppBuilderAppVersionId);
+		attributeSetterBiConsumers.put(
+			"appBuilderAppVersionId",
+			(BiConsumer<AppBuilderAppDataRecordLink, Long>)
+				AppBuilderAppDataRecordLink::setAppBuilderAppVersionId);
 		attributeGetterFunctions.put(
 			"ddlRecordId", AppBuilderAppDataRecordLink::getDdlRecordId);
 		attributeSetterBiConsumers.put(
@@ -287,6 +306,16 @@ public class AppBuilderAppDataRecordLinkModelImpl
 		long appBuilderAppDataRecordLinkId) {
 
 		_appBuilderAppDataRecordLinkId = appBuilderAppDataRecordLinkId;
+	}
+
+	@Override
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	@Override
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
 	}
 
 	@Override
@@ -319,6 +348,16 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 	public long getOriginalAppBuilderAppId() {
 		return _originalAppBuilderAppId;
+	}
+
+	@Override
+	public long getAppBuilderAppVersionId() {
+		return _appBuilderAppVersionId;
+	}
+
+	@Override
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId) {
+		_appBuilderAppVersionId = appBuilderAppVersionId;
 	}
 
 	@Override
@@ -383,9 +422,12 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 		appBuilderAppDataRecordLinkImpl.setAppBuilderAppDataRecordLinkId(
 			getAppBuilderAppDataRecordLinkId());
+		appBuilderAppDataRecordLinkImpl.setGroupId(getGroupId());
 		appBuilderAppDataRecordLinkImpl.setCompanyId(getCompanyId());
 		appBuilderAppDataRecordLinkImpl.setAppBuilderAppId(
 			getAppBuilderAppId());
+		appBuilderAppDataRecordLinkImpl.setAppBuilderAppVersionId(
+			getAppBuilderAppVersionId());
 		appBuilderAppDataRecordLinkImpl.setDdlRecordId(getDdlRecordId());
 
 		appBuilderAppDataRecordLinkImpl.resetOriginalValues();
@@ -411,17 +453,17 @@ public class AppBuilderAppDataRecordLinkModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AppBuilderAppDataRecordLink)) {
+		if (!(object instanceof AppBuilderAppDataRecordLink)) {
 			return false;
 		}
 
 		AppBuilderAppDataRecordLink appBuilderAppDataRecordLink =
-			(AppBuilderAppDataRecordLink)obj;
+			(AppBuilderAppDataRecordLink)object;
 
 		long primaryKey = appBuilderAppDataRecordLink.getPrimaryKey();
 
@@ -438,14 +480,22 @@ public class AppBuilderAppDataRecordLinkModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -476,10 +526,15 @@ public class AppBuilderAppDataRecordLinkModelImpl
 		appBuilderAppDataRecordLinkCacheModel.appBuilderAppDataRecordLinkId =
 			getAppBuilderAppDataRecordLinkId();
 
+		appBuilderAppDataRecordLinkCacheModel.groupId = getGroupId();
+
 		appBuilderAppDataRecordLinkCacheModel.companyId = getCompanyId();
 
 		appBuilderAppDataRecordLinkCacheModel.appBuilderAppId =
 			getAppBuilderAppId();
+
+		appBuilderAppDataRecordLinkCacheModel.appBuilderAppVersionId =
+			getAppBuilderAppVersionId();
 
 		appBuilderAppDataRecordLinkCacheModel.ddlRecordId = getDdlRecordId();
 
@@ -562,14 +617,13 @@ public class AppBuilderAppDataRecordLinkModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _appBuilderAppDataRecordLinkId;
+	private long _groupId;
 	private long _companyId;
 	private long _appBuilderAppId;
 	private long _originalAppBuilderAppId;
 	private boolean _setOriginalAppBuilderAppId;
+	private long _appBuilderAppVersionId;
 	private long _ddlRecordId;
 	private long _originalDdlRecordId;
 	private boolean _setOriginalDdlRecordId;

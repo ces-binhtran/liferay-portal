@@ -121,6 +121,7 @@ definition {
 
 	@priority = "5"
 	test AddSiteTeamMultiple {
+		property portal.acceptance = "true";
 		property testray.component.names = "Site Administration";
 
 		JSONLayout.addPublicLayout(
@@ -336,6 +337,7 @@ definition {
 
 	@priority = "5"
 	test DeleteSiteTeam {
+		property portal.acceptance = "true";
 		property testray.component.names = "Site Administration";
 
 		Site.openSiteTeamsAdmin(siteURLKey = "site-name");

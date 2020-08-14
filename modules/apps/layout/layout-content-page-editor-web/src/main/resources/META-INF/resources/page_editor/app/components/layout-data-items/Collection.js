@@ -12,7 +12,8 @@
  * details.
  */
 
-import React, {useEffect, useState} from 'react';
+import ClayLayout from '@clayui/layout';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import CollectionService from '../../services/CollectionService';
 import {useDispatch, useSelector} from '../../store/index';
@@ -49,12 +50,6 @@ export function fromControlsId(controlsItemId) {
 	return itemId || controlsItemId;
 }
 
-const NoItemsMessage = () => (
-	<div className="page-editor__collection__no-items-message">
-		{Liferay.Language.get('you-do-not-have-any-items-in-this-collection')}
-	</div>
-);
-
 const NotCollectionSelectedMessage = () => (
 	<div className="page-editor__collection__not-collection-selected-message">
 		{Liferay.Language.get('no-collection-selected-yet')}
@@ -64,68 +59,77 @@ const NotCollectionSelectedMessage = () => (
 const Grid = ({
 	child,
 	collection,
-	collectionFields,
+	collectionConfig,
 	collectionId,
 	collectionLength,
-	numberOfColumns,
-	numberOfItems,
 }) => {
-	const maxNumberOfItems = Math.min(collectionLength, numberOfItems);
-	const numberOfRows = Math.ceil(maxNumberOfItems / numberOfColumns);
+	const maxNumberOfItems = Math.min(
+		collectionLength,
+		collectionConfig.numberOfItems
+	);
+	const numberOfRows = Math.ceil(
+		maxNumberOfItems / collectionConfig.numberOfColumns
+	);
 
-	const createRows = () => {
-		const rows = [];
+	return Array.from({length: numberOfRows}).map((_, i) => (
+		<ClayLayout.Row key={`row-${i}`}>
+			{Array.from({length: collectionConfig.numberOfColumns}).map(
+				(_, j) => {
+					const key = `col-${i}-${j}`;
+					const index = i * collectionConfig.numberOfColumns + j;
 
-		for (let i = 0; i < numberOfRows; i++) {
-			const columns = [];
+					return (
+						<ClayLayout.Col
+							key={key}
+							size={12 / collectionConfig.numberOfColumns}
+						>
+							{index < maxNumberOfItems && (
+								<ColumnContext
+									collectionConfig={collectionConfig}
+									collectionId={collectionId}
+									collectionItem={collection[index]}
+									index={index}
+								>
+									{React.cloneElement(child)}
+								</ColumnContext>
+							)}
+						</ClayLayout.Col>
+					);
+				}
+			)}
+		</ClayLayout.Row>
+	));
+};
 
-			for (let j = 0; j < numberOfColumns; j++) {
-				const index = [i, j].join('-');
-				const itemCount = i * numberOfColumns + j;
+const ColumnContext = ({
+	children,
+	collectionConfig,
+	collectionId,
+	collectionItem,
+	index,
+}) => {
+	const contextValue = useMemo(
+		() => ({
+			collectionConfig,
+			collectionItem,
+			collectionItemIndex: index,
+			fromControlsId: index === 0 ? null : fromControlsId,
+			toControlsId:
+				index === 0 ? null : getToControlsId(collectionId, index),
+		}),
+		[collectionConfig, collectionId, collectionItem, index]
+	);
 
-				columns.push(
-					<div
-						className={`col col-${12 / numberOfColumns}`}
-						key={index}
-					>
-						{itemCount < maxNumberOfItems && (
-							<CollectionItemContextProvider
-								key={index}
-								value={{
-									collectionFields,
-									collectionItem:
-										collection[i * numberOfColumns + j],
-									collectionItemIndex:
-										i * numberOfColumns + j,
-									fromControlsId:
-										itemCount === 0 ? null : fromControlsId,
-									toControlsId:
-										itemCount === 0
-											? null
-											: getToControlsId(
-													collectionId,
-													index
-											  ),
-								}}
-							>
-								{React.cloneElement(child)}
-							</CollectionItemContextProvider>
-						)}
-					</div>
-				);
-			}
+	return (
+		<CollectionItemContextProvider value={contextValue}>
+			{children}
+		</CollectionItemContextProvider>
+	);
+};
 
-			rows.push(
-				<div className="row" key={i}>
-					{columns}
-				</div>
-			);
-		}
-
-		return rows;
-	};
-
-	return createRows();
+const DEFAULT_COLLECTION = {
+	items: [{defaultTitle: Liferay.Language.get('title')}],
+	length: 1,
 };
 
 const Collection = React.forwardRef(({children, item}, ref) => {
@@ -138,10 +142,7 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 		(state) => state.segmentsExperienceId
 	);
 
-	const [collection, setCollection] = useState({
-		items: [],
-		length: 0,
-	});
+	const [collection, setCollection] = useState(DEFAULT_COLLECTION);
 
 	useEffect(() => {
 		if (collectionConfig.collection) {
@@ -155,7 +156,9 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 				templateKey: collectionConfig.templateKey || null,
 			})
 				.then((response) => {
-					setCollection(response);
+					setCollection(
+						response.length > 0 ? response : DEFAULT_COLLECTION
+					);
 				})
 				.catch((error) => {
 					if (process.env.NODE_ENV === 'development') {
@@ -173,46 +176,20 @@ const Collection = React.forwardRef(({children, item}, ref) => {
 		segmentsExperienceId,
 	]);
 
-	const [collectionFields, setCollectionFields] = useState([]);
-
-	useEffect(() => {
-		if (collectionConfig.collection) {
-			CollectionService.getCollectionMappingFields({
-				itemSubtype: collectionConfig.collection.itemSubtype || '',
-				itemType: collectionConfig.collection.itemType,
-				onNetworkStatus: dispatch,
-			})
-				.then((response) => {
-					setCollectionFields(response);
-				})
-				.catch((error) => {
-					if (process.env.NODE_ENV === 'development') {
-						console.error(error);
-					}
-				});
-		}
-	}, [dispatch, collectionConfig.collection]);
-
 	return (
 		<div className="page-editor__collection" ref={ref}>
-			{collectionIsMapped(collectionConfig) &&
-			!collection.content &&
-			collection.items.length > 0 ? (
+			{!collectionIsMapped(collectionConfig) ? (
+				<NotCollectionSelectedMessage />
+			) : collection.content ? (
+				<UnsafeHTML markup={collection.content} />
+			) : (
 				<Grid
 					child={child}
 					collection={collection.items}
-					collectionFields={collectionFields}
+					collectionConfig={collectionConfig}
 					collectionId={item.itemId}
 					collectionLength={collection.items.length}
-					numberOfColumns={collectionConfig.numberOfColumns}
-					numberOfItems={collectionConfig.numberOfItems}
 				/>
-			) : collectionIsMapped(collectionConfig) && collection.content ? (
-				<UnsafeHTML markup={collection.content} />
-			) : collectionIsMapped(collectionConfig) ? (
-				<NoItemsMessage />
-			) : (
-				<NotCollectionSelectedMessage />
 			)}
 		</div>
 	);

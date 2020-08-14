@@ -17,92 +17,151 @@ import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
 import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
+import selectLanguageId from '../../selectors/selectLanguageId';
 import InfoItemService from '../../services/InfoItemService';
+import {useSelector} from '../../store/index';
+import loadBackgroundImage from '../../utils/loadBackgroundImage';
 
-const Container = React.forwardRef(({children, className, data, item}, ref) => {
-	const {
-		align,
-		backgroundColor,
-		backgroundImage,
-		borderColor,
-		borderRadius,
-		borderWidth,
-		containerWidth,
-		contentDisplay,
-		dropShadow,
-		justify,
-		marginBottom,
-		marginLeft,
-		marginRight,
-		marginTop,
-		opacity,
-		paddingBottom,
-		paddingLeft,
-		paddingRight,
-		paddingTop,
-	} = item.config;
+const Container = React.forwardRef(
+	({children, className, data, item, withinTopper = false}, ref) => {
+		const {
+			backgroundColor,
+			backgroundImage,
+			borderColor,
+			borderRadius,
+			borderWidth,
+			fontFamily,
+			fontSize,
+			fontWeight,
+			height,
+			marginBottom,
+			marginLeft,
+			marginRight,
+			marginTop,
+			maxHeight,
+			maxWidth,
+			minHeight,
+			minWidth,
+			opacity,
+			overflow,
+			paddingBottom,
+			paddingLeft,
+			paddingRight,
+			paddingTop,
+			textAlign,
+			textColor,
+		} = item.config.styles;
 
-	const backgroundColorCssClass = backgroundColor && backgroundColor.cssClass;
-	const [backgroundImageValue, setBackgroundImageValue] = useState('');
-	const borderColorCssClass = borderColor && borderColor.cssClass;
+		const {widthType} = item.config;
 
-	useEffect(() => {
-		loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
-	}, [backgroundImage]);
+		const languageId = useSelector(selectLanguageId);
+		const [backgroundImageValue, setBackgroundImageValue] = useState('');
+		const [link, setLink] = useState(null);
 
-	const style = {
-		boxSizing: 'border-box',
-	};
+		useEffect(() => {
+			loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
+		}, [backgroundImage]);
 
-	if (backgroundImageValue) {
-		style.backgroundImage = `url(${backgroundImageValue})`;
-		style.backgroundPosition = '50% 50%';
-		style.backgroundRepeat = 'no-repeat';
-		style.backgroundSize = 'cover';
+		useEffect(() => {
+			if (!item.config.link) {
+				return;
+			}
+
+			if (item.config.link.href) {
+				setLink(item.config.link);
+			}
+			else if (item.config.link.fieldId) {
+				InfoItemService.getInfoItemFieldValue({
+					...item.config.link,
+					languageId,
+					onNetworkStatus: () => {},
+				}).then(({fieldValue}) => {
+					setLink({
+						href: fieldValue,
+						target: item.config.link.target,
+					});
+				});
+			}
+		}, [item.config.link, languageId]);
+
+		const style = {
+			boxSizing: 'border-box',
+		};
+
+		if (backgroundImageValue) {
+			style.backgroundImage = `url(${backgroundImageValue})`;
+			style.backgroundPosition = '50% 50%';
+			style.backgroundRepeat = 'no-repeat';
+			style.backgroundSize = 'cover';
+		}
+
+		if (fontSize) {
+			style.fontSize = fontSize;
+		}
+
+		if (minHeight !== 'auto') {
+			style.minHeight = minHeight;
+		}
+
+		if (minWidth !== 'auto') {
+			style.minWidth = minWidth;
+		}
+
+		style.border = `solid ${borderWidth}px`;
+		style.maxHeight = maxHeight;
+		style.maxWidth = maxWidth;
+		style.opacity = opacity;
+		style.overflow = overflow;
+
+		const content = (
+			<div
+				{...(link ? {} : data)}
+				className={classNames(
+					className,
+					fontWeight,
+					height,
+					`mb-${marginBottom}`,
+					`mt-${marginTop}`,
+					`pb-${paddingBottom}`,
+					`pl-${paddingLeft}`,
+					`pr-${paddingRight}`,
+					`pt-${paddingTop}`,
+					{
+						[`bg-${backgroundColor?.cssClass}`]: backgroundColor,
+						[`border-${borderColor?.cssClass}`]: borderColor,
+						[borderRadius]: !!borderRadius,
+						container: widthType === 'fixed',
+						empty: item.children.length === 0,
+						[`text-${fontFamily}`]: fontFamily !== 'default',
+						[`ml-${marginLeft}`]:
+							widthType !== 'fixed' && !withinTopper,
+						[`mr-${marginRight}`]:
+							widthType !== 'fixed' && !withinTopper,
+						[textAlign]: textAlign !== 'none',
+						[`text-${textColor?.cssClass}`]: textColor,
+					}
+				)}
+				ref={ref}
+				style={style}
+			>
+				{children}
+			</div>
+		);
+
+		return link ? (
+			<a
+				{...data}
+				href={link.href}
+				style={{color: 'inherit', textDecoration: 'none'}}
+				target={link.target}
+			>
+				{content}
+			</a>
+		) : (
+			content
+		);
 	}
-
-	if (borderWidth) {
-		style.borderStyle = 'solid';
-		style.borderWidth = `${borderWidth}px`;
-	}
-
-	if (opacity) {
-		style.opacity = Number(opacity / 100) || 1;
-	}
-
-	return (
-		<div
-			{...data}
-			className={classNames(
-				className,
-				`mb-${marginBottom || 0}`,
-				`ml-${marginLeft || 0}`,
-				`mr-${marginRight || 0}`,
-				`mt-${marginTop || 0}`,
-				`pb-${paddingBottom || 0}`,
-				`pl-${paddingLeft || 0}`,
-				`pr-${paddingRight || 0}`,
-				`pt-${paddingTop || 0}`,
-				{
-					[align]: !!align,
-					[borderRadius]: !!borderRadius,
-					container: containerWidth === 'fixed',
-					'd-block': contentDisplay === 'block',
-					'd-flex': contentDisplay === 'flex',
-					[dropShadow]: !!dropShadow,
-					empty: item.children.length === 0,
-					[justify]: !!justify,
-					[`bg-${backgroundColorCssClass}`]: !!backgroundColorCssClass,
-					[`border-${borderColorCssClass}`]: !!borderColorCssClass,
-				}
-			)}
-			ref={ref}
-			style={style}
-		>
-			{children}
-		</div>
-	);
-});
+);
 
 Container.displayName = 'Container';
 
@@ -110,31 +169,6 @@ Container.propTypes = {
 	item: getLayoutDataItemPropTypes({
 		config: PropTypes.shape({}),
 	}).isRequired,
-};
-
-const loadBackgroundImage = (backgroundImage) => {
-	if (!backgroundImage) {
-		return Promise.resolve('');
-	}
-	else if (typeof backgroundImage.url === 'string') {
-		return Promise.resolve(backgroundImage.url);
-	}
-	else if (backgroundImage.fieldId) {
-		return InfoItemService.getAssetFieldValue({
-			classNameId: backgroundImage.classNameId,
-			classPK: backgroundImage.classPK,
-			fieldId: backgroundImage.fieldId,
-			onNetworkStatus: () => {},
-		}).then((response) => {
-			if (response.fieldValue && response.fieldValue.url) {
-				return response.fieldValue.url;
-			}
-
-			return '';
-		});
-	}
-
-	return Promise.resolve('');
 };
 
 export default Container;

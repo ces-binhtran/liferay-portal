@@ -12,127 +12,121 @@
  * details.
  */
 
-import React, {useCallback, useMemo} from 'react';
+import classNames from 'classnames';
+import React, {useEffect, useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
 import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../../prop-types/index';
-import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
-import selectCanUpdateLayoutContent from '../../selectors/selectCanUpdateLayoutContent';
-import {useDispatch, useSelector} from '../../store/index';
-import duplicateItem from '../../thunks/duplicateItem';
-import {useSelectItem} from '../Controls';
+import loadBackgroundImage from '../../utils/loadBackgroundImage';
 import Topper from '../Topper';
-import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
 import FragmentContent from '../fragment-content/FragmentContent';
 
 const FragmentWithControls = React.forwardRef(({item, layoutData}, ref) => {
-	const canUpdateLayoutContent = useSelector(selectCanUpdateLayoutContent);
-	const dispatch = useDispatch();
-	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
-	const segmentsExperienceId = useSelector(
-		(state) => state.segmentsExperienceId
-	);
-	const selectItem = useSelectItem();
-	const widgets = useSelector((state) => state.widgets);
-
-	const fragmentEntryLink =
-		fragmentEntryLinks[item.config.fragmentEntryLinkId];
-
 	const [setRef, itemElement] = useSetRef(ref);
 
-	const handleButtonClick = useCallback(
-		(id) => {
-			if (id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id) {
-				dispatch(
-					duplicateItem({
-						itemId: item.itemId,
-						segmentsExperienceId,
-						selectItem,
-					})
-				);
-			}
-		},
-		[dispatch, item.itemId, segmentsExperienceId, selectItem]
-	);
+	const {
+		backgroundColor,
+		backgroundImage,
+		borderColor,
+		borderRadius,
+		borderWidth,
+		fontFamily,
+		fontSize,
+		fontWeight,
+		height,
+		marginBottom,
+		marginLeft,
+		marginRight,
+		marginTop,
+		maxHeight,
+		maxWidth,
+		minHeight,
+		minWidth,
+		opacity,
+		overflow,
+		paddingBottom,
+		paddingLeft,
+		paddingRight,
+		paddingTop,
+		shadow,
+		textAlign,
+		textColor,
+		width,
+	} = item.config.styles;
 
-	const floatingToolbarButtons = useMemo(() => {
-		const buttons = [];
+	const [backgroundImageValue, setBackgroundImageValue] = useState('');
 
-		const portletId = fragmentEntryLink.editableValues.portletId;
+	useEffect(() => {
+		loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
+	}, [backgroundImage]);
 
-		const widget = portletId && getWidget(widgets, portletId);
+	const style = {};
 
-		if (!widget || widget.instanceable) {
-			buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem);
-		}
+	if (backgroundImageValue) {
+		style.backgroundImage = `url(${backgroundImageValue})`;
+		style.backgroundPosition = '50% 50%';
+		style.backgroundRepeat = 'no-repeat';
+		style.backgroundSize = 'cover';
+	}
 
-		const configuration = fragmentEntryLink.configuration;
+	if (fontSize) {
+		style.fontSize = fontSize;
+	}
 
-		if (
-			configuration &&
-			Array.isArray(configuration.fieldSets) &&
-			configuration.fieldSets.length
-		) {
-			buttons.push(
-				LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.fragmentConfiguration
-			);
-		}
+	if (minHeight !== 'auto') {
+		style.minHeight = minHeight;
+	}
 
-		return buttons;
-	}, [
-		fragmentEntryLink.configuration,
-		fragmentEntryLink.editableValues.portletId,
-		widgets,
-	]);
+	if (minWidth !== 'auto') {
+		style.minWidth = minWidth;
+	}
+
+	style.border = `solid ${borderWidth}px`;
+	style.maxHeight = maxHeight;
+	style.maxWidth = maxWidth;
+	style.opacity = opacity;
+	style.overflow = overflow;
 
 	return (
 		<Topper item={item} itemElement={itemElement} layoutData={layoutData}>
-			<>
-				{canUpdateLayoutContent && (
-					<FloatingToolbar
-						buttons={floatingToolbarButtons}
-						item={item}
-						itemElement={itemElement}
-						onButtonClick={handleButtonClick}
-					/>
+			<div
+				className={classNames(
+					fontWeight,
+					height,
+					`mb-${marginBottom}`,
+					`ml-${marginLeft}`,
+					`mr-${marginRight}`,
+					`mt-${marginTop}`,
+					`pb-${paddingBottom}`,
+					`pl-${paddingLeft}`,
+					`pr-${paddingRight}`,
+					`pt-${paddingTop}`,
+					shadow,
+					width,
+					{
+						[`bg-${backgroundColor?.cssClass}`]: backgroundColor,
+						[`border-${borderColor?.cssClass}`]: borderColor,
+						[borderRadius]: !!borderRadius,
+						[`text-${fontFamily}`]: fontFamily !== 'default',
+						'no-gutters': !item.config.gutters,
+						[textAlign]: textAlign !== 'none',
+						[`text-${textColor?.cssClass}`]: textColor,
+					}
 				)}
-
+				style={style}
+			>
 				<FragmentContent
-					fragmentEntryLinkId={fragmentEntryLink.fragmentEntryLinkId}
+					elementRef={setRef}
+					fragmentEntryLinkId={item.config.fragmentEntryLinkId}
 					itemId={item.itemId}
-					ref={setRef}
 				/>
-			</>
+			</div>
 		</Topper>
 	);
 });
-
-function getWidget(widgets, portletId) {
-	let widget = null;
-
-	const widgetsLength = widgets.length;
-
-	for (let i = 0; i < widgetsLength; i++) {
-		const {categories = [], portlets = []} = widgets[i];
-		const categoryPortlet = portlets.find(
-			(_portlet) => _portlet.portletId === portletId
-		);
-		const subCategoryPortlet = getWidget(categories, portletId);
-
-		if (categoryPortlet) {
-			widget = categoryPortlet;
-		}
-
-		if (subCategoryPortlet) {
-			widget = subCategoryPortlet;
-		}
-	}
-
-	return widget;
-}
 
 FragmentWithControls.displayName = 'FragmentWithControls';
 

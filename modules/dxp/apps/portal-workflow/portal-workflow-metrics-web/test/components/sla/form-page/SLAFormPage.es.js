@@ -135,7 +135,7 @@ describe('The SLAFormPage component should', () => {
 		};
 
 		const historyMock = {
-			push: jest.fn(),
+			goBack: jest.fn(),
 		};
 
 		beforeAll(() => {
@@ -175,9 +175,7 @@ describe('The SLAFormPage component should', () => {
 			const cancelButton = getByTestId('cancelButton');
 			const descriptionField = getByTestId('descriptionField');
 			const descriptionInput = container.querySelector('#slaDescription');
-			const durationDaysDescription = getByTestId(
-				'durationDaysDescription'
-			);
+			const daysFieldDescription = getByTestId('daysFieldDescription');
 			const durationDaysInput = container.querySelector(
 				'#slaDurationDays'
 			);
@@ -217,7 +215,7 @@ describe('The SLAFormPage component should', () => {
 			expect(durationDescription).toHaveTextContent(
 				'define-the-sla-duration'
 			);
-			expect(durationDaysDescription).toHaveTextContent(
+			expect(daysFieldDescription).toHaveTextContent(
 				'enter-a-whole-number'
 			);
 			expect(durationHoursField).toHaveTextContent('hours');
@@ -318,10 +316,7 @@ describe('The SLAFormPage component should', () => {
 		});
 
 		test('Redirect to SLAListPage after successful submit', async () => {
-			expect(historyMock.push).toHaveBeenCalledWith({
-				pathname: `/sla/5678/list/20/1`,
-				search: '',
-			});
+			expect(historyMock.goBack).toHaveBeenCalled();
 		});
 	});
 

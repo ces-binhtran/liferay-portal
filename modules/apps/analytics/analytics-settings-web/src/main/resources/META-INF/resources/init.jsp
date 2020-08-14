@@ -38,7 +38,6 @@ page import="com.liferay.analytics.settings.web.internal.display.context.UserGro
 page import="com.liferay.analytics.settings.web.internal.display.context.UserGroupManagementToolbarDisplayContext" %><%@
 page import="com.liferay.analytics.settings.web.internal.search.ChannelSearch" %><%@
 page import="com.liferay.analytics.settings.web.internal.user.AnalyticsUsersManager" %><%@
-page import="com.liferay.analytics.settings.web.internal.util.AnalyticsSettingsUtil" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.util.ArrayUtil" %><%@
@@ -62,5 +61,5 @@ page import="java.util.Set" %>
 <portlet:defineObjects />
 
 <liferay-util:html-top>
-	<link href='<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/main.css") %>' rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>

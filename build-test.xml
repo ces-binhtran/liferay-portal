@@ -256,13 +256,15 @@ module.framework.properties.osgi.console=11312</echo>
 
 			<echo file="${script.sh.file}"><![CDATA[@{script}]]></echo>
 
+			<get-operating-system-property property.name="operating.system.docker.shell.path" />
+
 			<execute>
 				<![CDATA[
 					docker exec @{container} mkdir -p /tmp
 
 					docker cp ${script.sh.file} @{container}:/tmp/script.sh
 
-					docker exec @{container} /bin/bash /tmp/script.sh
+					docker exec @{container} ${operating.system.docker.shell.path} /tmp/script.sh
 
 					docker exec @{container} rm -f /tmp/script.sh
 				]]>
@@ -1123,8 +1125,12 @@ jdbc.counter.connectionProperties=oracle.jdbc.ReadTimeout=0;oracle.net.CONNECT_T
 				</elseif>
 				<elseif>
 					<and>
-						<equals arg1="${operating.system.type}" arg2="centos" />
-						<equals arg1="${operating.system.centos.version}" arg2="8" />
+						<not>
+							<and>
+								<equals arg1="${operating.system.type}" arg2="centos" />
+								<equals arg1="${operating.system.centos.version}" arg2="7" />
+							</and>
+						</not>
 						<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
 					</and>
 					<then>
@@ -1744,10 +1750,7 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 			<get-database-property property.name="database.username" />
 
 			<if>
-				<and>
-					<equals arg1="${app.server.type}" arg2="tomcat" />
-					<equals arg1="${database.type}" arg2="mysql" />
-				</and>
+				<equals arg1="${app.server.type}" arg2="tomcat" />
 				<then>
 					<if>
 						<not>
@@ -1779,37 +1782,67 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 							/>
 						</not>
 						<then>
-							<replace
-								file="${app.server.dir}/conf/server.xml"
-							>
-								<replacetoken><![CDATA[<GlobalNamingResources>]]></replacetoken>
-								<replacevalue expandproperties="true">
-									<![CDATA[
-										<GlobalNamingResources>
-											<Resource
-												auth="Container"
-												description="Global Address Database"
-												driverClassName="${database.driver}"
-												maxActive="40"
-												maxIdle="20"
-												maxWait="1000"
-												name="jdbc/LiferayPool"
-												password="${database.password}"
-												type="javax.sql.DataSource"
-												url="jdbc:mysql://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true"
-												username="${database.username}"
-											/>
-									]]>
-								</replacevalue>
-							</replace>
+							<if>
+								<equals arg1="${database.type}" arg2="mysql" />
+								<then>
+									<replace
+										file="${app.server.dir}/conf/server.xml"
+									>
+										<replacetoken><![CDATA[<GlobalNamingResources>]]></replacetoken>
+										<replacevalue expandproperties="true">
+											<![CDATA[
+												<GlobalNamingResources>
+													<Resource
+														auth="Container"
+														description="Global Address Database"
+														driverClassName="${database.driver}"
+														maxActive="40"
+														maxIdle="20"
+														maxWait="1000"
+														name="jdbc/LiferayPool"
+														password="${database.password}"
+														type="javax.sql.DataSource"
+														url="jdbc:mysql://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true"
+														username="${database.username}"
+													/>
+											]]>
+										</replacevalue>
+									</replace>
+								</then>
+								<elseif>
+									<equals arg1="${database.type}" arg2="mariadb" />
+									<then>
+										<replace
+											file="${app.server.dir}/conf/server.xml"
+										>
+											<replacetoken><![CDATA[<GlobalNamingResources>]]></replacetoken>
+											<replacevalue expandproperties="true">
+												<![CDATA[
+													<GlobalNamingResources>
+														<Resource
+															auth="Container"
+															description="Global Address Database"
+															driverClassName="${database.driver}"
+															maxActive="40"
+															maxIdle="20"
+															maxWait="1000"
+															name="jdbc/LiferayPool"
+															password="${database.password}"
+															type="javax.sql.DataSource"
+															url="jdbc:mariadb://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false"
+															username="${database.username}"
+														/>
+												]]>
+											</replacevalue>
+										</replace>
+									</then>
+								</elseif>
+							</if>
 						</then>
 					</if>
 				</then>
 				<elseif>
-					<and>
-						<equals arg1="${app.server.type}" arg2="wildfly" />
-						<equals arg1="${database.type}" arg2="mariadb" />
-					</and>
+					<equals arg1="${app.server.type}" arg2="wildfly" />
 					<then>
 						<if>
 							<not>
@@ -1819,24 +1852,53 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 								/>
 							</not>
 							<then>
-								<replace
-									file="${app.server.dir}/standalone/configuration/standalone.xml"
-								>
-									<replacetoken><![CDATA[<datasources>]]></replacetoken>
-									<replacevalue expandproperties="true">
-										<![CDATA[
-											<datasources>
-        										<datasource jndi-name="java:/jdbc/LiferayPool" pool-name="LiferayPool" enabled="true" jta="true" use-java-context="true" use-ccm="true">
-            										<connection-url>jdbc:mariadb://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false</connection-url>
-            										<driver>mariadb</driver>
-            										<security>
-                										<user-name>${database.username}</user-name>
-                										<password>${database.password}</password>
-            										</security>
-        										</datasource>
-										]]>
-									</replacevalue>
-								</replace>
+								<if>
+									<equals arg1="${database.type}" arg2="mysql" />
+									<then>
+										<replace
+											file="${app.server.dir}/standalone/configuration/standalone.xml"
+										>
+											<replacetoken><![CDATA[<datasources>]]></replacetoken>
+											<replacevalue expandproperties="true">
+												<![CDATA[
+													<datasources>
+														<datasource jndi-name="java:/jdbc/LiferayPool" pool-name="LiferayPool" enabled="true" jta="true" use-java-context="true" use-ccm="true">
+															<connection-url>jdbc:mysql://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false&amp;serverTimezone=GMT&amp;dontTrackOpenResources=true&amp;holdResultsOpenOverStatementClose=true</connection-url>
+															<driver>${database.type}</driver>
+															<security>
+																<user-name>${database.username}</user-name>
+																<password>${database.password}</password>
+															</security>
+														</datasource>
+												]]>
+											</replacevalue>
+										</replace>
+									</then>
+									<elseif>
+										<equals arg1="${database.type}" arg2="mariadb" />
+										<then>
+											<replace
+												file="${app.server.dir}/standalone/configuration/standalone.xml"
+											>
+												<replacetoken><![CDATA[<datasources>]]></replacetoken>
+												<replacevalue expandproperties="true">
+													<![CDATA[
+														<datasources>
+															<datasource jndi-name="java:/jdbc/LiferayPool" pool-name="LiferayPool" enabled="true" jta="true" use-java-context="true" use-ccm="true">
+																<connection-url>jdbc:mariadb://${database.host}/${database.schema}?useUnicode=true&amp;characterEncoding=UTF-8&amp;useFastDateParsing=false</connection-url>
+																<driver>${database.type}</driver>
+																<security>
+																	<user-name>${database.username}</user-name>
+																	<password>${database.password}</password>
+																</security>
+															</datasource>
+													]]>
+												</replacevalue>
+											</replace>
+										</then>
+									</elseif>
+								</if>
+
 								<replace
 									file="${app.server.dir}/standalone/configuration/standalone.xml"
 								>
@@ -1844,7 +1906,7 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 									<replacevalue expandproperties="true">
 										<![CDATA[
 											<drivers>
-            									<driver name="mariadb" module="com.liferay.portal">
+            									<driver name="${database.type}" module="com.liferay.portal">
                 									<driver-class>${database.driver}</driver-class>
             									</driver>
 										]]>
@@ -1951,10 +2013,7 @@ sendPasswordCaptchaEnabled=&quot;false&quot;</echo>
 
 	<macrodef name="prepare-database-upgrade-configuration">
 		<sequential>
-			<delete file="${liferay.home}/osgi/configs/com.liferay.portal.search.configuration.IndexStatusManagerConfiguration.cfg" />
 			<delete file="${liferay.home}/tools/portal-tools-db-upgrade-client/logs/upgrade.log" />
-
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.configuration.IndexStatusManagerConfiguration.cfg">indexReadOnly=true</echo>
 
 			<if>
 				<equals arg1="${app.server.type}" arg2="jboss" />
@@ -2282,8 +2341,7 @@ jdbc.default.password=${database.password}</echo>
 
 	<macrodef name="prepare-portal-elasticsearch-osgi-configuration">
 		<sequential>
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.elasticsearch6.configuration.ElasticsearchConfiguration.config">logExceptionsOnly=B"false"</echo>
-			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config">logExceptionsOnly=B"false"${line.separator}sidecarShutdownTimeout=L"20000"</echo>
+			<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration.config">logExceptionsOnly=B"false"${line.separator}sidecarShutdownTimeout=L"20000"${line.separator}sidecarHttpPort="AUTO"${line.separator}sidecarJVMOptions="-Xms256m|-Xmx512m"</echo>
 		</sequential>
 	</macrodef>
 
@@ -2856,51 +2914,7 @@ ${tomcat-gc-log}
 					<ant antfile="build-test-solr.xml" target="print-solr-indices" />
 				</then>
 				<else>
-					<get-testcase-property property.name="test.name.skip.portal.instance" />
-
-					<if>
-						<and>
-							<not>
-								<isset property="test.name.skip.portal.instance" />
-							</not>
-							<equals arg1="test.portal.instance" arg2="true" />
-						</and>
-						<then>
-							<var name="portalInstanceName" value="${env.HOSTNAME}" />
-						</then>
-						<else>
-							<var name="portalInstanceName" value="localhost" />
-						</else>
-					</if>
-
-					<exec executable="curl" outputproperty="companyId">
-						<arg value="http://localhost:8080/api/jsonws/company/get-company-by-virtual-host/virtual-host/${portalInstanceName}" />
-						<arg value="-u" />
-						<arg value="test@liferay.com:test" />
-					</exec>
-
-					<propertyregex
-						input="${companyId}"
-						override="true"
-						property="companyId"
-						regexp="(?&lt;=companyId&quot;:&quot;)(.*)(?=&quot;,&quot;home)"
-						select="\1"
-					/>
-
-					<get-testcase-property property.name="osgi.app.includes" />
-
-					<if>
-						<or>
-							<equals arg1="${suite.search.engine}" arg2="elasticsearch7" />
-							<contains string="${osgi.app.includes}" substring="portal-search-elasticsearch7" />
-						</or>
-						<then>
-							<ant antfile="build-test-elasticsearch7.xml" target="print-elasticsearch-indices" />
-						</then>
-						<else>
-							<ant antfile="build-test-elasticsearch6.xml" target="print-elasticsearch-indices" />
-						</else>
-					</if>
+					<ant antfile="build-test-elasticsearch7.xml" target="print-elasticsearch-indices" />
 				</else>
 			</if>
 		</sequential>
@@ -3899,6 +3913,44 @@ go</echo>
 		</sequential>
 	</macrodef>
 
+	<macrodef name="set-up-search-engine">
+		<sequential>
+			<get-testcase-property property.name="remote.elasticsearch.enabled" />
+
+			<if>
+				<equals arg1="${remote.elasticsearch.enabled}" arg2="true" />
+				<then>
+					<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
+				</then>
+			</if>
+
+			<get-testcase-property property.name="solr.enabled" />
+			<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
+
+			<if>
+				<equals arg1="${solr.enabled}" arg2="true" />
+				<then>
+					<ant antfile="build-test-solr.xml" target="start-solr" />
+				</then>
+				<elseif>
+					<equals arg1="${suite.search.engine}" arg2="solr" />
+					<then>
+						<ant antfile="build-test-solr.xml" target="set-up-solr" />
+					</then>
+				</elseif>
+			</if>
+
+			<get-testcase-property property.name="delete.sidecar.bundle" />
+
+			<if>
+				<equals arg1="${delete.sidecar.bundle}" arg2="true" />
+				<then>
+					<delete dir="${liferay.home}/elasticsearch7" failonerror="false" />
+				</then>
+			</if>
+		</sequential>
+	</macrodef>
+
 	<macrodef name="setup-testable-jboss">
 		<sequential>
 			<setup-testable-jboss-jsp-configuration />
@@ -4253,8 +4305,12 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 									</then>
 									<elseif>
 										<and>
-											<equals arg1="${operating.system.type}" arg2="centos" />
-											<equals arg1="${operating.system.centos.version}" arg2="8" />
+											<not>
+												<and>
+													<equals arg1="${operating.system.type}" arg2="centos" />
+													<equals arg1="${operating.system.centos.version}" arg2="7" />
+												</and>
+											</not>
 											<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
 										</and>
 										<then>
@@ -4315,8 +4371,12 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 										</then>
 										<elseif>
 											<and>
-												<equals arg1="${operating.system.type}" arg2="centos" />
-												<equals arg1="${operating.system.centos.version}" arg2="8" />
+												<not>
+													<and>
+														<equals arg1="${operating.system.type}" arg2="centos" />
+														<equals arg1="${operating.system.centos.version}" arg2="7" />
+													</and>
+												</not>
 												<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
 											</and>
 											<then>
@@ -5187,7 +5247,6 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 
 	<macrodef name="stop-remote-search-engine">
 		<sequential>
-			<get-testcase-property property.name="osgi.app.includes" />
 			<get-testcase-property property.name="remote.elasticsearch.clusters.enabled" />
 			<get-testcase-property property.name="remote.elasticsearch.enabled" />
 			<get-testcase-property property.name="test.name.skip.portal.instance" />
@@ -5195,26 +5254,18 @@ org.apache.catalina.startup.ClassLoaderFactory.level=INFO]]>
 			<if>
 				<equals arg1="${remote.elasticsearch.enabled}" arg2="true" />
 				<then>
-					<if>
-						<contains string="${osgi.app.includes}" substring="portal-search-elasticsearch7" />
-						<then>
-							<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
+					<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch" />
 
-							<if>
-								<and>
-									<equals arg1="${remote.elasticsearch.clusters.enabled}" arg2="true" />
-									<not>
-										<contains string="${test.name.skip.portal.instance}" substring="CrossCluster" />
-									</not>
-								</and>
-								<then>
-									<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch-local-cluster" />
-								</then>
-							</if>
+					<if>
+						<and>
+							<equals arg1="${remote.elasticsearch.clusters.enabled}" arg2="true" />
+							<not>
+								<contains string="${test.name.skip.portal.instance}" substring="CrossCluster" />
+							</not>
+						</and>
+						<then>
+							<ant antfile="build-test-elasticsearch7.xml" target="stop-elasticsearch-local-cluster" />
 						</then>
-						<else>
-							<ant antfile="build-test-elasticsearch6.xml" target="stop-elasticsearch" />
-						</else>
 					</if>
 				</then>
 			</if>
@@ -5398,8 +5449,12 @@ war.path=${app.server.portal.dir}/</echo>
 				</then>
 				<elseif>
 					<and>
-						<equals arg1="${operating.system.type}" arg2="centos" />
-						<equals arg1="${operating.system.centos.version}" arg2="8" />
+						<not>
+							<and>
+								<equals arg1="${operating.system.type}" arg2="centos" />
+								<equals arg1="${operating.system.centos.version}" arg2="7" />
+							</and>
+						</not>
 						<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
 					</and>
 					<then>
@@ -6437,6 +6492,35 @@ go</echo>
 		</exec>
 	</target>
 
+	<target name="delete-dependency-file">
+		<if>
+			<not>
+				<isset property="test.app.server.liferay.home" />
+			</not>
+			<then>
+				<set-app-server-properties />
+			</then>
+		</if>
+
+		<if>
+			<isset property="liferay.dependency.wars" />
+			<then>
+				<delete file="${test.app.server.liferay.home}/osgi/war/${liferay.dependency.wars}" />
+
+				<echo> ${test.app.server.liferay.home}/osgi/war/${liferay.dependency.wars} </echo>
+			</then>
+		</if>
+
+		<if>
+			<isset property="liferay.dependency.jars" />
+			<then>
+				<delete file="${test.app.server.liferay.home}/osgi/modules/${liferay.dependency.jars}" />
+
+				<echo> ${test.app.server.liferay.home}/osgi/modules/${liferay.dependency.jars} </echo>
+			</then>
+		</if>
+	</target>
+
 	<target name="delete-liferay-home">
 		<if>
 			<not>
@@ -6455,7 +6539,12 @@ go</echo>
 				<get-testcase-property property.name="portal.version" />
 
 				<if>
-					<isset property="portal.version" />
+					<and>
+						<isset property="portal.version" />
+						<not>
+							<equals arg1="${keep.osgi.state}" arg2="true" />
+						</not>
+					</and>
 					<then>
 						<delete dir="${test.app.server.liferay.home}/osgi/state" />
 					</then>
@@ -6477,8 +6566,16 @@ go</echo>
 							</then>
 						</if>
 
+						<if>
+							<not>
+								<equals arg1="${keep.osgi.state}" arg2="true" />
+							</not>
+							<then>
+								<delete dir="${test.app.server.liferay.home}/osgi/state" />
+							</then>
+						</if>
+
 						<delete dir="${test.app.server.liferay.home}/logs" />
-						<delete dir="${test.app.server.liferay.home}/osgi/state" />
 						<delete dir="${test.app.server.liferay.home}/work" />
 
 						<delete file="${test.app.server.liferay.home}/portal-setup-wizard.properties" />
@@ -6488,16 +6585,6 @@ go</echo>
 		</if>
 
 		<delete dir="/tmp/sprite" />
-	</target>
-
-	<target name="delete-portal-elasticsearch-dir">
-		<delete includeemptydirs="true">
-			<fileset
-				dir="${liferay.home}/data/"
-			>
-				<include name="elasticsearch*/" />
-			</fileset>
-		</delete>
 	</target>
 
 	<target name="deploy-dependency-jars">
@@ -6582,6 +6669,16 @@ go</echo>
 				<echo>The property "liferay.dependency.jars" is not set.</echo>
 			</else>
 		</if>
+	</target>
+
+	<target name="deploy-dependency-war">
+		<property name="liferay.dependency.dir" value="${project.dir}/portal-web/test/functional/com/liferay/portalweb/dependencies" />
+		<property name="deploy.dir" value="${app.server.parent.dir}/deploy" />
+
+		<copy
+			file="${liferay.dependency.dir}/${liferay.dependency.war}"
+			todir="${deploy.dir}"
+		/>
 	</target>
 
 	<target name="deploy-extra-apps">
@@ -7173,6 +7270,19 @@ go</echo>
 		</if>
 	</target>
 
+	<target name="execute-mysql">
+		<loadfile
+			property="mysql.statement"
+			srcfile="${mysql.input.file}"
+		/>
+
+		<sql classpath="${app.server.lib.global.dir}/${jdbc.mysql.driver}" driver="${database.mysql.driver}" onerror="continue" output="${mysql.output.file}" password="${database.mysql.password}" print="true" url="${database.mysql.url}" userid="${database.mysql.username}">
+			<![CDATA[
+				${mysql.statement}
+			]]>
+		</sql>
+	</target>
+
 	<target name="generate-changelog">
 		<record-git-commit-plugins />
 		<record-git-commit-portal />
@@ -7503,6 +7613,23 @@ go</echo>
 											<arg value="-Pliferay.home=${liferay.home}/osgi-temp" />
 										</gradle-execute>
 
+										<copy
+											todir="${liferay.home}/osgi-temp/deploy"
+										>
+											<fileset
+												dir="${liferay.home}/deploy"
+											>
+												<include name="${osgi.app.name}*hook*.war" />
+											</fileset>
+										</copy>
+
+										<delete>
+											<fileset
+												dir="${liferay.home}/deploy"
+												includes="${osgi.app.name}*hook*.war"
+											/>
+										</delete>
+
 										<ant antfile="build.xml" dir="modules" target="build-app-lpkg">
 											<property name="app.name" value="${osgi.app.name}" />
 											<property name="output.dir" value="${liferay.home}/deploy-temp" />
@@ -7821,6 +7948,79 @@ ${update.properties}</echo>
 		<apply-portal-ext-properties />
 	</target>
 
+	<target name="prepare-antisamy-config-file">
+		<property name="liferay.security.antisamy.dir" value="${project.dir}/modules/apps/portal-security/portal-security-antisamy/src/main/resources/META-INF/resources" />
+
+		<property name="liferay.config.xml" value="knowledge-base-sanitizer-configuration.xml" />
+
+		<if>
+			<available file="${liferay.security.antisamy.dir}/${liferay.config.xml}" />
+			<then>
+				<echo>Remove allowDynamicAttributes in ${liferay.security.antisamy.dir}/${liferay.config.xml}.</echo>
+
+				<replace
+					file="${liferay.security.antisamy.dir}/${liferay.config.xml}"
+				>
+					<replacetoken><![CDATA[<dynamic-tag-attributes>]]></replacetoken>
+					<replacevalue><![CDATA[<!--<dynamic-tag-attributes>-->]]></replacevalue>
+				</replace>
+
+				<replace
+					file="${liferay.security.antisamy.dir}/${liferay.config.xml}"
+				>
+					<replacetoken><![CDATA[<attribute name="data-"/>]]></replacetoken>
+					<replacevalue><![CDATA[<!--<attribute name="data-"/>-->]]></replacevalue>
+				</replace>
+
+				<replace
+					file="${liferay.security.antisamy.dir}/${liferay.config.xml}"
+				>
+					<replacetoken><![CDATA[</dynamic-tag-attributes>]]></replacetoken>
+					<replacevalue><![CDATA[<!--</dynamic-tag-attributes>-->]]></replacevalue>
+				</replace>
+
+				<replace
+					file="${liferay.security.antisamy.dir}/${liferay.config.xml}"
+				>
+					<replacetoken><![CDATA[<directive name="allowDynamicAttributes" value="true"/>]]></replacetoken>
+					<replacevalue><![CDATA[<!--<directive name="allowDynamicAttributes" value="true"/>-->]]></replacevalue>
+				</replace>
+			</then>
+			<else>
+				<echo>The file ${liferay.config.xml} is not exist.</echo>
+			</else>
+		</if>
+	</target>
+
+	<target name="prepare-encryption-PCKS12-certificate">
+		<if>
+			<equals arg1="${app.server.type}" arg2="tomcat" />
+			<then>
+				<if>
+					<os family="unix" />
+					<then>
+						<exec dir="${app.server.parent.dir}-1" executable="/bin/bash">
+							<arg value="-c" />
+							<arg value="keytool -alias samlsp-encryption -importkeystore -srckeystore ${app.server.parent.dir}-1/data/keystore.jks -srcstoretype JKS -srcstorepass liferay -srckeypass samlsp -deststoretype PKCS12 -destkeystore ${app.server.parent.dir}/poshi/samlsp_encryption.p12 -deststorepass samlsp" />
+						</exec>
+					</then>
+					<elseif>
+						<os family="windows" />
+						<then>
+							<exec dir="${app.server.parent.dir}-1" executable="cmd">
+								<arg value="/c" />
+								<arg value="keytool -alias samlsp-encryption -importkeystore -srckeystore ${app.server.parent.dir}-1/data/keystore.jks -srcstoretype JKS -srcstorepass liferay -srckeypass samlsp -deststoretype PKCS12 -destkeystore ${app.server.parent.dir}/poshi/samlsp_encryption.p12 -deststorepass samlsp" />
+							</exec>
+						</then>
+					</elseif>
+				</if>
+			</then>
+			<else>
+				<echo>Please convert encryption certificate manually.</echo>
+			</else>
+		</if>
+	</target>
+
 	<target name="prepare-ip-address-update">
 		<get-testcase-property property.name="testcase.url" />
 
@@ -8129,24 +8329,11 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 	</category>
 </log4j:configuration>]]></echo>
 
-		<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.search.elasticsearch6.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-	<category name="com.liferay.portal.search.elasticsearch6.internal.connection.EmbeddedElasticsearchConnection">
-		<priority value="ERROR" />
-	</category>
-
-	<category name="com.liferay.portal.search.elasticsearch6.internal.index.CompanyIndexFactory">
-		<priority value="INFO" />
-	</category>
-</log4j:configuration>]]></echo>
-
 		<echo file="${liferay.home}/osgi/log4j/com.liferay.portal.search.elasticsearch7.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
 <!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
 
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
-	<category name="com.liferay.portal.search.elasticsearch7.internal.connection.EmbeddedElasticsearchConnection">
+	<category name="com.liferay.portal.search.elasticsearch7.internal.sidecar.SidecarManager">
 		<priority value="ERROR" />
 	</category>
 
@@ -8167,6 +8354,43 @@ osb.lcs.portlet.oauth.consumer.secret=${osb.lcs.portlet.oauth.consumer.secret}</
 		<priority value="ERROR" />
 	</category>
 </log4j:configuration>]]></echo>
+
+		<get-testcase-property property.name="deploy.lcs.token.file" />
+
+		<if>
+			<equals arg1="${deploy.lcs.token.file}" arg2="true" />
+			<then>
+				<echo file="${liferay.home}/osgi/log4j/com.liferay.lcs.client.impl-log4j-ext.xml"><![CDATA[<?xml version="1.0"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<category name="com.liferay.lcs.client.internal.platform.http">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.advisor">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.lifecycle">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.task.advisor">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.task.scheduler">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.command">
+		<priority value="TRACE" />
+	</category>
+	<category name="com.liferay.lcs.client.internal.runnable">
+		<priority value="TRACE" />
+	</category>
+</log4j:configuration>]]></echo>
+			</then>
+		</if>
 	</target>
 
 	<target name="prepare-mobile-device">
@@ -8830,6 +9054,15 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		</if>
 
 		<if>
+			<isset property="test.build.fix.pack.zip.url.latest.heavy" />
+			<then>
+				<echo append="true" file="${test.ext.properties.file}">
+					test.build.fix.pack.zip.url.latest.heavy=${test.build.fix.pack.zip.url.latest.heavy}
+				</echo>
+			</then>
+		</if>
+
+		<if>
 			<isset property="test.build.fix.pack.zip.url.previous" />
 			<then>
 				<echo append="true" file="${test.ext.properties.file}">
@@ -8955,8 +9188,12 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 
 		<if>
 			<and>
-				<equals arg1="${operating.system.type}" arg2="centos" />
-				<equals arg1="${operating.system.centos.version}" arg2="8" />
+				<not>
+					<and>
+						<equals arg1="${operating.system.type}" arg2="centos" />
+						<equals arg1="${operating.system.centos.version}" arg2="7" />
+					</and>
+				</not>
 				<equals arg1="${env.DOCKER_ENABLED}" arg2="true" />
 			</and>
 			<then>
@@ -9243,6 +9480,7 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 				<prepare-edge-driver />
 
 				<echo append="true" file="${test.ext.properties.file}">
+					selenium.edge.driver.executable=${selenium.edge.driver.executable}
 					selenium.executable.dir.name=${selenium.executable.dir.name}
 				</echo>
 			</then>
@@ -10062,6 +10300,35 @@ auto.deploy.dest.dir=C:/WINDOWS/system32/config/systemprofile/liferay/websphere-
 		</if>
 	</target>
 
+	<target name="prepare-signing-PCKS12-certificate">
+		<if>
+			<equals arg1="${app.server.type}" arg2="tomcat" />
+			<then>
+				<if>
+					<os family="unix" />
+					<then>
+						<exec dir="${app.server.parent.dir}" executable="/bin/bash">
+							<arg value="-c" />
+							<arg value="keytool -alias samlidp -importkeystore -srckeystore ${app.server.parent.dir}/data/keystore.jks -srcstoretype JKS -srcstorepass liferay -srckeypass samlidp -deststoretype PKCS12 -destkeystore ${app.server.parent.dir}/poshi/samlidp.p12 -deststorepass samlidp" />
+						</exec>
+					</then>
+					<elseif>
+						<os family="windows" />
+						<then>
+							<exec dir="${app.server.parent.dir}" executable="cmd">
+								<arg value="/c" />
+								<arg value="keytool -alias samlidp -importkeystore -srckeystore ${app.server.parent.dir}/data/keystore.jks -srcstoretype JKS -srcstorepass liferay -srckeypass samlidp -deststoretype PKCS12 -destkeystore ${app.server.parent.dir}/poshi/samlidp.p12 -deststorepass samlidp" />
+							</exec>
+						</then>
+					</elseif>
+				</if>
+			</then>
+			<else>
+				<echo>Please convert signing certificate manually.</echo>
+			</else>
+		</if>
+	</target>
+
 	<target name="prepare-so-plugins">
 		<set-tomcat-version-number liferay.portal.bundle="${liferay.portal.bundle}" />
 
@@ -10595,6 +10862,39 @@ ANT_OPTS=${env.ANT_OPTS}</echo>
 			</then>
 		</if>
 
+		<if>
+			<or>
+				<equals arg1="${app.server.type}" arg2="weblogic" />
+				<equals arg1="${app.server.type}" arg2="websphere" />
+			</or>
+			<then>
+				<get
+					dest="${liferay.home}"
+					src="${elasticsearch.sidecar.analysis-icu.zip.url}"
+				/>
+
+				<get
+					dest="${liferay.home}"
+					src="${elasticsearch.sidecar.analysis-kuromoji.zip.url}"
+				/>
+
+				<get
+					dest="${liferay.home}"
+					src="${elasticsearch.sidecar.analysis-smartcn.zip.url}"
+				/>
+
+				<get
+					dest="${liferay.home}"
+					src="${elasticsearch.sidecar.analysis-stempel.zip.url}"
+				/>
+
+				<get
+					dest="${liferay.home}"
+					src="${elasticsearch.sidecar.no.jdk.tar.url}"
+				/>
+			</then>
+		</if>
+
 		<lstopwatch action="total" name="prepare.bundles.${app.server.name}" />
 	</target>
 
@@ -10697,6 +10997,32 @@ cluster.link.autodetect.address=
 cluster.link.bind.addr["cluster-link-control"]=127.0.0.1
 
 cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
+	</target>
+
+	<target name="print-lcs-log-content">
+		<var name="lcs.log.files" unset="true" />
+
+		<fileset
+			dir="${liferay.home}/logs/"
+			id="lcs.log.files"
+		>
+			<include name="lcs.*.log" />
+		</fileset>
+
+		<pathconvert pathsep="," property="lcs.log.files" refid="lcs.log.files" />
+
+		<for list="${lcs.log.files}" param="lcs.log.file">
+			<sequential>
+				<print-file file.name="@{lcs.log.file}" />
+			</sequential>
+		</for>
+
+		<if>
+			<equals arg1="${lcs.log.files}" arg2="" />
+			<then>
+				<echo>No LCS logs found.</echo>
+			</then>
+		</if>
 	</target>
 
 	<target name="print-scm-revision">
@@ -11209,6 +11535,21 @@ cluster.link.bind.addr["cluster-link-udp"]=127.0.0.1</echo>
 
 							<property name="docker.database.dest.path" value="/tmp/${database.type}.sql" />
 							<property name="import.database.src.path" value="${liferay.home}/${database.type}.sql" />
+						</then>
+					</elseif>
+					<elseif>
+						<equals arg1="${database.type}" arg2="sqlserver" />
+						<then>
+							<echo file="${import.database.sh.file.path}">
+								<![CDATA[
+									#!/bin/bash
+
+									/opt/mssql-tools/bin/sqlcmd -S localhost -U ${database.sqlserver.username} -P ${database.sqlserver.password} -Q "RESTORE DATABASE ${database.sqlserver.schema} FROM  DISK='/tmp/${database.type}.bak'"
+								]]>
+							</echo>
+
+							<property name="docker.database.dest.path" value="/tmp/${database.type}.bak" />
+							<property name="import.database.src.path" value="${liferay.home}/${database.type}.bak" />
 						</then>
 					</elseif>
 					<elseif>
@@ -12314,6 +12655,19 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 		Deploy project samples to the deploy directory.
 		-->
 
+		<get-testcase-property property.name="antisamy.enabled" />
+
+		<if>
+			<equals arg1="${antisamy.enabled}" arg2="true" />
+			<then>
+				<antcall target="prepare-antisamy-config-file" />
+
+				<gradle-execute dir="${project.dir}/modules/apps/portal-security/portal-security-antisamy" task="deploy">
+					<arg value="clean" />
+				</gradle-execute>
+			</then>
+		</if>
+
 		<get-testcase-property property.name="cas.enabled" />
 
 		<if>
@@ -12331,47 +12685,6 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 				<ant antfile="build-test-authentication.xml" target="delete-openam-config" />
 
 				<ant antfile="build-test-authentication.xml" target="setup-openam" />
-			</then>
-		</if>
-
-		<get-testcase-property property.name="portal.suite.search.engine" />
-		<get-testcase-property property.name="remote.elasticsearch.enabled" />
-
-		<if>
-			<equals arg1="${remote.elasticsearch.enabled}" arg2="true" />
-			<then>
-				<if>
-					<contains string="${env.CI_TEST_SUITE}" substring="search" />
-					<then>
-						<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
-
-						<if>
-							<equals arg1="${suite.search.engine}" arg2="elasticsearch7" />
-							<then>
-								<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
-							</then>
-							<else>
-								<ant antfile="build-test-elasticsearch6.xml" target="start-elasticsearch" />
-							</else>
-						</if>
-					</then>
-					<else>
-						<if>
-							<or>
-								<contains string="${portal.suite.search.engine}" substring="elasticsearch6" />
-								<not>
-									<isset property="portal.suite.search.engine" />
-								</not>
-							</or>
-							<then>
-								<ant antfile="build-test-elasticsearch6.xml" target="start-elasticsearch" />
-							</then>
-							<else>
-								<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
-							</else>
-						</if>
-					</else>
-				</if>
 			</then>
 		</if>
 
@@ -12399,28 +12712,6 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 
 				<print-file file.name="${liferay.home}/osgi/modules/com.liferay.simple.socks.proxy.SocksProxyConfiguration.cfg" />
 			</then>
-		</if>
-
-		<get-testcase-property property.name="solr.enabled" />
-
-		<if>
-			<equals arg1="${solr.enabled}" arg2="true" />
-			<then>
-				<ant antfile="build-test-solr.xml" target="start-solr" />
-			</then>
-			<elseif>
-				<isset property="env.CI_TEST_SUITE" />
-				<then>
-					<propertycopy from="search.engine[${env.CI_TEST_SUITE}]" name="suite.search.engine" silent="true" />
-
-					<if>
-						<equals arg1="${suite.search.engine}" arg2="solr" />
-						<then>
-							<ant antfile="build-test-solr.xml" target="start-solr" />
-						</then>
-					</if>
-				</then>
-			</elseif>
 		</if>
 
 		<get-testcase-property property.name="test.smtp.server.enabled" />
@@ -12478,6 +12769,8 @@ module.framework.properties.blacklist.portal.profile.names=${blacklist.portal.pr
 		<antcall target="deploy-dependency-jars" />
 
 		<antcall target="deploy-extra-apps" />
+
+		<set-up-search-engine />
 
 		<get-testcase-property property.name="osgi.module.configuration.file.names" />
 		<get-testcase-property property.name="osgi.module.configurations" />
@@ -12742,6 +13035,13 @@ url=${short.hostname}:8080</echo>
 			</then>
 			<else>
 				<antcall target="run-selenium-test" />
+
+				<if>
+					<equals arg1="${deploy.lcs.token.file}" arg2="true" />
+					<then>
+						<antcall target="print-lcs-log-content" />
+					</then>
+				</if>
 			</else>
 		</if>
 
@@ -12907,7 +13207,7 @@ url=${short.hostname}:8080</echo>
 				<equals arg1="${app.server.bundles.size}" arg2="0" />
 			</not>
 			<then>
-				<ant antfile="build-test-elasticsearch6.xml" target="start-elasticsearch" />
+				<ant antfile="build-test-elasticsearch7.xml" target="start-elasticsearch" />
 
 				<prepare-additional-bundles />
 			</then>
@@ -13069,6 +13369,46 @@ url=${short.hostname}:8080</echo>
 		<print-file file.name="${osgi.configs.dir}/${osgi.module.configuration.file.names}" />
 	</target>
 
+	<target name="update-translation-file">
+		<var name="translation.file.type" value="xlf" />
+
+		<unzip
+			dest="${selenium.output.dir.name}"
+			src="${selenium.output.dir.name}/${translation.zip.file.name}"
+		>
+		</unzip>
+
+		<if>
+			<equals arg1="${translation.file.rename}" arg2="true" />
+			<then>
+				<move
+					file="${selenium.output.dir.name}/${translation.file.name}.${translation.file.type}"
+					tofile="${selenium.output.dir.name}/${translation.file.name}.xliff"
+				/>
+
+				<var name="translation.file.type" value="xliff" />
+			</then>
+		</if>
+
+		<replace
+			file="${selenium.output.dir.name}/${translation.file.name}.${translation.file.type}"
+			token="${translation.title.target.original}"
+			value="${translation.title.target}"
+		/>
+
+		<replace
+			file="${selenium.output.dir.name}/${translation.file.name}.${translation.file.type}"
+			token="${translation.content.target.original}"
+			value="${translation.content.target}"
+		/>
+
+		<replace
+			file="${selenium.output.dir.name}/${translation.file.name}.${translation.file.type}"
+			token="${translation.description.target.original}"
+			value="${translation.description.target}"
+		/>
+	</target>
+
 	<target name="upgrade-legacy-database">
 		<prepare-database-upgrade-configuration />
 
@@ -13113,8 +13453,6 @@ url=${short.hostname}:8080</echo>
 				<fail message="${upgrade.error}${line.separator}${jstack.output}" />
 			</catch>
 		</trycatch>
-
-		<echo file="${liferay.home}/osgi/configs/com.liferay.portal.search.configuration.IndexStatusManagerConfiguration.cfg">indexReadOnly=false</echo>
 	</target>
 
 	<target name="wait-for-plugins-deployment">

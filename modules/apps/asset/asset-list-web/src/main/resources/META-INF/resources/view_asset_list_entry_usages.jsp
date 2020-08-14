@@ -56,7 +56,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 								allNavigationURL.setParameter("navigation", "all");
 								%>
 
-								<a class='nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "all") ? "active" : StringPool.BLANK %>' href="<%= allNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "all") ? "active" : StringPool.BLANK %>" href="<%= allNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getAllUsageCount() %>" key="all-x" />
 								</a>
 							</li>
@@ -68,7 +68,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 								pagesNavigationURL.setParameter("navigation", "pages");
 								%>
 
-								<a class='nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "pages") ? "active" : StringPool.BLANK %>' href="<%= pagesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "pages") ? "active" : StringPool.BLANK %>" href="<%= pagesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getPagesUsageCount() %>" key="pages-x" />
 								</a>
 							</li>
@@ -80,7 +80,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 								pageTemplatesNavigationURL.setParameter("navigation", "page-templates");
 								%>
 
-								<a class='nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "page-templates") ? "active" : StringPool.BLANK %>' href="<%= pageTemplatesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "page-templates") ? "active" : StringPool.BLANK %>" href="<%= pageTemplatesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getPageTemplatesUsageCount() %>" key="page-templates-x" />
 								</a>
 							</li>
@@ -92,7 +92,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 								displayPagesNavigationURL.setParameter("navigation", "display-page-templates");
 								%>
 
-								<a class='nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-page-templates") ? "active" : StringPool.BLANK %>' href="<%= displayPagesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "display-page-templates") ? "active" : StringPool.BLANK %>" href="<%= displayPagesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= assetListEntryUsagesDisplayContext.getDisplayPagesUsageCount() %>" key="display-page-templates-x" />
 								</a>
 							</li>
@@ -105,7 +105,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 		<clay:col
 			lg="9"
 		>
-			<div class="sheet">
+			<clay:sheet>
 				<h3 class="sheet-title">
 					<c:choose>
 						<c:when test='<%= Objects.equals(assetListEntryUsagesDisplayContext.getNavigation(), "pages") %>'>
@@ -123,12 +123,8 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 					</c:choose>
 				</h3>
 
-				<%
-				AssetListEntryUsagesManagementToolbarDisplayContext assetListEntryUsagesManagementToolbarDisplayContext = new AssetListEntryUsagesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetListEntryUsagesDisplayContext.getSearchContainer());
-				%>
-
 				<clay:management-toolbar
-					displayContext="<%= assetListEntryUsagesManagementToolbarDisplayContext %>"
+					displayContext="<%= new AssetListEntryUsagesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetListEntryUsagesDisplayContext.getSearchContainer()) %>"
 				/>
 
 				<liferay-ui:search-container
@@ -163,7 +159,7 @@ renderResponse.setTitle(assetListDisplayContext.getAssetListEntryTitle());
 						searchResultCssClass="show-quick-actions-on-hover table table-autofit"
 					/>
 				</liferay-ui:search-container>
-			</div>
+			</clay:sheet>
 		</clay:col>
 	</clay:row>
 </clay:container-fluid>

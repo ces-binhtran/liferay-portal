@@ -16,23 +16,51 @@ import React from 'react';
 
 import toDataArray, {sumTotalEntries, toArray} from '../../utils/data.es';
 import fieldTypes from '../../utils/fieldTypes.es';
-import BarChart from '../chart/bar/BarChart.es';
+import MultiBarChart from '../chart/bar/MultiBarChart.es';
+import SimpleBarChart from '../chart/bar/SimpleBarChart.es';
 import PieChart from '../chart/pie/PieChart.es';
 import EmptyState from '../empty-state/EmptyState.es';
 import List from '../list/List.es';
 import Card from './Card.es';
 
-const chartFactory = (field, values, totalEntries) => {
+const chartFactory = ({field, structure, summary, totalEntries, values}) => {
 	const {options, type} = field;
 
 	switch (type) {
 		case 'checkbox_multiple':
 			return (
-				<BarChart
+				<SimpleBarChart
 					data={toDataArray(options, values)}
 					totalEntries={totalEntries}
 				/>
 			);
+
+		case 'numeric': {
+			if (Array.isArray(values)) {
+				return (
+					<List
+						data={toArray(values)}
+						field={field}
+						summary={summary}
+						totalEntries={totalEntries}
+					/>
+				);
+			}
+			else {
+				return '';
+			}
+		}
+
+		case 'grid': {
+			return (
+				<MultiBarChart
+					data={values}
+					field={field}
+					structure={structure}
+					totalEntries={totalEntries}
+				/>
+			);
+		}
 
 		case 'radio':
 		case 'select':
@@ -42,7 +70,8 @@ const chartFactory = (field, values, totalEntries) => {
 					totalEntries={totalEntries}
 				/>
 			);
-
+		case 'color':
+		case 'date':
 		case 'text': {
 			if (Array.isArray(values)) {
 				return (
@@ -50,6 +79,7 @@ const chartFactory = (field, values, totalEntries) => {
 						data={toArray(values)}
 						field={field}
 						totalEntries={totalEntries}
+						type={type}
 					/>
 				);
 			}
@@ -67,15 +97,21 @@ export default ({data, fields}) => {
 	let hasCards = false;
 
 	const cards = fields.map((field, index) => {
-		const {values = {}, totalEntries = sumTotalEntries(values)} =
-			data[field.name] || {};
+		const {
+			values = {},
+			structure = {},
+			summary = {},
+			totalEntries = sumTotalEntries(values),
+		} = data[field.name] || {};
 
 		field = {
 			...field,
 			...fieldTypes[field.type],
 		};
 
-		const chart = chartFactory(field, values, totalEntries);
+		const chartContent = {field, structure, summary, totalEntries, values};
+
+		const chart = chartFactory(chartContent);
 
 		if (chart === null) {
 			return null;
@@ -85,7 +121,13 @@ export default ({data, fields}) => {
 		}
 
 		return (
-			<Card field={field} key={index} totalEntries={totalEntries}>
+			<Card
+				field={field}
+				index={index}
+				key={index}
+				summary={summary}
+				totalEntries={totalEntries}
+			>
 				{chart}
 			</Card>
 		);

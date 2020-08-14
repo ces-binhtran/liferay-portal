@@ -48,7 +48,7 @@ public class CreatorStatisticsUtil {
 
 				setLastPostDate(
 					() -> {
-						boolean nestLastPostDate = Optional.ofNullable(
+						boolean hasLastPostDateField = Optional.ofNullable(
 							uriInfo
 						).map(
 							UriInfo::getQueryParameters
@@ -60,7 +60,7 @@ public class CreatorStatisticsUtil {
 							false
 						);
 
-						if (nestLastPostDate) {
+						if (hasLastPostDateField) {
 							return mbStatsUserLocalService.
 								getLastPostDateByUserId(
 									user.getGroupId(), user.getUserId());

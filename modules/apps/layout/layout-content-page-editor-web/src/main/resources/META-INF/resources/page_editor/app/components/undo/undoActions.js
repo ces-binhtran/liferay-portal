@@ -16,6 +16,7 @@ import {SELECT_SEGMENTS_EXPERIENCE} from '../../../plugins/experience/actions';
 import {
 	ADD_FRAGMENT_ENTRY_LINKS,
 	ADD_ITEM,
+	CHANGE_MASTER_LAYOUT,
 	DELETE_ITEM,
 	DUPLICATE_ITEM,
 	MOVE_ITEM,
@@ -25,31 +26,39 @@ import {
 	UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION,
 	UPDATE_ITEM_CONFIG,
 	UPDATE_LANGUAGE_ID,
+	UPDATE_ROW_COLUMNS,
 } from '../../actions/types';
 import {getItemNameFromAction} from './getItemNameFromAction';
-import * as undoDelete from './undoDelete';
+import * as undoAddFragmentEntryLinks from './undoAddFragmentEntryLinks';
+import * as undoAddItem from './undoAddItem';
+import * as undoChangeMasterLayout from './undoChangeMasterLayout';
+import * as undoDeleteItem from './undoDeleteItem';
 import * as undoDuplicateItem from './undoDuplicateItem';
-import * as undoEditableValuesAction from './undoEditableValuesAction';
-import * as undoFragmentConfiguration from './undoFragmentConfiguration';
-import * as undoFragmentEntryLinks from './undoFragmentEntryLinks';
-import * as undoLayoutDataAction from './undoLayoutDataAction';
+import * as undoMoveItem from './undoMoveItem';
 import * as undoSelectExperience from './undoSelectExperience';
 import * as undoSwitchViewportSize from './undoSwitchViewportSize';
+import * as undoUpdateColSize from './undoUpdateColSize';
+import * as undoUpdateEditableValuesAction from './undoUpdateEditableValuesAction';
+import * as undoUpdateFragmentConfiguration from './undoUpdateFragmentConfiguration';
+import * as undoUpdateItemConfig from './undoUpdateItemConfig';
 import * as undoUpdateLanguage from './undoUpdateLanguage';
+import * as undoUpdateRowColumns from './undoUpdateRowColumns';
 
 const UNDO_ACTIONS = {
-	[ADD_FRAGMENT_ENTRY_LINKS]: undoFragmentEntryLinks,
-	[ADD_ITEM]: undoLayoutDataAction,
-	[DELETE_ITEM]: undoDelete,
+	[ADD_FRAGMENT_ENTRY_LINKS]: undoAddFragmentEntryLinks,
+	[ADD_ITEM]: undoAddItem,
+	[CHANGE_MASTER_LAYOUT]: undoChangeMasterLayout,
+	[DELETE_ITEM]: undoDeleteItem,
 	[DUPLICATE_ITEM]: undoDuplicateItem,
-	[MOVE_ITEM]: undoLayoutDataAction,
+	[MOVE_ITEM]: undoMoveItem,
 	[SELECT_SEGMENTS_EXPERIENCE]: undoSelectExperience,
 	[SWITCH_VIEWPORT_SIZE]: undoSwitchViewportSize,
-	[UPDATE_COL_SIZE]: undoLayoutDataAction,
-	[UPDATE_EDITABLE_VALUES]: undoEditableValuesAction,
-	[UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION]: undoFragmentConfiguration,
-	[UPDATE_ITEM_CONFIG]: undoLayoutDataAction,
+	[UPDATE_COL_SIZE]: undoUpdateColSize,
+	[UPDATE_EDITABLE_VALUES]: undoUpdateEditableValuesAction,
+	[UPDATE_FRAGMENT_ENTRY_LINK_CONFIGURATION]: undoUpdateFragmentConfiguration,
+	[UPDATE_ITEM_CONFIG]: undoUpdateItemConfig,
 	[UPDATE_LANGUAGE_ID]: undoUpdateLanguage,
+	[UPDATE_ROW_COLUMNS]: undoUpdateRowColumns,
 };
 
 export function canUndoAction(action) {

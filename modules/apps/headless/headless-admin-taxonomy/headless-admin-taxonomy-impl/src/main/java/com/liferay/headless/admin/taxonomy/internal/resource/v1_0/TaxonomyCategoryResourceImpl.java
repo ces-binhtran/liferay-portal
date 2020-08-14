@@ -148,19 +148,19 @@ public class TaxonomyCategoryResourceImpl
 			parentTaxonomyCategoryId);
 
 		return _getCategoriesPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-category",
 				addAction(
 					"ADD_CATEGORY", assetCategory.getCategoryId(),
-					AssetCategory.class.getName(), assetCategory.getUserId(),
 					"postTaxonomyCategoryTaxonomyCategory",
+					assetCategory.getUserId(), AssetCategory.class.getName(),
 					assetCategory.getGroupId())
 			).put(
 				"get",
 				addAction(
 					"VIEW", assetCategory.getCategoryId(),
-					AssetCategory.class.getName(), assetCategory.getUserId(),
 					"getTaxonomyCategoryTaxonomyCategoriesPage",
+					assetCategory.getUserId(), AssetCategory.class.getName(),
 					assetCategory.getGroupId())
 			).build(),
 			booleanQuery -> {
@@ -186,7 +186,7 @@ public class TaxonomyCategoryResourceImpl
 			taxonomyVocabularyId);
 
 		return _getCategoriesPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-category",
 				addAction(
 					"ADD_CATEGORY", assetVocabulary,
@@ -473,7 +473,7 @@ public class TaxonomyCategoryResourceImpl
 		return _taxonomyCategoryDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.<String, Map<String, String>>put(
+				HashMapBuilder.put(
 					"add-category",
 					addAction(
 						"ADD_CATEGORY", assetCategory,

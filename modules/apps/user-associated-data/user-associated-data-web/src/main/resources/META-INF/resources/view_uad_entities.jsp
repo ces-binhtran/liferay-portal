@@ -72,7 +72,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 
 	<clay:container-fluid
 		cssClass="closed sidenav-container sidenav-right"
-		id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+		id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 	>
 		<div id="breadcrumb">
 			<liferay-ui:breadcrumb
@@ -84,12 +84,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 		</div>
 
 		<liferay-ui:error key="deleteUADEntityException">
-
-			<%
-			String message = (String)errorException;
-			%>
-
-			<liferay-ui:message key="<%= message %>" localizeKey="<%= false %>" />
+			<liferay-ui:message key="<%= (String)errorException %>" localizeKey="<%= false %>" />
 		</liferay-ui:error>
 
 		<c:if test="<%= !Objects.equals(viewUADEntitiesDisplay.getApplicationKey(), UADConstants.ALL_APPLICATIONS) %>">
@@ -100,7 +95,7 @@ long[] groupIds = viewUADEntitiesDisplay.getGroupIds();
 
 			<liferay-frontend:sidebar-panel
 				resourceURL="<%= entityTypeSidebarURL %>"
-				searchContainerId="<%= viewUADEntitiesDisplay.getSearchContainerID(request, renderResponse.getNamespace()) %>"
+				searchContainerId="<%= viewUADEntitiesDisplay.getSearchContainerID(request, liferayPortletResponse.getNamespace()) %>"
 			>
 				<liferay-util:include page="/info_panel.jsp" servletContext="<%= application %>" />
 			</liferay-frontend:sidebar-panel>

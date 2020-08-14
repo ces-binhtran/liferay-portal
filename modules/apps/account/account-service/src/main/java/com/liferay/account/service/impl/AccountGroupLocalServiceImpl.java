@@ -15,10 +15,22 @@
 package com.liferay.account.service.impl;
 
 import com.liferay.account.model.AccountGroup;
+import com.liferay.account.model.AccountGroupAccountEntryRel;
 import com.liferay.account.service.base.AccountGroupLocalServiceBaseImpl;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.Disjunction;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+
+import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -55,6 +67,54 @@ public class AccountGroupLocalServiceImpl
 	}
 
 	@Override
+	public AccountGroup deleteAccountGroup(AccountGroup accountGroup) {
+		accountGroupPersistence.remove(accountGroup);
+
+		List<AccountGroupAccountEntryRel> accountGroupAccountEntryRels =
+			accountGroupAccountEntryRelPersistence.findByAccountGroupId(
+				accountGroup.getAccountGroupId());
+
+		for (AccountGroupAccountEntryRel accountGroupAccountEntryRel :
+				accountGroupAccountEntryRels) {
+
+			accountGroupAccountEntryRelPersistence.remove(
+				accountGroupAccountEntryRel);
+		}
+
+		return accountGroup;
+	}
+
+	@Override
+	public AccountGroup deleteAccountGroup(long accountGroupId)
+		throws PortalException {
+
+		return deleteAccountGroup(
+			accountGroupLocalService.getAccountGroup(accountGroupId));
+	}
+
+	@Override
+	public List<AccountGroup> getAccountGroups(
+		long companyId, int start, int end,
+		OrderByComparator<AccountGroup> orderByComparator) {
+
+		return accountGroupPersistence.findByCompanyId(
+			companyId, start, end, orderByComparator);
+	}
+
+	@Override
+	public BaseModelSearchResult<AccountGroup> searchAccountGroups(
+		long companyId, String keywords, int start, int end,
+		OrderByComparator<AccountGroup> orderByComparator) {
+
+		return new BaseModelSearchResult<>(
+			accountGroupLocalService.dynamicQuery(
+				_getDynamicQuery(companyId, keywords, orderByComparator), start,
+				end, orderByComparator),
+			(int)accountGroupLocalService.dynamicQueryCount(
+				_getDynamicQuery(companyId, keywords, null)));
+	}
+
+	@Override
 	public AccountGroup updateAccountGroup(
 			long accountGroupId, String name, String description)
 		throws PortalException {
@@ -66,6 +126,33 @@ public class AccountGroupLocalServiceImpl
 		accountGroup.setDescription(description);
 
 		return accountGroupPersistence.update(accountGroup);
+	}
+
+	private DynamicQuery _getDynamicQuery(
+		long companyId, String keywords,
+		OrderByComparator<AccountGroup> orderByComparator) {
+
+		DynamicQuery dynamicQuery = accountGroupLocalService.dynamicQuery();
+
+		dynamicQuery.add(RestrictionsFactoryUtil.eq("companyId", companyId));
+
+		if (Validator.isNotNull(keywords)) {
+			Disjunction disjunction = RestrictionsFactoryUtil.disjunction();
+
+			disjunction.add(
+				RestrictionsFactoryUtil.ilike(
+					"name", StringUtil.quote(keywords, StringPool.PERCENT)));
+			disjunction.add(
+				RestrictionsFactoryUtil.ilike(
+					"description",
+					StringUtil.quote(keywords, StringPool.PERCENT)));
+
+			dynamicQuery.add(disjunction);
+		}
+
+		OrderFactoryUtil.addOrderByComparator(dynamicQuery, orderByComparator);
+
+		return dynamicQuery;
 	}
 
 }

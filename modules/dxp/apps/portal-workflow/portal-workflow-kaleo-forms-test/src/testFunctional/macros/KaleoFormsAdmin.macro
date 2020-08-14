@@ -198,6 +198,12 @@ definition {
 			workflowDefinitionTitle = "${workflowDefinitionTitle}");
 	}
 
+	macro closeWorkflowModal {
+		SelectFrame(value1 = "relative=top");
+
+		Click(locator1 = "KaleoFormsAdmin#CLOSE_BUTTON");
+	}
+
 	macro deactivateWorkflow {
 		LexiconEntry.gotoEntryMenuItemNoError(
 			menuItem = "Unpublish",
@@ -486,7 +492,7 @@ definition {
 
 		SelectFrame(value1 = "relative=top");
 
-		Click(locator1 = "Icon#CLOSE");
+		Click(locator1 = "KaleoFormsAdmin#CLOSE_BUTTON");
 	}
 
 	macro reactivateInactiveWorkflowDefinition {
@@ -570,7 +576,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Kaleo Forms Admin");
 
 		while (IsElementPresent(locator1 = "Icon#BODY_VERTICAL_ELLIPSIS")) {

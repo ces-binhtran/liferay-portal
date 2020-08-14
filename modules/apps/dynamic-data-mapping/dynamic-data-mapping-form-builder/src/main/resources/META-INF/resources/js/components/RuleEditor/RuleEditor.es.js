@@ -20,7 +20,7 @@ import 'clay-button';
 
 import 'clay-modal';
 
-import 'dynamic-data-mapping-form-renderer/js/components/PageRenderer/PageRenderer.es';
+import 'dynamic-data-mapping-form-renderer/js/components/Field/ReactFieldAdapter.es';
 import {PagesVisitor} from 'dynamic-data-mapping-form-renderer';
 import {makeFetch} from 'dynamic-data-mapping-form-renderer/js/util/fetch.es';
 import Component from 'metal-component';
@@ -338,7 +338,9 @@ class RuleEditor extends Component {
 			};
 		});
 
-		let {actionTypes} = this;
+		let actionTypes = this.actionTypes.map((actionType) => ({
+			...actionType,
+		}));
 
 		if (pages.length < 3) {
 			actionTypes = this.actionTypes.filter((obj) => {
@@ -356,7 +358,7 @@ class RuleEditor extends Component {
 
 	syncPages(pages) {
 		const {actions} = this;
-		let {conditions} = this;
+		let conditions = this._getConditions();
 
 		const visitor = new PagesVisitor(pages);
 
@@ -365,15 +367,19 @@ class RuleEditor extends Component {
 			const secondOperand = condition.operands[1];
 			let secondOperandFieldExists = false;
 
-			visitor.mapFields(({fieldName}) => {
-				if (condition.operands[0].value === fieldName) {
-					firstOperandFieldExists = true;
-				}
+			visitor.mapFields(
+				({fieldName}) => {
+					if (condition.operands[0].value === fieldName) {
+						firstOperandFieldExists = true;
+					}
 
-				if (secondOperand && secondOperand.value === fieldName) {
-					secondOperandFieldExists = true;
-				}
-			});
+					if (secondOperand && secondOperand.value === fieldName) {
+						secondOperandFieldExists = true;
+					}
+				},
+				true,
+				true
+			);
 
 			if (condition.operands[0].value === 'user') {
 				firstOperandFieldExists = true;
@@ -424,15 +430,20 @@ class RuleEditor extends Component {
 		const fields = [];
 		const visitor = new PagesVisitor(pages);
 
-		visitor.mapFields((field) => {
-			if (field.type == 'numeric') {
-				fields.push({
-					...field,
-					options: field.options ? field.options : [],
-					value: field.fieldName,
-				});
-			}
-		});
+		visitor.mapFields(
+			(field) => {
+				if (field.type == 'numeric') {
+					fields.push({
+						...field,
+						label: field.label || field.fieldName,
+						options: field.options ? field.options : [],
+						value: field.fieldName,
+					});
+				}
+			},
+			true,
+			true
+		);
 
 		return fields;
 	}
@@ -457,7 +468,7 @@ class RuleEditor extends Component {
 
 	_clearAllConditionFieldValues(index) {
 		const {secondOperandSelectedList} = this;
-		let {conditions} = this;
+		let conditions = this._getConditions();
 
 		conditions = this._clearFirstOperandValue(conditions, index);
 		conditions = this._clearOperatorValue(conditions, index);
@@ -538,18 +549,29 @@ class RuleEditor extends Component {
 		return this._getFieldOptions(omittedFieldsList);
 	}
 
+	_getConditions() {
+		return this.conditions.map((condition) => ({
+			...condition,
+			operands: condition.operands.map((operand) => ({...operand})),
+		}));
+	}
+
 	_getDeletedFields(visitor) {
 		const existentFields = [];
 		const {actionsFieldOptions} = this;
 		let deletedFields = [];
 
-		actionsFieldOptions.forEach((field) => {
-			visitor.mapFields(({fieldName}) => {
-				if (field.fieldName === fieldName) {
-					existentFields.push(fieldName);
-				}
-			});
-		});
+		actionsFieldOptions.forEach(
+			(field) => {
+				visitor.mapFields(({fieldName}) => {
+					if (field.fieldName === fieldName) {
+						existentFields.push(fieldName);
+					}
+				});
+			},
+			true,
+			true
+		);
 
 		const oldFields = actionsFieldOptions.map((field) => field.fieldName);
 
@@ -566,9 +588,13 @@ class RuleEditor extends Component {
 		const visitor = new PagesVisitor(pages);
 
 		visitor.visitFields((field) => {
-			if (omittedFieldsList.indexOf(field.type) < 0) {
+			if (
+				field.type != 'fieldset' &&
+				omittedFieldsList.indexOf(field.type) < 0
+			) {
 				fields.push({
 					...field,
+					label: field.label || field.fieldName,
 					options: field.options ? field.options : [],
 					value: field.fieldName,
 				});
@@ -578,39 +604,10 @@ class RuleEditor extends Component {
 		return fields;
 	}
 
-	_getFieldLabel(fieldName) {
+	_getFieldType(fieldName) {
 		const pages = this.pages;
 
-		let fieldLabel;
-
-		if (pages) {
-			for (let page = 0; page < pages.length; page++) {
-				const rows = pages[page].rows;
-
-				for (let row = 0; row < rows.length; row++) {
-					const cols = rows[row].columns;
-
-					for (let col = 0; col < cols.length; col++) {
-						const fields = cols[col].fields;
-
-						for (let field = 0; field < fields.length; field++) {
-							if (
-								pages[page].rows[row].columns[col].fields[field]
-									.fieldName === fieldName
-							) {
-								fieldLabel =
-									pages[page].rows[row].columns[col].fields[
-										field
-									].label;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		return fieldLabel;
+		return getFieldProperty(pages, fieldName, 'type');
 	}
 
 	_getFieldTypeByFieldName(fieldName) {
@@ -663,6 +660,36 @@ class RuleEditor extends Component {
 		});
 	}
 
+	_getOptionValue(fieldName, optionLabel) {
+		const pages = this.pages;
+
+		let optionValue = null;
+
+		if (pages && optionLabel) {
+			const visitor = new PagesVisitor(pages);
+
+			visitor.findField((field) => {
+				let found = false;
+
+				if (field.fieldName === fieldName && field.options) {
+					field.options.some((option) => {
+						if (option.label == optionLabel) {
+							optionValue = option.value;
+
+							found = true;
+						}
+
+						return found;
+					});
+				}
+
+				return found;
+			});
+		}
+
+		return optionValue ? optionValue : optionLabel;
+	}
+
 	_handleActionAdded() {
 		const {actions} = this;
 		const newAction = {
@@ -687,8 +714,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleActionSelection(event) {
-		const {fieldInstance, value} = event;
+	_handleActionSelection({fieldInstance, value}) {
 		const index = parseInt(
 			this._getIndex(fieldInstance, '.action-type'),
 			10
@@ -750,8 +776,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleDataProviderInputEdited(event) {
-		const {fieldInstance, value} = event;
+	_handleDataProviderInputEdited({fieldInstance, value}) {
 		const {actions} = this;
 		const actionIndex = this._getIndex(fieldInstance, '.action');
 		const inputIndex = this._getIndex(
@@ -770,8 +795,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleDataProviderOutputEdited(event) {
-		const {fieldInstance, value} = event;
+	_handleDataProviderOutputEdited({fieldInstance, value}) {
 		const actionIndex = this._getIndex(fieldInstance, '.action');
 		const outputIndex = this._getIndex(
 			fieldInstance,
@@ -790,8 +814,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleDeleteAction(event) {
-		const {currentTarget} = event;
+	_handleDeleteAction({currentTarget}) {
 		const index = currentTarget.getAttribute('data-index');
 
 		this.refs.confirmationModalAction.show();
@@ -800,8 +823,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleDeleteCondition(event) {
-		const {currentTarget} = event;
+	_handleDeleteCondition({currentTarget}) {
 		const index = currentTarget.getAttribute('data-index');
 
 		this.refs.confirmationModalCondition.show();
@@ -817,11 +839,11 @@ class RuleEditor extends Component {
 		this.setState({actions});
 	}
 
-	_handleFirstOperandFieldEdited(event) {
-		const {fieldInstance, value} = event;
+	_handleFirstOperandFieldEdited({fieldInstance, value}) {
 		const index = this._getIndex(fieldInstance, '.condition-if');
 		const {actions, pages} = this;
-		let {conditions} = this;
+
+		let conditions = this._getConditions();
 
 		if (value && value.length > 0 && value[0]) {
 			const fieldName = value[0];
@@ -830,7 +852,7 @@ class RuleEditor extends Component {
 			);
 
 			const firstOperand = {
-				label: this._getFieldLabel(fieldName),
+				label: getFieldProperty(this.pages, fieldName, 'label'),
 				repeatable,
 				type: dataType == 'user' ? 'user' : 'field',
 				value: fieldName,
@@ -868,7 +890,9 @@ class RuleEditor extends Component {
 
 						conditions[index].operands[0].source = pageIndex;
 					}
-				}
+				},
+				true,
+				true
 			);
 		}
 
@@ -891,9 +915,8 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleLogicalOperationChange(event) {
-		const {target} = event;
-		const {value} = target.dataset;
+	_handleLogicalOperationChange({data}) {
+		const {value} = data.item;
 
 		if (value !== this.logicalOperator) {
 			this.setState({
@@ -939,9 +962,8 @@ class RuleEditor extends Component {
 		}
 	}
 
-	_handleOperatorEdited(event) {
-		const {fieldInstance, value} = event;
-		let {conditions} = this;
+	_handleOperatorEdited({fieldInstance, value}) {
+		let conditions = this._getConditions();
 		let operatorValue = '';
 
 		if (value && value.length > 0 && value[0]) {
@@ -987,9 +1009,8 @@ class RuleEditor extends Component {
 		this.emit('ruleCancelled', {});
 	}
 
-	_handleSecondOperandFieldEdited(event) {
+	_handleSecondOperandFieldEdited({fieldInstance, value}) {
 		const {conditions} = this;
-		const {fieldInstance, value} = event;
 		let fieldValue = '';
 
 		if (value && typeof value == 'object' && value[0]) {
@@ -1033,12 +1054,23 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleSecondOperandTypeEdited(event) {
-		let {conditions} = this;
-		const {fieldInstance, value} = event;
+	_handleSecondOperandTypeEdited({fieldInstance, value}) {
+		let conditions = this._getConditions();
 		const index = this._getIndex(fieldInstance, '.condition-type');
 		const {operands} = conditions[index];
 		const secondOperand = operands[1];
+
+		if (value.length == 0) {
+			if (secondOperand) {
+				conditions[index].operands.splice(1, 1);
+
+				this.setState({
+					conditions,
+				});
+			}
+
+			return;
+		}
 
 		let secondOperandType = 'field';
 		let valueType = 'field';
@@ -1079,11 +1111,24 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleSecondOperandValueEdited(event) {
+	_handleSecondOperandValueEdited({fieldInstance, value}) {
 		const {conditions} = this;
-		const {fieldInstance, value} = event;
 		const index = this._getIndex(fieldInstance, '.condition-type-value');
-		const secondOperandValue = Array.isArray(value) ? value[0] : value;
+
+		let secondOperandValue = Array.isArray(value) ? value[0] : value;
+		let secondOperandOptionValue = secondOperandValue;
+
+		if (
+			conditions[index].operands[1].type !== 'field' &&
+			fieldInstance.type === 'select'
+		) {
+			fieldInstance.options.map((option) => {
+				if (option.value === secondOperandValue) {
+					secondOperandOptionValue = option.value;
+					secondOperandValue = option.label;
+				}
+			});
+		}
 
 		this.setState({
 			conditions: conditions.map((condition, conditionIndex) => {
@@ -1092,6 +1137,7 @@ class RuleEditor extends Component {
 				if (index == conditionIndex) {
 					operands[1] = {
 						...operands[1],
+						optionValue: secondOperandOptionValue,
 						value: secondOperandValue,
 					};
 				}
@@ -1104,8 +1150,7 @@ class RuleEditor extends Component {
 		});
 	}
 
-	_handleTargetSelection(event) {
-		const {fieldInstance, value} = event;
+	_handleTargetSelection({fieldInstance, value}) {
 		const {actions} = this;
 		const id = value[0];
 		const index = this._getIndex(fieldInstance, '.target-action');
@@ -1169,13 +1214,36 @@ class RuleEditor extends Component {
 			return newAction;
 		});
 
+		const newConditions = rule.conditions.map((condition) => {
+			const newCondition = {...condition};
+			const {operands} = newCondition;
+
+			if (operands[1].type !== 'field') {
+				const fieldType = this._getFieldType(operands[0].value);
+
+				if (
+					fieldType === 'checkbox_multiple' ||
+					fieldType === 'radio' ||
+					fieldType === 'select'
+				) {
+					operands[1].optionValue = this._getOptionValue(
+						operands[0].value,
+						operands[1].value
+					);
+				}
+			}
+
+			return newCondition;
+		});
+
 		newActions = this._syncActions(newActions);
 
 		newRule.actions = newActions;
+		newRule.conditions = newConditions;
 
 		this.setState({
 			actions: newActions,
-			conditions: rule.conditions,
+			conditions: newConditions,
 			logicalOperator: rule['logical-operator'].toLowerCase(),
 			rule: newRule,
 		});
@@ -1368,11 +1436,15 @@ class RuleEditor extends Component {
 		actions.forEach((action) => {
 			let targetFieldExists = false;
 
-			visitor.mapFields(({fieldName}) => {
-				if (action.target === fieldName) {
-					targetFieldExists = true;
-				}
-			});
+			visitor.mapFields(
+				({fieldName}) => {
+					if (action.target === fieldName) {
+						targetFieldExists = true;
+					}
+				},
+				true,
+				true
+			);
 
 			action.calculatorFields = this._updateCalculatorFields(
 				action,
@@ -1704,6 +1776,17 @@ RuleEditor.STATE = {
 	loadingDataProviderOptions: Config.bool(),
 
 	logicalOperator: Config.string().internal().value('or'),
+
+	logicalOperators: Config.array().value([
+		{
+			label: Liferay.Language.get('or'),
+			value: 'or',
+		},
+		{
+			label: Liferay.Language.get('and'),
+			value: 'and',
+		},
+	]),
 
 	pageOptions: Config.arrayOf(
 		Config.shapeOf({

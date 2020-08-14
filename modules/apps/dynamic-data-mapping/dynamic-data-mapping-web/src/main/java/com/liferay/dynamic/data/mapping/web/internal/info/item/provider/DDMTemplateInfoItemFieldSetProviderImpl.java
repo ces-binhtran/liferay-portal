@@ -23,14 +23,12 @@ import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.localized.InfoLocalizedValue;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portlet.display.template.PortletDisplayTemplate;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.osgi.service.component.annotations.Component;
@@ -52,30 +50,35 @@ public class DDMTemplateInfoItemFieldSetProviderImpl
 			DDMStructure ddmStructure =
 				_ddmStructureLocalService.getDDMStructure(ddmStructureId);
 
-			InfoFieldSet infoFieldSet = new InfoFieldSet(
-				InfoLocalizedValue.localize(getClass(), "templates"),
-				"templates");
+			return InfoFieldSet.builder(
+			).infoFieldSetEntry(
+				consumer -> {
+					List<DDMTemplate> ddmTemplates =
+						ddmStructure.getTemplates();
 
-			List<DDMTemplate> ddmTemplates = ddmStructure.getTemplates();
+					Stream<DDMTemplate> stream = ddmTemplates.stream();
 
-			Stream<DDMTemplate> stream = ddmTemplates.stream();
+					Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
 
-			Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-			infoFieldSet.addAll(
-				stream.map(
-					ddmTemplate -> new InfoField(
-						TextInfoFieldType.INSTANCE,
-						InfoLocalizedValue.localize(
-							getClass(),
-							ddmTemplate.getName(locale) + StringPool.SPACE +
-								StringPool.STAR),
-						_getTemplateFieldName(ddmTemplate))
-				).collect(
-					Collectors.toList()
-				));
-
-			return infoFieldSet;
+					stream.map(
+						ddmTemplate -> InfoField.builder(
+						).infoFieldType(
+							TextInfoFieldType.INSTANCE
+						).name(
+							_getTemplateFieldName(ddmTemplate)
+						).labelInfoLocalizedValue(
+							InfoLocalizedValue.localize(
+								getClass(), ddmTemplate.getName(locale))
+						).build()
+					).forEach(
+						consumer::accept
+					);
+				}
+			).labelInfoLocalizedValue(
+				InfoLocalizedValue.localize(getClass(), "templates")
+			).name(
+				"templates"
+			).build();
 		}
 		catch (NoSuchStructureException noSuchStructureException) {
 			throw noSuchStructureException;

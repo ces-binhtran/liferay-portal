@@ -18,6 +18,7 @@ import com.liferay.headless.delivery.dto.v1_0.ClassPKReference;
 import com.liferay.headless.delivery.dto.v1_0.ContextReference;
 import com.liferay.headless.delivery.dto.v1_0.FragmentImage;
 import com.liferay.headless.delivery.dto.v1_0.FragmentInlineValue;
+import com.liferay.headless.delivery.dto.v1_0.FragmentLink;
 import com.liferay.headless.delivery.dto.v1_0.FragmentMappedValue;
 import com.liferay.headless.delivery.dto.v1_0.Layout;
 import com.liferay.headless.delivery.dto.v1_0.Mapping;
@@ -26,7 +27,12 @@ import com.liferay.headless.delivery.dto.v1_0.PageSectionDefinition;
 import com.liferay.info.display.contributor.InfoDisplayContributor;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.layout.page.template.util.AlignConverter;
+import com.liferay.layout.page.template.util.BorderRadiusConverter;
+import com.liferay.layout.page.template.util.JustifyConverter;
+import com.liferay.layout.page.template.util.MarginConverter;
 import com.liferay.layout.page.template.util.PaddingConverter;
+import com.liferay.layout.page.template.util.ShadowConverter;
 import com.liferay.layout.util.structure.ContainerLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
@@ -39,7 +45,11 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.osgi.service.component.annotations.Component;
@@ -73,41 +83,26 @@ public class ContainerLayoutStructureItemExporter
 							containerLayoutStructureItem.
 								getBackgroundColorCssClass(),
 							null);
-						backgroundImage = _toBackgroundFragmentImage(
+						backgroundFragmentImage = _toBackgroundFragmentImage(
 							containerLayoutStructureItem.
 								getBackgroundImageJSONObject(),
 							saveMappingConfiguration);
-						layout = new Layout() {
-							{
-								paddingBottom =
-									PaddingConverter.convertToExternalValue(
-										containerLayoutStructureItem.
-											getPaddingBottom());
-								paddingHorizontal =
-									PaddingConverter.convertToExternalValue(
-										containerLayoutStructureItem.
-											getPaddingHorizontal());
-								paddingTop =
-									PaddingConverter.convertToExternalValue(
-										containerLayoutStructureItem.
-											getPaddingTop());
+						fragmentLink = _toFragmentLink(
+							containerLayoutStructureItem.getLinkJSONObject(),
+							saveMappingConfiguration);
+						layout = _toLayout(containerLayoutStructureItem);
 
-								setContainerType(
-									() -> {
-										String containerType =
-											containerLayoutStructureItem.
-												getContainerType();
+						setStyles(
+							() -> {
+								JSONObject itemConfigJSONObject =
+									containerLayoutStructureItem.
+										getItemConfigJSONObject();
 
-										if (Validator.isNull(containerType)) {
-											return null;
-										}
-
-										return ContainerType.create(
-											StringUtil.upperCaseFirstLetter(
-												containerType));
-									});
-							}
-						};
+								return _toStyles(
+									itemConfigJSONObject.getJSONObject(
+										"styles"),
+									saveMappingConfiguration);
+							});
 					}
 				};
 				type = PageElement.Type.SECTION;
@@ -123,6 +118,10 @@ public class ContainerLayoutStructureItemExporter
 				return jsonObject.getString("url");
 			}
 
+			if (object instanceof String) {
+				return (String)object;
+			}
+
 			return StringPool.BLANK;
 		};
 	}
@@ -133,6 +132,10 @@ public class ContainerLayoutStructureItemExporter
 		if (saveMapping && jsonObject.has("classNameId") &&
 			jsonObject.has("classPK") && jsonObject.has("fieldId")) {
 
+			return true;
+		}
+
+		if (saveMapping && jsonObject.has("collectionFieldId")) {
 			return true;
 		}
 
@@ -260,6 +263,53 @@ public class ContainerLayoutStructureItemExporter
 		return null;
 	}
 
+	private FragmentLink _toFragmentLink(
+		JSONObject jsonObject, boolean saveMapping) {
+
+		if (jsonObject == null) {
+			return null;
+		}
+
+		if (jsonObject.isNull("href") &&
+			!_isSaveFragmentMappedValue(jsonObject, saveMapping)) {
+
+			return null;
+		}
+
+		return new FragmentLink() {
+			{
+				setHref(
+					() -> {
+						if (_isSaveFragmentMappedValue(
+								jsonObject, saveMapping)) {
+
+							return _toFragmentMappedValue(
+								_toDefaultMappingValue(jsonObject, null),
+								jsonObject);
+						}
+
+						return new FragmentInlineValue() {
+							{
+								value = jsonObject.getString("href");
+							}
+						};
+					});
+				setTarget(
+					() -> {
+						String target = jsonObject.getString("target");
+
+						if (Validator.isNull(target)) {
+							return null;
+						}
+
+						return Target.create(
+							StringUtil.upperCaseFirstLetter(
+								target.substring(1)));
+					});
+			}
+		};
+	}
+
 	private FragmentMappedValue _toFragmentMappedValue(
 		FragmentInlineValue fragmentInlineValue, JSONObject jsonObject) {
 
@@ -267,11 +317,18 @@ public class ContainerLayoutStructureItemExporter
 			{
 				mapping = new Mapping() {
 					{
-						defaultValue = fragmentInlineValue;
+						defaultFragmentInlineValue = fragmentInlineValue;
 						itemReference = _toItemReference(jsonObject);
 
 						setFieldKey(
 							() -> {
+								String collectionFieldId = jsonObject.getString(
+									"collectionFieldId");
+
+								if (Validator.isNotNull(collectionFieldId)) {
+									return collectionFieldId;
+								}
+
 								String fieldId = jsonObject.getString(
 									"fieldId");
 
@@ -279,7 +336,14 @@ public class ContainerLayoutStructureItemExporter
 									return fieldId;
 								}
 
-								return jsonObject.getString("mappedField");
+								String mappedField = jsonObject.getString(
+									"mappedField");
+
+								if (Validator.isNotNull(mappedField)) {
+									return mappedField;
+								}
+
+								return null;
 							});
 					}
 				};
@@ -360,11 +424,22 @@ public class ContainerLayoutStructureItemExporter
 	}
 
 	private Object _toItemReference(JSONObject jsonObject) {
+		String collectionFieldId = jsonObject.getString("collectionFieldId");
 		String fieldId = jsonObject.getString("fieldId");
 		String mappedField = jsonObject.getString("mappedField");
 
-		if (Validator.isNull(fieldId) && Validator.isNull(mappedField)) {
+		if (Validator.isNull(collectionFieldId) && Validator.isNull(fieldId) &&
+			Validator.isNull(mappedField)) {
+
 			return null;
+		}
+
+		if (Validator.isNotNull(collectionFieldId)) {
+			return new ContextReference() {
+				{
+					contextSource = ContextSource.COLLECTION_ITEM;
+				}
+			};
 		}
 
 		if (Validator.isNotNull(mappedField)) {
@@ -379,6 +454,118 @@ public class ContainerLayoutStructureItemExporter
 			{
 				className = _toItemClassName(jsonObject);
 				classPK = _toitemClassPK(jsonObject);
+			}
+		};
+	}
+
+	private Layout _toLayout(
+		ContainerLayoutStructureItem containerLayoutStructureItem) {
+
+		return new Layout() {
+			{
+				align = Align.create(
+					AlignConverter.convertToExternalValue(
+						containerLayoutStructureItem.getAlign()));
+				borderRadius = BorderRadius.create(
+					BorderRadiusConverter.convertToExternalValue(
+						containerLayoutStructureItem.getBorderRadius()));
+				borderWidth = containerLayoutStructureItem.getBorderWidth();
+				justify = Justify.create(
+					JustifyConverter.convertToExternalValue(
+						containerLayoutStructureItem.getJustify()));
+				marginBottom = MarginConverter.convertToExternalValue(
+					containerLayoutStructureItem.getMarginBottom());
+				marginLeft = MarginConverter.convertToExternalValue(
+					containerLayoutStructureItem.getMarginLeft());
+				marginRight = MarginConverter.convertToExternalValue(
+					containerLayoutStructureItem.getMarginRight());
+				marginTop = MarginConverter.convertToExternalValue(
+					containerLayoutStructureItem.getMarginTop());
+				opacity = containerLayoutStructureItem.getOpacity();
+				paddingBottom = PaddingConverter.convertToExternalValue(
+					containerLayoutStructureItem.getPaddingBottom());
+				paddingLeft = PaddingConverter.convertToExternalValue(
+					containerLayoutStructureItem.getPaddingLeft());
+				paddingRight = PaddingConverter.convertToExternalValue(
+					containerLayoutStructureItem.getPaddingRight());
+				paddingTop = PaddingConverter.convertToExternalValue(
+					containerLayoutStructureItem.getPaddingTop());
+				shadow = Shadow.create(
+					ShadowConverter.convertToExternalValue(
+						containerLayoutStructureItem.getShadow()));
+
+				setBorderColor(
+					() -> {
+						String borderColor =
+							containerLayoutStructureItem.getBorderColor();
+
+						if (Validator.isNull(borderColor)) {
+							return null;
+						}
+
+						return borderColor;
+					});
+				setContentDisplay(
+					() -> {
+						String contentDisplay =
+							containerLayoutStructureItem.getContentDisplay();
+
+						if (Validator.isNull(contentDisplay)) {
+							return null;
+						}
+
+						return ContentDisplay.create(
+							StringUtil.upperCaseFirstLetter(contentDisplay));
+					});
+				setWidthType(
+					() -> {
+						String widthType =
+							containerLayoutStructureItem.getWidthType();
+
+						if (Validator.isNotNull(widthType)) {
+							return WidthType.create(
+								StringUtil.upperCaseFirstLetter(widthType));
+						}
+
+						String containerType =
+							containerLayoutStructureItem.getContainerType();
+
+						if (Validator.isNotNull(containerType)) {
+							return WidthType.create(
+								StringUtil.upperCaseFirstLetter(containerType));
+						}
+
+						return null;
+					});
+			}
+		};
+	}
+
+	private Map<String, Object> _toStyles(
+		JSONObject jsonObject, boolean saveMappingConfiguration) {
+
+		return new HashMap<String, Object>() {
+			{
+				Set<String> keys = jsonObject.keySet();
+
+				Iterator<String> iterator = keys.iterator();
+
+				while (iterator.hasNext()) {
+					String key = iterator.next();
+
+					Object value = jsonObject.get(key);
+
+					if (Objects.equals(key, "backgroundImage")) {
+						JSONObject backgroundImageJSONObject =
+							(JSONObject)value;
+
+						value = _toBackgroundFragmentImage(
+							backgroundImageJSONObject,
+							saveMappingConfiguration);
+					}
+
+					put(key, value);
+				}
 			}
 		};
 	}

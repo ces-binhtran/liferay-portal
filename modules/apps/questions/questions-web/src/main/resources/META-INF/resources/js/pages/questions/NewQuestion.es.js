@@ -20,14 +20,18 @@ import React, {useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
+import Alert from '../../components/Alert.es';
 import Link from '../../components/Link.es';
 import QuestionsEditor from '../../components/QuestionsEditor';
 import TagSelector from '../../components/TagSelector.es';
-import useSection from '../../hooks/useSection.es';
-import {client, createQuestionQuery} from '../../utils/client.es';
+import TextLengthValidation from '../../components/TextLengthValidation.es';
+import {client, createQuestionQuery, getSections} from '../../utils/client.es';
+import lang from '../../utils/lang.es';
 import {
+	getContextLink,
 	historyPushWithSlug,
 	slugToText,
+	stripHTML,
 	useDebounceCallback,
 } from '../../utils/utils.es';
 
@@ -40,6 +44,7 @@ export default withRouter(
 	}) => {
 		const [articleBody, setArticleBody] = useState('');
 		const [headline, setHeadline] = useState('');
+		const [error, setError] = useState({});
 		const [sectionId, setSectionId] = useState();
 		const [sections, setSections] = useState([]);
 		const [tags, setTags] = useState([]);
@@ -48,14 +53,13 @@ export default withRouter(
 		const context = useContext(AppContext);
 		const historyPushParser = historyPushWithSlug(history.push);
 
-		const section = useSection(slugToText(sectionTitle), context.siteKey);
-
 		const [debounceCallback] = useDebounceCallback(
 			() => historyPushParser(`/questions/${sectionTitle}/`),
 			500
 		);
 
 		const [createQuestion] = useMutation(createQuestionQuery, {
+			context: getContextLink(sectionTitle),
 			onCompleted() {
 				client.resetStore();
 				debounceCallback();
@@ -63,16 +67,48 @@ export default withRouter(
 		});
 
 		useEffect(() => {
-			if (section && section.parentSection) {
-				setSections([
-					{
-						id: section.parentSection.id,
-						title: section.parentSection.title,
-					},
-					...section.parentSection.messageBoardSections.items,
-				]);
+			getSections(slugToText(sectionTitle), context.siteKey).then(
+				(section) => {
+					setSectionId(section.id);
+					if (section.parentMessageBoardSection) {
+						setSections([
+							{
+								id: section.parentMessageBoardSection.id,
+								title: section.parentMessageBoardSection.title,
+							},
+							...section.parentMessageBoardSection
+								.messageBoardSections.items,
+							...section.messageBoardSections.items,
+						]);
+					}
+					else {
+						setSections([
+							{
+								id: section.id,
+								title: section.title,
+							},
+							...section.messageBoardSections.items,
+						]);
+					}
+				}
+			);
+		}, [context.siteKey, sectionTitle]);
+
+		const processError = (error) => {
+			if (error.message && error.message.includes('AssetTagException')) {
+				error.message = lang.sub(
+					Liferay.Language.get(
+						'the-x-cannot-contain-the-following-invalid-characters-x'
+					),
+					[
+						'Tag',
+						' & \' @ \\\\ ] } : , = > / < \\n [ {  | + # ` ? \\" \\r ; / * ~',
+					]
+				);
 			}
-		}, [section, section.parentSection]);
+
+			setError(error);
+		};
 
 		return (
 			<section className="c-mt-5 questions-section questions-section-new">
@@ -138,9 +174,11 @@ export default withRouter(
 													'include-all-the-information-someone-would-need-to-answer-your-question'
 												)}
 											</span>
-										</ClayForm.FeedbackItem>
 
-										<ClayForm.Text>{''}</ClayForm.Text>
+											<TextLengthValidation
+												text={articleBody}
+											/>
+										</ClayForm.FeedbackItem>
 									</ClayForm.FeedbackGroup>
 								</ClayForm.Group>
 
@@ -158,10 +196,7 @@ export default withRouter(
 												<ClaySelect.Option
 													key={id}
 													label={title}
-													selected={
-														section &&
-														section.id === id
-													}
+													selected={sectionId === id}
 													value={id}
 												/>
 											))}
@@ -181,7 +216,10 @@ export default withRouter(
 								<ClayButton
 									className="c-mt-4 c-mt-sm-0"
 									disabled={
-										!articleBody || !headline || !tagsLoaded
+										!articleBody ||
+										!headline ||
+										!tagsLoaded ||
+										stripHTML(articleBody).length < 15
 									}
 									displayType="primary"
 									onClick={() => {
@@ -192,10 +230,9 @@ export default withRouter(
 												keywords: tags.map(
 													(tag) => tag.label
 												),
-												messageBoardSectionId:
-													sectionId || section.id,
+												messageBoardSectionId: sectionId,
 											},
-										});
+										}).catch(processError);
 									}}
 								>
 									{Liferay.Language.get('post-your-question')}
@@ -211,6 +248,7 @@ export default withRouter(
 						</div>
 					</div>
 				</div>
+				<Alert info={error} />
 			</section>
 		);
 	}

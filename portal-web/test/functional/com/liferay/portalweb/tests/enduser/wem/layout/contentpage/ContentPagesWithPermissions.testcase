@@ -72,7 +72,8 @@ definition {
 			roleTitle = "Roles Siterole Name",
 			roleType = "site");
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -121,6 +122,8 @@ definition {
 	@description = "This is a test for LPS-96795. Content author having permissions to create and update web content could see edit icon in the content page displaying the web contents and could edit web content in edit mode."
 	@priority = "5"
 	test EditContentWithCreateAndUpdateWebContentPermissions {
+		property portal.acceptance = "true";
+
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "Userfn",
@@ -183,7 +186,8 @@ definition {
 			roleTitle = "Roles Siterole Name",
 			roleType = "site");
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -235,7 +239,9 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
 
-		PageEditor.addWidget(portletName = "Web Content Display");
+		PageEditor.addWidget(
+			portletName = "Web Content Display",
+			targetFragmentName = "Heading");
 
 		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title 2");
 
@@ -283,6 +289,8 @@ definition {
 	@description = "This is a test for LPS-96795. Content author having permissions to update web content and Update Page Content could see edit icon in the content page displaying the web contents and could edit web content in editmode."
 	@priority = "5"
 	test EditContentWithUpdateWebContentAndUpdatePageContentPermissions {
+		property portal.acceptance = "true";
+
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "Userfn",
@@ -329,7 +337,8 @@ definition {
 			roleTitle = "Roles Siterole Name",
 			roleType = "site");
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -368,7 +377,9 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
 
-		PageEditor.addWidget(portletName = "Web Content Display");
+		PageEditor.addWidget(
+			portletName = "Web Content Display",
+			targetFragmentName = "Heading");
 
 		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title 2");
 
@@ -416,6 +427,8 @@ definition {
 	@description = "This is a test for LPS-103454. Content author having permission to update web content could see edit icon in the content page displaying the web contents and could edit web content in editmode, but could not edit editable field "
 	@priority = "5"
 	test EditContentWithWebContentArticleUpdatePermission {
+		property portal.acceptance = "true";
+
 		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "Userfn",
@@ -442,7 +455,8 @@ definition {
 			roleTitle = "Roles Siterole Name",
 			roleType = "site");
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -481,7 +495,9 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
 
-		PageEditor.addWidget(portletName = "Web Content Display");
+		PageEditor.addWidget(
+			portletName = "Web Content Display",
+			targetFragmentName = "Heading");
 
 		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title 2");
 
@@ -572,7 +588,8 @@ definition {
 				roleType = "site");
 		}
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -592,7 +609,7 @@ definition {
 
 		Click(locator1 = "//div[contains(@class,'fragment-rich-text')]/lfr-editable[contains(@id,'rich-text')]");
 
-		Click(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_EDIT_BUTTON");
+		DoubleClick(locator1 = "//div[contains(@class,'fragment-rich-text')]/lfr-editable[contains(@id,'rich-text')]");
 
 		Type(
 			locator1 = "//div[contains(@class,'fragment-rich-text')]/lfr-editable[contains(@id,'rich-text')]//div[contains(@class,'cke_editable_inline')]",
@@ -605,7 +622,6 @@ definition {
 		AssertVisible(
 			key_content = "New editable fragment text",
 			key_fragmentClass = "rich-text",
-			key_position = "1",
 			locator1 = "Fragment#FRAGMENT");
 	}
 
@@ -680,7 +696,8 @@ definition {
 				roleType = "site");
 		}
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -700,7 +717,13 @@ definition {
 
 		Click(locator1 = "//div[contains(@class,'fragment-rich-text')]/lfr-editable[contains(@id,'rich-text')]");
 
-		Click(locator1 = "PageEditor#EDITABLE_FIELD_TOOLBAR_MAP_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Structure");
+
+		var key_navItem = "Mapping";
+
+		AssertClick(
+			locator1 = "PageEditor#NAV_ITEM_BUTTON",
+			value1 = "Mapping");
 
 		Select(
 			locator1 = "PageEditorEditableLink#FIELD",
@@ -715,7 +738,6 @@ definition {
 		AssertVisible(
 			key_content = "Webcontent Title",
 			key_fragmentClass = "rich-text",
-			key_position = "1",
 			locator1 = "Fragment#FRAGMENT");
 	}
 
@@ -748,7 +770,8 @@ definition {
 			roleTitle = "Roles Siterole Name",
 			roleType = "site");
 
-		JSONRole.assignRoleToUser(
+		JSONRole.assignSiteRoleToUser(
+			groupName = "Test Site Name",
 			roleTitle = "Roles Siterole Name",
 			userEmailAddress = "userea@liferay.com");
 
@@ -785,7 +808,9 @@ definition {
 			pageName = "Test Content Page Name",
 			siteName = "Test Site Name");
 
-		PageEditor.addWidget(portletName = "Web Content Display");
+		PageEditor.addWidget(
+			portletName = "Web Content Display",
+			targetFragmentName = "Heading");
 
 		WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
 

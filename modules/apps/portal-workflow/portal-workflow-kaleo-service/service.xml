@@ -140,6 +140,7 @@
 		<column localized="true" name="title" type="String" />
 		<column name="description" type="String" />
 		<column name="content" type="String" />
+		<column name="scope" type="String" />
 		<column name="version" type="int" />
 		<column name="active" type="boolean" />
 
@@ -268,6 +269,10 @@
 		<finder name="C_U" return-type="Collection">
 			<finder-column name="companyId" />
 			<finder-column name="userId" />
+		</finder>
+		<finder name="KDI_C" return-type="Collection">
+			<finder-column name="kaleoDefinitionId" />
+			<finder-column name="completed" />
 		</finder>
 		<finder name="KDVI_C" return-type="Collection">
 			<finder-column name="kaleoDefinitionVersionId" />

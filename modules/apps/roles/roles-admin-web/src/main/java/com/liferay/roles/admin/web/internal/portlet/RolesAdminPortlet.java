@@ -453,7 +453,8 @@ public class RolesAdminPortlet extends MVCPortlet {
 				String[] groupIds = StringUtil.split(
 					ParamUtil.getString(actionRequest, "groupIds" + target));
 
-				groupIds = ArrayUtil.distinct(groupIds);
+				groupIds = ArrayUtil.distinct(
+					ArrayUtil.filter(groupIds, Validator::isNotNull));
 
 				int scope = ResourceConstants.SCOPE_COMPANY;
 
@@ -583,14 +584,14 @@ public class RolesAdminPortlet extends MVCPortlet {
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof DuplicateRoleException ||
-			cause instanceof NoSuchRoleException ||
-			cause instanceof PrincipalException ||
-			cause instanceof RequiredRoleException ||
-			cause instanceof RoleAssignmentException ||
-			cause instanceof RoleNameException ||
-			cause instanceof RolePermissionsException) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof DuplicateRoleException ||
+			throwable instanceof NoSuchRoleException ||
+			throwable instanceof PrincipalException ||
+			throwable instanceof RequiredRoleException ||
+			throwable instanceof RoleAssignmentException ||
+			throwable instanceof RoleNameException ||
+			throwable instanceof RolePermissionsException) {
 
 			return true;
 		}
@@ -742,9 +743,9 @@ public class RolesAdminPortlet extends MVCPortlet {
 		String actionId = null;
 
 		if ((panelCategoryHelper.containsPortlet(
-				portletId, PanelCategoryKeys.CONTROL_PANEL) ||
+				portletId, PanelCategoryKeys.APPLICATIONS_MENU) ||
 			 panelCategoryHelper.containsPortlet(
-				 portletId, PanelCategoryKeys.GLOBAL_MENU)) &&
+				 portletId, PanelCategoryKeys.CONTROL_PANEL)) &&
 			(role.getType() == RoleConstants.TYPE_REGULAR)) {
 
 			selResource = PortletKeys.PORTAL;

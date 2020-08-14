@@ -14,47 +14,56 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import React, {useEffect, useRef, useState} from 'react';
+import ClayLabel from '@clayui/label';
+import React, {useEffect, useState} from 'react';
 
 import {getItem} from '../../utils/client.es';
+import {getLocalizedValue} from '../../utils/lang.es';
 import DropDownWithSearch from './DropDownWithSearch.es';
 
-export default ({onSelect, selectedValue, visible}) => {
+export function getDataObjects() {
+	return getItem(
+		'/o/data-engine/v2.0/data-definitions/by-content-type/app-builder',
+		{keywords: '', page: -1, pageSize: -1, sort: ''}
+	).then(({items}) =>
+		items.map((item) => ({
+			...item,
+			name: getLocalizedValue(item.defaultLanguageId, item.name),
+			type: 'custom',
+		}))
+	);
+}
+
+export default ({defaultValue, label, onSelect, selectedValue, visible}) => {
 	const [state, setState] = useState({
 		error: null,
 		isLoading: true,
 	});
 	const [items, setItems] = useState([]);
-	const selectRef = useRef();
 
 	const doFetch = () => {
-		const params = {keywords: '', page: -1, pageSize: -1, sort: ''};
-
 		setState({
 			error: null,
 			isLoading: true,
 		});
 
-		return Promise.all([
-			getItem(
-				'/o/data-engine/v2.0/data-definitions/by-content-type/app-builder',
-				params
-			),
-			getItem(
-				'/o/data-engine/v2.0/data-definitions/by-content-type/native-object',
-				params
-			),
-		])
-			.then(([customObjects, nativeObjects]) => {
-				setItems(
-					[...customObjects.items, ...nativeObjects.items].sort(
-						(a, b) => a - b
-					)
-				);
+		getDataObjects()
+			.then((items) => {
+				setItems(items);
 				setState({
 					error: null,
 					isLoading: false,
 				});
+
+				if (defaultValue) {
+					const defaultItem = items.find(
+						({id}) => id === defaultValue
+					);
+
+					if (defaultItem) {
+						onSelect(defaultItem);
+					}
+				}
 			})
 			.catch((error) => {
 				setState({
@@ -66,13 +75,8 @@ export default ({onSelect, selectedValue, visible}) => {
 
 	useEffect(() => {
 		doFetch();
-
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
-
-	const handleOnSelect = (newValue) => {
-		onSelect(newValue);
-	};
 
 	const stateProps = {
 		emptyProps: {
@@ -91,30 +95,53 @@ export default ({onSelect, selectedValue, visible}) => {
 		},
 	};
 
+	const labelProps = {
+		custom: {
+			displayType: 'success',
+			label: Liferay.Language.get('custom'),
+		},
+		native: {
+			displayType: 'info',
+			label: Liferay.Language.get('native'),
+		},
+	};
+
+	const ItemWithLabel = ({name, type}) => (
+		<>
+			<span className="float-left text-left text-truncate w70">
+				{name || label}
+			</span>
+
+			{type && (
+				<ClayLabel
+					className="dropdown-button-asset float-right"
+					displayType={labelProps[type].displayType}
+				>
+					{labelProps[type].label}
+				</ClayLabel>
+			)}
+		</>
+	);
+
 	return (
 		<>
 			<DropDownWithSearch
 				{...state}
 				isEmpty={items.length === 0}
-				label={Liferay.Language.get('select-object')}
+				label={label}
 				stateProps={stateProps}
 				trigger={
 					<ClayButton
+						aria-labelledby="select-object-label"
 						className="clearfix w-100"
 						displayType="secondary"
-						ref={(element) => {
-							selectRef.current = element;
-						}}
 					>
-						<span className="float-left">
-							{selectedValue ||
-								Liferay.Language.get('select-object')}
-						</span>
-
 						<ClayIcon
-							className="float-right icon"
+							className="dropdown-button-asset float-right ml-1"
 							symbol="caret-bottom"
 						/>
+
+						<ItemWithLabel {...selectedValue} />
 					</ClayButton>
 				}
 				visible={visible}
@@ -124,8 +151,10 @@ export default ({onSelect, selectedValue, visible}) => {
 						'no-objects-found-with-this-name-try-searching-again-with-a-different-name'
 					)}
 					items={items}
-					onSelect={handleOnSelect}
-				/>
+					onSelect={onSelect}
+				>
+					{ItemWithLabel}
+				</DropDownWithSearch.Items>
 			</DropDownWithSearch>
 		</>
 	);

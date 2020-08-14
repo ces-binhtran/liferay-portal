@@ -135,12 +135,18 @@ public class OAuth2ApplicationModelImpl
 
 	public static final long OAUTH2APPLICATIONID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -148,7 +154,9 @@ public class OAuth2ApplicationModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static OAuth2Application toModel(OAuth2ApplicationSoap soapModel) {
 		if (soapModel == null) {
 			return null;
@@ -187,7 +195,9 @@ public class OAuth2ApplicationModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<OAuth2Application> toModels(
 		OAuth2ApplicationSoap[] soapModels) {
 
@@ -256,9 +266,6 @@ public class OAuth2ApplicationModelImpl
 				attributeName,
 				attributeGetterFunction.apply((OAuth2Application)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -881,16 +888,16 @@ public class OAuth2ApplicationModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof OAuth2Application)) {
+		if (!(object instanceof OAuth2Application)) {
 			return false;
 		}
 
-		OAuth2Application oAuth2Application = (OAuth2Application)obj;
+		OAuth2Application oAuth2Application = (OAuth2Application)object;
 
 		long primaryKey = oAuth2Application.getPrimaryKey();
 
@@ -907,14 +914,22 @@ public class OAuth2ApplicationModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -1139,9 +1154,6 @@ public class OAuth2ApplicationModelImpl
 			_escapedModelProxyProviderFunction = _getProxyProviderFunction();
 
 	}
-
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
 
 	private long _oAuth2ApplicationId;
 	private long _companyId;

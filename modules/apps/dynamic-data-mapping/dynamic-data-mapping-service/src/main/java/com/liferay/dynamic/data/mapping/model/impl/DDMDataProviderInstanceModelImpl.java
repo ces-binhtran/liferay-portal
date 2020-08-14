@@ -139,12 +139,18 @@ public class DDMDataProviderInstanceModelImpl
 
 	public static final long DATAPROVIDERINSTANCEID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -152,7 +158,9 @@ public class DDMDataProviderInstanceModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static DDMDataProviderInstance toModel(
 		DDMDataProviderInstanceSoap soapModel) {
 
@@ -186,7 +194,9 @@ public class DDMDataProviderInstanceModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<DDMDataProviderInstance> toModels(
 		DDMDataProviderInstanceSoap[] soapModels) {
 
@@ -255,9 +265,6 @@ public class DDMDataProviderInstanceModelImpl
 				attributeName,
 				attributeGetterFunction.apply((DDMDataProviderInstance)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -1032,17 +1039,17 @@ public class DDMDataProviderInstanceModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDMDataProviderInstance)) {
+		if (!(object instanceof DDMDataProviderInstance)) {
 			return false;
 		}
 
 		DDMDataProviderInstance ddmDataProviderInstance =
-			(DDMDataProviderInstance)obj;
+			(DDMDataProviderInstance)object;
 
 		long primaryKey = ddmDataProviderInstance.getPrimaryKey();
 
@@ -1059,14 +1066,22 @@ public class DDMDataProviderInstanceModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -1263,9 +1278,6 @@ public class DDMDataProviderInstanceModelImpl
 					_getProxyProviderFunction();
 
 	}
-
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
 
 	private long _mvccVersion;
 	private long _ctCollectionId;

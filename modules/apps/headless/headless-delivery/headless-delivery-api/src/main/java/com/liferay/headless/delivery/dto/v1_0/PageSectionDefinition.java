@@ -75,23 +75,60 @@ public class PageSectionDefinition {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String backgroundColor;
 
 	@Schema
 	@Valid
-	public FragmentImage getBackgroundImage() {
+	public FragmentImage getBackgroundFragmentImage() {
+		return backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		FragmentImage backgroundFragmentImage) {
+
+		this.backgroundFragmentImage = backgroundFragmentImage;
+	}
+
+	@JsonIgnore
+	public void setBackgroundFragmentImage(
+		UnsafeSupplier<FragmentImage, Exception>
+			backgroundFragmentImageUnsafeSupplier) {
+
+		try {
+			backgroundFragmentImage =
+				backgroundFragmentImageUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Deprecated
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentImage backgroundFragmentImage;
+
+	@Schema(
+		description = "Deprecated as of Athanasius (7.3.x), replaced by backgroundFragmentImage"
+	)
+	@Valid
+	public BackgroundImage getBackgroundImage() {
 		return backgroundImage;
 	}
 
-	public void setBackgroundImage(FragmentImage backgroundImage) {
+	public void setBackgroundImage(BackgroundImage backgroundImage) {
 		this.backgroundImage = backgroundImage;
 	}
 
 	@JsonIgnore
 	public void setBackgroundImage(
-		UnsafeSupplier<FragmentImage, Exception>
+		UnsafeSupplier<BackgroundImage, Exception>
 			backgroundImageUnsafeSupplier) {
 
 		try {
@@ -105,9 +142,41 @@ public class PageSectionDefinition {
 		}
 	}
 
+	@Deprecated
+	@GraphQLField(
+		description = "Deprecated as of Athanasius (7.3.x), replaced by backgroundFragmentImage"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected BackgroundImage backgroundImage;
+
+	@Schema
+	@Valid
+	public FragmentLink getFragmentLink() {
+		return fragmentLink;
+	}
+
+	public void setFragmentLink(FragmentLink fragmentLink) {
+		this.fragmentLink = fragmentLink;
+	}
+
+	@JsonIgnore
+	public void setFragmentLink(
+		UnsafeSupplier<FragmentLink, Exception> fragmentLinkUnsafeSupplier) {
+
+		try {
+			fragmentLink = fragmentLinkUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected FragmentImage backgroundImage;
+	protected FragmentLink fragmentLink;
 
 	@Schema
 	@Valid
@@ -137,6 +206,35 @@ public class PageSectionDefinition {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Layout layout;
+
+	@Schema
+	@Valid
+	public Map<String, Object> getStyles() {
+		return styles;
+	}
+
+	public void setStyles(Map<String, Object> styles) {
+		this.styles = styles;
+	}
+
+	@JsonIgnore
+	public void setStyles(
+		UnsafeSupplier<Map<String, Object>, Exception> stylesUnsafeSupplier) {
+
+		try {
+			styles = stylesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, Object> styles;
 
 	@Override
 	public boolean equals(Object object) {
@@ -180,6 +278,16 @@ public class PageSectionDefinition {
 			sb.append("\"");
 		}
 
+		if (backgroundFragmentImage != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"backgroundFragmentImage\": ");
+
+			sb.append(String.valueOf(backgroundFragmentImage));
+		}
+
 		if (backgroundImage != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -190,6 +298,16 @@ public class PageSectionDefinition {
 			sb.append(String.valueOf(backgroundImage));
 		}
 
+		if (fragmentLink != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentLink\": ");
+
+			sb.append(String.valueOf(fragmentLink));
+		}
+
 		if (layout != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -198,6 +316,16 @@ public class PageSectionDefinition {
 			sb.append("\"layout\": ");
 
 			sb.append(String.valueOf(layout));
+		}
+
+		if (styles != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"styles\": ");
+
+			sb.append(_toJSON(styles));
 		}
 
 		sb.append("}");
@@ -215,6 +343,16 @@ public class PageSectionDefinition {
 		String string = String.valueOf(object);
 
 		return string.replaceAll("\"", "\\\\\"");
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -235,9 +373,7 @@ public class PageSectionDefinition {
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;

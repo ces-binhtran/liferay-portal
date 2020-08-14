@@ -30,19 +30,19 @@ String googleDocsRedirect = ParamUtil.getString(request, "googleDocsRedirect");
 	<head>
 		<meta content="initial-scale=1.0, width=device-width" name="viewport" />
 
-		<link href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_CSS) + "/main.css", cssLastModifiedTime)) %>' id="liferayPortalCSS" rel="stylesheet" type="text/css" />
-		<link class="lfr-css-file" href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, themeDisplay.getPathThemeCss() + "/clay.css")) %>' id="liferayAUICSS" rel="stylesheet" type="text/css" />
-		<link href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/google_docs.css"))) %>' id="liferayGoogleDriveCSS" rel="stylesheet" type="text/css" />
+		<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, themeDisplay.getCDNDynamicResourcesHost() + PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_CSS) + "/main.css", cssLastModifiedTime)) %>" id="liferayPortalCSS" rel="stylesheet" type="text/css" />
+		<link class="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, themeDisplay.getPathThemeCss() + "/clay.css")) %>" id="liferayAUICSS" rel="stylesheet" type="text/css" />
+		<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/google_docs.css"))) %>" id="liferayGoogleDriveCSS" rel="stylesheet" type="text/css" />
 	</head>
 
 	<body>
 		<clay:content-row
 			cssClass="google-docs-toolbar"
-			padded="true"
+			padded="<%= true %>"
 			verticalAlign="center"
 		>
 			<clay:content-col
-				expand="true"
+				expand="<%= true %>"
 			>
 				<div class="autofit-section">
 					<portlet:actionURL name="/document_library/edit_in_google_docs" var="checkInURL">
@@ -56,7 +56,7 @@ String googleDocsRedirect = ParamUtil.getString(request, "googleDocsRedirect");
 							icon="angle-left"
 							id="closeAndCheckinBtn"
 							label='<%= LanguageUtil.format(resourceBundle, "save-and-return-to-x", themeDisplay.getSiteGroupName()) %>'
-							size="sm"
+							small="<%= true %>"
 							type="submit"
 						/>
 					</form>
@@ -73,8 +73,8 @@ String googleDocsRedirect = ParamUtil.getString(request, "googleDocsRedirect");
 				<form action="<%= cancelCheckoutURL %>" method="post">
 					<clay:button
 						id="discardChangesBtn"
-						label='<%= LanguageUtil.get(resourceBundle, "discard-changes") %>'
-						size="sm"
+						label="discard-changes"
+						small="<%= true %>"
 						type="submit"
 					/>
 				</form>

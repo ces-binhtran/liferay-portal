@@ -35,7 +35,7 @@ definition {
 
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -48,14 +48,10 @@ definition {
 	@priority = "4"
 	test AddSiteTemplateApplySiteTemplateChangesToSite {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-		property portal.release = "false";
-
-		// Quanratine for LPS-114960
 
 		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -69,7 +65,7 @@ definition {
 
 		Portlet.viewNoPortletsPresentPG();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -92,18 +88,18 @@ definition {
 			Refresh();
 		}
 
-		Portlet.viewPG(portletName = "Hello World");
+		Portlet.viewPortletPresentPG(portletContent = "Welcome to Liferay");
 	}
 
 	@priority = "4"
 	test AddSiteTemplateDisablePageModification {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		SiteTemplates.addCP(
 			disableChanges = "true",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -129,7 +125,7 @@ definition {
 
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -140,7 +136,7 @@ definition {
 			siteTemplateActiveEdit = "No",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -156,12 +152,12 @@ definition {
 	test DeactivateDefaultSiteTemplate {
 		property portal.acceptance = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -170,7 +166,7 @@ definition {
 			siteTemplateActiveEdit = "No",
 			siteTemplateName = "Community Site");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -181,7 +177,7 @@ definition {
 
 		Navigator.openSiteURL(siteName = "guest");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -198,14 +194,14 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
 
 		SiteTemplates.deleteCP(siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -229,7 +225,7 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -238,7 +234,7 @@ definition {
 			siteName = "Site Name",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -247,7 +243,7 @@ definition {
 			associatedToSite = "true",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -292,8 +288,6 @@ definition {
 
 		LAR.importPortlet(larFileName = "site-template-name.lar");
 
-		Refresh();
-
 		SiteTemplates.viewCP(siteTemplateName = "Site Template Name");
 
 		SiteTemplatesNavigator.openSiteTemplatesAdmin(baseURL = "http://www.able.com:8080");
@@ -315,7 +309,7 @@ definition {
 			siteTemplateDescription = "This is a site template description",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -324,7 +318,7 @@ definition {
 			siteTemplateDescription = "Site Template Description Edit",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -342,7 +336,7 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -351,7 +345,7 @@ definition {
 			siteName = "Site Name",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -360,7 +354,7 @@ definition {
 			siteTemplateActiveEdit = "No",
 			siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -374,7 +368,7 @@ definition {
 	test LocalizeDefaultSiteTemplates {
 		property test.name.skip.portal.instance = "CPSitetemplates#LocalizeDefaultSiteTemplates";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -390,9 +384,11 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ProductMenuHelper.closeProductMenu();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sitios web",
-			panel = "Control Panel",
+			panel = "Panel de control",
 			portlet = "Plantillas de sitio web");
 
 		SiteTemplates.viewDefaultDataLocalizedCP(
@@ -410,7 +406,9 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ProductMenuHelper.closeProductMenu();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Site Templates");
@@ -420,11 +418,11 @@ definition {
 
 	@priority = "4"
 	test OnlySiteAdminCanModifyPageAssociatedWithSiteTemplate {
-		property portal.acceptance = "true";
+		property portal.acceptance = "quarantine";
 
 		SiteTemplates.addCP(siteTemplateName = "Site Template Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -444,7 +442,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -475,7 +473,6 @@ definition {
 	@priority = "5"
 	test ResetPageChanges {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "CPSitetemplates#ResetPageChanges";
 		property testray.component.names = "Training";
 
@@ -527,7 +524,7 @@ definition {
 
 		Close.closeAndSelectWindow(locator1 = "Site Templates - Control Panel - ${siteName}");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -561,7 +558,7 @@ definition {
 			siteTemplateActive = "Yes",
 			siteTemplateName = '''<script>alert(123);</script>''');
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -576,7 +573,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Settings");
 
 		AssertAlertNotPresent();

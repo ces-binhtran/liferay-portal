@@ -47,8 +47,10 @@ public class AppBuilderAppDataRecordLinkWrapper
 		attributes.put(
 			"appBuilderAppDataRecordLinkId",
 			getAppBuilderAppDataRecordLinkId());
+		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("appBuilderAppId", getAppBuilderAppId());
+		attributes.put("appBuilderAppVersionId", getAppBuilderAppVersionId());
 		attributes.put("ddlRecordId", getDdlRecordId());
 
 		return attributes;
@@ -63,6 +65,12 @@ public class AppBuilderAppDataRecordLinkWrapper
 			setAppBuilderAppDataRecordLinkId(appBuilderAppDataRecordLinkId);
 		}
 
+		Long groupId = (Long)attributes.get("groupId");
+
+		if (groupId != null) {
+			setGroupId(groupId);
+		}
+
 		Long companyId = (Long)attributes.get("companyId");
 
 		if (companyId != null) {
@@ -73,6 +81,13 @@ public class AppBuilderAppDataRecordLinkWrapper
 
 		if (appBuilderAppId != null) {
 			setAppBuilderAppId(appBuilderAppId);
+		}
+
+		Long appBuilderAppVersionId = (Long)attributes.get(
+			"appBuilderAppVersionId");
+
+		if (appBuilderAppVersionId != null) {
+			setAppBuilderAppVersionId(appBuilderAppVersionId);
 		}
 
 		Long ddlRecordId = (Long)attributes.get("ddlRecordId");
@@ -103,6 +118,16 @@ public class AppBuilderAppDataRecordLinkWrapper
 	}
 
 	/**
+	 * Returns the app builder app version ID of this app builder app data record link.
+	 *
+	 * @return the app builder app version ID of this app builder app data record link
+	 */
+	@Override
+	public long getAppBuilderAppVersionId() {
+		return model.getAppBuilderAppVersionId();
+	}
+
+	/**
 	 * Returns the company ID of this app builder app data record link.
 	 *
 	 * @return the company ID of this app builder app data record link
@@ -120,6 +145,16 @@ public class AppBuilderAppDataRecordLinkWrapper
 	@Override
 	public long getDdlRecordId() {
 		return model.getDdlRecordId();
+	}
+
+	/**
+	 * Returns the group ID of this app builder app data record link.
+	 *
+	 * @return the group ID of this app builder app data record link
+	 */
+	@Override
+	public long getGroupId() {
+		return model.getGroupId();
 	}
 
 	/**
@@ -160,6 +195,16 @@ public class AppBuilderAppDataRecordLinkWrapper
 	}
 
 	/**
+	 * Sets the app builder app version ID of this app builder app data record link.
+	 *
+	 * @param appBuilderAppVersionId the app builder app version ID of this app builder app data record link
+	 */
+	@Override
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId) {
+		model.setAppBuilderAppVersionId(appBuilderAppVersionId);
+	}
+
+	/**
 	 * Sets the company ID of this app builder app data record link.
 	 *
 	 * @param companyId the company ID of this app builder app data record link
@@ -177,6 +222,16 @@ public class AppBuilderAppDataRecordLinkWrapper
 	@Override
 	public void setDdlRecordId(long ddlRecordId) {
 		model.setDdlRecordId(ddlRecordId);
+	}
+
+	/**
+	 * Sets the group ID of this app builder app data record link.
+	 *
+	 * @param groupId the group ID of this app builder app data record link
+	 */
+	@Override
+	public void setGroupId(long groupId) {
+		model.setGroupId(groupId);
 	}
 
 	/**

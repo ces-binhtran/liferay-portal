@@ -99,6 +99,10 @@ public class ResourceActionsImpl implements ResourceActions {
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #check(String)}
+	 */
+	@Deprecated
 	@Override
 	public void check(Portlet portlet) {
 		String portletName = portlet.getPortletId();
@@ -123,11 +127,7 @@ public class ResourceActionsImpl implements ResourceActions {
 
 		if (!resourceActions.contains(actionId)) {
 			throw new NoSuchResourceActionException(
-				name.concat(
-					StringPool.POUND
-				).concat(
-					actionId
-				));
+				StringBundler.concat(name, StringPool.POUND, actionId));
 		}
 	}
 
@@ -370,6 +370,10 @@ public class ResourceActionsImpl implements ResourceActions {
 		return portletNames;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public List<String> getPortletResourceActions(Portlet portlet) {
 		Set<String> actions = new LinkedHashSet<>(
@@ -961,11 +965,9 @@ public class ResourceActionsImpl implements ResourceActions {
 		String servletContextName, String portletName) {
 
 		if (servletContextName != null) {
-			portletName = portletName.concat(
-				PortletConstants.WAR_SEPARATOR
-			).concat(
-				servletContextName
-			);
+			portletName = StringBundler.concat(
+				portletName, PortletConstants.WAR_SEPARATOR,
+				servletContextName);
 		}
 
 		return JS.getSafeName(portletName);
@@ -1180,9 +1182,6 @@ public class ResourceActionsImpl implements ResourceActions {
 				"There are more than 64 actions for resource " + name);
 		}
 
-		Set<String> groupDefaultActions =
-			resourceActionsBag.getGroupDefaultActions();
-
 		Element groupDefaultsElement = _getPermissionsChildElement(
 			resourceElement, "site-member-defaults");
 
@@ -1198,6 +1197,9 @@ public class ResourceActionsImpl implements ResourceActions {
 		}
 
 		if (groupDefaultsElement != null) {
+			Set<String> groupDefaultActions =
+				resourceActionsBag.getGroupDefaultActions();
+
 			groupDefaultActions.clear();
 
 			_readActionKeys(groupDefaultActions, groupDefaultsElement);
@@ -1215,13 +1217,13 @@ public class ResourceActionsImpl implements ResourceActions {
 			_readActionKeys(guestDefaultActions, guestDefaultsElement);
 		}
 
-		Set<String> guestUnsupportedActions =
-			resourceActionsBag.getGuestUnsupportedActions();
-
 		Element guestUnsupportedElement = _getPermissionsChildElement(
 			resourceElement, "guest-unsupported");
 
 		if (guestUnsupportedElement != null) {
+			Set<String> guestUnsupportedActions =
+				resourceActionsBag.getGuestUnsupportedActions();
+
 			guestUnsupportedActions.clear();
 
 			_readActionKeys(guestUnsupportedActions, guestUnsupportedElement);

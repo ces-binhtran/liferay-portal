@@ -36,11 +36,19 @@ public class BuildFactory {
 				return new CucumberAxisBuild(url, (BatchBuild)parentBuild);
 			}
 
+			if ((jobVariant != null) && jobVariant.contains("functional")) {
+				return new PoshiAxisBuild(url, (BatchBuild)parentBuild);
+			}
+
 			return new AxisBuild(url, (BatchBuild)parentBuild);
 		}
 
 		if (url.contains("subrepository-source-format")) {
 			return new BatchBuild(url, (TopLevelBuild)parentBuild);
+		}
+
+		if (url.contains("-controller")) {
+			return new DefaultTopLevelBuild(url, (TopLevelBuild)parentBuild);
 		}
 
 		if (url.contains("-source-format")) {
@@ -57,10 +65,6 @@ public class BuildFactory {
 
 		if (url.contains("root-cause-analysis-tool-batch")) {
 			return new FreestyleBatchBuild(url, (TopLevelBuild)parentBuild);
-		}
-
-		if (url.contains("test-portal-environment-controller")) {
-			return new DefaultTopLevelBuild(url, (TopLevelBuild)parentBuild);
 		}
 
 		for (String batchToken : _TOKENS_BATCH) {
@@ -93,6 +97,31 @@ public class BuildFactory {
 			}
 
 			return new PullRequestPortalTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.startsWith("test-plugins-acceptance-pullrequest")) {
+			return new PullRequestPluginsTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-plugins-extraapps")) {
+			return new ExtraAppsPluginsTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-plugins-marketplaceapp")) {
+			return new MarketplaceAppPluginsTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-portal-fixpack-release")) {
+			return new PortalFixpackReleasePortalTopLevelBuild(
+				url, (TopLevelBuild)parentBuild);
+		}
+
+		if (jobName.equals("test-portal-release")) {
+			return new PortalReleasePortalTopLevelBuild(
 				url, (TopLevelBuild)parentBuild);
 		}
 

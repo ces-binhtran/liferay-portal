@@ -23,7 +23,7 @@ int status = (Integer)request.getAttribute(KBWebKeys.KNOWLEDGE_BASE_STATUS);
 int selStatus = KBArticlePermission.contains(permissionChecker, kbArticle, KBActionKeys.UPDATE) ? WorkflowConstants.STATUS_ANY : status;
 
 int sourceVersion = ParamUtil.getInteger(request, "sourceVersion");
-String eventName = ParamUtil.getString(request, "eventName", renderResponse.getNamespace() + "selectVersionFm");
+String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectVersionFm");
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
@@ -64,15 +64,19 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 								curTargetVersion = curSourceVersion;
 								curSourceVersion = tempVersion;
 							}
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"sourceversion", curSourceVersion
-							).put(
-								"targetversion", curTargetVersion
-							).build();
 							%>
 
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a
+								cssClass="selector-button"
+								data='<%=
+									HashMapBuilder.<String, Object>put(
+										"sourceversion", curSourceVersion
+									).put(
+										"targetversion", curTargetVersion
+									).build()
+								%>'
+								href="javascript:;"
+							>
 								<%= String.valueOf(curKBArticle.getVersion()) %>
 							</aui:a>
 						</c:when>

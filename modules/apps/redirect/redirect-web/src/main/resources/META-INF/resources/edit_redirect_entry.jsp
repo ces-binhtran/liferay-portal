@@ -115,7 +115,7 @@ else {
 		<%
 		boolean autoFocusDestination = Validator.isNotNull(sourceURL) && Validator.isNull(destinationURL);
 
-		Map<String, Object> data = HashMapBuilder.<String, Object>put(
+		Map<String, Object> props = HashMapBuilder.<String, Object>put(
 			"autofocus", autoFocusDestination
 		).put(
 			"initialDestinationUrl", (redirectEntry != null) ? redirectEntry.getDestinationURL() : ParamUtil.getString(request, "destinationURL")
@@ -128,8 +128,8 @@ else {
 			<aui:input name="destinationURL" value="<%= destinationURL %>" />
 
 			<react:component
-				data="<%= data %>"
 				module="js/DestinationUrlInput"
+				props="<%= props %>"
 			/>
 		</div>
 
@@ -147,10 +147,9 @@ else {
 
 		<c:if test="<%= redirectEntry != null %>">
 			<clay:alert
-				elementClasses="hide"
-				id='<%= renderResponse.getNamespace() + "typeInfoAlert" %>'
-				message='<%= LanguageUtil.get(resourceBundle, "changes-to-this-redirect-might-not-be-immediately-seen-for-users-whose-browsers-have-cached-the-old-redirect-configuration") %>'
-				title='<%= LanguageUtil.get(request, "info") + ":" %>'
+				cssClass="hide"
+				id='<%= liferayPortletResponse.getNamespace() + "typeInfoAlert" %>'
+				message="changes-to-this-redirect-might-not-be-immediately-seen-for-users-whose-browsers-have-cached-the-old-redirect-configuration"
 			/>
 		</c:if>
 	</liferay-frontend:edit-form-body>
@@ -164,11 +163,12 @@ else {
 
 <div>
 	<react:component
-		data='<%=
+		module="js/ChainedRedirections"
+		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"saveButtonLabel", LanguageUtil.get(request, (redirectEntry == null) ? "create" : "save")
-			).build() %>'
-		module="js/ChainedRedirections"
+			).build()
+		%>'
 	/>
 </div>
 

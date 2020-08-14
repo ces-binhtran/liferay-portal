@@ -10,19 +10,34 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClaySticker from '@clayui/sticker';
+import {ClayTooltipProvider} from '@clayui/tooltip';
+import classnames from 'classnames';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-function Author({authorName}) {
+function Author({authorName, authorPortraitURL, authorUserId}) {
+	const stickerColor = parseInt(authorUserId, 10) % 10;
+
 	return (
-		<div className="mt-2 text-secondary">
+		<div className="text-secondary">
 			<ClaySticker
-				className="mr-2 sticker-user-icon"
-				inline={true}
+				className={classnames('c-mr-2 sticker-user-icon', {
+					[`user-icon-color-${stickerColor}`]: !authorPortraitURL,
+				})}
+				shape="circle"
 				size="sm"
 			>
-				<ClayIcon symbol="user" />
+				{authorPortraitURL ? (
+					<img
+						alt={`${authorName}.`}
+						className="sticker-img"
+						src={authorPortraitURL}
+					/>
+				) : (
+					<ClayIcon symbol="user" />
+				)}
 			</ClaySticker>
 			{Liferay.Util.sub(
 				Liferay.Language.get('authored-by-x'),
@@ -32,7 +47,14 @@ function Author({authorName}) {
 	);
 }
 
-function BasicInformation({authorName, languageTag, publishDate, title}) {
+function BasicInformation({
+	authorName,
+	authorPortraitURL,
+	authorUserId,
+	languageTag,
+	publishDate,
+	title,
+}) {
 	const formattedPublishDate = Intl.DateTimeFormat(languageTag, {
 		day: 'numeric',
 		month: 'long',
@@ -40,25 +62,55 @@ function BasicInformation({authorName, languageTag, publishDate, title}) {
 	}).format(publishDate);
 
 	return (
-		<div>
-			<h4 className="mb-2">{title}</h4>
-			<span className="text-secondary">
-				{Liferay.Util.sub(
-					Liferay.Language.get('published-on-x'),
-					formattedPublishDate
-				)}
-			</span>
-			<Author authorName={authorName} />
+		<div className="sidebar-section">
+			<ClayLayout.ContentRow>
+				<ClayLayout.ContentCol expand>
+					<ClayTooltipProvider>
+						<span
+							className="component-title text-truncate-inline"
+							data-tooltip-align="top"
+							title={title}
+						>
+							<span className="text-truncate">{title}</span>
+						</span>
+					</ClayTooltipProvider>
+				</ClayLayout.ContentCol>
+			</ClayLayout.ContentRow>
+
+			<ClayLayout.ContentRow>
+				<ClayLayout.ContentCol expand>
+					<p className="text-secondary">
+						{Liferay.Util.sub(
+							Liferay.Language.get('published-on-x'),
+							formattedPublishDate
+						)}
+					</p>
+				</ClayLayout.ContentCol>
+			</ClayLayout.ContentRow>
+
+			<ClayLayout.ContentRow>
+				<ClayLayout.ContentCol expand>
+					<Author
+						authorName={authorName}
+						authorPortraitURL={authorPortraitURL}
+						authorUserId={authorUserId}
+					/>
+				</ClayLayout.ContentCol>
+			</ClayLayout.ContentRow>
 		</div>
 	);
 }
 
 Author.propTypes = {
 	authorName: PropTypes.string.isRequired,
+	authorPortraitURL: PropTypes.string.isRequired,
+	authorUserId: PropTypes.string.isRequired,
 };
 
 BasicInformation.propTypes = {
 	authorName: PropTypes.string.isRequired,
+	authorPortraitURL: PropTypes.string.isRequired,
+	authorUserId: PropTypes.string.isRequired,
 	publishDate: PropTypes.number.isRequired,
 	title: PropTypes.string.isRequired,
 };

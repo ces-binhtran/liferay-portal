@@ -12,96 +12,44 @@
  * details.
  */
 
-import {useModal} from '@clayui/modal';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useCallback, useState} from 'react';
+import React, {useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
 import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../../prop-types/index';
-import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
-import {useDispatch, useSelector} from '../../store/index';
-import duplicateItem from '../../thunks/duplicateItem';
+import selectCanUpdatePageStructure from '../../selectors/selectCanUpdatePageStructure';
+import {useSelector} from '../../store/index';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
 import {ResizeContextProvider} from '../ResizeContext';
 import Topper from '../Topper';
-import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
-import SaveFragmentCompositionModal from '../floating-toolbar/SaveFragmentCompositionModal';
 import Row from './Row';
-import hasDropZoneChild from './hasDropZoneChild';
 
 const RowWithControls = React.forwardRef(
 	({children, item, layoutData}, ref) => {
-		const {config} = layoutData.items[item.itemId];
-		const dispatch = useDispatch();
-		const isMounted = useIsMounted();
+		const rowConfig = layoutData.items[item.itemId].config;
 		const [resizing, setResizing] = useState(false);
 		const [updatedLayoutData, setUpdatedLayoutData] = useState(null);
 		const [customRow, setCustomRow] = useState(false);
 
-		const [
-			openSaveFragmentCompositionModal,
-			setOpenSaveFragmentCompositionModal,
-		] = useState(false);
-
-		const {observer, onClose} = useModal({
-			onClose: () => {
-				if (isMounted()) {
-					setOpenSaveFragmentCompositionModal(false);
-				}
-			},
-		});
-
-		const segmentsExperienceId = useSelector(
-			(state) => state.segmentsExperienceId
+		const canUpdatePageStructure = useSelector(
+			selectCanUpdatePageStructure
 		);
+
 		const selectedViewportSize = useSelector(
 			(state) => state.selectedViewportSize
 		);
 
-		const rowConfig = getResponsiveConfig(config, selectedViewportSize);
-
-		const [setRef, itemElement] = useSetRef(ref);
-
-		const handleButtonClick = useCallback(
-			(id) => {
-				if (
-					id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id
-				) {
-					dispatch(
-						duplicateItem({
-							itemId: item.itemId,
-							segmentsExperienceId,
-						})
-					);
-				}
-				else if (
-					id ===
-					LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition
-						.id
-				) {
-					setOpenSaveFragmentCompositionModal(true);
-				}
-			},
-			[dispatch, item.itemId, segmentsExperienceId]
+		const rowResponsiveConfig = getResponsiveConfig(
+			rowConfig,
+			selectedViewportSize
 		);
 
-		const buttons = [];
-
-		if (!hasDropZoneChild(item, layoutData)) {
-			buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem);
-			buttons.push(
-				LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition
-			);
-		}
-
-		buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.rowConfiguration);
-
-		const {verticalAlignment} = rowConfig;
+		const [setRef, itemElement] = useSetRef(ref);
+		const {verticalAlignment} = rowResponsiveConfig;
 
 		return (
 			<Topper
@@ -110,9 +58,10 @@ const RowWithControls = React.forwardRef(
 				layoutData={layoutData}
 			>
 				<Row
-					className={classNames('page-editor__row', {
+					className={classNames({
 						'align-bottom': verticalAlignment === 'bottom',
 						'align-middle': verticalAlignment === 'middle',
+						'page-editor__row': canUpdatePageStructure,
 						'page-editor__row-overlay-grid': resizing,
 					})}
 					item={item}
@@ -129,24 +78,8 @@ const RowWithControls = React.forwardRef(
 							updatedLayoutData,
 						}}
 					>
-						<FloatingToolbar
-							buttons={buttons}
-							item={item}
-							itemElement={itemElement}
-							onButtonClick={handleButtonClick}
-						/>
 						{children}
 					</ResizeContextProvider>
-
-					{openSaveFragmentCompositionModal && (
-						<SaveFragmentCompositionModal
-							errorMessage={''}
-							itemId={item.itemId}
-							observer={observer}
-							onClose={onClose}
-							onErrorDismiss={() => true}
-						/>
-					)}
 				</Row>
 			</Topper>
 		);

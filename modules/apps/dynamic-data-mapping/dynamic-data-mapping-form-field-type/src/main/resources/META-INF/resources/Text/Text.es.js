@@ -16,17 +16,20 @@ import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {ClayInput} from '@clayui/form';
 import {normalizeFieldName} from 'dynamic-data-mapping-form-renderer';
+import {usePrevious} from 'frontend-js-react-web';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
 
 const Text = ({
+	defaultLanguageId,
 	disabled,
+	editingLanguageId,
 	fieldName,
 	id,
+	localizable,
+	localizedValue,
 	name,
 	onBlur,
 	onChange,
@@ -36,6 +39,24 @@ const Text = ({
 	value: initialValue,
 }) => {
 	const [value, setValue] = useSyncValue(initialValue, syncDelay);
+
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
+	useEffect(() => {
+		if (prevEditingLanguageId !== editingLanguageId && localizable) {
+			const newValue = localizedValue[editingLanguageId]
+				? localizedValue[editingLanguageId]
+				: localizedValue[defaultLanguageId];
+			setValue(newValue);
+		}
+	}, [
+		defaultLanguageId,
+		editingLanguageId,
+		localizable,
+		localizedValue,
+		prevEditingLanguageId,
+		setValue,
+	]);
 
 	return (
 		<ClayInput
@@ -238,9 +259,13 @@ const DISPLAY_STYLE = {
 const Main = ({
 	autocomplete,
 	autocompleteEnabled,
+	defaultLanguageId,
 	displayStyle = 'singleline',
+	editingLanguageId,
 	fieldName,
 	id,
+	localizable,
+	localizedValue,
 	name,
 	onBlur,
 	onChange,
@@ -266,11 +291,15 @@ const Main = ({
 		];
 
 	return (
-		<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
+		<FieldBase {...otherProps} id={id} name={name} readOnly={readOnly}>
 			<Component
+				defaultLanguageId={defaultLanguageId}
 				disabled={readOnly}
+				editingLanguageId={editingLanguageId}
 				fieldName={fieldName}
 				id={id}
+				localizable={localizable}
+				localizedValue={localizedValue}
 				name={name}
 				onBlur={onBlur}
 				onChange={onChange}
@@ -280,22 +309,10 @@ const Main = ({
 				syncDelay={syncDelay}
 				value={value ? value : predefinedValue}
 			/>
-		</FieldBaseProxy>
+		</FieldBase>
 	);
 };
 
 Main.displayName = 'Text';
 
-const TextProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onBlur={(event) => emit('fieldBlurred', event, event.target.value)}
-		onChange={(event) => emit('fieldEdited', event, event.target.value)}
-		onFocus={(event) => emit('fieldFocused', event, event.target.value)}
-	/>
-));
-
-const ReactTextAdapter = getConnectedReactComponentAdapter(TextProxy, 'text');
-
-export {ReactTextAdapter, useSyncValue, Main};
-export default ReactTextAdapter;
+export default Main;

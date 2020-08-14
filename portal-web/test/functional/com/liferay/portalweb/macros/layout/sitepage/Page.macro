@@ -206,7 +206,6 @@ definition {
 	macro changeLayoutLogo {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.gotoPageMenuItem(
@@ -221,15 +220,15 @@ definition {
 	macro changeSinglePageTheme {
 		ContentPages.clickPencil();
 
-		Click.clickNoMouseOver(
-			key_tabName = "${tabName}",
-			locator1 = "PageEditor#FRAGMENT_SIDEBAR_TAB_BUTTON");
+		PageEditor.gotoTab(tabName = "Page Design Options");
+
+		Click(locator1 = "PageEditor#MORE_LINK");
 
 		Click(locator1 = "SitePagesEditPage#REGULAR_UNIQUE_LOOK_AND_FEEL");
 
 		Click(locator1 = "SitePagesEditPage#CHANGE_CURRENT_THEME_BUTTON");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var key_cardText = "${themeName}";
 
@@ -261,7 +260,6 @@ definition {
 	macro deleteLogoPG {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		if (isSet(page)) {
@@ -378,6 +376,12 @@ definition {
 			locator1 = "Home#PAGE_CHILD_PAGE");
 	}
 
+	macro gotoCollectionEntryEllipsisItem {
+		LexiconTable.clickEllipsisItem(
+			item = "${item}",
+			tableEntry = "${tableEntry}");
+	}
+
 	macro gotoFriendlyURLHistory {
 		Click(locator1 = "Icon#FRIENDLY_URL_HISTORY");
 	}
@@ -407,9 +411,9 @@ definition {
 
 		PortletEntry.inputName(name = "${actionName}");
 
-		var key_actionType = "${actionType}";
-
-		Click(locator1 = "MobileDevice#ADD_ACTION_TYPE_OPTION");
+		Select(
+			locator1 = "MobileDevice#ADD_ACTION_TYPE_SELECT",
+			value1 = "${actionType}");
 
 		if ("${actionType}" == "Redirect to URL") {
 			Type(
@@ -417,13 +421,13 @@ definition {
 				value1 = "${actionURL}");
 		}
 		else if ("${actionType}" == "Redirect to Site") {
-			var key_siteName = "${siteName}";
+			Select(
+				locator1 = "MobileDevice#ADD_ACTION_SITE_SELECT",
+				value1 = "${siteName}");
 
-			Click(locator1 = "MobileDevice#ADD_ACTION_SITE_OPTION");
-
-			var key_pageName = "${pageName}";
-
-			Click(locator1 = "MobileDevice#ADD_ACTION_PAGE_OPTION");
+			Select(
+				locator1 = "MobileDevice#ADD_ACTION_PAGE_SELECT",
+				value1 = "${pageName}");
 		}
 
 		PortletEntry.save();
@@ -486,11 +490,13 @@ definition {
 	}
 
 	macro selectMobileDeviceFamily {
+		WaitForLiferayEvent.initializeLiferayEventLog();
+
 		AssertClick(
 			locator1 = "Button#SELECT_MOBILE_DEVICE_RULES",
 			value1 = "Select");
 
-		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+		SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
 
 		var key_deviceFamilyName = "${deviceFamilyName}";
 
@@ -509,7 +515,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		Pause(locator1 = "5000");
@@ -605,7 +610,6 @@ definition {
 	macro view {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.togglePrivacy(privacy = "${privacy}");
@@ -645,10 +649,22 @@ definition {
 			value1 = "${childPageName}");
 	}
 
+	macro viewCollectionItem {
+		if (isSet(key_rowNumber)) {
+			AssertTextEquals.assertPartialText(
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_NUMBER",
+				value1 = "${itemName}");
+		}
+		else {
+			AssertTextEquals.assertPartialText(
+				locator1 = "ContentRow#ENTRY_CONTENT_ROW_1",
+				value1 = "${itemName}");
+		}
+	}
+
 	macro viewCurrentTheme {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		Click.waitForMenuToggleJSClick(
@@ -667,7 +683,6 @@ definition {
 	macro viewCurrentThemeSettings {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.gotoPageMenuItem(
@@ -823,10 +838,17 @@ definition {
 		AssertElementPresent(locator1 = "xpath=(//button[(@title = 'Delete') and (@disabled = 'disabled')])");
 	}
 
+	macro viewNoOldFriendlyURL {
+		for (var oldFriendlyURL : list "${oldFriendlyURLs}") {
+			AssertElementNotPresent(
+				key_oldFriendlyURL = "${oldFriendlyURL}",
+				locator1 = "SitePages#FRIENDLY_URL_HISTORY_ITEM");
+		}
+	}
+
 	macro viewNoPage {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.togglePrivacy(privacy = "${privacy}");
@@ -856,6 +878,7 @@ definition {
 				key_oldFriendlyURL = "${lastOldFriendlyURL}",
 				locator1 = "SitePages#FRIENDLY_URL_HISTORY_ITEM_LAST");
 		}
+
 		AssertVisible(
 			key_oldFriendlyURL = "${oldFriendlyURL}",
 			locator1 = "SitePages#FRIENDLY_URL_HISTORY_ITEM");
@@ -925,25 +948,29 @@ definition {
 
 	macro viewPagesOrder {
 		AssertTextEquals.assertPartialText(
-			key_index = "2",
+			key_depth = "${depth}",
+			key_index = "1",
 			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY",
 			value1 = "${pageName1}");
 
 		AssertTextEquals.assertPartialText(
-			key_index = "3",
+			key_depth = "${depth}",
+			key_index = "2",
 			locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY",
 			value1 = "${pageName2}");
 
 		if (isSet(pageName3)) {
 			AssertTextEquals.assertPartialText(
-				key_index = "4",
+				key_depth = "${depth}",
+				key_index = "3",
 				locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY",
 				value1 = "${pageName3}");
 		}
 
 		if (isSet(pageName4)) {
 			AssertTextEquals.assertPartialText(
-				key_index = "5",
+				key_depth = "${depth}",
+				key_index = "4",
 				locator1 = "SitePages#LIST_GROUP_ITEM_ROW_ENTRY",
 				value1 = "${pageName4}");
 		}
@@ -977,7 +1004,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.gotoPageMenuItem(
@@ -1008,7 +1034,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.gotoPageMenuItem(

@@ -14,9 +14,14 @@
 
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import {SheetSection} from '@clayui/layout';
+import ClayPanel from '@clayui/panel';
 import {ClayTooltipProvider} from '@clayui/tooltip';
 import {DataDefinitionUtils} from 'data-engine-taglib';
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
+
+import {AppContext} from '../../AppContext.es';
+import {getLocalizedUserPreferenceValue} from '../../utils/lang.es';
 
 const createFileEntryPreviewURL = (groupId, fileEntryId) => {
 	const portletURL = Liferay.PortletURL.createURL(
@@ -141,9 +146,51 @@ const OptionsRenderer = ({displayType, options, values = []}) => {
 	);
 };
 
-const StringRenderer = ({value = ' - '}) => (
-	<div>{Array.isArray(value) ? value.join(', ') : value}</div>
+const StringRenderer = ({value}) => (
+	<span className="d-block">
+		{(Array.isArray(value) ? value.join(', ') : value) || ' - '}
+	</span>
 );
+
+export const SectionRenderer = ({
+	children,
+	collapsible,
+	dataDefinition,
+	fieldName,
+}) => {
+	const {userLanguageId} = useContext(AppContext);
+	const {label} = DataDefinitionUtils.getDataDefinitionField(
+		dataDefinition,
+		fieldName
+	);
+	const localizedLabel = getLocalizedUserPreferenceValue(
+		label,
+		userLanguageId,
+		dataDefinition.defaultLanguageId
+	);
+
+	return (
+		<ClayPanel
+			className="data-record-section"
+			collapsable={collapsible}
+			defaultExpanded
+			displayTitle={
+				<SheetSection>
+					<div className="autofit-row sheet-subtitle">
+						<span className="autofit-col autofit-col-expand">
+							<label className="text-uppercase">
+								{localizedLabel}
+							</label>
+						</span>
+					</div>
+				</SheetSection>
+			}
+			showCollapseIcon
+		>
+			<ClayPanel.Body>{children}</ClayPanel.Body>
+		</ClayPanel>
+	);
+};
 
 const getFieldValueRenderer = (dataDefinitionField, displayType) => {
 	const {customProperties, fieldType} = dataDefinitionField;
@@ -225,12 +272,26 @@ export const FieldValuePreview = ({
 	return <Renderer value={value} />;
 };
 
-export default ({dataDefinition, dataRecordValues, fieldName}) => {
-	const label = DataDefinitionUtils.getFieldLabel(dataDefinition, fieldName);
+export default ({
+	dataDefinition,
+	dataRecordValues,
+	defaultLanguageId,
+	fieldName,
+}) => {
+	const {userLanguageId} = useContext(AppContext);
+	const {label} = DataDefinitionUtils.getDataDefinitionField(
+		dataDefinition,
+		fieldName
+	);
+	const localizedLabel = getLocalizedUserPreferenceValue(
+		label,
+		userLanguageId,
+		defaultLanguageId
+	);
 
 	return (
 		<div className="data-record-field-preview">
-			<label>{label}</label>
+			<label>{localizedLabel}</label>
 
 			<FieldValuePreview
 				dataDefinition={dataDefinition}

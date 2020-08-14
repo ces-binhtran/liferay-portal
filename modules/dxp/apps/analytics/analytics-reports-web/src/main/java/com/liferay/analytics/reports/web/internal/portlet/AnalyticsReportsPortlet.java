@@ -16,24 +16,21 @@ package com.liferay.analytics.reports.web.internal.portlet;
 
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItem;
 import com.liferay.analytics.reports.info.item.AnalyticsReportsInfoItemTracker;
-import com.liferay.analytics.reports.web.internal.configuration.AnalyticsReportsConfiguration;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsPortletKeys;
 import com.liferay.analytics.reports.web.internal.constants.AnalyticsReportsWebKeys;
 import com.liferay.analytics.reports.web.internal.data.provider.AnalyticsReportsDataProvider;
 import com.liferay.analytics.reports.web.internal.display.context.AnalyticsReportsDisplayContext;
+import com.liferay.analytics.reports.web.internal.info.display.contributor.util.InfoDisplayContributorUtil;
 import com.liferay.analytics.reports.web.internal.layout.seo.CanonicalURLProvider;
-import com.liferay.asset.display.page.constants.AssetDisplayPageWebKeys;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
 import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
 import com.liferay.layout.seo.kernel.LayoutSEOLinkManager;
-import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.Http;
@@ -44,8 +41,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
 
-import java.util.Map;
-
 import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -53,12 +48,8 @@ import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Deactivate;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -66,7 +57,6 @@ import org.osgi.service.component.annotations.Reference;
  * @author Sarai Díaz
  */
 @Component(
-	configurationPid = "com.liferay.analytics.reports.web.internal.configuration.AnalyticsReportsConfiguration",
 	configurationPolicy = ConfigurationPolicy.OPTIONAL, immediate = true,
 	property = {
 		"com.liferay.portlet.display-category=category.hidden",
@@ -84,20 +74,6 @@ import org.osgi.service.component.annotations.Reference;
 	service = {AnalyticsReportsPortlet.class, Portlet.class}
 )
 public class AnalyticsReportsPortlet extends MVCPortlet {
-
-	@Activate
-	@Modified
-	protected void activate(
-		BundleContext bundleContext, Map<String, Object> properties) {
-
-		_analyticsReportsConfiguration = ConfigurableUtil.createConfigurable(
-			AnalyticsReportsConfiguration.class, properties);
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_analyticsReportsConfiguration = null;
-	}
 
 	@Override
 	protected void doDispatch(
@@ -117,17 +93,20 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 			return;
 		}
 
-		InfoDisplayObjectProvider<Object> infoDisplayObjectProvider =
-			_getInfoDisplayObjectProvider(httpServletRequest);
+		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
+			InfoDisplayContributorUtil.getInfoDisplayObjectProvider(
+				httpServletRequest, _infoDisplayContributorTracker, _portal);
 
-		AnalyticsReportsInfoItem analyticsReportsInfoItem = null;
+		AnalyticsReportsInfoItem<Object> analyticsReportsInfoItem = null;
 		Object analyticsReportsInfoItemObject = null;
 
 		if (infoDisplayObjectProvider != null) {
 			analyticsReportsInfoItem =
-				_analyticsReportsInfoItemTracker.getAnalyticsReportsInfoItem(
-					_portal.getClassName(
-						infoDisplayObjectProvider.getClassNameId()));
+				(AnalyticsReportsInfoItem<Object>)
+					_analyticsReportsInfoItemTracker.
+						getAnalyticsReportsInfoItem(
+							_portal.getClassName(
+								infoDisplayObjectProvider.getClassNameId()));
 			analyticsReportsInfoItemObject =
 				infoDisplayObjectProvider.getDisplayObject();
 		}
@@ -140,8 +119,9 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 			(analyticsReportsInfoItemObject == null)) {
 
 			analyticsReportsInfoItem =
-				_analyticsReportsInfoItemTracker.getAnalyticsReportsInfoItem(
-					Layout.class.getName());
+				(AnalyticsReportsInfoItem<Object>)
+					_analyticsReportsInfoItemTracker.
+						getAnalyticsReportsInfoItem(Layout.class.getName());
 
 			analyticsReportsInfoItemObject = themeDisplay.getLayout();
 		}
@@ -149,8 +129,10 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 		String canonicalURL = null;
 
 		CanonicalURLProvider canonicalURLProvider = new CanonicalURLProvider(
-			_portal.getHttpServletRequest(renderRequest), _language,
-			_layoutSEOLinkManager, _portal);
+			_assetDisplayPageFriendlyURLProvider,
+			_portal.getHttpServletRequest(renderRequest),
+			infoDisplayObjectProvider, _language, _layoutSEOLinkManager,
+			_portal);
 
 		try {
 			canonicalURL = canonicalURLProvider.getCanonicalURL();
@@ -162,55 +144,26 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 		renderRequest.setAttribute(
 			AnalyticsReportsWebKeys.ANALYTICS_REPORTS_DISPLAY_CONTEXT,
 			new AnalyticsReportsDisplayContext(
-				_analyticsReportsConfiguration,
 				new AnalyticsReportsDataProvider(_http),
 				analyticsReportsInfoItem, analyticsReportsInfoItemObject,
-				canonicalURL, _portal, renderResponse,
+				canonicalURL, infoDisplayObjectProvider, _portal, renderRequest,
+				renderResponse,
 				ResourceBundleUtil.getBundle(
 					"content.Language", themeDisplay.getLocale(), getClass()),
-				themeDisplay));
+				themeDisplay,
+				_userLocalService.fetchUser(
+					analyticsReportsInfoItem.getAuthorUserId(
+						analyticsReportsInfoItemObject))));
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	private InfoDisplayObjectProvider<Object> _getInfoDisplayObjectProvider(
-		HttpServletRequest httpServletRequest) {
-
-		InfoDisplayObjectProvider<Object> infoDisplayObjectProvider =
-			(InfoDisplayObjectProvider<Object>)httpServletRequest.getAttribute(
-				AssetDisplayPageWebKeys.INFO_DISPLAY_OBJECT_PROVIDER);
-
-		if (infoDisplayObjectProvider != null) {
-			return infoDisplayObjectProvider;
-		}
-
-		InfoDisplayContributor<Object> infoDisplayContributor =
-			(InfoDisplayContributor<Object>)
-				_infoDisplayContributorTracker.getInfoDisplayContributor(
-					_portal.getClassName(
-						ParamUtil.getLong(httpServletRequest, "classNameId")));
-
-		try {
-			infoDisplayObjectProvider =
-				(InfoDisplayObjectProvider<Object>)
-					infoDisplayContributor.getInfoDisplayObjectProvider(
-						ParamUtil.getLong(httpServletRequest, "classPK"));
-		}
-		catch (Exception exception) {
-			_log.error("Unable to get info display object provider", exception);
-		}
-
-		return infoDisplayObjectProvider;
-	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		AnalyticsReportsPortlet.class);
-
-	private volatile AnalyticsReportsConfiguration
-		_analyticsReportsConfiguration;
-
 	@Reference
 	private AnalyticsReportsInfoItemTracker _analyticsReportsInfoItemTracker;
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
 	private Http _http;
@@ -226,5 +179,8 @@ public class AnalyticsReportsPortlet extends MVCPortlet {
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

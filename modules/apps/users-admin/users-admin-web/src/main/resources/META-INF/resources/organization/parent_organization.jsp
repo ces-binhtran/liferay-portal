@@ -47,7 +47,9 @@ if ((organization == null) && (parentOrganizationId == OrganizationConstants.DEF
 	}
 
 	if (manageableOrganizations.size() == 1) {
-		parentOrganizationId = manageableOrganizations.get(0).getOrganizationId();
+		Organization manageableOrganization = manageableOrganizations.get(0);
+
+		parentOrganizationId = manageableOrganization.getOrganizationId();
 	}
 }
 
@@ -71,7 +73,7 @@ if (parentOrganization != null) {
 	cssClass="sheet-subtitle"
 >
 	<clay:content-col
-		expand="true"
+		expand="<%= true %>"
 	>
 		<span class="heading-text"><liferay-ui:message key="parent-organization" /></span>
 	</clay:content-col>

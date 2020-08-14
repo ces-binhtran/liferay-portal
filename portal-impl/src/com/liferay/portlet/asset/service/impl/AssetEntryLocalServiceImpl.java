@@ -300,12 +300,19 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 
 	@Override
 	public double getEntryPriority(long classNameId, long classPK) {
-		return assetEntryFinder.findPriorityByC_C(classNameId, classPK);
+		AssetEntry assetEntry = assetEntryPersistence.fetchByC_C(
+			classNameId, classPK);
+
+		if (assetEntry == null) {
+			return 0;
+		}
+
+		return assetEntry.getPriority();
 	}
 
 	@Override
 	public double getEntryPriority(String className, long classPK) {
-		return assetEntryFinder.findPriorityByC_C(
+		return getEntryPriority(
 			classNameLocalService.getClassNameId(className), classPK);
 	}
 
@@ -984,15 +991,17 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			return;
 		}
 
-		List<AssetEntryValidatorExclusionRule> exclusionRules =
-			_assetEntryValidatorExclusionRuleServiceTrackerMap.getService(
-				className);
+		List<AssetEntryValidatorExclusionRule>
+			assetEntryValidatorExclusionRules =
+				_assetEntryValidatorExclusionRuleServiceTrackerMap.getService(
+					className);
 
-		if (exclusionRules != null) {
-			for (AssetEntryValidatorExclusionRule exclusionRule :
-					exclusionRules) {
+		if (assetEntryValidatorExclusionRules != null) {
+			for (AssetEntryValidatorExclusionRule
+					assetEntryValidatorExclusionRule :
+						assetEntryValidatorExclusionRules) {
 
-				if (exclusionRule.isValidationExcluded(
+				if (assetEntryValidatorExclusionRule.isValidationExcluded(
 						groupId, className, classPK, classTypePK, categoryIds,
 						tagNames)) {
 
@@ -1142,9 +1151,7 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			long companyId, String className, SearchContext searchContext)
 		throws Exception {
 
-		long[] classNameIds = getClassNameIds(companyId, className);
-
-		return doSearch(classNameIds, searchContext);
+		return doSearch(getClassNameIds(companyId, className), searchContext);
 	}
 
 	protected Hits doSearch(long[] classNameIds, SearchContext searchContext)
@@ -1179,9 +1186,8 @@ public class AssetEntryLocalServiceImpl extends AssetEntryLocalServiceBaseImpl {
 			long companyId, String className, SearchContext searchContext)
 		throws Exception {
 
-		long[] classNameIds = getClassNameIds(companyId, className);
-
-		return doSearchCount(classNameIds, searchContext);
+		return doSearchCount(
+			getClassNameIds(companyId, className), searchContext);
 	}
 
 	protected long doSearchCount(

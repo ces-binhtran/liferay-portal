@@ -20,7 +20,7 @@
 WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 
 double sourceVersion = ParamUtil.getDouble(request, "sourceVersion");
-String eventName = ParamUtil.getString(request, "eventName", renderResponse.getNamespace() + "selectVersionFm");
+String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectVersionFm");
 
 PortletURL portletURL = renderResponse.createRenderURL();
 
@@ -62,15 +62,19 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 								curTargetVersion = curSourceVersion;
 								curSourceVersion = tempVersion;
 							}
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"sourceversion", curSourceVersion
-							).put(
-								"targetversion", curTargetVersion
-							).build();
 							%>
 
-							<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+							<aui:a
+								cssClass="selector-button"
+								data='<%=
+									HashMapBuilder.<String, Object>put(
+										"sourceversion", curSourceVersion
+									).put(
+										"targetversion", curTargetVersion
+									).build()
+								%>'
+								href="javascript:;"
+							>
 								<%= String.valueOf(curWikiPage.getVersion()) %>
 							</aui:a>
 						</c:when>

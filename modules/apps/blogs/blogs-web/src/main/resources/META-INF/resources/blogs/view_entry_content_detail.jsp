@@ -71,7 +71,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				>
 					<clay:content-row>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<h3 class="title"><%= HtmlUtil.escape(BlogsEntryUtil.getDisplayTitle(resourceBundle, entry)) %></h3>
 
@@ -135,11 +135,11 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 						</clay:content-col>
 
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<clay:content-row>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<div class="text-truncate-inline">
 										<a class="text-truncate username" href="<%= entryUserURL %>"><%= HtmlUtil.escape(entry.getUserName()) %></a>
@@ -181,7 +181,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 		<clay:container-fluid
 			cssClass="widget-mode-detail-header"
-			id="<%= renderResponse.getNamespace() + entry.getEntryId() %>"
+			id="<%= liferayPortletResponse.getNamespace() + entry.getEntryId() %>"
 		>
 			<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
 

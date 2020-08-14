@@ -24,15 +24,16 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
 <%@ page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.BackgroundTask" %><%@
-page import="com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil" %><%@
+page import="com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay" %><%@
 page import="com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplayFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.model.CompanyConstants" %><%@
 page import="com.liferay.portal.kernel.search.Indexer" %><%@
 page import="com.liferay.portal.kernel.search.IndexerClassNameComparator" %><%@
 page import="com.liferay.portal.kernel.search.IndexerRegistryUtil" %><%@
-page import="com.liferay.portal.kernel.util.ParamUtil" %>
+page import="com.liferay.portal.kernel.util.ParamUtil" %><%@
+page import="com.liferay.product.navigation.control.menu.constants.ProductNavigationControlMenuCategoryKeys" %>
 
 <%@ page import="java.io.Serializable" %>
 
@@ -77,11 +78,16 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 	}
 	%>
 
-	<clay:container-fluid>
-		<ul class="list-group system-action-group">
+	<clay:container-fluid
+		cssClass="container-form-lg search-admin-index-actions-container sheet-lg"
+		id='<%= liferayPortletResponse.getNamespace() + "adminSearchAdminIndexActionsPanel" %>'
+	>
+		<ul class="list-group">
 			<li class="list-group-item list-group-item-flex">
 				<div class="autofit-col autofit-col-expand">
-					<liferay-ui:message key="reindex-all-search-indexes" />
+					<p class="list-group-title">
+						<liferay-ui:message key="reindex-all-search-indexes" />
+					</p>
 				</div>
 
 				<%
@@ -113,7 +119,9 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 			</li>
 			<li class="list-group-item list-group-item-flex">
 				<div class="autofit-col autofit-col-expand">
-					<liferay-ui:message key="reindex-all-spell-check-indexes" />
+					<p class="list-group-title">
+						<liferay-ui:message key="reindex-all-spell-check-indexes" />
+					</p>
 				</div>
 
 				<div class="autofit-col">
@@ -132,7 +140,9 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 
 				<li class="list-group-item list-group-item-flex">
 					<div class="autofit-col autofit-col-expand">
-						<liferay-ui:message arguments="<%= indexer.getClassName() %>" key="reindex-x" />
+						<p class="list-group-title">
+							<liferay-ui:message arguments="<%= indexer.getClassName() %>" key="reindex-x" />
+						</p>
 					</div>
 
 					<div class="autofit-col index-action-wrapper" data-type="<%= indexer.getClassName() %>">
@@ -157,10 +167,12 @@ portletURL.setParameter("mvcRenderCommandName", "/search_admin/view");
 
 <aui:script use="liferay-admin">
 	new Liferay.Portlet.Admin({
+		controlMenuCategoryKey:
+			'<%= ProductNavigationControlMenuCategoryKeys.TOOLS %>',
 		form: document.<portlet:namespace />fm,
 		indexActionWrapperSelector: '.index-action-wrapper',
 		indexActionsPanel:
-			'<%= '#' + renderResponse.getNamespace() + "adminSearchAdminIndexActionsPanel" %>',
+			'<%= '#' + liferayPortletResponse.getNamespace() + "adminSearchAdminIndexActionsPanel" %>',
 		namespace: '<portlet:namespace />',
 		redirectUrl: '<%= redirectURL %>',
 		submitButton: '.save-server-button',

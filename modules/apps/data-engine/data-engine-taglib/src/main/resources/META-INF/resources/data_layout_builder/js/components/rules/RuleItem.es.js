@@ -19,8 +19,32 @@ import React, {useContext} from 'react';
 
 import AppContext from '../../AppContext.es';
 import {DELETE_DATA_LAYOUT_RULE} from '../../actions.es';
-import {getFieldLabel} from '../../utils/dataDefinition.es';
+import {
+	forEachDataDefinitionField,
+	getDataDefinitionField,
+	getFieldLabel,
+	getOptionLabel,
+} from '../../utils/dataDefinition.es';
+import {getLocalizedValue} from '../../utils/lang.es';
 import CollapsablePanel from '../collapsable-panel/CollapsablePanel.es';
+
+const ACTION_LABELS = {
+	autofill: Liferay.Language.get('autofill'),
+	calculate: Liferay.Language.get('calculate'),
+	enable: Liferay.Language.get('enable'),
+	require: Liferay.Language.get('require'),
+	show: Liferay.Language.get('show'),
+};
+
+const OPERATOR_LABELS = {
+	'belongs-to': Liferay.Language.get('belongs-to'),
+	contains: Liferay.Language.get('contains'),
+	'equals-to': Liferay.Language.get('equals-to'),
+	'is-empty': Liferay.Language.get('is-empty'),
+	'not-contains': Liferay.Language.get('not-contains'),
+	'not-equals-to': Liferay.Language.get('not-equals-to'),
+	'not-is-empty': Liferay.Language.get('not-is-empty'),
+};
 
 const Text = ({capitalize = false, children = '', lowercase = false}) => (
 	<span
@@ -33,24 +57,10 @@ const Text = ({capitalize = false, children = '', lowercase = false}) => (
 	</span>
 );
 
-const OPERATOR_LABELS = {
-	'belongs-to': Liferay.Language.get('belongs-to'),
-	contains: Liferay.Language.get('contains'),
-	'equals-to': Liferay.Language.get('equals-to'),
-	'is-empty': Liferay.Language.get('is-empty'),
-	'not-contains': Liferay.Language.get('not-contains'),
-	'not-equals-to': Liferay.Language.get('not-equals-to'),
-	'not-is-empty': Liferay.Language.get('not-is-empty'),
-};
-
 export default function RuleItem({rule, toggleRulesEditorVisibility}) {
-	const {
-		actions,
-		conditions,
-		logicalOperator,
-		name: {en_US: name},
-	} = rule;
+	const {actions, conditions, logicalOperator, name: ruleName} = rule;
 	const [{dataDefinition}, dispatch] = useContext(AppContext);
+	const name = getLocalizedValue(dataDefinition.defaultLanguageId, ruleName);
 
 	const dropDownActions = [
 		{
@@ -74,6 +84,17 @@ export default function RuleItem({rule, toggleRulesEditorVisibility}) {
 		},
 	];
 
+	const replaceExpressionLabels = (expression) => {
+		forEachDataDefinitionField(dataDefinition, ({name}) => {
+			expression = expression.replace(
+				new RegExp(`\\[${name}\\]`, 'g'),
+				getFieldLabel(dataDefinition, name)
+			);
+		});
+
+		return expression;
+	};
+
 	return (
 		<CollapsablePanel actions={dropDownActions} title={name}>
 			<ClayButton
@@ -84,6 +105,32 @@ export default function RuleItem({rule, toggleRulesEditorVisibility}) {
 
 				{conditions.map(({operands, operator}, index) => {
 					const [first, last] = operands;
+					const lastValue = last?.value;
+
+					const _getFieldLabel = () => {
+						const field = getDataDefinitionField(
+							dataDefinition,
+							lastValue
+						);
+
+						if (field) {
+							return getFieldLabel(dataDefinition, lastValue);
+						}
+
+						const parent = getDataDefinitionField(
+							dataDefinition,
+							first.value
+						);
+
+						if (parent) {
+							return getOptionLabel(
+								parent.customProperties?.options,
+								lastValue
+							);
+						}
+
+						return lastValue;
+					};
 
 					return (
 						<>
@@ -99,9 +146,9 @@ export default function RuleItem({rule, toggleRulesEditorVisibility}) {
 								{OPERATOR_LABELS[operator] || operator}
 							</ClayLabel>
 
-							{last && last.value && (
+							{lastValue && (
 								<ClayLabel displayType="info">
-									{getFieldLabel(dataDefinition, last.value)}
+									{_getFieldLabel()}
 								</ClayLabel>
 							)}
 
@@ -114,16 +161,14 @@ export default function RuleItem({rule, toggleRulesEditorVisibility}) {
 					);
 				})}
 
-				<Text>{Liferay.Language.get('then')}</Text>
-
 				{actions.map(({action, expression, target}, index) => (
 					<>
-						<Text lowercase>{action}</Text>
+						<Text lowercase>{ACTION_LABELS[action] || action}</Text>
 
 						{expression && (
 							<>
 								<ClayLabel displayType="secondary">
-									{expression}
+									{replaceExpressionLabels(expression)}
 								</ClayLabel>
 
 								<Text lowercase>

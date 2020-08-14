@@ -29,6 +29,7 @@ import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
 import com.liferay.gradle.util.Validator;
 import com.liferay.portal.tools.bundle.support.commands.DownloadCommand;
 import com.liferay.portal.tools.bundle.support.constants.BundleSupportConstants;
+import com.liferay.workspace.bundle.url.codec.BundleURLCodec;
 
 import groovy.lang.Closure;
 import groovy.lang.MissingPropertyException;
@@ -40,7 +41,6 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -142,6 +142,8 @@ public class WorkspaceExtension {
 		_homeDir = _getProperty(
 			settings, "home.dir",
 			BundleSupportConstants.DEFAULT_LIFERAY_HOME_DIR_NAME);
+		_nodePackageManager = _getProperty(
+			settings, "node.package.manager", _NODE_PACKAGE_MANAGER);
 		_targetPlatformVersion = _getProperty(
 			settings, "target.platform.version",
 			_getDefaultTargetplatformVersion());
@@ -276,6 +278,10 @@ public class WorkspaceExtension {
 		return GradleUtil.toFile(_gradle.getRootProject(), _homeDir);
 	}
 
+	public String getNodePackageManager() {
+		return GradleUtil.toString(_nodePackageManager);
+	}
+
 	public String getProduct() {
 		return GradleUtil.toString(_product);
 	}
@@ -370,12 +376,27 @@ public class WorkspaceExtension {
 		_homeDir = homeDir;
 	}
 
+	public void setNodePackageManager(Object nodePackageManager) {
+		_nodePackageManager = nodePackageManager;
+	}
+
 	public void setProduct(Object product) {
 		_product = product;
 	}
 
 	public void setTargetPlatformVersion(Object targetPlatformVersion) {
 		_targetPlatformVersion = targetPlatformVersion;
+	}
+
+	private String _decodeBundleUrl(ProductInfo productInfo) {
+		try {
+			return BundleURLCodec.decode(
+				productInfo.getBundleUrl(), productInfo.getReleaseDate());
+		}
+		catch (Exception exception) {
+			throw new GradleException(
+				"Unable to determine bundle URL", exception);
+		}
 	}
 
 	private String _getDefaultAppServerVersion() {
@@ -402,13 +423,7 @@ public class WorkspaceExtension {
 		return Optional.ofNullable(
 			_getProductInfo(getProduct())
 		).map(
-			ProductInfo::getBundleUrl
-		).map(
-			url -> {
-				Base64.Decoder decoder = Base64.getDecoder();
-
-				return new String(decoder.decode(url));
-			}
+			this::_decodeBundleUrl
 		).orElse(
 			BundleSupportConstants.DEFAULT_BUNDLE_URL
 		);
@@ -440,6 +455,7 @@ public class WorkspaceExtension {
 					downloadCommand.setToken(false);
 					downloadCommand.setUrl(new URL(_PRODUCT_INFO_URL));
 					downloadCommand.setUserName(null);
+					downloadCommand.setQuiet(true);
 
 					downloadCommand.execute();
 
@@ -522,7 +538,9 @@ public class WorkspaceExtension {
 		Project.DEFAULT_BUILD_DIR_NAME + File.separator + "docker");
 
 	private static final String _DOCKER_IMAGE_LIFERAY =
-		"liferay/portal:7.2.0-ga1";
+		"liferay/portal:7.3.3-ga4";
+
+	private static final String _NODE_PACKAGE_MANAGER = "npm";
 
 	private static final String _PRODUCT_INFO_URL =
 		"https://releases.liferay.com/tools/workspace/.product_info.json";
@@ -544,6 +562,7 @@ public class WorkspaceExtension {
 	private Object _environment;
 	private final Gradle _gradle;
 	private Object _homeDir;
+	private Object _nodePackageManager;
 	private Object _product;
 	private final Map<String, ProductInfo> _productInfos = new HashMap<>();
 	private final Set<ProjectConfigurator> _projectConfigurators =

@@ -25,7 +25,10 @@ definition {
 		task ("Add a display page") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
 
-			DisplayPageTemplatesAdmin.addDisplayPage(displayPageName = "Display Page Name");
+			DisplayPageTemplatesAdmin.addDisplayPage(
+				contentType = "Web Content Article",
+				displayPageName = "Display Page Name",
+				subType = "Basic Web Content");
 		}
 	}
 
@@ -125,6 +128,8 @@ definition {
 	@description = "In the display page editor, user can add and remove fragments, user can remove sections, and user can edit text in fragment editable fields."
 	@priority = "5"
 	test AssertDisplayPageEditorFunctionality {
+		property portal.acceptance = "true";
+
 		task ("Add the Title, Rich Text, Button, and Content fragments") {
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -198,8 +203,12 @@ definition {
 	@description = "This is a test for LPS-86191. User can configure display page settings for any created display page, even if the display page is in draft status."
 	@priority = "5"
 	test ConfigureDraftStatusDisplayPage {
+		property portal.acceptance = "true";
+
 		task ("Configure the display page template's 'Look and Feel' while it is still in draft status") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			Click(locator1 = "Radio#SPECIFIC_LOOK");
 
@@ -236,6 +245,8 @@ definition {
 	@description = "User can edit a display page. This includes adding and removing fragments and includes editing text in fragment editable fields."
 	@priority = "5"
 	test EditDisplayPage {
+		property portal.acceptance = "true";
+
 		task ("Add the Title, Rich Text, and Button fragments") {
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
@@ -265,7 +276,8 @@ definition {
 		task ("Add a Content fragment") {
 			PageEditor.addFragment(
 				collectionName = "Collection Name",
-				fragmentName = "Content");
+				fragmentName = "Content",
+				targetFragmentName = "Button");
 		}
 
 		task ("Edit the Rich Text fragment's editable text") {

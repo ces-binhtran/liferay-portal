@@ -19,41 +19,81 @@ import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author Jürgen Kappler
  * @author Jorge Ferrer
  */
-public class InfoField implements InfoFieldSetEntry {
+public class InfoField<T extends InfoFieldType> implements InfoFieldSetEntry {
 
+	public static Builder builder() {
+		return new Builder();
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
 	public InfoField(
-		InfoFieldType infoFieldType,
-		InfoLocalizedValue<String> labelInfoLocalizedValue, String name) {
+		T infoFieldType, InfoLocalizedValue<String> labelInfoLocalizedValue,
+		boolean localizable, String name) {
 
-		_infoFieldType = infoFieldType;
-		_labelInfoLocalizedValue = labelInfoLocalizedValue;
-		_name = name;
+		this(
+			builder(
+			).infoFieldType(
+				infoFieldType
+			).name(
+				name
+			).labelInfoLocalizedValue(
+				labelInfoLocalizedValue
+			).localizable(
+				localizable
+			)._builder);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
+	public InfoField(
+		T infoFieldType, InfoLocalizedValue<String> labelInfoLocalizedValue,
+		String name) {
+
+		this(
+			builder(
+			).infoFieldType(
+				infoFieldType
+			).name(
+				name
+			).labelInfoLocalizedValue(
+				labelInfoLocalizedValue
+			)._builder);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof InfoField)) {
+		if (!(object instanceof InfoField)) {
 			return false;
 		}
 
-		InfoField infoDisplayField = (InfoField)obj;
+		InfoField infoDisplayField = (InfoField)object;
 
-		if (Objects.equals(_infoFieldType, infoDisplayField._infoFieldType) &&
+		if (Objects.equals(
+				_builder._infoFieldType,
+				infoDisplayField._builder._infoFieldType) &&
 			Objects.equals(
-				_labelInfoLocalizedValue,
-				infoDisplayField._labelInfoLocalizedValue) &&
-			Objects.equals(_name, infoDisplayField._name)) {
+				_builder._labelInfoLocalizedValue,
+				infoDisplayField._builder._labelInfoLocalizedValue) &&
+			Objects.equals(_builder._name, infoDisplayField._builder._name)) {
 
 			return true;
 		}
@@ -61,32 +101,46 @@ public class InfoField implements InfoFieldSetEntry {
 		return false;
 	}
 
+	public <V> Optional<V> getAttributeOptional(
+		InfoFieldType.Attribute<T, V> attribute) {
+
+		return Optional.ofNullable((V)_builder._attributes.get(attribute));
+	}
+
 	public InfoFieldType getInfoFieldType() {
-		return _infoFieldType;
+		return _builder._infoFieldType;
 	}
 
 	@Override
 	public String getLabel(Locale locale) {
-		return _labelInfoLocalizedValue.getValue(locale);
+		return _builder._labelInfoLocalizedValue.getValue(locale);
 	}
 
 	@Override
 	public InfoLocalizedValue<String> getLabelInfoLocalizedValue() {
-		return _labelInfoLocalizedValue;
+		return _builder._labelInfoLocalizedValue;
 	}
 
 	@Override
 	public String getName() {
-		return _name;
+		return _builder._name;
 	}
 
 	@Override
 	public int hashCode() {
-		int hash = HashUtil.hash(0, _infoFieldType);
+		int hash = HashUtil.hash(0, _builder._infoFieldType);
 
-		hash = HashUtil.hash(hash, _labelInfoLocalizedValue);
+		hash = HashUtil.hash(hash, _builder._labelInfoLocalizedValue);
 
-		return HashUtil.hash(hash, _name);
+		return HashUtil.hash(hash, _builder._name);
+	}
+
+	public boolean isLocalizable() {
+		return _builder._localizable;
+	}
+
+	public boolean isMultivalued() {
+		return _builder._multivalued;
 	}
 
 	@Override
@@ -94,16 +148,105 @@ public class InfoField implements InfoFieldSetEntry {
 		StringBundler sb = new StringBundler(5);
 
 		sb.append("{name: ");
-		sb.append(_name);
+		sb.append(_builder._name);
 		sb.append(", type: ");
-		sb.append(_infoFieldType.getName());
+		sb.append(_builder._infoFieldType.getName());
 		sb.append("}");
 
 		return sb.toString();
 	}
 
-	private final InfoFieldType _infoFieldType;
-	private final InfoLocalizedValue<String> _labelInfoLocalizedValue;
-	private final String _name;
+	public static class Builder {
+
+		public <T extends InfoFieldType> NameStep<T> infoFieldType(
+			T infoFieldType) {
+
+			_infoFieldType = infoFieldType;
+
+			return new NameStep<>(this);
+		}
+
+		private Builder() {
+		}
+
+		private final Map
+			<InfoFieldType.Attribute<? extends InfoFieldType, ?>, Object>
+				_attributes = new HashMap<>();
+		private InfoFieldType _infoFieldType;
+		private InfoLocalizedValue<String> _labelInfoLocalizedValue;
+		private boolean _localizable;
+		private boolean _multivalued;
+		private String _name;
+
+	}
+
+	public static class FinalStep<T extends InfoFieldType> {
+
+		public <V> FinalStep<T> attribute(
+			InfoFieldType.Attribute<T, V> attribute, V value) {
+
+			_builder._attributes.put(attribute, value);
+
+			return this;
+		}
+
+		public InfoField<T> build() {
+			if (_builder._labelInfoLocalizedValue == null) {
+				_builder._labelInfoLocalizedValue = InfoLocalizedValue.localize(
+					InfoField.class, _builder._name);
+			}
+
+			return new InfoField<>(_builder);
+		}
+
+		public FinalStep<T> labelInfoLocalizedValue(
+			InfoLocalizedValue<String> labelInfoLocalizedValue) {
+
+			_builder._labelInfoLocalizedValue = labelInfoLocalizedValue;
+
+			return this;
+		}
+
+		public FinalStep<T> localizable(boolean localizable) {
+			_builder._localizable = localizable;
+
+			return this;
+		}
+
+		public FinalStep<T> multivalued(boolean multivalued) {
+			_builder._multivalued = multivalued;
+
+			return this;
+		}
+
+		private FinalStep(Builder builder) {
+			_builder = builder;
+		}
+
+		private final Builder _builder;
+
+	}
+
+	public static class NameStep<T extends InfoFieldType> {
+
+		public FinalStep<T> name(String name) {
+			_builder._name = name;
+
+			return new FinalStep<>(_builder);
+		}
+
+		private NameStep(Builder builder) {
+			_builder = builder;
+		}
+
+		private final Builder _builder;
+
+	}
+
+	private InfoField(Builder builder) {
+		_builder = builder;
+	}
+
+	private final Builder _builder;
 
 }

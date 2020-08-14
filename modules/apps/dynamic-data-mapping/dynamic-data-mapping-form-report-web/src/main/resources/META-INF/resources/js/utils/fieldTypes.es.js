@@ -17,6 +17,22 @@ export default {
 		icon: 'check-circle',
 		title: Liferay.Language.get('checkbox-multiple-field-type-label'),
 	},
+	color: {
+		icon: 'color-picker',
+		title: Liferay.Language.get('color-field-type-label'),
+	},
+	date: {
+		icon: 'calendar',
+		title: Liferay.Language.get('date-field-type-label'),
+	},
+	grid: {
+		icon: 'table2',
+		title: Liferay.Language.get('grid-field-type-label'),
+	},
+	numeric: {
+		icon: 'integer',
+		title: Liferay.Language.get('numeric-field-type-label'),
+	},
 	radio: {
 		icon: 'radio-button',
 		title: Liferay.Language.get('radio-field-type-label'),

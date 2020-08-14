@@ -17,7 +17,7 @@
 <%@ include file="/dynamic_include/init.jsp" %>
 
 <liferay-frontend:component
-	componentId='<%= renderResponse.getNamespace() + "DocumentLibraryOpener" %>'
+	componentId='<%= liferayPortletResponse.getNamespace() + "DocumentLibraryOpener" %>'
 	module="js/DocumentLibraryOpener.es"
 />
 
@@ -67,5 +67,5 @@
 </aui:script>
 
 <liferay-util:html-top>
-	<link href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>' rel="stylesheet" type="text/css" />
+	<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>

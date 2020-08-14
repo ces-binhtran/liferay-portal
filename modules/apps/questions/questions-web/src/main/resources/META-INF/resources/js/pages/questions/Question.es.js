@@ -17,15 +17,17 @@ import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
 import ClayIcon from '@clayui/icon';
 import ClayNavigationBar from '@clayui/navigation-bar';
+import classNames from 'classnames';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../../AppContext.es';
 import Answer from '../../components/Answer.es';
 import ArticleBodyRenderer from '../../components/ArticleBodyRenderer.es';
+import Breadcrumb from '../../components/Breadcrumb.es';
 import CreatorRow from '../../components/CreatorRow.es';
+import DeleteQuestion from '../../components/DeleteQuestion.es';
 import Link from '../../components/Link.es';
-import Modal from '../../components/Modal.es';
 import PaginatedList from '../../components/PaginatedList.es';
 import QuestionsEditor from '../../components/QuestionsEditor';
 import Rating from '../../components/Rating.es';
@@ -33,24 +35,26 @@ import RelatedQuestions from '../../components/RelatedQuestions.es';
 import SectionLabel from '../../components/SectionLabel.es';
 import Subscription from '../../components/Subscription.es';
 import TagList from '../../components/TagList.es';
+import TextLengthValidation from '../../components/TextLengthValidation.es';
 import useQueryParams from '../../hooks/useQueryParams.es';
 import {
-	client,
 	createAnswerQuery,
-	deleteMessageBoardThreadQuery,
 	getMessagesQuery,
 	getThreadQuery,
 	markAsAnswerMessageBoardMessageQuery,
 } from '../../utils/client.es';
 import lang from '../../utils/lang.es';
-import {dateToBriefInternationalHuman} from '../../utils/utils.es';
+import {
+	dateToBriefInternationalHuman,
+	getContextLink,
+	stripHTML,
+} from '../../utils/utils.es';
 
 export default withRouter(
 	({
-		history,
 		location,
 		match: {
-			params: {questionId},
+			params: {questionId, sectionTitle},
 			url,
 		},
 	}) => {
@@ -61,7 +65,8 @@ export default withRouter(
 		const sort = queryParams.get('sort') || 'active';
 
 		const [articleBody, setArticleBody] = useState();
-		const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+		const [showDeleteModalPanel, setShowDeleteModalPanel] = useState(false);
+
 		const [page, setPage] = useState(1);
 		const [pageSize, setPageSize] = useState(20);
 
@@ -138,16 +143,10 @@ export default withRouter(
 		}, [messageBoardThreadMessageBoardMessages, pageSize, sort]);
 
 		const [createAnswer] = useMutation(createAnswerQuery, {
+			context: getContextLink(`${sectionTitle}/${questionId}`),
 			onCompleted() {
 				setArticleBody('');
 				refetch();
-			},
-		});
-
-		const [deleteThread] = useMutation(deleteMessageBoardThreadQuery, {
-			onCompleted() {
-				client.resetStore();
-				history.goBack();
 			},
 		});
 
@@ -194,8 +193,10 @@ export default withRouter(
 		);
 
 		return (
-			<section className="c-mt-5 questions-section questions-section-single">
-				<div className="questions-container">
+			<section className="questions-section questions-section-single">
+				<Breadcrumb section={question.messageBoardSection} />
+
+				<div className="c-mt-5 questions-container">
 					{!loading && (
 						<div className="row">
 							<div className="col-md-1 text-md-center">
@@ -212,7 +213,7 @@ export default withRouter(
 
 							<div className="col-md-10">
 								<div className="align-items-end flex-column-reverse flex-md-row row">
-									<div className="c-mt-4 c-mt-md-0 col-md-9">
+									<div className="c-mt-4 c-mt-md-0 col-md-8">
 										{!!question.messageBoardSection
 											.numberOfMessageBoardSections && (
 											<Link
@@ -226,7 +227,16 @@ export default withRouter(
 											</Link>
 										)}
 
-										<h1 className="c-mt-2 question-headline">
+										<h1
+											className={classNames(
+												'c-mt-2',
+												'question-headline',
+												{
+													'question-seen':
+														question.seen,
+												}
+											)}
+										>
 											{question.headline}
 										</h1>
 
@@ -252,56 +262,32 @@ export default withRouter(
 										</p>
 									</div>
 
-									<div className="col-md-3 text-right">
+									<div className="col-md-4 text-right">
 										<ClayButton.Group
 											className="questions-actions"
 											spaced={true}
 										>
 											{question.actions.subscribe && (
 												<Subscription
-													onSubscription={(
-														subscribed
-													) => {
-														question.subscribed = subscribed;
-													}}
 													question={question}
 												/>
 											)}
 
 											{question.actions.delete && (
 												<>
-													<Modal
-														body={Liferay.Language.get(
-															'do-you-want-to-delete–this-thread'
-														)}
-														callback={() => {
-															deleteThread({
-																variables: {
-																	messageBoardThreadId:
-																		question.id,
-																},
-															});
-														}}
-														onClose={() =>
-															setDeleteModalVisible(
-																false
-															)
+													<DeleteQuestion
+														deleteModalVisibility={
+															showDeleteModalPanel
 														}
-														status="warning"
-														textPrimaryButton={Liferay.Language.get(
-															'delete'
-														)}
-														title={Liferay.Language.get(
-															'delete-thread'
-														)}
-														visible={
-															deleteModalVisible
+														question={question}
+														setDeleteModalVisibility={
+															setShowDeleteModalPanel
 														}
 													/>
 													<ClayButton
 														displayType="secondary"
 														onClick={() =>
-															setDeleteModalVisible(
+															setShowDeleteModalPanel(
 																true
 															)
 														}
@@ -404,6 +390,9 @@ export default withRouter(
 											<Answer
 												answer={answer}
 												answerChange={answerChange}
+												canMarkAsAnswer={
+													!!question.actions.replace
+												}
 												deleteAnswer={deleteAnswer}
 												key={answer.id}
 											/>
@@ -441,11 +430,25 @@ export default withRouter(
 															}}
 														/>
 													</div>
+
+													<ClayForm.FeedbackGroup>
+														<ClayForm.FeedbackItem>
+															<TextLengthValidation
+																text={
+																	articleBody
+																}
+															/>
+														</ClayForm.FeedbackItem>
+													</ClayForm.FeedbackGroup>
 												</ClayForm.Group>
 											</ClayForm>
 
 											<ClayButton
-												disabled={!articleBody}
+												disabled={
+													!articleBody ||
+													stripHTML(articleBody)
+														.length < 15
+												}
 												displayType="primary"
 												onClick={() => {
 													createAnswer({

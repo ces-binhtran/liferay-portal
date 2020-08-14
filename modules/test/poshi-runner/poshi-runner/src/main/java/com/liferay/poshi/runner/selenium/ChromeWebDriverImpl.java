@@ -14,6 +14,8 @@
 
 package com.liferay.poshi.runner.selenium;
 
+import com.liferay.poshi.runner.exception.ElementNotFoundPoshiRunnerException;
+
 import java.util.List;
 import java.util.Stack;
 import java.util.regex.Matcher;
@@ -130,10 +132,12 @@ public class ChromeWebDriverImpl extends BaseWebDriverImpl {
 		try {
 			return super.getWebElement(locator, timeout);
 		}
-		catch (RuntimeException runtimeException) {
+		catch (ElementNotFoundPoshiRunnerException
+					elementNotFoundPoshiRunnerException) {
+
 			_refreshFrameWebElements();
 
-			throw runtimeException;
+			throw elementNotFoundPoshiRunnerException;
 		}
 	}
 

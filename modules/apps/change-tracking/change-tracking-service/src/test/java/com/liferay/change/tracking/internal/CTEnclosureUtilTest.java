@@ -14,11 +14,11 @@
 
 package com.liferay.change.tracking.internal;
 
-import com.liferay.change.tracking.internal.reference.closure.CTClosureImpl;
-import com.liferay.change.tracking.internal.reference.closure.Edge;
-import com.liferay.change.tracking.internal.reference.closure.GraphUtil;
-import com.liferay.change.tracking.internal.reference.closure.Node;
-import com.liferay.change.tracking.reference.closure.CTClosure;
+import com.liferay.change.tracking.closure.CTClosure;
+import com.liferay.change.tracking.internal.closure.CTClosureImpl;
+import com.liferay.change.tracking.internal.closure.Edge;
+import com.liferay.change.tracking.internal.closure.GraphUtil;
+import com.liferay.change.tracking.internal.closure.Node;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
@@ -60,21 +60,23 @@ public class CTEnclosureUtilTest {
 		Set<Node> nodes = new HashSet<>(
 			Arrays.asList(node1, node2, node3, node4, node5));
 
-		Map<Node, Collection<Edge>> edgeMap =
-			HashMapBuilder.<Node, Collection<Edge>>put(
-				node1,
-				Arrays.asList(new Edge(node1, node3), new Edge(node1, node4))
-			).put(
-				node2,
-				Arrays.asList(new Edge(node2, node4), new Edge(node2, node5))
-			).put(
-				node3, Collections.singleton(new Edge(node3, node6))
-			).put(
-				node4, Collections.singleton(new Edge(node4, node6))
-			).build();
-
 		CTClosure ctClosure = new CTClosureImpl(
-			1, GraphUtil.getNodeMap(nodes, edgeMap));
+			1,
+			GraphUtil.getNodeMap(
+				nodes,
+				HashMapBuilder.<Node, Collection<Edge>>put(
+					node1,
+					Arrays.asList(
+						new Edge(node1, node3), new Edge(node1, node4))
+				).put(
+					node2,
+					Arrays.asList(
+						new Edge(node2, node4), new Edge(node2, node5))
+				).put(
+					node3, Collections.singleton(new Edge(node3, node6))
+				).put(
+					node4, Collections.singleton(new Edge(node4, node6))
+				).build()));
 
 		Map<Long, Set<Long>> enclosureMap = CTEnclosureUtil.getEnclosureMap(
 			ctClosure, node3.getClassNameId(), node3.getPrimaryKey());

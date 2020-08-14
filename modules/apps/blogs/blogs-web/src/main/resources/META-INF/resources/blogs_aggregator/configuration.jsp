@@ -49,13 +49,13 @@ if (organizationId > 0) {
 					<aui:option label="scope" />
 				</aui:select>
 
-				<div class='form-group <%= selectionMethod.equals("users") ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />usersSelectionOptions">
+				<div class="form-group <%= selectionMethod.equals("users") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />usersSelectionOptions">
 					<aui:input label="organization" name="organizationName" type="resource" value="<%= organizationName %>" />
 
 					<aui:button name="selectOrganizationButton" value="select" />
 
 					<%
-					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + renderResponse.getNamespace() + "');";
+					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + liferayPortletResponse.getNamespace() + "');";
 					%>
 
 					<aui:button name="removeOrganizationButton" onClick="<%= taglibRemoveFolder %>" value="remove" />

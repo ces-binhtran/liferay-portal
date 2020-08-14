@@ -41,6 +41,10 @@ public class AccountGroupLocalServiceUtil {
 	/**
 	 * Adds the account group to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was added
 	 */
@@ -82,6 +86,10 @@ public class AccountGroupLocalServiceUtil {
 	/**
 	 * Deletes the account group from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was removed
 	 */
@@ -93,6 +101,10 @@ public class AccountGroupLocalServiceUtil {
 
 	/**
 	 * Deletes the account group with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountGroupId the primary key of the account group
 	 * @return the account group that was removed
@@ -259,6 +271,16 @@ public class AccountGroupLocalServiceUtil {
 		return getService().getAccountGroups(start, end);
 	}
 
+	public static java.util.List<com.liferay.account.model.AccountGroup>
+		getAccountGroups(
+			long companyId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.account.model.AccountGroup> orderByComparator) {
+
+		return getService().getAccountGroups(
+			companyId, start, end, orderByComparator);
+	}
+
 	/**
 	 * Returns the number of account groups.
 	 *
@@ -300,8 +322,22 @@ public class AccountGroupLocalServiceUtil {
 		return getService().getPersistedModel(primaryKeyObj);
 	}
 
+	public static com.liferay.portal.kernel.search.BaseModelSearchResult
+		<com.liferay.account.model.AccountGroup> searchAccountGroups(
+			long companyId, String keywords, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.account.model.AccountGroup> orderByComparator) {
+
+		return getService().searchAccountGroups(
+			companyId, keywords, start, end, orderByComparator);
+	}
+
 	/**
 	 * Updates the account group in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was updated

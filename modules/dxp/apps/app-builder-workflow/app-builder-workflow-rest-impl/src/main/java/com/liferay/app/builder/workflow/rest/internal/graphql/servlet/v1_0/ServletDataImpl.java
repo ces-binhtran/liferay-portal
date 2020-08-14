@@ -16,7 +16,8 @@ package com.liferay.app.builder.workflow.rest.internal.graphql.servlet.v1_0;
 
 import com.liferay.app.builder.workflow.rest.internal.graphql.mutation.v1_0.Mutation;
 import com.liferay.app.builder.workflow.rest.internal.graphql.query.v1_0.Query;
-import com.liferay.app.builder.workflow.rest.resource.v1_0.AppWorkflowTaskResource;
+import com.liferay.app.builder.workflow.rest.resource.v1_0.AppWorkflowDataRecordLinkResource;
+import com.liferay.app.builder.workflow.rest.resource.v1_0.AppWorkflowResource;
 import com.liferay.portal.vulcan.graphql.servlet.ServletData;
 
 import javax.annotation.Generated;
@@ -38,11 +39,13 @@ public class ServletDataImpl implements ServletData {
 
 	@Activate
 	public void activate(BundleContext bundleContext) {
-		Mutation.setAppWorkflowTaskResourceComponentServiceObjects(
-			_appWorkflowTaskResourceComponentServiceObjects);
+		Mutation.setAppWorkflowResourceComponentServiceObjects(
+			_appWorkflowResourceComponentServiceObjects);
+		Mutation.setAppWorkflowDataRecordLinkResourceComponentServiceObjects(
+			_appWorkflowDataRecordLinkResourceComponentServiceObjects);
 
-		Query.setAppWorkflowTaskResourceComponentServiceObjects(
-			_appWorkflowTaskResourceComponentServiceObjects);
+		Query.setAppWorkflowResourceComponentServiceObjects(
+			_appWorkflowResourceComponentServiceObjects);
 	}
 
 	@Override
@@ -61,7 +64,11 @@ public class ServletDataImpl implements ServletData {
 	}
 
 	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
-	private ComponentServiceObjects<AppWorkflowTaskResource>
-		_appWorkflowTaskResourceComponentServiceObjects;
+	private ComponentServiceObjects<AppWorkflowResource>
+		_appWorkflowResourceComponentServiceObjects;
+
+	@Reference(scope = ReferenceScope.PROTOTYPE_REQUIRED)
+	private ComponentServiceObjects<AppWorkflowDataRecordLinkResource>
+		_appWorkflowDataRecordLinkResourceComponentServiceObjects;
 
 }

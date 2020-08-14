@@ -14,6 +14,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>ADD_DOMAIN</td>
+	<td>//iframe[@title='Add Domain']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>ADD_USERS_TO_ASSET_LIBRARY</td>
 	<td>//iframe[@title='Assign Users to This Asset Library']</td>
 	<td></td>
@@ -21,6 +26,11 @@
 <tr>
 	<td>ADD_USERS_TO_SITE</td>
 	<td>//iframe[@title='Assign Users to This Site']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ASSIGN_USER</td>
+	<td>//div[contains(.,'Assign User')]//iframe</td>
 	<td></td>
 </tr>
 <tr>
@@ -35,7 +45,7 @@
 </tr>
 <tr>
 	<td>ASSET_LIST_DIALOG</td>
-	<td>//iframe[contains(@id,'selectAssetList_iframe')]</td>
+	<td>//iframe[contains(@class,'dialog-iframe-node') and contains(@id,'selectAssetList_iframe')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -61,6 +71,11 @@
 <tr>
 	<td>EMBEDDED_IFRAME</td>
 	<td>//iframe[@id='embeddedIframe']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>EMBEDDED_VIDEO_IFRAME</td>
+	<td>//iframe[contains(@src,'embed')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -154,6 +169,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SELECT_ACCOUNTS</td>
+	<td>//iframe[@title='Select Accounts']</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SELECT_DEPOT_ROLE</td>
 	<td>//iframe[contains(@id,'selectDepotRole_iframe_')]</td>
 	<td></td>
@@ -190,12 +210,17 @@
 </tr>
 <tr>
 	<td>SELECT_STRUCTURE_FIELD</td>
-	<td>//div[contains(@class,'dialog-iframe-bd')]/iframe[contains(@src,'select_structure_field')]</td>
+	<td>//iframe[contains(@title,'Select Structure Field')]</td>
 	<td></td>
 </tr>
 <tr>
 	<td>SITE_VARIATION_IFRAME</td>
 	<td>//iframe[contains(@id,'sitePagesVariationDialog_iframe_')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>VALID_DOMAINS</td>
+	<td>//iframe[@title='Valid Domains']</td>
 	<td></td>
 </tr>
 <tr>

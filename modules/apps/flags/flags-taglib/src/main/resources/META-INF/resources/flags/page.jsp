@@ -24,33 +24,33 @@ String message = (String)request.getAttribute("liferay-flags:flags:message");
 boolean onlyIcon = GetterUtil.getBoolean(request.getAttribute("liferay-flags:flags:onlyIcon"));
 %>
 
-<div class='taglib-flags <%= Validator.isNotNull(elementClasses) ? elementClasses : "" %>' id="<%= id %>">
+<div class="taglib-flags <%= Validator.isNotNull(elementClasses) ? elementClasses : "" %>" id="<%= id %>">
 	<c:choose>
 		<c:when test="<%= onlyIcon %>">
 			<clay:button
+				borderless="<%= true %>"
+				cssClass="lfr-portal-tooltip"
 				disabled="<%= true %>"
-				elementClasses="btn-outline-borderless btn-outline-secondary lfr-portal-tooltip"
+				displayType="secondary"
 				icon="flag-empty"
-				monospaced="<%= true %>"
-				size="sm"
-				style="secondary"
+				small="<%= true %>"
 				title="<%= message %>"
 			/>
 		</c:when>
 		<c:otherwise>
 			<clay:button
+				borderless="<%= true %>"
 				disabled="<%= true %>"
-				elementClasses="btn-outline-borderless btn-outline-secondary"
+				displayType="secondary"
 				icon="flag-empty"
-				label="<%= message %>"
-				size="sm"
-				style="secondary"
+				label="message"
+				small="<%= true %>"
 			/>
 		</c:otherwise>
 	</c:choose>
 
 	<react:component
-		data="<%= data %>"
 		module="flags/js/index.es"
+		props="<%= data %>"
 	/>
 </div>

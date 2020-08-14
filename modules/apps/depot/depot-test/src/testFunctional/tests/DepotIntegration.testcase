@@ -55,6 +55,10 @@ definition {
 
 		DepotNavigator.openDepotAdmin();
 
+		Depot.viewConnectedSiteNumber(
+			connectedSiteNumber = "0",
+			depotName = "Test Depot Name");
+
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
 
 		DepotNavigator.gotoSites(depotName = "Test Depot Name");
@@ -62,6 +66,10 @@ definition {
 		Depot.connectSite(siteList = "Site Name,Private Site Name,Restricted Site Name");
 
 		DepotNavigator.openDepotAdmin();
+
+		Depot.viewConnectedSiteNumber(
+			connectedSiteNumber = "3",
+			depotName = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
 
@@ -99,7 +107,7 @@ definition {
 			depotName = "Test Depot Name",
 			siteList = "Site Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -120,7 +128,7 @@ definition {
 			depotName = "Test Depot Name",
 			siteList = "Site Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -154,6 +162,10 @@ definition {
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		DepotNavigator.openDepotAdmin();
+
+		Depot.viewConnectedSiteNumber(
+			connectedSiteNumber = "1",
+			depotName = "Test Depot Name");
 
 		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
 
@@ -562,8 +574,7 @@ definition {
 	@description = "This ensures that a depot web content can be searched from the connected site."
 	@priority = "5"
 	test SearchForWebContent {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
+		property portal.acceptance = "true";
 
 		JSONLayout.addWidgetToPublicLayout(
 			groupName = "Site Name",
@@ -613,8 +624,7 @@ definition {
 	@description = "This ensures that a depot can be connected to the site."
 	@priority = "5"
 	test Smoke {
-		property portal.acceptance = "quarantine";
-		property portal.upstream = "quarantine";
+		property portal.acceptance = "true";
 
 		JSONDepot.addDepot(
 			depotDescription = "This is the description of a depot",

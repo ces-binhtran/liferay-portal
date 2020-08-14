@@ -15,13 +15,14 @@ import React, {useCallback, useContext, useState} from 'react';
 
 import ConnectionContext from '../context/ConnectionContext';
 import {StoreContext, useHistoricalWarning, useWarning} from '../context/store';
-import {numberFormat} from '../utils/numberFormat';
 import Detail from './Detail';
 import Main from './Main';
 
 export default function Navigation({
 	api,
 	authorName,
+	authorPortraitURL,
+	authorUserId,
 	defaultTimeRange,
 	defaultTimeSpanKey,
 	languageTag,
@@ -47,22 +48,16 @@ export default function Navigation({
 	}, []);
 
 	const handleTotalReads = useCallback(() => {
-		return api.getTotalReads().then((response) => {
-			return numberFormat(
-				languageTag,
-				response.analyticsReportsTotalReads
-			);
-		});
-	}, [api, languageTag]);
+		return api
+			.getTotalReads()
+			.then((response) => response.analyticsReportsTotalReads);
+	}, [api]);
 
 	const handleTotalViews = useCallback(() => {
-		return api.getTotalViews().then((response) => {
-			return numberFormat(
-				languageTag,
-				response.analyticsReportsTotalViews
-			);
-		});
-	}, [api, languageTag]);
+		return api
+			.getTotalViews()
+			.then((response) => response.analyticsReportsTotalViews);
+	}, [api]);
 
 	const handleTrafficShare = useCallback(() => {
 		const trafficSource = trafficSources.find((trafficSource) => {
@@ -97,11 +92,7 @@ export default function Navigation({
 		return Promise.resolve(trafficSource?.value ?? '-');
 	}, [trafficSourceName, trafficSources]);
 
-	const [{publishedToday, readsEnabled}] = useContext(StoreContext);
-
-	const chartDataProviders = readsEnabled
-		? [getHistoricalViews, getHistoricalReads]
-		: [getHistoricalViews];
+	const [{publishedToday}] = useContext(StoreContext);
 
 	return (
 		<>
@@ -135,10 +126,15 @@ export default function Navigation({
 				)}
 
 			{currentPage.view === 'main' && (
-				<div className="p-3">
+				<div>
 					<Main
 						authorName={authorName}
-						chartDataProviders={chartDataProviders}
+						authorPortraitURL={authorPortraitURL}
+						authorUserId={authorUserId}
+						chartDataProviders={[
+							getHistoricalViews,
+							getHistoricalReads,
+						]}
 						defaultTimeRange={defaultTimeRange}
 						defaultTimeSpanOption={defaultTimeSpanKey}
 						languageTag={languageTag}
@@ -153,16 +149,17 @@ export default function Navigation({
 				</div>
 			)}
 
-			{currentPage.view === 'traffic-source-detail' && (
-				<Detail
-					currentPage={currentPage}
-					languageTag={languageTag}
-					onCurrentPageChange={handleCurrentPage}
-					onTrafficSourceNameChange={handleTrafficSourceName}
-					trafficShareDataProvider={handleTrafficShare}
-					trafficVolumeDataProvider={handleTrafficVolume}
-				/>
-			)}
+			{currentPage.view === 'traffic-source-detail' &&
+				currentPage.data.countryKeywords.length > 0 && (
+					<Detail
+						currentPage={currentPage}
+						languageTag={languageTag}
+						onCurrentPageChange={handleCurrentPage}
+						onTrafficSourceNameChange={handleTrafficSourceName}
+						trafficShareDataProvider={handleTrafficShare}
+						trafficVolumeDataProvider={handleTrafficVolume}
+					/>
+				)}
 		</>
 	);
 }
@@ -170,6 +167,8 @@ export default function Navigation({
 Navigation.proptypes = {
 	api: PropTypes.object.isRequired,
 	authorName: PropTypes.string.isRequired,
+	authorPortraitURL: PropTypes.string.isRequired,
+	authorUserId: PropTypes.string.isRequired,
 	defaultTimeRange: PropTypes.objectOf(
 		PropTypes.shape({
 			endDate: PropTypes.string.isRequired,

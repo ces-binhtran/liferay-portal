@@ -1983,7 +1983,7 @@ public class JournalArticleFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(ddmStructureKeys.length * 3 + 1);
+		StringBundler sb = new StringBundler((ddmStructureKeys.length * 3) + 1);
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
@@ -2005,7 +2005,7 @@ public class JournalArticleFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(folderIds.size() * 3 + 1);
+		StringBundler sb = new StringBundler((folderIds.size() * 3) + 1);
 
 		sb.append(StringPool.OPEN_PARENTHESIS);
 
@@ -2068,8 +2068,8 @@ public class JournalArticleFinderImpl
 			return true;
 		}
 
-		for (Object obj : array) {
-			if (Validator.isNotNull(obj)) {
+		for (Object object : array) {
+			if (Validator.isNotNull(object)) {
 				return false;
 			}
 		}
@@ -2154,7 +2154,7 @@ public class JournalArticleFinderImpl
 	}
 
 	private static boolean _isOrderByTitle(
-		OrderByComparator orderByComparator) {
+		OrderByComparator<JournalArticle> orderByComparator) {
 
 		if ((orderByComparator != null) &&
 			(StringUtil.containsIgnoreCase(

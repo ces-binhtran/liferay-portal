@@ -116,8 +116,8 @@ export default ({data, height, totalEntries, width}) => {
 					<Tooltip
 						content={
 							<TooltipContent
-								activeIndex={activeIndex}
-								showBullet={false}
+								showBullet={true}
+								showHeader={false}
 								totalEntries={totalEntries}
 							/>
 						}

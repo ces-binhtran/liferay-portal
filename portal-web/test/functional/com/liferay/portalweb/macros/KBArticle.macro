@@ -141,6 +141,18 @@ definition {
 			CKEditor.addContent(content = "${kbArticleContent}");
 		}
 
+		if (isSet(embedVideo)) {
+			WaitForLiferayEvent.initializeLiferayEventLog();
+
+			Click.pauseClickAt(locator1 = "CKEditor#CONTENT_VIDEO_IMAGE");
+
+			Type(
+				locator1 = "CKEditor#VIDEO_URL",
+				value1 = "${embedVideo}");
+
+			Click(locator1 = "CKEditor#VIDEO_OK");
+		}
+
 		if (isSet(kbArticleAttachment)) {
 			KBArticle.selectAttachmentCP(kbArticleAttachment = "${kbArticleAttachment}");
 		}
@@ -678,7 +690,7 @@ definition {
 			locator1 = "Button#PUBLISH_LOCALIZED",
 			value1 = "Publicar");
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
 	macro enableSocialBookmarkSites {
@@ -779,7 +791,7 @@ definition {
 			locator1 = "KnowledgeBase#HIERARCHY_NAVIGATION_PARENT",
 			value1 = "${kbArticleTitle}");
 
-		Pause(locator1 = "5000");
+		Pause(locator1 = "3000");
 	}
 
 	macro importCP {
@@ -985,7 +997,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Knowledge Base");
 
 		if (IsElementPresent(locator1 = "KnowledgeBase#ARTICLE_DESCRIPTIVE_ARTICLE_TITLE_GENERIC")) {
@@ -1145,6 +1156,20 @@ definition {
 		AssertTextEquals(
 			locator1 = "KnowledgeBaseArticle#CONTENT",
 			value1 = "${kbArticleContent}");
+
+		if (isSet(embedVideo)) {
+			Pause(locator1 = "5000");
+
+			AssertElementPresent(
+				key_service = "youtube",
+				locator1 = "BlogsEntry#CONTENT_VIDEO");
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#EMBEDDED_VIDEO_IFRAME");
+
+			AssertElementPresent(
+				key_service = "youtube",
+				locator1 = "CKEditor#VIDEO_BUTTON_PLAY");
+		}
 
 		if (isSet(kbChildArticleTitle)) {
 			AssertTextEquals(

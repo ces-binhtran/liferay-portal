@@ -16,16 +16,18 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.asset.info.display.contributor.util.ContentAccessor;
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
+import com.liferay.fragment.entry.processor.helper.FragmentEntryProcessorHelper;
 import com.liferay.info.field.InfoField;
 import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.InfoFormValues;
-import com.liferay.info.item.InfoItemClassPKReference;
-import com.liferay.info.item.provider.InfoItemFormProvider;
-import com.liferay.info.item.provider.InfoItemFormProviderTracker;
+import com.liferay.info.item.InfoItemFieldValues;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemFieldValuesProvider;
 import com.liferay.info.list.renderer.DefaultInfoListRendererContext;
 import com.liferay.info.list.renderer.InfoListRenderer;
 import com.liferay.info.list.renderer.InfoListRendererTracker;
 import com.liferay.info.pagination.Pagination;
+import com.liferay.info.type.WebImage;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
 import com.liferay.layout.list.retriever.DefaultLayoutListRetrieverContext;
 import com.liferay.layout.list.retriever.LayoutListRetriever;
@@ -134,11 +136,12 @@ public class GetCollectionFieldMVCResourceCommand
 
 		String type = layoutObjectReferenceJSONObject.getString("type");
 
-		LayoutListRetriever layoutListRetriever =
-			_layoutListRetrieverTracker.getLayoutListRetriever(type);
+		LayoutListRetriever<?, ListObjectReference> layoutListRetriever =
+			(LayoutListRetriever<?, ListObjectReference>)
+				_layoutListRetrieverTracker.getLayoutListRetriever(type);
 
 		if (layoutListRetriever != null) {
-			ListObjectReferenceFactory listObjectReferenceFactory =
+			ListObjectReferenceFactory<?> listObjectReferenceFactory =
 				_listObjectReferenceFactoryTracker.getListObjectReference(type);
 
 			if (listObjectReferenceFactory != null) {
@@ -166,12 +169,13 @@ public class GetCollectionFieldMVCResourceCommand
 					itemType = FileEntry.class.getName();
 				}
 
-				InfoItemFormProvider<Object> infoItemFormProvider =
-					(InfoItemFormProvider<Object>)
-						_infoItemFormProviderTracker.getInfoItemFormProvider(
-							itemType);
+				InfoItemFieldValuesProvider<Object>
+					infoItemFieldValuesProvider =
+						(InfoItemFieldValuesProvider<Object>)
+							_infoItemServiceTracker.getFirstInfoItemService(
+								InfoItemFieldValuesProvider.class, itemType);
 
-				if (infoItemFormProvider == null) {
+				if (infoItemFieldValuesProvider == null) {
 					if (_log.isWarnEnabled()) {
 						_log.warn(
 							"Unable to get info item form provdier for class " +
@@ -189,11 +193,12 @@ public class GetCollectionFieldMVCResourceCommand
 				for (Object object : list) {
 					jsonArray.put(
 						_getDisplayObjectJSONObject(
-							infoItemFormProvider, object, locale));
+							infoItemFieldValuesProvider, object, locale));
 				}
 
-				InfoListRenderer infoListRenderer =
-					_infoListRendererTracker.getInfoListRenderer(listStyle);
+				InfoListRenderer<Object> infoListRenderer =
+					(InfoListRenderer<Object>)
+						_infoListRendererTracker.getInfoListRenderer(listStyle);
 
 				if (infoListRenderer != null) {
 					UnsyncStringWriter unsyncStringWriter =
@@ -232,16 +237,16 @@ public class GetCollectionFieldMVCResourceCommand
 	}
 
 	private JSONObject _getDisplayObjectJSONObject(
-		InfoItemFormProvider<Object> infoItemFormProvider, Object object,
-		Locale locale) {
+		InfoItemFieldValuesProvider<Object> infoItemFieldValuesProvider,
+		Object object, Locale locale) {
 
 		JSONObject displayObjectJSONObject = JSONFactoryUtil.createJSONObject();
 
-		InfoFormValues infoFormValues = infoItemFormProvider.getInfoFormValues(
-			object);
+		InfoItemFieldValues infoItemFieldValues =
+			infoItemFieldValuesProvider.getInfoItemFieldValues(object);
 
 		for (InfoFieldValue<Object> infoFieldValue :
-				infoFormValues.getInfoFieldValues()) {
+				infoItemFieldValues.getInfoFieldValues()) {
 
 			Object value = infoFieldValue.getValue(locale);
 
@@ -251,19 +256,29 @@ public class GetCollectionFieldMVCResourceCommand
 				value = contentAccessor.getContent();
 			}
 
+			if (value instanceof WebImage) {
+				WebImage webImage = (WebImage)value;
+
+				value = webImage.toJSONObject();
+			}
+			else {
+				value = _fragmentEntryProcessorHelper.formatMappedValue(
+					value, locale);
+			}
+
 			InfoField infoField = infoFieldValue.getInfoField();
 
 			displayObjectJSONObject.put(infoField.getName(), value);
 		}
 
-		InfoItemClassPKReference infoItemClassPKReference =
-			infoFormValues.getInfoItemClassPKReference();
+		InfoItemReference infoItemReference =
+			infoItemFieldValues.getInfoItemReference();
 
-		if (infoItemClassPKReference != null) {
+		if (infoItemReference != null) {
 			displayObjectJSONObject.put(
-				"className", infoItemClassPKReference.getClassName()
+				"className", infoItemReference.getClassName()
 			).put(
-				"classPK", infoItemClassPKReference.getClassPK()
+				"classPK", infoItemReference.getClassPK()
 			);
 		}
 
@@ -274,7 +289,10 @@ public class GetCollectionFieldMVCResourceCommand
 		GetCollectionFieldMVCResourceCommand.class);
 
 	@Reference
-	private InfoItemFormProviderTracker _infoItemFormProviderTracker;
+	private FragmentEntryProcessorHelper _fragmentEntryProcessorHelper;
+
+	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
 	private InfoListRendererTracker _infoListRendererTracker;

@@ -14,6 +14,19 @@
 
 import React from 'react';
 
-export default function () {
-	return <></>;
+import AuditBarChart from './components/AuditBarChart';
+import EmptyAuditBarChart from './components/EmptyAuditBarChart';
+
+export default function ({context, props}) {
+	const {languageDirection} = context;
+	const {learnHowURL, vocabularies} = props;
+
+	return vocabularies.length ? (
+		<AuditBarChart
+			rtl={languageDirection === 'rtl'}
+			vocabularies={vocabularies}
+		/>
+	) : (
+		<EmptyAuditBarChart learnHowURL={learnHowURL} />
+	);
 }

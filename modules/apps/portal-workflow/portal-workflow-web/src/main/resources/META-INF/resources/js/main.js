@@ -16,8 +16,6 @@ AUI.add(
 	'liferay-workflow-web',
 	(A) => {
 		var WorkflowWeb = {
-			_alert: null,
-
 			_doToggleDefinitionLinkEditionMode(namespace) {
 				var instance = this;
 
@@ -165,13 +163,11 @@ AUI.add(
 				for (var index in elementsList) {
 					var element = elementsList[parseInt(index, 10)];
 
-					var hidden = element.getAttribute('hidden');
-
-					if (hidden) {
-						element.removeAttribute('hidden');
+					if (element.classList.contains('d-none')) {
+						element.classList.remove('d-none');
 					}
 					else {
-						element.setAttribute('hidden', true);
+						element.classList.add('d-none');
 					}
 				}
 			},
@@ -391,38 +387,16 @@ AUI.add(
 			},
 
 			showActionUndoneSuccessMessage() {
-				var instance = this;
-
 				var successMessage = Liferay.Language.get('action-undone');
 
-				var alert = instance._alert;
-
-				if (alert) {
-					alert.destroy();
-				}
-
-				alert = new Liferay.Alert({
-					closeable: true,
-					delay: {
-						hide: 5000,
-						show: 0,
-					},
+				Liferay.Util.openToast({
+					container: document.querySelector('.portlet-column'),
 					message: successMessage,
 					type: 'success',
 				});
-
-				if (!alert.get('rendered')) {
-					alert.render('.portlet-column');
-				}
-
-				alert.show();
-
-				instance._alert = alert;
 			},
 
 			showDefinitionImportSuccessMessage(namespace) {
-				var instance = this;
-
 				var undo = Liferay.Language.get('undo');
 
 				var undoEvent = "'" + namespace + "undoDefinition'";
@@ -440,29 +414,10 @@ AUI.add(
 
 				successMessage += undoLink;
 
-				var alert = instance._alert;
-
-				if (alert) {
-					alert.destroy();
-				}
-
-				alert = new Liferay.Alert({
-					closeable: true,
-					delay: {
-						hide: 10000,
-						show: 0,
-					},
+				Liferay.Util.openToast({
+					container: document.querySelector('.lfr-alert-container'),
 					message: successMessage,
-					type: 'success',
 				});
-
-				if (!alert.get('rendered')) {
-					alert.render('.portlet-column');
-				}
-
-				alert.show();
-
-				instance._alert = alert;
 			},
 
 			toggleDefinitionLinkEditionMode(event, namespace) {
@@ -526,6 +481,6 @@ AUI.add(
 	},
 	'',
 	{
-		requires: ['liferay-alert', 'liferay-util-window'],
+		requires: ['liferay-util-window'],
 	}
 );

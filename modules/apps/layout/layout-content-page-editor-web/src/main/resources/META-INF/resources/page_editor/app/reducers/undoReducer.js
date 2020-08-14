@@ -12,6 +12,7 @@
  * details.
  */
 
+import {DELETE_SEGMENTS_EXPERIENCE} from '../../plugins/experience/actions';
 import {
 	ADD_REDO_ACTION,
 	ADD_UNDO_ACTION,
@@ -20,7 +21,7 @@ import {
 } from '../actions/types';
 import {getDerivedStateForUndo} from '../components/undo/undoActions';
 
-const MAX_UNDO_ACTIONS = 20;
+const MAX_UNDO_ACTIONS = 100;
 
 let actionId = 0;
 
@@ -71,10 +72,35 @@ export default function undoReducer(state, action) {
 				],
 			};
 		}
+		case DELETE_SEGMENTS_EXPERIENCE: {
+			const {segmentsExperienceId} = action.payload;
+
+			const nextUndoHistory = state.undoHistory || [];
+			const nextRedoHistory = state.redoHistory || [];
+
+			return {
+				...state,
+				redoHistory: nextRedoHistory.filter(
+					(action) =>
+						action.segmentsExperienceId !== segmentsExperienceId &&
+						action.nextSegmentsExperienceId !== segmentsExperienceId
+				),
+				undoHistory: nextUndoHistory.filter(
+					(action) =>
+						action.segmentsExperienceId !== segmentsExperienceId &&
+						action.nextSegmentsExperienceId !== segmentsExperienceId
+				),
+			};
+		}
 		case UPDATE_REDO_ACTIONS: {
 			return {
 				...state,
 				redoHistory: action.redoHistory,
+			};
+		}
+		case 'UPDATE_STORE': {
+			return {
+				...action.store,
 			};
 		}
 		case UPDATE_UNDO_ACTIONS: {

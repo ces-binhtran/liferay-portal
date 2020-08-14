@@ -12,17 +12,20 @@
  * details.
  */
 
-import {DataLayoutBuilderActions, DataLayoutVisitor} from 'data-engine-taglib';
+import {
+	DataLayoutBuilderActions,
+	DataLayoutVisitor,
+	TranslationManager,
+	saveDataDefinition,
+} from 'data-engine-taglib';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import {AppContext} from '../../AppContext.es';
-import TranslationManager from '../../components/translation-manager/TranslationManager.es';
 import UpperToolbar from '../../components/upper-toolbar/UpperToolbar.es';
 import {errorToast, successToast} from '../../utils/toast.es';
 import FormViewContext from './FormViewContext.es';
-import saveFormView from './saveFormView.es';
 
-export default ({newCustomObject}) => {
+export default ({newCustomObject, showTranslationManager}) => {
 	const [defaultLanguageId, setDefaultLanguageId] = useState('');
 	const [editingLanguageId, setEditingLanguageId] = useState('');
 
@@ -84,7 +87,7 @@ export default ({newCustomObject}) => {
 	const onError = (error) => {
 		const {title = ''} = error;
 
-		errorToast(`${title}.`);
+		errorToast(title);
 	};
 
 	const onSuccess = () => {
@@ -101,7 +104,7 @@ export default ({newCustomObject}) => {
 				dataLayout.name[editingLanguageId];
 		}
 
-		saveFormView(state)
+		saveDataDefinition(state)
 			.then(onSuccess)
 			.catch((error) => {
 				onError(error);
@@ -114,20 +117,22 @@ export default ({newCustomObject}) => {
 
 	return (
 		<UpperToolbar>
-			<UpperToolbar.Group>
-				<TranslationManager
-					defaultLanguageId={defaultLanguageId}
-					editingLanguageId={editingLanguageId}
-					onEditingLanguageIdChange={onEditingLanguageIdChange}
-					translatedLanguageIds={dataLayout.name}
-				/>
-			</UpperToolbar.Group>
+			{showTranslationManager && (
+				<UpperToolbar.Group>
+					<TranslationManager
+						defaultLanguageId={defaultLanguageId}
+						editingLanguageId={editingLanguageId}
+						onEditingLanguageIdChange={onEditingLanguageIdChange}
+						translatedLanguageIds={dataLayout.name}
+					/>
+				</UpperToolbar.Group>
+			)}
 
 			<UpperToolbar.Input
 				onInput={onDataLayoutNameChange}
 				onKeyDown={onKeyDown}
 				placeholder={Liferay.Language.get('untitled-form-view')}
-				value={dataLayout.name[editingLanguageId]}
+				value={dataLayout.name[editingLanguageId] || ''}
 			/>
 
 			<UpperToolbar.Group>
@@ -137,7 +142,7 @@ export default ({newCustomObject}) => {
 
 				<UpperToolbar.Button
 					disabled={
-						!dataLayout.name[defaultLanguageId] ||
+						!dataLayout.name[editingLanguageId] ||
 						DataLayoutVisitor.isDataLayoutEmpty(
 							dataLayout.dataLayoutPages
 						)

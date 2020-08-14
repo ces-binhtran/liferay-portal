@@ -27,7 +27,8 @@ import org.dom4j.Element;
 /**
  * @author Peter Yoo
  */
-public class PullRequestPortalTopLevelBuild extends PortalTopLevelBuild {
+public class PullRequestPortalTopLevelBuild
+	extends PortalTopLevelBuild implements PullRequestBuild {
 
 	public PullRequestPortalTopLevelBuild(
 		String url, TopLevelBuild topLevelBuild) {
@@ -46,6 +47,28 @@ public class PullRequestPortalTopLevelBuild extends PortalTopLevelBuild {
 
 			exception.printStackTrace();
 		}
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("https://github.com/");
+		sb.append(getParameterValue("GITHUB_RECEIVER_USERNAME"));
+		sb.append("/liferay-portal");
+
+		String branchName = getBranchName();
+
+		if (!branchName.equals("master")) {
+			sb.append("-ee");
+		}
+
+		sb.append("/pull/");
+		sb.append(getParameterValue("GITHUB_PULL_REQUEST_NUMBER"));
+
+		_pullRequest = new PullRequest(sb.toString());
+	}
+
+	@Override
+	public PullRequest getPullRequest() {
+		return _pullRequest;
 	}
 
 	@Override
@@ -87,14 +110,29 @@ public class PullRequestPortalTopLevelBuild extends PortalTopLevelBuild {
 		String batchWhitelist = buildProperties.getProperty(
 			"pull.request.forward.upstream.failure.comparison.batch.whitelist");
 
-		List<String> whitelistedBatchNames = Arrays.asList(
+		List<String> whitelistedBatchRegexes = Arrays.asList(
 			batchWhitelist.split("\\s*,\\s*"));
 
 		for (Build downstreamBuild : downstreamBuildFailures) {
-			if (downstreamBuild.isUniqueFailure() ||
-				!whitelistedBatchNames.contains(
-					downstreamBuild.getJobVariant())) {
+			if (downstreamBuild.isUniqueFailure()) {
+				return result;
+			}
 
+			boolean approved = false;
+
+			String jobVariant = downstreamBuild.getJobVariant();
+
+			jobVariant = jobVariant.replaceAll("(.*)/.*", "$1");
+
+			for (String whiteListedBatchRegex : whitelistedBatchRegexes) {
+				if (jobVariant.matches(".*" + whiteListedBatchRegex + ".*")) {
+					approved = true;
+
+					break;
+				}
+			}
+
+			if (!approved) {
 				return result;
 			}
 		}
@@ -319,6 +357,7 @@ public class PullRequestPortalTopLevelBuild extends PortalTopLevelBuild {
 		return rootElement;
 	}
 
+	private final PullRequest _pullRequest;
 	private Job _stableJob;
 	private String _stableJobResult;
 

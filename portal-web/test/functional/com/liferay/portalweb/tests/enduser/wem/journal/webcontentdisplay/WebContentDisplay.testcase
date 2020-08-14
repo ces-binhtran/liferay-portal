@@ -14,6 +14,8 @@ definition {
 
 		JSONGroup.addGroup(groupName = "Test Site Name");
 
+		JSONGroup.addGroup(groupName = "Site Name");
+
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
 			layoutName = "Web Content Display Page");
@@ -33,6 +35,8 @@ definition {
 		}
 		else {
 			JSONGroup.deleteGroupByName(groupName = "Test Site Name");
+
+			JSONGroup.deleteGroupByName(groupName = "Site Name");
 		}
 	}
 
@@ -119,6 +123,7 @@ definition {
 
 	@priority = "5"
 	test AddExistingPageAsDisplayPageInSiteCP {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training,Web Content Administration";
 
 		JSONLayout.addPublicLayout(
@@ -163,6 +168,7 @@ definition {
 
 	@priority = "5"
 	test AddImageToWebContentViaItemSelector {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training,Web Content Administration";
 
 		JSONLayout.addPublicLayout(
@@ -221,13 +227,17 @@ definition {
 			webContentContent = "WC WebContent Content",
 			webContentTitle = "WC WebContent Title");
 
-		WebContent.publishViaWCD();
+		PortletEntry.publish();
 
-		Navigator.gotoSitePage(
-			pageName = "Web Content Page",
-			siteName = "Test Site Name");
+		Click.clickAt(locator1 = "ControlMenu#ADD");
 
-		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Content");
+		AssertElementPresent(locator1 = "ControlMenuAddPanel#SIDEBAR_HEADER");
+
+		Navigator.gotoNavTab(navTab = "Content");
+
+		AssertVisible(
+			key_entryTitle = "WC WebContent Title",
+			locator1 = "ControlMenuAddPanel#ASSET_ENTRY");
 	}
 
 	@priority = "4"
@@ -382,6 +392,7 @@ definition {
 
 	@priority = "5"
 	test AddWebContentViaAddContentPanel {
+		property portal.acceptance = "true";
 		property testray.component.names = "Web Content Display,Training";
 
 		JSONWebcontent.addWebContent(
@@ -533,7 +544,7 @@ definition {
 		property test.name.skip.portal.instance = "WebContentDisplay#ChangeTemplate";
 		property testray.component.names = "Web Content Display";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "Search");
@@ -573,6 +584,31 @@ definition {
 			siteName = "Test Site Name");
 
 		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Content");
+	}
+
+	@description = "This is a use case for LPS-118702. Display web content article from other site."
+	@priority = "5"
+	test DisplayWebContentFromOtherSite {
+		task ("Add a web content article in Site Name") {
+			JSONWebcontent.addWebContent(
+				content = "Web Content Content",
+				groupName = "Site Name",
+				title = "Web Content Title");
+		}
+
+		task ("Select the web content article in Web Content Display in Test Site Name") {
+			Navigator.gotoSitePage(
+				pageName = "Web Content Display Page",
+				siteName = "Test Site Name");
+
+			WebContentDisplayPortlet.selectOtherSiteWebContent(
+				otherSiteName = "Site Name",
+				webContentTitle = "Web Content Title");
+		}
+
+		task ("Assert the web content article is shown in Web Content Display") {
+			WebContent.viewPGViaWCD(webContentContent = "Web Content Content");
+		}
 	}
 
 	@priority = "4"
@@ -749,6 +785,7 @@ definition {
 	@description = "This is a use case for LPS-71941."
 	@priority = "5"
 	test UndeployWebContentDisplayModuleViaGogoShell {
+		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "WebContentDisplay#UndeployWebContentDisplayModuleViaGogoShell";
 
 		GogoShell.openGogoShellAdmin();
@@ -806,7 +843,7 @@ definition {
 
 		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Content");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");
@@ -1137,7 +1174,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		WebContent.moveToRecycleBinCP(
@@ -1160,7 +1196,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		WebContent.deleteCP(

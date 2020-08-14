@@ -25,7 +25,6 @@ definition {
 
 			ProductMenu.gotoPortlet(
 				category = "Content &amp; Data",
-				panel = "Site Administration",
 				portlet = "Forms");
 
 			FormsAdmin.teardownForms();
@@ -48,7 +47,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		Navigator.gotoNavItem(navItem = "Data Providers");
@@ -75,7 +73,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoAddForm();
@@ -85,6 +82,8 @@ definition {
 		Form.editDescription();
 
 		Form.addTextField(fieldPositionNumber = "1");
+
+		var fieldNameTextFieldAuto = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Text Field With Autocomplete");
 
@@ -104,14 +103,13 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		LexiconEntry.gotoEntryMenuItem(
 			menuItem = "Edit",
 			rowEntry = "Created Form Name");
 
-		FormsAdminNavigator.gotoEditField(fieldName = "Text Field With Autocomplete");
+		FormsAdminNavigator.gotoEditField(fieldName = "${fieldNameTextFieldAuto}");
 
 		Form.gotoAutocompleteTab();
 
@@ -125,7 +123,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(pageName = "Form Page");
@@ -144,19 +141,20 @@ definition {
 
 		Navigator.gotoPage(pageName = "Form Page");
 
+		FormPortlet.waitFormRenderer(text = "Submit");
+
 		FormFields.editTextWithDataProvider(
-			fieldName = "TextFieldWithAutocomplete",
+			fieldName = "${fieldNameTextFieldAuto}",
 			fieldValue = "Bra");
 
 		FormFields.selectAutoCompleteOption(autocompleteOption = "Brazil");
 
-		FormPortlet.submit();
+		FormPortlet.submitSuccessfully();
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoViewEntries();
@@ -169,12 +167,11 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoEditFormByName();
 
-		FormsAdminNavigator.gotoEditField(fieldName = "Text Field With Autocomplete");
+		FormsAdminNavigator.gotoEditField(fieldName = "${fieldNameTextFieldAuto}");
 
 		Form.gotoAutocompleteTab();
 
@@ -196,8 +193,10 @@ definition {
 
 		Navigator.gotoPage(pageName = "Form Page");
 
+		FormPortlet.waitFormRenderer(text = "Submit");
+
 		FormFields.editText(
-			fieldName = "TextFieldWithAutocomplete",
+			fieldName = "${fieldNameTextFieldAuto}",
 			fieldValue = "Br");
 
 		AssertElementNotPresent(
@@ -215,7 +214,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		Navigator.gotoNavItem(navItem = "Data Providers");
@@ -238,7 +236,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoAddForm();
@@ -250,6 +247,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "1",
 			fieldType = "Select from List");
+
+		var fieldNameDataProvider = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Data Provider Select Field");
 
@@ -263,7 +262,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
 		SitePages.addPublicPage(pageName = "Form Page");
@@ -282,16 +280,14 @@ definition {
 
 		Navigator.gotoPage(pageName = "Form Page");
 
-		Pause(locator1 = "1500");
+		FormPortlet.waitFormRenderer(text = "Submit");
 
 		FormFields.viewSelectLabel(
 			fieldLabel = "Data Provider Select Field",
-			fieldName = "DataProviderSelectField");
-
-		Pause(locator1 = "1000");
+			fieldName = "${fieldNameDataProvider}");
 
 		FormFields.selectSelectOption(
-			fieldName = "Select Field",
+			fieldName = "${fieldNameDataProvider}",
 			selectOption = "United States");
 
 		FormPortlet.submitSuccessfully();
@@ -300,7 +296,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoViewEntries();
@@ -321,7 +316,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		Navigator.gotoNavItem(navItem = "Data Providers");
@@ -346,7 +340,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Forms");
 
 		FormsAdminNavigator.gotoAddForm();
@@ -358,6 +351,8 @@ definition {
 		Form.gotoAddField(
 			fieldPositionNumber = "1",
 			fieldType = "Select from List");
+
+		var fieldNameCountries = FormFields.getFieldName();
 
 		Form.editFieldLabelMetal(fieldValue = "Countries");
 
@@ -371,6 +366,12 @@ definition {
 
 		Form.save();
 
+		ProductMenu.gotoPortlet(
+			category = "Content &amp; Data",
+			portlet = "Forms");
+
+		FormsAdminNavigator.gotoEditFormByName();
+
 		Form.publishForm();
 
 		FormsAdminNavigator.gotoPublishCopyURLLink();
@@ -382,7 +383,7 @@ definition {
 		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
 
 		FormFields.viewSelectOptionsList(
-			fieldName = "Countries",
+			fieldName = "${fieldNameCountries}",
 			selectOption = "Afghanistan");
 
 		User.logoutPG();
@@ -390,7 +391,7 @@ definition {
 		Navigator.openSpecificURL(url = "${publishedFormPublicURL}");
 
 		FormFields.viewSelectOptionsList(
-			fieldName = "Countries",
+			fieldName = "${fieldNameCountries}",
 			selectOption = "Afghanistan");
 
 		User.loginUserPG();

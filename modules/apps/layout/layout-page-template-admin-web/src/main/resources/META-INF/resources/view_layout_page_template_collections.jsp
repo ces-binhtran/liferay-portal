@@ -47,10 +47,10 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 						<c:choose>
 							<c:when test="<%= ListUtil.isNotEmpty(layoutPageTemplateCollections) %>">
 								<clay:content-row
-									verticaAlign="center"
+									verticalAlign="center"
 								>
 									<clay:content-col
-										expand="true"
+										expand="<%= true %>"
 									>
 										<strong class="text-uppercase">
 											<liferay-ui:message key="collections" />
@@ -58,24 +58,43 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 									</clay:content-col>
 
 									<clay:content-col
-										verticaAlign="end"
+										verticalAlign="end"
 									>
 										<ul class="navbar-nav">
 											<c:if test="<%= layoutPageTemplateDisplayContext.isShowAddButton(LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_COLLECTION) %>">
 												<li>
-													<liferay-ui:icon
+													<clay:link
+														borderless="<%= true %>"
+														href="<%= editLayoutPageTemplateCollectionURL.toString() %>"
 														icon="plus"
-														iconCssClass="btn btn-monospaced btn-outline-borderless btn-outline-secondary"
-														markupView="lexicon"
-														url="<%= editLayoutPageTemplateCollectionURL %>"
+														type="button"
 													/>
 												</li>
 											</c:if>
 
 											<li>
+												<portlet:renderURL var="viewLayoutPageTemplateCollectionURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+													<portlet:param name="mvcRenderCommandName" value="/layout_page_template/select_layout_page_template_collections" />
+												</portlet:renderURL>
+
+												<portlet:renderURL var="redirectURL">
+													<portlet:param name="tabs1" value="page-templates" />
+												</portlet:renderURL>
+
+												<liferay-portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/layout_page_template/delete_layout_page_template_collection" var="deleteLayoutPageTemplateCollectionURL">
+													<portlet:param name="redirect" value="<%= redirectURL %>" />
+												</liferay-portlet:actionURL>
+
 												<clay:dropdown-actions
-													componentId="actionsComponent"
+													additionalProps='<%=
+														HashMapBuilder.<String, Object>put(
+															"deleteLayoutPageTemplateCollectionURL", deleteLayoutPageTemplateCollectionURL.toString()
+														).put(
+															"viewLayoutPageTemplateCollectionURL", viewLayoutPageTemplateCollectionURL.toString()
+														).build()
+													%>'
 													dropdownItems="<%= layoutPageTemplateDisplayContext.getCollectionsDropdownItems() %>"
+													propsTransformer="js/ActionsComponentPropsTransformer"
 												/>
 											</li>
 										</ul>
@@ -97,7 +116,7 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 											layoutPageTemplateCollectionURL.setParameter("tabs1", "page-templates");
 											%>
 
-											<a class='nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= layoutPageTemplateCollectionURL.toString() %>">
+											<a class="nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= layoutPageTemplateCollectionURL.toString() %>">
 												<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
 											</a>
 										</li>
@@ -138,10 +157,10 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 				<clay:sheet>
 					<h2 class="sheet-title">
 						<clay:content-row
-							verticaAlign="center"
+							verticalAlign="center"
 						>
 							<clay:content-col
-								expand="true"
+								expand="<%= true %>"
 							>
 								<span class="text-uppercase">
 									<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
@@ -150,7 +169,7 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 
 							<clay:content-col
 								cssClass="inline-item-after"
-								verticaAlign="end"
+								verticalAlign="end"
 							>
 								<liferay-util:include page="/layout_page_template_collection_action.jsp" servletContext="<%= application %>" />
 							</clay:content-col>
@@ -165,78 +184,3 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 		</clay:col>
 	</clay:row>
 </clay:container-fluid>
-
-<aui:form cssClass="hide" name="layoutPageTemplateCollectionsFm">
-</aui:form>
-
-<aui:script require="metal-dom/src/dom as dom, frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
-	var deleteCollections = function () {
-		var layoutPageTemplateCollectionsFm =
-			document.<portlet:namespace />layoutPageTemplateCollectionsFm;
-
-		if (layoutPageTemplateCollectionsFm) {
-			var itemSelectorDialog = new ItemSelectorDialog.default({
-				buttonAddLabel: '<liferay-ui:message key="delete" />',
-				eventName: '<portlet:namespace />selectCollections',
-				title: '<liferay-ui:message key="delete-collection" />',
-				url:
-					'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/layout_page_template/select_layout_page_template_collections" /></portlet:renderURL>',
-			});
-
-			itemSelectorDialog.on('selectedItemChange', function (event) {
-				var selectedItems = event.selectedItem;
-
-				if (selectedItems) {
-					if (
-						confirm(
-							'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />'
-						)
-					) {
-						Array.prototype.forEach.call(selectedItems, function (
-							item,
-							index
-						) {
-							dom.append(layoutPageTemplateCollectionsFm, item);
-						});
-
-						<portlet:renderURL var="redirectURL">
-							<portlet:param name="tabs1" value="page-templates" />
-						</portlet:renderURL>
-
-						<liferay-portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/layout_page_template/delete_layout_page_template_collection" var="deleteLayoutPageTemplateCollectionURL">
-							<portlet:param name="redirect" value="<%= redirectURL %>" />
-						</liferay-portlet:actionURL>
-
-						submitForm(
-							layoutPageTemplateCollectionsFm,
-							'<%= deleteLayoutPageTemplateCollectionURL %>'
-						);
-					}
-				}
-			});
-
-			itemSelectorDialog.open();
-		}
-	};
-
-	var ACTIONS = {
-		deleteCollections: deleteCollections,
-	};
-
-	Liferay.componentReady('actionsComponent').then(function (actionsComponent) {
-		actionsComponent.on(['click', 'itemClicked'], function (event, facade) {
-			var itemData;
-
-			if (event.data && event.data.item) {
-				itemData = event.data.item.data;
-			}
-			else if (!event.data && facade && facade.target) {
-				itemData = facade.target.data;
-			}
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>

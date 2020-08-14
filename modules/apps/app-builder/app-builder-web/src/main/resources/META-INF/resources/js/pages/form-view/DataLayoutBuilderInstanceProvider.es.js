@@ -15,7 +15,6 @@
 import {DataLayoutBuilderActions} from 'data-engine-taglib';
 import React, {useContext, useEffect} from 'react';
 
-import generateDataDefinitionFieldName from '../../utils/generateDataDefinitionFieldName.es';
 import DataLayoutBuilderContext from './DataLayoutBuilderInstanceContext.es';
 import FormViewContext from './FormViewContext.es';
 import useDeleteDefinitionField from './useDeleteDefinitionField.es';
@@ -24,7 +23,10 @@ import useSaveAsFieldset from './useSaveAsFieldset.es';
 
 export default ({children, dataLayoutBuilder}) => {
 	const [
-		{dataDefinition, editingLanguageId, focusedField},
+		{
+			config: {allowNestedFields},
+			editingLanguageId,
+		},
 		dispatch,
 	] = useContext(FormViewContext);
 	const deleteDefinitionField = useDeleteDefinitionField({dataLayoutBuilder});
@@ -35,25 +37,10 @@ export default ({children, dataLayoutBuilder}) => {
 	const saveAsFieldset = useSaveAsFieldset({dataLayoutBuilder});
 
 	useEffect(() => {
-		const provider = dataLayoutBuilder.getLayoutProvider();
-
-		provider.props = {
-			...provider.props,
-			availableLanguageIds: [
-				...new Set([
-					...provider.props.availableLanguageIds,
-					editingLanguageId,
-				]),
-			],
+		dataLayoutBuilder.onEditingLanguageIdChange({
 			editingLanguageId,
-		};
-
-		if (Object.keys(focusedField).length) {
-			provider.getEvents().fieldClicked(focusedField);
-		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [dataLayoutBuilder, dispatch, editingLanguageId]);
+		});
+	}, [dataLayoutBuilder, editingLanguageId]);
 
 	useEffect(() => {
 		const provider = dataLayoutBuilder.getLayoutProvider();
@@ -98,6 +85,7 @@ export default ({children, dataLayoutBuilder}) => {
 		];
 
 		if (
+			allowNestedFields &&
 			Object.keys(fieldHovered).length &&
 			fieldHovered.type === 'fieldset' &&
 			!fieldHovered.ddmStructureId
@@ -117,27 +105,16 @@ export default ({children, dataLayoutBuilder}) => {
 		provider.props = {
 			...provider.props,
 			fieldActions,
-			shouldAutoGenerateName: () => false,
 		};
 
 		provider.getEvents().fieldHovered(fieldHovered);
-	}, [dataLayoutBuilder, dispatch, onDeleteDefinitionField, saveAsFieldset]);
-
-	useEffect(() => {
-		const provider = dataLayoutBuilder.getLayoutProvider();
-
-		provider.props.fieldNameGenerator = (
-			desiredFieldName,
-			currentFieldName,
-			blacklist
-		) =>
-			generateDataDefinitionFieldName(
-				dataDefinition,
-				desiredFieldName,
-				currentFieldName,
-				blacklist
-			);
-	}, [dataDefinition, dataLayoutBuilder]);
+	}, [
+		allowNestedFields,
+		dataLayoutBuilder,
+		dispatch,
+		onDeleteDefinitionField,
+		saveAsFieldset,
+	]);
 
 	return (
 		<DataLayoutBuilderContext.Provider

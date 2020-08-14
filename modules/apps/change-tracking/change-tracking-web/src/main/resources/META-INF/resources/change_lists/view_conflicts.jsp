@@ -91,7 +91,7 @@ portletDisplay.setURLBack(backURL);
 								</clay:content-col>
 
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<p class="entry-title text-muted"><%= HtmlUtil.escape(ctDisplayRendererRegistry.getEntryDescription(request, ctEntry)) %></p>
 
@@ -99,7 +99,7 @@ portletDisplay.setURLBack(backURL);
 										<div class="alert alert-success" role="alert">
 											<clay:content-row>
 												<clay:content-col
-													expand="true"
+													expand="<%= true %>"
 												>
 													<clay:content-section>
 														<span class="alert-indicator">
@@ -114,19 +114,6 @@ portletDisplay.setURLBack(backURL);
 															<%= conflictInfo.getConflictDescription(conflictInfoResourceBundle) + ":" %>
 														</strong>
 														<%= conflictInfo.getResolutionDescription(conflictInfoResourceBundle) %>
-													</clay:content-section>
-												</clay:content-col>
-
-												<liferay-portlet:actionURL name="/change_lists/delete_ct_auto_resolution_info" var="dismissURL">
-													<liferay-portlet:param name="redirect" value="<%= currentURL %>" />
-													<liferay-portlet:param name="ctAutoResolutionInfoId" value="<%= String.valueOf(conflictInfo.getCTAutoResolutionInfoId()) %>" />
-												</liferay-portlet:actionURL>
-
-												<clay:content-col>
-													<clay:content-section>
-														<a class="btn btn-secondary btn-sm" href="<%= dismissURL %>" type="button">
-															<liferay-ui:message key="dismiss" />
-														</a>
 													</clay:content-section>
 												</clay:content-col>
 
@@ -149,6 +136,19 @@ portletDisplay.setURLBack(backURL);
 														</clay:content-section>
 													</clay:content-col>
 												</c:if>
+
+												<liferay-portlet:actionURL name="/change_lists/delete_ct_auto_resolution_info" var="dismissURL">
+													<liferay-portlet:param name="redirect" value="<%= currentURL %>" />
+													<liferay-portlet:param name="ctAutoResolutionInfoId" value="<%= String.valueOf(conflictInfo.getCTAutoResolutionInfoId()) %>" />
+												</liferay-portlet:actionURL>
+
+												<clay:content-col>
+													<clay:content-section>
+														<a class="btn btn-secondary btn-sm" href="<%= dismissURL %>" type="button">
+															<liferay-ui:message key="dismiss" />
+														</a>
+													</clay:content-section>
+												</clay:content-col>
 											</clay:content-row>
 										</div>
 									</div>
@@ -197,7 +197,7 @@ portletDisplay.setURLBack(backURL);
 								</clay:content-col>
 
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<p class="entry-title text-muted"><%= HtmlUtil.escape(ctDisplayRendererRegistry.getEntryDescription(request, ctEntry)) %></p>
 
@@ -205,7 +205,7 @@ portletDisplay.setURLBack(backURL);
 										<div class="alert alert-warning" role="alert">
 											<clay:content-row>
 												<clay:content-col
-													expand="true"
+													expand="<%= true %>"
 												>
 													<clay:content-section>
 														<span class="alert-indicator">
@@ -260,6 +260,22 @@ portletDisplay.setURLBack(backURL);
 														</c:if>
 													</c:otherwise>
 												</c:choose>
+
+												<clay:content-col>
+													<clay:content-section>
+														<liferay-portlet:renderURL var="discardURL">
+															<portlet:param name="mvcRenderCommandName" value="/change_lists/view_discard" />
+															<portlet:param name="redirect" value="<%= currentURL %>" />
+															<portlet:param name="ctCollectionId" value="<%= String.valueOf(ctEntry.getCtCollectionId()) %>" />
+															<portlet:param name="modelClassNameId" value="<%= String.valueOf(ctEntry.getModelClassNameId()) %>" />
+															<portlet:param name="modelClassPK" value="<%= String.valueOf(ctEntry.getModelClassPK()) %>" />
+														</liferay-portlet:renderURL>
+
+														<a class="btn btn-secondary btn-sm" href="<%= discardURL %>" type="button">
+															<liferay-ui:message key="discard" />
+														</a>
+													</clay:content-section>
+												</clay:content-col>
 											</clay:content-row>
 										</div>
 									</div>

@@ -101,27 +101,27 @@ String friendlyURLBase = StringPool.BLANK;
 					<portlet:param name="plid" value="<%= String.valueOf(selLayout.getPlid()) %>" />
 				</portlet:actionURL>
 
-				<c:if test="<%= FFViewFriendlyURLHistoryConfigurationUtil.enabled() %>">
-					<div class="btn-url-history-wrapper">
-						<react:component
-							data='<%=
-								HashMapBuilder.<String, Object>put(
-									"defaultLanguageId",
-									LocaleUtil.toLanguageId(company.getDefaultUser().getLocale())
-								).put(
-									"deleteFriendlyURLEntryLocalizationURL",
-									deleteFriendlyURLEntryLocalizationURL
-								).put(
-									"friendlyURLEntryLocalizationsURL",
-									friendlyURLEntryLocalizationsURL
-								).put(
-									"restoreFriendlyURLEntryLocalizationURL",
-									restoreFriendlyURLEntryLocalizationURL
-								).build() %>'
-							module="js/friendly_url_history/FriendlyURLHistory"
-						/>
-					</div>
-				</c:if>
+				<div class="btn-url-history-wrapper">
+
+					<%
+					User defaultUser = company.getDefaultUser();
+					%>
+
+					<react:component
+						module="js/friendly_url_history/FriendlyURLHistory"
+						props='<%=
+							HashMapBuilder.<String, Object>put(
+								"defaultLanguageId", LocaleUtil.toLanguageId(defaultUser.getLocale())
+							).put(
+								"deleteFriendlyURLEntryLocalizationURL", deleteFriendlyURLEntryLocalizationURL
+							).put(
+								"friendlyURLEntryLocalizationsURL", friendlyURLEntryLocalizationsURL
+							).put(
+								"restoreFriendlyURLEntryLocalizationURL", restoreFriendlyURLEntryLocalizationURL
+							).build()
+						%>'
+					/>
+				</div>
 
 				<div class="form-group friendly-url">
 					<label for="<portlet:namespace />friendlyURL"><liferay-ui:message key="friendly-url" /> <liferay-ui:icon-help message='<%= LanguageUtil.format(request, "for-example-x", "<em>/news</em>", false) %>' /></label>
@@ -146,10 +146,9 @@ String friendlyURLBase = StringPool.BLANK;
 			LayoutSetPrototype layoutSetPrototype = LayoutSetPrototypeLocalServiceUtil.getLayoutSetPrototype(group.getClassPK());
 
 			boolean layoutSetPrototypeUpdateable = GetterUtil.getBoolean(layoutSetPrototype.getSettingsProperty("layoutsUpdateable"), true);
-			boolean layoutUpdateable = GetterUtil.getBoolean(selLayoutType.getTypeSettingsProperty("layoutUpdateable"), true);
 			%>
 
-			<aui:input disabled="<%= !layoutSetPrototypeUpdateable %>" helpMessage="allow-site-administrators-to-modify-this-page-for-their-site-help" label="allow-site-administrators-to-modify-this-page-for-their-site" name="TypeSettingsProperties--layoutUpdateable--" type="checkbox" value="<%= layoutUpdateable %>" />
+			<aui:input disabled="<%= !layoutSetPrototypeUpdateable %>" helpMessage="allow-site-administrators-to-modify-this-page-for-their-site-help" label="allow-site-administrators-to-modify-this-page-for-their-site" name="TypeSettingsProperties--layoutUpdateable--" type="checkbox" value='<%= GetterUtil.getBoolean(selLayoutType.getTypeSettingsProperty("layoutUpdateable"), true) %>' />
 		</c:if>
 	</c:when>
 	<c:otherwise>
@@ -169,11 +168,11 @@ String friendlyURLBase = StringPool.BLANK;
 
 	<aui:input helpMessage='<%= LanguageUtil.format(request, "if-enabled-this-page-will-inherit-changes-made-to-the-x-page-template", HtmlUtil.escape(layoutPrototype.getName(user.getLocale())), false) %>' label="inherit-changes" name="layoutPrototypeLinkEnabled" type="toggle-switch" value="<%= selLayout.isLayoutPrototypeLinkEnabled() %>" />
 
-	<div class='alert alert-warning layout-prototype-info-message <%= selLayout.isLayoutPrototypeLinkActive() ? StringPool.BLANK : "hide" %>'>
+	<div class="alert alert-warning layout-prototype-info-message <%= selLayout.isLayoutPrototypeLinkActive() ? StringPool.BLANK : "hide" %>">
 		<liferay-ui:message arguments='<%= new String[] {"inherit-changes", "general"} %>' key="some-page-settings-are-unavailable-because-x-is-enabled" translateArguments="<%= true %>" />
 	</div>
 
-	<div class='<%= selLayout.isLayoutPrototypeLinkEnabled() ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />layoutPrototypeMergeAlert">
+	<div class="<%= selLayout.isLayoutPrototypeLinkEnabled() ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />layoutPrototypeMergeAlert">
 
 		<%
 		request.setAttribute("edit_layout_prototype.jsp-layoutPrototype", layoutPrototype);
@@ -185,7 +184,7 @@ String friendlyURLBase = StringPool.BLANK;
 	</div>
 </c:if>
 
-<div class='<%= selLayout.isLayoutPrototypeLinkActive() ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />typeOptions">
+<div class="<%= selLayout.isLayoutPrototypeLinkActive() ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />typeOptions">
 	<liferay-util:include page="/layout_type_resources.jsp" servletContext="<%= application %>">
 		<liferay-util:param name="id" value="<%= selLayout.getType() %>" />
 		<liferay-util:param name="type" value="<%= selLayout.getType() %>" />

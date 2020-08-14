@@ -312,11 +312,11 @@ definition {
 
 		Click.pauseClickAt(locator1 = "Icon#INFO");
 
-		if (IsElementNotPresent(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON")) {
+		if (IsElementNotPresent(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON")) {
 			Click.pauseClickAt(locator1 = "Icon#INFO");
 		}
 
-		Click(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON");
+		Click(locator1 = "Icon#SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON");
 
 		MenuItem.click(menuItem = "Edit");
 
@@ -415,9 +415,27 @@ definition {
 		AssertElementNotPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE");
 	}
 
+	macro deleteWorkflowDefinitionExtra {
+		Click(locator1 = "WorkflowDefinition#DEFINITION_TABLE_DEFINITION_UNPUBLISHED_EXTRA_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Delete");
+
+		AssertTextEquals(
+			locator1 = "IFrame#DIALOG_BOX",
+			value1 = "Delete workflow?");
+
+		AssertTextEquals(
+			locator1 = "WorkflowDefinition#DIALOG_BOX_BODY",
+			value1 = "A deleted workflow cannot be recovered.");
+
+		Button.clickDelete();
+
+		Alert.viewSuccessMessage();
+	}
+
 	macro duplicateSingleApproverWorkflow {
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -673,7 +691,7 @@ definition {
 	}
 
 	macro tearDownPortalWorkflow {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -715,7 +733,7 @@ definition {
 	}
 
 	macro tearDownSpecificWorkflowDefinition {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -725,7 +743,7 @@ definition {
 		while (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_SPECIFIC_DEFINITION_ELLIPSIS")) {
 			Workflow.unpublishWorkflowDefinition(workflowDefinitionTitle = "${workflowDefinitionTitle}");
 
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Workflow",
 				panel = "Applications",
 				portlet = "Process Builder");
@@ -735,17 +753,19 @@ definition {
 	}
 
 	macro tearDownWorkflowDefinitions {
-		var key_workflowDefinitionTitle = "${workflowDefinitionTitle}";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
 
-		while (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_TITLE")) {
-			Workflow.unpublishWorkflowDefinition(workflowDefinitionTitle = "${workflowDefinitionTitle}");
+		while (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_EXTRA")) {
 
-			Workflow.deleteWorkflowDefinition(workflowDefinitionTitle = "${workflowDefinitionTitle}");
+			if (IsElementPresent(locator1 = "WorkflowDefinition#DEFINITION_TABLE_DEFINITION_EXTRA_ELLIPSIS")) {
+				Workflow.unpublishWorkflowDefinitionExtra();
+			}
+
+			Workflow.deleteWorkflowDefinitionExtra();
 		}
 	}
 
@@ -753,6 +773,14 @@ definition {
 		var key_workflowDefinitionTitle = "${workflowDefinitionTitle}";
 
 		Click(locator1 = "WorkflowDefinition#DEFINITION_TABLE_SPECIFIC_DEFINITION_ELLIPSIS");
+
+		MenuItem.clickNoError(menuItem = "Unpublish");
+
+		Alert.viewSuccessMessage();
+	}
+
+	macro unpublishWorkflowDefinitionExtra {
+		Click(locator1 = "WorkflowDefinition#DEFINITION_TABLE_DEFINITION_EXTRA_ELLIPSIS");
 
 		MenuItem.clickNoError(menuItem = "Unpublish");
 
@@ -874,11 +902,7 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${workflowDefinitionFile}");
 
-		AssertVisible(locator1 = "Message#SUCCESS");
-
-		AssertTextEquals.assertPartialText(
-			locator1 = "Message#SUCCESS",
-			value1 = "Definition imported successfully.");
+		Alert.viewSuccessMessageText(successMessage = "Definition imported successfully.");
 
 		Alert.closeMessage(messageType = "SUCCESS");
 
@@ -1343,6 +1367,22 @@ definition {
 		AssertTextEquals(
 			locator1 = "Portlet#H2_HEADER",
 			value1 = "${workflowTask}: ${kfProcessName}");
+	}
+
+	macro webContentGoToAddCP {
+		Pause(locator1 = "3000");
+
+		LexiconEntry.gotoAdd();
+
+		MenuItem.click(menuItem = "Basic Web Content");
+
+		WaitForElementPresent(locator1 = "TextInput#TITLE");
+
+		AssertVisible(locator1 = "TextInput#TITLE");
+
+		while (IsElementNotPresent(locator1 = "WCEditWebContent#SIDEBAR")) {
+			Pause(locator1 = "1000");
+		}
 	}
 
 	macro withdrawTaskByActions {

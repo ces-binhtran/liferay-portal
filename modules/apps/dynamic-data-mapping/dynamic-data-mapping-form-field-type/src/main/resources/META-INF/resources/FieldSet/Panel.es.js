@@ -17,6 +17,7 @@ import './Panel.scss';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import classNames from 'classnames';
+import {EVENT_TYPES, useForm} from 'dynamic-data-mapping-form-renderer';
 import React from 'react';
 
 import useHeightTransition from './useHeightTransition.es';
@@ -28,17 +29,17 @@ import useHeightTransition from './useHeightTransition.es';
  */
 const Panel = ({
 	children,
-	onRemoveButton,
-	onRepeatButton,
+	name,
 	readOnly,
 	repeatable,
 	showLabel,
 	showRepeatableRemoveButton,
-	spritemap,
 	title,
 }) => {
 	const panelRef = React.useRef(null);
 	const [expanded, setExpanded] = React.useState(true);
+
+	const dispatch = useForm();
 
 	const [
 		transitioning,
@@ -95,17 +96,18 @@ const Panel = ({
 											onClick={(event) => {
 												event.stopPropagation();
 
-												onRemoveButton(event);
+												dispatch({
+													payload: name,
+													type:
+														EVENT_TYPES.FIELD_REMOVED,
+												});
 											}}
 											small
 											title={Liferay.Language.get(
 												'remove'
 											)}
 										>
-											<ClayIcon
-												spritemap={spritemap}
-												symbol="hr"
-											/>
+											<ClayIcon symbol="hr" />
 										</ClayButton>
 									)}
 
@@ -115,17 +117,18 @@ const Panel = ({
 										onClick={(event) => {
 											event.stopPropagation();
 
-											onRepeatButton(event);
+											dispatch({
+												payload: name,
+												type:
+													EVENT_TYPES.FIELD_REPEATED,
+											});
 										}}
 										small
 										title={Liferay.Language.get(
 											'duplicate'
 										)}
 									>
-										<ClayIcon
-											spritemap={spritemap}
-											symbol="plus"
-										/>
+										<ClayIcon symbol="plus" />
 									</ClayButton>
 								</div>
 							</span>

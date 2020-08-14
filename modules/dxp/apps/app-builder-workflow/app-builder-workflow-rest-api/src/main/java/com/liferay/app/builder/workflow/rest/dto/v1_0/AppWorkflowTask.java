@@ -52,18 +52,25 @@ public class AppWorkflowTask {
 	}
 
 	@Schema
-	public Long getAppId() {
-		return appId;
+	@Valid
+	public AppWorkflowDataLayoutLink[] getAppWorkflowDataLayoutLinks() {
+		return appWorkflowDataLayoutLinks;
 	}
 
-	public void setAppId(Long appId) {
-		this.appId = appId;
+	public void setAppWorkflowDataLayoutLinks(
+		AppWorkflowDataLayoutLink[] appWorkflowDataLayoutLinks) {
+
+		this.appWorkflowDataLayoutLinks = appWorkflowDataLayoutLinks;
 	}
 
 	@JsonIgnore
-	public void setAppId(UnsafeSupplier<Long, Exception> appIdUnsafeSupplier) {
+	public void setAppWorkflowDataLayoutLinks(
+		UnsafeSupplier<AppWorkflowDataLayoutLink[], Exception>
+			appWorkflowDataLayoutLinksUnsafeSupplier) {
+
 		try {
-			appId = appIdUnsafeSupplier.get();
+			appWorkflowDataLayoutLinks =
+				appWorkflowDataLayoutLinksUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -75,25 +82,28 @@ public class AppWorkflowTask {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Long appId;
+	protected AppWorkflowDataLayoutLink[] appWorkflowDataLayoutLinks;
 
 	@Schema
 	@Valid
-	public AppWorkflowAction[] getAppWorkflowActions() {
-		return appWorkflowActions;
+	public AppWorkflowRoleAssignment[] getAppWorkflowRoleAssignments() {
+		return appWorkflowRoleAssignments;
 	}
 
-	public void setAppWorkflowActions(AppWorkflowAction[] appWorkflowActions) {
-		this.appWorkflowActions = appWorkflowActions;
+	public void setAppWorkflowRoleAssignments(
+		AppWorkflowRoleAssignment[] appWorkflowRoleAssignments) {
+
+		this.appWorkflowRoleAssignments = appWorkflowRoleAssignments;
 	}
 
 	@JsonIgnore
-	public void setAppWorkflowActions(
-		UnsafeSupplier<AppWorkflowAction[], Exception>
-			appWorkflowActionsUnsafeSupplier) {
+	public void setAppWorkflowRoleAssignments(
+		UnsafeSupplier<AppWorkflowRoleAssignment[], Exception>
+			appWorkflowRoleAssignmentsUnsafeSupplier) {
 
 		try {
-			appWorkflowActions = appWorkflowActionsUnsafeSupplier.get();
+			appWorkflowRoleAssignments =
+				appWorkflowRoleAssignmentsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -105,23 +115,27 @@ public class AppWorkflowTask {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected AppWorkflowAction[] appWorkflowActions;
+	protected AppWorkflowRoleAssignment[] appWorkflowRoleAssignments;
 
 	@Schema
-	public Long[] getDataLayoutIds() {
-		return dataLayoutIds;
+	@Valid
+	public AppWorkflowTransition[] getAppWorkflowTransitions() {
+		return appWorkflowTransitions;
 	}
 
-	public void setDataLayoutIds(Long[] dataLayoutIds) {
-		this.dataLayoutIds = dataLayoutIds;
+	public void setAppWorkflowTransitions(
+		AppWorkflowTransition[] appWorkflowTransitions) {
+
+		this.appWorkflowTransitions = appWorkflowTransitions;
 	}
 
 	@JsonIgnore
-	public void setDataLayoutIds(
-		UnsafeSupplier<Long[], Exception> dataLayoutIdsUnsafeSupplier) {
+	public void setAppWorkflowTransitions(
+		UnsafeSupplier<AppWorkflowTransition[], Exception>
+			appWorkflowTransitionsUnsafeSupplier) {
 
 		try {
-			dataLayoutIds = dataLayoutIdsUnsafeSupplier.get();
+			appWorkflowTransitions = appWorkflowTransitionsUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -133,7 +147,7 @@ public class AppWorkflowTask {
 
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Long[] dataLayoutIds;
+	protected AppWorkflowTransition[] appWorkflowTransitions;
 
 	@Schema
 	public String getName() {
@@ -188,29 +202,19 @@ public class AppWorkflowTask {
 
 		sb.append("{");
 
-		if (appId != null) {
+		if (appWorkflowDataLayoutLinks != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"appId\": ");
-
-			sb.append(appId);
-		}
-
-		if (appWorkflowActions != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"appWorkflowActions\": ");
+			sb.append("\"appWorkflowDataLayoutLinks\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < appWorkflowActions.length; i++) {
-				sb.append(String.valueOf(appWorkflowActions[i]));
+			for (int i = 0; i < appWorkflowDataLayoutLinks.length; i++) {
+				sb.append(String.valueOf(appWorkflowDataLayoutLinks[i]));
 
-				if ((i + 1) < appWorkflowActions.length) {
+				if ((i + 1) < appWorkflowDataLayoutLinks.length) {
 					sb.append(", ");
 				}
 			}
@@ -218,19 +222,39 @@ public class AppWorkflowTask {
 			sb.append("]");
 		}
 
-		if (dataLayoutIds != null) {
+		if (appWorkflowRoleAssignments != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"dataLayoutIds\": ");
+			sb.append("\"appWorkflowRoleAssignments\": ");
 
 			sb.append("[");
 
-			for (int i = 0; i < dataLayoutIds.length; i++) {
-				sb.append(dataLayoutIds[i]);
+			for (int i = 0; i < appWorkflowRoleAssignments.length; i++) {
+				sb.append(String.valueOf(appWorkflowRoleAssignments[i]));
 
-				if ((i + 1) < dataLayoutIds.length) {
+				if ((i + 1) < appWorkflowRoleAssignments.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (appWorkflowTransitions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"appWorkflowTransitions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < appWorkflowTransitions.length; i++) {
+				sb.append(String.valueOf(appWorkflowTransitions[i]));
+
+				if ((i + 1) < appWorkflowTransitions.length) {
 					sb.append(", ");
 				}
 			}
@@ -269,6 +293,16 @@ public class AppWorkflowTask {
 		return string.replaceAll("\"", "\\\\\"");
 	}
 
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
+	}
+
 	private static String _toJSON(Map<String, ?> map) {
 		StringBuilder sb = new StringBuilder("{");
 
@@ -287,9 +321,7 @@ public class AppWorkflowTask {
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;

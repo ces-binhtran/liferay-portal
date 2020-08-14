@@ -24,7 +24,7 @@ public interface DDMFormFieldTypeReportProcessor {
 
 	public default JSONObject process(
 			DDMFormFieldValue ddmFormFieldValue, JSONObject fieldJSONObject,
-			long formInstanceRecordId, String formInstanceReportEvent)
+			long formInstanceRecordId, String ddmFormInstanceReportEvent)
 		throws Exception {
 
 		throw new UnsupportedOperationException(
@@ -33,16 +33,16 @@ public interface DDMFormFieldTypeReportProcessor {
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #process(DDMFormFieldValue, JSONObject, long, String)}
+	 *             #process(DDMFormFieldValue, JSONObject, long, String)}
 	 */
 	@Deprecated
 	public default JSONObject process(
 			DDMFormFieldValue ddmFormFieldValue,
-			JSONObject formInstanceReportDataJSONObject,
-			String formInstanceReportEvent)
+			JSONObject ddmFormInstanceReportDataJSONObject,
+			String ddmFormInstanceReportEvent)
 		throws Exception {
 
-		return process(ddmFormFieldValue, null, 0, formInstanceReportEvent);
+		return process(ddmFormFieldValue, null, 0, ddmFormInstanceReportEvent);
 	}
 
 }

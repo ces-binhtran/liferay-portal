@@ -124,11 +124,13 @@ public class AssetListEntryLocalServiceImpl
 
 		assetListEntry.setModifiedDate(new Date());
 
-		String assetEntryType = _getManualAssetEntryType(assetListEntryId);
+		if (Validator.isNull(assetListEntry.getAssetEntryType())) {
+			String assetEntryType = _getManualAssetEntryType(assetListEntryId);
 
-		assetListEntry.setAssetEntrySubtype(
-			_getManualAssetEntrySubtype(assetEntryType, assetListEntryId));
-		assetListEntry.setAssetEntryType(assetEntryType);
+			assetListEntry.setAssetEntrySubtype(
+				_getManualAssetEntrySubtype(assetEntryType, assetListEntryId));
+			assetListEntry.setAssetEntryType(assetEntryType);
+		}
 
 		assetListEntryPersistence.update(assetListEntry);
 	}
@@ -179,9 +181,6 @@ public class AssetListEntryLocalServiceImpl
 			assetListEntry.setAssetEntrySubtype(
 				_getAssetEntrySubtype(assetEntryType, typeSettings));
 			assetListEntry.setAssetEntryType(assetEntryType);
-		}
-		else {
-			assetListEntry.setAssetEntryType(AssetEntry.class.getName());
 		}
 
 		assetListEntry = assetListEntryPersistence.update(assetListEntry);
@@ -454,18 +453,14 @@ public class AssetListEntryLocalServiceImpl
 
 		assetListEntry.setModifiedDate(new Date());
 
-		if (assetListEntry.getType() ==
-				AssetListEntryTypeConstants.TYPE_DYNAMIC) {
+		String assetEntryType = _getSegmentsAssetEntryType(
+			assetListEntryId, segmentsEntryId, typeSettings);
 
-			String assetEntryType = _getSegmentsAssetEntryType(
-				assetListEntryId, segmentsEntryId, typeSettings);
-
-			assetListEntry.setAssetEntrySubtype(
-				_getSegmentsAssetEntrySubtype(
-					assetEntryType, assetListEntryId, segmentsEntryId,
-					typeSettings));
-			assetListEntry.setAssetEntryType(assetEntryType);
-		}
+		assetListEntry.setAssetEntrySubtype(
+			_getSegmentsAssetEntrySubtype(
+				assetEntryType, assetListEntryId, segmentsEntryId,
+				typeSettings));
+		assetListEntry.setAssetEntryType(assetEntryType);
 
 		assetListEntryPersistence.update(assetListEntry);
 
@@ -586,8 +581,8 @@ public class AssetListEntryLocalServiceImpl
 		Class<?> clazz = assetRendererFactory.getClass();
 
 		if (assetRendererFactory instanceof AssetRendererFactoryWrapper) {
-			AssetRendererFactoryWrapper assetRendererFactoryWrapper =
-				(AssetRendererFactoryWrapper)assetRendererFactory;
+			AssetRendererFactoryWrapper<?> assetRendererFactoryWrapper =
+				(AssetRendererFactoryWrapper<?>)assetRendererFactory;
 
 			clazz = assetRendererFactoryWrapper.getWrappedClass();
 		}

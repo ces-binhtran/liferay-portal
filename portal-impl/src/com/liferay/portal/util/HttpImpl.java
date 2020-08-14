@@ -158,9 +158,7 @@ public class HttpImpl implements Http {
 		requestConfigBuilder = requestConfigBuilder.setConnectionRequestTimeout(
 			_TIMEOUT);
 
-		RequestConfig requestConfig = requestConfigBuilder.build();
-
-		httpClientBuilder.setDefaultRequestConfig(requestConfig);
+		httpClientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
 
 		SystemDefaultRoutePlanner systemDefaultRoutePlanner =
 			new SystemDefaultRoutePlanner(ProxySelector.getDefault());
@@ -207,9 +205,8 @@ public class HttpImpl implements Http {
 		requestConfigBuilder.setProxy(new HttpHost(_PROXY_HOST, _PROXY_PORT));
 		requestConfigBuilder.setProxyPreferredAuthSchemes(_proxyAuthPrefs);
 
-		RequestConfig proxyRequestConfig = requestConfigBuilder.build();
-
-		proxyHttpClientBuilder.setDefaultRequestConfig(proxyRequestConfig);
+		proxyHttpClientBuilder.setDefaultRequestConfig(
+			requestConfigBuilder.build());
 
 		_proxyCloseableHttpClient = proxyHttpClientBuilder.build();
 	}
@@ -619,7 +616,7 @@ public class HttpImpl implements Http {
 			return StringPool.BLANK;
 		}
 
-		String queryString = uri.getQuery();
+		String queryString = uri.getRawQuery();
 
 		if (queryString == null) {
 			return StringPool.BLANK;
@@ -654,7 +651,7 @@ public class HttpImpl implements Http {
 
 	@Override
 	public boolean hasProtocol(String url) {
-		if (Validator.isNull(url)) {
+		if (Validator.isNull(url) || (url.indexOf(CharPool.COLON) == -1)) {
 			return false;
 		}
 
@@ -774,7 +771,7 @@ public class HttpImpl implements Http {
 			return StringPool.SLASH;
 		}
 
-		StringBundler sb = new StringBundler(parts.size() * 2 + 2);
+		StringBundler sb = new StringBundler((parts.size() * 2) + 2);
 
 		for (String part : parts) {
 			sb.append(StringPool.SLASH);
@@ -1460,7 +1457,7 @@ public class HttpImpl implements Http {
 
 		if (maxAge > 0) {
 			Date expiryDate = new Date(
-				System.currentTimeMillis() + maxAge * 1000L);
+				System.currentTimeMillis() + (maxAge * 1000L));
 
 			basicClientCookie.setExpiryDate(expiryDate);
 

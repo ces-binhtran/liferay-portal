@@ -23,7 +23,7 @@ DDMStructure ddmStructure = journalContentDisplayContext.getDDMStructure();
 String refererPortletName = ParamUtil.getString(request, "refererPortletName");
 %>
 
-<div class="sheet-section">
+<clay:sheet-section>
 	<div class="sheet-subtitle">
 		<liferay-ui:message key="template" />
 	</div>
@@ -38,7 +38,7 @@ String refererPortletName = ParamUtil.getString(request, "refererPortletName");
 	DDMTemplate defaultDDMTemplate = journalContentDisplayContext.getDefaultDDMTemplate();
 
 	if (defaultDDMTemplate != null) {
-		defaultDDMTemplateName = defaultDDMTemplate.getName(locale);
+		defaultDDMTemplateName = HtmlUtil.escape(defaultDDMTemplate.getName(locale));
 	}
 	%>
 
@@ -46,7 +46,7 @@ String refererPortletName = ParamUtil.getString(request, "refererPortletName");
 
 	<aui:input checked="<%= !journalContentDisplayContext.isDefaultTemplate() %>" id='<%= refererPortletName + "ddmTemplateTypeCustom" %>' label="use-a-specific-template" name='<%= refererPortletName + "ddmTemplateType" %>' type="radio" useNamespace="<%= false %>" value="custom" />
 
-	<div id='<%= refererPortletName + "customDDMTemplateContainer" %>'>
+	<div id="<%= refererPortletName + "customDDMTemplateContainer" %>">
 		<div class="template-preview-content">
 			<c:choose>
 				<c:when test="<%= journalContentDisplayContext.isDefaultTemplate() %>">
@@ -64,7 +64,7 @@ String refererPortletName = ParamUtil.getString(request, "refererPortletName");
 
 		<aui:button id='<%= refererPortletName + "clearddmTemplateButton" %>' useNamespace="<%= false %>" value="clear" />
 	</div>
-</div>
+</clay:sheet-section>
 
 <%
 AssetRendererFactory<JournalArticle> assetRendererFactory = AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClass(JournalArticle.class);
@@ -72,7 +72,7 @@ AssetRendererFactory<JournalArticle> assetRendererFactory = AssetRendererFactory
 AssetRenderer<JournalArticle> assetRenderer = assetRendererFactory.getAssetRenderer(article, 0);
 %>
 
-<aui:script use="aui-parse-content,liferay-alert">
+<aui:script use="aui-parse-content">
 	var templatePreview = A.one('.template-preview-content');
 	var form = A.one('#<%= refererPortletName %>fm');
 	var templateKeyInput = A.one('#<%= refererPortletName + "ddmTemplateKey" %>');
@@ -97,12 +97,6 @@ AssetRenderer<JournalArticle> assetRenderer = assetRendererFactory.getAssetRende
 			event.preventDefault();
 
 			var instance = this;
-
-			var alert = instance._alert;
-
-			if (alert) {
-				alert.destroy();
-			}
 
 			Liferay.Util.openModal({
 				onSelect: function (selectedItem) {
@@ -143,22 +137,12 @@ AssetRenderer<JournalArticle> assetRenderer = assetRendererFactory.getAssetRende
 							);
 						});
 
-					alert = new Liferay.Alert({
-						closeable: true,
-						delay: {
-							hide: 0,
-							show: 0,
-						},
-						duration: 500,
-						icon: 'info-circle',
+					Liferay.Util.openToast({
+						container: form,
 						message:
 							'<%= HtmlUtil.escapeJS(LanguageUtil.get(resourceBundle, "changing-the-template-will-not-affect-the-original-web-content-defautl-template.-the-change-only-applies-to-this-web-content-display")) %>',
-						namespace: '<portlet:namespace />',
-						title: '',
 						type: 'info',
-					}).render(form);
-
-					instance._alert = alert;
+					});
 				},
 				selectEventName:
 					'<%= PortalUtil.getPortletNamespace(portletId) + "selectDDMTemplate" %>',

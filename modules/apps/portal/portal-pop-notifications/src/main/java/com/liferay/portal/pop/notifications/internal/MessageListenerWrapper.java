@@ -54,8 +54,8 @@ public class MessageListenerWrapper implements MessageListener {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #accept(String, List, Message)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #accept(String,
+	 *             List, Message)}
 	 */
 	@Deprecated
 	@Override
@@ -78,8 +78,8 @@ public class MessageListenerWrapper implements MessageListener {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #deliver(String, List, Message)}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #deliver(String,
+	 *             List, Message)}
 	 */
 	@Deprecated
 	@Override
@@ -90,16 +90,16 @@ public class MessageListenerWrapper implements MessageListener {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MessageListenerWrapper)) {
+		if (!(object instanceof MessageListenerWrapper)) {
 			return false;
 		}
 
-		MessageListenerWrapper messageListener = (MessageListenerWrapper)obj;
+		MessageListenerWrapper messageListener = (MessageListenerWrapper)object;
 
 		return getId().equals(messageListener.getId());
 	}

@@ -292,14 +292,14 @@ public class DepotAdminSelectRoleDisplayContext {
 
 		public Map<String, Object> getData(Role role) throws PortalException {
 			return HashMapBuilder.<String, Object>put(
+				"entityid", role.getRoleId()
+			).put(
 				"groupdescriptivename",
 				_group.getDescriptiveName(_themeDisplay.getLocale())
 			).put(
 				"groupid", _group.getGroupId()
 			).put(
 				"iconcssclass", RolesAdminUtil.getIconCssClass(role)
-			).put(
-				"roleid", role.getRoleId()
 			).put(
 				"rolename", role.getTitle(_themeDisplay.getLocale())
 			).build();
@@ -396,7 +396,8 @@ public class DepotAdminSelectRoleDisplayContext {
 		}
 
 		/**
-		 * @see com.liferay.site.memberships.web.internal.display.context.UserRolesDisplayContext#_filterGroupRoles(PermissionChecker, long, List)
+		 * @see com.liferay.site.memberships.web.internal.display.context.UserRolesDisplayContext#_filterGroupRoles(
+		 *      PermissionChecker, long, List)
 		 */
 		private List<Role> _filterGroupRoles(List<Role> roles)
 			throws PortalException {

@@ -15,13 +15,10 @@
 package com.liferay.layout.seo.web.internal.portlet.action;
 
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
+import com.liferay.layout.seo.web.internal.util.LayoutTypeSettingsUtil;
 import com.liferay.portal.events.EventsProcessorUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -32,9 +29,6 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -85,10 +79,10 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		Layout layout = _layoutLocalService.getLayout(
 			groupId, privateLayout, layoutId);
 
-		Map<Locale, String> titleMap = _getLocalizationMap(
-			actionRequest, layout, "title");
-		Map<Locale, String> descriptionMap = _getLocalizationMap(
-			actionRequest, layout, "description");
+		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
+			actionRequest, "title");
+		Map<Locale, String> descriptionMap =
+			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 
 		Map<Locale, String> keywordsMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "keywords");
@@ -119,17 +113,23 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 			groupId, privateLayout, layoutId, canonicalURLEnabled,
 			canonicalURLMap, serviceContext);
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
+		UnicodeProperties formTypeSettingsUnicodeProperties =
+			PropertiesParamUtil.getProperties(
+				actionRequest, "TypeSettingsProperties--");
+
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (draftLayout != null) {
-			_layoutService.updateLayout(
+			draftLayout = _layoutService.updateLayout(
 				groupId, privateLayout, draftLayout.getLayoutId(),
 				draftLayout.getParentLayoutId(), draftLayout.getNameMap(),
 				titleMap, descriptionMap, keywordsMap, robotsMap,
 				draftLayout.getType(), draftLayout.isHidden(),
 				draftLayout.getFriendlyURLMap(), draftLayout.isIconImage(),
 				null, serviceContext);
+
+			draftLayout = LayoutTypeSettingsUtil.updateTypeSettings(
+				draftLayout, _layoutService, formTypeSettingsUnicodeProperties);
 
 			_layoutSEOEntryService.updateLayoutSEOEntry(
 				groupId, privateLayout, draftLayout.getLayoutId(),
@@ -138,46 +138,11 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 
 		themeDisplay.clearLayoutFriendlyURL(layout);
 
-		UnicodeProperties layoutTypeSettingsUnicodeProperties =
-			layout.getTypeSettingsProperties();
-
-		UnicodeProperties formTypeSettingsUnicodeProperties =
-			PropertiesParamUtil.getProperties(
-				actionRequest, "TypeSettingsProperties--");
+		layout = LayoutTypeSettingsUtil.updateTypeSettings(
+			layout, _layoutService, formTypeSettingsUnicodeProperties);
 
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
-
-		String type = layout.getType();
-
-		if (type.equals(LayoutConstants.TYPE_PORTLET)) {
-			layoutTypeSettingsUnicodeProperties.putAll(
-				formTypeSettingsUnicodeProperties);
-
-			boolean layoutCustomizable = GetterUtil.getBoolean(
-				layoutTypeSettingsUnicodeProperties.get(
-					LayoutConstants.CUSTOMIZABLE_LAYOUT));
-
-			if (!layoutCustomizable) {
-				layoutTypePortlet.removeCustomization(
-					layoutTypeSettingsUnicodeProperties);
-			}
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
-		}
-		else {
-			layoutTypeSettingsUnicodeProperties.putAll(
-				formTypeSettingsUnicodeProperties);
-
-			layoutTypeSettingsUnicodeProperties.putAll(
-				layout.getTypeSettingsProperties());
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
-		}
 
 		EventsProcessorUtil.process(
 			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
@@ -200,40 +165,8 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
 
-	private Map<Locale, String> _getLocalizationMap(
-		ActionRequest actionRequest, Layout layout, String name) {
-
-		if (_isDisplayPageTemplate(layout.getPlid())) {
-			return HashMapBuilder.put(
-				LocaleUtil.fromLanguageId(layout.getDefaultLanguageId()),
-				ParamUtil.getString(actionRequest, name)
-			).build();
-		}
-
-		return LocalizationUtil.getLocalizationMap(actionRequest, name);
-	}
-
-	private boolean _isDisplayPageTemplate(long plid) {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(plid);
-
-		if ((layoutPageTemplateEntry != null) &&
-			(layoutPageTemplateEntry.getType() ==
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE)) {
-
-			return true;
-		}
-
-		return false;
-	}
-
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Reference
 	private LayoutSEOEntryService _layoutSEOEntryService;

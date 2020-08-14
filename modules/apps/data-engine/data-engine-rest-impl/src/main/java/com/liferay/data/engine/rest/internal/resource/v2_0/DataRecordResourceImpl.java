@@ -14,13 +14,10 @@
 
 package com.liferay.data.engine.rest.internal.resource.v2_0;
 
+import com.liferay.data.engine.constants.DataActionKeys;
 import com.liferay.data.engine.model.DEDataListView;
-import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
-import com.liferay.data.engine.rest.dto.v2_0.DataDefinitionField;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
-import com.liferay.data.engine.rest.internal.constants.DataActionKeys;
 import com.liferay.data.engine.rest.internal.content.type.DataDefinitionContentTypeTracker;
-import com.liferay.data.engine.rest.internal.dto.v2_0.util.DataDefinitionUtil;
 import com.liferay.data.engine.rest.internal.odata.entity.v2_0.DataRecordEntityModel;
 import com.liferay.data.engine.rest.internal.security.permission.resource.DataRecordCollectionModelResourcePermission;
 import com.liferay.data.engine.rest.internal.storage.DataRecordExporter;
@@ -37,6 +34,7 @@ import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServices
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLayoutLocalService;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.dynamic.data.mapping.spi.converter.SPIDDMFormRuleConverter;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -55,10 +53,10 @@ import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.StringEntityField;
@@ -71,10 +69,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.validation.ValidationException;
 
@@ -157,7 +151,8 @@ public class DataRecordResourceImpl
 
 		DataRecordExporter dataRecordExporter = new DataRecordExporter(
 			_dataDefinitionContentTypeTracker, _ddlRecordSetLocalService,
-			_ddmFormFieldTypeServicesTracker, _spiDDMFormRuleConverter);
+			_ddmFormFieldTypeServicesTracker, _ddmStructureLayoutLocalService,
+			_spiDDMFormRuleConverter);
 
 		return dataRecordExporter.export(
 			transform(
@@ -197,6 +192,8 @@ public class DataRecordResourceImpl
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
 				searchContext.setAttribute(
+					Field.STATUS, WorkflowConstants.STATUS_ANY);
+				searchContext.setAttribute(
 					"recordSetId", dataRecordCollectionId);
 				searchContext.setAttribute(
 					"recordSetScope", ddlRecordSet.getScope());
@@ -205,7 +202,7 @@ public class DataRecordResourceImpl
 			},
 			sorts,
 			document -> _toDataRecord(
-				_ddlRecordLocalService.getRecord(
+				_ddlRecordLocalService.fetchRecord(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
@@ -274,13 +271,6 @@ public class DataRecordResourceImpl
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 
-		_validate(
-			DataDefinitionUtil.toDataDefinition(
-				_dataDefinitionContentTypeTracker,
-				_ddmFormFieldTypeServicesTracker, ddmStructure,
-				_spiDDMFormRuleConverter),
-			dataRecord);
-
 		DataStorage dataStorage = _getDataStorage(
 			ddmStructure.getStorageType());
 
@@ -322,13 +312,6 @@ public class DataRecordResourceImpl
 		dataRecord.setId(dataRecordId);
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
-
-		_validate(
-			DataDefinitionUtil.toDataDefinition(
-				_dataDefinitionContentTypeTracker,
-				_ddmFormFieldTypeServicesTracker, ddmStructure,
-				_spiDDMFormRuleConverter),
-			dataRecord);
 
 		DataStorage dataStorage = _getDataStorage(
 			ddmStructure.getStorageType());
@@ -448,6 +431,10 @@ public class DataRecordResourceImpl
 	}
 
 	private DataRecord _toDataRecord(DDLRecord ddlRecord) throws Exception {
+		if (ddlRecord == null) {
+			return null;
+		}
+
 		DDLRecordSet ddlRecordSet = ddlRecord.getRecordSet();
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
@@ -463,38 +450,6 @@ public class DataRecordResourceImpl
 				id = ddlRecord.getRecordId();
 			}
 		};
-	}
-
-	private void _validate(
-		DataDefinition dataDefinition, DataRecord dataRecord) {
-
-		// Field names
-
-		Set<String> dataDefinitionFieldNames = Stream.of(
-			dataDefinition.getDataDefinitionFields()
-		).map(
-			DataDefinitionField::getName
-		).collect(
-			Collectors.toSet()
-		);
-
-		Map<String, ?> dataRecordValues = dataRecord.getDataRecordValues();
-
-		Set<String> fieldNames = dataRecordValues.keySet();
-
-		Stream<String> fieldNamesStream = fieldNames.stream();
-
-		List<String> missingFieldNames = fieldNamesStream.filter(
-			fieldName -> !dataDefinitionFieldNames.contains(fieldName)
-		).collect(
-			Collectors.toList()
-		);
-
-		if (!missingFieldNames.isEmpty()) {
-			throw new ValidationException(
-				"Missing fields: " +
-					ArrayUtil.toStringArray(missingFieldNames));
-		}
 	}
 
 	@Reference
@@ -521,6 +476,9 @@ public class DataRecordResourceImpl
 
 	@Reference
 	private DDMStorageLinkLocalService _ddmStorageLinkLocalService;
+
+	@Reference
+	private DDMStructureLayoutLocalService _ddmStructureLayoutLocalService;
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;

@@ -21,7 +21,6 @@ import dom from 'metal-dom';
 import {EventHandler} from 'metal-events';
 import Component, {Config} from 'metal-jsx';
 
-import Notifications from '../../util/Notifications.es';
 import Email from './Email.es';
 import Link from './Link.es';
 
@@ -45,12 +44,16 @@ class ShareFormModal extends Component {
 	}
 
 	disposeInternal() {
+		const modalBackdrop = document.querySelector('.modal-backdrop');
+		dom.exitDocument(modalBackdrop);
+
 		super.disposeInternal();
 		this._eventHandler.removeAllListeners();
 	}
 
 	open() {
 		this.refs.shareFormModalRef.refs.emailRef.init();
+		this.refs.shareFormModalRef.refs.linkRef.init();
 		this.refs.shareFormModalRef.visible = true;
 	}
 
@@ -67,7 +70,13 @@ class ShareFormModal extends Component {
 									{Liferay.Language.get('link')}
 								</div>
 								<div class="popover-body">
-									{<Link spritemap={spritemap} url={url} />}
+									{
+										<Link
+											ref="linkRef"
+											spritemap={spritemap}
+											url={url}
+										/>
+									}
 								</div>
 							</div>
 							<div class="share-form-modal-item">
@@ -119,6 +128,22 @@ class ShareFormModal extends Component {
 		);
 	}
 
+	showNotification(message, error) {
+		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
+
+		const openToastParams = {message};
+
+		if (error) {
+			openToastParams.title = Liferay.Language.get('error');
+			openToastParams.type = 'danger';
+		}
+		else {
+			openToastParams.title = Liferay.Language.get('success');
+		}
+
+		parentOpenToast(openToastParams);
+	}
+
 	submitEmailContent() {
 		const {portletNamespace, shareFormInstanceURL} = this.props;
 		const {emailContent} = this.refs.shareFormModalRef.refs.emailRef.state;
@@ -143,8 +168,8 @@ class ShareFormModal extends Component {
 		})
 			.then((response) => {
 				return response.successMessage
-					? Notifications.showAlert(response.successMessage)
-					: Notifications.showError(response.errorMessage);
+					? this.showNotification(response.successMessage)
+					: this.showNotification(response.errorMessage, true);
 			})
 			.catch((error) => {
 				throw new Error(error);

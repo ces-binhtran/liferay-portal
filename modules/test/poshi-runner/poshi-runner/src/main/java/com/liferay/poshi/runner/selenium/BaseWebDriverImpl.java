@@ -18,6 +18,7 @@ import com.deque.axe.AXE;
 
 import com.liferay.poshi.runner.PoshiRunnerContext;
 import com.liferay.poshi.runner.PoshiRunnerGetterUtil;
+import com.liferay.poshi.runner.exception.ElementNotFoundPoshiRunnerException;
 import com.liferay.poshi.runner.exception.PoshiRunnerWarningException;
 import com.liferay.poshi.runner.util.AntCommands;
 import com.liferay.poshi.runner.util.ArchiveUtil;
@@ -28,7 +29,6 @@ import com.liferay.poshi.runner.util.GetterUtil;
 import com.liferay.poshi.runner.util.HtmlUtil;
 import com.liferay.poshi.runner.util.OSDetector;
 import com.liferay.poshi.runner.util.PropsValues;
-import com.liferay.poshi.runner.util.ResourceUtil;
 import com.liferay.poshi.runner.util.StringPool;
 import com.liferay.poshi.runner.util.StringUtil;
 import com.liferay.poshi.runner.util.Validator;
@@ -384,6 +384,17 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			throw new Exception(
 				"Pattern \"" + value + "\" does not exists in the HTML source");
 		}
+	}
+
+	@Override
+	public void assertJavaScript(
+			String javaScript, String message, String argument)
+		throws Exception {
+
+		Condition javaScriptCondition = getJavaScriptCondition(
+			javaScript, message, argument);
+
+		javaScriptCondition.assertTrue();
 	}
 
 	@Override
@@ -1012,7 +1023,28 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		JavascriptExecutor javascriptExecutor =
 			(JavascriptExecutor)wrappedWebDriver;
 
-		javascriptExecutor.executeScript(javaScript, argument1, argument2);
+		Object object1 = null;
+		Object object2 = null;
+
+		try {
+			object1 = getWebElement(argument1);
+		}
+		catch (ElementNotFoundPoshiRunnerException
+					elementNotFoundPoshiRunnerException) {
+
+			object1 = argument1;
+		}
+
+		try {
+			object2 = getWebElement(argument2);
+		}
+		catch (ElementNotFoundPoshiRunnerException
+					elementNotFoundPoshiRunnerException) {
+
+			object2 = argument2;
+		}
+
+		javascriptExecutor.executeScript(javaScript, object1, object2);
 	}
 
 	@Override
@@ -1270,8 +1302,29 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 		JavascriptExecutor javascriptExecutor =
 			(JavascriptExecutor)wrappedWebDriver;
 
+		Object object1 = null;
+		Object object2 = null;
+
+		try {
+			object1 = getWebElement(argument1);
+		}
+		catch (ElementNotFoundPoshiRunnerException
+					elementNotFoundPoshiRunnerException) {
+
+			object1 = argument1;
+		}
+
+		try {
+			object2 = getWebElement(argument2);
+		}
+		catch (ElementNotFoundPoshiRunnerException
+					elementNotFoundPoshiRunnerException) {
+
+			object2 = argument2;
+		}
+
 		return (String)javascriptExecutor.executeScript(
-			javaScript, argument1, argument2);
+			javaScript, object1, object2);
 	}
 
 	@Override
@@ -1802,32 +1855,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
-	public void javaScriptDragAndDropToObject(
-			String sourceLocator, String targetLocator)
-		throws Exception {
-
-		WebElement sourceElement = getWebElement(sourceLocator);
-
-		WrapsDriver wrapsDriver = (WrapsDriver)sourceElement;
-
-		WebDriver wrappedWebDriver = wrapsDriver.getWrappedDriver();
-
-		JavascriptExecutor javascriptExecutor =
-			(JavascriptExecutor)wrappedWebDriver;
-
-		StringBuilder sb = new StringBuilder();
-
-		String simulateJSContent = ResourceUtil.read(
-			"com/liferay/poshi/runner/dependencies/simulate_drag_and_drop.js");
-
-		sb.append(simulateJSContent);
-
-		sb.append("\nSimulate.dragAndDrop(arguments[0], arguments[1]);");
-
-		WebElement targetElement = getWebElement(targetLocator);
-
-		javascriptExecutor.executeScript(
-			sb.toString(), sourceElement, targetElement);
+	public void javaScriptDoubleClick(String locator) {
+		executeJavaScriptEvent(locator, "MouseEvent", "dblclick");
 	}
 
 	public String javaScriptGetText(String locator, String timeout)
@@ -1902,12 +1931,11 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 				WrapsDriver wrapsDriver = (WrapsDriver)webElement;
 
-				WebDriver webDriver = wrapsDriver.getWrappedDriver();
-
-				Actions actions = new Actions(webDriver);
-
 				if (keycode.equals("ALT") || keycode.equals("COMMAND") ||
 					keycode.equals("CONTROL") || keycode.equals("SHIFT")) {
+
+					Actions actions = new Actions(
+						wrapsDriver.getWrappedDriver());
 
 					actions.keyDown(webElement, keys);
 					actions.keyUp(webElement, keys);
@@ -2429,10 +2457,10 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public void selectPopUp(String windowID) {
-		Set<String> windowHandles = getWindowHandles();
-
 		if (windowID.equals("") || windowID.equals("null")) {
 			String title = getTitle();
+
+			Set<String> windowHandles = getWindowHandles();
 
 			for (String windowHandle : windowHandles) {
 				WebDriver.TargetLocator targetLocator = switchTo();
@@ -2596,9 +2624,9 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	public void setTimeoutImplicit(String timeout) {
 		WebDriver.Options options = manage();
 
-		WebDriver.Timeouts timeouts = options.timeouts();
-
 		if (!PropsValues.BROWSER_TYPE.equals("safari")) {
+			WebDriver.Timeouts timeouts = options.timeouts();
+
 			timeouts.implicitlyWait(
 				GetterUtil.getInteger(timeout), TimeUnit.SECONDS);
 		}
@@ -2656,14 +2684,14 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 	@Override
 	public void sikuliClick(String image) throws Exception {
-		Mouse mouse = new DesktopMouse();
-
 		ScreenRegion screenRegion = new DesktopScreenRegion();
 
 		ScreenRegion imageTargetScreenRegion = screenRegion.find(
 			getImageTarget(image));
 
 		if (imageTargetScreenRegion != null) {
+			Mouse mouse = new DesktopMouse();
+
 			mouse.click(imageTargetScreenRegion.getCenter());
 		}
 	}
@@ -2671,8 +2699,6 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	@Override
 	public void sikuliClickByIndex(String image, String index)
 		throws Exception {
-
-		Mouse mouse = new DesktopMouse();
 
 		ScreenRegion screenRegion = new DesktopScreenRegion();
 
@@ -2683,6 +2709,8 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			GetterUtil.getInteger(index));
 
 		if (imageTargetScreenRegion != null) {
+			Mouse mouse = new DesktopMouse();
+
 			mouse.click(imageTargetScreenRegion.getCenter());
 		}
 	}
@@ -2943,11 +2971,12 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 
 			retryCount++;
 
-			String message =
-				"Actual typed value: '" + typedValue +
-					"' did not match expected typed value: '" + value + "'.";
-
 			if (retryCount < maxRetries) {
+				String message =
+					"Actual typed value: '" + typedValue +
+						"' did not match expected typed value: '" + value +
+							"'.";
+
 				System.out.println(
 					message + " Retrying LiferaySelenium.type() attempt #" +
 						(retryCount + 1) + ".");
@@ -3230,6 +3259,17 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 	}
 
 	@Override
+	public void verifyJavaScript(
+			String javaScript, String message, String argument)
+		throws Exception {
+
+		Condition javaScriptCondition = getJavaScriptCondition(
+			javaScript, message, argument);
+
+		javaScriptCondition.verify();
+	}
+
+	@Override
 	public void verifyNotVisible(String locator) throws Exception {
 		Condition notVisibleCondition = getNotVisibleCondition(locator);
 
@@ -3301,6 +3341,17 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			javaScript, message, argument);
 
 		javaScriptCondition.waitFor();
+	}
+
+	@Override
+	public void waitForJavaScriptNoError(
+			String javaScript, String message, String argument)
+		throws Exception {
+
+		Condition javaScriptCondition = getJavaScriptCondition(
+			javaScript, message, argument);
+
+		javaScriptCondition.waitFor("false");
 	}
 
 	@Override
@@ -3823,9 +3874,20 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 				JavascriptExecutor javascriptExecutor =
 					(JavascriptExecutor)wrappedWebDriver;
 
+				Object object = null;
+
+				try {
+					object = getWebElement(argument);
+				}
+				catch (ElementNotFoundPoshiRunnerException
+							elementNotFoundPoshiRunnerException) {
+
+					object = argument;
+				}
+
 				Boolean javaScriptResult =
 					(Boolean)javascriptExecutor.executeScript(
-						javaScript, argument);
+						javaScript, object);
 
 				if (javaScriptResult == null) {
 					return false;
@@ -4341,7 +4403,7 @@ public abstract class BaseWebDriverImpl implements LiferaySelenium, WebDriver {
 			return webElements.get(0);
 		}
 
-		throw new RuntimeException(
+		throw new ElementNotFoundPoshiRunnerException(
 			"Element is not present at \"" + locator + "\"");
 	}
 

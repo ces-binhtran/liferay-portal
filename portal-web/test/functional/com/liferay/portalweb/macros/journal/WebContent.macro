@@ -126,7 +126,7 @@ definition {
 
 		Alert.viewRequestFailedToComplete();
 
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "Message#ERROR_1",
@@ -245,7 +245,7 @@ definition {
 	}
 
 	macro addPriority {
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		Type(
 			locator1 = "WC#PRIORITY",
@@ -287,7 +287,7 @@ definition {
 	}
 
 	macro addTagPGViaWCD {
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		Type(
 			locator1 = "AssetCategorization#TAGS_FIELD",
@@ -379,7 +379,7 @@ definition {
 
 		Panel.expandPanel(panel = "Friendly URL");
 
-		Type(
+		Type.typePause(
 			locator1 = "TextInput#FRIENDLY_URL",
 			value1 = "${friendlyUrl}");
 
@@ -439,7 +439,7 @@ definition {
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
 
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		AssetCategorization.addMultipleCategories(
 			categoryNameList = "${categoryNameList}",
@@ -450,8 +450,9 @@ definition {
 
 			Alert.viewErrorMessage(errorMessage = "You cannot select more than one category for Vocabulary Name.");
 		}
-
-		PortletEntry.publish();
+		else {
+			PortletEntry.publish();
+		}
 	}
 
 	macro addWithPriorityCP {
@@ -459,7 +460,7 @@ definition {
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
 
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		Type(
 			locator1 = "TextInput#ASSET_PRIORITY",
@@ -548,6 +549,18 @@ definition {
 				key_fieldName = "HTML",
 				locator1 = "DDMField#HTML",
 				value1 = "${webContentHTML}");
+		}
+
+		if (isSet(webContentSourceHTML)) {
+			Click(
+				key_editor = "HTML",
+				locator1 = "AlloyEditor#EDITOR");
+
+			Click(locator1 = "Button#EDITOR_SWITCH");
+
+			Type.typeAceEditor(
+				locator1 = "TextArea#ACE_EDITOR",
+				value1 = "${webContentSourceHTML}");
 		}
 
 		if (isSet(webContentImage)) {
@@ -731,7 +744,7 @@ definition {
 			webContentContent = "${webContentContent}",
 			webContentTitle = "${webContentTitle}");
 
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		for (var tagName : list "${tagNameList}") {
 			AssetCategorization.addTag(tagName = "${tagName}");
@@ -808,7 +821,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		AssertTextNotPresent(value1 = "${webContentTitle}");
@@ -826,7 +838,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Recycle Bin",
-			panel = "Site Administration",
 			portlet = "Recycle Bin");
 
 		RecycleBin.emptyCP();
@@ -837,7 +848,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		AssertTextNotPresent(value1 = "${webContentTitle}");
@@ -885,12 +895,8 @@ definition {
 				value1 = "Draft");
 		}
 		else {
-			if ("${changeListEnabled}" == "true") {
-				Button.clickPublishToChangeList();
-			}
-			else {
-				PortletEntry.publish();
-			}
+			PortletEntry.publish();
+
 			LexiconEntry.changeDisplayStyle(displayStyle = "list");
 
 			var key_webContentTitle = "${webContentTitleEdit}";
@@ -918,7 +924,7 @@ definition {
 			locator1 = "WCEditWebContent#DISPLAY_PAGE_SELECT",
 			value1 = "Specific Display Page Template");
 
-		Click(locator1 = "WCEditWebContent#DISPLAY_PAGE_CHOOSE_BUTTON");
+		Click.javaScriptClick(locator1 = "WCEditWebContent#DISPLAY_PAGE_CHOOSE_BUTTON");
 
 		Pause(locator1 = "5000");
 
@@ -1095,12 +1101,7 @@ definition {
 				value1 = "Draft");
 		}
 		else {
-			if ("${changeListEnabled}" == "true") {
-				Button.clickPublishToChangeList();
-			}
-			else {
-				PortletEntry.publish();
-			}
+			PortletEntry.publish();
 		}
 	}
 
@@ -1262,7 +1263,7 @@ definition {
 
 		AssertConfirm(value1 = "Are you sure you want to move this to the Recycle Bin?");
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		AssertElementNotPresent(
 			key_webContentTitle = "${key_webContentTitle}",
@@ -1278,7 +1279,7 @@ definition {
 
 		Confirm();
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
 	macro paginateRelatedAssets {
@@ -1350,7 +1351,7 @@ definition {
 	}
 
 	macro selectCategory {
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		if (isSet(userSegmentDetailTitle)) {
 			AssertTextEquals(
@@ -1443,7 +1444,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
-			panel = "Site Administration",
 			portlet = "Web Content");
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "list");
@@ -1453,14 +1453,13 @@ definition {
 
 			Click(locator1 = "Icon#MOVE_TO_RECYCLE_BIN");
 
-			AssertElementPresent(locator1 = "Message#SUCCESS");
+			VerifyElementPresent(locator1 = "Message#SUCCESS");
 		}
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Recycle Bin",
-			panel = "Site Administration",
 			portlet = "Recycle Bin");
 
 		RecycleBin.emptyCP();
@@ -1527,7 +1526,7 @@ definition {
 	}
 
 	macro viewCategorizationCategoryCP {
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		for (var categoryName : list "${categoryNameList}") {
 			AssertTextEquals(
@@ -1538,7 +1537,7 @@ definition {
 	}
 
 	macro viewCategorizationCategoryNotVisibleCP {
-		Panel.expandPanel(panel = "Metadata");
+		Panel.expandPanel(panel = "Categorization");
 
 		for (var categoryName : list "${categoryNameList}") {
 			AssertElementNotPresent(
@@ -1548,17 +1547,13 @@ definition {
 	}
 
 	macro viewCategorizationVocabularyCP {
-		Panel.expandPanel(panel = "Metadata");
-
-		var count = "1";
+		Panel.expandPanel(panel = "Categorization");
 
 		for (var vocabularyName : list "${vocabularyNameList}") {
 			AssertTextEquals(
-				key_count = "${count}",
+				key_fieldLabel = "${vocabularyName}",
 				locator1 = "AssetCategorization#VOCABULARY_LIST_ITEM",
 				value1 = "${vocabularyName}");
-
-			var count = ${count} + 1;
 		}
 	}
 
@@ -1617,11 +1612,67 @@ definition {
 			SelectFrame(value1 = "relative=top");
 		}
 
+		if (isSet(webContentDecimal)) {
+			AssertTextEquals(
+				key_fieldName = "Decimal",
+				locator1 = "TextInput#DDM",
+				value1 = "${webContentDecimal}");
+		}
+
+		if (isSet(webContentInteger)) {
+			AssertTextEquals(
+				key_fieldName = "Integer",
+				locator1 = "TextInput#DDM",
+				value1 = "${webContentInteger}");
+		}
+
+		if (isSet(webContentNumber)) {
+			AssertTextEquals(
+				key_fieldName = "Number",
+				locator1 = "TextInput#DDM",
+				value1 = "${webContentNumber}");
+		}
+
+		if (isSet(webContentTextBox)) {
+			AssertTextEquals(
+				key_fieldName = "TextBox",
+				locator1 = "DDMField#TEXT_BOX",
+				value1 = "${webContentTextBox}");
+		}
+
 		if (isSet(webContentDocumentsAndMedia)) {
 			AssertTextEquals(
 				key_fieldName = "DocumentsAndMedia",
 				locator1 = "TextInput#DDM",
 				value1 = "${webContentDocumentsAndMedia}");
+		}
+
+		if (isSet(webContentDescription)) {
+			if (isSet(otherLocaleSummary)) {
+				SelectFrame.selectFrameNoLoading(
+					key_fieldLabel = "${otherLocaleSummary}",
+					locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+			}
+			else {
+				SelectFrame.selectFrameNoLoading(
+					key_fieldLabel = "Summary",
+					locator1 = "CKEditor#BODY_FIELD_IFRAME_WEB_CONTENT_ARTICLE");
+			}
+
+			AssertTextEquals(
+				locator1 = "CKEditor#BODY",
+				value1 = "${webContentDescription}");
+
+			SelectFrameTop(value1 = "relative=top");
+		}
+
+		if (isSet(webContentHTML)) {
+			AssertTextEquals.assertPartialText(
+				key_editor = "HTML",
+				locator1 = "AlloyEditor#EDITOR",
+				value1 = "${webContentHTML}");
+
+			SelectFrame(value1 = "relative=top");
 		}
 	}
 
@@ -2071,6 +2122,29 @@ definition {
 				locator1 = "WC#ENTRY_LIST_TITLE",
 				value1 = "${webContentTitle}");
 		}
+	}
+
+	macro viewTranslationStatusWithWorkflowCP {
+		WebContentNavigator.gotoViewStatus(
+			translationStatus = "true",
+			webContentStatus = "PENDING",
+			webContentTitle = "${webContentTitle}");
+
+		AssertTextEquals(
+			key_status = "Pending",
+			locator1 = "AssetWorkflow#WORKFLOW_STATUS",
+			value1 = "Pending");
+
+		AssertTextEquals(
+			locator1 = "TextInput#TITLE",
+			value1 = "${webContentTitle}");
+
+		AssertTextEquals(
+			key_editor = "content",
+			locator1 = "AlloyEditor#EDITOR",
+			value1 = "${webContentContent}");
+
+		SelectFrameTop();
 	}
 
 	macro viewUserEditCP {

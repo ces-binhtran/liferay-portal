@@ -84,8 +84,8 @@ String navigation = ParamUtil.getString(request, "navigation");
 
 		<div>
 			<react:component
-				data="<%= context %>"
 				module="document_library/js/bulk/BulkStatus.es"
+				props="<%= context %>"
 			/>
 		</div>
 
@@ -95,7 +95,7 @@ String navigation = ParamUtil.getString(request, "navigation");
 			boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
 			%>
 
-			<div class='closed <%= portletTitleBasedNavigation ? "container-fluid-1280" : StringPool.BLANK %> sidenav-container sidenav-right' id="<portlet:namespace />infoPanelId">
+			<div class="closed <%= portletTitleBasedNavigation ? "container-fluid-1280" : StringPool.BLANK %> sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
 				<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/document_library/info_panel" var="sidebarPanelURL">
 					<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
 					<portlet:param name="repositoryId" value="<%= String.valueOf(repositoryId) %>" />
@@ -171,7 +171,7 @@ String navigation = ParamUtil.getString(request, "navigation");
 			uploadable = false;
 		}
 		else {
-			List<AssetVocabulary> assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(scopeGroupId);
+			List<AssetVocabulary> assetVocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId));
 
 			if (!assetVocabularies.isEmpty()) {
 				long classNameId = ClassNameLocalServiceUtil.getClassNameId(DLFileEntryConstants.getClassName());
@@ -333,8 +333,8 @@ String navigation = ParamUtil.getString(request, "navigation");
 
 		<div>
 			<react:component
-				data="<%= editTagsData %>"
 				module="document_library/js/categorization/tags/EditTags.es"
+				props="<%= editTagsData %>"
 			/>
 		</div>
 
@@ -358,8 +358,8 @@ String navigation = ParamUtil.getString(request, "navigation");
 
 		<div>
 			<react:component
-				data="<%= editCategoriesData %>"
 				module="document_library/js/categorization/categories/EditCategories.es"
+				props="<%= editCategoriesData %>"
 			/>
 		</div>
 

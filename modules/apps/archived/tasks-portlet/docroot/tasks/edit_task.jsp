@@ -37,7 +37,7 @@ if ((tasksEntry != null) && (tasksEntry.getDueDate() != null)) {
 	dueDateToggleText = LanguageUtil.get(request, "remove-due-date");
 }
 
-String dueDateControlGroupCssClass = renderResponse.getNamespace() + "dueDateControlGroup";
+String dueDateControlGroupCssClass = liferayPortletResponse.getNamespace() + "dueDateControlGroup";
 
 String dueDateWrapperCssClass = dueDateControlGroupCssClass + StringPool.SPACE + dueDateHideClass;
 %>
@@ -70,7 +70,7 @@ String dueDateWrapperCssClass = dueDateControlGroupCssClass + StringPool.SPACE +
 							<c:when test="<%= group.isUser() %>">
 								<aui:option label="<%= HtmlUtil.escape(user.getFullName()) %>" selected="<%= assigneeUserId == 0 %>" value="<%= user.getUserId() %>" />
 
-								<optgroup label='<liferay-ui:message key="contacts" />'>
+								<optgroup label="<liferay-ui:message key="contacts" />">
 							</c:when>
 							<c:otherwise>
 								<aui:option label="unassigned" selected="<%= assigneeUserId == 0 %>" value="0" />
@@ -81,7 +81,7 @@ String dueDateWrapperCssClass = dueDateControlGroupCssClass + StringPool.SPACE +
 									<aui:option label="<%= PortalUtil.getUserName(assigneeUserId, tasksEntry.getAssigneeFullName()) %>" selected="<%= true %>" />
 								</c:if>
 
-								<optgroup label='<liferay-ui:message key="members" />'>
+								<optgroup label="<liferay-ui:message key="members" />">
 							</c:otherwise>
 						</c:choose>
 
@@ -127,7 +127,7 @@ String dueDateWrapperCssClass = dueDateControlGroupCssClass + StringPool.SPACE +
 					<aui:field-wrapper>
 						<label class="control-label"><liferay-ui:message key="due-date" /></label>
 
-						<aui:a cssClass="field-content" href="javascript:;" id="toggleDueDate" label="<%= dueDateToggleText %>" onClick='<%= renderResponse.getNamespace() + "displayInputDate();" %>' />
+						<aui:a cssClass="field-content" href="javascript:;" id="toggleDueDate" label="<%= dueDateToggleText %>" onClick='<%= liferayPortletResponse.getNamespace() + "displayInputDate();" %>' />
 					</aui:field-wrapper>
 
 					<aui:input id="addDueDate" name="addDueDate" type="hidden" value="<%= addDueDate %>" />

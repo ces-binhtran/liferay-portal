@@ -12,49 +12,66 @@
  * details.
  */
 
+import {PropTypes} from 'prop-types';
 import React from 'react';
 
-import MappingField from './MappingField';
+import MappingInputs from './components/MappingInputs';
+import lang from './utils/lang';
 
-function SeoMapping({
+export default function SeoMapping({
 	description,
 	fields,
 	portletNamespace,
 	selectedSource,
 	title,
 }) {
-	const ns = (obj) => Liferay.Util.ns(portletNamespace, obj);
-
 	return (
-		<>
-			<MappingField
-				fields={fields}
-				label={Liferay.Language.get('html-title')}
-				name={ns('title')}
-				selectedField={
-					fields.find(({key}) => key === title) || fields[0]
-				}
-				selectedSource={selectedSource}
-			/>
-
-			<MappingField
-				fields={fields}
-				label={Liferay.Language.get('description')}
-				name={ns('description')}
-				selectedField={
-					fields.find(({key}) => key === description) || fields[0]
-				}
-				selectedSource={selectedSource}
-			/>
-		</>
-	);
-}
-
-export default function (props) {
-	return (
-		<SeoMapping
-			{...props}
-			portletNamespace={`_${props.portletNamespace}_`}
+		<MappingInputs
+			fields={fields}
+			inputs={[
+				{
+					fieldType: 'text',
+					helpMessage: lang.sub(
+						Liferay.Language.get(
+							'map-a-x-field-it-will-be-used-as-x'
+						),
+						Liferay.Language.get('text'),
+						Liferay.Language.get('html-title')
+					),
+					label: Liferay.Language.get('html-title'),
+					name: `${portletNamespace}TypeSettingsProperties--mapped-title--`,
+					selectedFieldKey: title,
+				},
+				{
+					fieldType: 'text',
+					helpMessage: lang.sub(
+						Liferay.Language.get(
+							'map-a-x-field-it-will-be-used-as-x'
+						),
+						Liferay.Language.get('text'),
+						Liferay.Language.get('description')
+					),
+					label: Liferay.Language.get('description'),
+					name: `${portletNamespace}TypeSettingsProperties--mapped-description--`,
+					selectedFieldKey: description,
+				},
+			]}
+			selectedSource={selectedSource}
 		/>
 	);
 }
+
+SeoMapping.propTypes = {
+	description: PropTypes.string,
+	fields: PropTypes.arrayOf(
+		PropTypes.shape({
+			key: PropTypes.string,
+			label: PropTypes.string,
+		})
+	).isRequired,
+	selectedSource: PropTypes.shape({
+		classNameLabel: PropTypes.string,
+		classTypeLabel: PropTypes.string,
+	}).isRequired,
+	title: PropTypes.string,
+};

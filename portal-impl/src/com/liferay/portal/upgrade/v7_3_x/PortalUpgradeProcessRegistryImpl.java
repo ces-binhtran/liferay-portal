@@ -118,6 +118,18 @@ public class PortalUpgradeProcessRegistryImpl
 				"SocialActivityCounter", "SocialActivityLimit",
 				"SocialActivitySet", "SocialActivitySetting", "SocialRelation",
 				"SocialRequest"));
+
+		upgradeProcesses.put(
+			new Version(8, 15, 0), new UpgradeCTModel("SystemEvent"));
+
+		upgradeProcesses.put(
+			new Version(8, 16, 0), new UpgradeDLFileEntryType());
+
+		upgradeProcesses.put(
+			new Version(8, 17, 0), new UpgradeAssetVocabulary());
+
+		upgradeProcesses.put(
+			new Version(8, 18, 0), new UpgradeLayoutStyleBookEntry());
 	}
 
 }

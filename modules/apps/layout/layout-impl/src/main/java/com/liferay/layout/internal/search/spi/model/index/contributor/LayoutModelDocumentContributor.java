@@ -34,12 +34,14 @@ import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
+import com.liferay.portal.kernel.search.Query;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -145,7 +147,8 @@ public class LayoutModelDocumentContributor
 				}
 
 				document.addText(
-					Field.getLocalizedName(locale, Field.CONTENT), content);
+					Field.getLocalizedName(locale, Field.CONTENT),
+					HtmlUtil.stripHtml(content));
 			}
 			catch (PortalException portalException) {
 				throw new SystemException(portalException);
@@ -176,7 +179,7 @@ public class LayoutModelDocumentContributor
 
 		SearchContext searchContext = new SearchContext();
 
-		BooleanClause booleanClause = BooleanClauseFactoryUtil.create(
+		BooleanClause<Query> booleanClause = BooleanClauseFactoryUtil.create(
 			Field.ENTRY_CLASS_PK, String.valueOf(stagingLayout.getPlid()),
 			BooleanClauseOccur.MUST.getName());
 

@@ -113,6 +113,44 @@ public class GitWorkingDirectory {
 		return newGitRemote;
 	}
 
+	public LocalGitBranch checkoutLocalGitBranch(
+		Build.BranchInformation branchInformation) {
+
+		checkoutUpstreamLocalGitBranch();
+
+		LocalGitBranch localGitBranch = createLocalGitBranch(
+			JenkinsResultsParserUtil.combine(
+				branchInformation.getUpstreamBranchName(), "-temp-",
+				String.valueOf(System.currentTimeMillis())),
+			true);
+
+		try {
+			RemoteGitRef cacheBranchFromGitHubDev =
+				GitHubDevSyncUtil.fetchCacheBranchFromGitHubDev(
+					this, branchInformation.getCachedRemoteGitRefName());
+
+			localGitBranch = createLocalGitBranch(
+				localGitBranch.getName(), true,
+				cacheBranchFromGitHubDev.getSHA());
+		}
+		catch (Exception exception) {
+			RemoteGitRef senderRemoteGitRef =
+				branchInformation.getSenderRemoteGitRef();
+
+			localGitBranch = getRebasedLocalGitBranch(
+				localGitBranch.getName(),
+				branchInformation.getSenderBranchName(),
+				senderRemoteGitRef.getRemoteURL(),
+				branchInformation.getSenderBranchSHA(),
+				branchInformation.getUpstreamBranchName(),
+				branchInformation.getUpstreamBranchSHA());
+		}
+
+		checkoutLocalGitBranch(localGitBranch);
+
+		return localGitBranch;
+	}
+
 	public void checkoutLocalGitBranch(LocalGitBranch localGitBranch) {
 		checkoutLocalGitBranch(localGitBranch, "-f");
 	}
@@ -680,25 +718,33 @@ public class GitWorkingDirectory {
 			(remoteGitRef instanceof RemoteGitBranch) &&
 			remoteURL.contains("github.com:liferay/")) {
 
-			LocalGitBranch liferayGitHubLocalGitBranch = createLocalGitBranch(
-				JenkinsResultsParserUtil.combine(
-					"temp-", remoteGitRef.getName()),
-				true, remoteGitRef.getSHA());
+			String upstreamBranchSHA = getRemoteGitBranchSHA(
+				remoteGitRef.getName(), getUpstreamGitRemote());
 
-			List<GitRemote> gitHubDevGitRemotes =
-				GitHubDevSyncUtil.getGitHubDevGitRemotes(this);
+			if ((upstreamBranchSHA != null) &&
+				upstreamBranchSHA.equals(remoteGitRef.getSHA())) {
 
-			try {
-				GitHubDevSyncUtil.pushToAllRemotes(
-					true, liferayGitHubLocalGitBranch, remoteGitRef.getName(),
-					gitHubDevGitRemotes);
-			}
-			finally {
-				if (localGitBranch == null) {
-					deleteLocalGitBranch(liferayGitHubLocalGitBranch);
+				LocalGitBranch liferayGitHubLocalGitBranch =
+					createLocalGitBranch(
+						JenkinsResultsParserUtil.combine(
+							"temp-", remoteGitRef.getName()),
+						true, remoteGitRef.getSHA());
+
+				List<GitRemote> gitHubDevGitRemotes =
+					GitHubDevSyncUtil.getGitHubDevGitRemotes(this);
+
+				try {
+					GitHubDevSyncUtil.pushToAllRemotes(
+						true, liferayGitHubLocalGitBranch,
+						remoteGitRef.getName(), gitHubDevGitRemotes);
 				}
+				finally {
+					if (localGitBranch == null) {
+						deleteLocalGitBranch(liferayGitHubLocalGitBranch);
+					}
 
-				removeGitRemotes(gitHubDevGitRemotes);
+					removeGitRemotes(gitHubDevGitRemotes);
+				}
 			}
 		}
 
@@ -973,7 +1019,9 @@ public class GitWorkingDirectory {
 		String currentBranchName = getCurrentBranchName();
 
 		if (currentBranchName == null) {
-			return null;
+			checkoutUpstreamLocalGitBranch();
+
+			return getUpstreamLocalGitBranch();
 		}
 
 		return getLocalGitBranch(currentBranchName);
@@ -1129,10 +1177,10 @@ public class GitWorkingDirectory {
 
 			System.out.println(sb);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			System.out.println("Unable to parse git remotes\n" + standardOut);
 
-			throw t;
+			throw throwable;
 		}
 
 		return _gitRemotes;
@@ -2037,11 +2085,9 @@ public class GitWorkingDirectory {
 	}
 
 	protected Map<String, String> getLocalGitBranchesShaMap() {
-		File workingDirectory = getWorkingDirectory();
-
 		String command = JenkinsResultsParserUtil.combine(
 			"git ls-remote -h ",
-			JenkinsResultsParserUtil.getCanonicalPath(workingDirectory));
+			JenkinsResultsParserUtil.getCanonicalPath(getWorkingDirectory()));
 
 		GitUtil.ExecutionResult executionResult = executeBashCommands(
 			GitUtil.RETRIES_SIZE_MAX, GitUtil.MILLIS_RETRY_DELAY,

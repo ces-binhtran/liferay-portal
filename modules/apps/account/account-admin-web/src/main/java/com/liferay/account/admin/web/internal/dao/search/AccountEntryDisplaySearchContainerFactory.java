@@ -22,10 +22,12 @@ import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.vulcan.util.TransformUtil;
 
@@ -47,17 +49,28 @@ public class AccountEntryDisplaySearchContainerFactory {
 			new LinkedHashMap<>(), true);
 	}
 
-	public static SearchContainer<AccountEntryDisplay> create(
+	public static SearchContainer<AccountEntryDisplay> createWithAccountGroupId(
+		long accountGroupId, LiferayPortletRequest liferayPortletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
+
+		return _create(
+			liferayPortletRequest, liferayPortletResponse,
+			LinkedHashMapBuilder.<String, Object>put(
+				"accountGroupIds", new long[] {accountGroupId}
+			).build(),
+			false);
+	}
+
+	public static SearchContainer<AccountEntryDisplay> createWithUserId(
 		long userId, LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse) {
 
-		LinkedHashMap<String, Object> params =
+		return _create(
+			liferayPortletRequest, liferayPortletResponse,
 			LinkedHashMapBuilder.<String, Object>put(
 				"accountUserIds", new long[] {userId}
-			).build();
-
-		return _create(
-			liferayPortletRequest, liferayPortletResponse, params, false);
+			).build(),
+			false);
 	}
 
 	private static SearchContainer<AccountEntryDisplay> _create(
@@ -68,7 +81,9 @@ public class AccountEntryDisplaySearchContainerFactory {
 
 		SearchContainer<AccountEntryDisplay>
 			accountEntryDisplaySearchContainer = new SearchContainer(
-				liferayPortletRequest, liferayPortletResponse.createRenderURL(),
+				liferayPortletRequest,
+				PortletURLUtil.getCurrent(
+					liferayPortletRequest, liferayPortletResponse),
 				null, "no-accounts-were-found");
 
 		accountEntryDisplaySearchContainer.setId("accountEntries");
@@ -93,6 +108,12 @@ public class AccountEntryDisplaySearchContainerFactory {
 			liferayPortletRequest, "navigation", "active");
 
 		params.put("status", _getStatus(navigation));
+
+		String type = ParamUtil.getString(liferayPortletRequest, "type");
+
+		if (Validator.isNotNull(type) && !type.equals("all")) {
+			params.put("type", type);
+		}
 
 		BaseModelSearchResult<AccountEntry> baseModelSearchResult;
 

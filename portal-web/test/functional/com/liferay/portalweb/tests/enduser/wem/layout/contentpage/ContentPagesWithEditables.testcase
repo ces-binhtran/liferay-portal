@@ -36,6 +36,7 @@ definition {
 	@description = "Add a content page and edit its fragment immediately. This is a variation of the steps from LPS-85872."
 	@priority = "5"
 	test AddContentPageWithEditedFragmentText {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		ContentPagesNavigator.openEditContentPage(
@@ -62,7 +63,6 @@ definition {
 			AssertVisible(
 				key_content = "New editable fragment text",
 				key_fragmentClass = "body",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 		}
 	}
@@ -153,6 +153,8 @@ definition {
 	@description = "This is a test for LPS-106776. Add a translation to editable text."
 	@priority = "5"
 	test AddTraslationtoRichText {
+		property portal.acceptance = "true";
+
 		task ("Add a Rich Text fragment to the content page") {
 			ContentPagesNavigator.openEditContentPage(
 				pageName = "Content Page Name",
@@ -193,7 +195,6 @@ definition {
 			AssertVisible(
 				key_content = "New editable fragment en-US text",
 				key_fragmentClass = "rich-text",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 
 			Click(locator1 = "PageEditor#DROPDOWN");
@@ -203,7 +204,6 @@ definition {
 			AssertVisible(
 				key_content = "New editable fragment ca-ES text",
 				key_fragmentClass = "rich-text",
-				key_position = "1",
 				locator1 = "Fragment#FRAGMENT");
 		}
 	}

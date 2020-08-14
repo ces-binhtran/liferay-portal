@@ -69,15 +69,16 @@ ViewAccountEntriesManagementToolbarDisplayContext viewAccountEntriesManagementTo
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand"
 					href="<%= rowURL %>"
-					name="parent-account"
-					property="parentAccountEntryName"
+					name="organizations"
+					property="organizationNames"
 				/>
 
 				<liferay-ui:search-container-column-text
 					cssClass="table-cell-expand"
 					href="<%= rowURL %>"
-					name="organizations"
-					property="organizationNames"
+					name="type"
+					property="type"
+					translate="<%= true %>"
 				/>
 
 				<liferay-ui:search-container-column-text

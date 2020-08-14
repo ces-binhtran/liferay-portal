@@ -21,12 +21,15 @@ import {
 	getLayoutDataItemPropTypes,
 } from '../../../prop-types/index';
 import {VIEWPORT_SIZES} from '../../config/constants/viewportSizes';
+import selectCanUpdateItemConfiguration from '../../selectors/selectCanUpdateItemConfiguration';
+import selectCanUpdatePageStructure from '../../selectors/selectCanUpdatePageStructure';
 import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
 import {useDispatch, useSelector} from '../../store/index';
 import resizeColumns from '../../thunks/resizeColumns';
 import {getResponsiveColumnSize} from '../../utils/getResponsiveColumnSize';
 import {NotDraggableArea} from '../../utils/useDragAndDrop';
 import {useIsActive} from '../Controls';
+import {useGlobalContext} from '../GlobalContext';
 import {
 	useResizeContext,
 	useSetCustomRowContext,
@@ -45,7 +48,7 @@ const getNewResponsiveConfig = (size, config, viewportSize) => {
 		: {...config, [viewportSize]: {size}};
 };
 
-const updateNewLayoutDataContext = (
+export const updateNewLayoutDataContext = (
 	layoutDataContext,
 	columnConfig,
 	selectedViewportSize
@@ -83,6 +86,13 @@ const ColumnWithControls = React.forwardRef(
 		] = useState(false);
 		const parentItem = layoutData.items[item.parentId];
 		const resizeInfo = useRef();
+		const canUpdateItemConfiguration = useSelector(
+			selectCanUpdateItemConfiguration
+		);
+		const canUpdatePageStructure = useSelector(
+			selectCanUpdatePageStructure
+		);
+		const globalContext = useGlobalContext();
 		const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
 		const [selectedColumn, setColumnSelected] = useState(null);
 		const selectedViewportSize = useSelector(
@@ -311,6 +321,8 @@ const ColumnWithControls = React.forwardRef(
 						dispatch(
 							resizeColumns({
 								layoutData: layoutDataContext,
+								rowItemId: parentItem.itemId,
+								segmentsExperienceId,
 							})
 						).then(() => {
 							setUpdatedLayoutData(null);
@@ -354,7 +366,7 @@ const ColumnWithControls = React.forwardRef(
 				}
 			},
 			false,
-			document.body
+			globalContext.document.body
 		);
 
 		useEventListener(
@@ -367,13 +379,14 @@ const ColumnWithControls = React.forwardRef(
 					dispatch(
 						resizeColumns({
 							layoutData: layoutDataContext,
+							rowItemId: parentItem.itemId,
 							segmentsExperienceId,
 						})
 					).then(() => setUpdatedLayoutData(null));
 				}
 			},
 			false,
-			document.body
+			globalContext.document.body
 		);
 
 		const isActive = useIsActive();
@@ -401,7 +414,9 @@ const ColumnWithControls = React.forwardRef(
 					item={item}
 					ref={ref}
 				>
-					{parentItemIsActive && columnIndex !== 0 ? (
+					{(canUpdatePageStructure || canUpdateItemConfiguration) &&
+					parentItemIsActive &&
+					columnIndex !== 0 ? (
 						<NotDraggableArea>
 							<button
 								className={classNames(
@@ -411,6 +426,8 @@ const ColumnWithControls = React.forwardRef(
 									}
 								)}
 								onMouseDown={handleMouseDown}
+								title={Liferay.Language.get('resize-column')}
+								type="button"
 							/>
 							{children}
 						</NotDraggableArea>

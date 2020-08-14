@@ -17,6 +17,7 @@ package com.liferay.social.kernel.service;
 import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -54,6 +55,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see SocialActivityCounterLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -66,7 +68,7 @@ public interface SocialActivityCounterLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SocialActivityCounterLocalServiceUtil} to access the social activity counter local service. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialActivityCounterLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.social.service.impl.SocialActivityCounterLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the social activity counter local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SocialActivityCounterLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -131,6 +133,10 @@ public interface SocialActivityCounterLocalService
 
 	/**
 	 * Adds the social activity counter to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityCounterLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityCounter the social activity counter
 	 * @return the social activity counter that was added
@@ -199,6 +205,10 @@ public interface SocialActivityCounterLocalService
 	/**
 	 * Deletes the social activity counter with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityCounterLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param activityCounterId the primary key of the social activity counter
 	 * @return the social activity counter that was removed
 	 * @throws PortalException if a social activity counter with the primary key could not be found
@@ -210,6 +220,10 @@ public interface SocialActivityCounterLocalService
 
 	/**
 	 * Deletes the social activity counter from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityCounterLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityCounter the social activity counter
 	 * @return the social activity counter that was removed
@@ -595,6 +609,10 @@ public interface SocialActivityCounterLocalService
 
 	/**
 	 * Updates the social activity counter in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityCounterLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityCounter the social activity counter
 	 * @return the social activity counter that was updated

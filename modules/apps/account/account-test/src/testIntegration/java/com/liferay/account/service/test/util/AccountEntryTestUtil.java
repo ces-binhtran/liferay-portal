@@ -73,4 +73,17 @@ public class AccountEntryTestUtil {
 			ServiceContextTestUtil.getServiceContext());
 	}
 
+	public static AccountEntry addPersonAccountEntry(
+			AccountEntryLocalService accountEntryLocalService)
+		throws Exception {
+
+		return accountEntryLocalService.addAccountEntry(
+			TestPropsValues.getUserId(), 0L, RandomTestUtil.randomString(50),
+			RandomTestUtil.randomString(50), null, null,
+			RandomTestUtil.randomString(50),
+			AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON,
+			WorkflowConstants.STATUS_APPROVED,
+			ServiceContextTestUtil.getServiceContext());
+	}
+
 }

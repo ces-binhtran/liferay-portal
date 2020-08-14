@@ -27,6 +27,8 @@ definition {
 	@description = "This is a use case for LPS-102207. Can not export a master page template when it doesn't has published version."
 	@priority = "5"
 	test CannotExportMastersPageTemplateWithoutPublishedVersion {
+		property portal.acceptance = "true";
+
 		task ("Add a custom master but not publish") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
 				groupName = "Test Site Name",
@@ -77,11 +79,11 @@ definition {
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
 				dropTarget = "Footer",
-				fragmentName = "Section",
+				fragmentName = "Container",
 				scope = "Master");
 
-			Click(
-				key_elementType = "Section",
+			Click.clickNoWaitForVisible(
+				key_elementType = "Container",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 
@@ -92,7 +94,7 @@ definition {
 				key_fragmentName = "Heading",
 				key_position = "1",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-				locator2 = "PageEditor#SECTION_CONTAINER",
+				locator2 = "PageEditor#CONTAINER_CONTAINER",
 				value1 = "");
 
 			PageEditor.waitForAutoSave();
@@ -100,15 +102,13 @@ definition {
 			AssertElementPresent(
 				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Heading')]",
 				key_position = "1",
-				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
 				dropTarget = "Footer",
-				fragmentName = "Row",
+				fragmentName = "Grid",
 				scope = "Master");
-
-			PageEditor.gotoTab(tabName = "Fragments");
 
 			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
 
@@ -118,7 +118,7 @@ definition {
 				key_fragmentName = "Button",
 				key_position = "1",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-				locator2 = "PageEditor#ROW_COLUMN",
+				locator2 = "PageEditor#GRID_COLUMN",
 				value1 = "");
 
 			PageEditor.waitForAutoSave();
@@ -127,7 +127,7 @@ definition {
 				key_columnNumber = "1",
 				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Button')]",
 				key_position = "1",
-				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
 
 			Button.click(button = "Publish Master");
 		}
@@ -156,17 +156,17 @@ definition {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
 			AssertElementPresent(
-				key_elementType = "Section",
+				key_elementType = "Container",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 
 			AssertElementPresent(
 				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Heading')]",
 				key_position = "1",
-				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
 			AssertElementPresent(
-				key_elementType = "Row",
+				key_elementType = "Grid",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 
@@ -174,7 +174,7 @@ definition {
 				key_columnNumber = "1",
 				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Button')]",
 				key_position = "1",
-				locator1 = "PageEditor#ROW_COLUMN_NESTED_ELEMENT");
+				locator1 = "PageEditor#GRID_COLUMN_NESTED_ELEMENT");
 		}
 	}
 
@@ -187,7 +187,7 @@ definition {
 				masterPageTemplateEntryName = "Custom Masters Page Template");
 		}
 
-		task ("Add a Section and a Heading to custom master and set up configuration settings of them") {
+		task ("Add a Container and a Heading to custom master and set up configuration settings of them") {
 			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
 
 			MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
@@ -197,14 +197,15 @@ definition {
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
 				dropTarget = "Footer",
-				fragmentName = "Section",
+				fragmentName = "Container",
 				scope = "Master");
 
-			PageEditor.editLayoutSection(
+			PageEditor.editLayoutContainer(
 				backgroundImage = "Manual Selection",
+				panel = "Styles",
 				uploadFileName = "Document_1.png");
 
-			PageEditor.viewSectionStyle(
+			PageEditor.viewContainerStyle(
 				backgroundImage = "Document_1.png",
 				position = "1");
 
@@ -214,13 +215,16 @@ definition {
 				fragmentName = "Heading",
 				scope = "Master");
 
-			PageEditor.gotoConfiguration(fragmentName = "Heading");
+			PageEditor.gotoStyle(fragmentName = "Heading");
 
 			PageEditor.configureFragment(
-				headingLevel = "H2",
+				alignment = "Center",
 				marginBottom = "1",
-				textAlign = "Center",
 				textColor = "danger");
+
+			PageEditor.gotoConfiguration(fragmentName = "Heading");
+
+			PageEditor.configureFragment(headingLevel = "H2");
 
 			PageEditor.viewFragmentStyle(
 				alignment = "center",
@@ -255,7 +259,7 @@ definition {
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-			PageEditor.viewSectionStyle(
+			PageEditor.viewContainerStyle(
 				backgroundImage = "Document_1.png",
 				position = "1");
 
@@ -284,7 +288,9 @@ definition {
 				item = "Edit",
 				masterLayoutName = "Custom Masters Page Template");
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			Theme.configureLookAndFeelShowFooter(showFooter = "true");
 
@@ -338,7 +344,9 @@ definition {
 
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			Pause(locator1 = "3000");
 
@@ -592,6 +600,12 @@ definition {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
 				groupName = "Test Site Name",
 				masterPageTemplateEntryName = "Custom Masters Page Template");
+
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			Button.click(button = "Publish Master");
 		}
 
 		task ("Change thumbnail of custom master") {
@@ -640,6 +654,12 @@ definition {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
 				groupName = "Test Site Name",
 				masterPageTemplateEntryName = "Custom Masters Page Template");
+
+			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
+
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			Button.click(button = "Publish Master");
 		}
 
 		task ("Change thumbnail of custom master") {
@@ -673,7 +693,7 @@ definition {
 
 			MenuItem.click(menuItem = "Import");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			var mastersZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "master-page-*.zip");
 
@@ -685,7 +705,7 @@ definition {
 				checkboxName = "Overwrite Existing Page Templates",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 
-			Click(locator1 = "Button#IMPORT");
+			Button.clickImport();
 
 			Alert.viewSuccessMessage();
 
@@ -709,13 +729,13 @@ definition {
 
 			MenuItem.click(menuItem = "Import");
 
-			SelectFrame(locator1 = "IFrame#DIALOG");
+			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 			UploadCommonFile(
 				locator1 = "TextInput#FILE",
 				value1 = "master-page-invalid-value.zip");
 
-			Click(locator1 = "Button#IMPORT");
+			Button.clickImport();
 		}
 
 		task ("Assert the specific error message is shown on Import popup") {

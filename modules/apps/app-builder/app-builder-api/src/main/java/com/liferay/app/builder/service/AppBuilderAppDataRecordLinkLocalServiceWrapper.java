@@ -38,6 +38,10 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 	/**
 	 * Adds the app builder app data record link to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was added
 	 */
@@ -51,6 +55,12 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 			addAppBuilderAppDataRecordLink(appBuilderAppDataRecordLink);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addAppBuilderAppDataRecordLink(long, long, long, long,
+	 long)}
+	 */
+	@Deprecated
 	@Override
 	public com.liferay.app.builder.model.AppBuilderAppDataRecordLink
 		addAppBuilderAppDataRecordLink(
@@ -59,6 +69,18 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 		return _appBuilderAppDataRecordLinkLocalService.
 			addAppBuilderAppDataRecordLink(
 				companyId, appBuilderAppId, ddlRecordId);
+	}
+
+	@Override
+	public com.liferay.app.builder.model.AppBuilderAppDataRecordLink
+		addAppBuilderAppDataRecordLink(
+			long groupId, long companyId, long appBuilderAppId,
+			long appBuilderAppVersionId, long ddlRecordId) {
+
+		return _appBuilderAppDataRecordLinkLocalService.
+			addAppBuilderAppDataRecordLink(
+				groupId, companyId, appBuilderAppId, appBuilderAppVersionId,
+				ddlRecordId);
 	}
 
 	/**
@@ -90,6 +112,10 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 	/**
 	 * Deletes the app builder app data record link from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was removed
 	 */
@@ -105,6 +131,10 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 
 	/**
 	 * Deletes the app builder app data record link with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderAppDataRecordLinkId the primary key of the app builder app data record link
 	 * @return the app builder app data record link that was removed
@@ -239,6 +269,14 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 	}
 
 	@Override
+	public com.liferay.app.builder.model.AppBuilderAppDataRecordLink
+		fetchDDLRecordAppBuilderAppDataRecordLink(long ddlRecordId) {
+
+		return _appBuilderAppDataRecordLinkLocalService.
+			fetchDDLRecordAppBuilderAppDataRecordLink(ddlRecordId);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -289,6 +327,16 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 
 		return _appBuilderAppDataRecordLinkLocalService.
 			getAppBuilderAppDataRecordLinks(appBuilderAppId);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.app.builder.model.AppBuilderAppDataRecordLink>
+			getAppBuilderAppDataRecordLinks(
+				long appBuilderAppId, long[] ddlRecordIds) {
+
+		return _appBuilderAppDataRecordLinkLocalService.
+			getAppBuilderAppDataRecordLinks(appBuilderAppId, ddlRecordIds);
 	}
 
 	/**
@@ -344,6 +392,10 @@ public class AppBuilderAppDataRecordLinkLocalServiceWrapper
 
 	/**
 	 * Updates the app builder app data record link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was updated

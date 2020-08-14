@@ -22,6 +22,8 @@ import SidebarPanelHeader from '../../../common/components/SidebarPanelHeader';
 import SearchResultsPanel from './SearchResultsPanel';
 import TabsPanel from './TabsPanel';
 
+const BASIC_COMPONENT_COLLECTION = 'BASIC_COMPONENT';
+
 export default function FragmentsSidebar() {
 	const fragments = useSelector((state) => state.fragments);
 	const widgets = useSelector((state) => state.widgets);
@@ -36,8 +38,11 @@ export default function FragmentsSidebar() {
 		() => [
 			{
 				collections: fragments.map((collection) => ({
-					children: collection.fragmentEntries.map(
-						normalizeFragmentEntry
+					children: collection.fragmentEntries.map((fragmentEntry) =>
+						normalizeFragmentEntry(
+							fragmentEntry,
+							collection.fragmentCollectionId
+						)
 					),
 					collectionId: collection.fragmentCollectionId,
 					label: collection.name,
@@ -45,11 +50,9 @@ export default function FragmentsSidebar() {
 				label: Liferay.Language.get('fragments'),
 			},
 			{
-				collections: widgets.map((collection) => ({
-					children: collection.portlets.map(normalizeWidget),
-					collectionId: collection.path,
-					label: collection.title,
-				})),
+				collections: widgets.map((collection) =>
+					normalizeCollections(collection)
+				),
 				label: Liferay.Language.get('widgets'),
 			},
 		],
@@ -64,17 +67,31 @@ export default function FragmentsSidebar() {
 							...tab,
 
 							collections: tab.collections
-								.map((collection) => ({
-									...collection,
-									children: collection.children.filter(
-										(item) =>
-											item.label
-												.toLowerCase()
-												.indexOf(
-													searchValueLowerCase
-												) !== -1
-									),
-								}))
+								.map((collection) => {
+									let filteredChildren = collection.children;
+
+									if (collection.collections) {
+										filteredChildren = filteredChildren
+											.concat(
+												collection.collections.map(
+													collectionFilter
+												)
+											)
+											.flat();
+									}
+
+									return {
+										...collection,
+										children: filteredChildren.filter(
+											(item) =>
+												item.label
+													.toLowerCase()
+													.indexOf(
+														searchValueLowerCase
+													) !== -1
+										),
+									};
+								})
 								.filter(
 									(collection) => collection.children.length
 								),
@@ -102,7 +119,23 @@ export default function FragmentsSidebar() {
 	);
 }
 
-const normalizeFragmentEntry = (fragmentEntry) => {
+const normalizeCollections = (collection) => {
+	const normalizedElement = {
+		children: collection.portlets.map(normalizeWidget),
+		collectionId: collection.path,
+		label: collection.title,
+	};
+
+	if (collection.categories?.length) {
+		normalizedElement.collections = collection.categories.map(
+			normalizeCollections
+		);
+	}
+
+	return normalizedElement;
+};
+
+const normalizeFragmentEntry = (fragmentEntry, collectionId) => {
 	if (!fragmentEntry.fragmentEntryKey) {
 		return fragmentEntry;
 	}
@@ -116,7 +149,10 @@ const normalizeFragmentEntry = (fragmentEntry) => {
 		icon: fragmentEntry.icon,
 		itemId: fragmentEntry.fragmentEntryKey,
 		label: fragmentEntry.name,
-		preview: fragmentEntry.type ? null : fragmentEntry.imagePreviewURL,
+		preview:
+			collectionId !== BASIC_COMPONENT_COLLECTION
+				? fragmentEntry.imagePreviewURL
+				: null,
 		type: LAYOUT_DATA_ITEM_TYPES.fragment,
 	};
 };
@@ -126,13 +162,25 @@ const normalizeWidget = (widget) => {
 		data: {
 			instanceable: widget.instanceable,
 			portletId: widget.portletId,
+			portletItemId: widget.portletItemId || null,
 			used: widget.used,
 		},
 		disabled: !widget.instanceable && widget.used,
 		icon: widget.instanceable ? 'cards2' : 'square-hole',
 		itemId: widget.portletId,
 		label: widget.title,
+		portletItems: widget.portletItems?.length
+			? widget.portletItems.map(normalizeWidget)
+			: null,
 		preview: '',
 		type: LAYOUT_DATA_ITEM_TYPES.fragment,
 	};
+};
+
+const collectionFilter = (collection) => {
+	return collection.collections.reduce((acc, item) => {
+		return item.collections?.length > 0
+			? acc.concat(item.children, collectionFilter(item))
+			: acc.concat(item.children);
+	}, []);
 };

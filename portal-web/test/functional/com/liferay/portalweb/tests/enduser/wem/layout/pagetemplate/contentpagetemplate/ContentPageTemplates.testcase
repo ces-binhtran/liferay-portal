@@ -35,6 +35,7 @@ definition {
 	@description = "Change a fragment's editable image field."
 	@priority = "5"
 	test ChangeEditableImage {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		task ("Add a content page template") {
@@ -84,6 +85,8 @@ definition {
 	@description = "Change a fragment's editable text field."
 	@priority = "5"
 	test ChangeEditableText {
+		property portal.acceptance = "true";
+
 		task ("Add a content page template") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
 				groupName = "Test Site Name",

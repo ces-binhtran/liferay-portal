@@ -52,7 +52,7 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 								allNavigationURL.setParameter("navigation", "all");
 								%>
 
-								<a class='nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "all") ? "active" : StringPool.BLANK %>' href="<%= allNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "all") ? "active" : StringPool.BLANK %>" href="<%= allNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getAllUsageCount() %>" key="all-x" />
 								</a>
 							</li>
@@ -64,8 +64,20 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 								pagesNavigationURL.setParameter("navigation", "pages");
 								%>
 
-								<a class='nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "pages") ? "active" : StringPool.BLANK %>' href="<%= pagesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "pages") ? "active" : StringPool.BLANK %>" href="<%= pagesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getPagesUsageCount() %>" key="pages-x" />
+								</a>
+							</li>
+							<li class="nav-item">
+
+								<%
+								PortletURL masterPagessNavigationURL = fragmentEntryLinkDisplayContext.getPortletURL();
+
+								masterPagessNavigationURL.setParameter("navigation", "master-pages");
+								%>
+
+								<a class="nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "master-pages") ? "active" : StringPool.BLANK %>" href="<%= masterPagessNavigationURL.toString() %>">
+									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getMasterPagesUsageCount() %>" key="master-pages-x" />
 								</a>
 							</li>
 							<li class="nav-item">
@@ -76,7 +88,7 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 								pageTemplatesNavigationURL.setParameter("navigation", "page-templates");
 								%>
 
-								<a class='nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "page-templates") ? "active" : StringPool.BLANK %>' href="<%= pageTemplatesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "page-templates") ? "active" : StringPool.BLANK %>" href="<%= pageTemplatesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getPageTemplatesUsageCount() %>" key="page-templates-x" />
 								</a>
 							</li>
@@ -88,7 +100,7 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 								displayPagesNavigationURL.setParameter("navigation", "display-page-templates");
 								%>
 
-								<a class='nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "display-page-templates") ? "active" : StringPool.BLANK %>' href="<%= displayPagesNavigationURL.toString() %>">
+								<a class="nav-link <%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "display-page-templates") ? "active" : StringPool.BLANK %>" href="<%= displayPagesNavigationURL.toString() %>">
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getDisplayPagesUsageCount() %>" key="display-page-templates-x" />
 								</a>
 							</li>
@@ -101,13 +113,18 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 		<clay:col
 			lg="9"
 		>
-			<div class="sheet">
+			<clay:sheet>
 				<h2 class="sheet-title">
-					<div class="autofit-row autofit-row-center">
-						<div class="autofit-col">
+					<clay:content-row
+						verticalAlign="center"
+					>
+						<clay:content-col>
 							<c:choose>
 								<c:when test='<%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "pages") %>'>
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getPagesUsageCount() %>" key="pages-x" />
+								</c:when>
+								<c:when test='<%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "master-pages") %>'>
+									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getMasterPagesUsageCount() %>" key="master-pages-x" />
 								</c:when>
 								<c:when test='<%= Objects.equals(fragmentEntryLinkDisplayContext.getNavigation(), "page-templates") %>'>
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getPageTemplatesUsageCount() %>" key="page-templates-x" />
@@ -119,8 +136,8 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 									<liferay-ui:message arguments="<%= fragmentEntryLinkDisplayContext.getAllUsageCount() %>" key="all-x" />
 								</c:otherwise>
 							</c:choose>
-						</div>
-					</div>
+						</clay:content-col>
+					</clay:content-row>
 				</h2>
 
 				<clay:management-toolbar
@@ -154,7 +171,7 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 							<liferay-ui:search-container-column-text
 								name="using"
 							>
-								<span class='label <%= fragmentEntryLink.isLatestVersion() ? "label-success" : "label-info" %>'>
+								<span class="label <%= fragmentEntryLink.isLatestVersion() ? "label-success" : "label-info" %>">
 									<liferay-ui:message key='<%= fragmentEntryLink.isLatestVersion() ? "latest-version" : "a-previous-version" %>' />
 								</span>
 							</liferay-ui:search-container-column-text>
@@ -172,7 +189,7 @@ FragmentEntryUsageManagementToolbarDisplayContext fragmentEntryUsageManagementTo
 						/>
 					</liferay-ui:search-container>
 				</aui:form>
-			</div>
+			</clay:sheet>
 		</clay:col>
 	</clay:row>
 </clay:container-fluid>

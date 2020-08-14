@@ -90,9 +90,6 @@ public class UploadServletRequestImpl
 
 			ServletFileUpload servletFileUpload;
 
-			long uploadServletRequestImplMaxSize =
-				UploadServletRequestConfigurationHelperUtil.getMaxSize();
-
 			if (fileSizeThreshold > 0) {
 				servletFileUpload = new ServletFileUpload(
 					new LiferayFileItemFactory(
@@ -100,9 +97,11 @@ public class UploadServletRequestImpl
 			}
 			else {
 				servletFileUpload = new ServletFileUpload(
-					new LiferayFileItemFactory(
-						getTempDir(), (int)uploadServletRequestImplMaxSize));
+					new LiferayFileItemFactory(getTempDir()));
 			}
+
+			long uploadServletRequestImplMaxSize =
+				UploadServletRequestConfigurationHelperUtil.getMaxSize();
 
 			if (maxRequestSize > 0) {
 				servletFileUpload.setSizeMax(maxRequestSize);

@@ -59,7 +59,7 @@ if (deployed && oAuthEnabled) {
 
 <liferay-portlet:actionURL var="configurationActionURL" />
 
-<aui:form action="<%= configurationActionURL %>" cssClass="container-fluid container-fluid-max-xl container-form-lg" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "updatePreferences();" %>'>
+<aui:form action="<%= configurationActionURL %>" cssClass="container-fluid container-fluid-max-xl container-form-lg" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "updatePreferences();" %>'>
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 
 	<clay:sheet>
@@ -126,8 +126,8 @@ if (deployed && oAuthEnabled) {
 			<div class="btn-group">
 				<div class="btn-group-item">
 					<clay:button
-						label='<%= LanguageUtil.get(request, "save") %>'
-						style="primary"
+						displayType="primary"
+						label="save"
 						type="submit"
 					/>
 				</div>

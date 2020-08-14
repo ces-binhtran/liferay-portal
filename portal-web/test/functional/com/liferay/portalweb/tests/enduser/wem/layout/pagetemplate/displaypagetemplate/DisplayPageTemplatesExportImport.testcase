@@ -125,7 +125,9 @@ definition {
 				key_type = "dark",
 				locator1 = "PageEditor#FOOTERS");
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
@@ -137,6 +139,9 @@ definition {
 	@description = "This is a use case for LPS-86193. The Collection Display with mapping content should be exported and imported with display page template."
 	@priority = "4"
 	test ExportImportDisplayPageTemplateWithCollectionDisplayContainingMappingContent {
+		property osgi.app.includes = "bookmarks";
+		property osgi.app.includes = "document-library-google-docs";
+
 		task ("Add three Web Content Articles based on Basic Web Content") {
 			for (var entryTitle : list "First Web Content,Second Web Content,Third Web Content") {
 				JSONWebcontent.addWebContent(
@@ -147,15 +152,10 @@ definition {
 		}
 
 		task ("Add a dynamic Collections and select Web Content Article as Asset Entry Type") {
-			JSONAssetlist.addDynamicAssetListEntry(
+			JSONAssetlist.addDynamicAssetListEntryWithItemType(
 				groupName = "Test Site Name",
+				itemType = "Web Content Article",
 				title = "Dynamic Collection");
-
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.editAssetList(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.configureAssetEntryType(selectedAsset = "Web Content Article");
 		}
 
 		task ("Add a display page template with Web Content Article type and Basic Web Content subtype") {
@@ -230,7 +230,7 @@ definition {
 		task ("Assert the Collection Display containing mapping content is imported") {
 			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
-			AssertElementPresent(
+			Click.clickNoWaitForVisible(
 				key_fragmentName = "Collection Display",
 				locator1 = "Fragment#FRAGMENT_HEADER");
 

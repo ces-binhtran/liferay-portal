@@ -20,8 +20,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.language.LanguageConstants;
+import com.liferay.portal.kernel.language.LanguageBuilderUtil;
 import com.liferay.portal.kernel.language.LanguageValidator;
+import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
@@ -58,12 +59,6 @@ import org.apache.commons.io.FileUtils;
  * @author Hugo Huijser
  */
 public class LangBuilder {
-
-	public static final String AUTOMATIC_COPY =
-		com.liferay.portal.tools.LangBuilder.AUTOMATIC_COPY;
-
-	public static final String AUTOMATIC_TRANSLATION =
-		com.liferay.portal.tools.LangBuilder.AUTOMATIC_TRANSLATION;
 
 	public static void main(String[] args) throws Exception {
 		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
@@ -365,7 +360,8 @@ public class LangBuilder {
 				}
 
 				if ((translatedText != null) &&
-					translatedText.endsWith(AUTOMATIC_COPY)) {
+					translatedText.endsWith(
+						LanguageBuilderUtil.AUTOMATIC_COPY)) {
 
 					translatedText = "";
 				}
@@ -380,7 +376,8 @@ public class LangBuilder {
 							 ArrayUtil.contains(
 								 _AUTOMATIC_COPY_LANGUAGE_IDS, languageId)) {
 
-						translatedText = value + AUTOMATIC_COPY;
+						translatedText =
+							value + LanguageBuilderUtil.AUTOMATIC_COPY;
 					}
 					else if (line.contains("[")) {
 						int pos = line.indexOf("[");
@@ -394,7 +391,8 @@ public class LangBuilder {
 							translatedText = translatedBaseKey;
 						}
 						else {
-							translatedText = value + AUTOMATIC_COPY;
+							translatedText =
+								value + LanguageBuilderUtil.AUTOMATIC_COPY;
 						}
 					}
 					else if (languageId.equals("el") &&
@@ -429,13 +427,15 @@ public class LangBuilder {
 							"en", languageId, key, value, 0);
 
 						if (Validator.isNull(translatedText)) {
-							translatedText = value + AUTOMATIC_COPY;
+							translatedText =
+								value + LanguageBuilderUtil.AUTOMATIC_COPY;
 						}
 						else if (!key.startsWith("country.") &&
 								 !key.startsWith("language.")) {
 
 							translatedText =
-								translatedText + AUTOMATIC_TRANSLATION;
+								translatedText +
+									LanguageBuilderUtil.AUTOMATIC_TRANSLATION;
 						}
 					}
 				}
@@ -484,6 +484,8 @@ public class LangBuilder {
 
 	private String _fixTranslation(String value) {
 		value = StringUtil.replace(value, "\n", "\\n");
+		value = StringUtil.replace(
+			value, CharPool.NO_BREAK_SPACE, CharPool.SPACE);
 
 		value = StringUtil.replace(
 			value.trim(),
@@ -713,15 +715,15 @@ public class LangBuilder {
 			return null;
 		}
 
-		Language fromLanguage = Language.fromString(
-			_getMicrosoftLanguageId(fromLanguageId));
-
 		Language toLanguage = Language.fromString(
 			_getMicrosoftLanguageId(toLanguageId));
 
 		if (toLanguage == null) {
 			return null;
 		}
+
+		Language fromLanguage = Language.fromString(
+			_getMicrosoftLanguageId(fromLanguageId));
 
 		String toText = null;
 

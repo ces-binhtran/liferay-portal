@@ -20,14 +20,15 @@ import React from 'react';
 import ListStandardApps from '../../../../src/main/resources/META-INF/resources/js/pages/apps/ListStandardApps.es';
 import * as time from '../../../../src/main/resources/META-INF/resources/js/utils/time.es';
 import AppContextProviderWrapper from '../../AppContextProviderWrapper.es';
-import {RESPONSES} from '../../constants.es';
+import {DATA_DEFINITION_RESPONSES, RESPONSES} from '../../constants.es';
 
 const DROPDOWN_VALUES = {
 	items: [
 		{
+			defaultLanguageId: 'en_US',
 			id: 123,
 			name: {
-				'en-US': 'Object test',
+				en_US: 'Object test',
 			},
 		},
 	],
@@ -55,6 +56,9 @@ describe('ListStandardApps', () => {
 
 	it('renders opening a new app popover and lists 5 apps', async () => {
 		fetch.mockResponseOnce(JSON.stringify(RESPONSES.MANY_ITEMS(5)));
+		fetch.mockResponseOnce(
+			JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
+		);
 		fetch.mockResponse(JSON.stringify(DROPDOWN_VALUES));
 
 		const {container} = render(<ListStandardApps {...routeProps} />, {
@@ -75,7 +79,7 @@ describe('ListStandardApps', () => {
 		await fireEvent.mouseOver(newAppButton);
 
 		expect(
-			document.querySelector('.popover.apps-popover.mw-100')
+			document.querySelector('.popover.apps-popover')
 		).toBeInTheDocument();
 		expect(
 			document.querySelector('.popover.clay-popover-bottom-right')
@@ -87,18 +91,21 @@ describe('ListStandardApps', () => {
 		await fireEvent.click(newAppButton);
 		await fireEvent.mouseOut(newAppButton);
 
-		expect(document.querySelector('.popover.apps-popover.mw-100.hide'));
+		expect(document.querySelector('.popover.apps-popover.hide'));
 		expect(
 			document.querySelector('.popover.clay-popover-bottom-right')
 		).not.toBeInTheDocument();
 
 		await fireEvent.click(newAppButton);
 
-		expect(document.querySelector('.popover.apps-popover.mw-100.hide'));
+		expect(document.querySelector('.popover.apps-popover.hide'));
 	});
 
 	it('renders with empty state', async () => {
 		fetch.mockResponseOnce(JSON.stringify(RESPONSES.NO_ITEMS));
+		fetch.mockResponseOnce(
+			JSON.stringify(DATA_DEFINITION_RESPONSES.ONE_ITEM)
+		);
 		fetch.mockResponse(JSON.stringify(DROPDOWN_VALUES));
 
 		const push = jest.fn();
@@ -132,8 +139,14 @@ describe('ListStandardApps', () => {
 		expect(continueButton.textContent).toBe('continue');
 		expect(continueButton).toBeDisabled();
 
+		const dropdownItemsLabel = document.querySelectorAll(
+			'.select-dropdown-menu li > button .float-right'
+		);
+
+		expect(dropdownItemsLabel[0].textContent).toBe('custom');
+
 		const dropdownItems = document.querySelectorAll(
-			'.select-dropdown-menu li > button'
+			'.select-dropdown-menu li > button .float-left'
 		);
 
 		expect(dropdownItems[0].textContent).toBe('Object test');

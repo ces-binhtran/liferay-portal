@@ -19,14 +19,15 @@ import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
+import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.SynchronousMailTestRule;
 import com.liferay.portal.workflow.kaleo.definition.Action;
 import com.liferay.portal.workflow.kaleo.definition.Task;
 import com.liferay.portal.workflow.kaleo.model.KaleoAction;
@@ -51,16 +52,21 @@ import java.io.Serializable;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.Map;
-
-import org.apache.log4j.Level;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Inácio Nery
  */
 public abstract class BaseKaleoLocalServiceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(), SynchronousMailTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -89,7 +95,8 @@ public abstract class BaseKaleoLocalServiceTestCase {
 			_kaleoDefinitionLocalService.addKaleoDefinition(
 				StringUtil.randomString(), StringUtil.randomString(),
 				StringUtil.randomString(),
-				_read("legal-marketing-definition.xml"), 1, serviceContext);
+				_read("legal-marketing-definition.xml"), StringPool.BLANK, 1,
+				serviceContext);
 
 		_kaleoDefinitionLocalService.activateKaleoDefinition(
 			kaleoDefinition.getKaleoDefinitionId(), serviceContext);
@@ -98,7 +105,8 @@ public abstract class BaseKaleoLocalServiceTestCase {
 	}
 
 	protected KaleoInstance addKaleoInstance() throws Exception {
-		Map<String, Serializable> workflowContext =
+		return _kaleoInstanceLocalService.addKaleoInstance(
+			1, 1, "Test", 1,
 			HashMapBuilder.<String, Serializable>put(
 				WorkflowConstants.CONTEXT_ENTRY_CLASS_NAME,
 				(Serializable)BlogsEntry.class.getName()
@@ -108,10 +116,8 @@ public abstract class BaseKaleoLocalServiceTestCase {
 			).put(
 				WorkflowConstants.CONTEXT_SERVICE_CONTEXT,
 				(Serializable)serviceContext
-			).build();
-
-		return _kaleoInstanceLocalService.addKaleoInstance(
-			1, 1, "Test", 1, workflowContext, serviceContext);
+			).build(),
+			serviceContext);
 	}
 
 	protected KaleoInstanceToken addKaleoInstanceToken(
@@ -230,15 +236,10 @@ public abstract class BaseKaleoLocalServiceTestCase {
 	protected ServiceContext serviceContext;
 
 	private BlogsEntry _addBlogsEntry() throws Exception {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.petra.mail.MailEngine", Level.OFF)) {
-
-			return _blogsEntryLocalService.addEntry(
-				TestPropsValues.getUserId(), StringUtil.randomString(),
-				StringUtil.randomString(), new Date(),
-				ServiceContextTestUtil.getServiceContext());
-		}
+		return _blogsEntryLocalService.addEntry(
+			TestPropsValues.getUserId(), StringUtil.randomString(),
+			StringUtil.randomString(), new Date(),
+			ServiceContextTestUtil.getServiceContext());
 	}
 
 	private String _read(String name) throws IOException {

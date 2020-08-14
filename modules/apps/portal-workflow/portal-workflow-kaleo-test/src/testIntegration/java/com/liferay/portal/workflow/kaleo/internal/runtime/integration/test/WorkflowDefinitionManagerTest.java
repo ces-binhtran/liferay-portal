@@ -251,7 +251,7 @@ public class WorkflowDefinitionManagerTest {
 
 		error = _assertInvalid(inputStream);
 
-		_assertEquals("Fork fork3 and join join6 nodes must be paired", error);
+		_assertEquals("Fork fork3 and join join5 nodes must be paired", error);
 	}
 
 	@Test
@@ -445,9 +445,8 @@ public class WorkflowDefinitionManagerTest {
 	}
 
 	private void _assertValid(InputStream inputStream) throws Exception {
-		byte[] bytes = FileUtil.getBytes(inputStream);
-
-		_workflowDefinitionManager.validateWorkflowDefinition(bytes);
+		_workflowDefinitionManager.validateWorkflowDefinition(
+			FileUtil.getBytes(inputStream));
 	}
 
 	private InputStream _getResource(String name) {

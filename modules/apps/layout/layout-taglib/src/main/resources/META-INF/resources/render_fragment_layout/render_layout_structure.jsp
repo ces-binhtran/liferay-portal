@@ -23,6 +23,7 @@ String mode = (String)request.getAttribute("liferay-layout:render-fragment-layou
 long previewClassNameId = (long)request.getAttribute("liferay-layout:render-fragment-layout:previewClassNameId");
 long previewClassPK = (long)request.getAttribute("liferay-layout:render-fragment-layout:previewClassPK");
 int previewType = (int)request.getAttribute("liferay-layout:render-fragment-layout:previewType");
+String previewVersion = (String)request.getAttribute("liferay-layout:render-fragment-layout:previewVersion");
 RenderFragmentLayoutDisplayContext renderFragmentLayoutDisplayContext = (RenderFragmentLayoutDisplayContext)request.getAttribute("liferay-layout:render-fragment-layout:renderFragmentLayoutDisplayContext");
 long[] segmentsExperienceIds = (long[])request.getAttribute("liferay-layout:render-fragment-layout:segmentsExperienceIds");
 
@@ -32,15 +33,17 @@ for (String childrenItemId : childrenItemIds) {
 	LayoutStructureItem layoutStructureItem = layoutStructure.getLayoutStructureItem(childrenItemId);
 %>
 
+	<c:if test="<%= layoutStructureItem instanceof StyledLayoutStructureItem %>">
+		<div class="<%= renderFragmentLayoutDisplayContext.getCssClass((StyledLayoutStructureItem)layoutStructureItem) %>" style="<%= renderFragmentLayoutDisplayContext.getStyle((StyledLayoutStructureItem)layoutStructureItem) %>">
+	</c:if>
+
 	<c:choose>
 		<c:when test="<%= layoutStructureItem instanceof CollectionLayoutStructureItem %>">
 
 			<%
 			CollectionLayoutStructureItem collectionLayoutStructureItem = (CollectionLayoutStructureItem)layoutStructureItem;
 
-			request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
-
-			InfoListRenderer infoListRenderer = renderFragmentLayoutDisplayContext.getInfoListRenderer(collectionLayoutStructureItem);
+			InfoListRenderer<Object> infoListRenderer = (InfoListRenderer<Object>)renderFragmentLayoutDisplayContext.getInfoListRenderer(collectionLayoutStructureItem);
 			%>
 
 			<c:choose>
@@ -62,6 +65,7 @@ for (String childrenItemId : childrenItemIds) {
 
 							for (Object collectionObject : renderFragmentLayoutDisplayContext.getCollection(collectionLayoutStructureItem, segmentsExperienceIds)) {
 								request.setAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT, collectionObject);
+								request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
 						%>
 
 								<clay:col
@@ -116,41 +120,26 @@ for (String childrenItemId : childrenItemIds) {
 			<%
 			ContainerLayoutStructureItem containerLayoutStructureItem = (ContainerLayoutStructureItem)layoutStructureItem;
 
-			String backgroundImage = renderFragmentLayoutDisplayContext.getBackgroundImage(containerLayoutStructureItem.getBackgroundImageJSONObject());
-
-			StringBundler sb = new StringBundler();
-
-			if (Validator.isNotNull(containerLayoutStructureItem.getBackgroundColorCssClass())) {
-				sb.append("bg-");
-				sb.append(containerLayoutStructureItem.getBackgroundColorCssClass());
-			}
-
-			if (containerLayoutStructureItem.getPaddingBottom() != -1L) {
-				sb.append(" pb-");
-				sb.append(containerLayoutStructureItem.getPaddingBottom());
-			}
-
-			if (containerLayoutStructureItem.getPaddingHorizontal() != -1L) {
-				sb.append(" px-");
-				sb.append(containerLayoutStructureItem.getPaddingHorizontal());
-			}
-
-			if (containerLayoutStructureItem.getPaddingTop() != -1L) {
-				sb.append(" pt-");
-				sb.append(containerLayoutStructureItem.getPaddingTop());
-			}
+			String containerLinkHref = renderFragmentLayoutDisplayContext.getContainerLinkHref(containerLayoutStructureItem, request.getAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT));
 			%>
 
-			<div class="<%= sb.toString() %>" style='<%= Validator.isNotNull(backgroundImage) ? "background-image: url(" + backgroundImage + "); background-position: 50% 50%; background-repeat: no-repeat; background-size: cover;" : "" %>'>
-				<div class='<%= Objects.equals(containerLayoutStructureItem.getContainerType(), "fluid") ? "container-fluid" : "container" %>'>
+			<c:choose>
+				<c:when test="<%= Validator.isNotNull(containerLinkHref) %>">
+					<a href="<%= containerLinkHref %>" style="color: inherit; text-decoration: none;" target="<%= renderFragmentLayoutDisplayContext.getContainerLinkTarget(containerLayoutStructureItem) %>">
+				</c:when>
+			</c:choose>
 
-					<%
-					request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
-					%>
+			<%
+			request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
+			%>
 
-					<liferay-util:include page="/render_fragment_layout/render_layout_structure.jsp" servletContext="<%= application %>" />
-				</div>
-			</div>
+			<liferay-util:include page="/render_fragment_layout/render_layout_structure.jsp" servletContext="<%= application %>" />
+
+			<c:choose>
+				<c:when test="<%= Validator.isNotNull(containerLinkHref) %>">
+					</a>
+				</c:when>
+			</c:choose>
 		</c:when>
 		<c:when test="<%= layoutStructureItem instanceof DropZoneLayoutStructureItem %>">
 
@@ -187,17 +176,19 @@ for (String childrenItemId : childrenItemIds) {
 
 			DefaultFragmentRendererContext defaultFragmentRendererContext = new DefaultFragmentRendererContext(fragmentEntryLink);
 
-			Object displayObject = request.getAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT);
-
-			defaultFragmentRendererContext.setDisplayObject(displayObject);
-
+			defaultFragmentRendererContext.setDisplayObject(request.getAttribute(InfoDisplayWebKeys.INFO_LIST_DISPLAY_OBJECT));
 			defaultFragmentRendererContext.setFieldValues(fieldValues);
 			defaultFragmentRendererContext.setLocale(locale);
 			defaultFragmentRendererContext.setMode(mode);
 			defaultFragmentRendererContext.setPreviewClassNameId(previewClassNameId);
 			defaultFragmentRendererContext.setPreviewClassPK(previewClassPK);
 			defaultFragmentRendererContext.setPreviewType(previewType);
+			defaultFragmentRendererContext.setPreviewVersion(previewVersion);
 			defaultFragmentRendererContext.setSegmentsExperienceIds(segmentsExperienceIds);
+
+			if (LayoutStructureItemUtil.hasAncestor(fragmentLayoutStructureItem.getItemId(), LayoutDataItemTypeConstants.TYPE_COLLECTION_ITEM, layoutStructure)) {
+				defaultFragmentRendererContext.setUseCachedContent(false);
+			}
 			%>
 
 			<%= fragmentRendererController.render(defaultFragmentRendererContext, request, response) %>
@@ -237,8 +228,9 @@ for (String childrenItemId : childrenItemIds) {
 
 			<c:choose>
 				<c:when test="<%= includeContainer %>">
-					<clay:container-fluid
-						cssClass="p-0"
+					<clay:container
+						cssClass="overflow-hidden p-0"
+						fluid="<%= true %>"
 					>
 						<clay:row
 							cssClass="<%= ResponsiveLayoutStructureUtil.getRowCssClass(rowLayoutStructureItem) %>"
@@ -250,7 +242,7 @@ for (String childrenItemId : childrenItemIds) {
 
 							<liferay-util:include page="/render_fragment_layout/render_layout_structure.jsp" servletContext="<%= application %>" />
 						</clay:row>
-					</clay:container-fluid>
+					</clay:container>
 				</c:when>
 				<c:otherwise>
 					<clay:row
@@ -267,6 +259,10 @@ for (String childrenItemId : childrenItemIds) {
 			</c:choose>
 		</c:when>
 	</c:choose>
+
+	<c:if test="<%= layoutStructureItem instanceof StyledLayoutStructureItem %>">
+		</div>
+	</c:if>
 
 <%
 }

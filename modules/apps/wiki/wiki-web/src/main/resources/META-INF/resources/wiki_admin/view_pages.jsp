@@ -104,7 +104,7 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 
 <clay:container-fluid
 	cssClass="closed sidenav-container sidenav-right"
-	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "infoPanelId" %>'
 >
 	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/wiki/page_info_panel" var="sidebarPanelURL">
 		<portlet:param name="nodeId" value="<%= String.valueOf(node.getNodeId()) %>" />
@@ -186,7 +186,10 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 					if (!navigation.equals("draft-pages") || Validator.isNotNull(keywords)) {
 						rowURL.setParameter("mvcRenderCommandName", "/wiki/view");
 						rowURL.setParameter("redirect", currentURL);
-						rowURL.setParameter("nodeName", curPage.getNode().getName());
+
+						WikiNode wikiNode = curPage.getNode();
+
+						rowURL.setParameter("nodeName", wikiNode.getName());
 					}
 					else {
 						rowURL.setParameter("mvcRenderCommandName", "/wiki/edit_page");
@@ -225,7 +228,7 @@ WikiPagesManagementToolbarDisplayContext wikiPagesManagementToolbarDisplayContex
 											<liferay-ui:message arguments="<%= new String[] {HtmlUtil.escape(curPage.getUserName()), modifiedDateDescription} %>" key="x-modified-x-ago" />
 										</c:when>
 										<c:otherwise>
-											<liferay-ui:message arguments="<%= new String[] {modifiedDateDescription} %>" key="modified-x-ago" />
+											<liferay-ui:message arguments="<%= modifiedDateDescription %>" key="modified-x-ago" />
 										</c:otherwise>
 									</c:choose>
 								</span>

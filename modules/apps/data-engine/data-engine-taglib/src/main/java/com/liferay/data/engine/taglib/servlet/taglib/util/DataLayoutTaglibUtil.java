@@ -14,6 +14,7 @@
 
 package com.liferay.data.engine.taglib.servlet.taglib.util;
 
+import com.liferay.data.engine.field.type.util.LocalizedValueUtil;
 import com.liferay.data.engine.renderer.DataLayoutRenderer;
 import com.liferay.data.engine.renderer.DataLayoutRendererContext;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
@@ -75,7 +76,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -135,6 +135,8 @@ public class DataLayoutTaglibUtil {
 		).put(
 			"allowMultiplePages",
 			dataLayoutBuilderDefinition.allowMultiplePages()
+		).put(
+			"allowNestedFields", dataLayoutBuilderDefinition.allowNestedFields()
 		).put(
 			"allowRules", dataLayoutBuilderDefinition.allowRules()
 		).put(
@@ -279,11 +281,8 @@ public class DataLayoutTaglibUtil {
 		if (Validator.isNull(dataDefinitionId) &&
 			Validator.isNull(dataLayoutId)) {
 
-			return new HashSet() {
-				{
-					add(LocaleThreadLocal.getDefaultLocale());
-				}
-			};
+			return SetUtil.fromArray(
+				new Locale[] {LocaleThreadLocal.getSiteDefaultLocale()});
 		}
 
 		try {
@@ -310,12 +309,13 @@ public class DataLayoutTaglibUtil {
 			);
 		}
 		catch (Exception exception) {
-			return new HashSet() {
-				{
-					add(LocaleThreadLocal.getDefaultLocale());
-				}
-			};
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception, exception);
+			}
 		}
+
+		return SetUtil.fromArray(
+			new Locale[] {LocaleThreadLocal.getSiteDefaultLocale()});
 	}
 
 	private DataDefinition _getDataDefinition(
@@ -793,7 +793,9 @@ public class DataLayoutTaglibUtil {
 				dataRuleJSONObject.put(
 					"conditions", jsonArray
 				).put(
-					"logical-operator", dataRule.getLogicalOperator()
+					"logicalOperator", dataRule.getLogicalOperator()
+				).put(
+					"name", LocalizedValueUtil.toJSONObject(dataRule.getName())
 				);
 
 				dataRulesJSONArray.put(dataRuleJSONObject);

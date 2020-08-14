@@ -39,6 +39,8 @@ definition {
 	@description = "This is for LPS-106813. Can set permissions for widgets in display page template."
 	@priority = "5"
 	test ConfigurePermissionsOfAP {
+		property portal.acceptance = "true";
+
 		task ("Add an asset publisher widget to the display page template") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
 

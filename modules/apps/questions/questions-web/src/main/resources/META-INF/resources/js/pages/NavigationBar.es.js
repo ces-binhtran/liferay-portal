@@ -12,14 +12,13 @@
  * details.
  */
 
-import {useLazyQuery} from '@apollo/client';
 import ClayLink from '@clayui/link';
 import ClayNavigationBar from '@clayui/navigation-bar';
-import React, {useContext, useEffect} from 'react';
+import React, {useContext} from 'react';
 import {withRouter} from 'react-router-dom';
 
 import {AppContext} from '../AppContext.es';
-import {getSectionsQuery} from '../utils/client.es';
+import useQueryParams from '../hooks/useQueryParams.es';
 import {historyPushWithSlug} from '../utils/utils.es';
 
 export default withRouter(
@@ -30,52 +29,49 @@ export default withRouter(
 			params: {sectionTitle},
 		},
 	}) => {
-		const isActive = (value) => location.pathname.includes(value);
-
-		const label = () =>
-			location.pathname.includes('tags')
-				? Liferay.Language.get('tags')
-				: location.pathname.includes('activity')
-				? Liferay.Language.get('my-activity')
-				: Liferay.Language.get('questions');
-
 		const context = useContext(AppContext);
 
-		const [getSections] = useLazyQuery(getSectionsQuery, {
-			onCompleted({messageBoardSections}) {
-				context.setSection(messageBoardSections.items[0].title);
-			},
-		});
+		const queryParams = useQueryParams(location);
 
-		useEffect(() => {
-			if (sectionTitle) {
-				context.setSection(sectionTitle);
+		sectionTitle = sectionTitle || queryParams.get('sectiontitle');
+
+		const isActive = (value) => location.pathname === value;
+
+		const label = () => {
+			if (location.pathname.includes('tags')) {
+				return Liferay.Language.get('tags');
 			}
-			else if (Object.keys(context.section).length === 0) {
-				getSections({variables: {siteKey: context.siteKey}});
+			else if (location.pathname.includes('activity')) {
+				return Liferay.Language.get('my-activity');
 			}
-		}, [context, getSections, sectionTitle]);
+			else if (location.pathname.includes('subscriptions')) {
+				return Liferay.Language.get('my-subscriptions');
+			}
+
+			return Liferay.Language.get('questions');
+		};
 
 		const historyPushParser = historyPushWithSlug(history.push);
 
 		return (
-			<section className="border-bottom questions-section questions-section-nav">
+			<section className="questions-section questions-section-nav">
 				<div className="questions-container">
 					<div className="row">
 						{location.pathname !== '/' && (
 							<div className="align-items-center col d-flex justify-content-between">
 								<ClayNavigationBar
-									className="navigation-bar"
+									className="border-0 navigation-bar"
 									triggerLabel={label()}
 								>
 									<ClayNavigationBar.Item
-										active={
-											!isActive('activity') &&
-											!isActive('tags')
-										}
+										active={isActive(
+											`/questions/${sectionTitle}`
+										)}
 										onClick={() =>
 											historyPushParser(
-												`/questions/${context.section}`
+												sectionTitle
+													? `/questions/${sectionTitle}`
+													: '/'
 											)
 										}
 									>
@@ -88,10 +84,14 @@ export default withRouter(
 									</ClayNavigationBar.Item>
 
 									<ClayNavigationBar.Item
-										active={isActive('tags')}
+										active={isActive(
+											`/questions/${sectionTitle}/tags`
+										)}
 										onClick={() =>
 											historyPushParser(
-												`/questions/${context.section}/tags`
+												sectionTitle
+													? `/questions/${sectionTitle}/tags`
+													: '/'
 											)
 										}
 									>
@@ -104,7 +104,9 @@ export default withRouter(
 									</ClayNavigationBar.Item>
 
 									<ClayNavigationBar.Item
-										active={isActive('activity')}
+										active={isActive(
+											`/subscriptions/${context.userId}`
+										)}
 										className={
 											Liferay.ThemeDisplay.isSignedIn()
 												? 'ml-md-auto'
@@ -112,7 +114,44 @@ export default withRouter(
 										}
 										onClick={() =>
 											historyPushParser(
-												`/activity/${context.userId}`
+												`/subscriptions/${
+													context.userId
+												}${
+													sectionTitle
+														? '?sectionTitle=' +
+														  sectionTitle
+														: ''
+												}`
+											)
+										}
+									>
+										<ClayLink
+											className="nav-link"
+											displayType="unstyled"
+										>
+											{Liferay.Language.get(
+												'my-subscriptions'
+											)}
+										</ClayLink>
+									</ClayNavigationBar.Item>
+
+									<ClayNavigationBar.Item
+										active={isActive(
+											`/activity/${context.userId}`
+										)}
+										className={
+											Liferay.ThemeDisplay.isSignedIn()
+												? ''
+												: 'd-none'
+										}
+										onClick={() =>
+											historyPushParser(
+												`/activity/${context.userId}${
+													sectionTitle
+														? '?sectionTitle=' +
+														  sectionTitle
+														: ''
+												}`
 											)
 										}
 									>

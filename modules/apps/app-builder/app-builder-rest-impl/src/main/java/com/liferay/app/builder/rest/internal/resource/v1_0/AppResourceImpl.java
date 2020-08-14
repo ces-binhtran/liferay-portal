@@ -20,6 +20,7 @@ import com.liferay.app.builder.deploy.AppDeployer;
 import com.liferay.app.builder.deploy.AppDeployerTracker;
 import com.liferay.app.builder.model.AppBuilderApp;
 import com.liferay.app.builder.model.AppBuilderAppDeployment;
+import com.liferay.app.builder.model.AppBuilderAppVersion;
 import com.liferay.app.builder.rest.dto.v1_0.App;
 import com.liferay.app.builder.rest.dto.v1_0.AppDeployment;
 import com.liferay.app.builder.rest.internal.constants.AppBuilderActionKeys;
@@ -30,6 +31,7 @@ import com.liferay.app.builder.rest.internal.resource.v1_0.util.LocalizedValueUt
 import com.liferay.app.builder.rest.resource.v1_0.AppResource;
 import com.liferay.app.builder.service.AppBuilderAppDeploymentLocalService;
 import com.liferay.app.builder.service.AppBuilderAppLocalService;
+import com.liferay.app.builder.service.AppBuilderAppVersionLocalService;
 import com.liferay.app.builder.util.comparator.AppBuilderAppCreateDateComparator;
 import com.liferay.app.builder.util.comparator.AppBuilderAppModifiedDateComparator;
 import com.liferay.app.builder.util.comparator.AppBuilderAppNameComparator;
@@ -79,8 +81,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
@@ -221,7 +221,7 @@ public class AppResourceImpl
 			},
 			sorts,
 			document -> _toApp(
-				_appBuilderAppLocalService.getAppBuilderApp(
+				_appBuilderAppLocalService.fetchAppBuilderApp(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
@@ -269,10 +269,10 @@ public class AppResourceImpl
 		return SearchUtil.search(
 			Collections.emptyMap(),
 			booleanQuery -> {
-				BooleanFilter booleanFilter =
-					booleanQuery.getPreBooleanFilter();
-
 				if (Validator.isNotNull(scope)) {
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
 					BooleanQuery scopeBooleanQuery = new BooleanQueryImpl();
 
 					scopeBooleanQuery.addTerm("scope", scope);
@@ -297,7 +297,7 @@ public class AppResourceImpl
 			},
 			sorts,
 			document -> _toApp(
-				_appBuilderAppLocalService.getAppBuilderApp(
+				_appBuilderAppLocalService.fetchAppBuilderApp(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
@@ -344,10 +344,10 @@ public class AppResourceImpl
 		return SearchUtil.search(
 			Collections.emptyMap(),
 			booleanQuery -> {
-				BooleanFilter booleanFilter =
-					booleanQuery.getPreBooleanFilter();
-
 				if (Validator.isNotNull(scope)) {
+					BooleanFilter booleanFilter =
+						booleanQuery.getPreBooleanFilter();
+
 					BooleanQuery scopeBooleanQuery = new BooleanQueryImpl();
 
 					scopeBooleanQuery.addTerm("scope", scope);
@@ -370,7 +370,7 @@ public class AppResourceImpl
 			},
 			sorts,
 			document -> _toApp(
-				_appBuilderAppLocalService.getAppBuilderApp(
+				_appBuilderAppLocalService.fetchAppBuilderApp(
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
@@ -544,6 +544,10 @@ public class AppResourceImpl
 	}
 
 	private App _toApp(AppBuilderApp appBuilderApp) {
+		if (appBuilderApp == null) {
+			return null;
+		}
+
 		return new App() {
 			{
 				active = appBuilderApp.isActive();
@@ -562,6 +566,7 @@ public class AppResourceImpl
 				dataDefinitionId = appBuilderApp.getDdmStructureId();
 				dataLayoutId = appBuilderApp.getDdmStructureLayoutId();
 				dataListViewId = appBuilderApp.getDeDataListViewId();
+				dataRecordCollectionId = appBuilderApp.getDdlRecordSetId();
 				dateCreated = appBuilderApp.getCreateDate();
 				dateModified = appBuilderApp.getModifiedDate();
 				id = appBuilderApp.getAppBuilderAppId();
@@ -578,6 +583,15 @@ public class AppResourceImpl
 
 						return ddmStructure.getName(
 							contextAcceptLanguage.getPreferredLocale());
+					});
+				setVersion(
+					() -> {
+						AppBuilderAppVersion latestAppBuilderAppVersion =
+							_appBuilderAppVersionLocalService.
+								getLatestAppBuilderAppVersion(
+									appBuilderApp.getAppBuilderAppId());
+
+						return latestAppBuilderAppVersion.getVersion();
 					});
 			}
 		};
@@ -679,22 +693,12 @@ public class AppResourceImpl
 					throw new InvalidAppException(
 						"The app name has more than 30 characters");
 				}
-
-				Matcher matcher = _invalidAppNameCharsPattern.matcher(
-					localizedName);
-
-				if (matcher.matches()) {
-					throw new InvalidAppException(
-						"The app name must not contain special characters");
-				}
 			}
 		}
 	}
 
 	private static final EntityModel _entityModel =
 		new AppBuilderAppEntityModel();
-	private static final Pattern _invalidAppNameCharsPattern = Pattern.compile(
-		".*[$&+,:;=\\\\?@#|/'<>.^*()%!-].*");
 
 	@Reference
 	private AppBuilderAppDeploymentLocalService
@@ -702,6 +706,9 @@ public class AppResourceImpl
 
 	@Reference
 	private AppBuilderAppLocalService _appBuilderAppLocalService;
+
+	@Reference
+	private AppBuilderAppVersionLocalService _appBuilderAppVersionLocalService;
 
 	@Reference
 	private AppDeployerTracker _appDeployerTracker;

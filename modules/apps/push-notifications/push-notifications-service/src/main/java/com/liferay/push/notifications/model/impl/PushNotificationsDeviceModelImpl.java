@@ -117,12 +117,18 @@ public class PushNotificationsDeviceModelImpl
 
 	public static final long PUSHNOTIFICATIONSDEVICEID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	/**
@@ -130,7 +136,9 @@ public class PushNotificationsDeviceModelImpl
 	 *
 	 * @param soapModel the soap model instance to convert
 	 * @return the normal model instance
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static PushNotificationsDevice toModel(
 		PushNotificationsDeviceSoap soapModel) {
 
@@ -156,7 +164,9 @@ public class PushNotificationsDeviceModelImpl
 	 *
 	 * @param soapModels the soap model instances to convert
 	 * @return the normal model instances
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
 	 */
+	@Deprecated
 	public static List<PushNotificationsDevice> toModels(
 		PushNotificationsDeviceSoap[] soapModels) {
 
@@ -225,9 +235,6 @@ public class PushNotificationsDeviceModelImpl
 				attributeName,
 				attributeGetterFunction.apply((PushNotificationsDevice)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -542,17 +549,17 @@ public class PushNotificationsDeviceModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PushNotificationsDevice)) {
+		if (!(object instanceof PushNotificationsDevice)) {
 			return false;
 		}
 
 		PushNotificationsDevice pushNotificationsDevice =
-			(PushNotificationsDevice)obj;
+			(PushNotificationsDevice)object;
 
 		long primaryKey = pushNotificationsDevice.getPrimaryKey();
 
@@ -569,14 +576,22 @@ public class PushNotificationsDeviceModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
@@ -711,9 +726,6 @@ public class PushNotificationsDeviceModelImpl
 					_getProxyProviderFunction();
 
 	}
-
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
 
 	private long _pushNotificationsDeviceId;
 	private long _companyId;

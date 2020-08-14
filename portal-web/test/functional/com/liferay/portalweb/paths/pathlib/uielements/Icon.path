@@ -89,6 +89,11 @@
 	<td></td>
 </tr>
 <tr>
+	<td>DELETE_ATTACHMENT</td>
+	<td>//div[contains(@class,'card-body') and contains(.,'${key_fileName}')]//a[*[name()='svg'][contains(@class,'icon-times')]]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>DELETE_CUSTOM_META_TAG</td>
 	<td>//div[contains(@class,'field-wrapper')][${key_tagNum}]//*[*[name()='svg'][contains(@class,'icon-hr')]]</td>
 	<td></td>
@@ -140,7 +145,7 @@
 </tr>
 <tr>
 	<td>EXPIRE</td>
-	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-time')]]</td>
+	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-time') and not(contains(@class,'circle'))]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -195,7 +200,7 @@
 </tr>
 <tr>
 	<td>INFO_IE</td>
-	<td>//button[contains(@aria-label,'info-circle-open')] | //*[@data-qa-id='infoButton']</td>
+	<td>//button[contains(@aria-label,'info-circle-open') or contains(@id,'OpenContextualSidebar')] | //*[@data-qa-id='infoButton']</td>
 	<td></td>
 </tr>
 <tr>
@@ -265,7 +270,7 @@
 </tr>
 <tr>
 	<td>SHARE</td>
-	<td>//button[*[name()='svg'][contains(@class,'lexicon-icon-share')]]</td>
+	<td>//button[contains(@class,'dropdown-toggle')]//span[*[name()='svg'][contains(@class,'lexicon-icon-share')]]</td>
 	<td></td>
 </tr>
 <tr>
@@ -297,6 +302,11 @@
 <tr>
 	<td>VERTICAL_ELLIPSIS_BUTTON</td>
 	<td>//div[contains(@class,'dropdown-action')]//button[contains(@class,'dropdown-toggle')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>SIDEBAR_HEADER_ACTION_VERTICAL_ELLIPSIS_BUTTON</td>
+	<td>//*[contains(@class,'sidebar-header-actions')]//button[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -332,6 +342,11 @@
 <tr>
 	<td>HEADER_VERTICAL_ELLIPSIS_IE</td>
 	<td>//*[@data-qa-id='header']//a[@title='Options']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>HELPER</td>
+	<td>//div[label[contains(.,'${key_fieldLabel}')]]//span[contains(@class,'icon-help')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -372,6 +387,11 @@
 <tr>
 	<td>ROW_VERTICAL_ELLIPSIS_IE</td>
 	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'icon-monospaced')]/span</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ROW_VERTICAL_ELLIPSIS_SAFARI</td>
+	<td>//*[@data-qa-id='row' and contains(.,'${key_rowEntry}')]//a[contains(@class,'dropdown-toggle')]</td>
 	<td></td>
 </tr>
 <tr>

@@ -14,27 +14,26 @@
 
 package com.liferay.app.builder.web.internal.portlet.action;
 
-import com.liferay.app.builder.constants.AppBuilderPortletKeys;
+import com.liferay.app.builder.constants.AppBuilderAppConstants;
 import com.liferay.app.builder.model.AppBuilderApp;
+import com.liferay.app.builder.model.AppBuilderAppVersion;
 import com.liferay.app.builder.service.AppBuilderAppDataRecordLinkLocalService;
-import com.liferay.app.builder.service.AppBuilderAppLocalService;
+import com.liferay.app.builder.service.AppBuilderAppVersionLocalService;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
 import com.liferay.data.engine.rest.resource.v2_0.DataRecordResource;
+import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.transaction.TransactionConfig;
-import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 
-import javax.portlet.PortletException;
+import java.util.Optional;
+
 import javax.portlet.ResourceRequest;
-import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -45,45 +44,24 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + AppBuilderPortletKeys.APPS,
-		"javax.portlet.name=" + AppBuilderPortletKeys.OBJECTS,
+		"app.builder.app.scope=" + AppBuilderAppConstants.SCOPE_STANDARD,
 		"mvc.command.name=/app_builder/add_data_record"
 	},
 	service = MVCResourceCommand.class
 )
-public class AddDataRecordMVCResourceCommand extends BaseMVCResourceCommand {
+public class AddDataRecordMVCResourceCommand
+	extends BaseAppBuilderMVCResourceCommand<DataRecord> {
 
 	@Override
-	protected void doServeResource(
-			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
-		throws Exception {
-
-		try {
-			TransactionInvokerUtil.invoke(
-				_transactionConfig,
-				() -> {
-					_addDataRecord(resourceRequest);
-
-					return null;
-				});
-		}
-		catch (Throwable throwable) {
-			if (throwable instanceof PortletException) {
-				throw (PortletException)throwable;
-			}
-
-			throw new PortletException(throwable);
-		}
-	}
-
-	private void _addDataRecord(ResourceRequest resourceRequest)
+	protected Optional<DataRecord> doTransactionalCommand(
+			ResourceRequest resourceRequest)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		AppBuilderApp appBuilderApp =
-			_appBuilderAppLocalService.getAppBuilderApp(
+		AppBuilderAppVersion appBuilderAppVersion =
+			_appBuilderAppVersionLocalService.getLatestAppBuilderAppVersion(
 				ParamUtil.getLong(resourceRequest, "appBuilderAppId"));
 
 		DataRecordResource dataRecordResource = DataRecordResource.builder(
@@ -92,31 +70,26 @@ public class AddDataRecordMVCResourceCommand extends BaseMVCResourceCommand {
 		).build();
 
 		DataRecord dataRecord = dataRecordResource.postDataDefinitionDataRecord(
-			appBuilderApp.getDdmStructureId(),
+			appBuilderAppVersion.getDdmStructureId(),
 			DataRecord.toDTO(
 				ParamUtil.getString(resourceRequest, "dataRecord")));
 
 		_appBuilderAppDataRecordLinkLocalService.addAppBuilderAppDataRecordLink(
-			appBuilderApp.getCompanyId(), appBuilderApp.getAppBuilderAppId(),
+			themeDisplay.getScopeGroupId(), appBuilderAppVersion.getCompanyId(),
+			appBuilderAppVersion.getAppBuilderAppId(),
+			appBuilderAppVersion.getAppBuilderAppVersionId(),
 			dataRecord.getId());
 
 		WorkflowHandlerRegistryUtil.startWorkflowInstance(
 			themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
-			themeDisplay.getUserId(), AppBuilderApp.class.getName(),
+			themeDisplay.getUserId(),
+			ResourceActionsUtil.getCompositeModelName(
+				AppBuilderApp.class.getName(), DDLRecord.class.getName()),
 			dataRecord.getId(),
 			_ddlRecordLocalService.getDDLRecord(dataRecord.getId()),
 			new ServiceContext());
-	}
 
-	private static final TransactionConfig _transactionConfig;
-
-	static {
-		TransactionConfig.Builder builder = new TransactionConfig.Builder();
-
-		builder.setPropagation(Propagation.REQUIRES_NEW);
-		builder.setRollbackForClasses(Exception.class);
-
-		_transactionConfig = builder.build();
+		return Optional.of(dataRecord);
 	}
 
 	@Reference
@@ -124,7 +97,7 @@ public class AddDataRecordMVCResourceCommand extends BaseMVCResourceCommand {
 		_appBuilderAppDataRecordLinkLocalService;
 
 	@Reference
-	private AppBuilderAppLocalService _appBuilderAppLocalService;
+	private AppBuilderAppVersionLocalService _appBuilderAppVersionLocalService;
 
 	@Reference
 	private DDLRecordLocalService _ddlRecordLocalService;

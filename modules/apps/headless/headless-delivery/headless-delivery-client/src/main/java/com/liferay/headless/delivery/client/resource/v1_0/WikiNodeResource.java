@@ -14,6 +14,7 @@
 
 package com.liferay.headless.delivery.client.resource.v1_0;
 
+import com.liferay.headless.delivery.client.aggregation.Aggregation;
 import com.liferay.headless.delivery.client.dto.v1_0.WikiNode;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
@@ -41,13 +42,13 @@ public interface WikiNodeResource {
 	}
 
 	public Page<WikiNode> getSiteWikiNodesPage(
-			Long siteId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long siteId, String search, Aggregation aggregation,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getSiteWikiNodesPageHttpResponse(
-			Long siteId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long siteId, String search, Aggregation aggregation,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public WikiNode postSiteWikiNode(Long siteId, WikiNode wikiNode)
@@ -153,8 +154,8 @@ public interface WikiNodeResource {
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "test@liferay.com";
-		private String _password = "test";
+		private String _login = "";
+		private String _password = "";
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -164,13 +165,14 @@ public interface WikiNodeResource {
 	public static class WikiNodeResourceImpl implements WikiNodeResource {
 
 		public Page<WikiNode> getSiteWikiNodesPage(
-				Long siteId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long siteId, String search, Aggregation aggregation,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getSiteWikiNodesPageHttpResponse(
-					siteId, search, filterString, pagination, sortString);
+					siteId, search, aggregation, filterString, pagination,
+					sortString);
 
 			String content = httpResponse.getContent();
 
@@ -193,8 +195,8 @@ public interface WikiNodeResource {
 		}
 
 		public HttpInvoker.HttpResponse getSiteWikiNodesPageHttpResponse(
-				Long siteId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long siteId, String search, Aggregation aggregation,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -220,6 +222,17 @@ public interface WikiNodeResource {
 
 			if (search != null) {
 				httpInvoker.parameter("search", String.valueOf(search));
+			}
+
+			if ((aggregation != null) &&
+				(aggregation.getAggregationTerms() != null)) {
+
+				Map<String, String> aggregationTerms =
+					aggregation.getAggregationTerms();
+
+				httpInvoker.parameter(
+					"aggregationTerms",
+					String.join(",", aggregationTerms.values()));
 			}
 
 			if (filterString != null) {

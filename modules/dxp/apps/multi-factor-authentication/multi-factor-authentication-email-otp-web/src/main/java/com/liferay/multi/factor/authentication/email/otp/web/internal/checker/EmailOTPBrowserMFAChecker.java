@@ -22,6 +22,7 @@ import com.liferay.multi.factor.authentication.email.otp.web.internal.constants.
 import com.liferay.multi.factor.authentication.spi.checker.browser.BrowserMFAChecker;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.audit.AuditMessage;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
@@ -33,6 +34,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.util.PropsValues;
 
+import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -42,6 +45,7 @@ import java.util.Objects;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -68,7 +72,7 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 	public void includeBrowserVerification(
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, long userId)
-		throws Exception {
+		throws IOException, ServletException {
 
 		User user = _userLocalService.fetchUser(userId);
 
@@ -82,14 +86,20 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 			return;
 		}
 
+		if (_isMaximumAllowedAttemptsReached(user.getUserId())) {
+			httpServletRequest.setAttribute(
+				MFAEmailOTPWebKeys.MFA_EMAIL_OTP_FAILED_ATTEMPTS_RETRY_TIMEOUT,
+				_mfaEmailOTPConfiguration.retryTimeout());
+		}
+
 		HttpServletRequest originalHttpServletRequest =
 			_portal.getOriginalServletRequest(httpServletRequest);
 
 		HttpSession httpSession = originalHttpServletRequest.getSession();
 
 		httpServletRequest.setAttribute(
-			MFAEmailOTPWebKeys.MFA_EMAIL_OTP_SEND_TO_ADDRESS,
-			user.getEmailAddress());
+			MFAEmailOTPWebKeys.MFA_EMAIL_OTP_SEND_TO_ADDRESS_OBFUSCATED,
+			obfuscateEmailAddress(user.getEmailAddress()));
 		httpServletRequest.setAttribute(
 			MFAEmailOTPWebKeys.MFA_EMAIL_OTP_SET_AT_TIME,
 			GetterUtil.getLong(
@@ -153,33 +163,17 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 			_mfaEmailOTPEntryLocalService.fetchMFAEmailOTPEntryByUserId(userId);
 
 		if (mfaEmailOTPEntry == null) {
-			mfaEmailOTPEntry =
-				_mfaEmailOTPEntryLocalService.addMFAEmailOTPEntry(userId);
+			_mfaEmailOTPEntryLocalService.addMFAEmailOTPEntry(userId);
 		}
 
-		if ((_mfaEmailOTPConfiguration.failedAttemptsAllowed() >= 0) &&
-			(_mfaEmailOTPConfiguration.failedAttemptsAllowed() <=
-				mfaEmailOTPEntry.getFailedAttempts()) &&
-			(_mfaEmailOTPConfiguration.retryTimeout() >= 0)) {
+		if (_isMaximumAllowedAttemptsReached(userId)) {
+			_routeAuditMessage(
+				_mfaEmailOTPAuditMessageBuilder.
+					buildVerificationFailureAuditMessage(
+						user, _getClassName(),
+						"Reached maximum allowed attempts"));
 
-			Date lastFailDate = mfaEmailOTPEntry.getLastFailDate();
-
-			long time =
-				(_mfaEmailOTPConfiguration.retryTimeout() * Time.SECOND) +
-					lastFailDate.getTime();
-
-			if (time <= System.currentTimeMillis()) {
-				_mfaEmailOTPEntryLocalService.resetFailedAttempts(userId);
-			}
-			else {
-				_routeAuditMessage(
-					_mfaEmailOTPAuditMessageBuilder.
-						buildVerificationFailureAuditMessage(
-							user, _getClassName(),
-							"Reached maximum allowed attempts"));
-
-				return false;
-			}
+			return false;
 		}
 
 		HttpServletRequest originalHttpServletRequest =
@@ -217,6 +211,25 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 			userId, originalHttpServletRequest.getRemoteAddr(), false);
 
 		return false;
+	}
+
+	protected static String obfuscateEmailAddress(String emailAddress) {
+		String alias = emailAddress.substring(0, emailAddress.indexOf('@'));
+
+		int maskLength = Math.max(
+			(int)Math.ceil(alias.length() / 2.0), Math.min(3, alias.length()));
+
+		int startIndex = (int)Math.ceil((alias.length() - maskLength) / 2.0);
+
+		int endIndex = startIndex + maskLength;
+
+		char[] chars = emailAddress.toCharArray();
+
+		for (int i = startIndex; i < endIndex; i++) {
+			chars[i] = '*';
+		}
+
+		return new String(chars);
 	}
 
 	@Activate
@@ -304,35 +317,49 @@ public class EmailOTPBrowserMFAChecker implements BrowserMFAChecker {
 			return false;
 		}
 
-		if (_mfaEmailOTPConfiguration.validationExpirationTime() < 0) {
-			return true;
-		}
-
-		long time =
-			_mfaEmailOTPConfiguration.validationExpirationTime() * Time.SECOND;
-
-		time += (long)httpSession.getAttribute(
-			MFAEmailOTPWebKeys.MFA_EMAIL_OTP_VALIDATED_AT_TIME);
-
-		if (time > System.currentTimeMillis()) {
-			_routeAuditMessage(
-				_mfaEmailOTPAuditMessageBuilder.buildVerifiedAuditMessage(
-					user, _getClassName()));
-
-			return true;
-		}
-
-		_routeAuditMessage(
-			_mfaEmailOTPAuditMessageBuilder.buildNotVerifiedAuditMessage(
-				user, _getClassName(), "Expired verification"));
-
-		return false;
+		return true;
 	}
 
 	private String _getClassName() {
 		Class<?> clazz = getClass();
 
 		return clazz.getName();
+	}
+
+	private boolean _isMaximumAllowedAttemptsReached(long userId) {
+		try {
+			MFAEmailOTPEntry mfaEmailOTPEntry =
+				_mfaEmailOTPEntryLocalService.fetchMFAEmailOTPEntryByUserId(
+					userId);
+
+			if (mfaEmailOTPEntry == null) {
+				return false;
+			}
+
+			if ((_mfaEmailOTPConfiguration.failedAttemptsAllowed() >= 0) &&
+				(_mfaEmailOTPConfiguration.failedAttemptsAllowed() <=
+					mfaEmailOTPEntry.getFailedAttempts()) &&
+				(_mfaEmailOTPConfiguration.retryTimeout() >= 0)) {
+
+				Date lastFailDate = mfaEmailOTPEntry.getLastFailDate();
+
+				long time =
+					(_mfaEmailOTPConfiguration.retryTimeout() * Time.SECOND) +
+						lastFailDate.getTime();
+
+				if (time <= System.currentTimeMillis()) {
+					_mfaEmailOTPEntryLocalService.resetFailedAttempts(userId);
+				}
+				else {
+					return true;
+				}
+			}
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException, portalException);
+		}
+
+		return false;
 	}
 
 	private void _routeAuditMessage(AuditMessage auditMessage) {

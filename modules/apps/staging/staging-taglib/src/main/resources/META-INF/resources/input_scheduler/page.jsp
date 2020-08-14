@@ -18,7 +18,21 @@
 
 <ul class="hide options portlet-list select-options" id="<portlet:namespace />selectSchedule">
 	<li>
-		<liferay-ui:error exception="<%= com.liferay.portal.kernel.scheduler.SchedulerException.class %>" message="a-wrong-end-date-was-specified-the-scheduled-process-will-never-run" />
+		<liferay-ui:error exception="<%= SchedulerException.class %>">
+
+			<%
+			SchedulerException schedulerException = (SchedulerException)errorException;
+			%>
+
+			<c:choose>
+				<c:when test="<%= schedulerException.getType() == SchedulerException.TYPE_INVALID_START_DATE %>">
+					<liferay-ui:message key="a-wrong-start-date-was-specified-the-scheduled-process-cannot-start-in-the-past" />
+				</c:when>
+				<c:otherwise>
+					<liferay-ui:message key="a-wrong-end-date-was-specified-the-scheduled-process-will-never-run" />
+				</c:otherwise>
+			</c:choose>
+		</liferay-ui:error>
 
 		<aui:input name="jobName" type="hidden" />
 
@@ -79,6 +93,7 @@
 								dayValue="<%= startDay %>"
 								disabled="<%= false %>"
 								firstDayOfWeek="<%= cal.getFirstDayOfWeek() - 1 %>"
+								firstEnabledDate="<%= new Date() %>"
 								monthParam="schedulerStartDateMonth"
 								monthValue="<%= startMonth %>"
 								name="schedulerStartDate"
@@ -179,7 +194,7 @@
 				</tr>
 			</tbody>
 
-			<tbody class='<%= (recurrenceType != Recurrence.DAILY) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />recurrenceTypeDailyTable">
+			<tbody class="<%= (recurrenceType != Recurrence.DAILY) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />recurrenceTypeDailyTable">
 				<tr>
 					<th class="staging-scheduler-title">
 						<liferay-ui:message key="recur-every" />:
@@ -206,7 +221,7 @@
 				</tr>
 			</tbody>
 
-			<tbody class='<%= (recurrenceType != Recurrence.WEEKLY) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />recurrenceTypeWeeklyTable">
+			<tbody class="<%= (recurrenceType != Recurrence.WEEKLY) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />recurrenceTypeWeeklyTable">
 				<tr>
 					<th class="staging-scheduler-title">
 						<liferay-ui:message key="repeat-every" />:
@@ -256,7 +271,7 @@
 				</tr>
 			</tbody>
 
-			<tbody class='<%= (recurrenceType != Recurrence.MONTHLY) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />recurrenceTypeMonthlyTable">
+			<tbody class="<%= (recurrenceType != Recurrence.MONTHLY) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />recurrenceTypeMonthlyTable">
 				<tr>
 					<th class="staging-scheduler-title">
 						<liferay-ui:message key="repeat-type" />:
@@ -322,7 +337,7 @@
 				</tr>
 			</tbody>
 
-			<tbody class='<%= (recurrenceType != Recurrence.YEARLY) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />recurrenceTypeYearlyTable">
+			<tbody class="<%= (recurrenceType != Recurrence.YEARLY) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />recurrenceTypeYearlyTable">
 				<tr>
 					<th class="staging-scheduler-title">
 						<liferay-ui:message key="repeat-type" />:
@@ -428,7 +443,7 @@
 				</tr>
 			</tbody>
 
-			<tbody class='<%= (recurrenceType != Recurrence.NO_RECURRENCE) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />recurrenceTypeNeverTable">
+			<tbody class="<%= (recurrenceType != Recurrence.NO_RECURRENCE) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />recurrenceTypeNeverTable">
 				<tr>
 					<th class="staging-scheduler-title">
 					</th>

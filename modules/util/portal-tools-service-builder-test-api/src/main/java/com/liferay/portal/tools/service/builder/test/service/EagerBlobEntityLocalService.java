@@ -59,11 +59,15 @@ public interface EagerBlobEntityLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link EagerBlobEntityLocalServiceUtil} to access the eager blob entity local service. Add custom service methods to <code>com.liferay.portal.tools.service.builder.test.service.impl.EagerBlobEntityLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.tools.service.builder.test.service.impl.EagerBlobEntityLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the eager blob entity local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link EagerBlobEntityLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the eager blob entity to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EagerBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param eagerBlobEntity the eager blob entity
 	 * @return the eager blob entity that was added
@@ -89,6 +93,10 @@ public interface EagerBlobEntityLocalService
 	/**
 	 * Deletes the eager blob entity from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EagerBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param eagerBlobEntity the eager blob entity
 	 * @return the eager blob entity that was removed
 	 */
@@ -98,6 +106,10 @@ public interface EagerBlobEntityLocalService
 
 	/**
 	 * Deletes the eager blob entity with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EagerBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param eagerBlobEntityId the primary key of the eager blob entity
 	 * @return the eager blob entity that was removed
@@ -266,6 +278,10 @@ public interface EagerBlobEntityLocalService
 
 	/**
 	 * Updates the eager blob entity in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EagerBlobEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param eagerBlobEntity the eager blob entity
 	 * @return the eager blob entity that was updated

@@ -2,7 +2,7 @@
 definition {
 
 	property osgi.module.configuration.file.names = "com.liferay.questions.web.internal.configuration.QuestionsConfiguration-default.config";
-	property osgi.module.configurations = "com.liferay.portlet.display-category=&quot;category.collaboration&quot;\nenableRedirectToLogin=&quot;B&quot;true&quot;&quot;";
+	property osgi.module.configurations = "com.liferay.portlet.display-category=&quot;category.collaboration&quot;\nenableRedirectToLogin=&quot;true&quot;";
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Questions";
@@ -32,7 +32,6 @@ definition {
 		else {
 			ProductMenu.gotoPortlet(
 				category = "Content &amp; Data",
-				panel = "Site Administration",
 				portlet = "Message Boards");
 
 			if (IsElementPresent(locator1 = "Questions#QUESTIONS_LIST")) {
@@ -51,6 +50,22 @@ definition {
 			categoryName = "Question ListOfTagsAppearsInTheTagsTab",
 			userEmailAddress = "test@liferay.com");
 
+		Navigator.gotoPage(pageName = "Questions Page");
+
+		Questions.gotoCategory(categoryName = "Question ListOfTagsAppearsInTheTagsTab");
+
+		Questions.gotoTab(questionTabField = "Tags");
+
+		Questions.viewTags(noTagResults = "true");
+
+		Questions.configureTagsFilter(filterBy = "Latest Created");
+
+		Questions.viewTags(noTagResults = "true");
+
+		JSONAssettag.addTag(
+			groupName = "Guest",
+			tagName = "tag2");
+
 		Questions.addQuestionByAPI(
 			bodyField = "Body ListOfTagsAppearsInTheTagsTab",
 			categoryName = "Question ListOfTagsAppearsInTheTagsTab",
@@ -59,19 +74,17 @@ definition {
 
 		Navigator.gotoPage(pageName = "Questions Page");
 
-		Click(
-			key_questionNameField = "Question ListOfTagsAppearsInTheTagsTab",
-			locator1 = "Questions#QUESTIONS_NAME_FIELD");
+		Questions.gotoCategory(categoryName = "Question ListOfTagsAppearsInTheTagsTab");
 
 		Pause(locator = "3000");
 
-		Click(
-			key_questionTabField = "Tags",
-			locator1 = "Questions#QUESTIONS_LIST_TAB_FIELD");
+		Questions.gotoTab(questionTabField = "Tags");
 
-		AssertElementPresent(
-			key_tagName = "tag1",
-			locator1 = "Questions#TAGS_LIST_TAB_NAMES");
+		Questions.configureTagsFilter(filterBy = "Latest Created");
+
+		for (var tagName : list "tag1,tag2") {
+			Questions.viewTags(tagName = "${tagName}");
+		}
 	}
 
 	@description = "Validate if when the user click in the tag of the Tags tab, the user is redirected to the questions that use this tag"
@@ -90,9 +103,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Questions Page");
 
-		Click(
-			key_questionNameField = "Question TagCardRedirectTheUserToTheQuestionsThatAreUsingThisTag",
-			locator1 = "Questions#QUESTIONS_NAME_FIELD");
+		Questions.gotoCategory(categoryName = "Question TagCardRedirectTheUserToTheQuestionsThatAreUsingThisTag");
 
 		Pause(locator = "3000");
 
@@ -125,9 +136,7 @@ definition {
 
 		Navigator.gotoPage(pageName = "Questions Page");
 
-		Click(
-			key_questionNameField = "Question ValidateSearchByQuestionTags",
-			locator1 = "Questions#QUESTIONS_NAME_FIELD");
+		Questions.gotoCategory(categoryName = "Question ValidateSearchByQuestionTags");
 
 		Pause(locator = "3000");
 
@@ -135,42 +144,36 @@ definition {
 			key_questionTabField = "Tags",
 			locator1 = "Questions#QUESTIONS_LIST_TAB_FIELD");
 
-		Type(
-			locator1 = "Questions#SEARCH_QUESTION_FIELD",
-			value1 = "tagvalidatesearchbyquestiontags");
+		Questions.search(
+			searchKey = "tagvalidatesearchbyquestiontags",
+			searchTag = "true");
 
 		Pause(locator = "3000");
 
-		AssertElementPresent(
-			key_tagName = "tagvalidatesearchbyquestiontags",
-			locator1 = "Questions#TAGS_LIST_TAB_NAMES");
+		Questions.viewTags(tagName = "tagvalidatesearchbyquestiontags");
 	}
 
 	@description = "Validate if the Tags tab of the question portlet, the tags are ordered by occurrences"
 	@priority = "4"
 	test ValidateTagsOccurrences {
-		JSONMBMessage.addCategory(
-			categoryDescription = "Description",
-			categoryName = "Question ValidateTagsOccurrences",
-			userEmailAddress = "test@liferay.com");
+		for (var num : list "1,2") {
+			JSONMBMessage.addCategory(
+				categoryDescription = "Description",
+				categoryName = "Question ValidateTagsOccurrences${num}",
+				userEmailAddress = "test@liferay.com");
+		}
 
-		Questions.addQuestionByAPI(
-			bodyField = "1- Body ValidateTagsOccurrences",
-			categoryName = "Question ValidateTagsOccurrences",
-			tagField = "tag1",
-			titleField = "1- Title ValidateTagsOccurrences");
-
-		Questions.addQuestionByAPI(
-			bodyField = "2- Body ValidateTagsOccurrences",
-			categoryName = "Question ValidateTagsOccurrences",
-			tagField = "tag1",
-			titleField = "2- Title ValidateTagsOccurrences");
+		for (var num : list "1,2") {
+			Questions.addQuestionByAPI(
+				bodyField = "${num}- Body ValidateTagsOccurrences",
+				categoryName = "Question ValidateTagsOccurrences1",
+				tagField = "tag1",
+				titleField = "${num}- Title ValidateTagsOccurrences");
+		}
 
 		Navigator.gotoPage(pageName = "Questions Page");
 
-		Click(
-			key_questionNameField = "Question ValidateTagsOccurrences",
-			locator1 = "Questions#QUESTIONS_NAME_FIELD");
+		Questions.gotoCategory(categoryName = "Question ValidateTagsOccurrences1");
 
 		Pause(locator = "3000");
 
@@ -178,10 +181,33 @@ definition {
 			key_questionTabField = "Tags",
 			locator1 = "Questions#QUESTIONS_LIST_TAB_FIELD");
 
-		AssertElementPresent(
-			key_amountOfUsedTimes = "2",
-			key_tagName = "tag1",
-			locator1 = "Questions#TAGS_LIST_TAB_USED_TIMES");
+		Questions.viewTags(
+			amountOfUsedTimes = "2",
+			tagName = "tag1");
+
+		Questions.gotoTab(questionTabField = "Questions");
+
+		Click(locator1 = "Questions#QUESTIONS_HOME_ICON");
+
+		Questions.gotoCategory(categoryName = "Question ValidateTagsOccurrences2");
+
+		Questions.askQuestionFillingTheMandatoryFields(
+			contentField = "Content AddQuestion",
+			titleField = "Title AddQuestion");
+
+		Questions.addTags(tagLocator = "Tag1");
+
+		Click(locator1 = "Questions#ASK_QUESTION_POST_YOUR_QUESTION_BUTTON");
+
+		Questions.gotoTab(questionTabField = "Tags");
+
+		Click(
+			key_questionTabField = "Tags",
+			locator1 = "Questions#QUESTIONS_LIST_TAB_FIELD");
+
+		Questions.viewTags(
+			amountOfUsedTimes = "3",
+			tagName = "tag1");
 	}
 
 }

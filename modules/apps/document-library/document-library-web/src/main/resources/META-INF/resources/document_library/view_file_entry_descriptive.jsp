@@ -27,7 +27,7 @@ FileShortcut fileShortcut = null;
 if (result instanceof AssetEntry) {
 	AssetEntry assetEntry = (AssetEntry)result;
 
-	if (assetEntry.getClassName().equals(DLFileEntryConstants.getClassName())) {
+	if (Objects.equals(assetEntry.getClassName(), DLFileEntryConstants.getClassName())) {
 		fileEntry = DLAppLocalServiceUtil.getFileEntry(assetEntry.getClassPK());
 	}
 	else {
@@ -120,7 +120,7 @@ rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 	</c:choose>
 
 	<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-		<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title='<%= LanguageUtil.get(request, "shared") %>'>
+		<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
 			<aui:icon image="users" markupView="lexicon" message="shared" />
 		</span>
 	</c:if>

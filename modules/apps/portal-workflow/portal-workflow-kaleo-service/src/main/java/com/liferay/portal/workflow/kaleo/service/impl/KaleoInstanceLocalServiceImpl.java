@@ -246,6 +246,14 @@ public class KaleoInstanceLocalServiceImpl
 	}
 
 	@Override
+	public int getKaleoDefinitionKaleoInstancesCount(
+		long kaleoDefinitionId, boolean completed) {
+
+		return kaleoInstancePersistence.countByKDI_C(
+			kaleoDefinitionId, completed);
+	}
+
+	@Override
 	public List<KaleoInstance> getKaleoInstances(
 		Long userId, String assetClassName, Long assetClassPK,
 		Boolean completed, int start, int end,
@@ -410,8 +418,12 @@ public class KaleoInstanceLocalServiceImpl
 			long kaleoInstanceId = GetterUtil.getLong(
 				document.get(KaleoInstanceTokenField.KALEO_INSTANCE_ID));
 
-			kaleoInstances.add(
-				kaleoInstancePersistence.findByPrimaryKey(kaleoInstanceId));
+			KaleoInstance kaleoInstance =
+				kaleoInstancePersistence.fetchByPrimaryKey(kaleoInstanceId);
+
+			if (kaleoInstance != null) {
+				kaleoInstances.add(kaleoInstance);
+			}
 		}
 
 		return new BaseModelSearchResult<>(kaleoInstances, hits.getLength());
@@ -457,6 +469,7 @@ public class KaleoInstanceLocalServiceImpl
 		searchContext.setAttributes(searchAttributes);
 		searchContext.setCompanyId(serviceContext.getCompanyId());
 		searchContext.setEnd(end);
+		searchContext.setGroupIds(new long[] {-1L});
 		searchContext.setStart(start);
 
 		if (orderByComparator != null) {

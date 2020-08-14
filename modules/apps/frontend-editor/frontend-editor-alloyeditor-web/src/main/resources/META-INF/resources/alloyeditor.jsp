@@ -98,15 +98,15 @@ if (editorOptions != null) {
 			</div>
 
 			<div class="alloy-editor-switch hide">
-				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "fullscreen") %>' id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
+				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "fullscreen") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
 					<aui:icon image="expand" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "dark-theme") %>' id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
+				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "dark-theme") %>" id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
 					<aui:icon image="moon" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-secondary btn-sm editor-view lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "code-view") %>' id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
+				<button class="btn btn-secondary btn-sm editor-view lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "code-view") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
 					<aui:icon image="code" markupView="lexicon" />
 				</button>
 			</div>
@@ -125,16 +125,6 @@ if (editorOptions != null) {
 
 <%
 String modules = "liferay-alloy-editor";
-
-String uploadURL = StringPool.BLANK;
-
-if (editorOptions != null) {
-	uploadURL = editorOptions.getUploadURL();
-
-	if ((data != null) && Validator.isNotNull(uploadURL)) {
-		modules += ",liferay-editor-image-uploader";
-	}
-}
 
 if (showSource) {
 	modules += ",liferay-alloy-editor-source";
@@ -243,17 +233,6 @@ name = HtmlUtil.escapeJS(name);
 		);
 
 		var plugins = [];
-
-		<c:if test="<%= Validator.isNotNull(data) && Validator.isNotNull(uploadURL) %>">
-			plugins.push({
-				cfg: {
-					uploadItemReturnType:
-						'<%= editorOptions.getUploadItemReturnType() %>',
-					uploadUrl: '<%= uploadURL %>',
-				},
-				fn: A.Plugin.LiferayEditorImageUploader,
-			});
-		</c:if>
 
 		<c:if test="<%= showSource %>">
 			plugins.push(A.Plugin.LiferayAlloyEditorSource);

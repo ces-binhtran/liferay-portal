@@ -51,6 +51,26 @@ public class ContentSetElementResourceImpl
 	extends BaseContentSetElementResourceImpl {
 
 	@Override
+	public Page<ContentSetElement>
+			getAssetLibraryContentSetByKeyContentSetElementsPage(
+				Long assetLibraryId, String key, Pagination pagination)
+		throws Exception {
+
+		return getSiteContentSetByKeyContentSetElementsPage(
+			assetLibraryId, key, pagination);
+	}
+
+	@Override
+	public Page<ContentSetElement>
+			getAssetLibraryContentSetByUuidContentSetElementsPage(
+				Long assetLibraryId, String uuid, Pagination pagination)
+		throws Exception {
+
+		return getSiteContentSetByUuidContentSetElementsPage(
+			assetLibraryId, uuid, pagination);
+	}
+
+	@Override
 	public Page<ContentSetElement> getContentSetContentSetElementsPage(
 			Long contentSetId, Pagination pagination)
 		throws Exception {
@@ -64,10 +84,8 @@ public class ContentSetElementResourceImpl
 			Long siteId, String key, Pagination pagination)
 		throws Exception {
 
-		AssetListEntry assetListEntry =
-			_assetListEntryService.getAssetListEntry(siteId, key);
-
-		return _getContentSetContentSetElementsPage(assetListEntry, pagination);
+		return _getContentSetContentSetElementsPage(
+			_assetListEntryService.getAssetListEntry(siteId, key), pagination);
 	}
 
 	@Override
@@ -144,7 +162,7 @@ public class ContentSetElementResourceImpl
 	}
 
 	private ContentSetElement _toContentSetElement(AssetEntry assetEntry) {
-		DTOConverter dtoConverter = _dtoConverterRegistry.getDTOConverter(
+		DTOConverter<?, ?> dtoConverter = _dtoConverterRegistry.getDTOConverter(
 			assetEntry.getClassName());
 
 		return new ContentSetElement() {

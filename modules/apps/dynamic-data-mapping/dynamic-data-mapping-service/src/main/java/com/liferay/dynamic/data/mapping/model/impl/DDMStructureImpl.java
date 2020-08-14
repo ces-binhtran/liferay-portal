@@ -205,9 +205,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 
 	@Override
 	public Set<String> getFieldNames() {
-		List<DDMFormField> ddmFormFields = getDDMFormFields(false);
-
-		return SetUtil.fromList(getDDMFormFieldNames(ddmFormFields));
+		return SetUtil.fromList(getDDMFormFieldNames(getDDMFormFields(false)));
 	}
 
 	@Override
@@ -291,8 +289,13 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 	public List<String> getRootFieldNames() {
 		DDMForm ddmForm = getFullHierarchyDDMForm();
 
-		return getDDMFormFieldNames(
-			_removeFieldSetDDMFormField(ddmForm.getDDMFormFields()));
+		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+
+		ddmFormFields.removeIf(
+			ddmFormField -> GetterUtil.getBoolean(
+				ddmFormField.getProperty("upgradedStructure")));
+
+		return getDDMFormFieldNames(ddmFormFields);
 	}
 
 	@Override
@@ -524,7 +527,9 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 			_ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
 
 			for (DDMFormField ddmFormField : _ddmForm.getDDMFormFields()) {
-				if (_isFieldSet(ddmFormField)) {
+				if (_isFieldSet(ddmFormField) &&
+					ListUtil.isEmpty(ddmFormField.getNestedDDMFormFields())) {
+
 					_setNestedDDMFormFields(ddmFormField);
 				}
 			}
@@ -588,29 +593,6 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 		return false;
 	}
 
-	private List<DDMFormField> _removeFieldSetDDMFormField(
-		List<DDMFormField> ddmFormFields) {
-
-		try {
-			DDMStructure parentDDMStructure = getParentDDMStructure();
-
-			if (parentDDMStructure != null) {
-				ddmFormFields.removeIf(
-					ddmFormField ->
-						_isFieldSet(ddmFormField) &&
-						Objects.equals(
-							GetterUtil.getLong(
-								ddmFormField.getProperty("ddmStructureId")),
-							parentDDMStructure.getStructureId()));
-			}
-		}
-		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
-		}
-
-		return ddmFormFields;
-	}
-
 	private void _setNestedDDMFormFields(DDMFormField ddmFormField) {
 		if (Validator.isNotNull(ddmFormField.getProperty("ddmStructureId"))) {
 			try {
@@ -619,7 +601,7 @@ public class DDMStructureImpl extends DDMStructureBaseImpl {
 						GetterUtil.getLong(
 							ddmFormField.getProperty("ddmStructureId")));
 
-				DDMForm ddmForm = ddmStructure.createFullHierarchyDDMForm();
+				DDMForm ddmForm = ddmStructure.getDDMForm();
 
 				ddmFormField.setNestedDDMFormFields(ddmForm.getDDMFormFields());
 			}

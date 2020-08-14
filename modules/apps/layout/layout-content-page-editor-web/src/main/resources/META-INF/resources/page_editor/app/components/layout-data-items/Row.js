@@ -12,9 +12,10 @@
  * details.
  */
 
+import ClayLayout from '@clayui/layout';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 
 import {
 	LayoutDataPropTypes,
@@ -23,6 +24,7 @@ import {
 import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
 import {useSelector} from '../../store/index';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import loadBackgroundImage from '../../utils/loadBackgroundImage';
 import {useCustomRowContext} from '../ResizeContext';
 
 const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
@@ -34,29 +36,116 @@ const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
 	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
 	const {modulesPerRow, reverseOrder} = itemConfig;
 
-	const rowContent = (
-		<div
-			className={classNames(className, 'row', {
-				empty:
-					item.config.numberOfColumns === modulesPerRow &&
-					!item.children.some(
-						(childId) => layoutData.items[childId].children.length
-					),
-				'flex-column': customRow && modulesPerRow === 1,
-				'flex-column-reverse':
-					item.config.numberOfColumns === 2 &&
-					modulesPerRow === 1 &&
-					reverseOrder,
+	const {
+		backgroundColor,
+		backgroundImage,
+		borderColor,
+		borderRadius,
+		borderWidth,
+		fontFamily,
+		fontSize,
+		fontWeight,
+		height,
+		marginBottom,
+		marginLeft,
+		marginRight,
+		marginTop,
+		maxHeight,
+		maxWidth,
+		minHeight,
+		minWidth,
+		opacity,
+		overflow,
+		paddingBottom,
+		paddingLeft,
+		paddingRight,
+		paddingTop,
+		shadow,
+		textAlign,
+		textColor,
+		width,
+	} = item.config.styles;
 
-				'no-gutters': !item.config.gutters,
-			})}
+	const [backgroundImageValue, setBackgroundImageValue] = useState('');
+
+	useEffect(() => {
+		loadBackgroundImage(backgroundImage).then(setBackgroundImageValue);
+	}, [backgroundImage]);
+
+	const style = {};
+
+	if (backgroundImageValue) {
+		style.backgroundImage = `url(${backgroundImageValue})`;
+		style.backgroundPosition = '50% 50%';
+		style.backgroundRepeat = 'no-repeat';
+		style.backgroundSize = 'cover';
+	}
+
+	if (fontSize) {
+		style.fontSize = fontSize;
+	}
+
+	if (minHeight !== 'auto') {
+		style.minHeight = minHeight;
+	}
+
+	if (minWidth !== 'auto') {
+		style.minWidth = minWidth;
+	}
+
+	style.border = `solid ${borderWidth}px`;
+	style.maxHeight = maxHeight;
+	style.maxWidth = maxWidth;
+	style.opacity = opacity;
+	style.overflow = overflow;
+
+	const rowContent = (
+		<ClayLayout.Row
+			className={classNames(
+				className,
+				fontWeight,
+				height,
+				`mb-${marginBottom}`,
+				`mt-${marginTop}`,
+				`pb-${paddingBottom}`,
+				`pl-${paddingLeft}`,
+				`pr-${paddingRight}`,
+				`pt-${paddingTop}`,
+				shadow,
+				width,
+				{
+					[`bg-${backgroundColor?.cssClass}`]: backgroundColor,
+					[`border-${borderColor?.cssClass}`]: borderColor,
+					[borderRadius]: !!borderRadius,
+					empty:
+						item.config.numberOfColumns === modulesPerRow &&
+						!item.children.some(
+							(childId) =>
+								layoutData.items[childId].children.length
+						),
+					'flex-column': customRow && modulesPerRow === 1,
+					'flex-column-reverse':
+						item.config.numberOfColumns === 2 &&
+						modulesPerRow === 1 &&
+						reverseOrder,
+					[`text-${fontFamily}`]: fontFamily !== 'default',
+					[`ml-${marginLeft}`]: marginLeft !== '0',
+					[`mr-${marginRight}`]: marginRight !== '0',
+					'no-gutters': !item.config.gutters,
+					[textAlign]: textAlign !== 'none',
+					[`text-${textColor?.cssClass}`]: textColor,
+				}
+			)}
 			ref={ref}
+			style={style}
 		>
 			{children}
-		</div>
+		</ClayLayout.Row>
 	);
 
-	const masterLayoutData = useSelector((state) => state.masterLayoutData);
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
 
 	const masterParent = useMemo(() => {
 		const dropZone =
@@ -71,7 +160,9 @@ const Row = React.forwardRef(({children, className, item, layoutData}, ref) => {
 	);
 
 	return shouldAddContainer ? (
-		<div className="container-fluid p-0">{rowContent}</div>
+		<ClayLayout.ContainerFluid className="p-0" size={false}>
+			{rowContent}
+		</ClayLayout.ContainerFluid>
 	) : (
 		rowContent
 	);

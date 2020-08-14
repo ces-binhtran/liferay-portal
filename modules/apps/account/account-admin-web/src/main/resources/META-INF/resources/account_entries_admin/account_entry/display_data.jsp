@@ -47,7 +47,9 @@ AccountEntryDisplay accountEntryDisplay = (AccountEntryDisplay)request.getAttrib
 
 			</aui:select>
 
-			<aui:input helpMessage="tax-id-help" label="tax-id" name="taxIdNumber" type="text" value="<%= accountEntryDisplay.getTaxIdNumber() %>" />
+			<aui:input helpMessage="tax-id-help" label="tax-id" name="taxIdNumber" type="text" value="<%= accountEntryDisplay.getTaxIdNumber() %>">
+				<aui:validator name="maxLength"><%= ModelHintsUtil.getMaxLength(AccountEntry.class.getName(), "taxIdNumber") %></aui:validator>
+			</aui:input>
 
 			<c:if test="<%= accountEntryDisplay.getAccountEntryId() > 0 %>">
 				<aui:input cssClass="disabled" label="account-id" name="accountEntryId" readonly="true" type="text" value="<%= String.valueOf(accountEntryDisplay.getAccountEntryId()) %>" />
@@ -57,11 +59,13 @@ AccountEntryDisplay accountEntryDisplay = (AccountEntryDisplay)request.getAttrib
 		<clay:col
 			md="5"
 		>
-			<div class="text-center">
+			<div align="middle">
+				<label class="control-label"></label>
+
 				<liferay-ui:logo-selector
-					currentLogoURL='<%= (accountEntryDisplay.getLogoId() == 0) ? themeDisplay.getPathThemeImages() + "/lexicon/briefcase.svg" : accountEntryDisplay.getLogoURL(themeDisplay) %>'
+					currentLogoURL="<%= (accountEntryDisplay.getLogoId() == 0) ? accountEntryDisplay.getDefaultLogoURL(liferayPortletRequest) : accountEntryDisplay.getLogoURL(themeDisplay) %>"
 					defaultLogo="<%= accountEntryDisplay.getLogoId() == 0 %>"
-					defaultLogoURL='<%= themeDisplay.getPathThemeImages() + "/lexicon/briefcase.svg" %>'
+					defaultLogoURL="<%= accountEntryDisplay.getDefaultLogoURL(liferayPortletRequest) %>"
 					tempImageFileName="<%= String.valueOf(accountEntryDisplay.getAccountEntryId()) %>"
 				/>
 			</div>

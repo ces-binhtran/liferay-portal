@@ -120,7 +120,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "Site Name");
@@ -297,6 +296,7 @@ definition {
 	@description = "This test covers LPS-94208. It asserts that a document is auto tagged when OpenNLP Auto-Tagging is enabled."
 	@priority = "5"
 	test OpenNLPSmoke {
+		property environment.acceptance = "true";
 		property portal.acceptance = "true";
 
 		property test.name.skip.portal.instance = "DMAutoTagging#OpenNLPSmoke";

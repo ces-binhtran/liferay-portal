@@ -568,11 +568,7 @@ public class ClusterSchedulerEngine
 	}
 
 	protected String getFullName(String jobName, String groupName) {
-		return groupName.concat(
-			StringPool.PERIOD
-		).concat(
-			jobName
-		);
+		return StringBundler.concat(groupName, StringPool.PERIOD, jobName);
 	}
 
 	protected void initMemoryClusteredJobs() {
@@ -833,8 +829,8 @@ public class ClusterSchedulerEngine
 
 			_clusterExecutor.execute(clusterRequest);
 		}
-		catch (Throwable t) {
-			_log.error("Unable to notify slave", t);
+		catch (Throwable throwable) {
+			_log.error("Unable to notify slave", throwable);
 		}
 	}
 

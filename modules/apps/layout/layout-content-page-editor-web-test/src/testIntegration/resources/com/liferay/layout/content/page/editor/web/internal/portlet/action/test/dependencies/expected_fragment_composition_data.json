@@ -1,21 +1,55 @@
 {
 	"definition": {
-		"backgroundImage": {
+		"backgroundColor": "",
+		"backgroundFragmentImage": {
 		},
 		"layout": {
-			"containerType": "Fixed",
-			"paddingBottom": 1,
-			"paddingHorizontal": 1,
-			"paddingTop": 1
+			"borderWidth": 0,
+			"marginBottom": 0,
+			"marginLeft": 0,
+			"marginRight": 0,
+			"marginTop": 0,
+			"opacity": 100,
+			"paddingBottom": 0,
+			"paddingLeft": 0,
+			"paddingRight": 0,
+			"paddingTop": 0,
+			"shadow": "None",
+			"widthType": "Fluid"
+		},
+		"styles": {
+			"backgroundImage": {
+			},
+			"borderRadius": "rounded-0",
+			"borderWidth": 0,
+			"fontFamily": "sans-serif",
+			"fontSize": "medium",
+			"fontWeight": "font-weight-normal",
+			"height": "h-auto",
+			"marginBottom": "0",
+			"marginLeft": "0",
+			"marginRight": "0",
+			"marginTop": "0",
+			"maxHeight": "none",
+			"maxWidth": "none",
+			"minHeight": "auto",
+			"minWidth": "auto",
+			"opacity": 100,
+			"overflow": "visible",
+			"paddingBottom": "0",
+			"paddingLeft": "0",
+			"paddingRight": "0",
+			"paddingTop": "0",
+			"shadow": "shadow-none",
+			"textAlign": "none",
+			"width": "w-auto"
 		}
 	},
 	"pageElements": [
 		{
 			"definition": {
 				"fragment": {
-					"collectionName": "${FRAGMENT_COLLECTION_NAME}",
-					"key": "${FRAGMENT_ENTRY_KEY}",
-					"name": "${FRAGMENT_ENTRY_NAME}"
+					"key": "${FRAGMENT_ENTRY_KEY}"
 				},
 				"fragmentConfig": {
 					"buttonAlign": "left",
@@ -29,7 +63,7 @@
 						"value": {
 							"fragmentLink": {
 								"href": {
-									"defaultValue": {
+									"defaultFragmentInlineValue": {
 										"value": "${MAPPED_LINK_DEFAULT_VALUE}"
 									},
 									"mapping": {
@@ -43,7 +77,7 @@
 								"target": "Top"
 							},
 							"text": {
-								"defaultValue": {
+								"defaultFragmentInlineValue": {
 									"value": "${MAPPED_TEXT_DEFAULT_VALUE}"
 								},
 								"mapping": {

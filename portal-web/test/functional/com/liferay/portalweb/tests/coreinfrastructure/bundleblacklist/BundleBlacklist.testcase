@@ -25,7 +25,7 @@ definition {
 	test BlacklistComponent {
 		property test.name.skip.portal.instance = "BundleBlacklist#BlacklistComponent";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");
@@ -51,12 +51,12 @@ definition {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "BundleBlacklist#BlacklistModuleJar";
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Gogo Shell");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");
@@ -71,7 +71,7 @@ definition {
 			symbolicName = "com.liferay.gogo.shell.web");
 
 		BundleBlacklist.viewProductMenuBlacklistedModule(
-			category = "Configuration",
+			category = "System",
 			consoleText = "STOPPED com.liferay.gogo.shell.web",
 			panel = "Control Panel",
 			portlet = "Gogo Shell");
@@ -82,8 +82,8 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Gogo Shell");
 	}
@@ -94,12 +94,12 @@ definition {
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "BundleBlacklist#BlacklistModuleLPKG";
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Gogo Shell");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");
@@ -126,7 +126,7 @@ definition {
 			symbolicName = "${symbolicName}");
 
 		BundleBlacklist.viewProductMenuBlacklistedModule(
-			category = "Configuration",
+			category = "System",
 			consoleText = "${consoleText}",
 			panel = "Control Panel",
 			portlet = "Gogo Shell");
@@ -141,7 +141,7 @@ definition {
 			pageName = "Search",
 			themeName = "Classic Theme");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");
@@ -157,11 +157,7 @@ definition {
 
 		AssertConsoleTextPresent(value1 = "STOPPED classic-theme");
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages",
-			site = "Guest");
+		SitePages.openPagesAdmin(siteURLKey = "guest");
 
 		SitePages.gotoPageMenuItem(
 			menuItem = "Configure",
@@ -178,7 +174,7 @@ definition {
 	test ExportBundleBlacklistConfig {
 		property test.name.skip.portal.instance = "BundleBlacklist#ExportBundleBlacklistConfig";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "System Settings");

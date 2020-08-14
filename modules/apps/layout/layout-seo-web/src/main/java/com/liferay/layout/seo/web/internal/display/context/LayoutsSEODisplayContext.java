@@ -27,13 +27,15 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.StorageEngine;
 import com.liferay.info.display.contributor.InfoDisplayContributor;
 import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.item.provider.InfoItemFormProviderTracker;
+import com.liferay.info.exception.NoSuchFormVariationException;
+import com.liferay.info.form.InfoForm;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.item.selector.ItemSelector;
 import com.liferay.item.selector.ItemSelectorCriterion;
 import com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.image.criterion.ImageItemSelectorCriterion;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.seo.canonical.url.LayoutSEOCanonicalURLProvider;
@@ -60,7 +62,6 @@ import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -86,7 +87,7 @@ public class LayoutsSEODisplayContext {
 	public LayoutsSEODisplayContext(
 		DLAppService dlAppService, DLURLHelper dlurlHelper,
 		InfoDisplayContributorTracker infoDisplayContributorTracker,
-		InfoItemFormProviderTracker infoItemFormProviderTracker,
+		InfoItemServiceTracker infoItemServiceTracker,
 		ItemSelector itemSelector,
 		LayoutPageTemplateEntryLocalService layoutPageTemplateEntryLocalService,
 		LayoutSEOCanonicalURLProvider layoutSEOCanonicalURLProvider,
@@ -99,7 +100,7 @@ public class LayoutsSEODisplayContext {
 		_dlAppService = dlAppService;
 		_dlurlHelper = dlurlHelper;
 		_infoDisplayContributorTracker = infoDisplayContributorTracker;
-		_infoItemFormProviderTracker = infoItemFormProviderTracker;
+		_infoItemServiceTracker = infoItemServiceTracker;
 		_itemSelector = itemSelector;
 		_layoutPageTemplateEntryLocalService =
 			layoutPageTemplateEntryLocalService;
@@ -328,6 +329,29 @@ public class LayoutsSEODisplayContext {
 		}
 	}
 
+	public HashMap<String, Object> getOpenGraphMappingData()
+		throws PortalException {
+
+		return HashMapBuilder.<String, Object>putAll(
+			_getBaseSEOMappingData(
+				_getInfoForm(_getLayoutPageTemplateEntry()),
+				_getLayoutPageTemplateEntry())
+		).put(
+			"openGraphDescription",
+			_selLayout.getTypeSettingsProperty(
+				"mapped-openGraphDescription", "description")
+		).put(
+			"openGraphImage",
+			_selLayout.getTypeSettingsProperty("mapped-openGraphImage", null)
+		).put(
+			"openGraphImageAlt",
+			_selLayout.getTypeSettingsProperty("mapped-openGraphImageAlt", null)
+		).put(
+			"openGraphTitle",
+			_selLayout.getTypeSettingsProperty("mapped-openGraphTitle", "title")
+		).build();
+	}
+
 	public String getPageTitleSuffix() throws PortalException {
 		Company company = _themeDisplay.getCompany();
 
@@ -394,26 +418,73 @@ public class LayoutsSEODisplayContext {
 	}
 
 	public HashMap<String, Object> getSEOMappingData() throws PortalException {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(_selPlid);
+		return HashMapBuilder.<String, Object>putAll(
+			_getBaseSEOMappingData(
+				_getInfoForm(_getLayoutPageTemplateEntry()),
+				_getLayoutPageTemplateEntry())
+		).put(
+			"description",
+			_selLayout.getTypeSettingsProperty(
+				"mapped-description", "description")
+		).put(
+			"title", _selLayout.getTypeSettingsProperty("mapped-title", "title")
+		).build();
+	}
+
+	public boolean isPrivateLayout() {
+		if (_privateLayout != null) {
+			return _privateLayout;
+		}
+
+		Group selGroup = getSelGroup();
+
+		if (selGroup.isLayoutSetPrototype()) {
+			_privateLayout = true;
+
+			return _privateLayout;
+		}
+
+		if (getSelLayout() != null) {
+			Layout selLayout = getSelLayout();
+
+			_privateLayout = selLayout.isPrivateLayout();
+
+			return _privateLayout;
+		}
+
+		Layout layout = _themeDisplay.getLayout();
+
+		if (!layout.isTypeControlPanel()) {
+			_privateLayout = layout.isPrivateLayout();
+
+			return _privateLayout;
+		}
+
+		_privateLayout = ParamUtil.getBoolean(
+			_liferayPortletRequest, "privateLayout");
+
+		return _privateLayout;
+	}
+
+	private HashMap<String, Object> _getBaseSEOMappingData(
+			InfoForm infoForm, LayoutPageTemplateEntry layoutPageTemplateEntry)
+		throws PortalException {
 
 		return HashMapBuilder.<String, Object>put(
-			"description",
-			_selLayout.getDescription(
-				LocaleUtil.fromLanguageId(_selLayout.getDefaultLanguageId()))
+			"defaultLanguageId", _selLayout.getDefaultLanguageId()
 		).put(
 			"fields",
-			_infoItemFormProviderTracker.getInfoItemFormProvider(
-				layoutPageTemplateEntry.getClassName()
-			).getInfoForm(
-			).getAllInfoFields(
+			infoForm.getAllInfoFields(
 			).stream(
 			).map(
 				infoField -> JSONUtil.put(
 					"key", infoField.getName()
 				).put(
 					"label", infoField.getLabel(_themeDisplay.getLocale())
+				).put(
+					"type",
+					infoField.getInfoFieldType(
+					).getName()
 				)
 			).collect(
 				Collectors.toList()
@@ -433,61 +504,25 @@ public class LayoutsSEODisplayContext {
 					layoutPageTemplateEntry.getClassName(),
 					layoutPageTemplateEntry.getClassTypeId())
 			)
-		).put(
-			"title",
-			_selLayout.getTitle(
-				LocaleUtil.fromLanguageId(_selLayout.getDefaultLanguageId()))
 		).build();
 	}
 
-	public boolean isDisplayPageTemplate() {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(_selPlid);
+	private InfoForm _getInfoForm(
+			LayoutPageTemplateEntry layoutPageTemplateEntry)
+		throws NoSuchFormVariationException {
 
-		if ((layoutPageTemplateEntry != null) &&
-			(layoutPageTemplateEntry.getType() ==
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE)) {
+		InfoItemFormProvider<?> infoItemFormProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormProvider.class,
+				layoutPageTemplateEntry.getClassName());
 
-			return true;
-		}
-
-		return false;
+		return infoItemFormProvider.getInfoForm(
+			String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
 	}
 
-	public boolean isPrivateLayout() {
-		if (_privateLayout != null) {
-			return _privateLayout;
-		}
-
-		Group selGroup = getSelGroup();
-
-		if (selGroup.isLayoutSetPrototype()) {
-			_privateLayout = true;
-
-			return _privateLayout;
-		}
-
-		Layout selLayout = getSelLayout();
-
-		if (getSelLayout() != null) {
-			_privateLayout = selLayout.isPrivateLayout();
-
-			return _privateLayout;
-		}
-
-		Layout layout = _themeDisplay.getLayout();
-
-		if (!layout.isTypeControlPanel()) {
-			_privateLayout = layout.isPrivateLayout();
-
-			return _privateLayout;
-		}
-
-		_privateLayout = ParamUtil.getBoolean(
-			_liferayPortletRequest, "privateLayout");
-
-		return _privateLayout;
+	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry() {
+		return _layoutPageTemplateEntryLocalService.
+			fetchLayoutPageTemplateEntryByPlid(_selPlid);
 	}
 
 	private Long _getSelPlid() {
@@ -541,7 +576,7 @@ public class LayoutsSEODisplayContext {
 	private final GroupDisplayContextHelper _groupDisplayContextHelper;
 	private final HttpServletRequest _httpServletRequest;
 	private final InfoDisplayContributorTracker _infoDisplayContributorTracker;
-	private final InfoItemFormProviderTracker _infoItemFormProviderTracker;
+	private final InfoItemServiceTracker _infoItemServiceTracker;
 	private final ItemSelector _itemSelector;
 	private Long _layoutId;
 	private final LayoutPageTemplateEntryLocalService

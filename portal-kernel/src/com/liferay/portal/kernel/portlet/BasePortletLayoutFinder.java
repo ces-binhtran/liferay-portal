@@ -154,8 +154,8 @@ public abstract class BasePortletLayoutFinder implements PortletLayoutFinder {
 	protected class ResultImpl implements PortletLayoutFinder.Result {
 
 		/**
-		 * @deprecated As of Athanasius (7.3.x), replaced by {@link #ResultImpl(
-		 *             long, String, boolean)}
+		 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+		 *             #ResultImpl(long, String, boolean)}
 		 */
 		@Deprecated
 		public ResultImpl(long plid, String portletId) {
@@ -229,7 +229,7 @@ public abstract class BasePortletLayoutFinder implements PortletLayoutFinder {
 	private String _getErrorMessage(
 		long groupId, ThemeDisplay themeDisplay, String[] portletIds) {
 
-		StringBundler sb = new StringBundler(portletIds.length * 2 + 5);
+		StringBundler sb = new StringBundler((portletIds.length * 2) + 5);
 
 		sb.append("{groupId=");
 		sb.append(groupId);

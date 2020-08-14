@@ -24,7 +24,7 @@ String tabs3 = ParamUtil.getString(request, "tabs3", "new-publication-process");
 boolean newPublication = tabs3.equals("new-publication-process");
 
 String defaultRange = ExportImportDateUtil.RANGE_ALL;
-String javascriptOnSubmitFunction = "event.halt(); " + renderResponse.getNamespace();
+String javascriptOnSubmitFunction = "event.halt(); " + liferayPortletResponse.getNamespace();
 long workingGroupId = liveGroupId;
 
 if (newPublication) {
@@ -62,7 +62,7 @@ else {
 			int incompleteBackgroundTaskCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(StagingUtil.getStagingAndLiveGroupIds(themeDisplay.getScopeGroupId()), selPortlet.getPortletId(), BackgroundTaskExecutorNames.PORTLET_STAGING_BACKGROUND_TASK_EXECUTOR, false);
 			%>
 
-			<div class='<%= (incompleteBackgroundTaskCount == 0) ? "hide" : "in-progress" %>' id="<portlet:namespace />incompleteProcessMessage">
+			<div class="<%= (incompleteBackgroundTaskCount == 0) ? "hide" : "in-progress" %>" id="<portlet:namespace />incompleteProcessMessage">
 				<liferay-util:include page="/incomplete_processes_message.jsp" servletContext="<%= application %>">
 					<liferay-util:param name="incompleteBackgroundTaskCount" value="<%= String.valueOf(incompleteBackgroundTaskCount) %>" />
 				</liferay-util:include>

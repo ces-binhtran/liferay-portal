@@ -36,17 +36,23 @@ export default withRouter(
 		endpoint,
 		filters = [],
 		history,
+		noActionsMessage,
 		queryParams,
+		scope,
 	}) => {
 		const {defaultDelta = 20} = useContext(AppContext);
-		const [query, setQuery] = useQuery(history, {
-			filters: {},
-			keywords: '',
-			page: 1,
-			pageSize: defaultDelta,
-			sort: '',
-			...queryParams,
-		});
+		const [query, setQuery] = useQuery(
+			history,
+			{
+				filters: {},
+				keywords: '',
+				page: 1,
+				pageSize: defaultDelta,
+				sort: '',
+				...queryParams,
+			},
+			scope
+		);
 
 		const dispatch = useCallback(
 			(action) => setQuery(reducer(query, action)),
@@ -64,14 +70,14 @@ export default withRouter(
 
 		let items = [];
 		let totalCount = 0;
-		let totalPages = 1;
+		let totalPages;
 
 		if (response) {
 			({items = [], totalCount, lastPage: totalPages} = response);
 		}
 
 		useEffect(() => {
-			if (query.page > totalPages) {
+			if (totalPages && Number(query.page) > totalPages) {
 				dispatch({page: totalPages, type: 'CHANGE_PAGE'});
 			}
 		}, [dispatch, query.page, totalPages]);
@@ -134,6 +140,7 @@ export default withRouter(
 					isLoading={isLoading}
 					items={items.map((item, index) => children(item, index))}
 					keywords={query.keywords}
+					noActionsMessage={noActionsMessage}
 					totalCount={totalCount}
 				/>
 			</SearchContext.Provider>

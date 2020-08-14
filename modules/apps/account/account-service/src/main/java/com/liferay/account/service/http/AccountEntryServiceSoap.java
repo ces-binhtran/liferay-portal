@@ -57,8 +57,10 @@ import java.rmi.RemoteException;
  *
  * @author Brian Wing Shun Chan
  * @see AccountEntryServiceHttp
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 public class AccountEntryServiceSoap {
 
 	/**
@@ -143,13 +145,13 @@ public class AccountEntryServiceSoap {
 			getAccountEntries(
 				long companyId, int status, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.account.model.AccountEntry> obc)
+					<com.liferay.account.model.AccountEntry> orderByComparator)
 		throws RemoteException {
 
 		try {
 			java.util.List<com.liferay.account.model.AccountEntry> returnValue =
 				AccountEntryServiceUtil.getAccountEntries(
-					companyId, status, start, end, obc);
+					companyId, status, start, end, orderByComparator);
 
 			return com.liferay.account.model.AccountEntrySoap.toSoapModels(
 				returnValue);

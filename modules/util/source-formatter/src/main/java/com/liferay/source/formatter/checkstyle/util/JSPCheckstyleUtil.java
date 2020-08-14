@@ -17,7 +17,6 @@ package com.liferay.source.formatter.checkstyle.util;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.source.formatter.checks.util.JavaSourceUtil;
 
 import java.io.IOException;
 
@@ -45,7 +44,7 @@ public class JSPCheckstyleUtil {
 		Matcher matcher = _javaSourceTag.matcher(content);
 
 		if (matcher.find()) {
-			return _getJavaContent(absolutePath, content);
+			return _getJavaContent(content);
 		}
 
 		return null;
@@ -66,18 +65,14 @@ public class JSPCheckstyleUtil {
 		return StringUtil.replaceLast(javaContent, "\n%>", "");
 	}
 
-	private static String _getJavaContent(String fileName, String content)
-		throws IOException {
-
+	private static String _getJavaContent(String content) throws IOException {
 		StringBundler sb = new StringBundler();
 
 		List<String> lines = CheckstyleUtil.getLines(content);
 
 		boolean javaSource = false;
 
-		sb.append("public class ");
-		sb.append(JavaSourceUtil.getClassName(fileName));
-		sb.append(" {\n");
+		sb.append("public class TempClass {\n");
 
 		for (int i = 1; i < lines.size(); i++) {
 			String line = lines.get(i);
@@ -85,7 +80,7 @@ public class JSPCheckstyleUtil {
 			String trimmedLine = StringUtil.trimLeading(line);
 
 			if (javaSource) {
-				if (trimmedLine.matches("%>")) {
+				if (trimmedLine.startsWith("%>")) {
 					sb.append("\t\t// PLACEHOLDER");
 
 					javaSource = false;
@@ -109,7 +104,7 @@ public class JSPCheckstyleUtil {
 
 			sb.append("\n");
 
-			if (trimmedLine.matches("<%")) {
+			if (trimmedLine.equals("<%") || trimmedLine.endsWith("<%=")) {
 				javaSource = true;
 			}
 		}

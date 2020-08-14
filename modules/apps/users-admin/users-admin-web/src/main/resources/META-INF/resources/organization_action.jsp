@@ -22,7 +22,9 @@ SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("l
 String redirect = currentURL;
 
 if ((searchContainer != null) && (searchContainer instanceof OrganizationSearch)) {
-	redirect = searchContainer.getIteratorURL().toString();
+	PortletURL iteratorURL = searchContainer.getIteratorURL();
+
+	redirect = iteratorURL.toString();
 }
 
 ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
@@ -102,7 +104,7 @@ long organizationGroupId = organization.getGroupId();
 	<c:if test="<%= OrganizationPermissionUtil.contains(permissionChecker, organization, ActionKeys.ASSIGN_MEMBERS) %>">
 
 		<%
-		String taglibOnClick = renderResponse.getNamespace() + "openSelectUsersDialog('" + organizationId + "');";
+		String taglibOnClick = liferayPortletResponse.getNamespace() + "openSelectUsersDialog('" + organizationId + "');";
 		%>
 
 		<liferay-ui:icon
@@ -156,7 +158,7 @@ long organizationGroupId = organization.getGroupId();
 	<c:if test="<%= OrganizationPermissionUtil.contains(permissionChecker, organization, ActionKeys.DELETE) %>">
 
 		<%
-		String taglibDeleteURL = "javascript:" + renderResponse.getNamespace() + "deleteOrganization('" + organizationId + "');";
+		String taglibDeleteURL = "javascript:" + liferayPortletResponse.getNamespace() + "deleteOrganization('" + organizationId + "');";
 		%>
 
 		<liferay-ui:icon

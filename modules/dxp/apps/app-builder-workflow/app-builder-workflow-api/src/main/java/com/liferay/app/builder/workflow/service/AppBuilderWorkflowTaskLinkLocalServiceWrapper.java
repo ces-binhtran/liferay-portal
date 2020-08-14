@@ -38,6 +38,10 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 	/**
 	 * Adds the app builder workflow task link to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderWorkflowTaskLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderWorkflowTaskLink the app builder workflow task link
 	 * @return the app builder workflow task link that was added
 	 */
@@ -54,14 +58,15 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 	@Override
 	public com.liferay.app.builder.workflow.model.AppBuilderWorkflowTaskLink
 			addAppBuilderWorkflowTaskLink(
-				long companyId, long appBuilderAppId, long ddmStructureLayoutId,
-				String workflowTaskName)
+				long companyId, long appBuilderAppId,
+				long appBuilderAppVersionId, long ddmStructureLayoutId,
+				boolean readOnly, String workflowTaskName)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _appBuilderWorkflowTaskLinkLocalService.
 			addAppBuilderWorkflowTaskLink(
-				companyId, appBuilderAppId, ddmStructureLayoutId,
-				workflowTaskName);
+				companyId, appBuilderAppId, appBuilderAppVersionId,
+				ddmStructureLayoutId, readOnly, workflowTaskName);
 	}
 
 	/**
@@ -93,6 +98,10 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 	/**
 	 * Deletes the app builder workflow task link from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderWorkflowTaskLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderWorkflowTaskLink the app builder workflow task link
 	 * @return the app builder workflow task link that was removed
 	 */
@@ -108,6 +117,10 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 
 	/**
 	 * Deletes the app builder workflow task link with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderWorkflowTaskLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderWorkflowTaskLinkId the primary key of the app builder workflow task link
 	 * @return the app builder workflow task link that was removed
@@ -126,6 +139,15 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 	public void deleteAppBuilderWorkflowTaskLinks(long appBuilderAppId) {
 		_appBuilderWorkflowTaskLinkLocalService.
 			deleteAppBuilderWorkflowTaskLinks(appBuilderAppId);
+	}
+
+	@Override
+	public void deleteAppBuilderWorkflowTaskLinks(
+		long appBuilderAppId, long appBuilderAppVersionId) {
+
+		_appBuilderWorkflowTaskLinkLocalService.
+			deleteAppBuilderWorkflowTaskLinks(
+				appBuilderAppId, appBuilderAppVersionId);
 	}
 
 	/**
@@ -303,10 +325,23 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 	public java.util.List
 		<com.liferay.app.builder.workflow.model.AppBuilderWorkflowTaskLink>
 			getAppBuilderWorkflowTaskLinks(
-				long appBuilderAppId, String workflowTaskName) {
+				long appBuilderAppId, long appBuilderAppVersionId) {
 
 		return _appBuilderWorkflowTaskLinkLocalService.
-			getAppBuilderWorkflowTaskLinks(appBuilderAppId, workflowTaskName);
+			getAppBuilderWorkflowTaskLinks(
+				appBuilderAppId, appBuilderAppVersionId);
+	}
+
+	@Override
+	public java.util.List
+		<com.liferay.app.builder.workflow.model.AppBuilderWorkflowTaskLink>
+			getAppBuilderWorkflowTaskLinks(
+				long appBuilderAppId, long appBuilderAppVersionId,
+				String workflowTaskName) {
+
+		return _appBuilderWorkflowTaskLinkLocalService.
+			getAppBuilderWorkflowTaskLinks(
+				appBuilderAppId, appBuilderAppVersionId, workflowTaskName);
 	}
 
 	/**
@@ -353,6 +388,10 @@ public class AppBuilderWorkflowTaskLinkLocalServiceWrapper
 
 	/**
 	 * Updates the app builder workflow task link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderWorkflowTaskLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderWorkflowTaskLink the app builder workflow task link
 	 * @return the app builder workflow task link that was updated

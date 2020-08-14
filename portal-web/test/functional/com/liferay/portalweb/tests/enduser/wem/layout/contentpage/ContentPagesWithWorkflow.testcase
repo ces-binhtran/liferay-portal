@@ -393,6 +393,8 @@ definition {
 	@description = "This is for LPS-98384. The page author can not edit again after submit but can preview the modification."
 	@priority = "5"
 	test PageAuthorCanPreviewModificationButCannotEditAfterSubmit {
+		property portal.acceptance = "true";
+
 		task ("Assert the Heading fragment still displays original text for public") {
 			Navigator.gotoSitePage(
 				pageName = "Test Page Name",
@@ -443,6 +445,8 @@ definition {
 	@description = "This is for LPS-98384. The reviewer can edit the content page and preview the modification after submit."
 	@priority = "5"
 	test ReviewerCanPreviewModificationAndEditAfterSubmit {
+		property portal.acceptance = "true";
+
 		task ("Assert reviewer can preview modification of content page") {
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",

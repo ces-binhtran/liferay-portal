@@ -309,17 +309,16 @@ public class EditorPortlet extends AdminPortlet {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (Folder folder : folders) {
-			JSONObject jsonObject = JSONUtil.put(
-				"entryId", folder.getFolderId()
-			).put(
-				"label", folder.getName()
-			).put(
-				"leaf", false
-			).put(
-				"type", "editor"
-			);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"entryId", folder.getFolderId()
+				).put(
+					"label", folder.getName()
+				).put(
+					"leaf", false
+				).put(
+					"type", "editor"
+				));
 		}
 
 		boolean getFileEntries = ParamUtil.getBoolean(
@@ -425,10 +424,9 @@ public class EditorPortlet extends AdminPortlet {
 			"scrolling", modulePrefs.getScrolling()
 		);
 
-		String ownerId = ShindigUtil.getOwnerId(themeDisplay.getLayout());
-
 		String secureToken = ShindigUtil.createSecurityToken(
-			ownerId, themeDisplay.getUserId(), fileEntryURL,
+			ShindigUtil.getOwnerId(themeDisplay.getLayout()),
+			themeDisplay.getUserId(), fileEntryURL,
 			PortalUtil.getPortalURL(themeDisplay), fileEntryURL, moduleId,
 			PortalUtil.getCurrentURL(resourceRequest));
 

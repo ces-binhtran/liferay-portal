@@ -90,12 +90,14 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Layout Elements",
-			fragmentName = "Section");
+			fragmentName = "Container");
 
-		PageEditor.editLayoutSection(
+		PageEditor.editLayoutContainer(
 			backgroundImage = "Manual Selection",
 			entryTitle = "Document_1.svg",
-			navItem = "Documents and Media");
+			navItem = "Documents and Media",
+			paddingTop = "2",
+			panel = "Styles");
 
 		PageEditor.clickPublish();
 
@@ -151,12 +153,14 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Layout Elements",
-			fragmentName = "Section");
+			fragmentName = "Container");
 
-		PageEditor.editLayoutSection(
+		PageEditor.editLayoutContainer(
 			backgroundImage = "Manual Selection",
 			entryTitle = "Document_1.jpeg",
-			navItem = "Documents and Media");
+			navItem = "Documents and Media",
+			paddingTop = "2",
+			panel = "Styles");
 
 		PageEditor.clickPublish();
 

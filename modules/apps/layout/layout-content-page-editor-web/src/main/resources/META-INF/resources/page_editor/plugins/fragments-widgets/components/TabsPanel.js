@@ -61,25 +61,7 @@ export default function TabsPanel({tabs}) {
 						key={index}
 					>
 						<ul className="list-unstyled">
-							{tab.collections.map((collection, index) => (
-								<Collapse
-									key={collection.collectionId}
-									label={collection.label}
-									open={
-										index <
-										INITIAL_EXPANDED_ITEM_COLLECTIONS
-									}
-								>
-									<ul className="list-unstyled">
-										{collection.children.map((item) => (
-											<TabItem
-												item={item}
-												key={item.itemId}
-											/>
-										))}
-									</ul>
-								</Collapse>
-							))}
+							<Collections collections={tab.collections} open />
 						</ul>
 					</ClayTabs.TabPane>
 				))}
@@ -87,3 +69,33 @@ export default function TabsPanel({tabs}) {
 		</>
 	);
 }
+
+const Collections = ({collections, open}) =>
+	collections.map((collection, index) => (
+		<Collapse
+			key={collection.collectionId}
+			label={collection.label}
+			open={open && index < INITIAL_EXPANDED_ITEM_COLLECTIONS}
+		>
+			{collection.collections && (
+				<Collections collections={collection.collections} />
+			)}
+
+			<ul className="list-unstyled">
+				{collection.children.map((item, index) => (
+					<React.Fragment key={index}>
+						<TabItem item={item} />
+
+						{item.portletItems?.length && (
+							<TabPortletItem item={item} />
+						)}
+					</React.Fragment>
+				))}
+			</ul>
+		</Collapse>
+	));
+
+const TabPortletItem = ({item}) =>
+	item.portletItems.map((portlet, index) => (
+		<TabItem item={portlet} key={index} />
+	));

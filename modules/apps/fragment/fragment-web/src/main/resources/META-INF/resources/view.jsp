@@ -41,34 +41,39 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 
 						<c:choose>
 							<c:when test="<%= ListUtil.isNotEmpty(fragmentCollections) || ListUtil.isNotEmpty(fragmentCollectionContributors) || MapUtil.isNotEmpty(inheritedFragmentCollections) %>">
-								<div class="autofit-row autofit-row-center mb-4">
-									<div class="autofit-col autofit-col-expand">
+								<clay:content-row
+									cssClass="mb-4"
+									verticalAlign="center"
+								>
+									<clay:content-col
+										expand="<%= true %>"
+									>
 										<strong class="text-uppercase">
 											<liferay-ui:message key="collections" />
 										</strong>
-									</div>
+									</clay:content-col>
 
-									<div class="autofit-col autofit-col-end">
+									<clay:content-col>
 										<ul class="navbar-nav">
 											<li>
 												<c:if test="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) %>">
-													<liferay-ui:icon
+													<clay:link
+														borderless="<%= true %>"
+														href="<%= editFragmentCollectionURL %>"
 														icon="plus"
-														iconCssClass="btn btn-monospaced btn-outline-borderless btn-outline-secondary btn-sm"
-														markupView="lexicon"
-														url="<%= editFragmentCollectionURL %>"
+														type="button"
 													/>
 												</c:if>
 											</li>
 											<li>
 												<clay:dropdown-actions
-													componentId='<%= renderResponse.getNamespace() + "actionsComponent" %>'
+													defaultEventHandler="FragmentCollectionsViewDefaultEventHandler"
 													dropdownItems="<%= fragmentDisplayContext.getCollectionsDropdownItems() %>"
 												/>
 											</li>
 										</ul>
-									</div>
-								</div>
+									</clay:content-col>
+								</clay:content-row>
 
 								<ul class="mb-2 nav nav-stacked">
 									<c:if test="<%= ListUtil.isNotEmpty(fragmentCollectionContributors) || ListUtil.isNotEmpty(systemFragmentCollections) %>">
@@ -89,7 +94,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 												fragmentCollectionURL.setParameter("fragmentCollectionKey", String.valueOf(fragmentCollectionContributor.getFragmentCollectionKey()));
 												%>
 
-												<a class='nav-link text-truncate <%= Objects.equals(fragmentCollectionContributor.getFragmentCollectionKey(), fragmentDisplayContext.getFragmentCollectionKey()) ? "active" : StringPool.BLANK %>' href="<%= fragmentCollectionURL.toString() %>">
+												<a class="nav-link text-truncate <%= Objects.equals(fragmentCollectionContributor.getFragmentCollectionKey(), fragmentDisplayContext.getFragmentCollectionKey()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
 													<%= HtmlUtil.escape(fragmentCollectionContributor.getName(locale)) %>
 
 													<liferay-ui:icon
@@ -115,7 +120,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
 												%>
 
-												<a class='nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= fragmentCollectionURL.toString() %>">
+												<a class="nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
 													<%= HtmlUtil.escape(fragmentCollection.getName()) %>
 
 													<c:if test="<%= fragmentDisplayContext.isLocked(fragmentCollection) %>">
@@ -156,7 +161,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
 												%>
 
-												<a class='nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= fragmentCollectionURL.toString() %>">
+												<a class="nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
 													<%= HtmlUtil.escape(fragmentCollection.getName()) %>
 
 													<liferay-ui:icon
@@ -191,7 +196,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 												fragmentCollectionURL.setParameter("fragmentCollectionId", String.valueOf(fragmentCollection.getFragmentCollectionId()));
 												%>
 
-												<a class='nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= fragmentCollectionURL.toString() %>">
+												<a class="nav-link text-truncate <%= (fragmentCollection.getFragmentCollectionId() == fragmentDisplayContext.getFragmentCollectionId()) ? "active" : StringPool.BLANK %>" href="<%= fragmentCollectionURL.toString() %>">
 													<%= HtmlUtil.escape(fragmentCollection.getName()) %>
 
 													<c:if test="<%= fragmentDisplayContext.isLocked(fragmentCollection) %>">
@@ -219,7 +224,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 								<liferay-frontend:empty-result-message
 									actionDropdownItems="<%= FragmentPermission.contains(permissionChecker, scopeGroupId, FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES) ? fragmentDisplayContext.getActionDropdownItems() : null %>"
 									animationType="<%= EmptyResultMessageKeys.AnimationType.NONE %>"
-									componentId='<%= renderResponse.getNamespace() + "emptyResultMessageComponent" %>'
+									defaultEventHandler="FragmentCollectionsViewDefaultEventHandler"
 									description='<%= LanguageUtil.get(request, "collections-are-needed-to-create-fragments") %>'
 									elementType='<%= LanguageUtil.get(request, "collections") %>'
 								/>
@@ -234,25 +239,31 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 			lg="9"
 		>
 			<c:if test="<%= (fragmentDisplayContext.getFragmentCollection() != null) || (fragmentDisplayContext.getFragmentCollectionContributor() != null) %>">
-				<div class="sheet">
+				<clay:sheet>
 					<h2 class="sheet-title">
-						<div class="autofit-row autofit-row-center">
-							<div class="autofit-col">
+						<clay:content-row
+							verticalAlign="center"
+						>
+							<clay:content-col>
 								<%= fragmentDisplayContext.getFragmentCollectionName() %>
-							</div>
+							</clay:content-col>
 
 							<c:if test="<%= fragmentDisplayContext.showFragmentCollectionActions() %>">
-								<div class="autofit-col autofit-col-end inline-item-after">
+								<clay:content-col
+									cssClass="inline-item-after"
+								>
 									<liferay-util:include page="/fragment_collection_action.jsp" servletContext="<%= application %>" />
-								</div>
+								</clay:content-col>
 							</c:if>
-						</div>
+						</clay:content-row>
 					</h2>
 
-					<div class="sheet-section">
-						<clay:navigation-bar
-							navigationItems="<%= fragmentDisplayContext.getNavigationItems() %>"
-						/>
+					<clay:sheet-section>
+						<c:if test="<%= !ListUtil.isEmpty(fragmentDisplayContext.getNavigationItems()) %>">
+							<clay:navigation-bar
+								navigationItems="<%= fragmentDisplayContext.getNavigationItems() %>"
+							/>
+						</c:if>
 
 						<c:choose>
 							<c:when test="<%= fragmentDisplayContext.isSelectedFragmentCollectionContributor() %>">
@@ -269,8 +280,8 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 								</c:choose>
 							</c:otherwise>
 						</c:choose>
-					</div>
-				</div>
+					</clay:sheet-section>
+				</clay:sheet>
 			</c:if>
 		</clay:col>
 	</clay:row>
@@ -280,6 +291,7 @@ List<FragmentCollectionContributor> fragmentCollectionContributors = fragmentDis
 </aui:form>
 
 <liferay-frontend:component
+	componentId="FragmentCollectionsViewDefaultEventHandler"
 	context="<%= fragmentDisplayContext.getFragmentCollectionsViewContext() %>"
-	module="js/FragmentCollectionsView.es"
+	module="js/FragmentCollectionsViewDefaultEventHandler.es"
 />

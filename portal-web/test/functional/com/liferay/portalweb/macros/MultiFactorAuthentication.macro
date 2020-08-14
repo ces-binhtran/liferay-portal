@@ -2,6 +2,11 @@ definition {
 
 	macro assertDescriptions {
 		AssertTextEquals(
+			key_fieldName = "enabled",
+			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
+			value1 = "Enabling multi-factor authentication implies enabling Email One-Time Password. It is strongly advised that other forms of user authentication that only support a single factor are disabled (e.g. Basic, Digest, WEBDAV).");
+
+		AssertTextEquals(
 			key_fieldName = "otpSize",
 			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
 			value1 = "Set the length of a one-time password.");
@@ -25,11 +30,64 @@ definition {
 			key_fieldName = "retryTimeout",
 			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
 			value1 = "Set the time in seconds to block requests after reaching the limit for failed attempts allowed.");
+	}
 
-		AssertTextEquals(
-			key_fieldName = "validationExpirationTime",
-			locator1 = "MultiFactorAuthentication#EMAIL_OTP_CONFIG_TEXT",
-			value1 = "Set the time in seconds until session validations expire.");
+	macro configureIPAddress {
+		if ("${enableIP}" == "true") {
+			FormFields.enableCheckbox(fieldName = "enabled");
+
+			if (isSet(allowedIP)) {
+				Type(
+					locator1 = "MultiFactorAuthentication#IP_ADDRESS_CONFIGURATION_ALLOWED_IP_FIELD_1",
+					value1 = "${allowedIP}");
+			}
+		}
+		else if ("${enableIP}" == "false") {
+			FormFields.disableCheckbox(fieldName = "enabled");
+		}
+
+		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			PortletEntry.update();
+		}
+		else if (IsElementPresent(locator1 = "Button#SAVE")) {
+			PortletEntry.save();
+		}
+	}
+
+	macro configureMFAOnSystemLevel {
+		if ("${disabledMFA}" == "true") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Multi-Factor Authentication",
+				configurationName = "Multi-Factor Authentication System Configuration",
+				configurationScope = "System Scope");
+
+			FormFields.enableCheckbox(fieldName = "disableGlobally");
+		}
+		else if ("${disabledMFA}" == "false") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Configuration",
+				panel = "Control Panel",
+				portlet = "System Settings");
+
+			SystemSettings.gotoConfiguration(
+				configurationCategory = "Multi-Factor Authentication",
+				configurationName = "Multi-Factor Authentication System Configuration",
+				configurationScope = "System Scope");
+
+			FormFields.disableCheckbox(fieldName = "disableGlobally");
+		}
+
+		if (IsElementPresent(locator1 = "Button#UPDATE")) {
+			PortletEntry.update();
+		}
+		else if (IsElementPresent(locator1 = "Button#SAVE")) {
+			PortletEntry.save();
+		}
 	}
 
 	macro configureOTP {
@@ -111,9 +169,7 @@ definition {
 	}
 
 	macro sendOTPEmailPG {
-		AssertTextEquals(
-			locator1 = "MultiFactorAuthentication#EMAIL_OTP_VERIFY_INFO_MESSAGE",
-			value1 = "Your one-time password will be sent to your email address.");
+		AssertElementPresent(locator1 = "MultiFactorAuthentication#EMAIL_OTP_VERIFY_INFO_MESSAGE");
 
 		AssertClick(
 			locator1 = "MultiFactorAuthentication#EMAIL_OTP_VERIFY_SEND_EMAIL_BUTTON",
@@ -148,13 +204,13 @@ definition {
 		}
 		else {
 			var bodySpecificText = MockMock.getBodySpecificText(
-				asset = "${portalURL}: Your One-Time Password",
+				asset = "${portalURL}",
 				content = "Your one-time password is:",
 				enableOTP = "true",
 				recipient = "${recipient}",
 				sender = "Joe Bloggs",
 				specificText = "Your one-time password is: <pre>",
-				subject = "${portalURL}: Your One-Time Password");
+				subject = "${portalURL}");
 
 			if (isSet(specificURL)) {
 				Navigator.openSpecificURL(url = "${specificURL}");

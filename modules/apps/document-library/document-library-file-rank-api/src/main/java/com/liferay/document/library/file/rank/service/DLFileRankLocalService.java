@@ -62,11 +62,15 @@ public interface DLFileRankLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DLFileRankLocalServiceUtil} to access the document library file rank local service. Add custom service methods to <code>com.liferay.document.library.file.rank.service.impl.DLFileRankLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.document.library.file.rank.service.impl.DLFileRankLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the document library file rank local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DLFileRankLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the document library file rank to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileRankLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileRank the document library file rank
 	 * @return the document library file rank that was added
@@ -98,6 +102,10 @@ public interface DLFileRankLocalService
 	/**
 	 * Deletes the document library file rank from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileRankLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileRank the document library file rank
 	 * @return the document library file rank that was removed
 	 */
@@ -106,6 +114,10 @@ public interface DLFileRankLocalService
 
 	/**
 	 * Deletes the document library file rank with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileRankLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fileRankId the primary key of the document library file rank
 	 * @return the document library file rank that was removed
@@ -269,6 +281,10 @@ public interface DLFileRankLocalService
 
 	/**
 	 * Updates the document library file rank in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileRankLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileRank the document library file rank
 	 * @return the document library file rank that was updated

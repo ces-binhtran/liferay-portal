@@ -82,7 +82,8 @@ public class DisplayPageActionDropdownItemsProvider {
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		_draftLayout = _getDraftLayout(_layoutPageTemplateEntry);
+		_draftLayout = LayoutLocalServiceUtil.fetchDraftLayout(
+			layoutPageTemplateEntry.getPlid());
 	}
 
 	public List<DropdownItem> getActionDropdownItems() throws Exception {
@@ -217,6 +218,10 @@ public class DisplayPageActionDropdownItemsProvider {
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getDiscardDraftActionUnsafeConsumer() {
 
+		if (_draftLayout == null) {
+			return null;
+		}
+
 		PortletURL discardDraftURL = PortletURLFactoryUtil.create(
 			_httpServletRequest, LayoutAdminPortletKeys.GROUP_PAGES,
 			PortletRequest.ACTION_PHASE);
@@ -235,33 +240,12 @@ public class DisplayPageActionDropdownItemsProvider {
 		};
 	}
 
-	private Layout _getDraftLayout(
-		LayoutPageTemplateEntry layoutPageTemplateEntry) {
-
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(
-			layoutPageTemplateEntry.getPlid());
-
-		if (layout == null) {
-			return null;
-		}
-
-		return LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class),
-			_layoutPageTemplateEntry.getPlid());
-	}
-
 	private UnsafeConsumer<DropdownItem, Exception>
 		_getEditDisplayPageActionUnsafeConsumer() {
 
-		Layout layout = LayoutLocalServiceUtil.fetchLayout(
-			_layoutPageTemplateEntry.getPlid());
-
-		Layout draftLayout = LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), layout.getPlid());
-
 		return dropdownItem -> {
 			String layoutFullURL = PortalUtil.getLayoutFullURL(
-				draftLayout, _themeDisplay);
+				_draftLayout, _themeDisplay);
 
 			layoutFullURL = HttpUtil.setParameter(
 				layoutFullURL, "p_l_back_url", _themeDisplay.getURLCurrent());

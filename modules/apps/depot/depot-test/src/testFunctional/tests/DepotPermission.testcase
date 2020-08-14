@@ -45,7 +45,6 @@ definition {
 			DepotNavigator.openDepotAdmin();
 
 			DepotNavigator.gotoDepotPortlet(
-				category = "People",
 				depotName = "Test Depot Name",
 				portlet = "Memberships");
 
@@ -91,7 +90,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -152,7 +150,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -169,7 +166,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -207,7 +203,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -216,7 +212,7 @@ definition {
 			siteName = "Site Name",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -411,14 +407,14 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
 		Role.definePermissionCP(
 			assetLibrariesScope = "true",
-			permissionDefinitionKey = "SITE_ADMIN_CONTENT_COLLECTIONS_ASSET_LIST_ENTRY_DELETE_CHECKBOX",
+			permissionDefinitionKey = "SITE_ADMIN_BUILDER_COLLECTIONS_ASSET_LIST_ENTRY_DELETE_CHECKBOX",
 			permissionDefinitionValue = "Delete",
 			roleTitle = "Depot Regrole Name",
 			siteNameScope = "Test Depot Name");
@@ -436,7 +432,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -461,7 +457,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -498,7 +494,7 @@ definition {
 			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");

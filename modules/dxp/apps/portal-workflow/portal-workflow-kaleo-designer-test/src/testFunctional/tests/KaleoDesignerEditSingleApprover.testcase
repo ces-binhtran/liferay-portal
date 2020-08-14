@@ -15,7 +15,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -33,7 +33,6 @@ definition {
 
 	@priority = "5"
 	test DeleteTaskNode {
-		property portal.upstream = "quarantine";
 		property test.name.skip.portal.instance = "KaleoDesignerEditSingleApprover#DeleteTaskNode";
 
 		PortletEntry.inputTitle(title = "Edited Workflow Definition");
@@ -44,7 +43,7 @@ definition {
 
 		PortletEntry.update();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -63,14 +62,14 @@ definition {
 	test ViewInvalidSourceXMLNotRemainsAfterTabSwitch {
 		KaleoDesigner.editSourceXML(
 			kdSourceXML = "INVALID",
-			line = "4");
+			line = "9");
 
 		KaleoDesigner.viewViewTab();
 
 		KaleoDesigner.viewSourceXMLLine(
 			invalid = "true",
 			kdSourceXML = "INVALID",
-			line = "4");
+			line = "9");
 	}
 
 	@description = "This is a use case for LPS-46657."

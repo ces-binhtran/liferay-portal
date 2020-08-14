@@ -63,15 +63,20 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 	public PortalCache<K, V> getPortalCache(String portalCacheName)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, false);
+		return getPortalCache(portalCacheName, false, false);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getPortalCache(String)}
+	 */
+	@Deprecated
 	@Override
 	public PortalCache<K, V> getPortalCache(
 			String portalCacheName, boolean blocking)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, blocking, false);
+		return getPortalCache(portalCacheName);
 	}
 
 	@Override
@@ -82,7 +87,7 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 		PortalCache<K, V> portalCache = portalCaches.get(portalCacheName);
 
 		if (portalCache != null) {
-			_verifyPortalCache(portalCache, blocking, mvcc);
+			_verifyPortalCache(portalCache, mvcc);
 
 			return portalCache;
 		}
@@ -115,15 +120,11 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 			portalCache = new TransactionalPortalCache<>(portalCache, mvcc);
 		}
 
-		if (isBlockingPortalCacheAllowed() && blocking) {
-			portalCache = new BlockingPortalCache<>(portalCache);
-		}
-
 		PortalCache<K, V> previousPortalCache = portalCaches.putIfAbsent(
 			portalCacheName, portalCache);
 
 		if (previousPortalCache != null) {
-			_verifyPortalCache(portalCache, blocking, mvcc);
+			_verifyPortalCache(portalCache, mvcc);
 
 			portalCache = previousPortalCache;
 		}
@@ -146,8 +147,12 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 		return _transactionalPortalCacheNames;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public boolean isBlockingPortalCacheAllowed() {
-		return _blockingPortalCacheAllowed;
+		return false;
 	}
 
 	@Override
@@ -174,10 +179,12 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 		doRemovePortalCache(portalCacheName);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public void setBlockingPortalCacheAllowed(
 		boolean blockingPortalCacheAllowed) {
-
-		_blockingPortalCacheAllowed = blockingPortalCacheAllowed;
 	}
 
 	public void setClusterAware(boolean clusterAware) {
@@ -349,29 +356,19 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 	}
 
 	private void _verifyPortalCache(
-		PortalCache<K, V> portalCache, boolean blocking, boolean mvcc) {
+		PortalCache<K, V> portalCache, boolean mvcc) {
 
-		if ((mvcc == portalCache.isMVCC()) &&
-			(!isBlockingPortalCacheAllowed() ||
-			 (blocking == portalCache.isBlocking()))) {
-
+		if (mvcc == portalCache.isMVCC()) {
 			return;
 		}
 
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(9);
 
 		sb.append("Unable to get portal cache ");
 		sb.append(portalCache.getPortalCacheName());
 		sb.append(" from portal cache manager ");
 		sb.append(_portalCacheManagerName);
 		sb.append(" as a ");
-
-		if (isBlockingPortalCacheAllowed() && blocking) {
-			sb.append("blocking ");
-		}
-		else {
-			sb.append("non-blocking ");
-		}
 
 		if (mvcc) {
 			sb.append("MVCC ");
@@ -381,13 +378,6 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 		}
 
 		sb.append("portal cache, cause a ");
-
-		if (isBlockingPortalCacheAllowed() && portalCache.isBlocking()) {
-			sb.append("blocking ");
-		}
-		else {
-			sb.append("non-blocking ");
-		}
 
 		if (portalCache.isMVCC()) {
 			sb.append("MVCC ");
@@ -401,7 +391,6 @@ public abstract class BasePortalCacheManager<K extends Serializable, V>
 		throw new IllegalStateException(sb.toString());
 	}
 
-	private boolean _blockingPortalCacheAllowed;
 	private boolean _clusterAware;
 	private PortalCacheConfiguration _defaultPortalCacheConfiguration;
 	private PortalCacheManagerConfiguration _portalCacheManagerConfiguration;

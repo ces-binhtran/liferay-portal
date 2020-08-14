@@ -19,13 +19,18 @@ import com.liferay.application.list.PanelCategory;
 import com.liferay.application.list.PanelCategoryRegistry;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration;
 import com.liferay.product.navigation.product.menu.helper.ProductNavigationProductMenuHelper;
 
 import java.util.List;
@@ -65,7 +70,10 @@ public class ProductNavigationProductMenuHelperImpl
 			return false;
 		}
 
-		if (_isGlobalMenuApp(themeDisplay)) {
+		boolean enableApplicationsMenu = _isEnableApplicationsMenu(
+			themeDisplay.getCompanyId());
+
+		if (enableApplicationsMenu && _isApplicationsMenuApp(themeDisplay)) {
 			return false;
 		}
 
@@ -74,6 +82,14 @@ public class ProductNavigationProductMenuHelperImpl
 				PanelCategoryKeys.ROOT, themeDisplay.getPermissionChecker(),
 				themeDisplay.getScopeGroup());
 
+		if (!enableApplicationsMenu) {
+			childPanelCategories.addAll(
+				_panelCategoryRegistry.getChildPanelCategories(
+					PanelCategoryKeys.APPLICATIONS_MENU,
+					themeDisplay.getPermissionChecker(),
+					themeDisplay.getScopeGroup()));
+		}
+
 		if (childPanelCategories.isEmpty()) {
 			return false;
 		}
@@ -81,7 +97,7 @@ public class ProductNavigationProductMenuHelperImpl
 		return true;
 	}
 
-	private boolean _isGlobalMenuApp(ThemeDisplay themeDisplay) {
+	private boolean _isApplicationsMenuApp(ThemeDisplay themeDisplay) {
 		if (Validator.isNull(themeDisplay.getPpid())) {
 			return false;
 		}
@@ -89,7 +105,9 @@ public class ProductNavigationProductMenuHelperImpl
 		PanelCategoryHelper panelCategoryHelper = new PanelCategoryHelper(
 			_panelAppRegistry, _panelCategoryRegistry);
 
-		if (!panelCategoryHelper.isGlobalMenuApp(themeDisplay.getPpid())) {
+		if (!panelCategoryHelper.isApplicationsMenuApp(
+				themeDisplay.getPpid())) {
+
 			return false;
 		}
 
@@ -101,6 +119,36 @@ public class ProductNavigationProductMenuHelperImpl
 
 		return true;
 	}
+
+	private boolean _isEnableApplicationsMenu(long companyId) {
+		try {
+			ApplicationsMenuInstanceConfiguration
+				applicationsMenuInstanceConfiguration =
+					_configurationProvider.getCompanyConfiguration(
+						ApplicationsMenuInstanceConfiguration.class, companyId);
+
+			if (applicationsMenuInstanceConfiguration.
+					enableApplicationsMenu()) {
+
+				return true;
+			}
+		}
+		catch (ConfigurationException configurationException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					"Unable to get applications menu instance configuration",
+					configurationException);
+			}
+		}
+
+		return false;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ProductNavigationProductMenuHelperImpl.class);
+
+	@Reference
+	private ConfigurationProvider _configurationProvider;
 
 	@Reference
 	private PanelAppRegistry _panelAppRegistry;

@@ -255,10 +255,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public File createTempFile(InputStream is) throws IOException {
+	public File createTempFile(InputStream inputStream) throws IOException {
 		File file = createTempFile(StringPool.BLANK);
 
-		write(file, is);
+		write(file, inputStream);
 
 		return file;
 	}
@@ -396,13 +396,13 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public String extractText(InputStream is, String fileName) {
-		return extractText(is, fileName, -1);
+	public String extractText(InputStream inputStream, String fileName) {
+		return extractText(inputStream, fileName, -1);
 	}
 
 	@Override
 	public String extractText(
-		InputStream is, String fileName, int maxStringLength) {
+		InputStream inputStream, String fileName, int maxStringLength) {
 
 		if (maxStringLength == 0) {
 			return StringPool.BLANK;
@@ -417,7 +417,7 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 			boolean forkProcess = false;
 
-			TikaInputStream tikaInputStream = TikaInputStream.get(is);
+			TikaInputStream tikaInputStream = TikaInputStream.get(inputStream);
 
 			if (PropsValues.TEXT_EXTRACTION_FORK_PROCESS_ENABLED) {
 				String mimeType = tika.detect(tikaInputStream);
@@ -458,26 +458,28 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 				}
 			}
 		}
-		catch (Throwable t) {
-			Throwable throwable = ExceptionUtils.getRootCause(t);
+		catch (Throwable throwable) {
+			Throwable rootCauseThrowable = ExceptionUtils.getRootCause(
+				throwable);
 
-			if (throwable instanceof EncryptedDocumentException ||
-				throwable instanceof UnsupportedZipFeatureException) {
+			if (rootCauseThrowable instanceof EncryptedDocumentException ||
+				rootCauseThrowable instanceof UnsupportedZipFeatureException) {
 
 				if (_log.isWarnEnabled()) {
 					_log.warn(
 						"Unable to extract text from an encrypted file " +
 							fileName,
-						t);
+						throwable);
 				}
 			}
-			else if (t instanceof TikaException) {
+			else if (throwable instanceof TikaException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Unable to extract text from " + fileName, t);
+					_log.warn(
+						"Unable to extract text from " + fileName, throwable);
 				}
 			}
 			else {
-				_log.error(t, t);
+				_log.error(throwable, throwable);
 			}
 		}
 
@@ -530,11 +532,9 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 		String[] includedFiles = directoryScanner.getIncludedFiles();
 
 		for (int i = 0; i < includedFiles.length; i++) {
-			includedFiles[i] = directory.concat(
-				StringPool.SLASH
-			).concat(
-				replaceSeparator(includedFiles[i])
-			);
+			includedFiles[i] = StringBundler.concat(
+				directory, StringPool.SLASH,
+				replaceSeparator(includedFiles[i]));
 		}
 
 		return includedFiles;
@@ -569,8 +569,8 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public byte[] getBytes(InputStream is) throws IOException {
-		return getBytes(is, -1);
+	public byte[] getBytes(InputStream inputStream) throws IOException {
+		return getBytes(inputStream, -1);
 	}
 
 	@Override
@@ -935,11 +935,11 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public Properties toProperties(FileInputStream fis) {
+	public Properties toProperties(FileInputStream fileInputStream) {
 		Properties properties = new Properties();
 
 		try {
-			properties.load(fis);
+			properties.load(fileInputStream);
 		}
 		catch (IOException ioException) {
 		}
@@ -1006,10 +1006,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public void write(File file, InputStream is) throws IOException {
+	public void write(File file, InputStream inputStream) throws IOException {
 		mkdirsParentFile(file);
 
-		StreamUtil.transfer(is, new FileOutputStream(file));
+		StreamUtil.transfer(inputStream, new FileOutputStream(file));
 	}
 
 	@Override
@@ -1053,8 +1053,10 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 	}
 
 	@Override
-	public void write(String fileName, InputStream is) throws IOException {
-		write(new File(fileName), is);
+	public void write(String fileName, InputStream inputStream)
+		throws IOException {
+
+		write(new File(fileName), inputStream);
 	}
 
 	@Override
@@ -1157,18 +1159,19 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 
 					@Override
 					public void parseEmbedded(
-							InputStream stream, ContentHandler contentHandler,
-							Metadata metadata, boolean outputHtml)
+							InputStream inputStream,
+							ContentHandler contentHandler, Metadata metadata,
+							boolean outputHtml)
 						throws IOException, SAXException {
 
-						String mimeType = tika.detect(stream);
+						String mimeType = tika.detect(inputStream);
 
 						if (mimeType.equals(ContentTypes.IMAGE_PNG)) {
 							return;
 						}
 
 						super.parseEmbedded(
-							stream, contentHandler, metadata, outputHtml);
+							inputStream, contentHandler, metadata, outputHtml);
 					}
 
 				});
@@ -1243,9 +1246,9 @@ public class FileImpl implements com.liferay.portal.kernel.util.File {
 			Tika tika = new Tika(TikaConfigHolder._tikaConfig);
 
 			try {
-				InputStream is = new UnsyncByteArrayInputStream(_data);
+				InputStream inputStream = new UnsyncByteArrayInputStream(_data);
 
-				return _parseToString(tika, TikaInputStream.get(is));
+				return _parseToString(tika, TikaInputStream.get(inputStream));
 			}
 			catch (Exception exception) {
 				throw new ProcessException(exception);

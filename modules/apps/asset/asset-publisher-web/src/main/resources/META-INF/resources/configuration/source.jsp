@@ -48,7 +48,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 		<aui:option label="any" selected="<%= assetPublisherDisplayContext.isAnyAssetType() %>" value="<%= true %>" />
 		<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") + StringPool.TRIPLE_PERIOD %>' selected="<%= !assetPublisherDisplayContext.isAnyAssetType() && (classNameIds.length > 1) %>" value="<%= false %>" />
 
-		<optgroup label='<liferay-ui:message key="asset-type" />'>
+		<optgroup label="<liferay-ui:message key="asset-type" />">
 
 			<%
 			for (long classNameId : availableClassNameIdsSet) {
@@ -74,7 +74,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 	typesRightList = ListUtil.sort(typesRightList, new KeyValuePairComparator(false, true));
 	%>
 
-	<div class='<%= assetPublisherDisplayContext.isAnyAssetType() ? "hide" : "" %>' id="<portlet:namespace />classNamesBoxes">
+	<div class="<%= assetPublisherDisplayContext.isAnyAssetType() ? "hide" : "" %>" id="<portlet:namespace />classNamesBoxes">
 		<liferay-ui:input-move-boxes
 			leftBoxName="currentClassNameIds"
 			leftList="<%= typesLeftList %>"
@@ -128,12 +128,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 	%>
 
 		<div class='asset-subtype <%= (assetSelectedClassTypeIds.length < 1) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace /><%= className %>Options">
-
-			<%
-			String label = ResourceActionsUtil.getModelResource(locale, assetRendererFactory.getClassName()) + StringPool.SPACE + assetRendererFactory.getSubtypeTitle(themeDisplay.getLocale());
-			%>
-
-			<aui:select label="<%= label %>" name='<%= "preferences--anyClassType" + className + "--" %>'>
+			<aui:select label="<%= ResourceActionsUtil.getModelResource(locale, assetRendererFactory.getClassName()) + StringPool.SPACE + assetRendererFactory.getSubtypeTitle(themeDisplay.getLocale()) %>" name='<%= "preferences--anyClassType" + className + "--" %>'>
 				<aui:option label="any" selected="<%= anyAssetSubtype %>" value="<%= true %>" />
 				<aui:option label='<%= LanguageUtil.get(request, "select-more-than-one") + StringPool.TRIPLE_PERIOD %>' selected="<%= !anyAssetSubtype && (assetSelectedClassTypeIds.length > 1) %>" value="<%= false %>" />
 
@@ -183,7 +178,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 								<portlet:param name="portletResource" value="<%= HtmlUtil.escapeJS(assetPublisherDisplayContext.getPortletResource()) %>" />
 								<portlet:param name="className" value="<%= assetRendererFactory.getClassName() %>" />
 								<portlet:param name="classTypeId" value="<%= String.valueOf(classType.getClassTypeId()) %>" />
-								<portlet:param name="eventName" value='<%= renderResponse.getNamespace() + "selectDDMStructureField" %>' />
+								<portlet:param name="eventName" value='<%= liferayPortletResponse.getNamespace() + "selectDDMStructureField" %>' />
 							</liferay-portlet:renderURL>
 
 							<span class="asset-subtypefields-popup" id="<portlet:namespace /><%= classType.getClassTypeId() %>_<%= className %>PopUpButton">
@@ -200,7 +195,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 				</div>
 			</c:if>
 
-			<div class='<%= (assetSelectedClassTypeIds.length > 1) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace /><%= className %>Boxes">
+			<div class="<%= (assetSelectedClassTypeIds.length > 1) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace /><%= className %>Boxes">
 				<liferay-ui:input-move-boxes
 					leftBoxName='<%= className + "currentClassTypeIds" %>'
 					leftList="<%= subtypesLeftList %>"
@@ -218,7 +213,7 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 	%>
 
 	<c:if test="<%= assetPublisherDisplayContext.isShowSubtypeFieldsFilter() %>">
-		<div class='asset-subtypefield-selected <%= Validator.isNull(assetPublisherDisplayContext.getDDMStructureFieldName()) ? "hide" : StringPool.BLANK %>'>
+		<div class="asset-subtypefield-selected <%= Validator.isNull(assetPublisherDisplayContext.getDDMStructureFieldName()) ? "hide" : StringPool.BLANK %>">
 			<aui:input name="preferences--ddmStructureFieldName--" type="hidden" value="<%= assetPublisherDisplayContext.getDDMStructureFieldName() %>" />
 
 			<aui:input name="preferences--ddmStructureFieldValue--" type="hidden" value="<%= assetPublisherDisplayContext.getDDMStructureFieldValue() %>" />
@@ -545,46 +540,40 @@ List<AssetRendererFactory<?>> classTypesAssetRendererFactories = (List<AssetRend
 
 		var btn = delegateTarget.querySelector('.btn');
 
-		var uri = btn.dataset.href;
+		var url = btn.dataset.href;
 
-		uri = Util.addParams(
+		url = Util.addParams(
 			'_<%= HtmlUtil.escapeJS(assetPublisherDisplayContext.getPortletResource()) %>_ddmStructureDisplayFieldValue=' +
 				encodeURIComponent(ddmStructureDisplayFieldValueInput.value),
-			uri
+			url
 		);
-		uri = Util.addParams(
+		url = Util.addParams(
 			'_<%= HtmlUtil.escapeJS(assetPublisherDisplayContext.getPortletResource()) %>_ddmStructureFieldName=' +
 				encodeURIComponent(ddmStructureFieldNameInput.value),
-			uri
+			url
 		);
-		uri = Util.addParams(
+		url = Util.addParams(
 			'_<%= HtmlUtil.escapeJS(assetPublisherDisplayContext.getPortletResource()) %>_ddmStructureFieldValue=' +
 				encodeURIComponent(ddmStructureFieldValueInput.value),
-			uri
+			url
 		);
 
-		Util.selectEntity(
-			{
-				dialog: {
-					constrain: true,
-					modal: true,
-				},
-				eventName: '<portlet:namespace />selectDDMStructureField',
-				id: '<portlet:namespace />selectDDMStructure' + delegateTarget.id,
-				title:
-					'<liferay-ui:message arguments="structure-field" key="select-x" />',
-				uri: uri,
-			},
-			function (event) {
+		Util.openModal({
+			id: '<portlet:namespace />selectDDMStructure' + delegateTarget.id,
+			onSelect: function (selectedItem) {
 				setDDMFields(
-					event.className,
-					event.name,
-					event.value,
-					event.displayValue,
-					event.label + ': ' + event.displayValue
+					selectedItem.className,
+					selectedItem.name,
+					selectedItem.value,
+					selectedItem.displayValue,
+					selectedItem.label + ': ' + selectedItem.displayValue
 				);
-			}
-		);
+			},
+			selectEventName: '<portlet:namespace />selectDDMStructureField',
+			title:
+				'<liferay-ui:message arguments="structure-field" key="select-x" />',
+			url: url,
+		});
 	});
 
 	function setDDMFields(className, name, value, displayValue, message) {

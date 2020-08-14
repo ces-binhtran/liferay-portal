@@ -29,13 +29,19 @@ export default function ItemSelector({
 	itemSelectorURL,
 	label,
 	onItemSelect,
+	quickMappedInfoItems = [],
 	selectedItemTitle,
 	showAddButton = true,
 	showMappedItems = true,
 }) {
 	const [active, setActive] = useState(false);
 	const itemSelectorInputId = useId();
-	const mappedInfoItems = useSelector((state) => state.mappedInfoItems);
+	const mappedInfoItems = useSelector((state) => state.mappedInfoItems || []);
+
+	const mappedItems =
+		quickMappedInfoItems.length === 0
+			? mappedInfoItems
+			: quickMappedInfoItems;
 
 	const defaultEventName = `${config.portletNamespace}selectInfoItem`;
 
@@ -49,6 +55,15 @@ export default function ItemSelector({
 						'page-editor__item-selector__content-input': showAddButton,
 					})}
 					id={itemSelectorInputId}
+					onClick={() => {
+						if (showAddButton) {
+							openInfoItemSelector(
+								onItemSelect,
+								eventName || defaultEventName,
+								itemSelectorURL || config.infoItemSelectorURL
+							);
+						}
+					}}
 					readOnly
 					sizing="sm"
 					type="text"
@@ -56,7 +71,7 @@ export default function ItemSelector({
 				/>
 
 				{showAddButton &&
-					(mappedInfoItems.length > 0 && showMappedItems ? (
+					(mappedItems.length > 0 && showMappedItems ? (
 						<ClayDropDown
 							active={active}
 							onActiveChange={setActive}
@@ -73,7 +88,7 @@ export default function ItemSelector({
 							}
 						>
 							<ClayDropDown.ItemList>
-								{mappedInfoItems.map((item) => (
+								{mappedItems.map((item) => (
 									<ClayDropDown.Item
 										key={item.classNameId}
 										onClick={() => {

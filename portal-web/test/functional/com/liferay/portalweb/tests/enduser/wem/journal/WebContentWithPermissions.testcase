@@ -26,6 +26,7 @@ definition {
 
 	@priority = "5"
 	test AddAndViewStructureAndTemplateWithPermissions {
+		property portal.acceptance = "true";
 		property testray.component.names = "Permissions,Roles,Training,Web Content Administration";
 
 		JSONLayout.addPublicLayout(

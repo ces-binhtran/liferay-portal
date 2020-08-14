@@ -23,19 +23,239 @@ definition {
 	}
 
 	@priority = "4"
-	test AddAccountUser {
-		GlobalMenu.gotoPortlet(
+	test AccountAccountUserFilterByNavigation {
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "Filter AccountUser in Account By Navigation.",
+			accountName = "Filter Account User");
+
+		for (var accountUser : list "1,2") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Account Users");
+
+			AccountUsers.addUsers(
+				accountName = "Filter Account User",
+				userEmailAddress = "userea${accountUser}@liferay.com",
+				userFirstName = "userfn${accountUser}",
+				userLastName = "userln${accountUser}",
+				userScreenName = "usersn${accountUser}");
+		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		AccountUsers.deactivateUser(userFirstName = "userfn2");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "Filter Account User");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn1 userln1");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn2 userln2");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Active");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn1 userln1");
+	}
+
+	@priority = "4"
+	test AccountFilterByType {
+		for (var accountType : list "Business,Person") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Accounts");
+
+			Accounts.addCP(
+				accountDescription = "This is a ${accountType} Account.",
+				accountName = "${accountType} Account",
+				accountType = "${accountType}");
+		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Business");
+
+		LexiconEntry.viewEntryName(rowEntry = "Business Account");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Person Account");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Person");
+
+		LexiconEntry.viewEntryName(rowEntry = "Person Account");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Business Account");
+
+		ManagementBar.setFilterAndOrder(filterBy = "All");
+
+		LexiconEntry.viewEntryName(rowEntry = "Business Account");
+
+		LexiconEntry.viewEntryName(rowEntry = "Person Account");
+	}
+
+	@priority = "4"
+	test AccountUserFilterByAccounts {
+		for (var accountType : list "Business,Person") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Accounts");
+
+			Accounts.addCP(
+				accountDescription = "This is a ${accountType} Account.",
+				accountName = "${accountType} Account",
+				accountType = "${accountType}");
+		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		AccountUsers.addUsers(
+			accountName = "Business Account",
+			userEmailAddress = "businessuser@liferay.com",
+			userFirstName = "business",
+			userLastName = "user",
+			userScreenName = "businessuser");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		AccountUsers.addUsers(
+			accountName = "Business Account",
+			userEmailAddress = "userbusiness@liferay.com",
+			userFirstName = "user",
+			userLastName = "business",
+			userScreenName = "userbusiness");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		AccountUsers.addUsers(
+			accountName = "Person Account",
+			userEmailAddress = "personuser@liferay.com",
+			userFirstName = "person",
+			userLastName = "user",
+			userScreenName = "personuser");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Accounts");
+
+		AccountUsers.selectAccounts(accountName = "Person Account");
+
+		LexiconEntry.viewEntryName(rowEntry = "person user");
+
+		LexiconEntry.viewNoEntry(rowEntry = "user business");
+
+		LexiconEntry.viewNoEntry(rowEntry = "business user");
+
+		ManagementBar.setFilterAndOrder(filterBy = "Accounts");
+
+		AccountUsers.selectAccounts(accountName = "Business Account");
+
+		LexiconEntry.viewEntryName(rowEntry = "business user");
+
+		LexiconEntry.viewEntryName(rowEntry = "user business");
+
+		LexiconEntry.viewNoEntry(rowEntry = "person user");
+	}
+
+	@priority = "4"
+	test AccountUserFilterByNoAssignedAccount {
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an Account with User.",
 			accountName = "Account with User");
 
-		GlobalMenu.gotoPortlet(
+		for (var accountUser : list "1,2") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Account Users");
+
+			AccountUsers.addUsers(
+				accountName = "Account with User",
+				userEmailAddress = "userea${accountUser}@liferay.com",
+				userFirstName = "userfn${accountUser}",
+				userLastName = "userln${accountUser}",
+				userScreenName = "usersn${accountUser}");
+		}
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		AccountUsers.removeAccount(
+			accountName = "Account with User",
+			accountUser = "userfn1 userln1");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Account Users");
+
+		ManagementBar.setFilterAndOrder(filterBy = "No Assigned Account");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn1 userln1");
+
+		LexiconEntry.viewNoEntry(rowEntry = "userfn2 userln2");
+
+		ManagementBar.setFilterAndOrder(filterBy = "All");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn1 userln1");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn2 userln2");
+	}
+
+	@priority = "4"
+	test AddAccountUser {
+		property portal.acceptance = "true";
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "This is an Account with User.",
+			accountName = "Account with User");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -45,19 +265,56 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
 	}
 
 	@priority = "4"
-	test AddAccountWithMultiDomains {
-		GlobalMenu.gotoPortlet(
+	test AddAccountUserViaAssignUser {
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "Add account user via assign user.",
+			accountName = "Assign Account User");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		Accounts.addAssignee(
+			accountName = "Assign Account User",
+			addNewAssignee = "true",
+			assigneeName = "userfn",
+			assigneeType = "Users",
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "Assign Account User");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		Accounts.viewAssignee(assigneeName = "userfn");
+	}
+
+	@priority = "4"
+	test AddAccountWithMultiDomains {
+		AccountConfiguration.enableAccountEmailDomain();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -65,9 +322,9 @@ definition {
 			accountName = "Account with Multi Domains",
 			domainNames = "liferay.com,Google.com,si-na.com,9teen.com");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Account with Multi Domains");
@@ -79,20 +336,239 @@ definition {
 		}
 	}
 
+	@priority = "3"
+	test AddBlockedEmailDomain {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		AccountConfiguration.enableAccountEmailDomain();
+
+		AccountConfiguration.addBlockedEmailDomain(settingValues = "yahoo.com,blocked.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "This is an Account with Multi Domains",
+			accountName = "AM Account",
+			domainNames = "liferay.com,Google.com");
+
+		AccountConfiguration.addAccountManager(
+			accountName = "AM Account",
+			orgName = "AM Organization",
+			orgRoleTitle = "Account Manager",
+			userEmailAddress = "useramea@liferay.com",
+			userFirstName = "useramfn",
+			userLastName = "useramln",
+			userScreenName = "useramsn");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "useramea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		Accounts.addAssignee(
+			accountName = "AM Account",
+			addNewAssignee = "true",
+			assigneeName = "userfn",
+			assigneeType = "Users",
+			domainValidation = "Blocked",
+			invalidDomainName = "blocked.com",
+			userEmailAddress = "userea@blocked.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
+	}
+
+	@priority = "4"
+	test AddPersonAccount {
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "This is a Person Account.",
+			accountName = "Person Account",
+			accountType = "Person");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Search.searchCP(searchTerm = "Person Account");
+
+		Accounts.viewAccountDetails(
+			accountDescription = "This is a Person Account.",
+			accountName = "Person Account",
+			accountType = "Person");
+	}
+
+	@priority = "3"
+	test AddUserWithDifferentDomain {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		AccountConfiguration.enableAccountEmailDomain();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "This is an Account with Multi Domains",
+			accountName = "AM Account",
+			domainNames = "liferay.com,Google.com,9teen.com");
+
+		AccountConfiguration.addAccountManager(
+			accountName = "AM Account",
+			orgName = "AM Organization",
+			orgRoleTitle = "Account Manager",
+			userEmailAddress = "useramea@liferay.com",
+			userFirstName = "useramfn",
+			userLastName = "useramln",
+			userScreenName = "useramsn");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "useramea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		Accounts.addAssignee(
+			accountName = "AM Account",
+			addNewAssignee = "true",
+			assigneeName = "userfn",
+			assigneeType = "Users",
+			domainValidation = "Invalid",
+			emailDomainName = "nodomain.com",
+			userEmailAddress = "userea@nodomain.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
+	}
+
+	@priority = "3"
+	test AddUserWithSameDomain {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		AccountConfiguration.enableAccountEmailDomain();
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.addCP(
+			accountDescription = "This is an Account with Multi Domains",
+			accountName = "AM Account",
+			domainNames = "liferay.com,Google.com,9teen.com");
+
+		AccountConfiguration.addAccountManager(
+			accountName = "AM Account",
+			orgName = "AM Organization",
+			orgRoleTitle = "Account Manager",
+			userEmailAddress = "useramea@liferay.com",
+			userFirstName = "useramfn",
+			userLastName = "useramln",
+			userScreenName = "useramsn");
+
+		User.logoutPG();
+
+		User.loginUserPG(
+			password = "test",
+			userEmailAddress = "useramea@liferay.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		Accounts.addAssignee(
+			accountName = "AM Account",
+			addNewAssignee = "true",
+			assigneeName = "userfn",
+			assigneeType = "Users",
+			emailDomainName = "9teen.com",
+			userEmailAddress = "userea@9teen.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn",
+			validDomainNames = "liferay.com,Google.com,9teen.com");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoEntry(rowEntry = "AM Account");
+
+		Accounts.gotoAssigneeTab(assigneeTab = "Users");
+
+		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
+	}
+
 	@priority = "4"
 	test AssignExistingUserToAccount {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an account with user.",
 			accountName = "Account Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -102,9 +578,11 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		AccountConfiguration.enableAccountEmailDomain();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -119,9 +597,9 @@ definition {
 			assigneeName = "userfn",
 			assigneeType = "Users");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Account with Exist User");
@@ -137,9 +615,9 @@ definition {
 			organizationName = "Organization for Account",
 			organizationSite = "true");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -153,9 +631,9 @@ definition {
 			assigneeName = "Organization for Account",
 			assigneeType = "Organizations");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Account with Organization");
@@ -167,9 +645,9 @@ definition {
 
 	@priority = "4"
 	test CancelAccountCreation {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoAdd();
@@ -186,30 +664,58 @@ definition {
 			locator1 = "Portlet#HEADER",
 			value1 = "Accounts");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Search.searchCP(searchTerm = "Cancel Accounts Name");
 
 		LexiconEntry.viewNoEntry(rowEntry = "Cancel Accounts Name");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		LexiconEntry.gotoAdd();
+
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Add Account");
+
+		PortletEntry.inputName(name = "Back Icon Account");
+
+		Navigator.gotoBack();
+
+		AssertTextEquals(
+			locator1 = "Portlet#HEADER",
+			value1 = "Accounts");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Search.searchCP(searchTerm = "Back Icon Account");
+
+		LexiconEntry.viewNoEntry(rowEntry = "Back Icon Account");
 	}
 
 	@priority = "4"
 	test DeactivateActivateUser {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an Account with User.",
 			accountName = "Account with User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -219,9 +725,9 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
@@ -237,10 +743,12 @@ definition {
 
 	@priority = "4"
 	test DeleteAccount {
+		property portal.acceptance = "true";
+
 		for (var accountNumber : list "1,2,3") {
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Accounts",
-				panel = "Control Panel",
+				panel = "Applications",
 				portlet = "Accounts");
 
 			Accounts.addCP(
@@ -248,18 +756,18 @@ definition {
 				accountName = "Delete Accounts Name ${accountNumber} for Test");
 		}
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.deleteAccount(accountName = "Delete Accounts Name 1 for Test");
 
 		LexiconEntry.viewNoEntry(rowEntry = "Delete Accounts Name 1 for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.deleteAccount(
@@ -268,9 +776,9 @@ definition {
 
 		LexiconEntry.viewNoEntry(rowEntry = "Delete Accounts Name 2 for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.deleteAccount(
@@ -279,9 +787,9 @@ definition {
 
 		LexiconEntry.viewNoEntry(rowEntry = "Delete Accounts Name 3 for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
@@ -294,9 +802,9 @@ definition {
 	@description = "This is a use case for LPS-101315."
 	@priority = "4"
 	test DeleteInactiveAccount {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -304,9 +812,9 @@ definition {
 			accountName = "Accounts Name for Test",
 			accountStatus = "Inactive");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
@@ -321,18 +829,18 @@ definition {
 	@description = "This is a use case for LPS-107598."
 	@priority = "4"
 	test FilterAccountUserInTheUsersAdminPortlet {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an Account with User.",
 			accountName = "Account with User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -348,7 +856,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -374,18 +882,18 @@ definition {
 	test ImpersonateUser {
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an Account with User.",
 			accountName = "Account with User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -395,9 +903,9 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		LexiconEntry.viewEntryName(rowEntry = "userfn userln");
@@ -410,9 +918,9 @@ definition {
 	@priority = "4"
 	test InactiveAccount {
 		for (var accountNumber : list "1,2,3") {
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Accounts",
-				panel = "Control Panel",
+				panel = "Applications",
 				portlet = "Accounts");
 
 			Accounts.addCP(
@@ -420,18 +928,18 @@ definition {
 				accountName = "Accounts Name ${accountNumber} for Test");
 		}
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.inactiveAccount(accountName = "Accounts Name 1 for Test");
 
 		Accounts.viewInactiveAccount(accountName = "Accounts Name 1 for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.inactiveAccount(
@@ -440,9 +948,9 @@ definition {
 
 		Accounts.viewInactiveAccount(accountName = "Accounts Name 2 for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.inactiveAccount(
@@ -452,11 +960,110 @@ definition {
 		Accounts.viewInactiveAccount(accountName = "Accounts Name 3 for Test");
 	}
 
+	@description = "This is a use case for LPS-117171."
+	@priority = "3"
+	test NoFilterByNavigationForPersonAccount {
+		for (var accountType : list "Business,Person") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Accounts");
+
+			Accounts.addCP(
+				accountDescription = "This is a ${accountType} Account.",
+				accountName = "${accountType} Account",
+				accountType = "${accountType}");
+		}
+
+		for (var accountUser : list "1,2") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Account Users");
+
+			AccountUsers.addUsers(
+				accountName = "Business Account",
+				userEmailAddress = "userea${accountUser}@liferay.com",
+				userFirstName = "userfn${accountUser}",
+				userLastName = "userln${accountUser}",
+				userScreenName = "usersn${accountUser}");
+		}
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.gotoEdit(accountName = "Person Account");
+
+		AssertClick(
+			locator1 = "Account#USER_SELECT",
+			value1 = "Select");
+
+		SelectFrame(locator1 = "IFrame#ASSIGN_USER");
+
+		ManagementBar.viewNoSubheaderInFilterAndOrder(subheaderItem = "Filter by Navigation");
+	}
+
+	@priority = "4"
+	test PersonAccountSmoke {
+		for (var accountType : list "Business,Person") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Accounts");
+
+			Accounts.addCP(
+				accountDescription = "This is a ${accountType} Account.",
+				accountName = "${accountType} Account",
+				accountType = "${accountType}");
+		}
+
+		for (var accountUser : list "1,2") {
+			ApplicationsMenu.gotoPortlet(
+				category = "Accounts",
+				panel = "Applications",
+				portlet = "Account Users");
+
+			AccountUsers.addUsers(
+				accountName = "Business Account",
+				userEmailAddress = "userea${accountUser}@liferay.com",
+				userFirstName = "userfn${accountUser}",
+				userLastName = "userln${accountUser}",
+				userScreenName = "usersn${accountUser}");
+		}
+
+		Accounts.gotoEdit(accountName = "Person Account");
+
+		for (var navTab : list "Details,Organizations,Roles") {
+			Accounts.viewAssigneeTab(navTab = "${navTab}");
+		}
+
+		Accounts.viewNoAssigneeTab(navTab = "Users");
+
+		Accounts.selectUser(accountUserName = "userfn1");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "Accounts",
+			panel = "Applications",
+			portlet = "Accounts");
+
+		Accounts.gotoEdit(accountName = "Person Account");
+
+		Accounts.selectUser(accountUserName = "userfn2");
+
+		AssertElementNotPresent(
+			key_userName = "userfn1",
+			locator1 = "Account#USER_TABLE_NAME");
+	}
+
 	@priority = "4"
 	test RemoveDomain {
-		GlobalMenu.gotoPortlet(
+		AccountConfiguration.enableAccountEmailDomain();
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -464,18 +1071,18 @@ definition {
 			accountName = "Remove Account Domain",
 			domainNames = "liferay.com,Google.com");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.removeDomain(
 			accountName = "Remove Account Domain",
 			domainName = "Google.com");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Remove Account Domain");
@@ -490,19 +1097,40 @@ definition {
 	}
 
 	@priority = "4"
+	test RemoveDomainFromBlacklist {
+		AccountConfiguration.addBlockedEmailDomain(settingValues = "yahoo.com,blocked.com,google.com");
+
+		for (var settingValue : list "yahoo.com,blocked.com,google.com") {
+			SystemSettings.viewTextareaPartialText(
+				settingName = "Blocked Email Domains",
+				settingValue = "${settingValue}");
+		}
+
+		SystemSettings.editTextAreaSetting(
+			settingName = "Blocked Email Domains",
+			settingValue = "blocked.com");
+
+		SystemSettings.saveConfiguration();
+
+		SystemSettings.viewTextareaValue(
+			fieldName = "blockedEmailDomains",
+			fieldValue = "blocked.com");
+	}
+
+	@priority = "4"
 	test RemoveUserFromAccount {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is a test to remove account user.",
 			accountName = "Remove Account User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -512,9 +1140,9 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Remove Account User");
@@ -525,9 +1153,9 @@ definition {
 			assigneeName = "userfn",
 			assigneeType = "Users");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.viewNoAssignee(
@@ -537,16 +1165,20 @@ definition {
 
 	@priority = "5"
 	test Smoke {
-		GlobalMenu.gotoPortlet(
+		property portal.acceptance = "true";
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
-		Accounts.addCP(accountName = "Accounts Name for Test");
+		Accounts.addCP(
+			accountName = "Accounts Name for Test",
+			accountTaxID = "Z9870654786390342199899Y");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Search.searchCP(searchTerm = "Accounts Name for Test");
@@ -556,17 +1188,23 @@ definition {
 		LexiconEntry.viewEntryStatus(
 			rowEntry = "Accounts Name for Test",
 			rowStatus = "Active");
+
+		Accounts.viewAccountDetails(
+			accountName = "Accounts Name for Test",
+			accountTaxID = "Z9870654786390342199899Y");
 	}
 
 	@priority = "4"
 	test UnassignOrganizationFromAccount {
+		property portal.acceptance = "true";
+
 		JSONOrganization.addOrganization(
 			organizationName = "Organization for Account",
 			organizationSite = "true");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -580,9 +1218,9 @@ definition {
 			assigneeName = "Organization for Account",
 			assigneeType = "Organizations");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Unassign Organization from Account");
@@ -593,9 +1231,9 @@ definition {
 			assigneeName = "Organization for Account",
 			assigneeType = "Organizations");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.viewNoAssignee(
@@ -605,9 +1243,9 @@ definition {
 
 	@priority = "4"
 	test UpdateAccount {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -616,9 +1254,9 @@ definition {
 
 		AssertElementPresent(locator1 = "Icon#BACK");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Search.searchCP(searchTerm = "Accounts Name for Test");
@@ -629,9 +1267,9 @@ definition {
 			accountNameEdit = "Update Accounts Name for Test",
 			accountStatusEdit = "Inactive");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		ManagementBar.setFilterAndOrder(filterBy = "Inactive");
@@ -644,9 +1282,9 @@ definition {
 
 		LexiconEntry.viewNoEntry(rowEntry = "Accounts Name for Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.viewNoEntry(rowEntry = "Accounts Name for Test");
@@ -667,9 +1305,9 @@ definition {
 			locator1 = "Portlet#HEADER",
 			value1 = "Edit Update Accounts Name via Name Link");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.viewEntryName(rowEntry = "Update Accounts Name via Name Link");
@@ -683,18 +1321,18 @@ definition {
 
 	@priority = "4"
 	test UpdateAccountUser {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
 			accountDescription = "This is an Account with User.",
 			accountName = "Account with User");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.addUsers(
@@ -704,25 +1342,25 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		AccountUsers.editUser(
 			accountUser = "userfn userln",
 			editFirstName = "edituserfn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Account Users");
 
 		LexiconEntry.viewEntryName(rowEntry = "edituserfn userln");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		LexiconEntry.gotoEntry(rowEntry = "Account with User");
@@ -735,9 +1373,9 @@ definition {
 	@description = "This is a use case for LPS-101221."
 	@priority = "4"
 	test UpdateInactiveAccountViaNameLink {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Accounts.addCP(
@@ -786,17 +1424,17 @@ definition {
 	@priority = "4"
 	test ViewAccountPagination {
 		for (var accountNum : list "1,2,3,4,5,6") {
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Accounts",
-				panel = "Control Panel",
+				panel = "Applications",
 				portlet = "Accounts");
 
 			Accounts.addCP(accountName = "Accounts Name ${accountNum}");
 		}
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Accounts",
-			panel = "Control Panel",
+			panel = "Applications",
 			portlet = "Accounts");
 
 		Pagination.changePagination(itemsPerPage = "4");

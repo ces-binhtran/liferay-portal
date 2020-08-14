@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.internal.model.listener;
 
+import com.liferay.dynamic.data.mapping.internal.petra.executor.DDMFormInstanceReportPortalExecutor;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
@@ -23,6 +24,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -39,7 +41,7 @@ public class DDMFormInstanceModelListener
 		throws ModelListenerException {
 
 		try {
-			_ddmFormInstanceReportLocalService.addFormInstanceReport(
+			ddmFormInstanceReportLocalService.addFormInstanceReport(
 				ddmFormInstance.getFormInstanceId());
 		}
 		catch (Exception exception) {
@@ -57,21 +59,26 @@ public class DDMFormInstanceModelListener
 	}
 
 	@Override
-	public void onAfterRemove(DDMFormInstance ddmFormInstance)
+	public void onBeforeRemove(DDMFormInstance ddmFormInstance)
 		throws ModelListenerException {
 
 		try {
 			DDMFormInstanceReport ddmFormInstanceReport =
-				_ddmFormInstanceReportLocalService.
+				ddmFormInstanceReportLocalService.
 					getFormInstanceReportByFormInstanceId(
 						ddmFormInstance.getFormInstanceId());
 
-			if (ddmFormInstanceReport == null) {
-				return;
-			}
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					_ddmFormInstanceReportPortalExecutor.execute(
+						() ->
+							ddmFormInstanceReportLocalService.
+								deleteDDMFormInstanceReport(
+									ddmFormInstanceReport.
+										getFormInstanceReportId()));
 
-			_ddmFormInstanceReportLocalService.deleteDDMFormInstanceReport(
-				ddmFormInstanceReport.getFormInstanceReportId());
+					return null;
+				});
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
@@ -87,11 +94,15 @@ public class DDMFormInstanceModelListener
 		}
 	}
 
+	@Reference
+	protected DDMFormInstanceReportLocalService
+		ddmFormInstanceReportLocalService;
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		DDMFormInstanceModelListener.class);
 
 	@Reference
-	private DDMFormInstanceReportLocalService
-		_ddmFormInstanceReportLocalService;
+	private DDMFormInstanceReportPortalExecutor
+		_ddmFormInstanceReportPortalExecutor;
 
 }

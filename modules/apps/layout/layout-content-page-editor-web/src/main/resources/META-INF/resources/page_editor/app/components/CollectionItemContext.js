@@ -12,16 +12,18 @@
  * details.
  */
 
-import React, {useCallback, useContext} from 'react';
+import React, {useCallback, useContext, useEffect} from 'react';
 
+import {updateFragmentEntryLinkContent} from '../actions/index';
 import FragmentService from '../services/FragmentService';
 import InfoItemService from '../services/InfoItemService';
+import {useDispatch} from '../store/index';
 
 const defaultFromControlsId = (itemId) => itemId;
 const defaultToControlsId = (controlId) => controlId;
 
-const INITIAL_STATE = {
-	collectionFields: null,
+export const INITIAL_STATE = {
+	collectionConfig: null,
 	collectionItem: null,
 	collectionItemIndex: null,
 	fromControlsId: defaultFromControlsId,
@@ -51,31 +53,57 @@ const useToControlsId = () => {
 	return context.toControlsId || defaultToControlsId;
 };
 
-const useCollectionFields = () => {
+const useCollectionConfig = () => {
 	const context = useContext(CollectionItemContext);
 
-	return context.collectionFields;
+	return context.collectionConfig;
 };
 
-const useGetContent = () => {
+const useGetContent = (fragmentEntryLink, segmentsExperienceId) => {
 	const context = useContext(CollectionItemContext);
+	const dispatch = useDispatch();
 
-	return useCallback(
-		(fragmentEntryLink) => {
-			if (context.collectionItemIndex != null) {
-				const collectionContent =
-					fragmentEntryLink.collectionContent || [];
+	const {className, classPK} = context.collectionItem || {};
 
-				return (
-					collectionContent[context.collectionItemIndex] ||
-					fragmentEntryLink.content
+	useEffect(() => {
+		if (context.collectionItemIndex != null) {
+			FragmentService.renderFragmentEntryLinkContent({
+				collectionItemClassName: className,
+				collectionItemClassPK: classPK,
+				fragmentEntryLinkId: fragmentEntryLink.fragmentEntryLinkId,
+				onNetworkStatus: dispatch,
+				segmentsExperienceId,
+			}).then(({content}) => {
+				dispatch(
+					updateFragmentEntryLinkContent({
+						collectionItemIndex: context.collectionItemIndex,
+						content,
+						fragmentEntryLinkId:
+							fragmentEntryLink.fragmentEntryLinkId,
+					})
 				);
-			}
+			});
+		}
+	}, [
+		className,
+		classPK,
+		context.collectionItemIndex,
+		dispatch,
+		fragmentEntryLink.fragmentEntryLinkId,
+		segmentsExperienceId,
+		fragmentEntryLink.editableValues,
+	]);
 
-			return fragmentEntryLink.content;
-		},
-		[context.collectionItemIndex]
-	);
+	if (context.collectionItemIndex != null) {
+		const collectionContent = fragmentEntryLink.collectionContent || [];
+
+		return (
+			collectionContent[context.collectionItemIndex] ||
+			fragmentEntryLink.content
+		);
+	}
+
+	return fragmentEntryLink.content;
 };
 
 const useGetFieldValue = () => {
@@ -83,7 +111,7 @@ const useGetFieldValue = () => {
 
 	const getFromServer = useCallback(
 		({classNameId, classPK, fieldId, languageId}) =>
-			InfoItemService.getAssetFieldValue({
+			InfoItemService.getInfoItemFieldValue({
 				classNameId,
 				classPK,
 				fieldId,
@@ -143,7 +171,7 @@ export {
 	CollectionItemContextProvider,
 	useRenderFragmentContent,
 	useGetContent,
-	useCollectionFields,
+	useCollectionConfig,
 	useCollectionItemIndex,
 	useFromControlsId,
 	useToControlsId,

@@ -26,7 +26,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 %>
 
 <clay:content-row
-	verticaAlign="center"
+	verticalAlign="center"
 >
 	<clay:content-col
 		cssClass="inline-item-before"
@@ -39,7 +39,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 			</c:if>
 
 			<c:if test="<%= (displayStyles != null) && !displayStyles.isEmpty() %>">
-				<optgroup label='<liferay-ui:message key="default" />'>
+				<optgroup label="<liferay-ui:message key="default" />">
 
 					<%
 					for (String curDisplayStyle : displayStyles) {

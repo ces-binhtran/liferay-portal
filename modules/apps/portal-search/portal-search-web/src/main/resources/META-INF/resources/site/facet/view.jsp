@@ -45,7 +45,7 @@ if (scopeSearchFacetDisplayContext.isRenderNothing()) {
 SiteFacetPortletInstanceConfiguration siteFacetPortletInstanceConfiguration = scopeSearchFacetDisplayContext.getSiteFacetPortletInstanceConfiguration();
 
 Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"namespace", renderResponse.getNamespace()
+	"namespace", liferayPortletResponse.getNamespace()
 ).put(
 	"scopeSearchFacetDisplayContext", scopeSearchFacetDisplayContext
 ).build();
@@ -71,14 +71,14 @@ List<ScopeSearchFacetTermDisplayContext> scopeSearchFacetTermDisplayContexts = s
 			>
 				<liferay-ui:panel-container
 					extended="<%= true %>"
-					id='<%= renderResponse.getNamespace() + "facetScopePanelContainer" %>'
+					id='<%= liferayPortletResponse.getNamespace() + "facetScopePanelContainer" %>'
 					markupView="lexicon"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
 						cssClass="search-facet"
-						id='<%= renderResponse.getNamespace() + "facetScopePanel" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "facetScopePanel" %>'
 						markupView="lexicon"
 						persistState="<%= true %>"
 						title="site"
@@ -107,7 +107,7 @@ List<ScopeSearchFacetTermDisplayContext> scopeSearchFacetTermDisplayContexts = s
 													<%= scopeSearchFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
 												/>
 
-												<span class='custom-control-label term-name <%= scopeSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>'>
+												<span class="custom-control-label term-name <%= scopeSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 													<span class="custom-control-label-text"><%= HtmlUtil.escape(scopeSearchFacetTermDisplayContext.getDescriptiveName()) %></span>
 												</span>
 

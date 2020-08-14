@@ -75,6 +75,10 @@ public abstract class AppBuilderAppDataRecordLinkLocalServiceBaseImpl
 	/**
 	 * Adds the app builder app data record link to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was added
 	 */
@@ -107,6 +111,10 @@ public abstract class AppBuilderAppDataRecordLinkLocalServiceBaseImpl
 	/**
 	 * Deletes the app builder app data record link with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param appBuilderAppDataRecordLinkId the primary key of the app builder app data record link
 	 * @return the app builder app data record link that was removed
 	 * @throws PortalException if a app builder app data record link with the primary key could not be found
@@ -123,6 +131,10 @@ public abstract class AppBuilderAppDataRecordLinkLocalServiceBaseImpl
 
 	/**
 	 * Deletes the app builder app data record link from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was removed
@@ -368,6 +380,10 @@ public abstract class AppBuilderAppDataRecordLinkLocalServiceBaseImpl
 
 	/**
 	 * Updates the app builder app data record link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AppBuilderAppDataRecordLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param appBuilderAppDataRecordLink the app builder app data record link
 	 * @return the app builder app data record link that was updated

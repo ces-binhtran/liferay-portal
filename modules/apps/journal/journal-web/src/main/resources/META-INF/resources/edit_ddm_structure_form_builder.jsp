@@ -48,7 +48,7 @@ else {
 editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 %>
 
-<aui:form action="<%= editDDMStructureURL.toString() %>" cssClass="edit-article-form" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveDDMStructure();" %>'>
+<aui:form action="<%= editDDMStructureURL.toString() %>" cssClass="edit-article-form" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveDDMStructure();" %>'>
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="groupId" type="hidden" value="<%= groupId %>" />
 	<aui:input name="ddmStructureId" type="hidden" value="<%= journalEditDDMStructuresDisplayContext.getDDMStructureId() %>" />
@@ -70,11 +70,10 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 						<aui:button cssClass="btn-sm mr-3" type="submit" value="<%= journalEditDDMStructuresDisplayContext.getSaveButtonLabel() %>" />
 
 						<clay:button
+							borderless="<%= true %>"
 							icon="cog"
-							id='<%= renderResponse.getNamespace() + "contextualSidebarButton" %>'
-							monospaced="<%= true %>"
-							size="sm"
-							style="borderless"
+							id='<%= liferayPortletResponse.getNamespace() + "contextualSidebarButton" %>'
+							small="<%= true %>"
 						/>
 					</div>
 				</li>
@@ -143,6 +142,15 @@ editDDMStructureURL.setParameter("mvcPath", "/edit_ddm_structure.jsp");
 				%>
 
 				<liferay-ui:message arguments="<%= HtmlUtil.escape(msvcffn.getFieldName()) %>" key="invalid-characters-were-defined-for-field-name-x" translateArguments="<%= false %>" />
+			</liferay-ui:error>
+
+			<liferay-ui:error exception="<%= InvalidDDMStructureFieldNameException.class %>">
+
+				<%
+				InvalidDDMStructureFieldNameException iddmsfne = (InvalidDDMStructureFieldNameException)errorException;
+				%>
+
+				<liferay-ui:message arguments="<%= HtmlUtil.escape(iddmsfne.getFieldName()) %>" key="you-cannot-use-x-as-a-field-name" translateArguments="<%= false %>" />
 			</liferay-ui:error>
 
 			<liferay-ui:error exception="<%= LocaleException.class %>">

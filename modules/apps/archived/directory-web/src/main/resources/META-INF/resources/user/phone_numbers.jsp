@@ -29,9 +29,9 @@ if (classPK > 0) {
 	personalPhones = PhoneServiceUtil.getPhones(className, classPK);
 }
 
-for (int i = 0; i < organizations.size(); i++) {
+for (Organization organization : organizations) {
 	try {
-		organizationPhones.addAll(PhoneServiceUtil.getPhones(Organization.class.getName(), organizations.get(i).getOrganizationId()));
+		organizationPhones.addAll(PhoneServiceUtil.getPhones(Organization.class.getName(), organization.getOrganizationId()));
 	}
 	catch (Exception e) {
 	}
@@ -50,7 +50,7 @@ for (int i = 0; i < organizations.size(); i++) {
 			for (Phone phone : organizationPhones) {
 			%>
 
-				<li class='<%= (phone.isPrimary() && !organizationPhones.isEmpty()) ? "icon-star" : StringPool.BLANK %>'>
+				<li class="<%= (phone.isPrimary() && !organizationPhones.isEmpty()) ? "icon-star" : StringPool.BLANK %>">
 					<%= HtmlUtil.escape(phone.getNumber()) %> <%= phone.getExtension() %> <%= LanguageUtil.get(request, phone.getType().getName()) %>
 				</li>
 
@@ -70,7 +70,7 @@ for (int i = 0; i < organizations.size(); i++) {
 			for (Phone phone : personalPhones) {
 			%>
 
-				<li class='<%= (phone.isPrimary() && !personalPhones.isEmpty()) ? "icon-star" : StringPool.BLANK %>'>
+				<li class="<%= (phone.isPrimary() && !personalPhones.isEmpty()) ? "icon-star" : StringPool.BLANK %>">
 					<%= HtmlUtil.escape(phone.getNumber()) %> <%= phone.getExtension() %> <%= LanguageUtil.get(request, phone.getType().getName()) %>
 				</li>
 

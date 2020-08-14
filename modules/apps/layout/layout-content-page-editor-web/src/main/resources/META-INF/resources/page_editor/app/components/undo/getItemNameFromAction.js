@@ -25,11 +25,15 @@ import getLayoutDataItemLabel from '../../utils/getLayoutDataItemLabel';
  */
 export function getItemNameFromAction({action, state}) {
 	const fragmentEntryLinks = action.fragmentEntryLinks
-		? Object.fromEntries(
-				action.fragmentEntryLinks.map((fragmentEntryLink) => [
-					fragmentEntryLink.fragmentEntryLinkId,
-					fragmentEntryLink,
-				])
+		? Object.values(action.fragmentEntryLinks).reduce(
+				(acc, fragmentEntryLink) => {
+					acc[
+						fragmentEntryLink.fragmentEntryLinkId
+					] = fragmentEntryLink;
+
+					return acc;
+				},
+				{}
 		  )
 		: state.fragmentEntryLinks;
 

@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -46,7 +47,9 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 
@@ -137,6 +140,10 @@ public class MillerColumnsDisplayContext {
 				"breadcrumbEntries", _getBreadcrumbEntriesJSONArray()
 			).put(
 				"getItemChildrenURL", getLayoutChildrenURL()
+			).put(
+				"languageDirection", _getLanguageDirection()
+			).put(
+				"languageId", _themeDisplay.getLanguageId()
 			).put(
 				"layoutColumns", getLayoutColumnsJSONArray()
 			).put(
@@ -243,6 +250,62 @@ public class MillerColumnsDisplayContext {
 		return layoutsJSONArray;
 	}
 
+	private JSONObject _getAddChildPageActionJSONObject(
+		Layout layout, String actionType) {
+
+		return JSONUtil.put(
+			actionType, true
+		).put(
+			"icon", "plus"
+		).put(
+			"id", "add"
+		).put(
+			"label", LanguageUtil.get(_httpServletRequest, "add-page")
+		).put(
+			"url",
+			_layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(
+				_layoutsAdminDisplayContext.
+					getFirstLayoutPageTemplateCollectionId(),
+				layout.getPlid(), layout.isPrivateLayout())
+		);
+	}
+
+	private JSONObject _getAddLayoutCollectionActionJSONObject(
+		long plid, boolean privateLayout) {
+
+		return JSONUtil.put(
+			"id", "addCollectionPage"
+		).put(
+			"label",
+			LanguageUtil.get(_httpServletRequest, "add-collection-page")
+		).put(
+			"layoutAction", true
+		).put(
+			"url",
+			_layoutsAdminDisplayContext.getSelectLayoutCollectionURL(
+				plid, null, privateLayout)
+		);
+	}
+
+	private JSONObject _getAddRootLayoutActionJSONObject(
+			boolean privatePages, String actionType)
+		throws Exception {
+
+		return JSONUtil.put(
+			actionType, true
+		).put(
+			"icon", "plus"
+		).put(
+			"id", "add"
+		).put(
+			"label", LanguageUtil.get(_httpServletRequest, "add-page")
+		).put(
+			"url",
+			_layoutsAdminDisplayContext.getSelectLayoutPageTemplateEntryURL(
+				privatePages)
+		);
+	}
+
 	private JSONArray _getBreadcrumbEntriesJSONArray() throws Exception {
 		JSONArray breadcrumbEntriesJSONArray =
 			JSONFactoryUtil.createJSONArray();
@@ -304,19 +367,11 @@ public class MillerColumnsDisplayContext {
 
 		if (_layoutsAdminDisplayContext.isShowAddRootLayoutButton()) {
 			jsonArray.put(
-				JSONUtil.put(
-					"icon", "plus"
-				).put(
-					"id", "add"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "add")
-				).put(
-					"quickAction", true
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.
-						getSelectLayoutPageTemplateEntryURL(privatePages)
-				));
+				_getAddRootLayoutActionJSONObject(privatePages, "layoutAction")
+			).put(
+				_getAddLayoutCollectionActionJSONObject(
+					LayoutConstants.DEFAULT_PLID, privatePages)
+			);
 		}
 
 		if (_layoutsAdminDisplayContext.isShowFirstColumnConfigureAction()) {
@@ -380,6 +435,21 @@ public class MillerColumnsDisplayContext {
 		return firstColumnJSONArray;
 	}
 
+	private Map<String, String> _getLanguageDirection() {
+		Map<String, String> languageDirection = new HashMap<>();
+
+		for (Locale curLocale :
+				LanguageUtil.getAvailableLocales(
+					_themeDisplay.getScopeGroupId())) {
+
+			languageDirection.put(
+				LocaleUtil.toLanguageId(curLocale),
+				LanguageUtil.get(curLocale, "lang.dir"));
+		}
+
+		return languageDirection;
+	}
+
 	private JSONArray _getLayoutActionsJSONArray(Layout layout)
 		throws Exception {
 
@@ -387,26 +457,14 @@ public class MillerColumnsDisplayContext {
 
 		if (_layoutsAdminDisplayContext.isShowAddChildPageAction(layout)) {
 			jsonArray.put(
-				JSONUtil.put(
-					"icon", "plus"
-				).put(
-					"id", "add"
-				).put(
-					"label", LanguageUtil.get(_httpServletRequest, "add")
-				).put(
-					"quickAction", true
-				).put(
-					"url",
-					_layoutsAdminDisplayContext.
-						getSelectLayoutPageTemplateEntryURL(
-							_layoutsAdminDisplayContext.
-								getFirstLayoutPageTemplateCollectionId(),
-							layout.getPlid(), layout.isPrivateLayout())
-				));
+				_getAddChildPageActionJSONObject(layout, "layoutAction")
+			).put(
+				_getAddLayoutCollectionActionJSONObject(
+					layout.getPlid(), layout.isPrivateLayout())
+			);
 		}
 
-		Layout draftLayout = LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (layout.isDenied() || layout.isPending()) {
 			jsonArray.put(
@@ -600,6 +658,23 @@ public class MillerColumnsDisplayContext {
 				));
 		}
 
+		if (_layoutsAdminDisplayContext.isShowViewCollectionItemsAction(
+				layout)) {
+
+			jsonArray.put(
+				JSONUtil.put(
+					"id", "viewCollectionItems"
+				).put(
+					"label",
+					LanguageUtil.get(
+						_httpServletRequest, "view-collection-items")
+				).put(
+					"url",
+					_layoutsAdminDisplayContext.getViewCollectionItemsURL(
+						layout)
+				));
+		}
+
 		return jsonArray;
 	}
 
@@ -646,13 +721,10 @@ public class MillerColumnsDisplayContext {
 		return jsonArray;
 	}
 
-	private JSONArray _getLayoutStatesJSONArray(Layout layout)
-		throws Exception {
-
+	private JSONArray _getLayoutStatesJSONArray(Layout layout) {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-		Layout draftLayout = LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (layout.isTypeContent()) {
 			boolean published = GetterUtil.getBoolean(

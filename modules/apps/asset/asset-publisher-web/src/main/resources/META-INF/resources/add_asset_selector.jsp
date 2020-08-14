@@ -50,7 +50,7 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 				List<AssetPublisherAddItemHolder> assetPublisherAddItemHolders = entry.getValue();
 			%>
 
-				<div class='asset-entry-type <%= (groupId == scopeGroupId) ? StringPool.BLANK : "hide" %>' id="<%= liferayPortletResponse.getNamespace() + groupId %>">
+				<div class="asset-entry-type <%= (groupId == scopeGroupId) ? StringPool.BLANK : "hide" %>" id="<%= liferayPortletResponse.getNamespace() + groupId %>">
 					<aui:select cssClass="asset-entry-type-select" label="asset-entry-type" name="selectAssetEntryType">
 
 						<%
@@ -68,15 +68,18 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 							PortletURL portletURL = assetPublisherAddItemHolder.getPortletURL();
 
 							portletURL.setParameter("redirect", redirect);
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false)
-							).put(
-								"url", assetHelper.getAddURLPopUp(curGroupId, plid, portletURL, false, null)
-							).build();
 						%>
 
-							<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(message) %>" />
+							<aui:option
+								data='<%=
+									HashMapBuilder.<String, Object>put(
+										"title", LanguageUtil.format((HttpServletRequest)pageContext.getRequest(), "new-x", HtmlUtil.escape(message), false)
+									).put(
+										"url", assetHelper.getAddURLPopUp(curGroupId, plid, portletURL, false, null)
+									).build()
+								%>'
+								label="<%= HtmlUtil.escape(message) %>"
+							/>
 
 						<%
 						}
@@ -101,7 +104,7 @@ String redirect = PortalUtil.getLayoutFullURL(layout, themeDisplay);
 	</aui:fieldset-group>
 
 	<aui:button-row>
-		<aui:button onClick='<%= renderResponse.getNamespace() + "addAssetEntry();" %>' primary="<%= true %>" value="add" />
+		<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "addAssetEntry();" %>' primary="<%= true %>" value="add" />
 
 		<aui:button href="<%= redirect %>" type="cancel" />
 	</aui:button-row>

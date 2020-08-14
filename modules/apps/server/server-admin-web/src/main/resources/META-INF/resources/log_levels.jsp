@@ -40,8 +40,10 @@ Enumeration<Logger> enu = LogManager.getCurrentLoggers();
 while (enu.hasMoreElements()) {
 	Logger logger = enu.nextElement();
 
-	if (Validator.isNull(keywords) || logger.getName().contains(keywords)) {
-		currentLoggerNames.put(logger.getName(), logger);
+	String loggerName = logger.getName();
+
+	if (Validator.isNull(keywords) || loggerName.contains(keywords)) {
+		currentLoggerNames.put(loggerName, logger);
 	}
 }
 
@@ -120,7 +122,7 @@ CreationMenu creationMenu = new CreationMenu() {
 				Level level = logger.getLevel();
 				%>
 
-				<select name='<%= renderResponse.getNamespace() + "logLevel" + HtmlUtil.escapeAttribute(name) %>'>
+				<select name="<%= liferayPortletResponse.getNamespace() + "logLevel" + HtmlUtil.escapeAttribute(name) %>">
 
 					<%
 					for (int j = 0; j < Levels.ALL_LEVELS.length; j++) {

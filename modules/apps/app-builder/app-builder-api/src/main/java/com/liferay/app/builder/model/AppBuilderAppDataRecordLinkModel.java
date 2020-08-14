@@ -70,6 +70,20 @@ public interface AppBuilderAppDataRecordLinkModel
 		long appBuilderAppDataRecordLinkId);
 
 	/**
+	 * Returns the group ID of this app builder app data record link.
+	 *
+	 * @return the group ID of this app builder app data record link
+	 */
+	public long getGroupId();
+
+	/**
+	 * Sets the group ID of this app builder app data record link.
+	 *
+	 * @param groupId the group ID of this app builder app data record link
+	 */
+	public void setGroupId(long groupId);
+
+	/**
 	 * Returns the company ID of this app builder app data record link.
 	 *
 	 * @return the company ID of this app builder app data record link
@@ -98,6 +112,20 @@ public interface AppBuilderAppDataRecordLinkModel
 	 * @param appBuilderAppId the app builder app ID of this app builder app data record link
 	 */
 	public void setAppBuilderAppId(long appBuilderAppId);
+
+	/**
+	 * Returns the app builder app version ID of this app builder app data record link.
+	 *
+	 * @return the app builder app version ID of this app builder app data record link
+	 */
+	public long getAppBuilderAppVersionId();
+
+	/**
+	 * Sets the app builder app version ID of this app builder app data record link.
+	 *
+	 * @param appBuilderAppVersionId the app builder app version ID of this app builder app data record link
+	 */
+	public void setAppBuilderAppVersionId(long appBuilderAppVersionId);
 
 	/**
 	 * Returns the ddl record ID of this app builder app data record link.

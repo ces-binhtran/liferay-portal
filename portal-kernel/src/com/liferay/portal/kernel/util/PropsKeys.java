@@ -307,6 +307,10 @@ public interface PropsKeys {
 	public static final String AUTO_LOGIN_IGNORE_PATHS =
 		"auto.login.ignore.paths";
 
+	public static final String AXIS_SERVLET_ENABLED = "axis.servlet.enabled";
+
+	public static final String AXIS_SERVLET_MAPPING = "axis.servlet.mapping";
+
 	public static final String BASIC_AUTH_PASSWORD_REQUIRED =
 		"basic.auth.password.required";
 
@@ -903,6 +907,9 @@ public interface PropsKeys {
 	public static final String DL_FILE_ENTRY_PREVIEW_FORK_PROCESS_ENABLED =
 		"dl.file.entry.preview.fork.process.enabled";
 
+	public static final String DL_FILE_ENTRY_PREVIEW_FORK_PROCESS_JVM_OPTIONS =
+		"dl.file.entry.preview.fork.process.jvm.options";
+
 	public static final String
 		DL_FILE_ENTRY_PREVIEW_GENERATION_DECRYPT_PASSWORDS_PDFBOX =
 			"dl.file.entry.preview.generation.decrypt.passwords.pdfbox";
@@ -1078,6 +1085,10 @@ public interface PropsKeys {
 	public static final String EDITOR_WYSIWYG_DEFAULT =
 		"editor.wysiwyg.default";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String EHCACHE_BLOCKING_CACHE_ALLOWED =
 		"ehcache.blocking.cache.allowed";
 
@@ -1267,6 +1278,10 @@ public interface PropsKeys {
 	public static final String INDEX_ON_STARTUP_DELAY =
 		"index.on.startup.delay";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String INDEX_ON_UPGRADE = "index.on.upgrade";
 
 	public static final String
@@ -2326,6 +2341,10 @@ public interface PropsKeys {
 		PERMISSIONS_CUSTOM_ATTRIBUTE_WRITE_CHECK_BY_DEFAULT =
 			"permissions.custom.attribute.write.check.by.default";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String PERMISSIONS_OBJECT_BLOCKING_CACHE =
 		"permissions.object.blocking.cache";
 
@@ -3308,6 +3327,10 @@ public interface PropsKeys {
 	public static final String USERS_UPDATE_USER_NAME =
 		"users.update.user.name.";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String VALUE_OBJECT_ENTITY_BLOCKING_CACHE =
 		"value.object.entity.blocking.cache";
 
@@ -3317,6 +3340,10 @@ public interface PropsKeys {
 	public static final String VALUE_OBJECT_ENTITY_THREAD_LOCAL_CACHE_MAX_SIZE =
 		"value.object.entity.thread.local.cache.max.size";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static final String VALUE_OBJECT_FINDER_BLOCKING_CACHE =
 		"value.object.finder.blocking.cache";
 

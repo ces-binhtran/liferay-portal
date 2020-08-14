@@ -93,13 +93,12 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 
 			sb.append("></lfr-editable>");
 
-			JSONObject jsonObject = JSONUtil.put(
-				"content", sb.toString()
-			).put(
-				"name", "lfr-editable:" + editableElementParser.getKey()
-			);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"content", sb.toString()
+				).put(
+					"name", "lfr-editable:" + editableElementParser.getKey()
+				));
 		}
 
 		return jsonArray;
@@ -193,6 +192,16 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 						editableElementParser.getFieldTemplateConfigJSONObject(
 							value, fragmentEntryProcessorContext.getLocale(),
 							null);
+
+					if (mappedValueConfigJSONObject.has("alt")) {
+						String alt = mappedValueConfigJSONObject.getString(
+							"alt", StringPool.BLANK);
+
+						alt = _fragmentEntryProcessorHelper.processTemplate(
+							alt, fragmentEntryProcessorContext);
+
+						mappedValueConfigJSONObject.put("alt", alt);
+					}
 
 					value = StringUtil.replace(
 						editableElementParser.getFieldTemplate(), "field_name",
@@ -451,7 +460,7 @@ public class EditableFragmentEntryProcessor implements FragmentEntryProcessor {
 		throw new FragmentEntryContentException(
 			LanguageUtil.format(
 				resourceBundle,
-				"you-must-define-all-require-attributes-x-for-each-editable-" +
+				"you-must-define-all-required-attributes-x-for-each-editable-" +
 					"element",
 				StringUtil.merge(_REQUIRED_ATTRIBUTE_NAMES)));
 	}

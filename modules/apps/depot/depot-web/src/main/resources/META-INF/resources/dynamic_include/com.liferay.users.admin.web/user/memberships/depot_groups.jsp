@@ -19,7 +19,7 @@
 <%
 DepotAdminMembershipsDisplayContext depotAdminMembershipsDisplayContext = (DepotAdminMembershipsDisplayContext)request.getAttribute(DepotAdminMembershipsDisplayContext.class.getName());
 
-currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "asset-libraries");
+currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() + "asset-libraries");
 %>
 
 <aui:input name="<%= ActionRequest.ACTION_NAME %>" type="hidden" value="/depot/update_memberships" />
@@ -36,7 +36,7 @@ currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "asset-
 	cssClass="sheet-subtitle"
 >
 	<clay:content-col
-		expand="true"
+		expand="<%= true %>"
 	>
 		<span class="heading-text"><%= depotAdminMembershipsDisplayContext.getLabel() %></span>
 	</clay:content-col>

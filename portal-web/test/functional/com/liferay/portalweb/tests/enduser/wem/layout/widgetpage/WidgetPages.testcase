@@ -30,6 +30,7 @@ definition {
 
 	@priority = "5"
 	test AddPageFromExistingPage {
+		property portal.acceptance = "true";
 		property testray.component.names = "Training";
 
 		JSONLayout.addPublicLayout(
@@ -228,6 +229,7 @@ definition {
 
 	@priority = "5"
 	test ChangePageLayout {
+		property portal.acceptance = "true";
 		property testray.component.names = "Site Pages Administration,Training";
 
 		JSONLayout.addPublicLayout(
@@ -386,7 +388,7 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");

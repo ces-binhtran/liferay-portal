@@ -50,6 +50,7 @@ definition {
 
 	@priority = "5"
 	test AddMemberAssignSiteRole {
+		property portal.acceptance = "true";
 		property testray.component.names = "Site Administration,Training,Users and Organizations";
 
 		JSONUser.addUser(
@@ -96,6 +97,7 @@ definition {
 	@priority = "5"
 	test AddMembersSiteUser {
 		property portal.acceptance = "true";
+		property test.name.skip.portal.instance = "SiteMemberships#AddMembersSiteUser";
 		property testray.component.names = "Site Administration,Users and Organizations";
 
 		JSONUser.addUser(
@@ -114,9 +116,8 @@ definition {
 
 		SelectFrame(locator1 = "IFrame#ADD_USERS_TO_SITE");
 
-		if (IsNotVisible(locator1 = "ManagementBar#FILTER_AND_ORDER")) {
-
-			GlobalMenu.gotoPortlet(
+		if (IsElementNotPresent(locator1 = "ManagementBar#FILTER_AND_ORDER")) {
+			ApplicationsMenu.gotoPortlet(
 				category = "Configuration",
 				panel = "Control Panel",
 				portlet = "Search");
@@ -271,7 +272,7 @@ definition {
 		property test.name.skip.portal.instance = "SiteMemberships#OrganizationsView";
 		property testray.component.names = "Site Administration,Users and Organizations";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "Search");
@@ -740,7 +741,7 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		ProductMenuHelper.expandCategory(category = "People");
 
@@ -752,7 +753,7 @@ definition {
 
 		Navigator.openURL();
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		ProductMenuHelper.expandCategory(category = "People");
 

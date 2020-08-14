@@ -24,7 +24,7 @@
 	action="<%= configurationActionURL %>"
 	method="post"
 	name="fm"
-	onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfiguration();" %>'
+	onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveConfiguration();" %>'
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
@@ -49,7 +49,7 @@
 
 				<aui:input name="preferences--assetVocabularyIds--" type="hidden" />
 
-				<div class='<%= assetCategoriesNavigationPortletInstanceConfiguration.allAssetVocabularies() ? "hide" : "" %>' id="<portlet:namespace />assetVocabulariesBoxes">
+				<div class="<%= assetCategoriesNavigationPortletInstanceConfiguration.allAssetVocabularies() ? "hide" : "" %>" id="<portlet:namespace />assetVocabulariesBoxes">
 					<liferay-ui:input-move-boxes
 						leftBoxName="currentAssetVocabularyIds"
 						leftList="<%= assetCategoriesNavigationDisplayContext.getCurrentVocabularyNames() %>"

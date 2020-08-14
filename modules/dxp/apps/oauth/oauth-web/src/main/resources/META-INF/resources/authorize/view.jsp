@@ -110,7 +110,7 @@
 								<clay:col
 									md="6"
 								>
-									<img src='<%= HtmlUtil.escape(themeDisplay.getPathImage() + "/logo?img_id=" + oAuthApplication.getLogoId() + "&t=" + WebServerServletTokenUtil.getToken(oAuthApplication.getLogoId())) %>' />
+									<img src="<%= HtmlUtil.escape(themeDisplay.getPathImage() + "/logo?img_id=" + oAuthApplication.getLogoId() + "&t=" + WebServerServletTokenUtil.getToken(oAuthApplication.getLogoId())) %>" />
 								</clay:col>
 							</c:if>
 						</clay:row>
@@ -119,7 +119,7 @@
 							<aui:button type="submit" value="grant-access" />
 
 							<%
-							String taglibOnClick = "document.location = '".concat(HtmlUtil.escape(oAuthApplication.getWebsiteURL())).concat("'");
+							String taglibOnClick = StringBundler.concat("document.location = '", HtmlUtil.escape(oAuthApplication.getWebsiteURL()), "'");
 							%>
 
 							<aui:button onClick="<%= taglibOnClick %>" value="deny-access" />

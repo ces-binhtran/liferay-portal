@@ -72,7 +72,9 @@ Group group = layout.getGroup();
 				<c:otherwise>
 
 					<%
-					pageContext.getOut().print(renderRequest.getAttribute(WebKeys.PORTLET_CONTENT));
+					JspWriter jspWriter = pageContext.getOut();
+
+					jspWriter.print(renderRequest.getAttribute(WebKeys.PORTLET_CONTENT));
 					%>
 
 				</c:otherwise>
@@ -83,7 +85,7 @@ Group group = layout.getGroup();
 		<liferay-theme:wrap-portlet
 			page="portlet.jsp"
 		>
-			<div class='<%= portletDisplay.isStateMin() ? "hide" : "" %> portlet-content-container'>
+			<div class="<%= portletDisplay.isStateMin() ? "hide" : "" %> portlet-content-container">
 				<%@ include file="/html/common/themes/portlet_content_wrapper.jspf" %>
 			</div>
 		</liferay-theme:wrap-portlet>

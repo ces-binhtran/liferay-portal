@@ -14,7 +14,7 @@
 
 package com.liferay.portal.kernel.upgrade;
 
-import com.liferay.exportimport.kernel.staging.StagingConstants;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.layout.admin.kernel.model.LayoutTypePortletConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.jdbc.AutoBatchPreparedStatementUtil;
@@ -192,8 +192,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long groupId = rs.getLong("groupId");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -203,7 +201,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, groupId);
+					ps2.setLong(2, rs.getLong("groupId"));
 
 					ps2.addBatch();
 				}
@@ -321,8 +319,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long layoutRevisionId = rs.getLong("layoutRevisionId");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -332,7 +328,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, layoutRevisionId);
+					ps2.setLong(2, rs.getLong("layoutRevisionId"));
 
 					ps2.addBatch();
 				}
@@ -359,8 +355,6 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 			ResultSet rs = ps1.executeQuery()) {
 
 			while (rs.next()) {
-				long plid = rs.getLong("plid");
-
 				String typeSettings = rs.getString("typeSettings");
 
 				String newTypeSettings = getNewTypeSettings(
@@ -370,7 +364,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 				if (!Objects.equals(typeSettings, newTypeSettings)) {
 					ps2.setString(1, newTypeSettings);
 
-					ps2.setLong(2, plid);
+					ps2.setLong(2, rs.getLong("plid"));
 
 					ps2.addBatch();
 				}
@@ -449,7 +443,7 @@ public abstract class BaseUpgradePortletId extends UpgradeProcess {
 					"' where name = '", oldName, "'"));
 		}
 		else {
-			StringBundler sb = new StringBundler(5 + 3 * actionIds.size());
+			StringBundler sb = new StringBundler(5 + (3 * actionIds.size()));
 
 			sb.append("update ResourceAction set name = '");
 			sb.append(newName);

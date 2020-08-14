@@ -25,6 +25,45 @@ exports[`EditTableView renders 1`] = `
             class="tbar-nav"
           >
             <li
+              class="tbar-item"
+            >
+              <div
+                class="tbar-section"
+              >
+                <div
+                  class="input-group"
+                >
+                  <div
+                    class="dropdown localizable-dropdown"
+                  >
+                    <button
+                      class="dropdown-toggle btn btn-monospaced btn-secondary"
+                      symbol="en-US"
+                      type="button"
+                    >
+                      <span
+                        class="inline-item"
+                      >
+                        <svg
+                          class="lexicon-icon lexicon-icon-en-us"
+                          role="presentation"
+                        >
+                          <use
+                            xlink:href="#en-us"
+                          />
+                        </svg>
+                      </span>
+                      <span
+                        class="btn-section"
+                      >
+                        en-US
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </li>
+            <li
               class="tbar-item tbar-item-expand"
             >
               <div
@@ -98,7 +137,7 @@ exports[`EditTableView renders 1`] = `
           >
             <form>
               <div
-                class="autofit-row sidebar-section"
+                class="sidebar-section autofit-row"
               >
                 <div
                   class="autofit-col autofit-col-expand"
@@ -163,7 +202,7 @@ exports[`EditTableView renders 1`] = `
               class="component-tbar tbar"
             >
               <div
-                class="container-fluid"
+                class="container-fluid container-fluid-max-xl"
               >
                 <ul
                   class="nav nav-underline"
@@ -202,12 +241,12 @@ exports[`EditTableView renders 1`] = `
                 role="tabpanel"
               >
                 <div
-                  class="autofit-row autofit-row-center field-type"
+                  class="field-type autofit-row autofit-row-center"
                   data-field-type-name="Text"
                   draggable="true"
                 >
                   <div
-                    class="autofit-col pl-2 pr-2"
+                    class="pl-2 pr-2 autofit-col"
                   >
                     <svg
                       class="lexicon-icon lexicon-icon-drag"
@@ -219,10 +258,10 @@ exports[`EditTableView renders 1`] = `
                     </svg>
                   </div>
                   <div
-                    class="autofit-col pr-2"
+                    class="pr-2 autofit-col"
                   >
                     <span
-                      class="sticker data-layout-builder-field-sticker sticker-rounded sticker-light sticker-md"
+                      class="sticker data-layout-builder-field-sticker sticker-light sticker-md"
                     >
                       <span
                         class="sticker-overlay"
@@ -239,7 +278,7 @@ exports[`EditTableView renders 1`] = `
                     </span>
                   </div>
                   <div
-                    class="autofit-col autofit-col-expand pr-2"
+                    class="pr-2 autofit-col autofit-col-expand"
                   >
                     <h4
                       class="list-group-title text-truncate"
@@ -256,6 +295,9 @@ exports[`EditTableView renders 1`] = `
                       </small>
                     </p>
                   </div>
+                  <div
+                    class="autofit-col pr-2"
+                  />
                 </div>
               </div>
             </div>

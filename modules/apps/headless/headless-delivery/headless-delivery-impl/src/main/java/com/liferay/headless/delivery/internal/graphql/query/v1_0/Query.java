@@ -20,6 +20,7 @@ import com.liferay.headless.delivery.dto.v1_0.Comment;
 import com.liferay.headless.delivery.dto.v1_0.ContentElement;
 import com.liferay.headless.delivery.dto.v1_0.ContentSetElement;
 import com.liferay.headless.delivery.dto.v1_0.ContentStructure;
+import com.liferay.headless.delivery.dto.v1_0.ContentTemplate;
 import com.liferay.headless.delivery.dto.v1_0.Document;
 import com.liferay.headless.delivery.dto.v1_0.DocumentFolder;
 import com.liferay.headless.delivery.dto.v1_0.KnowledgeBaseArticle;
@@ -30,6 +31,7 @@ import com.liferay.headless.delivery.dto.v1_0.MessageBoardMessage;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardSection;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardThread;
 import com.liferay.headless.delivery.dto.v1_0.NavigationMenu;
+import com.liferay.headless.delivery.dto.v1_0.NavigationMenuItem;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContent;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContentFolder;
@@ -42,6 +44,7 @@ import com.liferay.headless.delivery.resource.v1_0.CommentResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentSetElementResource;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
+import com.liferay.headless.delivery.resource.v1_0.ContentTemplateResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentFolderResource;
 import com.liferay.headless.delivery.resource.v1_0.DocumentResource;
 import com.liferay.headless.delivery.resource.v1_0.KnowledgeBaseArticleResource;
@@ -136,6 +139,14 @@ public class Query {
 
 		_contentStructureResourceComponentServiceObjects =
 			contentStructureResourceComponentServiceObjects;
+	}
+
+	public static void setContentTemplateResourceComponentServiceObjects(
+		ComponentServiceObjects<ContentTemplateResource>
+			contentTemplateResourceComponentServiceObjects) {
+
+		_contentTemplateResourceComponentServiceObjects =
+			contentTemplateResourceComponentServiceObjects;
 	}
 
 	public static void setDocumentResourceComponentServiceObjects(
@@ -299,7 +310,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostings(filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostings(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's blog postings. Results can be paginated, filtered, searched, and sorted."
@@ -307,6 +318,8 @@ public class Query {
 	public BlogPostingPage blogPostings(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -318,7 +331,7 @@ public class Query {
 			this::_populateResourceContext,
 			blogPostingResource -> new BlogPostingPage(
 				blogPostingResource.getSiteBlogPostingsPage(
-					Long.valueOf(siteKey), search,
+					Long.valueOf(siteKey), search, aggregation,
 					_filterBiFunction.apply(blogPostingResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(blogPostingResource, sortsString))));
@@ -327,7 +340,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImage(blogPostingImageId: ___){contentUrl, encodingFormat, fileExtension, id, sizeInBytes, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImage(blogPostingImageId: ___){contentUrl, contentValue, encodingFormat, fileExtension, id, sizeInBytes, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the blog post's image. The binary image is returned as a relative URL to the image itself."
@@ -347,7 +360,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImages(filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingImages(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's blog post images. Results can be paginated, filtered, searched, and sorted."
@@ -355,6 +368,8 @@ public class Query {
 	public BlogPostingImagePage blogPostingImages(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -366,7 +381,7 @@ public class Query {
 			this::_populateResourceContext,
 			blogPostingImageResource -> new BlogPostingImagePage(
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					Long.valueOf(siteKey), search,
+					Long.valueOf(siteKey), search, aggregation,
 					_filterBiFunction.apply(
 						blogPostingImageResource, filterString),
 					Pagination.of(page, pageSize),
@@ -377,7 +392,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingComments(blogPostingId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {blogPostingComments(aggregation: ___, blogPostingId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the blog post's comments in a list. Results can be paginated, filtered, searched, and sorted."
@@ -385,6 +400,8 @@ public class Query {
 	public CommentPage blogPostingComments(
 			@GraphQLName("blogPostingId") Long blogPostingId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -396,7 +413,7 @@ public class Query {
 			this::_populateResourceContext,
 			commentResource -> new CommentPage(
 				commentResource.getBlogPostingCommentsPage(
-					blogPostingId, search,
+					blogPostingId, search, aggregation,
 					_filterBiFunction.apply(commentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(commentResource, sortsString))));
@@ -420,7 +437,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {commentComments(filter: ___, page: ___, pageSize: ___, parentCommentId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {commentComments(aggregation: ___, filter: ___, page: ___, pageSize: ___, parentCommentId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the parent comment's child comments. Results can be paginated, filtered, searched, and sorted."
@@ -428,6 +445,8 @@ public class Query {
 	public CommentPage commentComments(
 			@GraphQLName("parentCommentId") Long parentCommentId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -439,7 +458,7 @@ public class Query {
 			this::_populateResourceContext,
 			commentResource -> new CommentPage(
 				commentResource.getCommentCommentsPage(
-					parentCommentId, search,
+					parentCommentId, search, aggregation,
 					_filterBiFunction.apply(commentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(commentResource, sortsString))));
@@ -448,7 +467,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentComments(documentId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentComments(aggregation: ___, documentId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the document's comments. Results can be paginated, filtered, searched, and sorted."
@@ -456,6 +475,8 @@ public class Query {
 	public CommentPage documentComments(
 			@GraphQLName("documentId") Long documentId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -467,7 +488,7 @@ public class Query {
 			this::_populateResourceContext,
 			commentResource -> new CommentPage(
 				commentResource.getDocumentCommentsPage(
-					documentId, search,
+					documentId, search, aggregation,
 					_filterBiFunction.apply(commentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(commentResource, sortsString))));
@@ -476,7 +497,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentComments(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___, structuredContentId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentComments(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___, structuredContentId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the structured content's comments. Results can be paginated, filtered, searched, and sorted."
@@ -484,6 +505,8 @@ public class Query {
 	public CommentPage structuredContentComments(
 			@GraphQLName("structuredContentId") Long structuredContentId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -495,7 +518,7 @@ public class Query {
 			this::_populateResourceContext,
 			commentResource -> new CommentPage(
 				commentResource.getStructuredContentCommentsPage(
-					structuredContentId, search,
+					structuredContentId, search, aggregation,
 					_filterBiFunction.apply(commentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(commentResource, sortsString))));
@@ -504,12 +527,44 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentElements(filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryContentElements(aggregation: ___, assetLibraryId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentElementPage assetLibraryContentElements(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentElementResource -> new ContentElementPage(
+				contentElementResource.getAssetLibraryContentElementsPage(
+					Long.valueOf(assetLibraryId), search, aggregation,
+					_filterBiFunction.apply(
+						contentElementResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						contentElementResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentElements(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public ContentElementPage contentElements(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -521,12 +576,58 @@ public class Query {
 			this::_populateResourceContext,
 			contentElementResource -> new ContentElementPage(
 				contentElementResource.getSiteContentElementsPage(
-					Long.valueOf(siteKey), search,
+					Long.valueOf(siteKey), search, aggregation,
 					_filterBiFunction.apply(
 						contentElementResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(
 						contentElementResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryContentSetByKeyContentSetElements(assetLibraryId: ___, key: ___, page: ___, pageSize: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentSetElementPage assetLibraryContentSetByKeyContentSetElements(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("key") String key,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentSetElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentSetElementResource -> new ContentSetElementPage(
+				contentSetElementResource.
+					getAssetLibraryContentSetByKeyContentSetElementsPage(
+						Long.valueOf(assetLibraryId), key,
+						Pagination.of(page, pageSize))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryContentSetByUuidContentSetElements(assetLibraryId: ___, page: ___, pageSize: ___, uuid: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentSetElementPage assetLibraryContentSetByUuidContentSetElements(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("uuid") String uuid,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentSetElementResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentSetElementResource -> new ContentSetElementPage(
+				contentSetElementResource.
+					getAssetLibraryContentSetByUuidContentSetElementsPage(
+						Long.valueOf(assetLibraryId), uuid,
+						Pagination.of(page, pageSize))));
 	}
 
 	/**
@@ -604,6 +705,36 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryContentStructures(aggregation: ___, assetLibraryId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentStructurePage assetLibraryContentStructures(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentStructureResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentStructureResource -> new ContentStructurePage(
+				contentStructureResource.getAssetLibraryContentStructuresPage(
+					Long.valueOf(assetLibraryId), search, aggregation,
+					_filterBiFunction.apply(
+						contentStructureResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						contentStructureResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
 	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentStructure(contentStructureId: ___){availableLanguages, contentStructureFields, creator, dateCreated, dateModified, description, description_i18n, id, name, name_i18n, siteId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the content structure.")
@@ -622,7 +753,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentStructures(filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentStructures(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's content structures. Results can be paginated, filtered, searched, and sorted."
@@ -630,6 +761,8 @@ public class Query {
 	public ContentStructurePage contentStructures(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -641,7 +774,7 @@ public class Query {
 			this::_populateResourceContext,
 			contentStructureResource -> new ContentStructurePage(
 				contentStructureResource.getSiteContentStructuresPage(
-					Long.valueOf(siteKey), search,
+					Long.valueOf(siteKey), search, aggregation,
 					_filterBiFunction.apply(
 						contentStructureResource, filterString),
 					Pagination.of(page, pageSize),
@@ -652,7 +785,115 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolderDocuments(documentFolderId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryContentTemplates(aggregation: ___, assetLibraryId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentTemplatePage assetLibraryContentTemplates(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentTemplateResource -> new ContentTemplatePage(
+				contentTemplateResource.getAssetLibraryContentTemplatesPage(
+					Long.valueOf(assetLibraryId), search, aggregation,
+					_filterBiFunction.apply(
+						contentTemplateResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						contentTemplateResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentTemplates(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentTemplatePage contentTemplates(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentTemplateResource -> new ContentTemplatePage(
+				contentTemplateResource.getSiteContentTemplatesPage(
+					Long.valueOf(siteKey), search, aggregation,
+					_filterBiFunction.apply(
+						contentTemplateResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						contentTemplateResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentTemplate(contentTemplateId: ___, siteKey: ___){actions, availableLanguages, contentStructureId, creator, dateCreated, dateModified, description, description_i18n, id, name, name_i18n, programmingLanguage, siteId, templateScript}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ContentTemplate contentTemplate(
+			@GraphQLName("siteKey") @NotEmpty String siteKey,
+			@GraphQLName("contentTemplateId") String contentTemplateId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_contentTemplateResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			contentTemplateResource ->
+				contentTemplateResource.getContentTemplate(
+					Long.valueOf(siteKey), contentTemplateId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocuments(aggregation: ___, assetLibraryId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentPage assetLibraryDocuments(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("flatten") Boolean flatten,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentResource -> new DocumentPage(
+				documentResource.getAssetLibraryDocumentsPage(
+					Long.valueOf(assetLibraryId), flatten, search, aggregation,
+					_filterBiFunction.apply(documentResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(documentResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolderDocuments(aggregation: ___, documentFolderId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the folder's documents. Results can be paginated, filtered, searched, and sorted."
@@ -661,6 +902,8 @@ public class Query {
 			@GraphQLName("documentFolderId") Long documentFolderId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -672,7 +915,7 @@ public class Query {
 			this::_populateResourceContext,
 			documentResource -> new DocumentPage(
 				documentResource.getDocumentFolderDocumentsPage(
-					documentFolderId, flatten, search,
+					documentFolderId, flatten, search, aggregation,
 					_filterBiFunction.apply(documentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(documentResource, sortsString))));
@@ -681,7 +924,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {document(documentId: ___){actions, adaptedImages, aggregateRating, contentUrl, creator, customFields, dateCreated, dateModified, description, documentFolderId, documentType, encodingFormat, fileExtension, id, keywords, numberOfComments, relatedContents, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {document(documentId: ___){actions, adaptedImages, aggregateRating, contentUrl, contentValue, creator, customFields, dateCreated, dateModified, description, documentFolderId, documentType, encodingFormat, fileExtension, id, keywords, numberOfComments, relatedContents, sizeInBytes, taxonomyCategoryBriefs, taxonomyCategoryIds, title, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the document.")
 	public Document document(@GraphQLName("documentId") Long documentId)
@@ -712,7 +955,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documents(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documents(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the documents in the site's root folder. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -721,6 +964,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -732,10 +977,41 @@ public class Query {
 			this::_populateResourceContext,
 			documentResource -> new DocumentPage(
 				documentResource.getSiteDocumentsPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(documentResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(documentResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryDocumentFolders(aggregation: ___, assetLibraryId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public DocumentFolderPage assetLibraryDocumentFolders(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("flatten") Boolean flatten,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_documentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			documentFolderResource -> new DocumentFolderPage(
+				documentFolderResource.getAssetLibraryDocumentFoldersPage(
+					Long.valueOf(assetLibraryId), flatten, search, aggregation,
+					_filterBiFunction.apply(
+						documentFolderResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						documentFolderResource, sortsString))));
 	}
 
 	/**
@@ -758,7 +1034,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolderDocumentFolders(filter: ___, flatten: ___, page: ___, pageSize: ___, parentDocumentFolderId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolderDocumentFolders(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, parentDocumentFolderId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the folder's subfolders. Results can be paginated, filtered, searched, and sorted."
@@ -767,6 +1043,8 @@ public class Query {
 			@GraphQLName("parentDocumentFolderId") Long parentDocumentFolderId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -778,7 +1056,7 @@ public class Query {
 			this::_populateResourceContext,
 			documentFolderResource -> new DocumentFolderPage(
 				documentFolderResource.getDocumentFolderDocumentFoldersPage(
-					parentDocumentFolderId, flatten, search,
+					parentDocumentFolderId, flatten, search, aggregation,
 					_filterBiFunction.apply(
 						documentFolderResource, filterString),
 					Pagination.of(page, pageSize),
@@ -789,7 +1067,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolders(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {documentFolders(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's document folders. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -798,6 +1076,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -809,7 +1089,7 @@ public class Query {
 			this::_populateResourceContext,
 			documentFolderResource -> new DocumentFolderPage(
 				documentFolderResource.getSiteDocumentFoldersPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						documentFolderResource, filterString),
 					Pagination.of(page, pageSize),
@@ -858,7 +1138,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseArticleKnowledgeBaseArticles(filter: ___, flatten: ___, page: ___, pageSize: ___, parentKnowledgeBaseArticleId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseArticleKnowledgeBaseArticles(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, parentKnowledgeBaseArticleId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the parent knowledge base article's child knowledge base articles. Results can be paginated, filtered, searched, and sorted."
@@ -868,6 +1148,8 @@ public class Query {
 				parentKnowledgeBaseArticleId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -881,6 +1163,7 @@ public class Query {
 				knowledgeBaseArticleResource.
 					getKnowledgeBaseArticleKnowledgeBaseArticlesPage(
 						parentKnowledgeBaseArticleId, flatten, search,
+						aggregation,
 						_filterBiFunction.apply(
 							knowledgeBaseArticleResource, filterString),
 						Pagination.of(page, pageSize),
@@ -891,7 +1174,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseFolderKnowledgeBaseArticles(filter: ___, flatten: ___, knowledgeBaseFolderId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseFolderKnowledgeBaseArticles(aggregation: ___, filter: ___, flatten: ___, knowledgeBaseFolderId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the folder's knowledge base articles. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -900,6 +1183,8 @@ public class Query {
 			@GraphQLName("knowledgeBaseFolderId") Long knowledgeBaseFolderId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -912,7 +1197,7 @@ public class Query {
 			knowledgeBaseArticleResource -> new KnowledgeBaseArticlePage(
 				knowledgeBaseArticleResource.
 					getKnowledgeBaseFolderKnowledgeBaseArticlesPage(
-						knowledgeBaseFolderId, flatten, search,
+						knowledgeBaseFolderId, flatten, search, aggregation,
 						_filterBiFunction.apply(
 							knowledgeBaseArticleResource, filterString),
 						Pagination.of(page, pageSize),
@@ -923,7 +1208,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseArticles(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseArticles(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's knowledge base articles. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -932,6 +1217,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -943,7 +1230,7 @@ public class Query {
 			this::_populateResourceContext,
 			knowledgeBaseArticleResource -> new KnowledgeBaseArticlePage(
 				knowledgeBaseArticleResource.getSiteKnowledgeBaseArticlesPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						knowledgeBaseArticleResource, filterString),
 					Pagination.of(page, pageSize),
@@ -977,7 +1264,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseAttachment(knowledgeBaseAttachmentId: ___){contentUrl, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {knowledgeBaseAttachment(knowledgeBaseAttachmentId: ___){contentUrl, contentValue, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the knowledge base attachment.")
 	public KnowledgeBaseAttachment knowledgeBaseAttachment(
@@ -1061,7 +1348,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardAttachment(messageBoardAttachmentId: ___){contentUrl, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardAttachment(messageBoardAttachmentId: ___){contentUrl, contentValue, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the message board attachment.")
 	public MessageBoardAttachment messageBoardAttachment(
@@ -1160,7 +1447,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardMessageMessageBoardMessages(filter: ___, flatten: ___, page: ___, pageSize: ___, parentMessageBoardMessageId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardMessageMessageBoardMessages(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, parentMessageBoardMessageId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the parent message board message's child messages. Results can be paginated, filtered, searched, and sorted."
@@ -1170,6 +1457,8 @@ public class Query {
 				parentMessageBoardMessageId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1183,6 +1472,7 @@ public class Query {
 				messageBoardMessageResource.
 					getMessageBoardMessageMessageBoardMessagesPage(
 						parentMessageBoardMessageId, flatten, search,
+						aggregation,
 						_filterBiFunction.apply(
 							messageBoardMessageResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1193,7 +1483,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreadMessageBoardMessages(filter: ___, messageBoardThreadId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreadMessageBoardMessages(aggregation: ___, filter: ___, messageBoardThreadId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the message board thread's messages. Results can be paginated, filtered, searched, and sorted."
@@ -1201,6 +1491,8 @@ public class Query {
 	public MessageBoardMessagePage messageBoardThreadMessageBoardMessages(
 			@GraphQLName("messageBoardThreadId") Long messageBoardThreadId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1213,7 +1505,7 @@ public class Query {
 			messageBoardMessageResource -> new MessageBoardMessagePage(
 				messageBoardMessageResource.
 					getMessageBoardThreadMessageBoardMessagesPage(
-						messageBoardThreadId, search,
+						messageBoardThreadId, search, aggregation,
 						_filterBiFunction.apply(
 							messageBoardMessageResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1224,13 +1516,15 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardMessages(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardMessages(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the site's message board messages.")
 	public MessageBoardMessagePage messageBoardMessages(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1242,7 +1536,7 @@ public class Query {
 			this::_populateResourceContext,
 			messageBoardMessageResource -> new MessageBoardMessagePage(
 				messageBoardMessageResource.getSiteMessageBoardMessagesPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						messageBoardMessageResource, filterString),
 					Pagination.of(page, pageSize),
@@ -1291,7 +1585,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSectionMessageBoardSections(filter: ___, page: ___, pageSize: ___, parentMessageBoardSectionId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSectionMessageBoardSections(aggregation: ___, filter: ___, page: ___, pageSize: ___, parentMessageBoardSectionId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the parent message board section's subsections. Results can be paginated, filtered, searched, and sorted."
@@ -1300,6 +1594,8 @@ public class Query {
 			@GraphQLName("parentMessageBoardSectionId") Long
 				parentMessageBoardSectionId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1312,7 +1608,7 @@ public class Query {
 			messageBoardSectionResource -> new MessageBoardSectionPage(
 				messageBoardSectionResource.
 					getMessageBoardSectionMessageBoardSectionsPage(
-						parentMessageBoardSectionId, search,
+						parentMessageBoardSectionId, search, aggregation,
 						_filterBiFunction.apply(
 							messageBoardSectionResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1323,7 +1619,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSections(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSections(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's message board sections. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -1332,6 +1628,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1343,7 +1641,7 @@ public class Query {
 			this::_populateResourceContext,
 			messageBoardSectionResource -> new MessageBoardSectionPage(
 				messageBoardSectionResource.getSiteMessageBoardSectionsPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						messageBoardSectionResource, filterString),
 					Pagination.of(page, pageSize),
@@ -1354,7 +1652,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSectionMessageBoardThreads(filter: ___, messageBoardSectionId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardSectionMessageBoardThreads(aggregation: ___, filter: ___, messageBoardSectionId: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the message board section's threads. Results can be paginated, filtered, searched, and sorted."
@@ -1362,6 +1660,8 @@ public class Query {
 	public MessageBoardThreadPage messageBoardSectionMessageBoardThreads(
 			@GraphQLName("messageBoardSectionId") Long messageBoardSectionId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1374,7 +1674,7 @@ public class Query {
 			messageBoardThreadResource -> new MessageBoardThreadPage(
 				messageBoardThreadResource.
 					getMessageBoardSectionMessageBoardThreadsPage(
-						messageBoardSectionId, search,
+						messageBoardSectionId, search, aggregation,
 						_filterBiFunction.apply(
 							messageBoardThreadResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1411,7 +1711,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThread(messageBoardThreadId: ___){actions, aggregateRating, articleBody, creator, creatorStatistics, customFields, dateCreated, dateModified, encodingFormat, friendlyUrlPath, hasValidAnswer, headline, id, keywords, messageBoardSectionId, numberOfMessageBoardAttachments, numberOfMessageBoardMessages, relatedContents, showAsQuestion, siteId, subscribed, taxonomyCategoryBriefs, taxonomyCategoryIds, threadType, viewCount, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThread(messageBoardThreadId: ___){actions, aggregateRating, articleBody, creator, creatorStatistics, customFields, dateCreated, dateModified, encodingFormat, friendlyUrlPath, hasValidAnswer, headline, id, keywords, messageBoardSectionId, numberOfMessageBoardAttachments, numberOfMessageBoardMessages, relatedContents, seen, showAsQuestion, siteId, subscribed, taxonomyCategoryBriefs, taxonomyCategoryIds, threadType, viewCount, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the message board thread.")
 	public MessageBoardThread messageBoardThread(
@@ -1447,7 +1747,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreads(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreads(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's message board threads. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -1456,6 +1756,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1467,7 +1769,7 @@ public class Query {
 			this::_populateResourceContext,
 			messageBoardThreadResource -> new MessageBoardThreadPage(
 				messageBoardThreadResource.getSiteMessageBoardThreadsPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						messageBoardThreadResource, filterString),
 					Pagination.of(page, pageSize),
@@ -1478,7 +1780,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ___, siteKey: ___){actions, aggregateRating, articleBody, creator, creatorStatistics, customFields, dateCreated, dateModified, encodingFormat, friendlyUrlPath, hasValidAnswer, headline, id, keywords, messageBoardSectionId, numberOfMessageBoardAttachments, numberOfMessageBoardMessages, relatedContents, showAsQuestion, siteId, subscribed, taxonomyCategoryBriefs, taxonomyCategoryIds, threadType, viewCount, viewableBy}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {messageBoardThreadByFriendlyUrlPath(friendlyUrlPath: ___, siteKey: ___){actions, aggregateRating, articleBody, creator, creatorStatistics, customFields, dateCreated, dateModified, encodingFormat, friendlyUrlPath, hasValidAnswer, headline, id, keywords, messageBoardSectionId, numberOfMessageBoardAttachments, numberOfMessageBoardMessages, relatedContents, seen, showAsQuestion, siteId, subscribed, taxonomyCategoryBriefs, taxonomyCategoryIds, threadType, viewCount, viewableBy}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public MessageBoardThread messageBoardThreadByFriendlyUrlPath(
@@ -1498,7 +1800,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {navigationMenu(navigationMenuId: ___){actions, creator, dateCreated, dateModified, id, name, navigationMenuItems, siteId}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {navigationMenu(navigationMenuId: ___){actions, creator, dateCreated, dateModified, id, name, navigationMenuItems, navigationType, siteId}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "")
 	public NavigationMenu navigationMenu(
@@ -1535,7 +1837,38 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentStructureStructuredContents(contentStructureId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryStructuredContents(aggregation: ___, assetLibraryId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public StructuredContentPage assetLibraryStructuredContents(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("flatten") Boolean flatten,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentResource -> new StructuredContentPage(
+				structuredContentResource.getAssetLibraryStructuredContentsPage(
+					Long.valueOf(assetLibraryId), flatten, search, aggregation,
+					_filterBiFunction.apply(
+						structuredContentResource, filterString),
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(
+						structuredContentResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {contentStructureStructuredContents(aggregation: ___, contentStructureId: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves a list of the content structure's structured content. Results can be paginated, filtered, searched, and sorted."
@@ -1543,6 +1876,8 @@ public class Query {
 	public StructuredContentPage contentStructureStructuredContents(
 			@GraphQLName("contentStructureId") Long contentStructureId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1555,7 +1890,7 @@ public class Query {
 			structuredContentResource -> new StructuredContentPage(
 				structuredContentResource.
 					getContentStructureStructuredContentsPage(
-						contentStructureId, search,
+						contentStructureId, search, aggregation,
 						_filterBiFunction.apply(
 							structuredContentResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1566,7 +1901,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContents(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContents(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's structured content. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -1575,6 +1910,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1586,7 +1923,7 @@ public class Query {
 			this::_populateResourceContext,
 			structuredContentResource -> new StructuredContentPage(
 				structuredContentResource.getSiteStructuredContentsPage(
-					Long.valueOf(siteKey), flatten, search,
+					Long.valueOf(siteKey), flatten, search, aggregation,
 					_filterBiFunction.apply(
 						structuredContentResource, filterString),
 					Pagination.of(page, pageSize),
@@ -1657,7 +1994,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolderStructuredContents(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___, structuredContentFolderId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolderStructuredContents(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___, structuredContentFolderId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the folder's structured content. Results can be paginated, filtered, searched, and sorted."
@@ -1667,6 +2004,8 @@ public class Query {
 				structuredContentFolderId,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1679,7 +2018,7 @@ public class Query {
 			structuredContentResource -> new StructuredContentPage(
 				structuredContentResource.
 					getStructuredContentFolderStructuredContentsPage(
-						structuredContentFolderId, flatten, search,
+						structuredContentFolderId, flatten, search, aggregation,
 						_filterBiFunction.apply(
 							structuredContentResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1745,14 +2084,14 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentRenderedContentTemplate(structuredContentId: ___, templateId: ___){}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentRenderedContentTemplate(contentTemplateId: ___, structuredContentId: ___){}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the structured content's rendered template (the result of applying the structure's values to a template)."
 	)
 	public String structuredContentRenderedContentTemplate(
 			@GraphQLName("structuredContentId") Long structuredContentId,
-			@GraphQLName("templateId") Long templateId)
+			@GraphQLName("contentTemplateId") String contentTemplateId)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -1761,13 +2100,46 @@ public class Query {
 			structuredContentResource ->
 				structuredContentResource.
 					getStructuredContentRenderedContentTemplate(
-						structuredContentId, templateId));
+						structuredContentId, contentTemplateId));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolders(filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {assetLibraryStructuredContentFolders(aggregation: ___, assetLibraryId: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public StructuredContentFolderPage assetLibraryStructuredContentFolders(
+			@GraphQLName("assetLibraryId") @NotEmpty String assetLibraryId,
+			@GraphQLName("flatten") Boolean flatten,
+			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			@GraphQLName("filter") String filterString,
+			@GraphQLName("pageSize") int pageSize,
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_structuredContentFolderResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			structuredContentFolderResource -> new StructuredContentFolderPage(
+				structuredContentFolderResource.
+					getAssetLibraryStructuredContentFoldersPage(
+						Long.valueOf(assetLibraryId), flatten, search,
+						aggregation,
+						_filterBiFunction.apply(
+							structuredContentFolderResource, filterString),
+						Pagination.of(page, pageSize),
+						_sortsBiFunction.apply(
+							structuredContentFolderResource, sortsString))));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolders(aggregation: ___, filter: ___, flatten: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the site's structured content folders. Results can be paginated, filtered, searched, flattened, and sorted."
@@ -1776,6 +2148,8 @@ public class Query {
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("flatten") Boolean flatten,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1788,7 +2162,7 @@ public class Query {
 			structuredContentFolderResource -> new StructuredContentFolderPage(
 				structuredContentFolderResource.
 					getSiteStructuredContentFoldersPage(
-						Long.valueOf(siteKey), flatten, search,
+						Long.valueOf(siteKey), flatten, search, aggregation,
 						_filterBiFunction.apply(
 							structuredContentFolderResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1799,7 +2173,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolderStructuredContentFolders(filter: ___, page: ___, pageSize: ___, parentStructuredContentFolderId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {structuredContentFolderStructuredContentFolders(aggregation: ___, filter: ___, page: ___, pageSize: ___, parentStructuredContentFolderId: ___, search: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the parent structured content folder's subfolders. Results can be paginated, filtered, searched, and sorted."
@@ -1809,6 +2183,9 @@ public class Query {
 				@GraphQLName("parentStructuredContentFolderId") Long
 					parentStructuredContentFolderId,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -1821,7 +2198,7 @@ public class Query {
 			structuredContentFolderResource -> new StructuredContentFolderPage(
 				structuredContentFolderResource.
 					getStructuredContentFolderStructuredContentFoldersPage(
-						parentStructuredContentFolderId, search,
+						parentStructuredContentFolderId, search, aggregation,
 						_filterBiFunction.apply(
 							structuredContentFolderResource, filterString),
 						Pagination.of(page, pageSize),
@@ -1851,7 +2228,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiNodes(filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiNodes(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, siteKey: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the wiki node's of a site. Results can be paginated, filtered, searched, and sorted."
@@ -1859,6 +2236,8 @@ public class Query {
 	public WikiNodePage wikiNodes(
 			@GraphQLName("siteKey") @NotEmpty String siteKey,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1870,7 +2249,7 @@ public class Query {
 			this::_populateResourceContext,
 			wikiNodeResource -> new WikiNodePage(
 				wikiNodeResource.getSiteWikiNodesPage(
-					Long.valueOf(siteKey), search,
+					Long.valueOf(siteKey), search, aggregation,
 					_filterBiFunction.apply(wikiNodeResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(wikiNodeResource, sortsString))));
@@ -1894,7 +2273,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiNodeWikiPages(filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___, wikiNodeId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiNodeWikiPages(aggregation: ___, filter: ___, page: ___, pageSize: ___, search: ___, sorts: ___, wikiNodeId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(
 		description = "Retrieves the wiki page's of a node. Results can be paginated, filtered, searched, and sorted."
@@ -1902,6 +2281,8 @@ public class Query {
 	public WikiPagePage wikiNodeWikiPages(
 			@GraphQLName("wikiNodeId") Long wikiNodeId,
 			@GraphQLName("search") String search,
+			@GraphQLName("aggregation")
+				com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			@GraphQLName("filter") String filterString,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
@@ -1913,7 +2294,7 @@ public class Query {
 			this::_populateResourceContext,
 			wikiPageResource -> new WikiPagePage(
 				wikiPageResource.getWikiNodeWikiPagesPage(
-					wikiNodeId, search,
+					wikiNodeId, search, aggregation,
 					_filterBiFunction.apply(wikiPageResource, filterString),
 					Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(wikiPageResource, sortsString))));
@@ -1956,7 +2337,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiPageAttachment(wikiPageAttachmentId: ___){contentUrl, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {wikiPageAttachment(wikiPageAttachmentId: ___){contentUrl, contentValue, encodingFormat, fileExtension, id, sizeInBytes, title}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField(description = "Retrieves the wiki page attachment.")
 	public WikiPageAttachment wikiPageAttachment(
@@ -2004,6 +2385,9 @@ public class Query {
 		public KnowledgeBaseArticlePage knowledgeBaseArticles(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2017,6 +2401,7 @@ public class Query {
 					knowledgeBaseArticleResource.
 						getKnowledgeBaseArticleKnowledgeBaseArticlesPage(
 							_knowledgeBaseArticle.getId(), flatten, search,
+							aggregation,
 							_filterBiFunction.apply(
 								knowledgeBaseArticleResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2114,7 +2499,7 @@ public class Query {
 			description = "Retrieves the structured content's rendered template (the result of applying the structure's values to a template)."
 		)
 		public String renderedContentTemplate(
-				@GraphQLName("templateId") Long templateId)
+				@GraphQLName("contentTemplateId") String contentTemplateId)
 			throws Exception {
 
 			return _applyComponentServiceObjects(
@@ -2123,7 +2508,7 @@ public class Query {
 				structuredContentResource ->
 					structuredContentResource.
 						getStructuredContentRenderedContentTemplate(
-							_structuredContent.getId(), templateId));
+							_structuredContent.getId(), contentTemplateId));
 		}
 
 		private StructuredContent _structuredContent;
@@ -2195,6 +2580,9 @@ public class Query {
 		)
 		public StructuredContentPage structuredContents(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2207,7 +2595,7 @@ public class Query {
 				structuredContentResource -> new StructuredContentPage(
 					structuredContentResource.
 						getContentStructureStructuredContentsPage(
-							_contentStructure.getId(), search,
+							_contentStructure.getId(), search, aggregation,
 							_filterBiFunction.apply(
 								structuredContentResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2263,6 +2651,9 @@ public class Query {
 		)
 		public CommentPage comments(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2274,7 +2665,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				commentResource -> new CommentPage(
 					commentResource.getBlogPostingCommentsPage(
-						_blogPosting.getId(), search,
+						_blogPosting.getId(), search, aggregation,
 						_filterBiFunction.apply(commentResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(commentResource, sortsString))));
@@ -2299,6 +2690,9 @@ public class Query {
 		public DocumentPage documents(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2310,7 +2704,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				documentResource -> new DocumentPage(
 					documentResource.getDocumentFolderDocumentsPage(
-						_documentFolder.getId(), flatten, search,
+						_documentFolder.getId(), flatten, search, aggregation,
 						_filterBiFunction.apply(documentResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(
@@ -2381,6 +2775,9 @@ public class Query {
 		)
 		public CommentPage comments(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2392,7 +2789,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				commentResource -> new CommentPage(
 					commentResource.getStructuredContentCommentsPage(
-						_structuredContent.getId(), search,
+						_structuredContent.getId(), search, aggregation,
 						_filterBiFunction.apply(commentResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(commentResource, sortsString))));
@@ -2414,6 +2811,9 @@ public class Query {
 		)
 		public WikiPagePage wikiPages(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2425,7 +2825,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				wikiPageResource -> new WikiPagePage(
 					wikiPageResource.getWikiNodeWikiPagesPage(
-						_wikiNode.getId(), search,
+						_wikiNode.getId(), search, aggregation,
 						_filterBiFunction.apply(wikiPageResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(
@@ -2500,6 +2900,9 @@ public class Query {
 		public DocumentFolderPage documentFolders(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2511,7 +2914,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				documentFolderResource -> new DocumentFolderPage(
 					documentFolderResource.getDocumentFolderDocumentFoldersPage(
-						_documentFolder.getId(), flatten, search,
+						_documentFolder.getId(), flatten, search, aggregation,
 						_filterBiFunction.apply(
 							documentFolderResource, filterString),
 						Pagination.of(page, pageSize),
@@ -2538,6 +2941,9 @@ public class Query {
 		public KnowledgeBaseArticlePage knowledgeBaseArticles(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2551,6 +2957,7 @@ public class Query {
 					knowledgeBaseArticleResource.
 						getKnowledgeBaseFolderKnowledgeBaseArticlesPage(
 							_knowledgeBaseFolder.getId(), flatten, search,
+							aggregation,
 							_filterBiFunction.apply(
 								knowledgeBaseArticleResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2622,6 +3029,9 @@ public class Query {
 		)
 		public CommentPage comments(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2633,7 +3043,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				commentResource -> new CommentPage(
 					commentResource.getDocumentCommentsPage(
-						_document.getId(), search,
+						_document.getId(), search, aggregation,
 						_filterBiFunction.apply(commentResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(commentResource, sortsString))));
@@ -2688,6 +3098,9 @@ public class Query {
 		public StructuredContentPage structuredContents(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2701,6 +3114,7 @@ public class Query {
 					structuredContentResource.
 						getStructuredContentFolderStructuredContentsPage(
 							_structuredContentFolder.getId(), flatten, search,
+							aggregation,
 							_filterBiFunction.apply(
 								structuredContentResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2727,6 +3141,9 @@ public class Query {
 		)
 		public StructuredContentFolderPage structuredContentFolders(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2741,6 +3158,7 @@ public class Query {
 						structuredContentFolderResource.
 							getStructuredContentFolderStructuredContentFoldersPage(
 								_structuredContentFolder.getId(), search,
+								aggregation,
 								_filterBiFunction.apply(
 									structuredContentFolderResource,
 									filterString),
@@ -2794,6 +3212,9 @@ public class Query {
 		public MessageBoardMessagePage messageBoardMessages(
 				@GraphQLName("flatten") Boolean flatten,
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2807,6 +3228,7 @@ public class Query {
 					messageBoardMessageResource.
 						getMessageBoardMessageMessageBoardMessagesPage(
 							_messageBoardMessage.getId(), flatten, search,
+							aggregation,
 							_filterBiFunction.apply(
 								messageBoardMessageResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2830,6 +3252,9 @@ public class Query {
 		)
 		public CommentPage comments(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2841,7 +3266,7 @@ public class Query {
 				Query.this::_populateResourceContext,
 				commentResource -> new CommentPage(
 					commentResource.getCommentCommentsPage(
-						_comment.getId(), search,
+						_comment.getId(), search, aggregation,
 						_filterBiFunction.apply(commentResource, filterString),
 						Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(commentResource, sortsString))));
@@ -2865,6 +3290,9 @@ public class Query {
 		)
 		public MessageBoardSectionPage messageBoardSections(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2877,7 +3305,7 @@ public class Query {
 				messageBoardSectionResource -> new MessageBoardSectionPage(
 					messageBoardSectionResource.
 						getMessageBoardSectionMessageBoardSectionsPage(
-							_messageBoardSection.getId(), search,
+							_messageBoardSection.getId(), search, aggregation,
 							_filterBiFunction.apply(
 								messageBoardSectionResource, filterString),
 							Pagination.of(page, pageSize),
@@ -2953,6 +3381,9 @@ public class Query {
 		)
 		public MessageBoardThreadPage messageBoardThreads(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -2965,7 +3396,7 @@ public class Query {
 				messageBoardThreadResource -> new MessageBoardThreadPage(
 					messageBoardThreadResource.
 						getMessageBoardSectionMessageBoardThreadsPage(
-							_messageBoardSection.getId(), search,
+							_messageBoardSection.getId(), search, aggregation,
 							_filterBiFunction.apply(
 								messageBoardThreadResource, filterString),
 							Pagination.of(page, pageSize),
@@ -3016,6 +3447,9 @@ public class Query {
 		)
 		public MessageBoardMessagePage messageBoardMessages(
 				@GraphQLName("search") String search,
+				@GraphQLName("aggregation")
+					com.liferay.portal.vulcan.aggregation.Aggregation
+						aggregation,
 				@GraphQLName("filter") String filterString,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
@@ -3028,7 +3462,7 @@ public class Query {
 				messageBoardMessageResource -> new MessageBoardMessagePage(
 					messageBoardMessageResource.
 						getMessageBoardThreadMessageBoardMessagesPage(
-							_messageBoardThread.getId(), search,
+							_messageBoardThread.getId(), search, aggregation,
 							_filterBiFunction.apply(
 								messageBoardMessageResource, filterString),
 							Pagination.of(page, pageSize),
@@ -3217,6 +3651,38 @@ public class Query {
 
 		@GraphQLField
 		protected java.util.Collection<ContentStructure> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
+	@GraphQLName("ContentTemplatePage")
+	public class ContentTemplatePage {
+
+		public ContentTemplatePage(Page contentTemplatePage) {
+			actions = contentTemplatePage.getActions();
+			items = contentTemplatePage.getItems();
+			lastPage = contentTemplatePage.getLastPage();
+			page = contentTemplatePage.getPage();
+			pageSize = contentTemplatePage.getPageSize();
+			totalCount = contentTemplatePage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map> actions;
+
+		@GraphQLField
+		protected java.util.Collection<ContentTemplate> items;
 
 		@GraphQLField
 		protected long lastPage;
@@ -3712,6 +4178,169 @@ public class Query {
 
 	}
 
+	@GraphQLTypeExtension(Comment.class)
+	public class ParentCommentCommentIdTypeExtension {
+
+		public ParentCommentCommentIdTypeExtension(Comment comment) {
+			_comment = comment;
+		}
+
+		@GraphQLField(description = "Retrieves the comment.")
+		public Comment parentComment() throws Exception {
+			return _applyComponentServiceObjects(
+				_commentResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				commentResource -> commentResource.getComment(
+					_comment.getParentCommentId()));
+		}
+
+		private Comment _comment;
+
+	}
+
+	@GraphQLTypeExtension(DocumentFolder.class)
+	public class ParentDocumentFolderDocumentFolderIdTypeExtension {
+
+		public ParentDocumentFolderDocumentFolderIdTypeExtension(
+			DocumentFolder documentFolder) {
+
+			_documentFolder = documentFolder;
+		}
+
+		@GraphQLField(description = "Retrieves the document folder.")
+		public DocumentFolder parentDocumentFolder() throws Exception {
+			return _applyComponentServiceObjects(
+				_documentFolderResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				documentFolderResource ->
+					documentFolderResource.getDocumentFolder(
+						_documentFolder.getParentDocumentFolderId()));
+		}
+
+		private DocumentFolder _documentFolder;
+
+	}
+
+	@GraphQLTypeExtension(MessageBoardMessage.class)
+	public class ParentMessageBoardMessageMessageBoardMessageIdTypeExtension {
+
+		public ParentMessageBoardMessageMessageBoardMessageIdTypeExtension(
+			MessageBoardMessage messageBoardMessage) {
+
+			_messageBoardMessage = messageBoardMessage;
+		}
+
+		@GraphQLField(description = "Retrieves the message board message.")
+		public MessageBoardMessage parentMessageBoardMessage()
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_messageBoardMessageResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				messageBoardMessageResource ->
+					messageBoardMessageResource.getMessageBoardMessage(
+						_messageBoardMessage.getParentMessageBoardMessageId()));
+		}
+
+		private MessageBoardMessage _messageBoardMessage;
+
+	}
+
+	@GraphQLTypeExtension(MessageBoardSection.class)
+	public class ParentMessageBoardSectionMessageBoardSectionIdTypeExtension {
+
+		public ParentMessageBoardSectionMessageBoardSectionIdTypeExtension(
+			MessageBoardSection messageBoardSection) {
+
+			_messageBoardSection = messageBoardSection;
+		}
+
+		@GraphQLField(description = "Retrieves the message board section.")
+		public MessageBoardSection parentMessageBoardSection()
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_messageBoardSectionResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				messageBoardSectionResource ->
+					messageBoardSectionResource.getMessageBoardSection(
+						_messageBoardSection.getParentMessageBoardSectionId()));
+		}
+
+		private MessageBoardSection _messageBoardSection;
+
+	}
+
+	@GraphQLTypeExtension(NavigationMenuItem.class)
+	public class ParentNavigationMenuItemNavigationMenuIdTypeExtension {
+
+		public ParentNavigationMenuItemNavigationMenuIdTypeExtension(
+			NavigationMenuItem navigationMenuItem) {
+
+			_navigationMenuItem = navigationMenuItem;
+		}
+
+		@GraphQLField(description = "")
+		public NavigationMenu parentNavigationMenu() throws Exception {
+			return _applyComponentServiceObjects(
+				_navigationMenuResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				navigationMenuResource ->
+					navigationMenuResource.getNavigationMenu(
+						_navigationMenuItem.getParentNavigationMenuId()));
+		}
+
+		private NavigationMenuItem _navigationMenuItem;
+
+	}
+
+	@GraphQLTypeExtension(StructuredContentFolder.class)
+	public class
+		ParentStructuredContentFolderStructuredContentFolderIdTypeExtension {
+
+		public ParentStructuredContentFolderStructuredContentFolderIdTypeExtension(
+			StructuredContentFolder structuredContentFolder) {
+
+			_structuredContentFolder = structuredContentFolder;
+		}
+
+		@GraphQLField(description = "Retrieves the structured content folder.")
+		public StructuredContentFolder parentStructuredContentFolder()
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_structuredContentFolderResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				structuredContentFolderResource ->
+					structuredContentFolderResource.getStructuredContentFolder(
+						_structuredContentFolder.
+							getParentStructuredContentFolderId()));
+		}
+
+		private StructuredContentFolder _structuredContentFolder;
+
+	}
+
+	@GraphQLTypeExtension(WikiPage.class)
+	public class ParentWikiPageWikiPageIdTypeExtension {
+
+		public ParentWikiPageWikiPageIdTypeExtension(WikiPage wikiPage) {
+			_wikiPage = wikiPage;
+		}
+
+		@GraphQLField(description = "Retrieves the wiki page")
+		public WikiPage parentWikiPage() throws Exception {
+			return _applyComponentServiceObjects(
+				_wikiPageResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				wikiPageResource -> wikiPageResource.getWikiPage(
+					_wikiPage.getParentWikiPageId()));
+		}
+
+		private WikiPage _wikiPage;
+
+	}
+
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
 			_applyComponentServiceObjects(
 				ComponentServiceObjects<T> componentServiceObjects,
@@ -3808,6 +4437,20 @@ public class Query {
 			_httpServletResponse);
 		contentStructureResource.setContextUriInfo(_uriInfo);
 		contentStructureResource.setContextUser(_user);
+	}
+
+	private void _populateResourceContext(
+			ContentTemplateResource contentTemplateResource)
+		throws Exception {
+
+		contentTemplateResource.setContextAcceptLanguage(_acceptLanguage);
+		contentTemplateResource.setContextCompany(_company);
+		contentTemplateResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		contentTemplateResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		contentTemplateResource.setContextUriInfo(_uriInfo);
+		contentTemplateResource.setContextUser(_user);
 	}
 
 	private void _populateResourceContext(DocumentResource documentResource)
@@ -4026,6 +4669,8 @@ public class Query {
 		_contentSetElementResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ContentStructureResource>
 		_contentStructureResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ContentTemplateResource>
+		_contentTemplateResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentResource>
 		_documentResourceComponentServiceObjects;
 	private static ComponentServiceObjects<DocumentFolderResource>

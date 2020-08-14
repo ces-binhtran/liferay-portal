@@ -876,6 +876,13 @@ public abstract class BaseCheck extends AbstractCheck {
 		TokenTypes.STAR
 	};
 
+	protected static final int[] ASSIGNMENT_OPERATOR_TOKEN_TYPES = {
+		TokenTypes.ASSIGN, TokenTypes.BAND_ASSIGN, TokenTypes.BOR_ASSIGN,
+		TokenTypes.BSR_ASSIGN, TokenTypes.BXOR_ASSIGN, TokenTypes.DIV_ASSIGN,
+		TokenTypes.MINUS_ASSIGN, TokenTypes.MOD_ASSIGN, TokenTypes.PLUS_ASSIGN,
+		TokenTypes.SL_ASSIGN, TokenTypes.SR_ASSIGN, TokenTypes.STAR_ASSIGN
+	};
+
 	protected static final int[] CONDITIONAL_OPERATOR_TOKEN_TYPES = {
 		TokenTypes.BAND, TokenTypes.BOR, TokenTypes.BXOR, TokenTypes.LAND,
 		TokenTypes.LOR
@@ -885,6 +892,9 @@ public abstract class BaseCheck extends AbstractCheck {
 		TokenTypes.EQUAL, TokenTypes.GE, TokenTypes.GT, TokenTypes.LE,
 		TokenTypes.LT, TokenTypes.NOT_EQUAL
 	};
+
+	protected static final String RUN_OUTSIDE_PORTAL_EXCLUDES =
+		"run.outside.portal.excludes";
 
 	protected static final int[] UNARY_OPERATOR_TOKEN_TYPES = {
 		TokenTypes.DEC, TokenTypes.INC, TokenTypes.LNOT, TokenTypes.POST_DEC,

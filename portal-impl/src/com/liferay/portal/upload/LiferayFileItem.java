@@ -194,10 +194,10 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		}
 
 		try {
-			DeferredFileOutputStream dfos =
+			DeferredFileOutputStream deferredFileOutputStream =
 				(DeferredFileOutputStream)getOutputStream();
 
-			return dfos.getFile();
+			return deferredFileOutputStream.getFile();
 		}
 		catch (IOException ioException) {
 			_log.error(ioException, ioException);
@@ -262,7 +262,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		String id = String.valueOf(current);
 
 		if (current < 100000000) {
-			id = ("00000000" + id).substring(id.length());
+			return "00000000".substring(id.length()) + id;
 		}
 
 		return id;

@@ -858,9 +858,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				DisplayPageTemplate displayPageTemplate =
@@ -993,9 +993,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				MasterPage masterPage = masterPageEntry.getMasterPage();
@@ -1131,9 +1131,9 @@ public class LayoutPageTemplatesImporterImpl
 			try {
 				TransactionInvokerUtil.invoke(_transactionConfig, callable);
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(t, t);
+					_log.warn(throwable, throwable);
 				}
 
 				PageTemplate pageTemplate = pageTemplateEntry.getPageTemplate();
@@ -1202,8 +1202,7 @@ public class LayoutPageTemplatesImporterImpl
 		Layout layout = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class.getName()), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
 

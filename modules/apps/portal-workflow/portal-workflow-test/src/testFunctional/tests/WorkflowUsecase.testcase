@@ -46,9 +46,7 @@ definition {
 
 	@priority = "4"
 	test AddBlogsEntriesWithPortalScopeWorkflowAndAssertWorkflowScope {
-		property portal.upstream = "quarantine";
-
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -59,7 +57,7 @@ definition {
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -207,9 +205,7 @@ definition {
 
 	@priority = "4"
 	test AddBlogsEntriesWithSiteScopeWorkflowAndAssertWorkflowScope {
-		property portal.upstream = "quarantine";
-
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -304,7 +300,7 @@ definition {
 		property test.name.skip.portal.instance = "WorkflowUsecase#AddDDLRecordWithDoubleApproverDefinition";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -313,7 +309,7 @@ definition {
 			workflowDefinitionFile = "workflow_definition_legal_marketing.xml",
 			workflowDefinitionTitle = "Double Approver Definition");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -469,7 +465,7 @@ definition {
 	test AddWebContentWithCategorySpecificDefinition {
 		property test.name.skip.portal.instance = "WorkflowUsecase#AddWebContentWithCategorySpecificDefinition";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -515,7 +511,7 @@ definition {
 
 		Workflow.configureWCWorkflowViaFolderInfo(workflowDefinition = "Category Specific");
 
-		WebContentNavigator.gotoAddCP();
+		Workflow.webContentGoToAddCP();
 
 		WebContent.addCP(
 			webContentContent = "legal category",
@@ -541,7 +537,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoAddCP();
+		Workflow.webContentGoToAddCP();
 
 		WebContent.addCP(
 			webContentContent = "both categories",
@@ -571,7 +567,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoAddCP();
+		Workflow.webContentGoToAddCP();
 
 		WebContent.addCP(
 			webContentContent = "other category",
@@ -597,7 +593,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoAddCP();
+		Workflow.webContentGoToAddCP();
 
 		WebContent.addWithWorkflowCP(
 			webContentContent = "no category",
@@ -657,7 +653,7 @@ definition {
 
 		Portlet.addPG(portletName = "Wiki");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -668,7 +664,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -677,7 +673,7 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -799,7 +795,7 @@ definition {
 	test UnpublishAndDeleteUploadedDefinition {
 		property test.name.skip.portal.instance = "WorkflowUsecase#UnpublishAndDeleteUploadedDefinition";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -812,7 +808,7 @@ definition {
 
 		Workflow.unpublishWorkflowDefinition(workflowDefinitionTitle = "New Uploaded Definition");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -825,14 +821,14 @@ definition {
 
 		Workflow.viewDefinitionPublished(workflowDefinitionTitle = "New Uploaded Definition");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
 
 		Workflow.unpublishWorkflowDefinition(workflowDefinitionTitle = "New Uploaded Definition");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -916,11 +912,9 @@ definition {
 
 	@priority = "4"
 	test ViewInvalidDefinitionAlert {
-		property portal.upstream = "quarantine";
-
 		property test.name.skip.portal.instance = "WorkflowUsecase#ViewInvalidDefinitionAlert";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -953,7 +947,6 @@ definition {
 
 	@priority = "3"
 	test ViewTaskCount {
-		property portal.upstream = "quarantine";
 
 		Navigator.openURL();
 
@@ -983,7 +976,7 @@ definition {
 				panel = "Site Administration",
 				portlet = "Web Content");
 
-			WebContentNavigator.gotoAddCP();
+			Workflow.webContentGoToAddCP();
 
 			WebContent.addWithWorkflowCP(
 				webContentContent = "WC WebContent Content ${number}",
@@ -1002,7 +995,7 @@ definition {
 				entryTitle = "Blogs Entry Title ${number}");
 		}
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1065,7 +1058,7 @@ definition {
 	@description = "This is a use case for LPS-59108."
 	@priority = "4"
 	test ViewWorkflowConfigurationScope {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -1090,7 +1083,7 @@ definition {
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Calendar Event");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1141,7 +1134,7 @@ definition {
 	test ViewWorkflowSubmissionsFromDifferentUsers {
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -1152,7 +1145,7 @@ definition {
 			workflowDefinition = "Single Approver",
 			workflowResourceValue = "Blogs Entry");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -1163,7 +1156,7 @@ definition {
 			roleTitle = "Site Member",
 			roleType = "Site");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
@@ -1175,7 +1168,7 @@ definition {
 			roleType = "Site");
 
 		for (var n : list "1,2") {
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Users",
 				panel = "Control Panel",
 				portlet = "Users and Organizations");
@@ -1186,7 +1179,7 @@ definition {
 				userLastName = "userln${n}",
 				userScreenName = "usersn${n}");
 
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Users",
 				panel = "Control Panel",
 				portlet = "Users and Organizations");
@@ -1195,7 +1188,7 @@ definition {
 				siteName = "${siteName}",
 				userScreenName = "usersn${n}");
 
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Users",
 				panel = "Control Panel",
 				portlet = "Users and Organizations");
@@ -1302,8 +1295,6 @@ definition {
 
 	@priority = "4"
 	test XSSScriptWebContent {
-		property portal.upstream = "quarantine";
-
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		Navigator.openURL();
@@ -1322,7 +1313,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Web Content");
 
-		WebContentNavigator.gotoAddCP();
+		Workflow.webContentGoToAddCP();
 
 		WebContent.addWithWorkflowCP(
 			webContentContent = '''&lt;script&gt;alert(123);&lt;/script&gt;''',
@@ -1403,15 +1394,17 @@ definition {
 
 		AssertHTMLSourceTextPresent(value1 = "${escapedScript}");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
-			portlet = "Sites");
+			portlet = "Sites",
+			site = "${siteName}");
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",
-			portlet = "Pages");
+			portlet = "Pages",
+			site = "${siteName}");
 
 		SitePages.addPublicPage(pageName = "Asset Publisher Test Page");
 

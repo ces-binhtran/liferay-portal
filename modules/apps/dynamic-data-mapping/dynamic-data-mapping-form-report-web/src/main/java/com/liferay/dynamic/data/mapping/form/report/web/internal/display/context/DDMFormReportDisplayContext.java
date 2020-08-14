@@ -36,9 +36,10 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -74,19 +75,36 @@ public class DDMFormReportDisplayContext {
 
 		DDMForm ddmForm = ddmFormInstance.getDDMForm();
 
-		List<DDMFormField> ddmFormFields = ddmForm.getDDMFormFields();
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm.getDDMFormFieldsMap(true);
 
-		ddmFormFields.forEach(
+		Set<String> set = ddmFormFieldsMap.keySet();
+
+		Stream<String> stream = set.stream();
+
+		stream.map(
+			ddmFormFieldName -> ddmFormFieldsMap.get(ddmFormFieldName)
+		).filter(
+			ddmFormField -> !StringUtil.equals(
+				ddmFormField.getType(), "fieldset")
+		).forEach(
 			ddmFormField -> fieldsJSONArray.put(
 				JSONUtil.put(
+					"columns", _getPropertyLabels(ddmFormField, "columns")
+				).put(
 					"label", _getValue(ddmFormField.getLabel())
 				).put(
 					"name", ddmFormField.getName()
 				).put(
-					"options", _getFieldOptions(ddmFormField)
+					"options",
+					_getDDMFormFieldOptionLabels(
+						ddmFormField.getDDMFormFieldOptions())
+				).put(
+					"rows", _getPropertyLabels(ddmFormField, "rows")
 				).put(
 					"type", ddmFormField.getType()
-				)));
+				))
+		);
 
 		return fieldsJSONArray;
 	}
@@ -110,7 +128,7 @@ public class DDMFormReportDisplayContext {
 		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 			themeDisplay.getLocale(), DDMFormReportPortlet.class);
 
-		String languageKey = "report-was-last-modified-on-x";
+		String languageKey = "the-last-entry-was-sent-on-x";
 
 		Date modifiedDate = _ddmFormInstanceReport.getModifiedDate();
 
@@ -119,7 +137,7 @@ public class DDMFormReportDisplayContext {
 			themeDisplay.getTimeZone());
 
 		if (daysBetween < 2) {
-			languageKey = "report-was-last-modified-x";
+			languageKey = "the-last-entry-was-sent-x";
 		}
 
 		String relativeTimeDescription = StringUtil.removeSubstring(
@@ -148,20 +166,40 @@ public class DDMFormReportDisplayContext {
 		return jsonObject.getInt("totalItems");
 	}
 
-	private JSONObject _getFieldOptions(DDMFormField ddmFormField) {
+	private JSONObject _getDDMFormFieldOptionLabels(
+		DDMFormFieldOptions ddmFormFieldOptions) {
+
 		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		DDMFormFieldOptions ddmFormFieldOptions =
-			ddmFormField.getDDMFormFieldOptions();
+		int index = 0;
 
-		Set<String> optionsValues = ddmFormFieldOptions.getOptionsValues();
-
-		optionsValues.forEach(
-			optionValue -> jsonObject.put(
+		for (String optionValue : ddmFormFieldOptions.getOptionsValues()) {
+			jsonObject.put(
 				optionValue,
-				_getValue(ddmFormFieldOptions.getOptionLabels(optionValue))));
+				JSONUtil.put(
+					"index", index++
+				).put(
+					"value",
+					_getValue(ddmFormFieldOptions.getOptionLabels(optionValue))
+				));
+		}
 
 		return jsonObject;
+	}
+
+	private JSONObject _getPropertyLabels(
+		DDMFormField ddmFormField, String propertyName) {
+
+		Object property = ddmFormField.getProperty(propertyName);
+
+		if (property instanceof DDMFormFieldOptions) {
+			DDMFormFieldOptions ddmFormFieldOptions =
+				(DDMFormFieldOptions)property;
+
+			return _getDDMFormFieldOptionLabels(ddmFormFieldOptions);
+		}
+
+		return JSONFactoryUtil.createJSONObject();
 	}
 
 	private String _getValue(Value value) {

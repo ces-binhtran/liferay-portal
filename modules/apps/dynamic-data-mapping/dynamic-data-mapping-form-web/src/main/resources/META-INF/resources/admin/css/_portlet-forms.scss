@@ -37,6 +37,10 @@
 			font-size: 32px;
 			font-weight: 300;
 			padding: $baseline * 5 0 0 0;
+
+			p {
+				font-weight: 400;
+			}
 		}
 	}
 
@@ -60,12 +64,17 @@
 	.lfr-ddm-form-page-title {
 		font-weight: normal;
 		resize: none;
+		width: 90%;
 		word-break: normal;
 	}
 
 	.form-builder-page-header-description.form-control,
 	.lfr-ddm-form-page-description {
 		font-size: 14px;
+	}
+
+	.form-builder-page-header-title {
+		font-weight: 600;
 	}
 
 	.form-feedback-item {
@@ -104,6 +113,10 @@
 		font-size: 28px;
 		margin-bottom: 9px;
 		margin-top: 0;
+	}
+
+	.management-bar {
+		border-bottom: 1px solid #e7e7ed;
 	}
 
 	.checkbox-multiple-options .checkbox-multiple-switcher-inline {

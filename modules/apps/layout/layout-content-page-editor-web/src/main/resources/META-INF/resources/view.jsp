@@ -25,7 +25,7 @@ ContentPageEditorDisplayContext contentPageEditorDisplayContext = (ContentPageEd
 />
 
 <liferay-util:html-top>
-	<link href='<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/layout-content-page-editor-web/page_editor/app/components/App.css") %>' rel="stylesheet" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, PortalUtil.getPathModule() + "/layout-content-page-editor-web/page_editor/app/components/App.css") %>" rel="stylesheet" />
 </liferay-util:html-top>
 
 <div id="<portlet:namespace />pageEditor">
@@ -34,7 +34,7 @@ ContentPageEditorDisplayContext contentPageEditorDisplayContext = (ContentPageEd
 	</div>
 
 	<react:component
-		data="<%= contentPageEditorDisplayContext.getEditorContext(npmResolvedPackageName) %>"
 		module="page_editor/app/index"
+		props="<%= contentPageEditorDisplayContext.getEditorContext(npmResolvedPackageName) %>"
 	/>
 </div>

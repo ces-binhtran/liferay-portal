@@ -17,9 +17,9 @@ package com.liferay.data.engine.rest.internal.resource.v2_0;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 
+import com.liferay.data.engine.constants.DataActionKeys;
 import com.liferay.data.engine.field.type.util.LocalizedValueUtil;
 import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
-import com.liferay.data.engine.rest.internal.constants.DataActionKeys;
 import com.liferay.data.engine.rest.internal.content.type.DataDefinitionContentTypeTracker;
 import com.liferay.data.engine.rest.internal.dto.v2_0.util.DataDefinitionUtil;
 import com.liferay.data.engine.rest.internal.dto.v2_0.util.DataLayoutUtil;
@@ -31,6 +31,8 @@ import com.liferay.data.engine.service.DEDataDefinitionFieldLinkLocalService;
 import com.liferay.dynamic.data.mapping.form.builder.rule.DDMFormRuleDeserializer;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutSerializer;
+import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMStructureLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructureVersion;
@@ -195,6 +197,7 @@ public class DataLayoutResourceImpl
 					DataDefinitionUtil.toDataDefinition(
 						_dataDefinitionContentTypeTracker,
 						_ddmFormFieldTypeServicesTracker, ddmStructure,
+						_ddmStructureLayoutLocalService,
 						_spiDDMFormRuleConverter),
 					_ddmFormFieldTypeServicesTracker),
 				_ddmFormLayoutSerializer, _ddmFormRuleDeserializer),
@@ -225,6 +228,7 @@ public class DataLayoutResourceImpl
 						_ddmFormFieldTypeServicesTracker,
 						_ddmStructureLocalService.getStructure(
 							ddmStructureLayout.getDDMStructureId()),
+						_ddmStructureLayoutLocalService,
 						_spiDDMFormRuleConverter),
 					_ddmFormFieldTypeServicesTracker),
 				_ddmFormLayoutSerializer, _ddmFormRuleDeserializer),
@@ -232,14 +236,34 @@ public class DataLayoutResourceImpl
 	}
 
 	private void _addDataDefinitionFieldLinks(
-			long dataDefinitionId, long dataLayoutId, List<String> fieldNames,
-			long siteId)
+			long dataDefinitionId, long dataLayoutId, DDMForm ddmForm,
+			List<String> fieldNames, long siteId)
 		throws Exception {
+
+		Map<String, DDMFormField> ddmFormFieldsMap =
+			ddmForm.getDDMFormFieldsMap(true);
 
 		for (String fieldName : fieldNames) {
 			_deDataDefinitionFieldLinkLocalService.addDEDataDefinitionFieldLink(
 				siteId, _portal.getClassNameId(DDMStructureLayout.class),
 				dataLayoutId, dataDefinitionId, fieldName);
+
+			DDMFormField ddmFormField = ddmFormFieldsMap.get(fieldName);
+
+			if ((ddmFormField != null) &&
+				Validator.isNotNull(
+					GetterUtil.getLong(
+						ddmFormField.getProperty("ddmStructureId")))) {
+
+				_deDataDefinitionFieldLinkLocalService.
+					addDEDataDefinitionFieldLink(
+						siteId,
+						_portal.getClassNameId(DDMStructureLayout.class),
+						dataLayoutId,
+						GetterUtil.getLong(
+							ddmFormField.getProperty("ddmStructureId")),
+						fieldName);
+			}
 		}
 	}
 
@@ -264,7 +288,8 @@ public class DataLayoutResourceImpl
 
 		_addDataDefinitionFieldLinks(
 			dataDefinitionId, ddmStructureLayout.getStructureLayoutId(),
-			_getFieldNames(content), ddmStructureLayout.getGroupId());
+			ddmStructure.getDDMForm(), _getFieldNames(content),
+			ddmStructureLayout.getGroupId());
 
 		return DataLayoutUtil.toDataLayout(
 			ddmStructureLayout, _spiDDMFormRuleConverter);
@@ -462,7 +487,8 @@ public class DataLayoutResourceImpl
 
 		_addDataDefinitionFieldLinks(
 			ddmStructure.getStructureId(),
-			ddmStructureLayout.getStructureLayoutId(), _getFieldNames(content),
+			ddmStructureLayout.getStructureLayoutId(),
+			ddmStructure.getDDMForm(), _getFieldNames(content),
 			ddmStructureLayout.getGroupId());
 
 		return DataLayoutUtil.toDataLayout(

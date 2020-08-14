@@ -46,4 +46,18 @@ definition {
 		Button.clickDone();
 	}
 
+	macro selectMasterViaPageDesignOptions {
+		Navigator.gotoNavTab(navTab = "Master");
+
+		MetalComponent.waitForCard(card = "${masterLayoutName}");
+
+		LexiconCard.clickCardTitle(card = "${masterLayoutName}");
+
+		AssertElementPresent(
+			key_card = "${masterLayoutName}",
+			locator1 = "LexiconCard#CARD_SELECTED");
+
+		PageEditor.waitForAutoSave();
+	}
+
 }

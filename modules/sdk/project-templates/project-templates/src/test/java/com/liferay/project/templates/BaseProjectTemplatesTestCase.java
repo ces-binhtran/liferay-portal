@@ -139,6 +139,8 @@ public interface BaseProjectTemplatesTestCase {
 
 	public static final String GRADLE_WRAPPER_VERSION = "5.6.4";
 
+	public static final String MAVEN_GOAL_BUILD_REST = "rest-builder:build";
+
 	public static final String MAVEN_GOAL_BUILD_SERVICE =
 		"service-builder:build";
 
@@ -176,56 +178,6 @@ public interface BaseProjectTemplatesTestCase {
 			".*com\\.liferay\\.portal\\.tools\\.bundle\\.support" +
 				":([0-9]+\\.[0-9]+\\.[0-9]+).*",
 			Pattern.DOTALL | Pattern.MULTILINE);
-
-	public static void addGradleDependency(
-			File buildFile, String... dependencies)
-		throws IOException {
-
-		Path buildFilePath = buildFile.toPath();
-
-		List<String> lines = Files.readAllLines(
-			buildFilePath, StandardCharsets.UTF_8);
-
-		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
-				buildFilePath, StandardCharsets.UTF_8)) {
-
-			for (String line : lines) {
-				FileTestUtil.write(bufferedWriter, line);
-
-				if (line.contains("dependencies {")) {
-					FileTestUtil.write(bufferedWriter, dependencies);
-				}
-			}
-		}
-	}
-
-	public static void addMavenDependencyElement(
-		Document document, String groupId, String artifactId, String scope) {
-
-		Element projectElement = document.getDocumentElement();
-
-		Element dependenciesElement = XMLTestUtil.getChildElement(
-			projectElement, "dependencies");
-
-		Element artifactIdElement = document.createElement("artifactId");
-		Element dependencyElement = document.createElement("dependency");
-		Element groupdIdElement = document.createElement("groupId");
-		Element scopeElement = document.createElement("scope");
-
-		groupdIdElement.appendChild(document.createTextNode(groupId));
-
-		dependencyElement.appendChild(groupdIdElement);
-
-		artifactIdElement.appendChild(document.createTextNode(artifactId));
-
-		dependencyElement.appendChild(artifactIdElement);
-
-		scopeElement.appendChild(document.createTextNode(scope));
-
-		dependencyElement.appendChild(scopeElement);
-
-		dependenciesElement.appendChild(dependencyElement);
-	}
 
 	public static File findParentFile(
 		File dir, String[] fileNames, boolean checkParents) {
@@ -292,6 +244,56 @@ public interface BaseProjectTemplatesTestCase {
 				configurationElement.appendChild(newElement);
 			}
 		}
+	}
+
+	public default void addGradleDependency(
+			File buildFile, String... dependencies)
+		throws IOException {
+
+		Path buildFilePath = buildFile.toPath();
+
+		List<String> lines = Files.readAllLines(
+			buildFilePath, StandardCharsets.UTF_8);
+
+		try (BufferedWriter bufferedWriter = Files.newBufferedWriter(
+				buildFilePath, StandardCharsets.UTF_8)) {
+
+			for (String line : lines) {
+				FileTestUtil.write(bufferedWriter, line);
+
+				if (line.contains("dependencies {")) {
+					FileTestUtil.write(bufferedWriter, dependencies);
+				}
+			}
+		}
+	}
+
+	public default void addMavenDependencyElement(
+		Document document, String groupId, String artifactId, String scope) {
+
+		Element projectElement = document.getDocumentElement();
+
+		Element dependenciesElement = XMLTestUtil.getChildElement(
+			projectElement, "dependencies");
+
+		Element artifactIdElement = document.createElement("artifactId");
+		Element dependencyElement = document.createElement("dependency");
+		Element groupdIdElement = document.createElement("groupId");
+		Element scopeElement = document.createElement("scope");
+
+		groupdIdElement.appendChild(document.createTextNode(groupId));
+
+		dependencyElement.appendChild(groupdIdElement);
+
+		artifactIdElement.appendChild(document.createTextNode(artifactId));
+
+		dependencyElement.appendChild(artifactIdElement);
+
+		scopeElement.appendChild(document.createTextNode(scope));
+
+		dependencyElement.appendChild(scopeElement);
+
+		dependenciesElement.appendChild(dependencyElement);
 	}
 
 	public default void addNexusRepositoriesElement(
@@ -417,7 +419,7 @@ public interface BaseProjectTemplatesTestCase {
 				testWarsDiff(gradleOutputFile, mavenOutputFile);
 			}
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			if (TEST_DEBUG_BUNDLE_DIFFS) {
 				Path dirPath = Paths.get("build");
 
@@ -429,7 +431,7 @@ public interface BaseProjectTemplatesTestCase {
 					dirPath.resolve(mavenOutputFileName));
 			}
 
-			throw t;
+			throw throwable;
 		}
 	}
 
@@ -543,6 +545,20 @@ public interface BaseProjectTemplatesTestCase {
 
 		completeArgs.add("archetype:generate");
 		completeArgs.add("--batch-mode");
+
+		if (Validator.isNotNull(System.getenv("JENKINS_HOME"))) {
+			completeArgs.add("--settings");
+
+			String content = FileTestUtil.read(
+				BaseProjectTemplatesTestCase.class.getClassLoader(),
+				"com/liferay/project/templates/dependencies/settings.xml");
+
+			Path tempPath = Files.createTempFile("settings", "xml");
+
+			Files.write(tempPath, content.getBytes());
+
+			completeArgs.add(tempPath.toString());
+		}
 
 		String archetypeArtifactId =
 			"com.liferay.project.templates." + template.replace('-', '.');
@@ -790,9 +806,8 @@ public interface BaseProjectTemplatesTestCase {
 		String projectPath = projectDir.getPath();
 
 		if (projectPath.contains("workspace")) {
-			File workspaceDir = getWorkspaceDir(projectDir);
-
-			File workspaceBuildFile = new File(workspaceDir, "build.gradle");
+			File workspaceBuildFile = new File(
+				getWorkspaceDir(projectDir), "build.gradle");
 
 			Path buildFilePath = workspaceBuildFile.toPath();
 
@@ -1124,14 +1139,7 @@ public interface BaseProjectTemplatesTestCase {
 			temporaryFolder, "gradle", "gradleWS", liferayVersion,
 			mavenExecutor);
 
-		String modulesDir;
-
-		if (template.contains("war")) {
-			modulesDir = "wars";
-		}
-		else {
-			modulesDir = "modules";
-		}
+		String modulesDir = "modules";
 
 		File gradleWorkspaceModulesDir = new File(
 			gradleWorkspaceDir, modulesDir);
@@ -1212,10 +1220,10 @@ public interface BaseProjectTemplatesTestCase {
 		File gradleWorkspaceDir = buildWorkspace(
 			temporaryFolder, liferayVersion);
 
-		File warsDir = new File(gradleWorkspaceDir, "wars");
+		File modulesDir = new File(gradleWorkspaceDir, "modules");
 
 		File gradleProjectDir = buildTemplateWithGradle(
-			warsDir, template, name, "--dependency-management-enabled",
+			modulesDir, template, name, "--dependency-management-enabled",
 			"--liferay-version", liferayVersion);
 
 		if (!template.equals("war-hook") && !template.equals("theme")) {
@@ -1240,10 +1248,10 @@ public interface BaseProjectTemplatesTestCase {
 		File mavenWorkspaceDir = buildWorkspace(
 			temporaryFolder, "maven", "mavenWS", liferayVersion, mavenExecutor);
 
-		File mavenWarsDir = new File(mavenWorkspaceDir, "wars");
+		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
 
 		File mavenProjectDir = buildTemplateWithMaven(
-			mavenWarsDir, mavenWarsDir, template, name, "com.test",
+			mavenModulesDir, mavenModulesDir, template, name, "com.test",
 			mavenExecutor, "-DclassName=" + name,
 			"-Dpackage=" + name.toLowerCase(),
 			"-DliferayVersion=" + liferayVersion);
@@ -1255,7 +1263,7 @@ public interface BaseProjectTemplatesTestCase {
 			buildProjects(
 				gradleDistribution, mavenExecutor, gradleWorkspaceDir,
 				mavenProjectDir, gradleOutputDir, mavenOutputDir,
-				":wars:" + name + GRADLE_TASK_PATH_BUILD);
+				":modules:" + name + GRADLE_TASK_PATH_BUILD);
 		}
 
 		return gradleProjectDir;
@@ -1308,17 +1316,19 @@ public interface BaseProjectTemplatesTestCase {
 	public default void testBundlesDiff(File bundleFile1, File bundleFile2)
 		throws Exception {
 
-		PrintStream originalErrorStream = System.err;
-		PrintStream originalOutputStream = System.out;
+		PrintStream originalErrorPrintStream = System.err;
+		PrintStream originalOutputPrintStream = System.out;
 
-		originalErrorStream.flush();
-		originalOutputStream.flush();
+		originalErrorPrintStream.flush();
+		originalOutputPrintStream.flush();
 
-		ByteArrayOutputStream newErrorStream = new ByteArrayOutputStream();
-		ByteArrayOutputStream newOutputStream = new ByteArrayOutputStream();
+		ByteArrayOutputStream newErrorByteArrayOutputStream =
+			new ByteArrayOutputStream();
+		ByteArrayOutputStream newOutByteArrayOutputStream =
+			new ByteArrayOutputStream();
 
-		System.setErr(new PrintStream(newErrorStream, true));
-		System.setOut(new PrintStream(newOutputStream, true));
+		System.setErr(new PrintStream(newErrorByteArrayOutputStream, true));
+		System.setOut(new PrintStream(newOutByteArrayOutputStream, true));
 
 		try (bnd bnd = new bnd()) {
 			String[] args = {
@@ -1329,14 +1339,14 @@ public interface BaseProjectTemplatesTestCase {
 			bnd.start(args);
 		}
 		finally {
-			System.setErr(originalErrorStream);
-			System.setOut(originalOutputStream);
+			System.setErr(originalErrorPrintStream);
+			System.setOut(originalOutputPrintStream);
 		}
 
-		String output = newErrorStream.toString();
+		String output = newErrorByteArrayOutputStream.toString();
 
 		if (Validator.isNull(output)) {
-			output = newOutputStream.toString();
+			output = newOutByteArrayOutputStream.toString();
 		}
 
 		Assert.assertEquals(

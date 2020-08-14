@@ -48,9 +48,6 @@ public class UpstreamFailureUtil {
 			JSONObject failedBatchJSONObject =
 				failedBatchesJSONArray.getJSONObject(i);
 
-			JSONArray failedTestsJSONArray = failedBatchJSONObject.getJSONArray(
-				"failedTests");
-
 			String jobVariant = failedBatchJSONObject.getString("jobVariant");
 
 			jobVariant = jobVariant.replaceAll("(.*)/.*", "$1");
@@ -61,6 +58,9 @@ public class UpstreamFailureUtil {
 						jobVariant, failedBatchJSONObject.getString("result")));
 			}
 			else if (type.equals("test")) {
+				JSONArray failedTestsJSONArray =
+					failedBatchJSONObject.getJSONArray("failedTests");
+
 				for (int j = 0; j < failedTestsJSONArray.length(); j++) {
 					Object object = failedTestsJSONArray.get(j);
 
@@ -193,7 +193,7 @@ public class UpstreamFailureUtil {
 		String url = JenkinsResultsParserUtil.getLocalURL(
 			JenkinsResultsParserUtil.combine(
 				_URL_BASE_UPSTREAM_FAILURES_JOB,
-				jobName.replace("pullrequest", "upstream-dxp"),
+				topLevelBuild.getAcceptanceUpstreamJobName(),
 				"/builds/latest/test.results.json"));
 
 		try {

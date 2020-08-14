@@ -14,6 +14,9 @@
 
 package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
 
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
@@ -70,8 +73,6 @@ import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -111,6 +112,12 @@ public class AddFragmentCompositionMVCActionCommandTest {
 		_serviceContext.setCompanyId(TestPropsValues.getCompanyId());
 
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
+
+		_objectMapper = new ObjectMapper() {
+			{
+				configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true);
+			}
+		};
 	}
 
 	@Test
@@ -298,8 +305,7 @@ public class AddFragmentCompositionMVCActionCommandTest {
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(),
-				_portal.getClassNameId(Layout.class), _layout.getPlid(),
+				fragmentEntry.getFragmentEntryId(), 0, _layout.getPlid(),
 				StringPool.BLANK, html, StringPool.BLANK,
 				_read("fragment_configuration.json"), editableValues,
 				StringPool.BLANK, 0, null, _serviceContext);
@@ -384,8 +390,10 @@ public class AddFragmentCompositionMVCActionCommandTest {
 			fragmentComposition.getDataJSONObject();
 
 		Assert.assertEquals(
-			expectedFragmentCompositionDataJSONObject.toJSONString(),
-			fragmentCompositionDataJSONObject.toJSONString());
+			_objectMapper.readTree(
+				expectedFragmentCompositionDataJSONObject.toJSONString()),
+			_objectMapper.readTree(
+				fragmentCompositionDataJSONObject.toJSONString()));
 	}
 
 	@Test
@@ -436,19 +444,17 @@ public class AddFragmentCompositionMVCActionCommandTest {
 	}
 
 	private JournalArticle _addJournalArticle(String title) throws Exception {
-		Map<Locale, String> titleMap = HashMapBuilder.put(
-			LocaleUtil.US, title
-		).build();
-
-		Map<Locale, String> contentMap = HashMapBuilder.put(
-			LocaleUtil.US, RandomTestUtil.randomString()
-		).build();
-
 		return JournalTestUtil.addArticle(
 			_group.getGroupId(), 0,
-			PortalUtil.getClassNameId(JournalArticle.class), titleMap, null,
-			contentMap, LocaleUtil.getSiteDefault(), false, true,
-			_serviceContext);
+			PortalUtil.getClassNameId(JournalArticle.class),
+			HashMapBuilder.put(
+				LocaleUtil.US, title
+			).build(),
+			null,
+			HashMapBuilder.put(
+				LocaleUtil.US, RandomTestUtil.randomString()
+			).build(),
+			LocaleUtil.getSiteDefault(), false, true, _serviceContext);
 	}
 
 	private Layout _addLayout() throws Exception {
@@ -539,6 +545,8 @@ public class AddFragmentCompositionMVCActionCommandTest {
 		filter = "mvc.command.name=/content_layout/add_fragment_composition"
 	)
 	private MVCActionCommand _mvcActionCommand;
+
+	private ObjectMapper _objectMapper;
 
 	@Inject
 	private Portal _portal;

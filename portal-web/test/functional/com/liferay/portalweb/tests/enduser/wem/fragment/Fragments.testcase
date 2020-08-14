@@ -73,6 +73,60 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-111657. Can add the Container to a column of Row or another Container."
+	@priority = "4"
+	test AddContainerToLayoutElements {
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Content Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("Assert add a Container to another Container") {
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Container");
+
+			Click.clickNoWaitForVisible(
+				key_elementType = "Container",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_collectionName = "Layout Elements",
+				key_fragmentName = "Container",
+				key_position = "1",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "PageEditor#CONTAINER_CONTAINER",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Container')]//li[contains(@class,'title')]",
+				key_position = "1",
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+		}
+
+		task ("Assert add a Container to module of Grid") {
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid",
+				targetFragmentName = "Container");
+
+			PageEditor.addElementToColumn(
+				collectionName = "Layout Elements",
+				columnNumber = "1",
+				fragmentName = "Container",
+				navTab = "Fragments");
+		}
+	}
+
 	@description = "This is a test for LPS-101258. Can create a fragment with multiple Drop Zone areas."
 	@priority = "4"
 	test AddFragmentWithTwoDropZones {
@@ -87,7 +141,7 @@ definition {
 
 		Button.clickPublish();
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -115,9 +169,11 @@ definition {
 			locator1 = "Fragment#PAGE_EDITOR_NO_FRAGMENTS_MESSAGE");
 	}
 
-	@description = "This is a test for LPS-108339. Can add a Row fragment to Section. Can add several Row fragments to Section."
+	@description = "This is a test for LPS-108339. Can add a Row fragment to Container. Can add several Row fragments to Container."
 	@priority = "5"
 	test AddRowToSection {
+		property portal.acceptance = "true";
+
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
@@ -129,43 +185,45 @@ definition {
 				siteName = "Test Site Name");
 		}
 
-		task ("Assert add a Row fragment to Section") {
+		task ("Assert add a Row fragment to Container") {
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
-				fragmentName = "Section");
+				fragmentName = "Container");
 
-			Click(
-				key_elementType = "Section",
+			Click.clickNoWaitForVisible(
+				key_elementType = "Container",
 				key_position = "1",
 				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
 
+			PageEditor.expandFragmentCollection(collectionName = "Layout Elements");
+
 			DragAndDrop.javaScriptDragAndDropToObject(
 				key_collectionName = "Layout Elements",
-				key_fragmentName = "Row",
+				key_fragmentName = "Grid",
 				key_position = "1",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-				locator2 = "PageEditor#SECTION_CONTAINER",
+				locator2 = "PageEditor#CONTAINER_CONTAINER",
 				value1 = "");
 
 			AssertElementPresent(
-				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Grid')]//li[contains(@class,'title')]",
 				key_position = "1",
-				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 		}
 
 		task ("Assert add second Row fragment to the same Section") {
-			DragAndDrop.javaScriptDragAndDropToObject(
+			DragAndDrop.javaScriptDragAndDropObjectToBottomOfNestedObject(
 				key_collectionName = "Layout Elements",
-				key_fragmentName = "Row",
-				key_position = "1",
+				key_fragmentName = "Grid",
+				key_targetFragmentName = "Grid",
 				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-				locator2 = "PageEditor#SECTION_CONTAINER",
+				locator2 = "PageEditor#EMPTY_NESTED_FRAGMENT_DROP_TARGET",
 				value1 = "");
 
 			AssertElementPresent(
-				key_elementHeader = "/div[contains(@class,'page-editor__topper')][2]/div[contains(.,'Row')]//li[contains(@class,'title')]",
+				key_elementHeader = "/div[contains(@class,'page-editor__topper')][2]/div[contains(.,'Grid')]//li[contains(@class,'title')]",
 				key_position = "1",
-				locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 		}
 	}
 
@@ -192,10 +250,13 @@ definition {
 		task ("Configure the fragment") {
 			PageEditor.gotoConfiguration(fragmentName = "Button");
 
+			PageEditor.configureFragment(type = "Link");
+
+			PageEditor.gotoStyle(fragmentName = "Button");
+
 			PageEditor.configureFragment(
 				alignment = "Center",
-				size = "Large",
-				type = "Link");
+				size = "Large");
 		}
 
 		task ("View the fragment style") {
@@ -248,12 +309,12 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Card");
+			PageEditor.gotoStyle(fragmentName = "Card");
 
 			PageEditor.configureFragment(
+				alignment = "Center",
 				borderRadius = "None",
 				boxShadow = "Large",
-				contentAlign = "Center",
 				imageSize = "Fit",
 				marginBottom = "5");
 		}
@@ -261,7 +322,7 @@ definition {
 		task ("View the fragment style") {
 			PageEditor.viewFragmentStyle(
 				alignment = "center",
-				borderRadius = "0",
+				borderRadius = "rounded-0",
 				boxShadow = "lg",
 				fragmentName = "card",
 				imageSize = "100",
@@ -310,12 +371,15 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Heading");
+			PageEditor.gotoStyle(fragmentName = "Heading");
 
 			PageEditor.configureFragment(
-				headingLevel = "H2",
-				textAlign = "Right",
+				alignment = "Right",
 				textColor = "secondary");
+
+			PageEditor.gotoConfiguration(fragmentName = "Heading");
+
+			PageEditor.configureFragment(headingLevel = "H2");
 		}
 
 		task ("View the fragment style") {
@@ -368,7 +432,7 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Image");
+			PageEditor.gotoStyle(fragmentName = "Image");
 
 			PageEditor.configureFragment(
 				alignment = "Center",
@@ -426,10 +490,10 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Paragraph");
+			PageEditor.gotoStyle(fragmentName = "Paragraph");
 
 			PageEditor.configureFragment(
-				textAlign = "Right",
+				alignment = "Right",
 				textColor = "warning");
 		}
 
@@ -482,7 +546,7 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Separator");
+			PageEditor.gotoStyle(fragmentName = "Separator");
 
 			PageEditor.configureFragment(
 				borderColor = "lighter",
@@ -538,7 +602,7 @@ definition {
 		}
 
 		task ("Configure the fragment") {
-			PageEditor.gotoConfiguration(fragmentName = "Spacer");
+			PageEditor.gotoStyle(fragmentName = "Spacer");
 
 			PageEditor.configureFragment(height = "4");
 		}
@@ -568,9 +632,14 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-106776. Can change section background color, duplicate sectiion and row."
+	// Ignored until LPS-117067 implement
+
+	@description = "This is a test for LPS-106776, LPS-102959 and LPS-111657. Configure the Container and Grid elements."
+	@ignore = "true"
 	@priority = "5"
 	test ConfigureLayoutElements {
+		property portal.acceptance = "true";
+
 		task ("Add a content page") {
 			JSONLayout.addPublicLayout(
 				groupName = "Test Site Name",
@@ -582,47 +651,150 @@ definition {
 				siteName = "Test Site Name");
 		}
 
-		task ("Add a section") {
+		task ("Add a Container") {
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
-				fragmentName = "Section");
+				fragmentName = "Container");
 		}
 
-		task ("Configure the section") {
-			PageEditor.editLayoutSection(backgroundColor = "warning");
+		task ("Add a Card fragment to Container") {
+			Click.clickNoWaitForVisible(
+				key_elementType = "Container",
+				key_position = "1",
+				locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Card",
+				key_position = "1",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "PageEditor#CONTAINER_CONTAINER",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "//li[contains(@class,'topper__title') and contains(.,'Card')]",
+				key_position = "1",
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+
+			PageEditor.waitForAutoSave();
 		}
 
-		task ("View the fragment style") {
-			AssertVisible(locator1 = "//div[contains(@class,'page-editor__topper')]//div[contains(@class,'bg-warning')]");
+		task ("Add a Heading below Card inside the Container") {
+			DragAndDrop.javaScriptDragAndDropObjectToBottomOfNestedObject(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Heading",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "//div[contains(@class,'page-editor__topper__bar') and contains(.,'Card')]//following-sibling::div[contains(@class,'page-editor__topper__content')]",
+				value1 = "");
+
+			AssertElementPresent(
+				key_elementHeader = "//li[contains(@class,'topper__title') and contains(.,'Heading')]",
+				key_position = "1",
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+
+			PageEditor.waitForAutoSave();
 		}
 
-		task ("Duplicate the fragment") {
-			PageEditor.gotoDuplicate(fragmentName = "Section");
+		task ("Configure the Container styles") {
+			PageEditor.viewContainerStyle(
+				contentDisplay = "block",
+				position = "1");
+
+			PageEditor.editLayoutContainer(
+				backgroundColor = "warning",
+				borderColor = "danger",
+				borderRadius = "Large",
+				borderWidth = "5",
+				contentDisplay = "Flex",
+				dropShadow = "Large",
+				horizontalAlign = "Center",
+				marginBottom = "2",
+				marginLeft = "2",
+				marginRight = "2",
+				marginTop = "2",
+				opacity = "50",
+				paddingBottom = "2",
+				paddingLeft = "2",
+				paddingRight = "2",
+				paddingTop = "2",
+				panel = "Styles",
+				verticalAlign = "Center");
 		}
 
-		task ("View the duplicate section fragment") {
-			PageEditor.viewDuplicateFragment(fragmentName = "Section");
+		task ("View the Container styles") {
+			PageEditor.viewContainerStyle(
+				backgroundColor = "warning",
+				borderColor = "danger",
+				borderRadius = "lg",
+				borderWidth = "5",
+				contentDisplay = "flex",
+				dropShadow = "lg",
+				horizontalAlign = "center",
+				marginBottom = "2",
+				marginLeft = "2",
+				marginRight = "2",
+				marginTop = "2",
+				opacity = "0.5",
+				paddingBottom = "2",
+				paddingLeft = "2",
+				paddingRight = "2",
+				paddingTop = "2",
+				position = "1",
+				verticalAlign = "center");
 		}
 
-		task ("Add a row") {
+		task ("Duplicate the Container") {
+			PageEditor.gotoDuplicate(fragmentName = "Container");
+		}
+
+		task ("View the duplicate Container fragment") {
+			PageEditor.viewDuplicateFragment(fragmentName = "Container");
+		}
+
+		task ("Add a Grid below the Container") {
 			PageEditor.addFragment(
 				collectionName = "Layout Elements",
-				fragmentName = "Row",
-				targetFragmentName = "Section");
+				fragmentName = "Grid",
+				targetFragmentName = "Container");
 		}
 
-		task ("Duplicate the fragment") {
-			PageEditor.gotoDuplicate(fragmentName = "Row");
+		task ("Configure the Grid") {
+			PageEditor.editLayoutGrid(
+				columnCount = "2",
+				panel = "Configuration");
+
+			PageEditor.editLayoutGrid(
+				inverseOrder = "true",
+				layout = "1 Module per Row",
+				panel = "Styles",
+				verticalAlignment = "Bottom");
 		}
 
-		task ("View the duplicate section fragment") {
-			PageEditor.viewDuplicateFragment(fragmentName = "Row");
+		task ("View the Grid style") {
+			PageEditor.viewGridStyle(
+				columnCount = "2",
+				inverseOrder = "true",
+				layout = "12",
+				position = "1",
+				verticalAlignment = "Bottom");
+		}
+
+		task ("Duplicate the Gird") {
+			PageEditor.gotoDuplicate(fragmentName = "Grid");
+		}
+
+		task ("View the duplicate Grid fragment") {
+			PageEditor.viewDuplicateFragment(fragmentName = "Grid");
 		}
 	}
 
 	@description = "This is a test for LPS-90064 and is a supplementary frontend test to the integration tests in LPS-90307. Fragments can be copied."
 	@priority = "5"
 	test CopyFragment {
+		property portal.acceptance = "true";
+
 		task ("Navigate to the fragment collection") {
 			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 		}
@@ -711,6 +883,8 @@ definition {
 	@description = "This is a test for LPS-108376. Can check Cacheable for fragments when create them in portal and they are non-Cachable by default."
 	@priority = "5"
 	test MarkFragmentCreatedInPortalAsCacheable {
+		property portal.acceptance = "true";
+
 		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
 
 		FragmentsAdminNavigator.gotoEntryEllipsisItem(
@@ -775,6 +949,7 @@ definition {
 	test PropagateGlobalFragmentChanges {
 		property osgi.module.configuration.file.names = "com.liferay.fragment.web.internal.configuration.FragmentGlobalPanelAppConfiguration.config";
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
+		property portal.acceptance = "true";
 
 		task ("Add a fragment collection in Global site") {
 			JSONFragment.addFragmentCollection(
@@ -785,6 +960,7 @@ definition {
 		task ("Add a section fragment to the fragment collection via JSON") {
 			JSONFragment.addSection(
 				collectionName = "Global Collection Name",
+				fragmentStatus = "Approved",
 				groupName = "Global",
 				name = "Global Fragment Name 1");
 		}
@@ -792,6 +968,7 @@ definition {
 		task ("Add a section fragment to the fragment collection via JSON") {
 			JSONFragment.addSection(
 				collectionName = "Global Collection Name",
+				fragmentStatus = "Approved",
 				groupName = "Global",
 				name = "Global Fragment Name 2");
 		}
@@ -883,6 +1060,101 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-111657. Can save Container and nested elements as a new composition when the Container is inside a column of Row."
+	@priority = "5"
+	test SaveContainerAsCompositionInModuleOfGrid {
+		task ("Add a content page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Test Content Page Name",
+				type = "content");
+
+			ContentPagesNavigator.openEditContentPage(
+				pageName = "Test Content Page Name",
+				siteName = "Test Site Name");
+		}
+
+		task ("Add a Grid to page") {
+			PageEditor.addFragment(
+				collectionName = "Layout Elements",
+				fragmentName = "Grid");
+		}
+
+		task ("Add a Container to the first module of grid") {
+			PageEditor.addElementToColumn(
+				collectionName = "Layout Elements",
+				columnNumber = "1",
+				fragmentName = "Container",
+				navTab = "Fragments");
+		}
+
+		task ("Add an Image to the Container") {
+			DragAndDrop.javaScriptDragAndDropToObject(
+				key_collectionName = "Basic Components",
+				key_fragmentName = "Image",
+				key_position = "1",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
+				locator2 = "PageEditor#CONTAINER_CONTAINER",
+				value1 = "Image");
+
+			AssertElementPresent(
+				key_elementHeader = "//li[contains(@class,'topper__title') and contains(.,'Image')]",
+				key_position = "1",
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+
+			PageEditor.waitForAutoSave();
+		}
+
+		task ("Add an Asset Publisher below Image inside the Container") {
+			PageEditor.gotoTab(tabName = "Widgets");
+
+			Type.sendKeysApplicationSearch(
+				locator1 = "PageEditor#WIDGETS_APPLICATION_SEARCH_FIELD",
+				value1 = "Asset Publisher");
+
+			DragAndDrop.javaScriptDragAndDropObjectToBottomOfNestedObject(
+				key_portletName = "Asset Publisher",
+				key_position = "1",
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_WIDGET",
+				locator2 = "//div[contains(@class,'page-editor__topper__bar') and contains(.,'Image')]//following-sibling::div[contains(@class,'page-editor__topper__content')]",
+				value1 = "Asset Publisher");
+
+			Pause(locator1 = "5000");
+
+			AssertElementPresent(
+				key_elementHeader = "//div[contains(@class,'page-editor')]//li[contains(.,'Asset Publisher')]",
+				key_position = "1",
+				locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+
+			PageEditor.waitForAutoSave();
+
+			PageEditor.gotoTab(tabName = "Contents");
+
+			PageEditor.gotoTab(tabName = "Fragments and Widgets");
+		}
+
+		task ("Assert save Container and nested elements as composition") {
+			PageEditor.gotoSaveAsFragment(fragmentName = "Container");
+
+			PageEditorComposition.saveAsFragment(fragmentName = "New Fragment Name");
+		}
+
+		task ("Add new composition to below Grid to page") {
+			PageEditor.addFragment(
+				collectionName = "Collection Name",
+				composition = "true",
+				fragmentName = "New Fragment Name",
+				targetFragmentName = "Grid");
+
+			for (var elementName : list "Image,Asset Publisher") {
+				AssertElementPresent(
+					key_elementHeader = "//li[contains(@class,'topper__title') and contains(.,'${elementName}')]",
+					key_position = "2",
+					locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+			}
+		}
+	}
+
 	@description = "This is a test for LPS-101258. Can save a composition containing a fragment that has a Drop Zone area as fragment."
 	@priority = "4"
 	test SaveFragmentCompositionWithDropZoneInFrgament {
@@ -896,7 +1168,7 @@ definition {
 
 		Button.clickPublish();
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 
 		JSONLayout.addPublicLayout(
 			groupName = "Test Site Name",
@@ -909,31 +1181,29 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Layout Elements",
-			fragmentName = "Section");
+			fragmentName = "Container");
 
-		PageEditor.gotoTab(tabName = "Fragments");
-
-		PageEditor.expandFragmentCollection(collectionName = "Collection Name");
-
-		Click(
-			key_elementType = "Section",
+		Click.clickNoWaitForVisible(
+			key_elementType = "Container",
 			key_position = "1",
 			locator1 = "PageEditor#LAYOUT_ELEMENTS_HEADER");
+
+		PageEditor.expandFragmentCollection(collectionName = "Collection Name");
 
 		DragAndDrop.javaScriptDragAndDropToObject(
 			key_collectionName = "Collection Name",
 			key_fragmentName = "Fragment Name 2",
 			key_position = "1",
 			locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT",
-			locator2 = "PageEditor#SECTION_CONTAINER",
+			locator2 = "PageEditor#CONTAINER_CONTAINER",
 			value1 = "");
 
 		AssertElementPresent(
 			key_elementHeader = "//div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Fragment Name 2')]//li[contains(@class,'title')]",
 			key_position = "1",
-			locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+			locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
 
-		PageEditor.gotoSaveAsFrgament(fragmentName = "Section");
+		PageEditor.gotoSaveAsFragment(fragmentName = "Container");
 
 		PageEditorComposition.saveAsFragment(fragmentName = "New Fragment Name");
 
@@ -954,12 +1224,96 @@ definition {
 		AssertElementPresent(
 			key_elementHeader = "//div[contains(@class,'page-editor__topper')][1]/div[contains(.,'Fragment Name 2')]//li[contains(@class,'title')]",
 			key_position = "1",
-			locator1 = "PageEditor#SECTION_CONTAINER_NESTED_ELEMENT");
+			locator1 = "PageEditor#CONTAINER_CONTAINER_NESTED_ELEMENT");
+	}
+
+	@description = "This is a test for LPS-114145. The latest changes are saved automatically in fragment editor when the fragment has a published version."
+	@priority = "4"
+	test ViewAutoSavedAfterPublishingComponent {
+		FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+		FragmentsAdmin.addFragment(fragmentName = "Fragment Name 2");
+
+		FragmentsEditor.typeHtmlEditor(content = '''<div class="fragment_1">Fragment Name</div>''');
+
+		AssertTextEquals(
+			locator1 = "FragmentEditor#AUTOSAVE_MESSAGE",
+			value1 = "Changes Saved");
+
+		Button.clickPublish();
+
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
+
+		FragmentsAdminNavigator.gotoEntryEllipsisItem(
+			entry = "Fragment Name 2",
+			item = "Edit");
+
+		FragmentsEditor.typeHtmlEditor(content = '''<div class="fragment_1">New Fragment Name</div>''');
+
+		AssertTextEquals(
+			locator1 = "FragmentEditor#AUTOSAVE_MESSAGE",
+			value1 = "Changes Saved");
+
+		Navigator.gotoBack();
+
+		FragmentsAdminNavigator.gotoEntryEllipsisItem(
+			entry = "Fragment Name 2",
+			item = "Edit");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
+			value1 = '''<div class="fragment_1">New Fragment Name</div>''');
+	}
+
+	@description = "This is a test for LPS-114145. The changes are saved automatically in fragment editor before publishing."
+	@priority = "5"
+	test ViewAutoSavedBeforePublishingComponent {
+		property portal.acceptance = "true";
+
+		FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+		FragmentsAdmin.addFragment(fragmentName = "Fragment Name 2");
+
+		FragmentsEditor.typeHtmlEditor(content = '''<div class="fragment_1">Fragment Name</div>''');
+
+		AssertTextEquals(
+			locator1 = "FragmentEditor#AUTOSAVE_MESSAGE",
+			value1 = "Changes Saved");
+
+		Navigator.gotoBack();
+
+		FragmentsAdminNavigator.gotoEntryEllipsisItem(
+			entry = "Fragment Name 2",
+			item = "Edit");
+
+		AssertTextEquals.assertPartialText(
+			locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
+			value1 = '''<div class="fragment_1">Fragment Name</div>''');
 	}
 
 	@description = "Fragments that are being used cannot be deleted."
 	@priority = "5"
 	test ViewCannotDeleteFragmentInUse {
+		property portal.acceptance = "true";
+
+		task ("Publish the fragment entry") {
+			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
+
+			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
+
+			FragmentsAdminNavigator.gotoEntryEllipsisItem(
+				entry = "Fragment Name",
+				item = "Edit");
+
+			Pause(locator1 = "3000");
+
+			PortletEntry.publish();
+		}
+
 		task ("Navigate to page templates admin") {
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
 		}
@@ -1020,6 +1374,7 @@ definition {
 	test ViewGlobalFragments {
 		property osgi.module.configuration.file.names = "com.liferay.fragment.web.internal.configuration.FragmentGlobalPanelAppConfiguration.config";
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
+		property portal.acceptance = "true";
 
 		task ("Add a fragment collection in Global site") {
 			JSONFragment.addFragmentCollection(
@@ -1060,6 +1415,7 @@ definition {
 		task ("Add a section fragment to the fragment collection via JSON") {
 			JSONFragment.addSection(
 				collectionName = "Global Collection Name",
+				fragmentStatus = "Approved",
 				groupName = "Global",
 				name = "Global Fragment Name 2");
 		}
@@ -1083,6 +1439,7 @@ definition {
 	test ViewGlobalFragmentsSiteUsages {
 		property osgi.module.configuration.file.names = "com.liferay.fragment.web.internal.configuration.FragmentGlobalPanelAppConfiguration.config";
 		property osgi.module.configurations = "enabled=B&quot;true&quot;";
+		property portal.acceptance = "true";
 
 		task ("Add a fragment collection in Global site") {
 			JSONFragment.addFragmentCollection(
@@ -1093,6 +1450,7 @@ definition {
 		task ("Add a section fragment to the fragment collection via JSON") {
 			JSONFragment.addSection(
 				collectionName = "Global Collection Name",
+				fragmentStatus = "Approved",
 				groupName = "Global",
 				name = "Global Fragment Name 1");
 		}
@@ -1100,6 +1458,7 @@ definition {
 		task ("Add a section fragment to the fragment collection via JSON") {
 			JSONFragment.addSection(
 				collectionName = "Global Collection Name",
+				fragmentStatus = "Approved",
 				groupName = "Global",
 				name = "Global Fragment Name 2");
 		}
@@ -1139,7 +1498,8 @@ definition {
 
 		PageEditor.addFragment(
 			collectionName = "Global Collection Name",
-			fragmentName = "Global Fragment Name 2");
+			fragmentName = "Global Fragment Name 2",
+			targetFragmentName = "Global Fragment Name 1");
 
 		PageEditor.clickPublish();
 
@@ -1197,52 +1557,6 @@ definition {
 			value1 = "4");
 
 		AssertElementNotPresent(locator1 = "//*[contains(.,'Test Site Name 2')]");
-	}
-
-	@description = "Once fragments are published, they can no longer be saved as draft."
-	@priority = "4"
-	test ViewOnlyDraftFragmentsCanBeSaved {
-		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
-		}
-
-		task ("Add a second fragment") {
-			FragmentsAdmin.addFragment(fragmentName = "Fragment Name 2");
-
-			SiteAdmin.viewPortletTitle(portletTitle = "Fragment Name 2 (Draft)");
-		}
-
-		task ("Save the second fragment as draft") {
-			PortletEntry.saveAsDraft();
-		}
-
-		task ("Navigate to fragments admin") {
-			FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-		}
-
-		task ("Navigate to the fragment collection") {
-			FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
-		}
-
-		task ("Assert the second fragment is in draft status") {
-			FragmentsAdmin.viewEntryWorkflowStatus(
-				entry = "Fragment Name 2",
-				workflowStatus = "Draft");
-		}
-
-		task ("Publish the second fragment") {
-			FragmentsAdminNavigator.gotoEntryEllipsisItem(
-				entry = "Fragment Name 2",
-				item = "Edit");
-
-			FragmentsEditor.publish();
-		}
-
-		FragmentsAdminNavigator.gotoEntry(entry = "Fragment Name 2");
-
-		task ("Assert the second fragment can no longer be saved as draft") {
-			AssertElementNotPresent(locator1 = "Button#SAVE_AS_DRAFT");
-		}
 	}
 
 }

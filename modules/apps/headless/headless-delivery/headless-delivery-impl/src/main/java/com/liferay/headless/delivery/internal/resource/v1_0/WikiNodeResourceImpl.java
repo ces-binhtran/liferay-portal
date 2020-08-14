@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
@@ -38,7 +39,7 @@ import com.liferay.subscription.service.SubscriptionLocalService;
 import com.liferay.wiki.service.WikiNodeService;
 import com.liferay.wiki.service.WikiPageService;
 
-import java.util.Map;
+import java.util.Optional;
 
 import javax.ws.rs.core.MultivaluedMap;
 
@@ -68,12 +69,12 @@ public class WikiNodeResourceImpl
 
 	@Override
 	public Page<WikiNode> getSiteWikiNodesPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
 					"ADD_NODE", "postSiteWikiNode", "com.liferay.wiki", siteId)
@@ -89,8 +90,10 @@ public class WikiNodeResourceImpl
 			filter, com.liferay.wiki.model.WikiNode.class, search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
-			searchContext -> searchContext.setCompanyId(
-				contextCompany.getCompanyId()),
+			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
+				searchContext.setCompanyId(contextCompany.getCompanyId());
+			},
 			sorts,
 			document -> _toWikiNode(
 				_wikiNodeService.getNode(
@@ -142,7 +145,7 @@ public class WikiNodeResourceImpl
 
 		return new WikiNode() {
 			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+				actions = HashMapBuilder.put(
 					"delete", addAction("DELETE", wikiNode, "deleteWikiNode")
 				).put(
 					"get", addAction("VIEW", wikiNode, "getWikiNode")
@@ -156,7 +159,8 @@ public class WikiNodeResourceImpl
 					addAction("SUBSCRIBE", wikiNode, "putWikiNodeUnsubscribe")
 				).build();
 				creator = CreatorUtil.toCreator(
-					_portal, _userLocalService.fetchUser(wikiNode.getUserId()));
+					_portal, Optional.of(contextUriInfo),
+					_userLocalService.fetchUser(wikiNode.getUserId()));
 				dateCreated = wikiNode.getCreateDate();
 				dateModified = wikiNode.getModifiedDate();
 				description = wikiNode.getDescription();

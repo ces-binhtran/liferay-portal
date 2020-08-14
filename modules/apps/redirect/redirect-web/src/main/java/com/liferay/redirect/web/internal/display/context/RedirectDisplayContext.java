@@ -284,14 +284,13 @@ public class RedirectDisplayContext {
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		redirectEntrySearch.setTotal(
-			_redirectEntryService.getRedirectEntriesCount(
-				themeDisplay.getScopeGroupId()));
-
 		redirectEntrySearch.setResults(
 			_redirectEntryService.getRedirectEntries(
 				themeDisplay.getScopeGroupId(), _redirectEntrySearch.getStart(),
 				_redirectEntrySearch.getEnd(), _getOrderByComparator()));
+		redirectEntrySearch.setTotal(
+			_redirectEntryService.getRedirectEntriesCount(
+				themeDisplay.getScopeGroupId()));
 	}
 
 	private void _populateWithSearchIndex(

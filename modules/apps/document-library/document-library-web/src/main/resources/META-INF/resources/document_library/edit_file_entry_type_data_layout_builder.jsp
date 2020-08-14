@@ -23,9 +23,7 @@ DLFileEntryType fileEntryType = (DLFileEntryType)request.getAttribute(WebKeys.DO
 
 long fileEntryTypeId = BeanParamUtil.getLong(fileEntryType, request, "fileEntryTypeId");
 
-com.liferay.dynamic.data.mapping.model.DDMStructure ddmStructure = (com.liferay.dynamic.data.mapping.model.DDMStructure)request.getAttribute(WebKeys.DOCUMENT_LIBRARY_DYNAMIC_DATA_MAPPING_STRUCTURE);
-
-long ddmStructureId = BeanParamUtil.getLong(ddmStructure, request, "structureId");
+long dataDefinitionId = BeanParamUtil.getLong(fileEntryType, request, "dataDefinitionId");
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(redirect);
@@ -37,11 +35,11 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 	<portlet:param name="mvcRenderCommandName" value="/document_library/edit_file_entry_type_data_definition" />
 </portlet:actionURL>
 
-<aui:form action="<%= editFileEntryTypeURL %>" cssClass="edit-metadata-type-form" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveStructure();" %>'>
+<aui:form action="<%= editFileEntryTypeURL %>" cssClass="edit-metadata-type-form" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveStructure();" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= (fileEntryType == null) ? Constants.ADD : Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="fileEntryTypeId" type="hidden" value="<%= fileEntryTypeId %>" />
-	<aui:input name="dataDefinitionId" type="hidden" value="<%= ddmStructureId %>" />
+	<aui:input name="dataDefinitionId" type="hidden" value="<%= dataDefinitionId %>" />
 	<aui:input name="dataDefinition" type="hidden" />
 	<aui:input name="dataLayout" type="hidden" />
 
@@ -72,75 +70,77 @@ renderResponse.setTitle((fileEntryType == null) ? LanguageUtil.get(request, "new
 		</clay:container-fluid>
 	</nav>
 
-	<clay:container-fluid
-		cssClass="container-view"
-	>
+	<div class="contextual-sidebar-content">
+		<clay:container-fluid
+			cssClass="container-view"
+		>
 
-		<%
-		DLEditFileEntryTypeDisplayContext dlEditFileEntryTypeDisplayContext = (DLEditFileEntryTypeDisplayContext)request.getAttribute(DLWebKeys.DOCUMENT_LIBRARY_EDIT_EDIT_FILE_ENTRY_TYPE_DISPLAY_CONTEXT);
-		%>
+			<%
+			DLEditFileEntryTypeDataEngineDisplayContext dlEditFileEntryTypeDataEngineDisplayContext = (DLEditFileEntryTypeDataEngineDisplayContext)request.getAttribute(DLWebKeys.DOCUMENT_LIBRARY_EDIT_FILE_ENTRY_TYPE_DATA_ENGINE_DISPLAY_CONTEXT);
+			%>
 
-		<liferay-data-engine:data-layout-builder
-			additionalPanels="<%= dlEditFileEntryTypeDisplayContext.getAdditionalPanels(npmResolvedPackageName) %>"
-			componentId='<%= renderResponse.getNamespace() + "dataLayoutBuilder" %>'
-			contentType="document-library"
-			dataDefinitionId="<%= ddmStructureId %>"
-			dataLayoutInputId="dataLayout"
-			groupId="<%= scopeGroupId %>"
-			localizable="<%= true %>"
-			namespace="<%= renderResponse.getNamespace() %>"
-		/>
-	</clay:container-fluid>
+			<liferay-data-engine:data-layout-builder
+				additionalPanels="<%= dlEditFileEntryTypeDataEngineDisplayContext.getAdditionalPanels(npmResolvedPackageName) %>"
+				componentId='<%= liferayPortletResponse.getNamespace() + "dataLayoutBuilder" %>'
+				contentType="document-library"
+				dataDefinitionId="<%= dataDefinitionId %>"
+				dataLayoutInputId="dataLayout"
+				groupId="<%= scopeGroupId %>"
+				localizable="<%= true %>"
+				namespace="<%= liferayPortletResponse.getNamespace() %>"
+			/>
+		</clay:container-fluid>
+	</div>
 </aui:form>
 
 <aui:script>
-function <portlet:namespace />getInputLocalizedValues(field) {
-	var inputLocalized = Liferay.component('<portlet:namespace />' + field);
-	var localizedValues = {};
+	function <portlet:namespace />getInputLocalizedValues(field) {
+		var inputLocalized = Liferay.component('<portlet:namespace />' + field);
+		var localizedValues = {};
 
-	if (inputLocalized) {
-		var translatedLanguages = inputLocalized
-			.get('translatedLanguages')
-			.values();
+		if (inputLocalized) {
+			var translatedLanguages = inputLocalized
+				.get('translatedLanguages')
+				.values();
 
-		translatedLanguages.forEach(function (languageId) {
-			localizedValues[languageId] = inputLocalized.getValue(languageId);
-		});
-	}
-
-	return localizedValues;
-}
-
-function <portlet:namespace />saveStructure() {
-	Liferay.componentReady('<portlet:namespace />dataLayoutBuilder').then(
-		function (dataLayoutBuilder) {
-			var name = <portlet:namespace />getInputLocalizedValues('name');
-
-			var description = <portlet:namespace />getInputLocalizedValues(
-				'description'
-			);
-
-			var formData = dataLayoutBuilder.getFormData();
-
-			var dataDefinition = formData.definition;
-
-			dataDefinition.description = description;
-			dataDefinition.name = name;
-
-			var dataLayout = formData.layout;
-
-			dataLayout.description = description;
-			dataLayout.name = name;
-
-			Liferay.Util.postForm(document.<portlet:namespace />fm, {
-				data: {
-					dataDefinition: JSON.stringify(dataDefinition),
-					dataLayout: JSON.stringify(dataLayout),
-				},
+			translatedLanguages.forEach(function (languageId) {
+				localizedValues[languageId] = inputLocalized.getValue(languageId);
 			});
 		}
-	);
-}
+
+		return localizedValues;
+	}
+
+	function <portlet:namespace />saveStructure() {
+		Liferay.componentReady('<portlet:namespace />dataLayoutBuilder').then(
+			function (dataLayoutBuilder) {
+				var name = <portlet:namespace />getInputLocalizedValues('name');
+
+				var description = <portlet:namespace />getInputLocalizedValues(
+					'description'
+				);
+
+				var formData = dataLayoutBuilder.getFormData();
+
+				var dataDefinition = formData.definition;
+
+				dataDefinition.description = description;
+				dataDefinition.name = name;
+
+				var dataLayout = formData.layout;
+
+				dataLayout.description = description;
+				dataLayout.name = name;
+
+				Liferay.Util.postForm(document.<portlet:namespace />fm, {
+					data: {
+						dataDefinition: JSON.stringify(dataDefinition),
+						dataLayout: JSON.stringify(dataLayout),
+					},
+				});
+			}
+		);
+	}
 </aui:script>
 
 <%

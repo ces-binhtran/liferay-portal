@@ -20,7 +20,7 @@
 </tr>
 <tr>
     <td>SAVE_FORM_BUTTON</td>
-    <td>//button[contains(.,'Save Form') and not (contains(@class,'disabled'))]</td>
+    <td>//button[contains(.,'Save') and not (contains(@class,'disabled'))]</td>
     <td></td>
 </tr>
 <tr>
@@ -30,7 +30,7 @@
 </tr>
 <tr>
     <td>SAVE_FORM_BUTTON_LOCALIZED</td>
-    <td>//div[contains(@class,'button-holder')]//button[contains(.,'${key_saveButton}') and not (contains(@class,'disabled'))]</td>
+    <td>//button[contains(.,'${key_saveButton}') and not (contains(@class,'disabled'))]</td>
     <td></td>
 </tr>
 <tr>
@@ -46,6 +46,21 @@
 <tr>
     <td>PAGE_TITLE_FIELD</td>
     <td>xpath=(//input[contains(@class,'form-builder-page-header-title')])[${key_titleNumber}]</td>
+    <td></td>
+</tr>
+<tr>
+    <td>PREVIEW_FORM_BUTTON</td>
+    <td>//button[contains(.,'Preview') and not (contains(@class,'disabled'))]</td>
+    <td></td>
+</tr>
+<tr>
+    <td>PUBLISH_FORM_BUTTON</td>
+    <td>//button[contains(.,'Publish') and not (contains(@class,'disabled'))]</td>
+    <td></td>
+</tr>
+<tr>
+    <td>UNPUBLISH_FORM_BUTTON</td>
+    <td>//button[contains(.,'Unpublish') and not (contains(@class,'disabled'))]</td>
     <td></td>
 </tr>
 <tr>
@@ -92,7 +107,7 @@
 </tr>
 <tr>
     <td>PAGE_CONTROLS_DELETE_CURRENT_PAGE</td>
-    <td>xpath=(//li[contains(@class,'dropdown-item')]//a[text()='Remove Page'] | //button[contains(@class,'dropdown-item') and contains(text(),'Remove Page')])[${key_formPageNumber}]</td>
+    <td>//button[contains(@class,'dropdown-item') and contains(text(),'Remove Page')][${key_formDropDownNumber}]</td>
     <td></td>
 </tr>
 <tr>
@@ -140,6 +155,11 @@
     <td></td>
 </tr>
 <tr>
+    <td>ADD_IMAGE_DESCRIPTION</td>
+    <td>xpath=(//div[contains(@class,'form-group') ]//input[@placeholder='Add image description.'])[${descriptionPosition}]</td>
+    <td></td>
+</tr>
+<tr>
     <td></td>
     <td></td>
     <td></td>
@@ -152,7 +172,7 @@
 </tr>
 <tr>
     <td>SUCCESS_PAGE_DESCRIPTION_FIELD</td>
-    <td>//div[@class='form-builder-layout']//input[contains(@class,'form-builder-page-header-description')][@value='Your information was successfully received. Thank you for filling out the form.'] </td>
+    <td>//div[contains(@class,'form-builder-success-page')]//input[contains(@class,'form-builder-page-header-description')]</td>
     <td></td>
 </tr>
 <tr>
@@ -188,7 +208,7 @@
 </tr>
 <tr>
 	<td>PUBLISH_URL_ICON</td>
-	<td>//button[contains(@class,'share-form-icon') and contains(@title,'Share')]</td>
+	<td>//button[contains(@class,'share-form-icon')]</td>
 	<td></td>
 </tr>
 
@@ -227,7 +247,7 @@
 </tr>
 <tr>
     <td>FIELD_LABEL</td>
-    <td>//div[contains(@data-field-name,'${key_fieldName}')]//p | //div[contains(@class,'ddm-field-container')]//p[contains(text(),'${key_fieldName}')]</td>
+    <td>//div[@data-field-name='${key_fieldName}' and contains(@class,'ddm-field')]//p[contains(@class,'ddm-label')] | //div[contains(@class,'ddm-field-container')]//p[text()='${key_fieldName}']</td>
     <td></td>
 </tr>
 <tr>
@@ -283,7 +303,7 @@
 </tr>
 <tr>
     <td>SIDEBAR_ELEMENT_SETS_TAB</td>
-    <td>//a[contains(@class,'nav-link') and .='Element Sets']</td>
+    <td>//*[contains(@class,'nav-link') and .='Element Sets']</td>
     <td></td>
 </tr>
 <tr>

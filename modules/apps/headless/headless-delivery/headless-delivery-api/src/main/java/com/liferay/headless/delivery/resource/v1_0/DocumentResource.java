@@ -51,8 +51,24 @@ public interface DocumentResource {
 		return FactoryHolder.factory.create();
 	}
 
+	public Page<Document> getAssetLibraryDocumentsPage(
+			Long assetLibraryId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception;
+
+	public Document postAssetLibraryDocument(
+			Long assetLibraryId, MultipartBody multipartBody)
+		throws Exception;
+
+	public Response postAssetLibraryDocumentBatch(
+			Long assetLibraryId, MultipartBody multipartBody,
+			String callbackURL, Object object)
+		throws Exception;
+
 	public Page<Document> getDocumentFolderDocumentsPage(
 			Long documentFolderId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
 			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
@@ -93,8 +109,9 @@ public interface DocumentResource {
 		throws Exception;
 
 	public Page<Document> getSiteDocumentsPage(
-			Long siteId, Boolean flatten, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long siteId, Boolean flatten, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
 	public Document postSiteDocument(Long siteId, MultipartBody multipartBody)

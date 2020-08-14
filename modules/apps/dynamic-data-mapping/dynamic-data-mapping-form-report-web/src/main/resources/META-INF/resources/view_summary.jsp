@@ -28,7 +28,8 @@ if (ddmFormInstanceReport != null) {
 
 <div id="<portlet:namespace />report">
 	<react:component
-		data='<%=
+		module="js/index.es"
+		props='<%=
 			HashMapBuilder.<String, Object>put(
 				"data", ddmFormInstanceReportData
 			).put(
@@ -37,7 +38,7 @@ if (ddmFormInstanceReport != null) {
 				"formReportRecordsFieldValuesURL", ddmFormReportDisplayContext.getFormReportRecordsFieldValuesURL()
 			).put(
 				"portletNamespace", PortalUtil.getPortletNamespace(DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_REPORT)
-			).build() %>'
-		module="js/index.es"
+			).build()
+		%>'
 	/>
 </div>

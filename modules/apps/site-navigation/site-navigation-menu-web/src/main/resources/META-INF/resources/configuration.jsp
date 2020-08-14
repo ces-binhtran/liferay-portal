@@ -91,7 +91,7 @@ else {
 									<%= siteNavigationMenuName %>
 								</c:if>
 							</span>
-							<span class='mt-1 <%= (siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() && (siteNavigationMenu != null)) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />removeSiteNavigationMenu" role="button">
+							<span class="mt-1 <%= (siteNavigationMenuDisplayContext.isSiteNavigationMenuSelected() && (siteNavigationMenu != null)) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />removeSiteNavigationMenu" role="button">
 								<aui:icon cssClass="icon-monospaced" image="times-circle" markupView="lexicon" />
 							</span>
 						</div>
@@ -120,14 +120,14 @@ else {
 									<aui:select id="rootMenuItemType" label="start-with-menu-items-in" name="preferences--rootMenuItemType--" value="<%= rootMenuItemType %>">
 										<aui:option label="level" value="absolute" />
 										<aui:option label="level-relative-to-the-current-menu-item" value="relative" />
-										<aui:option label="select" value="select" />
+										<aui:option label="select-parent" value="select" />
 									</aui:select>
 								</clay:col>
 
 								<clay:col
 									md="3"
 								>
-									<div class='mt-4 pt-1 <%= (rootMenuItemType.equals("parent-at-level") || rootMenuItemType.equals("relative-parent-up-by")) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />rootMenuItemLevel">
+									<div class="mt-4 pt-1 <%= (rootMenuItemType.equals("parent-at-level") || rootMenuItemType.equals("relative-parent-up-by")) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemLevel">
 										<aui:select label="" name="preferences--rootMenuItemLevel--">
 
 											<%
@@ -149,7 +149,7 @@ else {
 								<clay:col
 									md="10"
 								>
-									<div class='mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />rootMenuItemIdPanel">
+									<div class="mb-3 <%= rootMenuItemType.equals("select") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />rootMenuItemIdPanel">
 										<aui:input id="rootMenuItemId" ignoreRequestValue="<%= true %>" name="preferences--rootMenuItemId--" type="hidden" value="<%= siteNavigationMenuDisplayContext.getRootMenuItemId() %>" />
 
 										<%
@@ -166,21 +166,30 @@ else {
 										}
 										%>
 
-										<div class="card card-horizontal taglib-horizontal-card">
-											<div class="card-body ">
-												<div class="card-col-field">
-													<clay:sticker
-														cssClass="sticker-static"
-														displayType="secondary"
-														icon="blogs"
-													/>
-												</div>
+										<div class="card card-horizontal card-type-directory">
+											<div class="card-body">
+												<clay:content-row
+													verticalAlign="center"
+												>
+													<clay:content-col>
+														<clay:sticker
+															cssClass="sticker-static"
+															displayType="secondary"
+															icon="blogs"
+														/>
+													</clay:content-col>
 
-												<div class="card-col-content card-col-gutters">
-													<span class="lfr-card-title-text text-truncate" id="<portlet:namespace />rootMenuItemName">
-														<%= HtmlUtil.escape(rootMenuItemName) %>
-													</span>
-												</div>
+													<clay:content-col
+														expand="<%= true %>"
+														gutters="<%= true %>"
+													>
+														<h3 class="card-title">
+															<span class="text-truncate-inline">
+																<span class="text-truncate" id="<portlet:namespace />rootMenuItemName"><%= HtmlUtil.escape(rootMenuItemName) %></span>
+															</span>
+														</h3>
+													</clay:content-col>
+												</clay:content-row>
 											</div>
 										</div>
 

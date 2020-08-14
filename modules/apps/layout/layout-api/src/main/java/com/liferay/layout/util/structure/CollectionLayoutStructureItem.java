@@ -18,31 +18,30 @@ import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
 
 import java.util.Objects;
 
 /**
  * @author Eudaldo Alonso
  */
-public class CollectionLayoutStructureItem extends LayoutStructureItem {
+public class CollectionLayoutStructureItem extends StyledLayoutStructureItem {
 
 	public CollectionLayoutStructureItem(String parentItemId) {
 		super(parentItemId);
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof CollectionLayoutStructureItem)) {
+		if (!(object instanceof CollectionLayoutStructureItem)) {
 			return false;
 		}
 
 		CollectionLayoutStructureItem collectionLayoutStructureItem =
-			(CollectionLayoutStructureItem)obj;
+			(CollectionLayoutStructureItem)object;
 
 		if (!Objects.equals(
 				_collectionJSONObject,
@@ -58,7 +57,7 @@ public class CollectionLayoutStructureItem extends LayoutStructureItem {
 			return false;
 		}
 
-		return super.equals(obj);
+		return super.equals(object);
 	}
 
 	public JSONObject getCollectionJSONObject() {
@@ -67,7 +66,9 @@ public class CollectionLayoutStructureItem extends LayoutStructureItem {
 
 	@Override
 	public JSONObject getItemConfigJSONObject() {
-		return JSONUtil.put(
+		JSONObject jsonObject = super.getItemConfigJSONObject();
+
+		return jsonObject.put(
 			"collection", _collectionJSONObject
 		).put(
 			"listItemStyle", _listItemStyle
@@ -153,6 +154,8 @@ public class CollectionLayoutStructureItem extends LayoutStructureItem {
 
 	@Override
 	public void updateItemConfig(JSONObject itemConfigJSONObject) {
+		super.updateItemConfig(itemConfigJSONObject);
+
 		if (itemConfigJSONObject.has("collection")) {
 			setCollectionJSONObject(
 				itemConfigJSONObject.getJSONObject("collection"));

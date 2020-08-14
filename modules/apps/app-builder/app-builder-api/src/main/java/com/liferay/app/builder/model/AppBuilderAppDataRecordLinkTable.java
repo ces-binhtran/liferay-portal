@@ -36,12 +36,18 @@ public class AppBuilderAppDataRecordLinkTable
 		appBuilderAppDataRecordLinkId = createColumn(
 			"appBuilderAppDataRecordLinkId", Long.class, Types.BIGINT,
 			Column.FLAG_PRIMARY);
+	public final Column<AppBuilderAppDataRecordLinkTable, Long> groupId =
+		createColumn("groupId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<AppBuilderAppDataRecordLinkTable, Long> companyId =
 		createColumn(
 			"companyId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<AppBuilderAppDataRecordLinkTable, Long>
 		appBuilderAppId = createColumn(
 			"appBuilderAppId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<AppBuilderAppDataRecordLinkTable, Long>
+		appBuilderAppVersionId = createColumn(
+			"appBuilderAppVersionId", Long.class, Types.BIGINT,
+			Column.FLAG_DEFAULT);
 	public final Column<AppBuilderAppDataRecordLinkTable, Long> ddlRecordId =
 		createColumn(
 			"ddlRecordId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);

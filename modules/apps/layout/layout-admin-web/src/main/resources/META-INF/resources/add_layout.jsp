@@ -102,19 +102,20 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 		<liferay-frontend:edit-form-footer>
 			<clay:button
-				label='<%= LanguageUtil.get(resourceBundle, "add") %>'
+				label="add"
 				type="submit"
 			/>
 
 			<clay:button
-				elementClasses="btn-cancel btn-secondary"
-				label='<%= LanguageUtil.get(resourceBundle, "cancel") %>'
+				displayType="secondary"
+				elementClasses="btn-cancel"
+				label="cancel"
 			/>
 		</liferay-frontend:edit-form-footer>
 	</liferay-frontend:edit-form>
 </clay:container-fluid>
 
-<aui:script use="liferay-alert">
+<aui:script>
 	var form = document.<portlet:namespace />fm;
 
 	form.addEventListener('submit', function (event) {
@@ -158,22 +159,18 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 					redirectURL.searchParams.set('p_p_state', 'normal');
 
-					Liferay.fire('closeWindow', {
+					var opener = Liferay.Util.getOpener();
+
+					opener.Liferay.fire('closeModal', {
 						id: '<portlet:namespace />addLayoutDialog',
 						redirect: redirectURL.toString(),
 					});
 				}
 				else {
-					new Liferay.Alert({
-						delay: {
-							hide: 3000,
-							show: 0,
-						},
-						duration: 500,
-						icon: 'exclamation-circle',
+					Liferay.Util.openToast({
 						message: response.errorMessage,
 						type: 'danger',
-					}).render();
+					});
 				}
 			});
 	});

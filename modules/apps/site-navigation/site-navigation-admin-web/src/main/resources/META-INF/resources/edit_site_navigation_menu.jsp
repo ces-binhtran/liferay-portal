@@ -52,15 +52,13 @@ renderResponse.setTitle(siteNavigationAdminDisplayContext.getSiteNavigationMenuN
 							/>
 						</button>
 
-						<%
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"dropdownItems", siteNavigationAdminDisplayContext.getAddSiteNavigationMenuItemDropdownItems()
-						).build();
-						%>
-
 						<react:component
-							data="<%= data %>"
 							module="js/add_menu/index"
+							props='<%=
+								HashMapBuilder.<String, Object>put(
+									"dropdownItems", siteNavigationAdminDisplayContext.getAddSiteNavigationMenuItemDropdownItems()
+								).build()
+							%>'
 						/>
 					</div>
 				</li>
@@ -105,7 +103,7 @@ renderResponse.setTitle(siteNavigationAdminDisplayContext.getSiteNavigationMenuN
 			<c:otherwise>
 				<liferay-frontend:empty-result-message
 					actionDropdownItems="<%= siteNavigationAdminDisplayContext.getAddSiteNavigationMenuItemDropdownItems() %>"
-					defaultEventHandler='<%= renderResponse.getNamespace() + "AddMenuDefaultEventHandler" %>'
+					defaultEventHandler='<%= liferayPortletResponse.getNamespace() + "AddMenuDefaultEventHandler" %>'
 					description='<%= LanguageUtil.get(request, "fortunately-it-is-very-easy-to-add-new-ones") %>'
 				/>
 			</c:otherwise>
@@ -127,28 +125,26 @@ renderResponse.setTitle(siteNavigationAdminDisplayContext.getSiteNavigationMenuN
 			<portlet:param name="mvcPath" value="/site_navigation_menu_settings.jsp" />
 		</portlet:renderURL>
 
-		<%
-		Map<String, Object> data = HashMapBuilder.<String, Object>put(
-			"editSiteNavigationMenuItemParentURL", editSiteNavigationMenuItemParentURL.toString()
-		).put(
-			"editSiteNavigationMenuItemURL", editSiteNavigationMenuItemURL.toString()
-		).put(
-			"editSiteNavigationMenuSettingsURL", editSiteNavigationMenuSettingsURL.toString()
-		).put(
-			"id", renderResponse.getNamespace() + "sidebar"
-		).put(
-			"redirect", currentURL
-		).put(
-			"siteNavigationMenuId", siteNavigationAdminDisplayContext.getSiteNavigationMenuId()
-		).put(
-			"siteNavigationMenuName", siteNavigationAdminDisplayContext.getSiteNavigationMenuName()
-		).build();
-		%>
-
 		<react:component
 			componentId="contextualSidebar"
-			data="<%= data %>"
 			module="js/ContextualSidebar"
+			props='<%=
+				HashMapBuilder.<String, Object>put(
+					"editSiteNavigationMenuItemParentURL", editSiteNavigationMenuItemParentURL.toString()
+				).put(
+					"editSiteNavigationMenuItemURL", editSiteNavigationMenuItemURL.toString()
+				).put(
+					"editSiteNavigationMenuSettingsURL", editSiteNavigationMenuSettingsURL.toString()
+				).put(
+					"id", liferayPortletResponse.getNamespace() + "sidebar"
+				).put(
+					"redirect", currentURL
+				).put(
+					"siteNavigationMenuId", siteNavigationAdminDisplayContext.getSiteNavigationMenuId()
+				).put(
+					"siteNavigationMenuName", siteNavigationAdminDisplayContext.getSiteNavigationMenuName()
+				).build()
+			%>'
 		/>
 	</div>
 </c:if>

@@ -15,7 +15,7 @@
 package com.liferay.dynamic.data.mapping.internal.model.listener;
 
 import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
-import com.liferay.dynamic.data.mapping.exception.NoSuchFormInstanceReportException;
+import com.liferay.dynamic.data.mapping.internal.petra.executor.DDMFormInstanceReportPortalExecutor;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceRecordVersion;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceRecordVersionLocalService;
@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import org.osgi.service.component.annotations.Component;
@@ -107,31 +108,31 @@ public class DDMFormInstanceRecordVersionModelListener
 		}
 	}
 
+	@Reference
+	protected DDMFormInstanceReportLocalService
+		ddmFormInstanceReportLocalService;
+
 	private void _processFormInstanceReportEvent(
 			DDMFormInstanceRecordVersion ddmFormInstanceRecordVersion,
 			String formInstanceReportEvent)
 		throws PortalException {
 
-		try {
-			DDMFormInstanceReport ddmFormInstanceReport =
-				_ddmFormInstanceReportLocalService.
-					getFormInstanceReportByFormInstanceId(
-						ddmFormInstanceRecordVersion.getFormInstanceId());
+		DDMFormInstanceReport ddmFormInstanceReport =
+			ddmFormInstanceReportLocalService.
+				getFormInstanceReportByFormInstanceId(
+					ddmFormInstanceRecordVersion.getFormInstanceId());
 
-			_ddmFormInstanceReportLocalService.processFormInstanceReportEvent(
-				ddmFormInstanceReport.getFormInstanceReportId(),
-				ddmFormInstanceRecordVersion.getFormInstanceRecordVersionId(),
-				formInstanceReportEvent);
-		}
-		catch (NoSuchFormInstanceReportException
-					noSuchFormInstanceReportException) {
+		TransactionCommitCallbackUtil.registerCallback(
+			() -> {
+				ddmFormInstanceReportLocalService.
+					processFormInstanceReportEvent(
+						ddmFormInstanceReport.getFormInstanceReportId(),
+						ddmFormInstanceRecordVersion.
+							getFormInstanceRecordVersionId(),
+						formInstanceReportEvent);
 
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					noSuchFormInstanceReportException,
-					noSuchFormInstanceReportException);
-			}
-		}
+				return null;
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -142,7 +143,7 @@ public class DDMFormInstanceRecordVersionModelListener
 		_ddmFormInstanceRecordVersionLocalService;
 
 	@Reference
-	private DDMFormInstanceReportLocalService
-		_ddmFormInstanceReportLocalService;
+	private DDMFormInstanceReportPortalExecutor
+		_ddmFormInstanceReportPortalExecutor;
 
 }

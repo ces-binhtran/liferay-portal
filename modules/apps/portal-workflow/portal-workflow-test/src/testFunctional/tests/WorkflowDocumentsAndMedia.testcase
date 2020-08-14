@@ -18,6 +18,8 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 			User.logoutAndLoginPG(
 				userLoginEmailAddress = "test@liferay.com",
 				userLoginFullName = "Test Test");
@@ -30,7 +32,7 @@ definition {
 				category = "Content &amp; Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "Guest");
+				site = "${siteName}");
 
 			Workflow.configureWorkflowViaPortlet(workflowDefinition = "No Workflow");
 
@@ -44,7 +46,9 @@ definition {
 		property test.name.skip.portal.instance = "WorkflowDocumentsAndMedia#ApproveInDMFolderCustomWorkflow";
 		property testray.component.names = "Training";
 
-		GlobalMenu.gotoPortlet(
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -53,7 +57,7 @@ definition {
 			orgName = "Space Program Academy of Continuing Education",
 			orgType = "Organization");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -62,7 +66,7 @@ definition {
 
 		Organization.addSiteCP(orgName = "Space Program Academy of Continuing Education");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -72,7 +76,7 @@ definition {
 			siteName = "Space Program Academy of Continuing Education",
 			siteType = "Private");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -83,7 +87,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -92,7 +96,7 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -105,7 +109,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Process Builder");
@@ -119,7 +123,7 @@ definition {
 			workflowDefinitionTitle = "Quarterly Reports Review Process",
 			workflowDefinitionVersionNumber = "1");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -128,7 +132,7 @@ definition {
 			roleTitle = "Board Member",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoSite(site = "Guest");
+		ApplicationsMenu.gotoSite(site = "${siteName}");
 
 		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
 
@@ -136,7 +140,7 @@ definition {
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.addCP(
 			dmFolderDescription = "Financial Reports Description",
@@ -152,7 +156,7 @@ definition {
 				category = "Content &amp; Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "Guest");
+				site = "${siteName}");
 
 			DMFolder.viewCP(dmFolderName = "Financial Reports");
 
@@ -213,7 +217,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		GlobalMenu.gotoSite(site = "Guest");
+		ApplicationsMenu.gotoSite(site = "${siteName}");
 
 		ProductMenu.gotoSite(site = "Space Program Academy of Continuing Education");
 
@@ -222,7 +226,7 @@ definition {
 				category = "Content &amp; Data",
 				panel = "Site Administration",
 				portlet = "Documents and Media",
-				site = "Guest");
+				site = "${siteName}");
 
 			DMFolder.viewCP(dmFolderName = "Financial Reports");
 
@@ -234,13 +238,13 @@ definition {
 
 	@priority = "4"
 	test ConfigureFolderWorkflow {
-		property portal.upstream = "quarantine";
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		Workflow.configureDMWorkflowViaFolderInfo(workflowDefinition = "Single Approver");
 
@@ -281,11 +285,13 @@ definition {
 	@description = "This test covers LPS-90346. It ensures that the document preview displays correctly after submitting an edit."
 	@priority = "4"
 	test PreviewSubmittedEdit {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 		ProductMenu.gotoPortlet(
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.addCP(
 			dmFolderDescription = "DM Folder Description",
@@ -362,10 +368,10 @@ definition {
 	@description = "This is a use case for LPS-60870."
 	@priority = "5"
 	test SaveAsDraftAndViewCategories {
-		property portal.upstream = "quarantine";
-
 		property custom.properties = "dl.file.entry.drafts.enabled=true";
 		property testray.component.names = "Training";
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
 		Navigator.openURL();
 
@@ -373,7 +379,7 @@ definition {
 			category = "Categorization",
 			panel = "Site Administration",
 			portlet = "Categories",
-			site = "Guest");
+			site = "${siteName}");
 
 		Vocabulary.addCP(vocabularyName = "Vocabulary Name");
 
@@ -387,7 +393,7 @@ definition {
 			category = "Categorization",
 			panel = "Site Administration",
 			portlet = "Categories",
-			site = "Guest");
+			site = "${siteName}");
 
 		Category.addCP(
 			categoryName = "Other",
@@ -399,7 +405,7 @@ definition {
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.addCP(
 			dmFolderDescription = "DM Folder Description",
@@ -416,7 +422,7 @@ definition {
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.viewCP(
 			dmDocumentTitle = "DM Folder Name",
@@ -455,7 +461,7 @@ definition {
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.viewCP(
 			dmDocumentTitle = "DM Folder Name",
@@ -477,7 +483,7 @@ definition {
 			category = "Content &amp; Data",
 			panel = "Site Administration",
 			portlet = "Documents and Media",
-			site = "Guest");
+			site = "${siteName}");
 
 		DMFolder.gotoEntry(dmFolderName = "DM Folder Name");
 

@@ -24,8 +24,10 @@ import java.util.List;
  * This class is used by SOAP remote services, specifically {@link com.liferay.fragment.service.http.FragmentEntryLinkServiceSoap}.
  *
  * @author Brian Wing Shun Chan
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  * @generated
  */
+@Deprecated
 public class FragmentEntryLinkSoap implements Serializable {
 
 	public static FragmentEntryLinkSoap toSoapModel(FragmentEntryLink model) {
@@ -46,6 +48,7 @@ public class FragmentEntryLinkSoap implements Serializable {
 		soapModel.setSegmentsExperienceId(model.getSegmentsExperienceId());
 		soapModel.setClassNameId(model.getClassNameId());
 		soapModel.setClassPK(model.getClassPK());
+		soapModel.setPlid(model.getPlid());
 		soapModel.setCss(model.getCss());
 		soapModel.setHtml(model.getHtml());
 		soapModel.setJs(model.getJs());
@@ -231,6 +234,14 @@ public class FragmentEntryLinkSoap implements Serializable {
 		_classPK = classPK;
 	}
 
+	public long getPlid() {
+		return _plid;
+	}
+
+	public void setPlid(long plid) {
+		_plid = plid;
+	}
+
 	public String getCss() {
 		return _css;
 	}
@@ -325,6 +336,7 @@ public class FragmentEntryLinkSoap implements Serializable {
 	private long _segmentsExperienceId;
 	private long _classNameId;
 	private long _classPK;
+	private long _plid;
 	private String _css;
 	private String _html;
 	private String _js;
