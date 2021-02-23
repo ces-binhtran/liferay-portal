@@ -235,6 +235,8 @@ page import="com.liferay.portlet.usersadmin.search.GroupSearchTerms" %><%@
 page import="com.liferay.taglib.search.ResultRow" %><%@
 page import="com.liferay.taglib.util.PortalIncludeUtil" %><%@
 page import="com.liferay.trash.kernel.model.TrashEntry" %>
+<%@ page import="com.liferay.document.library.web.constants.PortletConstants" %>
+
 
 <%@ page import="java.io.IOException" %>
 
