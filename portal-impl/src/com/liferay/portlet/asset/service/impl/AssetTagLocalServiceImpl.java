@@ -80,7 +80,7 @@ public class AssetTagLocalServiceImpl extends AssetTagLocalServiceBaseImpl {
 		tag.setUserId(user.getUserId());
 		tag.setUserName(user.getFullName());
 
-		name = StringUtil.toLowerCase(StringUtil.trim(name));
+		name = StringUtil.trim(name);
 
 		if (hasTag(groupId, name)) {
 			throw new DuplicateTagException(
