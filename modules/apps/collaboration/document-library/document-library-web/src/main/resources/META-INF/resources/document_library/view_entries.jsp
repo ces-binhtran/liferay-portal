@@ -32,8 +32,6 @@ String dlFileEntryTypeName = LanguageUtil.get(request, "basic-document");
 
 int status = WorkflowConstants.STATUS_APPROVED;
 
-int numberItemsShowDelta = 5;
-
 if (permissionChecker.isContentReviewer(user.getCompanyId(), scopeGroupId)) {
 	status = WorkflowConstants.STATUS_ANY;
 }
@@ -55,7 +53,7 @@ portletURL.setParameter("curFolder", currentFolder);
 portletURL.setParameter("deltaFolder", deltaFolder);
 portletURL.setParameter("folderId", String.valueOf(folderId));
 
-SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", numberItemsShowDelta, portletURL, null, null);
+SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", dlPortletInstanceSettings.getEntriesPerPage(), portletURL, null, null);
 
 EntriesChecker entriesChecker = new EntriesChecker(liferayPortletRequest, liferayPortletResponse);
 
