@@ -236,7 +236,6 @@ page import="com.liferay.taglib.search.ResultRow" %><%@
 page import="com.liferay.taglib.util.PortalIncludeUtil" %><%@
 page import="com.liferay.trash.kernel.model.TrashEntry" %>
 
-
 <%@ page import="java.io.IOException" %>
 
 <%@ page import="java.text.DecimalFormatSymbols" %><%@
