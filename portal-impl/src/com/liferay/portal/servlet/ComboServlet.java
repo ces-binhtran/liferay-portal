@@ -227,9 +227,7 @@ public class ComboServlet extends HttpServlet {
 							HttpHeaders.CACHE_CONTROL,
 							HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
-						PortalUtil.sendError(HttpServletResponse.SC_NOT_FOUND,new NoSuchAddressException(),request,response);
-
+git
 						return;
 					}
 
