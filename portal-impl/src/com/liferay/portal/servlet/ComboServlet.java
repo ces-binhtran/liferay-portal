@@ -46,6 +46,7 @@ import com.liferay.portal.servlet.filters.dynamiccss.DynamicCSSUtil;
 import com.liferay.portal.util.AggregateUtil;
 import com.liferay.portal.util.PrefsPropsUtil;
 import com.liferay.portal.util.PropsValues;
+import com.liferay.portal.kernel.exception.NoSuchAddressException;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -226,7 +227,7 @@ public class ComboServlet extends HttpServlet {
 							HttpHeaders.CACHE_CONTROL,
 							HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-
+git
 						return;
 					}
 
@@ -386,7 +387,7 @@ public class ComboServlet extends HttpServlet {
 
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(portletId);
 
-		if (portlet.isUndeployedPortlet()) {
+		if (portlet == null || portlet.isUndeployedPortlet()) {
 			return null;
 		}
 
