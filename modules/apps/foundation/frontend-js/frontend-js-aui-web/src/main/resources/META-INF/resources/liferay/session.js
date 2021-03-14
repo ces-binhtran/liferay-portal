@@ -340,7 +340,7 @@ AUI.add(
 									timeOffset = Math.floor((Date.now() - timestamp) / 1000) * 1000;
 
 									elapsed = timeOffset;
-								}
+									}
 								else {
 									timestamp = 'expired';
 								}
@@ -505,6 +505,9 @@ AUI.add(
 						instance._intervalId = host.registerInterval(
 							function(elapsed, interval, hasWarned, hasExpired, warningMoment, expirationMoment) {
 								if (!hasWarned) {
+
+									instance.set('sessionState', 'active');
+
 									instance._uiSetActivated();
 								}
 								else if (!hasExpired) {
