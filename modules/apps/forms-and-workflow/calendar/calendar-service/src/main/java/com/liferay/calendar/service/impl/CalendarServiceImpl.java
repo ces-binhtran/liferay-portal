@@ -84,8 +84,13 @@ public class CalendarServiceImpl extends CalendarServiceBaseImpl {
 			return null;
 		}
 
-		CalendarPermission.check(
-			getPermissionChecker(), calendar, ActionKeys.VIEW);
+		try {
+			CalendarPermission.check(
+				getPermissionChecker(), calendar, ActionKeys.VIEW);
+		}
+		catch (Exception e) {
+			return null;
+		}
 
 		return calendar;
 	}
