@@ -4982,6 +4982,18 @@ public class PortalImpl implements Portal {
 
 	@Override
 	public String getSiteAdminURL(
+		ThemeDisplay themeDisplay, String ppid,
+		Map<String, String[]> params)
+		throws PortalException {
+
+		StringBundler sb = new StringBundler(7);
+
+		sb.append(themeDisplay.getPortalURL());
+		return getSiteAdminURL(sb, themeDisplay.getScopeGroup(), ppid, params);
+	}
+
+	@Override
+	public String getSiteAdminURL(
 			Company company, Group group, String ppid,
 			Map<String, String[]> params)
 		throws PortalException {
@@ -4992,6 +5004,13 @@ public class PortalImpl implements Portal {
 			getPortalURL(
 				company.getVirtualHostname(), getPortalServerPort(false),
 				false));
+		return getSiteAdminURL(sb, group, ppid, params);
+
+	}
+
+	public String getSiteAdminURL(StringBundler sb, Group group, String ppid,
+					   Map<String, String[]> params)
+		throws PortalException {
 
 		sb.append(getPathFriendlyURLPrivateGroup());
 
