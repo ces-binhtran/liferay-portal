@@ -1079,6 +1079,11 @@ public interface Portal {
 		PortletResponse portletResponse, ThemeDisplay themeDisplay,
 		String portletName);
 
+	public String getSiteAdminURl(
+			ThemeDisplay themeDisplay, String ppid,
+			Map<String, String[]> params)
+		throws PortalException;
+
 	public String getSiteAdminURL(
 			Company company, Group group, String ppid,
 			Map<String, String[]> params)

@@ -1749,6 +1749,14 @@ public class PortalUtil {
 			portletResponse, themeDisplay, portletName);
 	}
 
+	public static String getSiteAdminURl(
+		ThemeDisplay themeDisplay, String ppid,
+		Map<String, String[]> params)
+		throws PortalException{
+
+		return getPortal().getSiteAdminURl(themeDisplay,ppid,params);
+	}
+
 	public static String getSiteAdminURL(
 			Company company, Group group, String ppid,
 			Map<String, String[]> params)
