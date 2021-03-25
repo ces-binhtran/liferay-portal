@@ -40,6 +40,7 @@ import javax.portlet.Portlet;
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
+import com.liferay.portal.kernel.util.MapUtil;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -124,7 +125,7 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 		throws PortalException {
 
 		if (!_workflowTaskPermissionChecker.hasPermission(
-				themeDisplay.getScopeGroupId(), workflowTask,
+			MapUtil.getLong(workflowTask.getOptionalAttributes(), "groupId"), workflowTask,
 				themeDisplay.getPermissionChecker())) {
 
 			throw new PrincipalException(
