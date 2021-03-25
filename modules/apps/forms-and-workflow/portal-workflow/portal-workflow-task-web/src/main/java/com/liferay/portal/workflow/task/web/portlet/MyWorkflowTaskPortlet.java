@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowTask;
@@ -123,8 +124,12 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 			WorkflowTask workflowTask, ThemeDisplay themeDisplay)
 		throws PortalException {
 
+		long groupId = MapUtil.getLong(
+			workflowTask.getOptionalAttributes() , "groupId",
+			themeDisplay.getSiteGroupId());
+
 		if (!_workflowTaskPermissionChecker.hasPermission(
-				themeDisplay.getScopeGroupId(), workflowTask,
+				groupId, workflowTask,
 				themeDisplay.getPermissionChecker())) {
 
 			throw new PrincipalException(
