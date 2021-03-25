@@ -36,25 +36,25 @@ public class WorkflowTaskPermissionChecker {
 			return true;
 		}
 
-		if (!permissionChecker.isContentReviewer(
-				permissionChecker.getCompanyId(), groupId)) {
-
-			return false;
-		}
-
 		long[] roleIds = permissionChecker.getRoleIds(
 			permissionChecker.getUserId(), groupId);
 
 		for (WorkflowTaskAssignee workflowTaskAssignee :
-				workflowTask.getWorkflowTaskAssignees()) {
+			workflowTask.getWorkflowTaskAssignees()) {
 
 			if (isWorkflowTaskAssignableToRoles(
-					workflowTaskAssignee, roleIds) ||
+				workflowTaskAssignee, roleIds) ||
 				isWorkflowTaskAssignableToUser(
 					workflowTaskAssignee, permissionChecker.getUserId())) {
 
 				return true;
 			}
+		}
+
+		if (!permissionChecker.isContentReviewer(
+				permissionChecker.getCompanyId(), groupId)) {
+
+			return false;
 		}
 
 		return false;
