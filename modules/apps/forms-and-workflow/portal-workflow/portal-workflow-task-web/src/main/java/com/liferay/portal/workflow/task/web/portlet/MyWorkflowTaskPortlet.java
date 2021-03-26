@@ -29,10 +29,12 @@ import com.liferay.portal.kernel.workflow.WorkflowTask;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManagerUtil;
 import com.liferay.portal.workflow.task.web.configuration.WorkflowTaskWebConfiguration;
 import com.liferay.portal.workflow.task.web.permission.WorkflowTaskPermissionChecker;
+import com.liferay.portal.kernel.util.MapUtil;
 
 import java.io.IOException;
 
 import java.util.Map;
+import java.lang.Long;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -123,8 +125,10 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 			WorkflowTask workflowTask, ThemeDisplay themeDisplay)
 		throws PortalException {
 
+		long groupId = MapUtil.getLong(workflowTask.getOptionalAttributes(),"groupId");  //prompt 5 first issue
+
 		if (!_workflowTaskPermissionChecker.hasPermission(
-				themeDisplay.getScopeGroupId(), workflowTask,
+				groupId, workflowTask,
 				themeDisplay.getPermissionChecker())) {
 
 			throw new PrincipalException(

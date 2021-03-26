@@ -36,6 +36,12 @@ public class WorkflowTaskPermissionChecker {
 			return true;
 		}
 
+		//prompt 5 second issue
+		if(workflowTask.getAssigneeUserId() == permissionChecker.getUserId()){
+
+			return true;
+		}
+
 		if (!permissionChecker.isContentReviewer(
 				permissionChecker.getCompanyId(), groupId)) {
 
