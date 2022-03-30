@@ -46,10 +46,14 @@
 	};
 
 	window.YUI_config = {
-		base: Liferay.ThemeDisplay.getCDNBaseURL() + PATH_JAVASCRIPT + '/aui/',
+		base:
+			Liferay.ThemeDisplay.getCDNBaseURL() +
+			Liferay.ThemeDisplay.getPathContext() +
+			PATH_JAVASCRIPT +
+			'/aui/',
 		combine: COMBINE,
 		comboBase: LiferayAUI.getComboPath(),
-		filter: Liferay.AUI.getFilter(),
+		filter: process.env.NODE_ENV === 'development' ? 'raw' : 'min',
 		groups: {
 			editor: {
 				base: PATH_EDITOR_CKEDITOR,
@@ -65,6 +69,7 @@
 			liferay: {
 				base:
 					Liferay.ThemeDisplay.getCDNBaseURL() +
+					Liferay.ThemeDisplay.getPathContext() +
 					PATH_JAVASCRIPT +
 					'/liferay/',
 				combine: COMBINE,
@@ -268,7 +273,6 @@
 							'aui-event-input',
 							'aui-palette',
 							'aui-set',
-							'portal-available-languages',
 						],
 					},
 					'liferay-input-move-boxes': {
@@ -351,11 +355,7 @@
 					},
 					'liferay-logo-editor': {
 						path: 'logo_editor.js',
-						requires: [
-							'aui-image-cropper',
-							'liferay-alert',
-							'liferay-portlet-base',
-						],
+						requires: ['aui-image-cropper', 'liferay-portlet-base'],
 					},
 					'liferay-logo-selector': {
 						path: 'logo_selector.js',
@@ -521,9 +521,11 @@
 					'liferay-session': {
 						path: 'session.js',
 						requires: [
+							'aui-base',
+							'aui-component',
 							'aui-timer',
 							'cookie',
-							'liferay-notification',
+							'plugin',
 						],
 					},
 					'liferay-sign-in-modal': {
@@ -619,40 +621,8 @@
 				},
 				root: PATH_JAVASCRIPT + '/liferay/',
 			},
-
-			misc: {
-				base:
-					Liferay.ThemeDisplay.getCDNBaseURL() +
-					PATH_JAVASCRIPT +
-					'/misc/',
-				combine: COMBINE,
-				modules: {
-					swfobject: {
-						path: 'swfobject.js',
-					},
-					swfupload: {
-						path: 'swfupload/swfupload.js',
-					},
-				},
-				root: PATH_JAVASCRIPT + '/misc/',
-			},
-
-			portal: {
-				base:
-					Liferay.ThemeDisplay.getCDNBaseURL() +
-					LiferayAUI.getJavaScriptRootPath() +
-					'/liferay/',
-				combine: false,
-				modules: {
-					'portal-available-languages': {
-						path: LiferayAUI.getAvailableLangPath(),
-						requires: ['liferay-language'],
-					},
-				},
-				root: PATH_JAVASCRIPT + '/liferay/',
-			},
 		},
-		insertBefore: 'liferayPortalCSS',
+		insertBefore: 'liferayAUICSS',
 		lang: themeDisplay.getBCP47LanguageId(),
 		root: PATH_JAVASCRIPT + '/aui/',
 		useBrowserConsole: false,

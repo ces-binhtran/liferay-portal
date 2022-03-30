@@ -15,27 +15,19 @@
 package com.liferay.document.library.internal.search.spi.model.query.contributor;
 
 import com.liferay.document.library.kernel.model.DLFolderConstants;
-import com.liferay.dynamic.data.mapping.kernel.DDMStructure;
 import com.liferay.dynamic.data.mapping.kernel.DDMStructureManager;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.petra.string.CharPool;
-import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BaseRelatedEntryIndexer;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
-import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.RelatedEntryIndexer;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.QueryFilter;
 import com.liferay.portal.kernel.search.filter.TermsFilter;
-import com.liferay.portal.kernel.search.generic.BooleanQueryImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.spi.model.query.contributor.ModelPreFilterContributor;
@@ -61,115 +53,13 @@ public class DLFileEntryModelPreFilterContributor
 		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
 		SearchContext searchContext) {
 
-		addAttachmentFilter(booleanFilter, searchContext);
-		addClassTypeIdsFilter(
-			booleanFilter, modelSearchSettings, searchContext);
-		addDDMFieldFilter(booleanFilter, searchContext);
+		_addAttachmentFilter(booleanFilter, searchContext);
+		_addClassTypeIdsFilter(booleanFilter, searchContext);
+		_addDDMFieldFilter(booleanFilter, searchContext);
 		addWorkflowStatusFilter(
 			booleanFilter, modelSearchSettings, searchContext);
 		addHiddenFilter(booleanFilter, searchContext);
-		addMimeTypesFilter(booleanFilter, searchContext);
-	}
-
-	protected void addAttachmentFilter(
-		BooleanFilter booleanFilter, SearchContext searchContext) {
-
-		if (!searchContext.isIncludeAttachments()) {
-			return;
-		}
-
-		try {
-			relatedEntryIndexer.addRelatedClassNames(
-				booleanFilter, searchContext);
-		}
-		catch (Exception exception) {
-			throw new SystemException(exception);
-		}
-	}
-
-	protected void addClassTypeIdsFilter(
-		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
-		SearchContext searchContext) {
-
-		long[] classTypeIds = searchContext.getClassTypeIds();
-
-		if (ArrayUtil.isEmpty(classTypeIds)) {
-			return;
-		}
-
-		TermsFilter termsFilter = new TermsFilter(Field.CLASS_TYPE_ID);
-
-		termsFilter.addValues(ArrayUtil.toStringArray(classTypeIds));
-
-		booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
-	}
-
-	protected void addDDMFieldFilter(
-		BooleanFilter booleanFilter, SearchContext searchContext) {
-
-		try {
-			String ddmStructureFieldName = (String)searchContext.getAttribute(
-				"ddmStructureFieldName");
-			Serializable ddmStructureFieldValue = searchContext.getAttribute(
-				"ddmStructureFieldValue");
-
-			if (Validator.isNotNull(ddmStructureFieldName) &&
-				Validator.isNotNull(ddmStructureFieldValue)) {
-
-				String[] ddmStructureFieldNameParts = StringUtil.split(
-					ddmStructureFieldName,
-					DDMStructureManager.STRUCTURE_INDEXER_FIELD_SEPARATOR);
-
-				DDMStructure ddmStructure = ddmStructureManager.getStructure(
-					GetterUtil.getLong(ddmStructureFieldNameParts[2]));
-
-				String fieldName = StringUtil.replaceLast(
-					ddmStructureFieldNameParts[3],
-					StringPool.UNDERLINE.concat(
-						LocaleUtil.toLanguageId(searchContext.getLocale())),
-					StringPool.BLANK);
-
-				try {
-					ddmStructureFieldValue =
-						ddmStructureManager.getIndexedFieldValue(
-							ddmStructureFieldValue,
-							ddmStructure.getFieldType(fieldName));
-				}
-				catch (Exception exception) {
-					if (_log.isDebugEnabled()) {
-						_log.debug(exception, exception);
-					}
-				}
-
-				BooleanQuery booleanQuery = new BooleanQueryImpl();
-
-				if (ddmStructureFieldValue instanceof String[]) {
-					String[] ddmStructureFieldValueArray =
-						(String[])ddmStructureFieldValue;
-
-					for (String ddmStructureFieldValueString :
-							ddmStructureFieldValueArray) {
-
-						booleanQuery.addRequiredTerm(
-							ddmStructureFieldName,
-							StringPool.QUOTE + ddmStructureFieldValueString +
-								StringPool.QUOTE);
-					}
-				}
-				else {
-					booleanQuery.addRequiredTerm(
-						ddmStructureFieldName,
-						StringPool.QUOTE + ddmStructureFieldValue +
-							StringPool.QUOTE);
-				}
-
-				booleanFilter.add(
-					new QueryFilter(booleanQuery), BooleanClauseOccur.MUST);
-			}
-		}
-		catch (PortalException portalException) {
-			throw new SystemException(portalException);
-		}
+		_addMimeTypesFilter(booleanFilter, searchContext);
 	}
 
 	protected void addHiddenFilter(
@@ -185,7 +75,84 @@ public class DLFileEntryModelPreFilterContributor
 		}
 	}
 
-	protected void addMimeTypesFilter(
+	protected void addWorkflowStatusFilter(
+		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
+		SearchContext searchContext) {
+
+		workflowStatusModelPreFilterContributor.contribute(
+			booleanFilter, modelSearchSettings, searchContext);
+	}
+
+	@Reference
+	protected DDMIndexer ddmIndexer;
+
+	@Reference
+	protected DDMStructureManager ddmStructureManager;
+
+	protected RelatedEntryIndexer relatedEntryIndexer =
+		new BaseRelatedEntryIndexer();
+
+	@Reference(target = "(model.pre.filter.contributor.id=WorkflowStatus)")
+	protected ModelPreFilterContributor workflowStatusModelPreFilterContributor;
+
+	private void _addAttachmentFilter(
+		BooleanFilter booleanFilter, SearchContext searchContext) {
+
+		if (!searchContext.isIncludeAttachments()) {
+			return;
+		}
+
+		try {
+			relatedEntryIndexer.addRelatedClassNames(
+				booleanFilter, searchContext);
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+	}
+
+	private void _addClassTypeIdsFilter(
+		BooleanFilter booleanFilter, SearchContext searchContext) {
+
+		long[] classTypeIds = searchContext.getClassTypeIds();
+
+		if (ArrayUtil.isEmpty(classTypeIds)) {
+			return;
+		}
+
+		TermsFilter termsFilter = new TermsFilter(Field.CLASS_TYPE_ID);
+
+		termsFilter.addValues(ArrayUtil.toStringArray(classTypeIds));
+
+		booleanFilter.add(termsFilter, BooleanClauseOccur.MUST);
+	}
+
+	private void _addDDMFieldFilter(
+		BooleanFilter booleanFilter, SearchContext searchContext) {
+
+		try {
+			String ddmStructureFieldName = (String)searchContext.getAttribute(
+				"ddmStructureFieldName");
+			Serializable ddmStructureFieldValue = searchContext.getAttribute(
+				"ddmStructureFieldValue");
+
+			if (Validator.isNotNull(ddmStructureFieldName) &&
+				Validator.isNotNull(ddmStructureFieldValue)) {
+
+				QueryFilter queryFilter =
+					ddmIndexer.createFieldValueQueryFilter(
+						ddmStructureFieldName, ddmStructureFieldValue,
+						searchContext.getLocale());
+
+				booleanFilter.add(queryFilter, BooleanClauseOccur.MUST);
+			}
+		}
+		catch (Exception exception) {
+			throw new SystemException(exception);
+		}
+	}
+
+	private void _addMimeTypesFilter(
 		BooleanFilter booleanFilter, SearchContext searchContext) {
 
 		String[] mimeTypes = (String[])searchContext.getAttribute("mimeTypes");
@@ -203,25 +170,5 @@ public class DLFileEntryModelPreFilterContributor
 			booleanFilter.add(mimeTypesBooleanFilter, BooleanClauseOccur.MUST);
 		}
 	}
-
-	protected void addWorkflowStatusFilter(
-		BooleanFilter booleanFilter, ModelSearchSettings modelSearchSettings,
-		SearchContext searchContext) {
-
-		workflowStatusModelPreFilterContributor.contribute(
-			booleanFilter, modelSearchSettings, searchContext);
-	}
-
-	@Reference
-	protected DDMStructureManager ddmStructureManager;
-
-	protected RelatedEntryIndexer relatedEntryIndexer =
-		new BaseRelatedEntryIndexer();
-
-	@Reference(target = "(model.pre.filter.contributor.id=WorkflowStatus)")
-	protected ModelPreFilterContributor workflowStatusModelPreFilterContributor;
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		DLFileEntryModelPreFilterContributor.class);
 
 }

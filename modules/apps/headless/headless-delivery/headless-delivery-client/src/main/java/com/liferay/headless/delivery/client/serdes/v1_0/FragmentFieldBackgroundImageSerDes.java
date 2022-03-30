@@ -59,6 +59,18 @@ public class FragmentFieldBackgroundImageSerDes {
 
 		sb.append("{");
 
+		if (fragmentFieldBackgroundImage.getBackgroundFragmentImage() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"backgroundFragmentImage\": ");
+
+			sb.append(
+				String.valueOf(
+					fragmentFieldBackgroundImage.getBackgroundFragmentImage()));
+		}
+
 		if (fragmentFieldBackgroundImage.getBackgroundImage() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -93,6 +105,16 @@ public class FragmentFieldBackgroundImageSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (fragmentFieldBackgroundImage.getBackgroundFragmentImage() == null) {
+			map.put("backgroundFragmentImage", null);
+		}
+		else {
+			map.put(
+				"backgroundFragmentImage",
+				String.valueOf(
+					fragmentFieldBackgroundImage.getBackgroundFragmentImage()));
+		}
+
 		if (fragmentFieldBackgroundImage.getBackgroundImage() == null) {
 			map.put("backgroundImage", null);
 		}
@@ -124,16 +146,21 @@ public class FragmentFieldBackgroundImageSerDes {
 			FragmentFieldBackgroundImage fragmentFieldBackgroundImage,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "backgroundImage")) {
+			if (Objects.equals(
+					jsonParserFieldName, "backgroundFragmentImage")) {
+
 				if (jsonParserFieldValue != null) {
-					fragmentFieldBackgroundImage.setBackgroundImage(
+					fragmentFieldBackgroundImage.setBackgroundFragmentImage(
 						FragmentImageSerDes.toDTO(
 							(String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (Objects.equals(jsonParserFieldName, "backgroundImage")) {
+				if (jsonParserFieldValue != null) {
+					fragmentFieldBackgroundImage.setBackgroundImage(
+						BackgroundImageSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
 			}
 		}
 
@@ -163,7 +190,7 @@ public class FragmentFieldBackgroundImageSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -199,7 +226,7 @@ public class FragmentFieldBackgroundImageSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

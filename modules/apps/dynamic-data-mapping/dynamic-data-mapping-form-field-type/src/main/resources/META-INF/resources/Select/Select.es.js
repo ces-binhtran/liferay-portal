@@ -14,12 +14,11 @@
 
 import ClayDropDown from '@clayui/drop-down';
 import {ClayCheckbox} from '@clayui/form';
-import React, {forwardRef, useMemo, useRef, useState} from 'react';
+import React, {forwardRef, useEffect, useMemo, useRef, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {normalizeOptions, normalizeValue} from '../util/options';
 import HiddenSelectInput from './HiddenSelectInput.es';
 import VisibleSelectInput from './VisibleSelectInput.es';
 
@@ -35,6 +34,11 @@ const KEYCODES = {
 	SPACE: 32,
 	TAB: 9,
 };
+
+/**
+ * Maximum number of items to be shown without the Search bar
+ */
+const MAX_ITEMS = 11;
 
 /**
  * Appends a new value on the current value state
@@ -74,70 +78,18 @@ function removeValue({value, valueToBeRemoved}) {
 function toArray(value = '') {
 	let newValue = value;
 
+	if (newValue && typeof newValue === 'string') {
+		try {
+			newValue = JSON.parse(newValue);
+		}
+		catch (error) {}
+	}
+
 	if (!Array.isArray(newValue)) {
 		newValue = [newValue];
 	}
 
 	return newValue;
-}
-
-function normalizeValue({
-	multiple,
-	normalizedOptions,
-	predefinedValueArray,
-	valueArray,
-}) {
-	const assertValue = valueArray.length ? valueArray : predefinedValueArray;
-
-	const valueWithoutMultiple = assertValue.filter((_, index) => {
-		return multiple ? true : index === 0;
-	});
-
-	return valueWithoutMultiple.filter((value) =>
-		normalizedOptions.some((option) => value === option.value)
-	);
-}
-
-/**
- * Some parameters on each option
- * needs to be prepared in case of
- * multiple selected values(when the value state is an array).
- */
-function assertOptionParameters({multiple, option, valueArray}) {
-	const included = valueArray.includes(option.value);
-
-	return {
-		...option,
-		active: !multiple && included,
-		checked: multiple && included,
-		type: multiple ? 'checkbox' : 'item',
-	};
-}
-
-function normalizeOptions({fixedOptions, multiple, options, valueArray}) {
-	const emptyOption = {
-		label: Liferay.Language.get('choose-an-option'),
-		value: null,
-	};
-
-	const newOptions = [
-		...options.map((option, index) => ({
-			...assertOptionParameters({multiple, option, valueArray}),
-			separator:
-				Array.isArray(fixedOptions) &&
-				fixedOptions.length > 0 &&
-				index === options.length - 1,
-		})),
-		...fixedOptions.map((option) =>
-			assertOptionParameters({multiple, option, valueArray})
-		),
-	].filter(({value}) => value !== '');
-
-	if (!multiple) {
-		return [emptyOption, ...newOptions];
-	}
-
-	return newOptions;
 }
 
 function handleDropdownItemClick({currentValue, multiple, option}) {
@@ -182,6 +134,7 @@ const DropdownItem = ({
 		<ClayDropDown.Item
 			active={expand && currentValue === option.label}
 			data-testid={`dropdownItem-${index}`}
+			disabled={option.disabled}
 			label={option.label}
 			onClick={(event) => {
 				event.preventDefault();
@@ -219,6 +172,83 @@ const DropdownItem = ({
 		{option && option.separator && <ClayDropDown.Divider />}
 	</>
 );
+
+const DropdownList = ({
+	currentValue,
+	expand,
+	handleSelect,
+	multiple,
+	options,
+}) => (
+	<ClayDropDown.ItemList>
+		{options.map((option, index) => (
+			<DropdownItem
+				currentValue={currentValue}
+				expand={expand}
+				index={index}
+				key={`${option.value}-${index}`}
+				multiple={multiple}
+				onSelect={handleSelect}
+				option={option}
+				options={options}
+			/>
+		))}
+	</ClayDropDown.ItemList>
+);
+
+const DropdownListWithSearch = ({
+	currentValue,
+	expand,
+	handleSelect,
+	multiple,
+	options,
+	showEmptyOption,
+}) => {
+	const [query, setQuery] = useState('');
+	const [filteredOptions, setFilteredOptions] = useState([]);
+
+	useEffect(() => {
+		let result = options.filter(
+			(option) =>
+				option.value &&
+				option.label.toLowerCase().includes(query.toLowerCase())
+		);
+
+		if (showEmptyOption && !multiple) {
+			const emptyOption = {
+				label: Liferay.Language.get('choose-an-option'),
+				value: null,
+			};
+
+			result = [emptyOption, ...result];
+		}
+
+		setFilteredOptions(result);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [options, query]);
+
+	return (
+		<>
+			<ClayDropDown.Search
+				onChange={(event) => setQuery(event.target.value)}
+				value={query}
+			/>
+			{filteredOptions.length > 0 ? (
+				<DropdownList
+					currentValue={currentValue}
+					expand={expand}
+					handleSelect={handleSelect}
+					multiple={multiple}
+					options={filteredOptions}
+				/>
+			) : (
+				<div className="dropdown-section text-muted">
+					{Liferay.Language.get('empty-list')}
+				</div>
+			)}
+		</>
+	);
+};
 
 const Trigger = forwardRef(
 	(
@@ -259,6 +289,7 @@ const Select = ({
 	options,
 	predefinedValue,
 	readOnly,
+	showEmptyOption,
 	value,
 	...otherProps
 }) => {
@@ -313,6 +344,8 @@ const Select = ({
 			setExpand(false);
 
 			onExpand({event, expand: false});
+
+			triggerElementRef.current.firstChild.focus();
 		}
 	};
 
@@ -337,6 +370,10 @@ const Select = ({
 
 					setExpand(!expand);
 					onExpand({event, expand: !expand});
+
+					if (expand) {
+						triggerElementRef.current.firstChild.focus();
+					}
 				}}
 				onTriggerKeyDown={(event) => {
 					if (
@@ -365,6 +402,10 @@ const Select = ({
 						setExpand(!expand);
 
 						onExpand({event, expand: !expand});
+
+						if (expand) {
+							triggerElementRef.current.firstChild.focus();
+						}
 					}
 				}}
 				options={options}
@@ -396,36 +437,44 @@ const Select = ({
 				onSetActive={setExpand}
 				ref={menuElementRef}
 			>
-				<ClayDropDown.ItemList>
-					{options.map((option, index) => (
-						<DropdownItem
-							currentValue={currentValue}
-							expand={expand}
-							index={index}
-							key={`${option.value}-${index}`}
-							multiple={multiple}
-							onSelect={handleSelect}
-							option={option}
-							options={options}
-						/>
-					))}
-				</ClayDropDown.ItemList>
+				{options.length > MAX_ITEMS ? (
+					<DropdownListWithSearch
+						currentValue={currentValue}
+						expand={expand}
+						handleSelect={handleSelect}
+						multiple={multiple}
+						options={options}
+						showEmptyOption={showEmptyOption}
+					/>
+				) : (
+					<DropdownList
+						currentValue={currentValue}
+						expand={expand}
+						handleSelect={handleSelect}
+						multiple={multiple}
+						options={options}
+					/>
+				)}
 			</ClayDropDown.Menu>
 		</>
 	);
 };
 
 const Main = ({
+	editingLanguageId,
 	fixedOptions = [],
 	label,
 	localizedValue = {},
+	localizedValueEdited,
 	multiple,
 	name,
+	onBlur = () => {},
 	onChange,
-	onExpand = () => {},
+	onFocus = () => {},
 	options = [],
 	predefinedValue = [],
 	readOnly = false,
+	showEmptyOption = true,
 	value = [],
 	...otherProps
 }) => {
@@ -435,27 +484,37 @@ const Main = ({
 	const normalizedOptions = useMemo(
 		() =>
 			normalizeOptions({
+				editingLanguageId,
 				fixedOptions,
 				multiple,
 				options,
+				showEmptyOption,
 				valueArray,
 			}),
-		[fixedOptions, multiple, options, valueArray]
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[fixedOptions, multiple, options, showEmptyOption, valueArray]
 	);
 
 	value = useMemo(
 		() =>
 			normalizeValue({
+				localizedValueEdited,
 				multiple,
 				normalizedOptions,
 				predefinedValueArray,
 				valueArray,
 			}),
-		[multiple, normalizedOptions, predefinedValueArray, valueArray]
+		[
+			localizedValueEdited,
+			multiple,
+			normalizedOptions,
+			predefinedValueArray,
+			valueArray,
+		]
 	);
 
 	return (
-		<FieldBaseProxy
+		<FieldBase
 			label={label}
 			localizedValue={localizedValue}
 			name={name}
@@ -464,41 +523,34 @@ const Main = ({
 		>
 			<Select
 				multiple={multiple}
-				name={name}
-				onCloseButtonClicked={onChange}
-				onDropdownItemClicked={onChange}
-				onExpand={onExpand}
+				name={`${name}_field`}
+				onCloseButtonClicked={({event, value}) =>
+					onChange(event, value)
+				}
+				onDropdownItemClicked={({event, value}) =>
+					onChange(event, value)
+				}
+				onExpand={({event, expand}) => {
+					if (expand) {
+						onFocus(event);
+					}
+					else {
+						onBlur(event);
+					}
+				}}
 				options={normalizedOptions}
 				predefinedValue={predefinedValueArray}
 				readOnly={readOnly}
+				showEmptyOption={showEmptyOption}
 				value={value}
 				{...otherProps}
 			/>
-		</FieldBaseProxy>
+
+			<input name={name} type="hidden" value={value} />
+		</FieldBase>
 	);
 };
 
 Main.displayName = 'Select';
 
-const SelectProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onChange={({event, value}) => emit('fieldEdited', event, value)}
-		onExpand={({event, expand}) => {
-			if (expand) {
-				emit('fieldFocused', event, event.target.value);
-			}
-			else {
-				emit('fieldBlurred', event, event.target.value);
-			}
-		}}
-	/>
-));
-
-const ReactSelectAdapter = getConnectedReactComponentAdapter(
-	SelectProxy,
-	'select'
-);
-
-export {ReactSelectAdapter, Main};
-export default ReactSelectAdapter;
+export default Main;

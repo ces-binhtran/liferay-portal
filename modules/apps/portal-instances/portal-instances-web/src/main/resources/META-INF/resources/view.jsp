@@ -19,9 +19,11 @@
 <%
 int cur = ParamUtil.getInteger(request, SearchContainer.DEFAULT_CUR_PARAM);
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/portal_instances/view");
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/portal_instances/view"
+).buildPortletURL();
 %>
 
 <clay:management-toolbar
@@ -30,10 +32,8 @@ portletURL.setParameter("mvcRenderCommandName", "/portal_instances/view");
 			{
 				addDropdownItem(
 					dropdownItem -> {
-						dropdownItem.setHref(
-							renderResponse.createRenderURL(), "mvcRenderCommandName", "/portal_instances/edit_instance", "redirect", PortalUtil.getCurrentURL(request));
-						dropdownItem.setLabel(
-							LanguageUtil.get(request, "add"));
+						dropdownItem.setHref(renderResponse.createRenderURL(), "mvcRenderCommandName", "/portal_instances/edit_instance", "redirect", PortalUtil.getCurrentURL(httpServletRequest));
+						dropdownItem.setLabel(LanguageUtil.get(httpServletRequest, "add"));
 					});
 			}
 		}
@@ -47,7 +47,7 @@ portletURL.setParameter("mvcRenderCommandName", "/portal_instances/view");
 	<portlet:param name="cur" value="<%= String.valueOf(cur) %>" />
 </portlet:renderURL>
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" />
 	<aui:input name="redirect" type="hidden" value="<%= redirectURL %>" />
 	<aui:input name="className" type="hidden" />

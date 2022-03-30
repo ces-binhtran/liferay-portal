@@ -15,13 +15,14 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.document.library.kernel.model.DLFileEntryConstants;
-import com.liferay.info.field.InfoField;
 import com.liferay.info.form.InfoForm;
+import com.liferay.info.item.InfoItemFormVariation;
+import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.info.item.provider.InfoItemFormProvider;
-import com.liferay.info.item.provider.InfoItemFormProviderTracker;
+import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -51,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_collection_mapping_fields"
+		"mvc.command.name=/layout_content_page_editor/get_collection_mapping_fields"
 	},
 	service = MVCResourceCommand.class
 )
@@ -63,7 +63,11 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 			ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 		throws Exception {
 
-		// LPS-111037
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		String itemSubtype = ParamUtil.getString(
+			resourceRequest, "itemSubtype");
 
 		String itemType = ParamUtil.getString(resourceRequest, "itemType");
 
@@ -71,50 +75,45 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 			itemType = FileEntry.class.getName();
 		}
 
-		InfoItemFormProvider<?> infoItemFormProvider =
-			_infoItemFormProviderTracker.getInfoItemFormProvider(itemType);
+		String itemSubtypeLabel = StringPool.BLANK;
 
-		if (infoItemFormProvider == null) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to get info item form provider for class " +
-						itemType);
+		InfoItemFormVariationsProvider<?> infoItemFormVariationsProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormVariationsProvider.class, itemType);
+
+		if (infoItemFormVariationsProvider != null) {
+			InfoItemFormVariation infoItemFormVariation =
+				infoItemFormVariationsProvider.getInfoItemFormVariation(
+					themeDisplay.getScopeGroupId(), itemSubtype);
+
+			if (infoItemFormVariation != null) {
+				itemSubtypeLabel = infoItemFormVariation.getLabel(
+					themeDisplay.getLocale());
 			}
+		}
+
+		InfoItemFormProvider<?> infoItemFormProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormProvider.class, itemType);
+
+		try {
+			InfoForm infoForm = infoItemFormProvider.getInfoForm();
+
+			String itemTypeLabel = infoForm.getLabel(themeDisplay.getLocale());
 
 			JSONPortletResponseUtil.writeJSON(
 				resourceRequest, resourceResponse,
-				JSONFactoryUtil.createJSONArray());
-
-			return;
-		}
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		String itemSubtype = ParamUtil.getString(
-			resourceRequest, "itemSubtype");
-
-		try {
-			JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
-
-			InfoForm infoForm = infoItemFormProvider.getInfoForm(
-				GetterUtil.getLong(itemSubtype));
-
-			for (InfoField infoField : infoForm.getAllInfoFields()) {
-				jsonArray.put(
-					JSONUtil.put(
-						"key", infoField.getName()
-					).put(
-						"label", infoField.getLabel(themeDisplay.getLocale())
-					).put(
-						"type",
-						infoField.getInfoFieldType(
-						).getName()
-					));
-			}
-
-			JSONPortletResponseUtil.writeJSON(
-				resourceRequest, resourceResponse, jsonArray);
+				JSONUtil.put(
+					"itemSubtypeLabel", itemSubtypeLabel
+				).put(
+					"itemTypeLabel", itemTypeLabel
+				).put(
+					"mappingFields",
+					MappingContentUtil.getMappingFieldsJSONArray(
+						itemSubtype, themeDisplay.getScopeGroupId(),
+						_infoItemServiceTracker, itemType,
+						themeDisplay.getLocale())
+				));
 		}
 		catch (Exception exception) {
 			_log.error("Unable to get collection mapping fields", exception);
@@ -133,6 +132,6 @@ public class GetCollectionMappingFieldsMVCResourceCommand
 		GetCollectionMappingFieldsMVCResourceCommand.class);
 
 	@Reference
-	private InfoItemFormProviderTracker _infoItemFormProviderTracker;
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 }

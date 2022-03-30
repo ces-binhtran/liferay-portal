@@ -16,22 +16,20 @@ package com.liferay.portal.search.elasticsearch7.internal.connection;
 
 import com.liferay.petra.process.local.LocalProcessExecutor;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.cluster.ClusterExecutor;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.Props;
-import com.liferay.portal.kernel.util.PropsKeys;
-import com.liferay.portal.kernel.util.SystemProperties;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
-import com.liferay.portal.search.elasticsearch7.internal.cluster.ClusterSettingsContext;
-import com.liferay.portal.search.elasticsearch7.internal.cluster.UnicastSettingsContributor;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
+import com.liferay.portal.search.elasticsearch7.internal.connection.constants.ConnectionConstants;
 import com.liferay.portal.search.elasticsearch7.internal.settings.BaseSettingsContributor;
 import com.liferay.portal.search.elasticsearch7.internal.sidecar.PathUtil;
 import com.liferay.portal.search.elasticsearch7.internal.sidecar.Sidecar;
+import com.liferay.portal.search.elasticsearch7.internal.sidecar.SidecarManager;
 import com.liferay.portal.search.elasticsearch7.settings.ClientSettingsHelper;
 import com.liferay.portal.search.elasticsearch7.settings.SettingsContributor;
-import com.liferay.portal.util.FileImpl;
-
-import java.io.File;
+import com.liferay.portal.util.PropsImpl;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,8 +45,6 @@ import org.elasticsearch.client.RestHighLevelClient;
 
 import org.mockito.Mockito;
 
-import org.osgi.framework.BundleContext;
-
 /**
  * @author André de Oliveira
  */
@@ -59,10 +55,55 @@ public class ElasticsearchConnectionFixture
 		return new Builder();
 	}
 
-	public void createNode() {
-		deleteTmpDir();
+	public ElasticsearchConnection createElasticsearchConnection() {
+		PropsUtil.setProps(new PropsImpl());
 
-		_elasticsearchConnection = openElasticsearchConnection();
+		ElasticsearchConfigurationWrapper elasticsearchConfigurationWrapper =
+			new ElasticsearchConfigurationWrapper() {
+				{
+					setElasticsearchConfiguration(
+						ConfigurableUtil.createConfigurable(
+							ElasticsearchConfiguration.class,
+							_elasticsearchConfigurationProperties));
+				}
+			};
+
+		Sidecar sidecar = new Sidecar(
+			Mockito.mock(ClusterExecutor.class),
+			elasticsearchConfigurationWrapper,
+			_createElasticsearchInstancePaths(), new LocalProcessExecutor(),
+			() -> _TMP_PATH.resolve("lib-process-executor"),
+			_getSettingsContributors(), Mockito.mock(SidecarManager.class));
+
+		ElasticsearchConnectionBuilder elasticsearchConnectionBuilder =
+			new ElasticsearchConnectionBuilder();
+
+		elasticsearchConnectionBuilder.active(
+			true
+		).connectionId(
+			ConnectionConstants.SIDECAR_CONNECTION_ID
+		).postCloseRunnable(
+			sidecar::stop
+		).preConnectElasticsearchConnectionConsumer(
+			elasticsearchConnection -> {
+				_deleteTmpDir();
+
+				sidecar.start();
+
+				elasticsearchConnection.setNetworkHostAddresses(
+					new String[] {sidecar.getNetworkHostAddress()});
+			}
+		);
+
+		_elasticsearchConnection = elasticsearchConnectionBuilder.build();
+
+		return _elasticsearchConnection;
+	}
+
+	public void createNode() {
+		createElasticsearchConnection();
+
+		_elasticsearchConnection.connect();
 	}
 
 	public void destroyNode() {
@@ -70,7 +111,7 @@ public class ElasticsearchConnectionFixture
 			_elasticsearchConnection.close();
 		}
 
-		deleteTmpDir();
+		_deleteTmpDir();
 	}
 
 	public Map<String, Object> getElasticsearchConfigurationProperties() {
@@ -104,14 +145,12 @@ public class ElasticsearchConnectionFixture
 			ElasticsearchConnectionFixture elasticsearchConnectionFixture =
 				new ElasticsearchConnectionFixture();
 
-			elasticsearchConnectionFixture._clusterSettingsContext =
-				_clusterSettingsContext;
+			elasticsearchConnectionFixture._discoveryTypeZen =
+				_discoveryTypeZen;
 			elasticsearchConnectionFixture.
 				_elasticsearchConfigurationProperties =
 					createElasticsearchConfigurationProperties(
 						_elasticsearchConfigurationProperties, _clusterName);
-			elasticsearchConnectionFixture._sidecarReplacesEmbedded =
-				_sidecarReplacesEmbedded;
 			elasticsearchConnectionFixture._workPath = _TMP_PATH.resolve(
 				_clusterName);
 
@@ -126,10 +165,8 @@ public class ElasticsearchConnectionFixture
 			return this;
 		}
 
-		public Builder clusterSettingsContext(
-			ClusterSettingsContext clusterSettingsContext) {
-
-			_clusterSettingsContext = clusterSettingsContext;
+		public Builder discoveryTypeZen(boolean discoveryTypeZen) {
+			_discoveryTypeZen = discoveryTypeZen;
 
 			return this;
 		}
@@ -148,15 +185,7 @@ public class ElasticsearchConnectionFixture
 			return this;
 		}
 
-		public ElasticsearchConnectionFixture.Builder sidecarReplacesEmbedded(
-			boolean sidecarReplacesEmbedded) {
-
-			_sidecarReplacesEmbedded = sidecarReplacesEmbedded;
-
-			return this;
-		}
-
-		protected static final Map<String, Object>
+		protected static Map<String, Object>
 			createElasticsearchConfigurationProperties(
 				Map<String, Object> elasticsearchConfigurationProperties,
 				String clusterName) {
@@ -170,29 +199,22 @@ public class ElasticsearchConnectionFixture
 			).put(
 				"logExceptionsOnly", false
 			).put(
-				"sidecarHttpPort", "9200-9300"
+				"sidecarHttpPort", HttpPortRange.AUTO
+			).put(
+				"sidecarJVMOptions", "-Xmx256m"
 			).putAll(
 				elasticsearchConfigurationProperties
 			).build();
 		}
 
 		private String _clusterName;
-		private ClusterSettingsContext _clusterSettingsContext;
+		private Boolean _discoveryTypeZen;
 		private Map<String, Object> _elasticsearchConfigurationProperties =
 			Collections.<String, Object>emptyMap();
-		private boolean _sidecarReplacesEmbedded = _SIDECAR_REPLACES_EMBEDDED;
 
 	}
 
-	protected ElasticsearchConnection createElasticsearchConnection() {
-		if (_sidecarReplacesEmbedded) {
-			return createSidecarElasticsearchConnection();
-		}
-
-		return createEmbeddedElasticsearchConnection();
-	}
-
-	protected ElasticsearchInstancePaths createElasticsearchInstancePaths() {
+	private ElasticsearchInstancePaths _createElasticsearchInstancePaths() {
 		ElasticsearchInstancePaths elasticsearchInstancePaths = Mockito.mock(
 			ElasticsearchInstancePaths.class);
 
@@ -211,77 +233,12 @@ public class ElasticsearchConnectionFixture
 		return elasticsearchInstancePaths;
 	}
 
-	protected ElasticsearchConnection createEmbeddedElasticsearchConnection() {
-		EmbeddedElasticsearchConnection embeddedElasticsearchConnection =
-			new EmbeddedElasticsearchConnection();
-
-		List<SettingsContributor> settingsContributors =
-			getSettingsContributors();
-
-		settingsContributors.forEach(
-			embeddedElasticsearchConnection::addSettingsContributor);
-
-		embeddedElasticsearchConnection.clusterSettingsContext =
-			getClusterSettingsContext();
-
-		embeddedElasticsearchConnection.props = createProps();
-
-		ReflectionTestUtil.setFieldValue(
-			embeddedElasticsearchConnection, "_file", new FileImpl());
-
-		BundleContext bundleContext = Mockito.mock(BundleContext.class);
-
-		Mockito.when(
-			bundleContext.getDataFile(
-				EmbeddedElasticsearchConnection.JNA_TMP_DIR)
-		).thenReturn(
-			new File(
-				SystemProperties.get(SystemProperties.TMP_DIR) + "/" +
-					EmbeddedElasticsearchConnection.JNA_TMP_DIR)
-		);
-
-		embeddedElasticsearchConnection.activate(
-			bundleContext, _elasticsearchConfigurationProperties);
-
-		return embeddedElasticsearchConnection;
-	}
-
-	protected Props createProps() {
-		Props props = Mockito.mock(Props.class);
-
-		Mockito.when(
-			props.get(PropsKeys.LIFERAY_HOME)
-		).thenReturn(
-			_workPath.toString()
-		);
-
-		return props;
-	}
-
-	protected SidecarElasticsearchConnection
-		createSidecarElasticsearchConnection() {
-
-		ElasticsearchConfiguration elasticsearchConfiguration =
-			ConfigurableUtil.createConfigurable(
-				ElasticsearchConfiguration.class,
-				_elasticsearchConfigurationProperties);
-
-		return new SidecarElasticsearchConnection(
-			elasticsearchConfiguration.restClientLoggerLevel(),
-			new Sidecar(
-				getClusterSettingsContext(), elasticsearchConfiguration,
-				createElasticsearchInstancePaths(), "9200-9300",
-				new LocalProcessExecutor(),
-				() -> _TMP_PATH.resolve("lib-process-executor"),
-				getSettingsContributors()));
-	}
-
-	protected void deleteTmpDir() {
+	private void _deleteTmpDir() {
 		PathUtil.deleteDir(_workPath);
 	}
 
-	protected SettingsContributor
-		getClusterLoggingThresholdSettingsContributor() {
+	private SettingsContributor
+		_getClusterLoggingThresholdSettingsContributor() {
 
 		return new BaseSettingsContributor(0) {
 
@@ -294,15 +251,32 @@ public class ElasticsearchConnectionFixture
 		};
 	}
 
-	protected ClusterSettingsContext getClusterSettingsContext() {
-		if (_clusterSettingsContext != null) {
-			return _clusterSettingsContext;
+	private SettingsContributor _getDiscoveryTypeZenContributor() {
+		if (!GetterUtil.getBoolean(_discoveryTypeZen)) {
+			return null;
 		}
 
-		return Mockito.mock(ClusterSettingsContext.class);
+		return new SettingsContributor() {
+
+			@Override
+			public int compareTo(SettingsContributor o) {
+				return 0;
+			}
+
+			@Override
+			public int getPriority() {
+				return 0;
+			}
+
+			@Override
+			public void populate(ClientSettingsHelper clientSettingsHelper) {
+				clientSettingsHelper.put("discovery.type", "zen");
+			}
+
+		};
 	}
 
-	protected SettingsContributor getDiskThresholdSettingsContributor() {
+	private SettingsContributor _getDiskThresholdSettingsContributor() {
 		return new BaseSettingsContributor(0) {
 
 			@Override
@@ -315,11 +289,11 @@ public class ElasticsearchConnectionFixture
 		};
 	}
 
-	protected List<SettingsContributor> getSettingsContributors() {
+	private List<SettingsContributor> _getSettingsContributors() {
 		return Stream.of(
-			getClusterLoggingThresholdSettingsContributor(),
-			getDiskThresholdSettingsContributor(),
-			getUnicastSettingsContributor()
+			_getClusterLoggingThresholdSettingsContributor(),
+			_getDiskThresholdSettingsContributor(),
+			_getDiscoveryTypeZenContributor()
 		).filter(
 			Objects::nonNull
 		).collect(
@@ -327,38 +301,12 @@ public class ElasticsearchConnectionFixture
 		);
 	}
 
-	protected SettingsContributor getUnicastSettingsContributor() {
-		if (_clusterSettingsContext != null) {
-			return new UnicastSettingsContributor() {
-				{
-					setClusterSettingsContext(_clusterSettingsContext);
-
-					activate(_elasticsearchConfigurationProperties);
-				}
-			};
-		}
-
-		return null;
-	}
-
-	protected ElasticsearchConnection openElasticsearchConnection() {
-		ElasticsearchConnection elasticsearchConnection =
-			createElasticsearchConnection();
-
-		elasticsearchConnection.connect();
-
-		return elasticsearchConnection;
-	}
-
-	private static final boolean _SIDECAR_REPLACES_EMBEDDED = false;
-
 	private static final Path _TMP_PATH = Paths.get("tmp");
 
-	private ClusterSettingsContext _clusterSettingsContext;
+	private Boolean _discoveryTypeZen;
 	private Map<String, Object> _elasticsearchConfigurationProperties =
 		Collections.<String, Object>emptyMap();
 	private ElasticsearchConnection _elasticsearchConnection;
-	private boolean _sidecarReplacesEmbedded;
 	private Path _workPath;
 
 }

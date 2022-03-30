@@ -34,7 +34,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/convert_layout"
+		"mvc.command.name=/layout_admin/convert_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -54,16 +54,7 @@ public class ConvertLayoutMVCActionCommand
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long[] selPlids = null;
-
-		long selPlid = ParamUtil.getLong(actionRequest, "selPlid");
-
-		if (selPlid > 0) {
-			selPlids = new long[] {selPlid};
-		}
-		else {
-			selPlids = ParamUtil.getLongValues(actionRequest, "rowIds");
-		}
+		long[] selPlids = ParamUtil.getLongValues(actionRequest, "rowIds");
 
 		for (long curSelPlid : selPlids) {
 			_bulkLayoutConverter.convertLayout(curSelPlid);

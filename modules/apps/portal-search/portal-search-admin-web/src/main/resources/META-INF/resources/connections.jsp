@@ -31,8 +31,7 @@ page import="com.liferay.portal.search.engine.NodeInformation" %>
 <%@ page import="java.util.List" %>
 
 <%
-SearchEngineDisplayContext
-	searchEngineDisplayContext = (SearchEngineDisplayContext)request.getAttribute(SearchAdminWebKeys.SEARCH_ENGINE_DISPLAY_CONTEXT);
+SearchEngineDisplayContext searchEngineDisplayContext = (SearchEngineDisplayContext)request.getAttribute(SearchAdminWebKeys.SEARCH_ENGINE_DISPLAY_CONTEXT);
 %>
 
 <clay:container-fluid
@@ -74,7 +73,7 @@ SearchEngineDisplayContext
 					List<ConnectionInformation> connectionInformationList = searchEngineDisplayContext.getConnectionInformationList();
 					%>
 
-					<h3 class="search-engine-page-title">
+					<h3 class="search-engine-page-title sheet-lg">
 						<liferay-ui:message key="active-connections" />
 
 						<clay:badge
@@ -127,7 +126,7 @@ SearchEngineDisplayContext
 													</div>
 
 													<div class="connection-health-indicator-text indicator-item">
-														<liferay-ui:message arguments="<%= new String[] {connectionInformation.getHealth()} %>" key="health-x" />
+														<liferay-ui:message arguments="<%= connectionInformation.getHealth() %>" key="health-x" />
 													</div>
 												</div>
 											</div>
@@ -180,9 +179,8 @@ SearchEngineDisplayContext
 
 									<c:if test="<%= Validator.isNotNull(errorMessage) %>">
 										<clay:alert
+											displayType="danger"
 											message="<%= errorMessage %>"
-											style="danger"
-											title='<%= LanguageUtil.get(request, "error") %>'
 										/>
 									</c:if>
 								</clay:sheet>
@@ -194,9 +192,7 @@ SearchEngineDisplayContext
 						</c:when>
 						<c:otherwise>
 							<clay:alert
-								message='<%= LanguageUtil.get(request, "no-active-connections") %>'
-								style="info"
-								title='<%= LanguageUtil.get(request, "info") %>'
+								message="no-active-connections"
 							/>
 						</c:otherwise>
 					</c:choose>

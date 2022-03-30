@@ -62,11 +62,14 @@ public class FragmentFieldHTMLSerDes {
 
 			sb.append("\"html\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(fragmentFieldHTML.getHtml()));
-
-			sb.append("\"");
+			if (fragmentFieldHTML.getHtml() instanceof String) {
+				sb.append("\"");
+				sb.append((String)fragmentFieldHTML.getHtml());
+				sb.append("\"");
+			}
+			else {
+				sb.append(fragmentFieldHTML.getHtml());
+			}
 		}
 
 		sb.append("}");
@@ -123,10 +126,6 @@ public class FragmentFieldHTMLSerDes {
 					fragmentFieldHTML.setHtml((Object)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -155,7 +154,7 @@ public class FragmentFieldHTMLSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -191,7 +190,7 @@ public class FragmentFieldHTMLSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

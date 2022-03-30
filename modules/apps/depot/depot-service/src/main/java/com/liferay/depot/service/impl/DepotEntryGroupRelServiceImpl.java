@@ -69,7 +69,7 @@ public class DepotEntryGroupRelServiceImpl
 			ActionKeys.UPDATE);
 
 		return depotEntryGroupRelLocalService.deleteDepotEntryGroupRel(
-			depotEntryGroupRelId);
+			depotEntryGroupRel);
 	}
 
 	@Override
@@ -105,6 +105,23 @@ public class DepotEntryGroupRelServiceImpl
 
 		return depotEntryGroupRelLocalService.getDepotEntryGroupRelsCount(
 			groupId);
+	}
+
+	@Override
+	public DepotEntryGroupRel updateDDMStructuresAvailable(
+			long depotEntryGroupRelId, boolean ddmStructuresAvailable)
+		throws PortalException {
+
+		DepotEntryGroupRel depotEntryGroupRel =
+			depotEntryGroupRelLocalService.getDepotEntryGroupRel(
+				depotEntryGroupRelId);
+
+		_depotEntryModelResourcePermission.check(
+			getPermissionChecker(), depotEntryGroupRel.getDepotEntryId(),
+			ActionKeys.UPDATE);
+
+		return depotEntryGroupRelLocalService.updateDDMStructuresAvailable(
+			depotEntryGroupRelId, ddmStructuresAvailable);
 	}
 
 	@Override

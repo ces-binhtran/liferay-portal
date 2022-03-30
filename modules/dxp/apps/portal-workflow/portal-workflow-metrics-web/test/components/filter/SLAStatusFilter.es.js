@@ -9,7 +9,8 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, findByTestId, render} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import SLAStatusFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/SLAStatusFilter.es';
@@ -22,34 +23,25 @@ const wrapper = ({children}) => (
 );
 
 describe('The sla status filter component should', () => {
-	let getAllByTestId;
-
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		const renderResult = render(<SLAStatusFilter processId={12345} />, {
+		render(<SLAStatusFilter processId={12345} />, {
 			wrapper,
 		});
-
-		getAllByTestId = renderResult.getAllByTestId;
 	});
 
-	test('Be rendered with filter item names', async () => {
-		const filterItems = await getAllByTestId('filterItem');
+	test('Be rendered with filter item names', () => {
+		const filterItems = document.querySelectorAll('.dropdown-item');
 
 		expect(filterItems[0].innerHTML).toContain('on-time');
 		expect(filterItems[1].innerHTML).toContain('overdue');
 		expect(filterItems[2].innerHTML).toContain('untracked');
 	});
 
-	test('Be rendered with active option "Overdue"', async () => {
-		const filterItems = getAllByTestId('filterItem');
+	test('Be rendered with active option "Overdue"', () => {
+		const activeItem = document.querySelector('.active');
 
-		const activeItem = filterItems.find((item) =>
-			item.className.includes('active')
-		);
-		const activeItemName = await findByTestId(activeItem, 'filterItemName');
-
-		expect(activeItemName.innerHTML).toBe('overdue');
+		expect(activeItem).toHaveTextContent('overdue');
 	});
 });

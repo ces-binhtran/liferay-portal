@@ -18,6 +18,7 @@ import com.liferay.asset.list.model.AssetListEntryUsage;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -54,6 +55,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see AssetListEntryUsageLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -66,11 +68,15 @@ public interface AssetListEntryUsageLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AssetListEntryUsageLocalServiceUtil} to access the asset list entry usage local service. Add custom service methods to <code>com.liferay.asset.list.service.impl.AssetListEntryUsageLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.asset.list.service.impl.AssetListEntryUsageLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the asset list entry usage local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AssetListEntryUsageLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the asset list entry usage to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryUsageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was added
@@ -79,9 +85,21 @@ public interface AssetListEntryUsageLocalService
 	public AssetListEntryUsage addAssetListEntryUsage(
 		AssetListEntryUsage assetListEntryUsage);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addAssetListEntryUsage(long, long, long, long, long, String,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public AssetListEntryUsage addAssetListEntryUsage(
 			long userId, long groupId, long assetListEntryId, long classNameId,
 			long classPK, String portletId, ServiceContext serviceContext)
+		throws PortalException;
+
+	public AssetListEntryUsage addAssetListEntryUsage(
+			long userId, long groupId, long classNameId, String containerKey,
+			long containerType, String key, long plid,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -103,6 +121,10 @@ public interface AssetListEntryUsageLocalService
 	/**
 	 * Deletes the asset list entry usage from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryUsageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was removed
 	 */
@@ -113,6 +135,10 @@ public interface AssetListEntryUsageLocalService
 	/**
 	 * Deletes the asset list entry usage with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryUsageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetListEntryUsageId the primary key of the asset list entry usage
 	 * @return the asset list entry usage that was removed
 	 * @throws PortalException if a asset list entry usage with the primary key could not be found
@@ -121,6 +147,9 @@ public interface AssetListEntryUsageLocalService
 	public AssetListEntryUsage deleteAssetListEntryUsage(
 			long assetListEntryUsageId)
 		throws PortalException;
+
+	public void deleteAssetListEntryUsages(
+		String containerKey, long containerType, long plid);
 
 	/**
 	 * @throws PortalException
@@ -131,6 +160,9 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -202,9 +234,19 @@ public interface AssetListEntryUsageLocalService
 	public AssetListEntryUsage fetchAssetListEntryUsage(
 		long assetListEntryUsageId);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsages(String, long, long)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetListEntryUsage fetchAssetListEntryUsage(
 		long classNameId, long classPK, String portletId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetListEntryUsage fetchAssetListEntryUsage(
+		long groupId, long classNameId, String containerKey, long containerType,
+		String key, long plid);
 
 	/**
 	 * Returns the asset list entry usage matching the UUID and group.
@@ -219,6 +261,9 @@ public interface AssetListEntryUsageLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetEntryListUsagesByPlid(long plid);
 
 	/**
 	 * Returns the asset list entry usage with the primary key.
@@ -260,23 +305,67 @@ public interface AssetListEntryUsageLocalService
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
 		int start, int end);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsages(long, long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
 		long assetListEntryId);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsages(long, long, String, int, int,
+	 OrderByComparator)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
 		long assetListEntryId, int start, int end,
 		OrderByComparator<AssetListEntryUsage> orderByComparator);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsages(long, long, String, int)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
 		long assetListEntryId, long classNameId);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsages(long, long, String, int, int, int,
+	 OrderByComparator)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetListEntryUsage> getAssetListEntryUsages(
 		long assetListEntryId, long classNameId, int start, int end,
 		OrderByComparator<AssetListEntryUsage> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int type, int start,
+		int end, OrderByComparator<AssetListEntryUsage> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		long groupId, long classNameId, String key, int start, int end,
+		OrderByComparator<AssetListEntryUsage> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AssetListEntryUsage> getAssetListEntryUsages(
+		String containerKey, long containerType, long plid);
 
 	/**
 	 * Returns all the asset list entry usages matching the UUID and company.
@@ -312,12 +401,30 @@ public interface AssetListEntryUsageLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntryUsagesCount();
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsagesCount(long, long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntryUsagesCount(long assetListEntryId);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getAssetListEntryUsagesCount(long, long, String, int)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAssetListEntryUsagesCount(
 		long assetListEntryId, long classNameId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntryUsagesCount(
+		long groupId, long classNameId, String key);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAssetListEntryUsagesCount(
+		long groupId, long classNameId, String key, int type);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
@@ -343,6 +450,10 @@ public interface AssetListEntryUsageLocalService
 
 	/**
 	 * Updates the asset list entry usage in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryUsageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetListEntryUsage the asset list entry usage
 	 * @return the asset list entry usage that was updated

@@ -22,8 +22,8 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.registry.BaseRepositoryDefiner;
 import com.liferay.portal.kernel.repository.registry.CapabilityRegistry;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 
 import java.util.Locale;
@@ -67,9 +67,7 @@ public abstract class BaseCMISRepositoryDefiner extends BaseRepositoryDefiner {
 	protected abstract PortalCapabilityLocator getPortalCapabilityLocator();
 
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return ResourceBundleLoaderUtil.
-			getResourceBundleLoaderByBundleSymbolicName(
-				"com.liferay.document.library.repository.cmis.impl");
+		return ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 	}
 
 	private static final String _MODEL_RESOURCE_NAME_PREFIX = "model.resource.";

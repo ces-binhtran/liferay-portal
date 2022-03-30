@@ -30,7 +30,6 @@ import com.liferay.segments.model.SegmentsExperimentRel;
 
 import java.util.Locale;
 import java.util.Optional;
-import java.util.ResourceBundle;
 
 /**
  * @author David Arques
@@ -84,13 +83,14 @@ public class SegmentsExperimentUtil {
 	public static JSONObject toGoalJSONObject(
 		Locale locale, UnicodeProperties typeSettingsUnicodeProperties) {
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, SegmentsExperimentUtil.class);
-
 		String goal = typeSettingsUnicodeProperties.getProperty("goal");
 
 		return JSONUtil.put(
-			"label", LanguageUtil.get(resourceBundle, goal)
+			"label",
+			LanguageUtil.get(
+				ResourceBundleUtil.getBundle(
+					"content.Language", locale, SegmentsExperimentUtil.class),
+				goal)
 		).put(
 			"target", typeSettingsUnicodeProperties.getProperty("goalTarget")
 		).put(
@@ -110,6 +110,9 @@ public class SegmentsExperimentUtil {
 			"confidenceLevel", segmentsExperiment.getConfidenceLevel()
 		).put(
 			"description", segmentsExperiment.getDescription()
+		).put(
+			"detailsURL",
+			_getViewSegmentsExperimentDetailsURL(segmentsExperiment)
 		).put(
 			"editable", _isEditable(segmentsExperiment)
 		).put(
@@ -168,14 +171,37 @@ public class SegmentsExperimentUtil {
 		SegmentsExperimentConstants.Status statusObject =
 			statusObjectOptional.get();
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			"content.Language", locale, SegmentsExperimentUtil.class);
-
 		return JSONUtil.put(
-			"label", LanguageUtil.get(resourceBundle, statusObject.getLabel())
+			"label",
+			LanguageUtil.get(
+				ResourceBundleUtil.getBundle(
+					"content.Language", locale, SegmentsExperimentUtil.class),
+				statusObject.getLabel())
 		).put(
 			"value", statusObject.getValue()
 		);
+	}
+
+	private static String _getLiferayAnalyticsURL(long companyId) {
+		return PrefsPropsUtil.getString(companyId, "liferayAnalyticsURL");
+	}
+
+	private static String _getViewSegmentsExperimentDetailsURL(
+		SegmentsExperiment segmentsExperiment) {
+
+		if (segmentsExperiment == null) {
+			return StringPool.BLANK;
+		}
+
+		String liferayAnalyticsURL = _getLiferayAnalyticsURL(
+			segmentsExperiment.getCompanyId());
+
+		if (Validator.isNull(liferayAnalyticsURL)) {
+			return StringPool.BLANK;
+		}
+
+		return liferayAnalyticsURL + "/tests/overview/" +
+			segmentsExperiment.getSegmentsExperimentKey();
 	}
 
 	private static boolean _isEditable(SegmentsExperiment segmentsExperiment) {

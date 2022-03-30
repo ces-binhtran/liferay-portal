@@ -124,6 +124,13 @@ public interface DataRecordResource {
 	public HttpInvoker.HttpResponse getDataRecordHttpResponse(Long dataRecordId)
 		throws Exception;
 
+	public DataRecord patchDataRecord(Long dataRecordId, DataRecord dataRecord)
+		throws Exception;
+
+	public HttpInvoker.HttpResponse patchDataRecordHttpResponse(
+			Long dataRecordId, DataRecord dataRecord)
+		throws Exception;
+
 	public DataRecord putDataRecord(Long dataRecordId, DataRecord dataRecord)
 		throws Exception;
 
@@ -177,14 +184,30 @@ public interface DataRecordResource {
 			return this;
 		}
 
+		public Builder parameters(String... parameters) {
+			if ((parameters.length % 2) != 0) {
+				throw new IllegalArgumentException(
+					"Parameters length is not an even number");
+			}
+
+			for (int i = 0; i < parameters.length; i += 2) {
+				String parameterName = String.valueOf(parameters[i]);
+				String parameterValue = String.valueOf(parameters[i + 1]);
+
+				_parameters.put(parameterName, parameterValue);
+			}
+
+			return this;
+		}
+
 		private Builder() {
 		}
 
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "test@liferay.com";
-		private String _password = "test";
+		private String _login = "";
+		private String _password = "";
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -205,11 +228,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, DataRecordSerDes::toDTO);
@@ -273,8 +313,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records",
-				dataDefinitionId);
+						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records");
+
+			httpInvoker.path("dataDefinitionId", dataDefinitionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -292,11 +333,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return DataRecordSerDes.toDTO(content);
@@ -341,8 +399,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records",
-				dataDefinitionId);
+						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records");
+
+			httpInvoker.path("dataDefinitionId", dataDefinitionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -360,11 +419,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse
@@ -403,8 +479,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records/batch",
-				dataDefinitionId);
+						"/o/data-engine/v2.0/data-definitions/{dataDefinitionId}/data-records/batch");
+
+			httpInvoker.path("dataDefinitionId", dataDefinitionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -424,11 +501,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, DataRecordSerDes::toDTO);
@@ -492,8 +586,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records",
-				dataRecordCollectionId);
+						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records");
+
+			httpInvoker.path("dataRecordCollectionId", dataRecordCollectionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -511,11 +606,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return DataRecordSerDes.toDTO(content);
@@ -560,8 +672,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records",
-				dataRecordCollectionId);
+						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records");
+
+			httpInvoker.path("dataRecordCollectionId", dataRecordCollectionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -579,11 +692,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse
@@ -623,8 +753,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/batch",
-				dataRecordCollectionId);
+						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/batch");
+
+			httpInvoker.path("dataRecordCollectionId", dataRecordCollectionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -642,11 +773,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return content;
@@ -696,8 +844,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/export",
-				dataRecordCollectionId);
+						"/o/data-engine/v2.0/data-record-collections/{dataRecordCollectionId}/data-records/export");
+
+			httpInvoker.path("dataRecordCollectionId", dataRecordCollectionId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -711,11 +860,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return;
@@ -757,8 +923,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-records/{dataRecordId}",
-				dataRecordId);
+						"/o/data-engine/v2.0/data-records/{dataRecordId}");
+
+			httpInvoker.path("dataRecordId", dataRecordId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -774,11 +941,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse deleteDataRecordBatchHttpResponse(
@@ -786,6 +970,8 @@ public interface DataRecordResource {
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -827,11 +1013,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return DataRecordSerDes.toDTO(content);
@@ -873,8 +1076,93 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-records/{dataRecordId}",
-				dataRecordId);
+						"/o/data-engine/v2.0/data-records/{dataRecordId}");
+
+			httpInvoker.path("dataRecordId", dataRecordId);
+
+			httpInvoker.userNameAndPassword(
+				_builder._login + ":" + _builder._password);
+
+			return httpInvoker.invoke();
+		}
+
+		public DataRecord patchDataRecord(
+				Long dataRecordId, DataRecord dataRecord)
+			throws Exception {
+
+			HttpInvoker.HttpResponse httpResponse = patchDataRecordHttpResponse(
+				dataRecordId, dataRecord);
+
+			String content = httpResponse.getContent();
+
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
+
+			try {
+				return DataRecordSerDes.toDTO(content);
+			}
+			catch (Exception e) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response: " + content, e);
+
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+		}
+
+		public HttpInvoker.HttpResponse patchDataRecordHttpResponse(
+				Long dataRecordId, DataRecord dataRecord)
+			throws Exception {
+
+			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(dataRecord.toString(), "application/json");
+
+			if (_builder._locale != null) {
+				httpInvoker.header(
+					"Accept-Language", _builder._locale.toLanguageTag());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._headers.entrySet()) {
+
+				httpInvoker.header(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<String, String> entry :
+					_builder._parameters.entrySet()) {
+
+				httpInvoker.parameter(entry.getKey(), entry.getValue());
+			}
+
+			httpInvoker.httpMethod(HttpInvoker.HttpMethod.PATCH);
+
+			httpInvoker.path(
+				_builder._scheme + "://" + _builder._host + ":" +
+					_builder._port +
+						"/o/data-engine/v2.0/data-records/{dataRecordId}");
+
+			httpInvoker.path("dataRecordId", dataRecordId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -891,11 +1179,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return DataRecordSerDes.toDTO(content);
@@ -939,8 +1244,9 @@ public interface DataRecordResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/data-engine/v2.0/data-records/{dataRecordId}",
-				dataRecordId);
+						"/o/data-engine/v2.0/data-records/{dataRecordId}");
+
+			httpInvoker.path("dataRecordId", dataRecordId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -956,11 +1262,28 @@ public interface DataRecordResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse putDataRecordBatchHttpResponse(

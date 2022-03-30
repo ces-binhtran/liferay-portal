@@ -43,6 +43,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.io.File;
 
@@ -91,10 +92,11 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group.getGroupId(),
-			layoutPageTemplateEntry.getPlid(), _read("layout_data.json"),
-			_serviceContext);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layoutPageTemplateEntry.getPlid(),
+				SegmentsExperienceConstants.ID_DEFAULT,
+				_read("layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group.getGroupId(), RandomTestUtil.randomString(),
@@ -114,24 +116,28 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 			fileEntry.getFileEntryId());
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		try (ZipFile zipFile = new ZipFile(file)) {
+			int count = 0;
+
 			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
 
 			while (enumeration.hasMoreElements()) {
 				ZipEntry zipEntry = enumeration.nextElement();
 
-				_validateZipEntry(zipEntry, zipFile);
+				if (!zipEntry.isDirectory()) {
+					_validateZipEntry(zipEntry, zipFile);
+
+					count++;
+				}
 			}
 
-			Assert.assertEquals(3, zipFile.size());
+			Assert.assertEquals(3, count);
 		}
 	}
 
@@ -144,13 +150,11 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		try (ZipFile zipFile = new ZipFile(file)) {
 			Assert.assertEquals(0, zipFile.size());
@@ -159,13 +163,11 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 
 	@Test
 	public void testGetFileNameMultipleMasterPages() {
-		long[] layoutPageTemplateEntryIds = {
-			RandomTestUtil.randomLong(), RandomTestUtil.randomLong()
-		};
-
 		String fileName = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFileName", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()
+			});
 
 		Assert.assertTrue(fileName.startsWith("master-pages-"));
 		Assert.assertTrue(fileName.endsWith(".zip"));
@@ -180,13 +182,11 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		String fileName = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFileName", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		Assert.assertTrue(
 			fileName.startsWith(
@@ -316,7 +316,7 @@ public class ExportMasterLayoutsMVCResourceCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/layout_page_template/export_master_layout"
+		filter = "mvc.command.name=/layout_page_template_admin/export_master_layouts"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
 

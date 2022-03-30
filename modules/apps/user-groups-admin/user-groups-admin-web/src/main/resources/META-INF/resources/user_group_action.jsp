@@ -87,16 +87,15 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	</c:if>
 
 	<c:if test="<%= GroupPermissionUtil.contains(permissionChecker, userGroupGroup, ActionKeys.MANAGE_LAYOUTS) %>">
-
-		<%
-		PortletURL managePagesURL = PortletProviderUtil.getPortletURL(request, userGroupGroup, Layout.class.getName(), PortletProvider.Action.EDIT);
-
-		managePagesURL.setParameter("redirect", currentURL);
-		%>
-
 		<liferay-ui:icon
 			message="manage-pages"
-			url="<%= managePagesURL.toString() %>"
+			url="<%=
+				PortletURLBuilder.create(
+					PortletProviderUtil.getPortletURL(request, userGroupGroup, Layout.class.getName(), PortletProvider.Action.EDIT)
+				).setRedirect(
+					currentURL
+				).buildString()
+			%>"
 		/>
 	</c:if>
 
@@ -136,7 +135,7 @@ UserGroup userGroup = (UserGroup)row.getObject();
 	<c:if test="<%= UserGroupPermissionUtil.contains(permissionChecker, userGroup.getUserGroupId(), ActionKeys.DELETE) %>">
 
 		<%
-		String taglibDeleteURL = "javascript:" + renderResponse.getNamespace() + "doDeleteUserGroup('" + UserGroup.class.getName() + "','" + userGroup.getUserGroupId() + "');";
+		String taglibDeleteURL = "javascript:" + liferayPortletResponse.getNamespace() + "doDeleteUserGroup('" + UserGroup.class.getName() + "','" + userGroup.getUserGroupId() + "');";
 		%>
 
 		<liferay-ui:icon

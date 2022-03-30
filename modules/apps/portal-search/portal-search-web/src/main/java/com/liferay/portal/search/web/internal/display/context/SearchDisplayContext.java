@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchContextFactory;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -30,8 +29,11 @@ import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.search.constants.SearchContextAttributes;
+import com.liferay.portal.search.context.SearchContextFactory;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilder;
 import com.liferay.portal.search.searcher.SearchResponse;
@@ -74,6 +76,7 @@ public class SearchDisplayContext {
 			IndexSearchPropsValues indexSearchPropsValues,
 			PortletURLFactory portletURLFactory,
 			SummaryBuilderFactory summaryBuilderFactory,
+			SearchContextFactory searchContextFactory,
 			SearchRequestBuilderFactory searchRequestBuilderFactory,
 			SearchFacetTracker searchFacetTracker)
 		throws PortletException {
@@ -83,6 +86,7 @@ public class SearchDisplayContext {
 		_indexSearchPropsValues = indexSearchPropsValues;
 		_portletURLFactory = portletURLFactory;
 		_summaryBuilderFactory = summaryBuilderFactory;
+		_searchContextFactory = searchContextFactory;
 		_searchFacetTracker = searchFacetTracker;
 
 		ThemeDisplaySupplier themeDisplaySupplier =
@@ -121,8 +125,21 @@ public class SearchDisplayContext {
 		SearchContainer<Document> searchContainer = new SearchContainer<>(
 			_renderRequest, getPortletURL(), null, emptyResultMessage);
 
-		SearchContext searchContext = SearchContextFactory.getInstance(
-			httpServletRequest);
+		long[] assetCategoryIds = StringUtil.split(
+			ParamUtil.getString(httpServletRequest, "category"), 0L);
+		String[] assetTagNames = StringUtil.split(
+			ParamUtil.getString(httpServletRequest, "tag"));
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		SearchContext searchContext = _searchContextFactory.getSearchContext(
+			assetCategoryIds, assetTagNames, themeDisplay.getCompanyId(),
+			ParamUtil.getString(httpServletRequest, "keywords"),
+			themeDisplay.getLayout(), themeDisplay.getLocale(),
+			httpServletRequest.getParameterMap(),
+			themeDisplay.getScopeGroupId(), themeDisplay.getTimeZone(),
+			themeDisplay.getUserId());
 
 		_resetScope(searchContext);
 
@@ -149,7 +166,7 @@ public class SearchDisplayContext {
 			searcher, searchRequestBuilderFactory);
 
 		searchRequestImpl.addSearchSettingsContributor(
-			this::contributeSearchSettings);
+			this::_contributeSearchSettings);
 
 		SearchResponseImpl searchResponseImpl = searchRequestImpl.search();
 
@@ -340,6 +357,10 @@ public class SearchDisplayContext {
 	public String getSearchScopeParameterString() {
 		SearchScope searchScope = getSearchScope();
 
+		if (searchScope == null) {
+			searchScope = SearchScopePreference.THIS_SITE.getSearchScope();
+		}
+
 		return searchScope.getParameterString();
 	}
 
@@ -501,7 +522,30 @@ public class SearchDisplayContext {
 		return _searchResultPreferences.isViewInContext();
 	}
 
-	protected void addEnabledSearchFacets(
+	protected SearchScope getSearchScope() {
+		String scopeString = ParamUtil.getString(
+			_renderRequest, SearchPortletParameterNames.SCOPE);
+
+		if (Validator.isNotNull(scopeString)) {
+			return SearchScope.getSearchScope(scopeString);
+		}
+
+		SearchScopePreference searchScopePreference =
+			getSearchScopePreference();
+
+		return searchScopePreference.getSearchScope();
+	}
+
+	protected SearchScopePreference getSearchScopePreference() {
+		return SearchScopePreference.getSearchScopePreference(
+			getSearchScopePreferenceString());
+	}
+
+	protected ThemeDisplay getThemeDisplay() {
+		return _themeDisplaySupplier.getThemeDisplay();
+	}
+
+	private void _addEnabledSearchFacets(
 		SearchRequestBuilder searchRequestBuilder) {
 
 		ThemeDisplay themeDisplay = _themeDisplaySupplier.getThemeDisplay();
@@ -514,7 +558,7 @@ public class SearchDisplayContext {
 
 		Stream<Optional<Facet>> facetOptionalsStream = searchFacetsStream.map(
 			searchFacet -> searchRequestBuilder.withSearchContextGet(
-				searchContext -> createFacet(
+				searchContext -> _createFacet(
 					searchFacet, companyId, searchContext)));
 
 		searchRequestBuilder.withFacetContext(
@@ -523,7 +567,7 @@ public class SearchDisplayContext {
 					facetContext::addFacet)));
 	}
 
-	protected void contributeSearchSettings(SearchSettings searchSettings) {
+	private void _contributeSearchSettings(SearchSettings searchSettings) {
 		searchSettings.setKeywords(_keywords.getKeywords());
 
 		QueryConfig queryConfig = searchSettings.getQueryConfig();
@@ -540,12 +584,12 @@ public class SearchDisplayContext {
 			getQuerySuggestionDisplayThreshold());
 		queryConfig.setQuerySuggestionMax(getQuerySuggestionMax());
 
-		addEnabledSearchFacets(searchSettings.getSearchRequestBuilder());
+		_addEnabledSearchFacets(searchSettings.getSearchRequestBuilder());
 
-		filterByThisSite(searchSettings);
+		_filterByThisSite(searchSettings);
 	}
 
-	protected Optional<Facet> createFacet(
+	private Optional<Facet> _createFacet(
 		SearchFacet searchFacet, long companyId, SearchContext searchContext) {
 
 		try {
@@ -562,9 +606,9 @@ public class SearchDisplayContext {
 		return Optional.ofNullable(searchFacet.getFacet());
 	}
 
-	protected void filterByThisSite(SearchSettings searchSettings) {
+	private void _filterByThisSite(SearchSettings searchSettings) {
 		SearchOptionalUtil.copy(
-			this::getThisSiteGroupId,
+			this::_getThisSiteGroupId,
 			groupId -> {
 				SearchContext searchContext = searchSettings.getSearchContext();
 
@@ -572,38 +616,7 @@ public class SearchDisplayContext {
 			});
 	}
 
-	protected SearchScope getSearchScope() {
-		String scopeString = ParamUtil.getString(
-			_renderRequest, SearchPortletParameterNames.SCOPE);
-
-		if (Validator.isNotNull(scopeString)) {
-			return SearchScope.getSearchScope(scopeString);
-		}
-
-		SearchScopePreference searchScopePreference =
-			getSearchScopePreference();
-
-		SearchScope searchScope = searchScopePreference.getSearchScope();
-
-		if (searchScope == null) {
-			throw new IllegalArgumentException(
-				"Scope parameter is empty and no default is set in " +
-					"preferences");
-		}
-
-		return searchScope;
-	}
-
-	protected SearchScopePreference getSearchScopePreference() {
-		return SearchScopePreference.getSearchScopePreference(
-			getSearchScopePreferenceString());
-	}
-
-	protected ThemeDisplay getThemeDisplay() {
-		return _themeDisplaySupplier.getThemeDisplay();
-	}
-
-	protected Optional<Long> getThisSiteGroupId() {
+	private Optional<Long> _getThisSiteGroupId() {
 		long searchScopeGroupId = getSearchScopeGroupId();
 
 		if (searchScopeGroupId == 0) {
@@ -644,6 +657,7 @@ public class SearchDisplayContext {
 	private String _searchConfiguration;
 	private final SearchContainer<Document> _searchContainer;
 	private final SearchContext _searchContext;
+	private final SearchContextFactory _searchContextFactory;
 	private final SearchFacetTracker _searchFacetTracker;
 	private final SearchResultPreferences _searchResultPreferences;
 	private String _searchScopePreferenceString;

@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.Projection;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
@@ -65,17 +66,24 @@ public interface DepotEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DepotEntryLocalServiceUtil} to access the depot entry local service. Add custom service methods to <code>com.liferay.depot.service.impl.DepotEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.depot.service.impl.DepotEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the depot entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DepotEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the depot entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DepotEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param depotEntry the depot entry
 	 * @return the depot entry that was added
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public DepotEntry addDepotEntry(DepotEntry depotEntry);
+
+	public DepotEntry addDepotEntry(Group group, ServiceContext serviceContext)
+		throws PortalException;
 
 	public DepotEntry addDepotEntry(
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
@@ -100,6 +108,10 @@ public interface DepotEntryLocalService
 	/**
 	 * Deletes the depot entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DepotEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param depotEntry the depot entry
 	 * @return the depot entry that was removed
 	 */
@@ -108,6 +120,10 @@ public interface DepotEntryLocalService
 
 	/**
 	 * Deletes the depot entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DepotEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param depotEntryId the primary key of the depot entry
 	 * @return the depot entry that was removed
@@ -126,6 +142,9 @@ public interface DepotEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -283,9 +302,22 @@ public interface DepotEntryLocalService
 	public DepotEntry getDepotEntryByUuidAndGroupId(String uuid, long groupId)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x)
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntry> getDepotEntryGroupRelsByUuidAndCompanyId(
+		String uuid, long companyId);
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
 		PortletDataContext portletDataContext);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<DepotEntry> getGroupConnectedDepotEntries(
+			long groupId, boolean ddmStructuresAvailable, int start, int end)
+		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DepotEntry> getGroupConnectedDepotEntries(
@@ -318,6 +350,10 @@ public interface DepotEntryLocalService
 
 	/**
 	 * Updates the depot entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DepotEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param depotEntry the depot entry
 	 * @return the depot entry that was updated

@@ -27,12 +27,35 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DLFileEntryTypeServiceWrapper
 	implements DLFileEntryTypeService, ServiceWrapper<DLFileEntryTypeService> {
 
+	public DLFileEntryTypeServiceWrapper() {
+		this(null);
+	}
+
 	public DLFileEntryTypeServiceWrapper(
 		DLFileEntryTypeService dlFileEntryTypeService) {
 
 		_dlFileEntryTypeService = dlFileEntryTypeService;
 	}
 
+	@Override
+	public DLFileEntryType addFileEntryType(
+			long groupId, long dataDefinitionId, String fileEntryTypeKey,
+			java.util.Map<java.util.Locale, String> nameMap,
+			java.util.Map<java.util.Locale, String> descriptionMap,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileEntryTypeService.addFileEntryType(
+			groupId, dataDefinitionId, fileEntryTypeKey, nameMap,
+			descriptionMap, serviceContext);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public DLFileEntryType addFileEntryType(
 			long groupId, String fileEntryTypeKey,
@@ -47,6 +70,12 @@ public class DLFileEntryTypeServiceWrapper
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public DLFileEntryType addFileEntryType(
 			long groupId, String name, String description,
@@ -123,6 +152,18 @@ public class DLFileEntryTypeServiceWrapper
 	@Override
 	public java.util.List<DLFileEntryType> search(
 		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<DLFileEntryType>
+			orderByComparator) {
+
+		return _dlFileEntryTypeService.search(
+			companyId, groupIds, keywords, includeBasicFileEntryType, scope,
+			start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<DLFileEntryType> search(
+		long companyId, long[] groupIds, String keywords,
 		boolean includeBasicFileEntryType, int start, int end,
 		com.liferay.portal.kernel.util.OrderByComparator<DLFileEntryType>
 			orderByComparator) {
@@ -152,6 +193,31 @@ public class DLFileEntryTypeServiceWrapper
 	}
 
 	@Override
+	public int searchCount(
+		long companyId, long[] groupIds, String keywords,
+		boolean includeBasicFileEntryType, int scope) {
+
+		return _dlFileEntryTypeService.searchCount(
+			companyId, groupIds, keywords, includeBasicFileEntryType, scope);
+	}
+
+	@Override
+	public DLFileEntryType updateFileEntryType(
+			long fileEntryTypeId,
+			java.util.Map<java.util.Locale, String> nameMap,
+			java.util.Map<java.util.Locale, String> descriptionMap)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dlFileEntryTypeService.updateFileEntryType(
+			fileEntryTypeId, nameMap, descriptionMap);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
+	@Override
 	public void updateFileEntryType(
 			long fileEntryTypeId,
 			java.util.Map<java.util.Locale, String> nameMap,
@@ -165,6 +231,11 @@ public class DLFileEntryTypeServiceWrapper
 			serviceContext);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
 	@Override
 	public void updateFileEntryType(
 			long fileEntryTypeId, String name, String description,

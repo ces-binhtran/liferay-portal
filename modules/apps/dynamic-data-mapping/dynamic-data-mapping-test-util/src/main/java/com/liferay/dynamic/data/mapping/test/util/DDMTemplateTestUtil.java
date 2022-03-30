@@ -14,9 +14,9 @@
 
 package com.liferay.dynamic.data.mapping.test.util;
 
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.template.TemplateConstants;
@@ -63,7 +63,7 @@ public class DDMTemplateTestUtil {
 
 		return addTemplate(
 			structureId, resourceClassNameId, TemplateConstants.LANG_TYPE_VM,
-			getSampleTemplateXSL(), LocaleUtil.getSiteDefault());
+			getSampleTemplateVM(), LocaleUtil.getSiteDefault());
 	}
 
 	public static DDMTemplate addTemplate(
@@ -72,7 +72,7 @@ public class DDMTemplateTestUtil {
 
 		return addTemplate(
 			structureId, resourceClassNameId, TemplateConstants.LANG_TYPE_VM,
-			getSampleTemplateXSL(), defaultLocale);
+			getSampleTemplateVM(), defaultLocale);
 	}
 
 	public static DDMTemplate addTemplate(
@@ -81,7 +81,7 @@ public class DDMTemplateTestUtil {
 
 		return addTemplate(
 			groupId, structureId, resourceClassNameId,
-			TemplateConstants.LANG_TYPE_VM, getSampleTemplateXSL(),
+			TemplateConstants.LANG_TYPE_VM, getSampleTemplateVM(),
 			LocaleUtil.getSiteDefault());
 	}
 
@@ -92,7 +92,7 @@ public class DDMTemplateTestUtil {
 
 		return addTemplate(
 			groupId, structureId, resourceClassNameId,
-			TemplateConstants.LANG_TYPE_VM, getSampleTemplateXSL(),
+			TemplateConstants.LANG_TYPE_VM, getSampleTemplateVM(),
 			defaultLocale);
 	}
 
@@ -103,7 +103,7 @@ public class DDMTemplateTestUtil {
 
 		return addTemplate(
 			groupId, classNameId, classPK, resourceClassNameId,
-			TemplateConstants.LANG_TYPE_VM, getSampleTemplateXSL(),
+			TemplateConstants.LANG_TYPE_VM, getSampleTemplateVM(),
 			LocaleUtil.getSiteDefault());
 	}
 
@@ -184,7 +184,7 @@ public class DDMTemplateTestUtil {
 		return document;
 	}
 
-	public static String getSampleTemplateXSL() {
+	public static String getSampleTemplateVM() {
 		return "$name.getData()";
 	}
 

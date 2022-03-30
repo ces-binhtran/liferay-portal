@@ -18,7 +18,7 @@ import com.liferay.message.boards.web.internal.upload.format.MBMessageFormatUplo
 import com.liferay.message.boards.web.internal.util.MBAttachmentFileEntryReference;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.editor.EditorConstants;
+import com.liferay.portal.kernel.editor.constants.EditorConstants;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 
@@ -44,21 +44,13 @@ public class MBMessageHTMLFormatUploadHandler
 		for (MBAttachmentFileEntryReference mbAttachmentFileEntryReference :
 				mbAttachmentFileEntryReferences) {
 
-			StringBundler sb = new StringBundler(8);
-
-			sb.append("<\\s*?img");
-			sb.append(_ATTRIBUTE_LIST_REGEXP);
-			sb.append(EditorConstants.ATTRIBUTE_DATA_IMAGE_ID);
-			sb.append("\\s*?=\\s*?\"");
-			sb.append(
-				mbAttachmentFileEntryReference.
-					getTempMBAttachmentFileEntryId());
-			sb.append("\"");
-			sb.append(_ATTRIBUTE_LIST_REGEXP);
-			sb.append("/>");
-
 			content = content.replaceAll(
-				sb.toString(),
+				StringBundler.concat(
+					"<\\s*?img", _ATTRIBUTE_LIST_REGEXP,
+					EditorConstants.ATTRIBUTE_DATA_IMAGE_ID, "\\s*?=\\s*?\"",
+					mbAttachmentFileEntryReference.
+						getTempMBAttachmentFileEntryId(),
+					"\"", _ATTRIBUTE_LIST_REGEXP, "/>"),
 				_getMBAttachmentFileEntryHTMLImgTag(
 					mbAttachmentFileEntryReference.getMBAttachmentFileEntry()));
 		}

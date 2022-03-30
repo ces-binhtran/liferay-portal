@@ -30,6 +30,10 @@ public class DLFileShortcutLocalServiceWrapper
 	implements DLFileShortcutLocalService,
 			   ServiceWrapper<DLFileShortcutLocalService> {
 
+	public DLFileShortcutLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DLFileShortcutLocalServiceWrapper(
 		DLFileShortcutLocalService dlFileShortcutLocalService) {
 
@@ -38,6 +42,10 @@ public class DLFileShortcutLocalServiceWrapper
 
 	/**
 	 * Adds the document library file shortcut to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileShortcutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileShortcut the document library file shortcut
 	 * @return the document library file shortcut that was added
@@ -126,6 +134,10 @@ public class DLFileShortcutLocalServiceWrapper
 	/**
 	 * Deletes the document library file shortcut from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileShortcutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileShortcut the document library file shortcut
 	 * @return the document library file shortcut that was removed
 	 */
@@ -136,6 +148,10 @@ public class DLFileShortcutLocalServiceWrapper
 
 	/**
 	 * Deletes the document library file shortcut with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileShortcutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fileShortcutId the primary key of the document library file shortcut
 	 * @return the document library file shortcut that was removed
@@ -211,6 +227,13 @@ public class DLFileShortcutLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _dlFileShortcutLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _dlFileShortcutLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -523,6 +546,10 @@ public class DLFileShortcutLocalServiceWrapper
 
 	/**
 	 * Updates the document library file shortcut in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileShortcutLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileShortcut the document library file shortcut
 	 * @return the document library file shortcut that was updated

@@ -40,14 +40,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.security.audit.storage.model.AuditEvent;
 import com.liferay.portal.security.audit.storage.service.AuditEventLocalService;
+import com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceUtil;
 import com.liferay.portal.security.audit.storage.service.persistence.AuditEventPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,11 +72,15 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AuditEventLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.security.audit.storage.service.AuditEventLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AuditEventLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AuditEventLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the audit event to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AuditEventLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param auditEvent the audit event
 	 * @return the audit event that was added
@@ -100,6 +108,10 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/**
 	 * Deletes the audit event with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AuditEventLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param auditEventId the primary key of the audit event
 	 * @return the audit event that was removed
 	 * @throws PortalException if a audit event with the primary key could not be found
@@ -115,6 +127,10 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/**
 	 * Deletes the audit event from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AuditEventLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param auditEvent the audit event
 	 * @return the audit event that was removed
 	 */
@@ -127,6 +143,13 @@ public abstract class AuditEventLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return auditEventPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -278,6 +301,7 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -295,6 +319,7 @@ public abstract class AuditEventLocalServiceBaseImpl
 			(AuditEvent)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AuditEvent> getBasePersistence() {
 		return auditEventPersistence;
 	}
@@ -338,6 +363,10 @@ public abstract class AuditEventLocalServiceBaseImpl
 	/**
 	 * Updates the audit event in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AuditEventLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param auditEvent the audit event
 	 * @return the audit event that was updated
 	 */
@@ -345,6 +374,11 @@ public abstract class AuditEventLocalServiceBaseImpl
 	@Override
 	public AuditEvent updateAuditEvent(AuditEvent auditEvent) {
 		return auditEventPersistence.update(auditEvent);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -358,6 +392,8 @@ public abstract class AuditEventLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		auditEventLocalService = (AuditEventLocalService)aopProxy;
+
+		_setLocalServiceUtilService(auditEventLocalService);
 	}
 
 	/**
@@ -399,6 +435,22 @@ public abstract class AuditEventLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		AuditEventLocalService auditEventLocalService) {
+
+		try {
+			Field field = AuditEventLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, auditEventLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

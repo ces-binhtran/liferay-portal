@@ -17,6 +17,7 @@ package com.liferay.portal.service.persistence.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -31,8 +32,12 @@ import com.liferay.portal.kernel.model.OrgGroupRoleTable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.OrgGroupRolePK;
 import com.liferay.portal.kernel.service.persistence.OrgGroupRolePersistence;
+import com.liferay.portal.kernel.service.persistence.OrgGroupRoleUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.model.impl.OrgGroupRoleImpl;
@@ -40,6 +45,7 @@ import com.liferay.portal.model.impl.OrgGroupRoleModelImpl;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.List;
@@ -173,7 +179,7 @@ public class OrgGroupRolePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<OrgGroupRole>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (OrgGroupRole orgGroupRole : list) {
@@ -232,10 +238,6 @@ public class OrgGroupRolePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -535,8 +537,7 @@ public class OrgGroupRolePersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -563,8 +564,6 @@ public class OrgGroupRolePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -671,7 +670,7 @@ public class OrgGroupRolePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<OrgGroupRole>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (OrgGroupRole orgGroupRole : list) {
@@ -730,10 +729,6 @@ public class OrgGroupRolePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1032,8 +1027,7 @@ public class OrgGroupRolePersistenceImpl
 
 		Object[] finderArgs = new Object[] {roleId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1060,8 +1054,6 @@ public class OrgGroupRolePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1080,7 +1072,6 @@ public class OrgGroupRolePersistenceImpl
 
 		setModelImplClass(OrgGroupRoleImpl.class);
 		setModelPKClass(OrgGroupRolePK.class);
-		setEntityCacheEnabled(OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(OrgGroupRoleTable.INSTANCE);
 	}
@@ -1093,11 +1084,10 @@ public class OrgGroupRolePersistenceImpl
 	@Override
 	public void cacheResult(OrgGroupRole orgGroupRole) {
 		EntityCacheUtil.putResult(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED, OrgGroupRoleImpl.class,
-			orgGroupRole.getPrimaryKey(), orgGroupRole);
-
-		orgGroupRole.resetOriginalValues();
+			OrgGroupRoleImpl.class, orgGroupRole.getPrimaryKey(), orgGroupRole);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the org group roles in the entity cache if it is enabled.
@@ -1106,16 +1096,19 @@ public class OrgGroupRolePersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<OrgGroupRole> orgGroupRoles) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (orgGroupRoles.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (OrgGroupRole orgGroupRole : orgGroupRoles) {
 			if (EntityCacheUtil.getResult(
-					OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
 					OrgGroupRoleImpl.class, orgGroupRole.getPrimaryKey()) ==
 						null) {
 
 				cacheResult(orgGroupRole);
-			}
-			else {
-				orgGroupRole.resetOriginalValues();
 			}
 		}
 	}
@@ -1124,57 +1117,41 @@ public class OrgGroupRolePersistenceImpl
 	 * Clears the cache for all org group roles.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(OrgGroupRoleImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OrgGroupRoleImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the org group role.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(OrgGroupRole orgGroupRole) {
-		EntityCacheUtil.removeResult(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED, OrgGroupRoleImpl.class,
-			orgGroupRole.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		EntityCacheUtil.removeResult(OrgGroupRoleImpl.class, orgGroupRole);
 	}
 
 	@Override
 	public void clearCache(List<OrgGroupRole> orgGroupRoles) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (OrgGroupRole orgGroupRole : orgGroupRoles) {
-			EntityCacheUtil.removeResult(
-				OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-				OrgGroupRoleImpl.class, orgGroupRole.getPrimaryKey());
+			EntityCacheUtil.removeResult(OrgGroupRoleImpl.class, orgGroupRole);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(OrgGroupRoleImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			EntityCacheUtil.removeResult(
-				OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-				OrgGroupRoleImpl.class, primaryKey);
+			EntityCacheUtil.removeResult(OrgGroupRoleImpl.class, primaryKey);
 		}
 	}
 
@@ -1310,10 +1287,8 @@ public class OrgGroupRolePersistenceImpl
 		try {
 			session = openSession();
 
-			if (orgGroupRole.isNew()) {
+			if (isNew) {
 				session.save(orgGroupRole);
-
-				orgGroupRole.setNew(false);
 			}
 			else {
 				orgGroupRole = (OrgGroupRole)session.merge(orgGroupRole);
@@ -1326,73 +1301,12 @@ public class OrgGroupRolePersistenceImpl
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!OrgGroupRoleModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {orgGroupRoleModelImpl.getGroupId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {orgGroupRoleModelImpl.getRoleId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByRoleId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByRoleId, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((orgGroupRoleModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					orgGroupRoleModelImpl.getOriginalGroupId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {orgGroupRoleModelImpl.getGroupId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByGroupId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((orgGroupRoleModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByRoleId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					orgGroupRoleModelImpl.getOriginalRoleId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByRoleId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByRoleId, args);
-
-				args = new Object[] {orgGroupRoleModelImpl.getRoleId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByRoleId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByRoleId, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED, OrgGroupRoleImpl.class,
-			orgGroupRole.getPrimaryKey(), orgGroupRole, false);
+			OrgGroupRoleImpl.class, orgGroupRoleModelImpl, false, true);
+
+		if (isNew) {
+			orgGroupRole.setNew(false);
+		}
 
 		orgGroupRole.resetOriginalValues();
 
@@ -1532,7 +1446,7 @@ public class OrgGroupRolePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<OrgGroupRole>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1573,10 +1487,6 @@ public class OrgGroupRolePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1606,7 +1516,7 @@ public class OrgGroupRolePersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1622,9 +1532,6 @@ public class OrgGroupRolePersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1664,73 +1571,79 @@ public class OrgGroupRolePersistenceImpl
 	 * Initializes the org group role persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			OrgGroupRoleModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
 		_finderPathCountByGroupId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
 		_finderPathWithPaginationFindByRoleId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByRoleId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"roleId"}, true);
 
 		_finderPathWithoutPaginationFindByRoleId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, OrgGroupRoleImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByRoleId",
-			new String[] {Long.class.getName()},
-			OrgGroupRoleModelImpl.ROLEID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"roleId"}, true);
 
 		_finderPathCountByRoleId = new FinderPath(
-			OrgGroupRoleModelImpl.ENTITY_CACHE_ENABLED,
-			OrgGroupRoleModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRoleId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"roleId"},
+			false);
+
+		_setOrgGroupRoleUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setOrgGroupRoleUtilPersistence(null);
+
 		EntityCacheUtil.removeCache(OrgGroupRoleImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setOrgGroupRoleUtilPersistence(
+		OrgGroupRolePersistence orgGroupRolePersistence) {
+
+		try {
+			Field field = OrgGroupRoleUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, orgGroupRolePersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	private static final String _SQL_SELECT_ORGGROUPROLE =
@@ -1758,5 +1671,10 @@ public class OrgGroupRolePersistenceImpl
 
 	private static final Set<String> _compoundPKColumnNames = SetUtil.fromArray(
 		new String[] {"organizationId", "groupId", "roleId"});
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
+	}
 
 }

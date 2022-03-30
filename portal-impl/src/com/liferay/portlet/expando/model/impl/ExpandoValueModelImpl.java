@@ -16,7 +16,6 @@ package com.liferay.portlet.expando.model.impl;
 
 import com.liferay.expando.kernel.model.ExpandoValue;
 import com.liferay.expando.kernel.model.ExpandoValueModel;
-import com.liferay.expando.kernel.model.ExpandoValueSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.json.JSON;
@@ -26,6 +25,7 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -33,14 +33,15 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -107,80 +108,59 @@ public class ExpandoValueModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.expando.kernel.model.ExpandoValue"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.expando.kernel.model.ExpandoValue"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.expando.kernel.model.ExpandoValue"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COLUMNID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DATA_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ROWID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long TABLEID_COLUMN_BITMASK = 32L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static ExpandoValue toModel(ExpandoValueSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		ExpandoValue model = new ExpandoValueImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setCtCollectionId(soapModel.getCtCollectionId());
-		model.setValueId(soapModel.getValueId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setTableId(soapModel.getTableId());
-		model.setColumnId(soapModel.getColumnId());
-		model.setRowId(soapModel.getRowId());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-		model.setData(soapModel.getData());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<ExpandoValue> toModels(ExpandoValueSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<ExpandoValue> models = new ArrayList<ExpandoValue>(
-			soapModels.length);
-
-		for (ExpandoValueSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -237,9 +217,6 @@ public class ExpandoValueModelImpl
 				attributeName,
 				attributeGetterFunction.apply((ExpandoValue)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -369,6 +346,10 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -380,6 +361,10 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_ctCollectionId = ctCollectionId;
 	}
 
@@ -391,6 +376,10 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setValueId(long valueId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_valueId = valueId;
 	}
 
@@ -402,6 +391,10 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -413,19 +406,20 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setTableId(long tableId) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalTableId) {
-			_setOriginalTableId = true;
-
-			_originalTableId = _tableId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_tableId = tableId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalTableId() {
-		return _originalTableId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("tableId"));
 	}
 
 	@JSON
@@ -436,19 +430,21 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setColumnId(long columnId) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalColumnId) {
-			_setOriginalColumnId = true;
-
-			_originalColumnId = _columnId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_columnId = columnId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalColumnId() {
-		return _originalColumnId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("columnId"));
 	}
 
 	@JSON
@@ -459,19 +455,20 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setRowId(long rowId) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalRowId) {
-			_setOriginalRowId = true;
-
-			_originalRowId = _rowId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_rowId = rowId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalRowId() {
-		return _originalRowId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("rowId_"));
 	}
 
 	@Override
@@ -502,19 +499,21 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setClassNameId(long classNameId) {
-		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
-
-		if (!_setOriginalClassNameId) {
-			_setOriginalClassNameId = true;
-
-			_originalClassNameId = _classNameId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_classNameId = classNameId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalClassNameId() {
-		return _originalClassNameId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("classNameId"));
 	}
 
 	@JSON
@@ -525,19 +524,20 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setClassPK(long classPK) {
-		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
-
-		if (!_setOriginalClassPK) {
-			_setOriginalClassPK = true;
-
-			_originalClassPK = _classPK;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_classPK = classPK;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalClassPK() {
-		return _originalClassPK;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("classPK"));
 	}
 
 	@JSON
@@ -553,20 +553,43 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void setData(String data) {
-		_columnBitmask |= DATA_COLUMN_BITMASK;
-
-		if (_originalData == null) {
-			_originalData = _data;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_data = data;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalData() {
-		return GetterUtil.getString(_originalData);
+		return getColumnOriginalValue("data_");
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -601,6 +624,32 @@ public class ExpandoValueModelImpl
 		expandoValueImpl.setData(getData());
 
 		expandoValueImpl.resetOriginalValues();
+
+		return expandoValueImpl;
+	}
+
+	@Override
+	public ExpandoValue cloneWithOriginalValues() {
+		ExpandoValueImpl expandoValueImpl = new ExpandoValueImpl();
+
+		expandoValueImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		expandoValueImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		expandoValueImpl.setValueId(
+			this.<Long>getColumnOriginalValue("valueId"));
+		expandoValueImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		expandoValueImpl.setTableId(
+			this.<Long>getColumnOriginalValue("tableId"));
+		expandoValueImpl.setColumnId(
+			this.<Long>getColumnOriginalValue("columnId"));
+		expandoValueImpl.setRowId(this.<Long>getColumnOriginalValue("rowId_"));
+		expandoValueImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		expandoValueImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
+		expandoValueImpl.setData(this.<String>getColumnOriginalValue("data_"));
 
 		return expandoValueImpl;
 	}
@@ -655,16 +704,16 @@ public class ExpandoValueModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ExpandoValue)) {
+		if (!(object instanceof ExpandoValue)) {
 			return false;
 		}
 
-		ExpandoValue expandoValue = (ExpandoValue)obj;
+		ExpandoValue expandoValue = (ExpandoValue)object;
 
 		long primaryKey = expandoValue.getPrimaryKey();
 
@@ -681,11 +730,19 @@ public class ExpandoValueModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -693,33 +750,9 @@ public class ExpandoValueModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		ExpandoValueModelImpl expandoValueModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		expandoValueModelImpl._originalTableId = expandoValueModelImpl._tableId;
-
-		expandoValueModelImpl._setOriginalTableId = false;
-
-		expandoValueModelImpl._originalColumnId =
-			expandoValueModelImpl._columnId;
-
-		expandoValueModelImpl._setOriginalColumnId = false;
-
-		expandoValueModelImpl._originalRowId = expandoValueModelImpl._rowId;
-
-		expandoValueModelImpl._setOriginalRowId = false;
-
-		expandoValueModelImpl._originalClassNameId =
-			expandoValueModelImpl._classNameId;
-
-		expandoValueModelImpl._setOriginalClassNameId = false;
-
-		expandoValueModelImpl._originalClassPK = expandoValueModelImpl._classPK;
-
-		expandoValueModelImpl._setOriginalClassPK = false;
-
-		expandoValueModelImpl._originalData = expandoValueModelImpl._data;
-
-		expandoValueModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -762,7 +795,7 @@ public class ExpandoValueModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -773,9 +806,26 @@ public class ExpandoValueModelImpl
 			Function<ExpandoValue, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ExpandoValue)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((ExpandoValue)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -794,7 +844,7 @@ public class ExpandoValueModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -831,22 +881,98 @@ public class ExpandoValueModelImpl
 	private long _valueId;
 	private long _companyId;
 	private long _tableId;
-	private long _originalTableId;
-	private boolean _setOriginalTableId;
 	private long _columnId;
-	private long _originalColumnId;
-	private boolean _setOriginalColumnId;
 	private long _rowId;
-	private long _originalRowId;
-	private boolean _setOriginalRowId;
 	private long _classNameId;
-	private long _originalClassNameId;
-	private boolean _setOriginalClassNameId;
 	private long _classPK;
-	private long _originalClassPK;
-	private boolean _setOriginalClassPK;
 	private String _data;
-	private String _originalData;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<ExpandoValue, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((ExpandoValue)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("valueId", _valueId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("tableId", _tableId);
+		_columnOriginalValues.put("columnId", _columnId);
+		_columnOriginalValues.put("rowId_", _rowId);
+		_columnOriginalValues.put("classNameId", _classNameId);
+		_columnOriginalValues.put("classPK", _classPK);
+		_columnOriginalValues.put("data_", _data);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("rowId_", "rowId");
+		attributeNames.put("data_", "data");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("valueId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("tableId", 16L);
+
+		columnBitmasks.put("columnId", 32L);
+
+		columnBitmasks.put("rowId_", 64L);
+
+		columnBitmasks.put("classNameId", 128L);
+
+		columnBitmasks.put("classPK", 256L);
+
+		columnBitmasks.put("data_", 512L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private ExpandoValue _escapedModel;
 

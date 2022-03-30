@@ -17,11 +17,20 @@ package com.liferay.headless.delivery.resource.v1_0;
 import com.liferay.headless.delivery.dto.v1_0.WikiNode;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.odata.filter.ExpressionConvert;
+import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.annotation.Generated;
 
@@ -50,8 +59,9 @@ public interface WikiNodeResource {
 	}
 
 	public Page<WikiNode> getSiteWikiNodesPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search,
+			com.liferay.portal.vulcan.aggregation.Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception;
 
 	public WikiNode postSiteWikiNode(Long siteId, WikiNode wikiNode)
@@ -59,6 +69,28 @@ public interface WikiNodeResource {
 
 	public Response postSiteWikiNodeBatch(
 			Long siteId, String callbackURL, Object object)
+		throws Exception;
+
+	public void deleteSiteWikiNodeByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public WikiNode getSiteWikiNodeByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception;
+
+	public WikiNode putSiteWikiNodeByExternalReferenceCode(
+			Long siteId, String externalReferenceCode, WikiNode wikiNode)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getSiteWikiNodePermissionsPage(Long siteId, String roleNames)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			putSiteWikiNodePermissionsPage(
+				Long siteId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
 	public void deleteWikiNode(Long wikiNodeId) throws Exception;
@@ -72,6 +104,16 @@ public interface WikiNodeResource {
 		throws Exception;
 
 	public Response putWikiNodeBatch(String callbackURL, Object object)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			getWikiNodePermissionsPage(Long wikiNodeId, String roleNames)
+		throws Exception;
+
+	public Page<com.liferay.portal.vulcan.permission.Permission>
+			putWikiNodePermissionsPage(
+				Long wikiNodeId,
+				com.liferay.portal.vulcan.permission.Permission[] permissions)
 		throws Exception;
 
 	public void putWikiNodeSubscribe(Long wikiNodeId) throws Exception;
@@ -99,6 +141,33 @@ public interface WikiNodeResource {
 	public void setContextUser(
 		com.liferay.portal.kernel.model.User contextUser);
 
+	public void setExpressionConvert(
+		ExpressionConvert<Filter> expressionConvert);
+
+	public void setFilterParserProvider(
+		FilterParserProvider filterParserProvider);
+
+	public void setGroupLocalService(GroupLocalService groupLocalService);
+
+	public void setResourceActionLocalService(
+		ResourceActionLocalService resourceActionLocalService);
+
+	public void setResourcePermissionLocalService(
+		ResourcePermissionLocalService resourcePermissionLocalService);
+
+	public void setRoleLocalService(RoleLocalService roleLocalService);
+
+	public default Filter toFilter(String filterString) {
+		return toFilter(
+			filterString, Collections.<String, List<String>>emptyMap());
+	}
+
+	public default Filter toFilter(
+		String filterString, Map<String, List<String>> multivaluedMap) {
+
+		return null;
+	}
+
 	public static class FactoryHolder {
 
 		public static volatile Factory factory;
@@ -114,6 +183,9 @@ public interface WikiNodeResource {
 
 		public Builder httpServletRequest(
 			HttpServletRequest httpServletRequest);
+
+		public Builder httpServletResponse(
+			HttpServletResponse httpServletResponse);
 
 		public Builder preferredLocale(Locale preferredLocale);
 

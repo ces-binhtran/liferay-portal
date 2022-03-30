@@ -13,224 +13,252 @@
  */
 
 import ClayDatePicker from '@clayui/date-picker';
-import moment from 'moment';
+import moment from 'moment/min/moment-with-locales';
 import React, {useEffect, useMemo, useRef, useState} from 'react';
-import {createAutoCorrectedDatePipe} from 'text-mask-addons';
 import {createTextMaskInputElement} from 'text-mask-core';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import {createAutoCorrectedDatePipe} from './createAutoCorrectedDatePipe';
 
-const getInputMask = (dateFormat, dateDelimiter) => {
-	const inputMaskArray = [];
+const DIGIT_REGEX = /\d/;
+const PIPE_FORBIDDEN_ENDING_CHAR_REGEX = /[^\w]/i;
+const LETTER_REGEX = /[a-z]/i;
+const SERVER_DATE_FORMAT = 'YYYY-MM-DD';
+const SERVER_DATE_TIME_FORMAT = 'YYYY-MM-DD HH:mm';
+const NOT_LETTER_REGEX = /[^a-z]/gi;
+const WORD_CHARACTER_REGEX = /\w/g;
+const A_OR_P_CHARACTER_REGEX = /[AP]/i;
+const M_CHARACTER_REGEX = /M/i;
 
-	dateFormat.split('').forEach((item) => {
-		if (item === dateDelimiter) {
-			inputMaskArray.push(dateDelimiter);
+export default function DatePicker({
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+	dir,
+	locale,
+	localizable,
+	localizedValue,
+	months,
+	name,
+	onBlur,
+	onChange,
+	onFocus,
+	predefinedValue,
+	readOnly,
+	type,
+	value,
+	weekdaysShort,
+	...otherProps
+}) {
+	const inputRef = useRef(null);
+	const maskRef = useRef();
+	const {
+		clayFormat,
+		isDateTime,
+		momentFormat,
+		placeholder,
+		serverFormat,
+		use12Hours,
+	} = useMemo(() => {
+		let use12Hours = false;
+
+		const isDateTime = type === 'date_time';
+		const momentLocale = moment().locale(locale ?? defaultLanguageId);
+		const dateFormat = momentLocale.localeData().longDateFormat('L');
+		const time = momentLocale.localeData().longDateFormat('LT');
+
+		let momentFormat = dateFormat;
+
+		if (isDateTime) {
+			const [hourFormat] = time.split(NOT_LETTER_REGEX, 1);
+
+			const formattedTime =
+				hourFormat.length === 1
+					? hourFormat[0] === 'H'
+						? `H${time}`
+						: `h${time}`
+					: time;
+
+			momentFormat = `${dateFormat} ${formattedTime}`;
+			use12Hours = time.endsWith('A');
 		}
-		else if (item === 'Y') {
-			inputMaskArray.push(/\d/);
-			inputMaskArray.push(/\d/);
-			inputMaskArray.push(/\d/);
-			inputMaskArray.push(/\d/);
-		}
-		else if (item === 'd' || item === 'm') {
-			inputMaskArray.push(/\d/);
-			inputMaskArray.push(/\d/);
-		}
-	});
 
-	return inputMaskArray;
-};
+		const clayFormat = dateFormat
+			.replace('YYYY', 'yyyy')
+			.replace('DD', 'dd');
 
-const getDateMask = (dateFormat, dateDelimiter) => {
-	return dateFormat
-		.split(dateDelimiter)
-		.map((item) => {
-			let currentFormat;
+		const placeholder = momentFormat.replace(WORD_CHARACTER_REGEX, '_');
 
-			if (item === '%Y') {
-				currentFormat = 'YYYY';
-			}
-			else if (item === '%m') {
-				currentFormat = 'MM';
-			}
-			else {
-				currentFormat = 'DD';
-			}
-
-			return currentFormat;
-		})
-		.join(dateDelimiter);
-};
-
-const getDelimiter = (dateFormat) => {
-	let dateDelimiter = '/';
-
-	if (dateFormat.indexOf('.') != -1) {
-		dateDelimiter = '.';
-	}
-
-	if (dateFormat.indexOf('-') != -1) {
-		dateDelimiter = '-';
-	}
-
-	return dateDelimiter;
-};
-
-const useDateFormat = () => {
-	return useMemo(() => {
-		const dateFormat = Liferay.AUI.getDateFormat();
-		const dateDelimiter = getDelimiter(dateFormat);
+		const serverFormat = isDateTime
+			? SERVER_DATE_TIME_FORMAT
+			: SERVER_DATE_FORMAT;
 
 		return {
-			dateMask: getDateMask(dateFormat, dateDelimiter),
-			inputMask: getInputMask(dateFormat, dateDelimiter),
+			clayFormat,
+			isDateTime,
+			momentFormat,
+			placeholder,
+			serverFormat,
+			use12Hours,
 		};
-	}, []);
-};
+	}, [defaultLanguageId, locale, type]);
 
-const transformToDate = (date) => {
-	if (typeof date === 'string' && date.indexOf('_') === -1 && date !== '') {
-		return moment(date).toDate();
-	}
+	const date = useMemo(() => {
+		let formattedDate = '';
+		let year = moment().year();
+		const rawDate =
+			(localizable
+				? localizedValue?.[locale] ??
+				  localizedValue?.[defaultLanguageId]
+				: value) ??
+			predefinedValue ??
+			'';
 
-	return date;
-};
+		if (rawDate !== '') {
+			const date = moment(rawDate, serverFormat, true);
+			formattedDate = date
+				.locale(locale ?? defaultLanguageId)
+				.format(momentFormat);
+			year = date.year();
+		}
 
-const getInitialMonth = (value) => {
-	if (moment(value).isValid()) {
-		return moment(value).toDate();
-	}
-
-	return moment().toDate();
-};
-
-const getValueForHidden = (value) => {
-	if (moment(value).isValid()) {
-		return moment(value).format('YYYY-MM-DD');
-	}
-
-	return null;
-};
-
-const DatePicker = ({
-	disabled,
-	name,
-	onChange,
-	spritemap,
-	value: initialValue,
-}) => {
-	const inputRef = useRef(null);
-	const maskInstance = useRef(null);
-
-	const initialValueMemoized = useMemo(() => transformToDate(initialValue), [
-		initialValue,
+		return {
+			formattedDate,
+			locale,
+			name,
+			predefinedValue,
+			rawDate,
+			years: {end: year + 5, start: year - 5},
+		};
+	}, [
+		momentFormat,
+		defaultLanguageId,
+		locale,
+		localizable,
+		localizedValue,
+		name,
+		predefinedValue,
+		serverFormat,
+		value,
 	]);
 
-	const [value, setValue] = useSyncValue(initialValueMemoized);
-	const [years, setYears] = useState(() => {
-		const currentYear = new Date().getFullYear();
+	const [{formattedDate, rawDate, years}, setDate] = useState(date);
 
-		return {
-			end: currentYear + 5,
-			start: currentYear - 5,
-		};
-	});
+	/**
+	 * Updates the rawDate state whenever the prop value or localizedValue changes,
+	 * but it keep user's input case theres no language change.
+	 */
+	useEffect(
+		() =>
+			setDate(({formattedDate, name, predefinedValue}) =>
+				name === date.name && predefinedValue === date.predefinedValue
+					? {...date, formattedDate}
+					: date
+			),
+		[date]
+	);
 
-	const {dateMask, inputMask} = useDateFormat();
-
+	/**
+	 * Creates the input mask and update it whenever the format changes
+	 */
 	useEffect(() => {
-		if (inputRef.current && inputMask && dateMask) {
-			maskInstance.current = createTextMaskInputElement({
-				guide: true,
-				inputElement: inputRef.current,
-				keepCharPositions: true,
-				mask: inputMask,
-				pipe: createAutoCorrectedDatePipe(dateMask.toLowerCase()),
-				showMask: true,
-			});
-			maskInstance.current.update(inputRef.current.value);
-		}
-	}, [inputMask, dateMask, inputRef]);
+		const mask = [];
+		[...momentFormat].forEach((char) => {
+			if (char === 'A' || char === 'a') {
+				mask.push(A_OR_P_CHARACTER_REGEX);
+				mask.push(M_CHARACTER_REGEX);
 
-	const handleNavigation = (date) => {
-		const currentYear = date.getFullYear();
-
-		setYears({
-			end: currentYear + 5,
-			start: currentYear - 5,
+				return;
+			}
+			mask.push(LETTER_REGEX.test(char) ? DIGIT_REGEX : char);
 		});
+
+		const pipeFormat = momentFormat
+			.split(PIPE_FORBIDDEN_ENDING_CHAR_REGEX)
+			.reduce((format, item) => {
+				switch (item) {
+					case 'YYYY':
+						return `${format} yyyy`;
+					case 'MM':
+						return `${format} mm`;
+					case 'DD':
+						return `${format} dd`;
+					case 'mm':
+						return `${format} MM`;
+					case 'A':
+					case 'a':
+						return format;
+					case '':
+						return `${format} `;
+					default:
+						return `${format} ${item}`;
+				}
+			}, '')
+			.trim();
+
+		maskRef.current = createTextMaskInputElement({
+			guide: true,
+			inputElement: inputRef.current,
+			keepCharPositions: true,
+			mask,
+			pipe: createAutoCorrectedDatePipe(pipeFormat),
+			showMask: true,
+		});
+	}, [momentFormat]);
+
+	const handleValueChange = (value) => {
+		let formattedDate = value;
+		if (isDateTime) {
+			const firstSpace = value.indexOf(' ');
+			formattedDate = value.substring(0, firstSpace);
+			const formattedTime = value
+				.substring(firstSpace)
+				.replaceAll('-', '_');
+			formattedDate = `${formattedDate}${formattedTime}`;
+		}
+		const nextState = {
+			formattedDate,
+			rawDate: '',
+		};
+
+		const date = moment(formattedDate, momentFormat, true);
+		if (date.isValid()) {
+			nextState.rawDate = date.locale('en').format(serverFormat);
+			nextState.years = {end: date.year() + 5, start: date.year() - 5};
+		}
+
+		setDate((previousState) => ({...previousState, ...nextState}));
+
+		if (nextState.rawDate !== rawDate) {
+			onChange({}, nextState.rawDate);
+		}
 	};
 
 	return (
-		<>
-			<input
-				aria-label="date_picker_hidden"
-				name={name}
-				type="hidden"
-				value={getValueForHidden(value)}
-			/>
-			<ClayDatePicker
-				dateFormat={dateMask}
-				disabled={disabled}
-				initialMonth={getInitialMonth(value)}
-				onInput={(event) => {
-					maskInstance.current.update(event.target.value);
-				}}
-				onNavigation={handleNavigation}
-				onValueChange={(value) => {
-					setValue(value);
-
-					if (moment(value).isValid()) {
-						onChange(moment(value).format(dateMask));
-					}
-				}}
-				ref={inputRef}
-				spritemap={spritemap}
-				value={value}
-				years={years}
-			/>
-		</>
-	);
-};
-
-const DatePickerProxy = connectStore(
-	({
-		emit,
-		name,
-		placeholder,
-		predefinedValue,
-		readOnly,
-		spritemap,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy
-			{...otherProps}
+		<FieldBase
+			localizedValue={localizedValue}
 			name={name}
 			readOnly={readOnly}
-			spritemap={spritemap}
+			{...otherProps}
 		>
-			<DatePicker
+			<ClayDatePicker
+				dateFormat={clayFormat}
+				dir={dir}
 				disabled={readOnly}
-				name={name}
-				onChange={(value) => emit('fieldEdited', {}, value)}
+				months={months}
+				onBlur={onBlur}
+				onFocus={onFocus}
+				onInput={({target: {value}}) => maskRef.current.update(value)}
+				onValueChange={handleValueChange}
 				placeholder={placeholder}
-				spritemap={spritemap}
-				value={value ? value : predefinedValue}
+				ref={inputRef}
+				time={isDateTime}
+				use12Hours={use12Hours}
+				value={formattedDate}
+				weekdaysShort={weekdaysShort}
+				years={years}
+				yearsCheck={false}
 			/>
-		</FieldBaseProxy>
-	)
-);
 
-const ReactDatePickerAdapter = getConnectedReactComponentAdapter(
-	DatePickerProxy,
-	'date'
-);
-
-export {ReactDatePickerAdapter};
-
-export default ReactDatePickerAdapter;
+			<input name={name} type="hidden" value={rawDate} />
+		</FieldBase>
+	);
+}

@@ -43,6 +43,7 @@ public abstract class BaseMBUploadFileEntryHandler
 
 		dlValidator.validateFileSize(
 			uploadPortletRequest.getFileName(getParameterName()),
+			uploadPortletRequest.getContentType(getParameterName()),
 			uploadPortletRequest.getSize(getParameterName()));
 
 		ThemeDisplay themeDisplay =
@@ -51,30 +52,17 @@ public abstract class BaseMBUploadFileEntryHandler
 
 		long categoryId = ParamUtil.getLong(uploadPortletRequest, "categoryId");
 
-		try (InputStream inputStream = getFileAsStream(uploadPortletRequest)) {
+		try (InputStream inputStream = _getFileAsInputStream(
+				uploadPortletRequest)) {
+
 			String tempFileName = TempFileEntryUtil.getTempFileName(
-				getFileName(uploadPortletRequest));
+				_getFileName(uploadPortletRequest));
 
 			return mbMessageService.addTempAttachment(
 				themeDisplay.getScopeGroupId(), categoryId,
 				MBMessageConstants.TEMP_FOLDER_NAME, tempFileName, inputStream,
-				getContentType(uploadPortletRequest));
+				_getContentType(uploadPortletRequest));
 		}
-	}
-
-	protected String getContentType(UploadPortletRequest uploadPortletRequest) {
-		return uploadPortletRequest.getContentType(getParameterName());
-	}
-
-	protected InputStream getFileAsStream(
-			UploadPortletRequest uploadPortletRequest)
-		throws IOException {
-
-		return uploadPortletRequest.getFileAsStream(getParameterName());
-	}
-
-	protected String getFileName(UploadPortletRequest uploadPortletRequest) {
-		return uploadPortletRequest.getFileName(getParameterName());
 	}
 
 	protected abstract String getParameterName();
@@ -84,5 +72,20 @@ public abstract class BaseMBUploadFileEntryHandler
 
 	@Reference
 	protected MBMessageService mbMessageService;
+
+	private String _getContentType(UploadPortletRequest uploadPortletRequest) {
+		return uploadPortletRequest.getContentType(getParameterName());
+	}
+
+	private InputStream _getFileAsInputStream(
+			UploadPortletRequest uploadPortletRequest)
+		throws IOException {
+
+		return uploadPortletRequest.getFileAsStream(getParameterName());
+	}
+
+	private String _getFileName(UploadPortletRequest uploadPortletRequest) {
+		return uploadPortletRequest.getFileName(getParameterName());
+	}
 
 }

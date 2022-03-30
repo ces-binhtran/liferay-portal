@@ -17,8 +17,16 @@ package com.liferay.gradle.plugins.workspace.configurators;
 import com.liferay.ant.bnd.metatype.MetatypePlugin;
 import com.liferay.gradle.plugins.JspCDefaultsPlugin;
 import com.liferay.gradle.plugins.LiferayOSGiPlugin;
+import com.liferay.gradle.plugins.extensions.BundleExtension;
 import com.liferay.gradle.plugins.extensions.LiferayOSGiExtension;
+import com.liferay.gradle.plugins.js.module.config.generator.JSModuleConfigGeneratorPlugin;
+import com.liferay.gradle.plugins.js.transpiler.JSTranspilerBasePlugin;
+import com.liferay.gradle.plugins.js.transpiler.JSTranspilerPlugin;
+import com.liferay.gradle.plugins.node.NodePlugin;
+import com.liferay.gradle.plugins.rest.builder.RESTBuilderPlugin;
 import com.liferay.gradle.plugins.service.builder.ServiceBuilderPlugin;
+import com.liferay.gradle.plugins.soy.SoyPlugin;
+import com.liferay.gradle.plugins.soy.SoyTranslationPlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationBasePlugin;
 import com.liferay.gradle.plugins.test.integration.TestIntegrationPlugin;
 import com.liferay.gradle.plugins.upgrade.table.builder.UpgradeTableBuilderPlugin;
@@ -26,6 +34,7 @@ import com.liferay.gradle.plugins.util.BndUtil;
 import com.liferay.gradle.plugins.workspace.FrontendPlugin;
 import com.liferay.gradle.plugins.workspace.WorkspaceExtension;
 import com.liferay.gradle.plugins.workspace.WorkspacePlugin;
+import com.liferay.gradle.plugins.workspace.internal.JSModuleConfigGeneratorDefaultsPlugin;
 import com.liferay.gradle.plugins.workspace.internal.util.FileUtil;
 import com.liferay.gradle.plugins.workspace.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.wsdd.builder.WSDDBuilderPlugin;
@@ -122,13 +131,25 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			}
 
 			GradleUtil.applyPlugin(project, LiferayOSGiPlugin.class);
+			GradleUtil.applyPlugin(project, RESTBuilderPlugin.class);
+			GradleUtil.applyPlugin(project, ServiceBuilderPlugin.class);
+			GradleUtil.applyPlugin(project, SoyPlugin.class);
+			GradleUtil.applyPlugin(project, SoyTranslationPlugin.class);
+			GradleUtil.applyPlugin(project, UpgradeTableBuilderPlugin.class);
+			GradleUtil.applyPlugin(project, WSDDBuilderPlugin.class);
 
-			if (FileUtil.exists(project, "service.xml")) {
-				GradleUtil.applyPlugin(project, ServiceBuilderPlugin.class);
-				GradleUtil.applyPlugin(
-					project, UpgradeTableBuilderPlugin.class);
-				GradleUtil.applyPlugin(project, WSDDBuilderPlugin.class);
+			if (GradleUtil.hasTask(
+					project, NodePlugin.PACKAGE_RUN_BUILD_TASK_NAME)) {
+
+				GradleUtil.applyPlugin(project, JSTranspilerBasePlugin.class);
 			}
+			else {
+				GradleUtil.applyPlugin(
+					project, JSModuleConfigGeneratorPlugin.class);
+				GradleUtil.applyPlugin(project, JSTranspilerPlugin.class);
+			}
+
+			JSModuleConfigGeneratorDefaultsPlugin.INSTANCE.apply(project);
 
 			Jar jar = (Jar)GradleUtil.getTask(
 				project, JavaPlugin.JAR_TASK_NAME);
@@ -153,7 +174,7 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			File packageJsonFile = project.file("package.json");
 
 			if (packageJsonFile.exists() &&
-				_hasNpmBuildScript(packageJsonFile.toPath())) {
+				_hasJsPortletBuildScript(packageJsonFile.toPath())) {
 
 				GradleUtil.applyPlugin(project, FrontendPlugin.class);
 
@@ -178,6 +199,9 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			}
 		}
 
+		final BundleExtension bundleExtension = BndUtil.getBundleExtension(
+			project.getExtensions());
+
 		final WorkspaceExtension workspaceExtension = _getWorkspaceExtension(
 			project);
 
@@ -195,7 +219,8 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 
 					if (deployFastTask != null) {
 						_configureTaskDeployFast(
-							(Copy)deployFastTask, workspaceExtension);
+							(Copy)deployFastTask, bundleExtension,
+							workspaceExtension);
 					}
 
 					Task setUpTestableTomcatTask = taskContainer.findByName(
@@ -252,21 +277,16 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
-					Path dirNamePath = dirPath.getFileName();
+					String dirName = String.valueOf(dirPath.getFileName());
 
-					String dirName = dirNamePath.toString();
-
-					if (dirName.equals("build") || dirName.equals("dist") ||
-						dirName.equals("node_modules") ||
-						dirName.equals("node_modules_cache")) {
-
+					if (isExcludedDirName(dirName)) {
 						return FileVisitResult.SKIP_SUBTREE;
 					}
 
 					Path packageJsonPath = dirPath.resolve("package.json");
 
 					if (Files.exists(packageJsonPath) &&
-						_hasNpmBuildScript(packageJsonPath)) {
+						_hasJsPortletBuildScript(packageJsonPath)) {
 
 						projectDirs.add(dirPath.toFile());
 
@@ -283,12 +303,6 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 
 	protected static final String NAME = "modules";
 
-	private static File _getResourcesDir(SourceSet sourceSet) {
-		SourceSetOutput sourceSetOutput = sourceSet.getOutput();
-
-		return sourceSetOutput.getResourcesDir();
-	}
-
 	private void _configureLiferayOSGi(Project project) {
 		LiferayOSGiExtension liferayOSGiExtension = GradleUtil.getExtension(
 			project, LiferayOSGiExtension.class);
@@ -304,7 +318,7 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 
 	@SuppressWarnings("serial")
 	private void _configureRootTaskDistBundle(final Jar jar) {
-		final Project project = jar.getProject();
+		Project project = jar.getProject();
 
 		Copy copy = (Copy)GradleUtil.getTask(
 			project.getRootProject(),
@@ -322,7 +336,7 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 			});
 	}
 
-	private void _configureRootTaskDistBundle(final Task buildTask) {
+	private void _configureRootTaskDistBundle(Task buildTask) {
 		Project project = buildTask.getProject();
 
 		Copy copy = (Copy)GradleUtil.getTask(
@@ -335,14 +349,15 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 	}
 
 	private void _configureTaskDeployFast(
-		Copy deployFastTask, WorkspaceExtension workspaceExtension) {
+		Copy deployFastTask, BundleExtension bundleExtension,
+		WorkspaceExtension workspaceExtension) {
 
 		Project project = deployFastTask.getProject();
 
-		String bundleSymbolicName = BndUtil.getInstruction(
-			project, Constants.BUNDLE_SYMBOLICNAME);
-		String bundleVersion = BndUtil.getInstruction(
-			project, Constants.BUNDLE_VERSION);
+		String bundleSymbolicName = bundleExtension.getInstruction(
+			Constants.BUNDLE_SYMBOLICNAME);
+		String bundleVersion = bundleExtension.getInstruction(
+			Constants.BUNDLE_VERSION);
 
 		StringBuilder sb = new StringBuilder();
 
@@ -405,11 +420,11 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 	private void _configureTaskSetUpTestableTomcat(
 		Task setUpTestableTomcatTask, WorkspaceExtension workspaceExtension) {
 
-		Project project = setUpTestableTomcatTask.getProject();
-
 		File homeDir = workspaceExtension.getHomeDir();
 
 		if (!homeDir.exists()) {
+			Project project = setUpTestableTomcatTask.getProject();
+
 			Task initBundleTask = GradleUtil.getTask(
 				project.getRootProject(),
 				RootProjectConfigurator.INIT_BUNDLE_TASK_NAME);
@@ -495,20 +510,30 @@ public class ModulesProjectConfigurator extends BaseProjectConfigurator {
 		return (Map<String, Object>)jsonSlurper.parse(packageJsonFile);
 	}
 
+	private File _getResourcesDir(SourceSet sourceSet) {
+		SourceSetOutput sourceSetOutput = sourceSet.getOutput();
+
+		return sourceSetOutput.getResourcesDir();
+	}
+
 	private WorkspaceExtension _getWorkspaceExtension(Project project) {
 		return GradleUtil.getExtension(
 			(ExtensionAware)project.getGradle(), WorkspaceExtension.class);
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean _hasNpmBuildScript(Path packageJsonPath) {
+	private boolean _hasJsPortletBuildScript(Path packageJsonPath) {
 		Map<String, Object> packageJsonMap = _getPackageJsonMap(
 			packageJsonPath.toFile());
 
+		Map<String, Object> liferayTheme =
+			(Map<String, Object>)packageJsonMap.get("liferayTheme");
 		Map<String, Object> scripts = (Map<String, Object>)packageJsonMap.get(
 			"scripts");
 
-		if ((scripts != null) && (scripts.get("build") != null)) {
+		if ((liferayTheme == null) && (scripts != null) &&
+			(scripts.get("build") != null)) {
+
 			return true;
 		}
 

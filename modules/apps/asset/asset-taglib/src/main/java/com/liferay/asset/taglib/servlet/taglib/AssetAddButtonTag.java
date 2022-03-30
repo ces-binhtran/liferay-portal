@@ -26,13 +26,17 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.PageContext;
 
 /**
- * @author Eudaldo Alonso
+ * @author     Eudaldo Alonso
+ * @deprecated As of Athanasius (7.3.x), with no direct replacement
  */
+@Deprecated
 public class AssetAddButtonTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		request.setAttribute(
+		HttpServletRequest httpServletRequest = getRequest();
+
+		httpServletRequest.setAttribute(
 			AssetWebKeys.ASSET_HELPER, ServletContextUtil.getAssetHelper());
 
 		return super.doStartTag();
@@ -98,7 +102,7 @@ public class AssetAddButtonTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setRedirect(String redirect) {

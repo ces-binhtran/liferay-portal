@@ -20,18 +20,23 @@
 long groupId = ParamUtil.getLong(request, "groupId");
 String articleId = ParamUtil.getString(request, "articleId");
 double sourceVersion = ParamUtil.getDouble(request, "sourceVersion");
-String eventName = ParamUtil.getString(request, "eventName", renderResponse.getNamespace() + "selectVersionFm");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/select_version.jsp");
-portletURL.setParameter("redirect", currentURL);
-portletURL.setParameter("groupId", String.valueOf(groupId));
-portletURL.setParameter("articleId", articleId);
-portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCPath(
+	"/select_version.jsp"
+).setRedirect(
+	currentURL
+).setParameter(
+	"articleId", articleId
+).setParameter(
+	"groupId", groupId
+).setParameter(
+	"sourceVersion", sourceVersion
+).buildPortletURL();
 %>
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="selectVersionFm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectVersionFm">
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 		total="<%= JournalArticleLocalServiceUtil.getArticlesCount(groupId, articleId) %>"
@@ -58,15 +63,19 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 					curTargetVersion = curSourceVersion;
 					curSourceVersion = tempVersion;
 				}
-
-				Map<String, Object> data = HashMapBuilder.<String, Object>put(
-					"sourceversion", curSourceVersion
-				).put(
-					"targetversion", curTargetVersion
-				).build();
 				%>
 
-				<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+				<aui:a
+					cssClass="selector-button"
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"sourceversion", curSourceVersion
+						).put(
+							"targetversion", curTargetVersion
+						).build()
+					%>'
+					href="javascript:;"
+				>
 					<%= String.valueOf(curArticle.getVersion()) %>
 				</aui:a>
 			</liferay-ui:search-container-column-text>
@@ -83,10 +92,3 @@ portletURL.setParameter("sourceVersion", String.valueOf(sourceVersion));
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectVersionFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

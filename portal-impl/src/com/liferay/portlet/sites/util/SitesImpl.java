@@ -14,8 +14,10 @@
 
 package com.liferay.portlet.sites.util;
 
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
+import com.liferay.background.task.kernel.util.comparator.BackgroundTaskCreateDateComparator;
+import com.liferay.exportimport.kernel.background.task.BackgroundTaskExecutorNames;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactoryUtil;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataHandlerKeys;
 import com.liferay.exportimport.kernel.lar.UserIdStrategy;
@@ -30,6 +32,7 @@ import com.liferay.portal.events.EventsProcessorUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
+import com.liferay.portal.kernel.change.tracking.CTTransactionException;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.RequiredLayoutException;
@@ -49,6 +52,7 @@ import com.liferay.portal.kernel.model.LayoutSetPrototype;
 import com.liferay.portal.kernel.model.LayoutType;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.model.Organization;
+import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
@@ -95,6 +99,7 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
@@ -287,6 +292,7 @@ public class SitesImpl implements Sites {
 				"layoutPrototypeLinkEnabled", linkEnabled);
 			serviceContext.setAttribute(
 				"layoutPrototypeUuid", layoutPrototype.getUuid());
+
 			Locale targetSiteDefaultLocale = PortalUtil.getSiteDefaultLocale(
 				targetLayout.getGroupId());
 
@@ -300,7 +306,7 @@ public class SitesImpl implements Sites {
 				targetLayout.getRobotsMap(), layoutPrototypeLayout.getType(),
 				targetLayout.isHidden(), targetLayout.getFriendlyURLMap(),
 				layoutPrototypeLayout.isIconImage(), iconBytes,
-				layoutPrototypeLayout.getMasterLayoutPlid(), serviceContext);
+				layoutPrototypeLayout.getMasterLayoutPlid(), 0, serviceContext);
 		}
 		finally {
 			if (originalLayoutPrototypeLinkEnabled == null) {
@@ -489,7 +495,9 @@ public class SitesImpl implements Sites {
 		LayoutTypePortlet sourceLayoutTypePortlet =
 			(LayoutTypePortlet)sourceLayout.getLayoutType();
 
-		List<String> sourcePortletIds = sourceLayoutTypePortlet.getPortletIds();
+		List<String> sourcePortletIds = ListUtil.toList(
+			sourceLayoutTypePortlet.getAllPortlets(),
+			Portlet.PORTLET_ID_ACCESSOR);
 
 		for (String sourcePortletId : sourcePortletIds) {
 			PortletPreferences sourcePreferences =
@@ -588,7 +596,6 @@ public class SitesImpl implements Sites {
 		}
 
 		Group group = layout.getGroup();
-		String oldFriendlyURL = themeDisplay.getLayoutFriendlyURL(layout);
 
 		if (group.isStagingGroup() &&
 			!GroupPermissionUtil.contains(
@@ -600,6 +607,8 @@ public class SitesImpl implements Sites {
 				permissionChecker, Group.class.getName(), group.getGroupId(),
 				ActionKeys.MANAGE_STAGING, ActionKeys.PUBLISH_STAGING);
 		}
+
+		String oldFriendlyURL = themeDisplay.getLayoutFriendlyURL(layout);
 
 		if (LayoutPermissionUtil.contains(
 				permissionChecker, layout, ActionKeys.DELETE)) {
@@ -887,11 +896,13 @@ public class SitesImpl implements Sites {
 
 			for (String uuid : StringUtil.split(uuids)) {
 				Layout layout =
-					LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(
+					LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
 						uuid, layoutSet.getGroupId(),
 						layoutSet.isPrivateLayout());
 
-				layouts.add(layout);
+				if (layout != null) {
+					layouts.add(layout);
+				}
 			}
 
 			return layouts;
@@ -1049,7 +1060,7 @@ public class SitesImpl implements Sites {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -1125,35 +1136,46 @@ public class SitesImpl implements Sites {
 
 		if ((lastMergeTime >= modifiedDate.getTime()) &&
 			((lastMergeVersion == 0) ||
-			 (lastMergeVersion == layoutSetPrototype.getMvccVersion()))) {
+			 (lastMergeVersion == layoutSetPrototype.getMvccVersion())) &&
+			!isAnyFailedLayoutModifiedSinceLastMerge(layoutSet)) {
 
+			return false;
+		}
+
+		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
+			layoutSetPrototype.getSettingsProperties();
+
+		boolean readyForPropagation = GetterUtil.getBoolean(
+			layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+				"readyForPropagation"),
+			true);
+
+		if (!readyForPropagation && !(lastMergeTime == 0)) {
 			return false;
 		}
 
 		LayoutSet layoutSetPrototypeLayoutSet =
 			layoutSetPrototype.getLayoutSet();
 
-		UnicodeProperties layoutSetPrototypeSettingsUnicodeProperties =
+		UnicodeProperties layoutSetPrototypeLayoutSetSettingsUnicodeProperties =
 			layoutSetPrototypeLayoutSet.getSettingsProperties();
 
 		int mergeFailCount = GetterUtil.getInteger(
-			layoutSetPrototypeSettingsUnicodeProperties.getProperty(
+			layoutSetPrototypeLayoutSetSettingsUnicodeProperties.getProperty(
 				MERGE_FAIL_COUNT));
 
 		if (mergeFailCount >
 				PropsValues.LAYOUT_SET_PROTOTYPE_MERGE_FAIL_THRESHOLD) {
 
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(6);
-
-				sb.append("Merge not performed because the fail threshold ");
-				sb.append("was reached for layoutSetPrototypeId ");
-				sb.append(layoutSetPrototype.getLayoutSetPrototypeId());
-				sb.append(" and layoutId ");
-				sb.append(layoutSetPrototypeLayoutSet.getLayoutSetId());
-				sb.append(". Update the count in the database to try again.");
-
-				_log.warn(sb.toString());
+				_log.warn(
+					StringBundler.concat(
+						"Merge not performed because the fail threshold was ",
+						"reached for layoutSetPrototypeId ",
+						layoutSetPrototype.getLayoutSetPrototypeId(),
+						" and layoutId ",
+						layoutSetPrototypeLayoutSet.getLayoutSetId(),
+						". Update the count in the database to try again."));
 			}
 
 			return false;
@@ -1184,7 +1206,7 @@ public class SitesImpl implements Sites {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -1239,7 +1261,7 @@ public class SitesImpl implements Sites {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -1396,8 +1418,6 @@ public class SitesImpl implements Sites {
 				return;
 			}
 
-			removeMergeFailFriendlyURLLayouts(layoutSet);
-
 			Map<String, String[]> parameterMap =
 				getLayoutSetPrototypesParameters(importData);
 
@@ -1418,16 +1438,13 @@ public class SitesImpl implements Sites {
 
 			mergeFailCount++;
 
-			StringBundler sb = new StringBundler(6);
-
-			sb.append("Merge fail count increased to ");
-			sb.append(mergeFailCount);
-			sb.append(" for layout set prototype ");
-			sb.append(layoutSetPrototype.getLayoutSetPrototypeId());
-			sb.append(" and layout set ");
-			sb.append(layoutSet.getLayoutSetId());
-
-			_log.error(sb.toString(), exception);
+			_log.error(
+				StringBundler.concat(
+					"Merge fail count increased to ", mergeFailCount,
+					" for layout set prototype ",
+					layoutSetPrototype.getLayoutSetPrototypeId(),
+					" and layout set ", layoutSet.getLayoutSetId()),
+				exception);
 
 			layoutSetPrototypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(mergeFailCount));
@@ -1747,16 +1764,13 @@ public class SitesImpl implements Sites {
 				PropsValues.LAYOUT_PROTOTYPE_MERGE_FAIL_THRESHOLD) {
 
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(6);
-
-				sb.append("Merge not performed because the fail threshold ");
-				sb.append("was reached for layoutPrototypeId ");
-				sb.append(layoutPrototype.getLayoutPrototypeId());
-				sb.append(" and layoutId ");
-				sb.append(layoutPrototypeLayout.getLayoutId());
-				sb.append(". Update the count in the database to try again.");
-
-				_log.warn(sb.toString());
+				_log.warn(
+					StringBundler.concat(
+						"Merge not performed because the fail threshold was ",
+						"reached for layoutPrototypeId ",
+						layoutPrototype.getLayoutPrototypeId(),
+						" and layoutId ", layoutPrototypeLayout.getLayoutId(),
+						". Update the count in the database to try again."));
 			}
 
 			return;
@@ -1788,8 +1802,11 @@ public class SitesImpl implements Sites {
 
 			applyLayoutPrototype(layoutPrototype, layout, true);
 		}
+		catch (CTTransactionException ctTransactionException) {
+			throw ctTransactionException;
+		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			prototypeTypeSettingsUnicodeProperties.setProperty(
 				MERGE_FAIL_COUNT, String.valueOf(++mergeFailCount));
@@ -2063,6 +2080,12 @@ public class SitesImpl implements Sites {
 			"lastMergeVersion",
 			new String[] {String.valueOf(lastMergeVersion)});
 
+		parameterMap.put(
+			"layoutSetPrototypeId",
+			new String[] {
+				String.valueOf(layoutSetPrototype.getLayoutSetPrototypeId())
+			});
+
 		if (importData) {
 			file = exportLayoutSetPrototype(
 				user, layoutSetPrototype, parameterMap, null);
@@ -2080,9 +2103,27 @@ public class SitesImpl implements Sites {
 			_exportInProgressMap.remove(cacheFileName);
 		}
 
-		if (file == null) {
+		LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
+			groupId, privateLayout);
+
+		if ((file == null) ||
+			isSkipImport(groupId, layoutSet, false, lastMergeVersion) ||
+			isSkipImport(groupId, layoutSet, true, lastMergeVersion)) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Skipping import of layout set prototype ",
+						layoutSetPrototype.getUuid(), " (mvccVersion ",
+						layoutSetPrototype.getMvccVersion(), ") to layout set ",
+						layoutSet.getLayoutSetId(), " (mvccVersion ",
+						layoutSet.getMvccVersion(), ")"));
+			}
+
 			return;
 		}
+
+		removeMergeFailFriendlyURLLayouts(layoutSet);
 
 		Map<String, Serializable> importLayoutSettingsMap =
 			ExportImportConfigurationSettingsMapFactoryUtil.
@@ -2099,11 +2140,99 @@ public class SitesImpl implements Sites {
 					importLayoutSettingsMap, WorkflowConstants.STATUS_DRAFT,
 					new ServiceContext());
 
-		ExportImportLocalServiceUtil.importLayoutsDataDeletions(
-			exportImportConfiguration, file);
+		ExportImportLocalServiceUtil.importLayoutSetPrototypeInBackground(
+			user.getUserId(), exportImportConfiguration, file);
+	}
 
-		ExportImportLocalServiceUtil.importLayouts(
-			exportImportConfiguration, file);
+	protected boolean isAnyFailedLayoutModifiedSinceLastMerge(
+		LayoutSet layoutSet) {
+
+		UnicodeProperties unicodeProperties = layoutSet.getSettingsProperties();
+
+		String uuids = unicodeProperties.getProperty(
+			MERGE_FAIL_FRIENDLY_URL_LAYOUTS);
+
+		if (Validator.isNotNull(uuids)) {
+			for (String uuid : StringUtil.split(uuids)) {
+				Layout layout =
+					LayoutLocalServiceUtil.fetchLayoutByUuidAndGroupId(
+						uuid, layoutSet.getGroupId(),
+						layoutSet.isPrivateLayout());
+
+				if (layout == null) {
+					return true;
+				}
+
+				Date modifiedDate = layout.getModifiedDate();
+
+				long lastMergeTime = GetterUtil.getLong(
+					unicodeProperties.getProperty(LAST_MERGE_TIME));
+
+				if (modifiedDate.getTime() > lastMergeTime) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	protected boolean isSkipImport(
+		long groupId, LayoutSet layoutSet, boolean completed,
+		long lastMergeVersion) {
+
+		BackgroundTask previousBackgroundTask =
+			BackgroundTaskManagerUtil.fetchFirstBackgroundTask(
+				groupId,
+				BackgroundTaskExecutorNames.
+					LAYOUT_SET_PROTOTYPE_IMPORT_BACKGROUND_TASK_EXECUTOR,
+				completed, new BackgroundTaskCreateDateComparator(false));
+
+		if (previousBackgroundTask == null) {
+			return false;
+		}
+
+		Map<String, Serializable> contextMap =
+			previousBackgroundTask.getTaskContextMap();
+
+		ExportImportConfiguration previousExportImportConfiguration =
+			ExportImportConfigurationLocalServiceUtil.
+				fetchExportImportConfiguration(
+					MapUtil.getLong(contextMap, "exportImportConfigurationId"));
+
+		if (previousExportImportConfiguration == null) {
+			return false;
+		}
+
+		Map<String, Serializable> settingsMap =
+			previousExportImportConfiguration.getSettingsMap();
+
+		Map<String, String[]> parameterMap =
+			(Map<String, String[]>)settingsMap.get("parameterMap");
+
+		long previousLastMergeVersion = MapUtil.getLong(
+			parameterMap, "lastMergeVersion");
+
+		if (previousLastMergeVersion == lastMergeVersion) {
+			if (isAnyFailedLayoutModifiedSinceLastMerge(layoutSet)) {
+				return false;
+			}
+
+			UnicodeProperties settingsUnicodeProperties =
+				layoutSet.getSettingsProperties();
+
+			long lastResetTime = GetterUtil.getLong(
+				settingsUnicodeProperties.getProperty(LAST_RESET_TIME));
+
+			Date previousBackgroundTaskCreateDate =
+				previousBackgroundTask.getCreateDate();
+
+			if (previousBackgroundTaskCreateDate.getTime() > lastResetTime) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	protected void setLayoutSetPrototypeLinkEnabledParameter(
@@ -2242,6 +2371,10 @@ public class SitesImpl implements Sites {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 

@@ -37,7 +37,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT_IMPORT,
-		"mvc.command.name=publishLayoutsSimple"
+		"mvc.command.name=/export_import/publish_layouts_simple"
 	},
 	service = MVCRenderCommand.class
 )
@@ -53,7 +53,7 @@ public class PublishLayoutsSimpleMVCRenderCommand implements MVCRenderCommand {
 				renderRequest, "exportImportConfigurationId");
 
 			if (exportImportConfigurationId <= 0) {
-				createExportImportConfiguration(renderRequest);
+				_createExportImportConfiguration(renderRequest);
 			}
 
 			ActionUtil.getGroup(renderRequest);
@@ -73,7 +73,7 @@ public class PublishLayoutsSimpleMVCRenderCommand implements MVCRenderCommand {
 		return "/publish/simple/publish_layouts_simple.jsp";
 	}
 
-	protected void createExportImportConfiguration(RenderRequest renderRequest)
+	private void _createExportImportConfiguration(RenderRequest renderRequest)
 		throws PortalException {
 
 		ExportImportConfiguration exportImportConfiguration = null;

@@ -27,6 +27,10 @@ public class CTCollectionLocalServiceWrapper
 	implements CTCollectionLocalService,
 			   ServiceWrapper<CTCollectionLocalService> {
 
+	public CTCollectionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public CTCollectionLocalServiceWrapper(
 		CTCollectionLocalService ctCollectionLocalService) {
 
@@ -35,6 +39,10 @@ public class CTCollectionLocalServiceWrapper
 
 	/**
 	 * Adds the ct collection to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was added
@@ -106,6 +114,10 @@ public class CTCollectionLocalServiceWrapper
 	/**
 	 * Deletes the ct collection from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was removed
 	 * @throws PortalException
@@ -120,6 +132,10 @@ public class CTCollectionLocalServiceWrapper
 
 	/**
 	 * Deletes the ct collection with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollectionId the primary key of the ct collection
 	 * @return the ct collection that was removed
@@ -147,6 +163,13 @@ public class CTCollectionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ctCollectionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ctCollectionLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -309,6 +332,23 @@ public class CTCollectionLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List
+		<com.liferay.change.tracking.mapping.CTMappingTableInfo>
+			getCTMappingTableInfos(long ctCollectionId) {
+
+		return _ctCollectionLocalService.getCTMappingTableInfos(ctCollectionId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.change.tracking.model.CTEntry>
+		getDiscardCTEntries(
+			long ctCollectionId, long modelClassNameId, long modelClassPK) {
+
+		return _ctCollectionLocalService.getDiscardCTEntries(
+			ctCollectionId, modelClassNameId, modelClassPK);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery
 		getIndexableActionableDynamicQuery() {
 
@@ -355,6 +395,10 @@ public class CTCollectionLocalServiceWrapper
 
 	/**
 	 * Updates the ct collection in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was updated

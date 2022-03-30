@@ -30,23 +30,24 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletJSONUtil;
 import com.liferay.portal.kernel.portlet.PortletLayoutListener;
 import com.liferay.portal.kernel.portlet.PortletParameterUtil;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
 import com.liferay.portal.kernel.portlet.RestrictPortletServletRequest;
+import com.liferay.portal.kernel.portlet.constants.PortletPreferencesFactoryConstants;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.servlet.DynamicServletRequest;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.DirectTag;
-import com.liferay.taglib.servlet.PipingServletResponse;
+import com.liferay.taglib.servlet.PipingServletResponseFactory;
 import com.liferay.taglib.util.PortalIncludeUtil;
 import com.liferay.taglib.util.ThreadLocalUtil;
 
@@ -174,7 +175,7 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 		if (pageContext != null) {
 			if (httpServletResponse == pageContext.getResponse()) {
 				httpServletResponse =
-					PipingServletResponse.createPipingServletResponse(
+					PipingServletResponseFactory.createPipingServletResponse(
 						pageContext);
 			}
 			else {
@@ -194,15 +195,19 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 
 		String portletInstanceKey = portletName;
 
-		if (Validator.isNotNull(instanceId) && !instanceId.startsWith("0")) {
+		if (Validator.isNotNull(instanceId) && !instanceId.equals("0")) {
 			portletInstanceKey = PortletIdCodec.encode(
 				PortletIdCodec.decodePortletName(portletName),
 				PortletIdCodec.decodeUserId(portletName), instanceId);
 		}
 
+		boolean resetLifecycleRender = false;
+
 		if (!Objects.equals(
 				portletInstanceKey,
 				httpServletRequest.getParameter("p_p_id"))) {
+
+			resetLifecycleRender = true;
 
 			Set<String> keySet = parameterMap.keySet();
 
@@ -225,11 +230,18 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			}
 		}
 
-		queryString = PortletParameterUtil.addNamespace(
-			portletInstanceKey, queryString);
+		if (Validator.isNotNull(queryString)) {
+			queryString = PortletParameterUtil.addNamespace(
+				portletInstanceKey, queryString);
 
-		httpServletRequest = DynamicServletRequest.addQueryString(
-			restrictPortletServletRequest, parameterMap, queryString, false);
+			httpServletRequest = DynamicServletRequest.addQueryString(
+				restrictPortletServletRequest, parameterMap, queryString,
+				false);
+		}
+		else {
+			httpServletRequest = new DynamicServletRequest(
+				restrictPortletServletRequest, parameterMap, false);
+		}
 
 		try {
 			httpServletRequest.setAttribute(
@@ -250,12 +262,20 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				_embeddedPortletIds.set(embeddedPortletIds);
 			}
 
-			if (embeddedPortletIds.search(portlet.getPortletId()) > -1) {
+			String rootPortletId = portlet.getRootPortletId();
+
+			if (embeddedPortletIds.search(rootPortletId) > -1) {
+				if (_log.isWarnEnabled()) {
+					_log.warn(
+						"The application cannot include itself: " +
+							rootPortletId);
+				}
+
 				String errorMessage = LanguageUtil.get(
-					httpServletRequest,
+					originalHttpServletRequest,
 					"the-application-cannot-include-itself");
 
-				httpServletRequest.setAttribute(
+				originalHttpServletRequest.setAttribute(
 					"liferay-portlet:runtime:errorMessage", errorMessage);
 
 				PortalIncludeUtil.include(pageContext, _ERROR_PAGE);
@@ -299,26 +319,30 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 				writeObject = true;
 			}
 
-			long count =
-				PortletPreferencesLocalServiceUtil.getPortletPreferencesCount(
-					PortletKeys.PREFS_OWNER_TYPE_LAYOUT, themeDisplay.getPlid(),
-					portletInstanceKey);
+			if (persistSettings) {
+				long count =
+					PortletPreferencesLocalServiceUtil.
+						getPortletPreferencesCount(
+							PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
+							themeDisplay.getPlid(), portletInstanceKey);
 
-			if (count < 1) {
-				PortletPreferencesFactoryUtil.getLayoutPortletSetup(
-					layout, portletInstanceKey, defaultPreferences);
-				PortletPreferencesFactoryUtil.getPortletSetup(
-					httpServletRequest, portletInstanceKey, defaultPreferences);
+				if (count < 1) {
+					PortletPreferencesFactoryUtil.getLayoutPortletSetup(
+						layout, portletInstanceKey, defaultPreferences);
+					PortletPreferencesFactoryUtil.getPortletSetup(
+						httpServletRequest, portletInstanceKey,
+						defaultPreferences);
 
-				PortletLayoutListener portletLayoutListener =
-					portlet.getPortletLayoutListenerInstance();
+					PortletLayoutListener portletLayoutListener =
+						portlet.getPortletLayoutListenerInstance();
 
-				if (portletLayoutListener != null) {
-					portletLayoutListener.onAddToLayout(
-						portletInstanceKey, themeDisplay.getPlid());
+					if (portletLayoutListener != null) {
+						portletLayoutListener.onAddToLayout(
+							portletInstanceKey, themeDisplay.getPlid());
+					}
+
+					writeObject = true;
 				}
-
-				writeObject = true;
 			}
 
 			if (writeObject) {
@@ -333,10 +357,23 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 					httpServletResponse, jsonObject);
 			}
 
-			embeddedPortletIds.push(portletInstanceKey);
+			embeddedPortletIds.push(rootPortletId);
 
-			PortletContainerUtil.render(
-				httpServletRequest, httpServletResponse, portlet);
+			boolean lifecycleRender = themeDisplay.isLifecycleRender();
+
+			try {
+				if (resetLifecycleRender) {
+					themeDisplay.setLifecycleRender(true);
+				}
+
+				PortletContainerUtil.render(
+					httpServletRequest, httpServletResponse, portlet);
+			}
+			finally {
+				if (resetLifecycleRender) {
+					themeDisplay.setLifecycleRender(lifecycleRender);
+				}
+			}
 
 			embeddedPortletIds.pop();
 
@@ -386,7 +423,7 @@ public class RuntimeTag extends TagSupport implements DirectTag {
 			return EVAL_PAGE;
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			throw new JspException(exception);
 		}

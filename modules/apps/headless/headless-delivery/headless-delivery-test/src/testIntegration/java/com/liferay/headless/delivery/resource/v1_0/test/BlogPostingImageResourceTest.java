@@ -21,7 +21,7 @@ import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.problem.Problem;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 
@@ -50,16 +50,25 @@ public class BlogPostingImageResourceTest
 
 		BlogPostingImage blogPostingImage = randomBlogPostingImage();
 
-		blogPostingImage.setTitle("*,?");
-
 		try {
 			testPostSiteBlogPostingImage_addBlogPostingImage(
-				blogPostingImage, getMultipartFiles());
+				blogPostingImage,
+				HashMapBuilder.put(
+					"file",
+					() -> {
+						File tempFile = FileUtil.createTempFile("*,?", "txt");
+
+						FileUtil.write(
+							tempFile, TestDataConstants.TEST_BYTE_ARRAY);
+
+						return tempFile;
+					}
+				).build());
 
 			Assert.fail();
 		}
-		catch (Throwable e) {
-			Assert.assertTrue(e instanceof Problem.ProblemException);
+		catch (Throwable throwable) {
+			Assert.assertTrue(throwable instanceof Problem.ProblemException);
 		}
 
 		folder = BlogsEntryLocalServiceUtil.fetchAttachmentsFolder(

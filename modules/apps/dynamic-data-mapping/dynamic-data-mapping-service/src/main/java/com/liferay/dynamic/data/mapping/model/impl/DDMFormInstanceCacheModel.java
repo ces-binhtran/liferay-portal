@@ -37,17 +37,17 @@ public class DDMFormInstanceCacheModel
 	implements CacheModel<DDMFormInstance>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DDMFormInstanceCacheModel)) {
+		if (!(object instanceof DDMFormInstanceCacheModel)) {
 			return false;
 		}
 
 		DDMFormInstanceCacheModel ddmFormInstanceCacheModel =
-			(DDMFormInstanceCacheModel)obj;
+			(DDMFormInstanceCacheModel)object;
 
 		if ((formInstanceId == ddmFormInstanceCacheModel.formInstanceId) &&
 			(mvccVersion == ddmFormInstanceCacheModel.mvccVersion)) {
@@ -239,7 +239,7 @@ public class DDMFormInstanceCacheModel
 		structureId = objectInput.readLong();
 		version = objectInput.readUTF();
 		name = objectInput.readUTF();
-		description = objectInput.readUTF();
+		description = (String)objectInput.readObject();
 		settings = (String)objectInput.readObject();
 		lastPublishDate = objectInput.readLong();
 
@@ -305,10 +305,10 @@ public class DDMFormInstanceCacheModel
 		}
 
 		if (description == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(description);
+			objectOutput.writeObject(description);
 		}
 
 		if (settings == null) {

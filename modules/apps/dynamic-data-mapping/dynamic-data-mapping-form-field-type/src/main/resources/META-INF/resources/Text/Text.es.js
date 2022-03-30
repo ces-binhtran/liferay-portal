@@ -15,39 +15,108 @@
 import ClayAutocomplete from '@clayui/autocomplete';
 import ClayDropDown from '@clayui/drop-down';
 import {ClayInput} from '@clayui/form';
-import {normalizeFieldName} from 'dynamic-data-mapping-form-renderer';
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {usePrevious} from '@liferay/frontend-js-react-web';
+import {normalizeFieldName} from 'data-engine-js-components-web';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import withConfirmationField from '../util/withConfirmationField.es';
 
 const Text = ({
+	defaultLanguageId,
 	disabled,
+	editingLanguageId,
 	fieldName,
 	id,
+	invalidCharacters,
+	localizable,
+	localizedValue,
+	maxLength,
 	name,
+	normalizeField,
 	onBlur,
 	onChange,
 	onFocus,
 	placeholder,
+	shouldUpdateValue,
 	syncDelay,
 	value: initialValue,
 }) => {
-	const [value, setValue] = useSyncValue(initialValue, syncDelay);
+	const [value, setValue] = useSyncValue(
+		initialValue,
+		syncDelay,
+		editingLanguageId
+	);
+
+	const inputRef = useRef(null);
+
+	const prevEditingLanguageId = usePrevious(editingLanguageId);
+
+	useEffect(() => {
+		if (prevEditingLanguageId !== editingLanguageId && localizable) {
+			const newValue =
+				localizedValue[editingLanguageId] !== undefined
+					? localizedValue[editingLanguageId]
+					: localizedValue[defaultLanguageId];
+			setValue(newValue);
+		}
+	}, [
+		defaultLanguageId,
+		editingLanguageId,
+		localizable,
+		localizedValue,
+		prevEditingLanguageId,
+		setValue,
+	]);
+
+	useEffect(() => {
+		if (
+			normalizeField &&
+			inputRef.current &&
+			inputRef.current.value !== initialValue &&
+			(inputRef.current.value === '' || shouldUpdateValue)
+		) {
+			setValue(initialValue);
+			onChange({target: {value: initialValue}});
+		}
+	}, [
+		initialValue,
+		inputRef,
+		fieldName,
+		normalizeField,
+		onChange,
+		setValue,
+		shouldUpdateValue,
+	]);
 
 	return (
 		<ClayInput
-			aria-label="text"
 			className="ddm-field-text"
+			dir={Liferay.Language.direction[editingLanguageId]}
 			disabled={disabled}
 			id={id}
+			lang={editingLanguageId}
+			maxLength={maxLength}
 			name={name}
-			onBlur={onBlur}
+			onBlur={(event) => {
+				if (normalizeField) {
+					onBlur({target: {value: initialValue}});
+				}
+				else {
+					onBlur(event);
+				}
+			}}
 			onChange={(event) => {
-				if (fieldName === 'name') {
-					event.target.value = normalizeFieldName(event.target.value);
+				const {value} = event.target;
+
+				if (normalizeField) {
+					event.target.value = normalizeFieldName(value);
+				}
+				else if (invalidCharacters) {
+					const regex = new RegExp(invalidCharacters, 'g');
+
+					event.target.value = value.replace(regex, '');
 				}
 
 				setValue(event.target.value);
@@ -55,6 +124,7 @@ const Text = ({
 			}}
 			onFocus={onFocus}
 			placeholder={placeholder}
+			ref={inputRef}
 			type="text"
 			value={value}
 		/>
@@ -63,6 +133,7 @@ const Text = ({
 
 const Textarea = ({
 	disabled,
+	editingLanguageId,
 	id,
 	name,
 	onBlur,
@@ -77,8 +148,10 @@ const Textarea = ({
 	return (
 		<textarea
 			className="ddm-field-text form-control"
+			dir={Liferay.Language.direction[editingLanguageId]}
 			disabled={disabled}
 			id={id}
+			lang={editingLanguageId}
 			name={name}
 			onBlur={onBlur}
 			onChange={(event) => {
@@ -87,6 +160,7 @@ const Textarea = ({
 			}}
 			onFocus={onFocus}
 			placeholder={placeholder}
+			style={disabled ? {resize: 'none'} : null}
 			type="text"
 			value={value}
 		/>
@@ -95,6 +169,7 @@ const Textarea = ({
 
 const Autocomplete = ({
 	disabled,
+	editingLanguageId,
 	id,
 	name,
 	onBlur,
@@ -105,21 +180,40 @@ const Autocomplete = ({
 	syncDelay,
 	value: initialValue,
 }) => {
+	const [selectedItem, setSelectedItem] = useState(false);
 	const [value, setValue] = useSyncValue(initialValue, syncDelay);
 	const [visible, setVisible] = useState(false);
 	const inputRef = useRef(null);
 	const itemListRef = useRef(null);
 
-	const filteredItems = options.filter((item) => item && item.match(value));
+	const escapeChars = (string) =>
+		string.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+
+	const filteredItems = options.filter(
+		(item) => item && item.match(escapeChars(value))
+	);
+
+	const isValidItem = useCallback(() => {
+		return (
+			!selectedItem &&
+			filteredItems.length > 1 &&
+			!filteredItems.includes(value)
+		);
+	}, [filteredItems, selectedItem, value]);
 
 	useEffect(() => {
-		if (filteredItems.length === 1 && filteredItems.includes(value)) {
+		const ddmPageContainerLayout = inputRef.current.closest(
+			'.ddm-page-container-layout'
+		);
+
+		if (
+			!isValidItem() &&
+			ddmPageContainerLayout &&
+			ddmPageContainerLayout.classList.contains('hide')
+		) {
 			setVisible(false);
 		}
-		else {
-			setVisible(!!value);
-		}
-	}, [filteredItems, value]);
+	}, [filteredItems, isValidItem, value, selectedItem]);
 
 	const handleFocus = (event, direction) => {
 		const target = event.target;
@@ -154,15 +248,25 @@ const Autocomplete = ({
 	return (
 		<ClayAutocomplete>
 			<ClayAutocomplete.Input
+				dir={Liferay.Language.direction[editingLanguageId]}
 				disabled={disabled}
 				id={id}
+				lang={editingLanguageId}
 				name={name}
 				onBlur={onBlur}
 				onChange={(event) => {
 					setValue(event.target.value);
+					setVisible(!!event.target.value);
+					setSelectedItem(false);
 					onChange(event);
 				}}
-				onFocus={onFocus}
+				onFocus={(event) => {
+					if (isValidItem() && event.target.value) {
+						setVisible(true);
+					}
+
+					onFocus(event);
+				}}
 				onKeyDown={(event) => {
 					if (
 						(event.key === 'Tab' || event.key === 'ArrowDown') &&
@@ -212,12 +316,15 @@ const Autocomplete = ({
 							{Liferay.Language.get('no-results-were-found')}
 						</ClayDropDown.Item>
 					)}
-					{filteredItems.map((label) => (
+
+					{filteredItems.map((label, index) => (
 						<ClayAutocomplete.Item
-							key={label}
+							key={index}
 							match={value}
 							onClick={() => {
 								setValue(label);
+								setVisible(false);
+								setSelectedItem(true);
 								onChange({target: {value: label}});
 							}}
 							value={label}
@@ -238,10 +345,17 @@ const DISPLAY_STYLE = {
 const Main = ({
 	autocomplete,
 	autocompleteEnabled,
+	defaultLanguageId,
 	displayStyle = 'singleline',
 	fieldName,
 	id,
+	invalidCharacters = '',
+	locale,
+	localizable,
+	localizedValue = {},
+	maxLength,
 	name,
+	normalizeField = false,
 	onBlur,
 	onChange,
 	onFocus,
@@ -249,6 +363,7 @@ const Main = ({
 	placeholder,
 	predefinedValue = '',
 	readOnly,
+	shouldUpdateValue = false,
 	syncDelay = true,
 	value,
 	...otherProps
@@ -260,42 +375,43 @@ const Main = ({
 		DISPLAY_STYLE[
 			autocomplete || autocompleteEnabled
 				? 'autocomplete'
-				: displayStyle
-				? displayStyle
-				: `singleline`
+				: displayStyle ?? `singleline`
 		];
 
 	return (
-		<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
+		<FieldBase
+			{...otherProps}
+			fieldName={fieldName}
+			id={id}
+			localizedValue={localizedValue}
+			name={name}
+			readOnly={readOnly}
+		>
 			<Component
+				defaultLanguageId={defaultLanguageId}
 				disabled={readOnly}
+				editingLanguageId={locale}
 				fieldName={fieldName}
 				id={id}
+				invalidCharacters={invalidCharacters}
+				localizable={localizable}
+				localizedValue={localizedValue}
+				maxLength={maxLength}
 				name={name}
+				normalizeField={normalizeField}
 				onBlur={onBlur}
 				onChange={onChange}
 				onFocus={onFocus}
 				options={optionsMemo}
 				placeholder={placeholder}
+				shouldUpdateValue={shouldUpdateValue}
 				syncDelay={syncDelay}
 				value={value ? value : predefinedValue}
 			/>
-		</FieldBaseProxy>
+		</FieldBase>
 	);
 };
 
 Main.displayName = 'Text';
 
-const TextProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onBlur={(event) => emit('fieldBlurred', event, event.target.value)}
-		onChange={(event) => emit('fieldEdited', event, event.target.value)}
-		onFocus={(event) => emit('fieldFocused', event, event.target.value)}
-	/>
-));
-
-const ReactTextAdapter = getConnectedReactComponentAdapter(TextProxy, 'text');
-
-export {ReactTextAdapter, useSyncValue, Main};
-export default ReactTextAdapter;
+export default withConfirmationField(Main);

@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.form.web.internal.portlet.action.helper.SaveFormInstanceMVCCommandHelper;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValidationException;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
-		"mvc.command.name=saveFormInstance"
+		"mvc.command.name=/dynamic_data_mapping_form/save_form_instance"
 	},
 	service = MVCActionCommand.class
 )

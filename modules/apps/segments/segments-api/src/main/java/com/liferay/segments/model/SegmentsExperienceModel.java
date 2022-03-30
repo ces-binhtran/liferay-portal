@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.model.LocalizedModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.model.ShardedModel;
 import com.liferay.portal.kernel.model.StagedGroupedModel;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
 
 import java.util.Date;
 import java.util.Locale;
@@ -42,8 +43,9 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface SegmentsExperienceModel
-	extends AttachedModel, BaseModel<SegmentsExperience>, LocalizedModel,
-			MVCCModel, ShardedModel, StagedGroupedModel {
+	extends AttachedModel, BaseModel<SegmentsExperience>,
+			CTModel<SegmentsExperience>, LocalizedModel, MVCCModel,
+			ShardedModel, StagedGroupedModel {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -56,6 +58,7 @@ public interface SegmentsExperienceModel
 	 *
 	 * @return the primary key of this segments experience
 	 */
+	@Override
 	public long getPrimaryKey();
 
 	/**
@@ -63,6 +66,7 @@ public interface SegmentsExperienceModel
 	 *
 	 * @param primaryKey the primary key of this segments experience
 	 */
+	@Override
 	public void setPrimaryKey(long primaryKey);
 
 	/**
@@ -80,6 +84,22 @@ public interface SegmentsExperienceModel
 	 */
 	@Override
 	public void setMvccVersion(long mvccVersion);
+
+	/**
+	 * Returns the ct collection ID of this segments experience.
+	 *
+	 * @return the ct collection ID of this segments experience
+	 */
+	@Override
+	public long getCtCollectionId();
+
+	/**
+	 * Sets the ct collection ID of this segments experience.
+	 *
+	 * @param ctCollectionId the ct collection ID of this segments experience
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId);
 
 	/**
 	 * Returns the uuid of this segments experience.
@@ -431,6 +451,21 @@ public interface SegmentsExperienceModel
 	public void setActive(boolean active);
 
 	/**
+	 * Returns the type settings of this segments experience.
+	 *
+	 * @return the type settings of this segments experience
+	 */
+	@AutoEscape
+	public String getTypeSettings();
+
+	/**
+	 * Sets the type settings of this segments experience.
+	 *
+	 * @param typeSettings the type settings of this segments experience
+	 */
+	public void setTypeSettings(String typeSettings);
+
+	/**
 	 * Returns the last publish date of this segments experience.
 	 *
 	 * @return the last publish date of this segments experience
@@ -458,5 +493,8 @@ public interface SegmentsExperienceModel
 	@Override
 	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
 		throws LocaleException;
+
+	@Override
+	public SegmentsExperience cloneWithOriginalValues();
 
 }

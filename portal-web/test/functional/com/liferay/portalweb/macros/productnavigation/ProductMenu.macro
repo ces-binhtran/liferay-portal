@@ -1,12 +1,39 @@
 definition {
 
+	@summary = "Change site default language in Site Settings."
+	macro changeDefaultLanguage {
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
+			portlet = "Site Settings");
+
+		Click(
+			key_itemName = "Localization",
+			locator1 = "ListGroupItem#ITEM_TEXT");
+
+		Click(
+			key_fieldLabel = "Define a custom default language",
+			locator1 = "SystemSettings#LABEL");
+
+		Select(
+			locator1 = "Select#SITE_DEFAULT_LANGUAGE",
+			value1 = "${defaultPortalLanguage}");
+
+		Button.clickSave();
+	}
+
+	macro gotoHomePage {
+		ProductMenuHelper.openProductMenu();
+
+		Click(locator1 = "ProductMenu#HOME_PAGE_LINK");
+	}
+
 	@summary = "Navigate to the Live site"
 	macro gotoLiveSite {
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "${site}");
+			ApplicationsMenu.gotoSite(site = "${site}");
 		}
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		AssertClick(
 			locator1 = "ProductMenu#LIVE_LINK",
@@ -15,11 +42,15 @@ definition {
 
 	@summary = "Navigate to Product Menu > Sites > Sites Modal > ${site}"
 	macro gotoLocalizedSite {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "Guest");
+			ApplicationsMenu.gotoSite(site = "${siteName}");
 		}
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
+
+		WaitForLiferayEvent.initializeLiferayEventLog();
 
 		ProductMenuHelper.openWorkspace();
 
@@ -35,19 +66,28 @@ definition {
 
 		SelectFrameTop();
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
 			value1 = "${site}");
 	}
 
-	@summary = "Navigate to Product Menu > ${panel} > ${category} > ${portlet}"
+	@summary = "Navigate to Product Menu > ${category} > ${portlet}"
 	macro gotoPortlet {
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "${site}");
+			ApplicationsMenu.gotoSite(site = "${site}");
 		}
 
+		ProductMenuHelper.openProductMenu();
+
+		ProductMenuHelper.expandCategory(category = "${category}");
+
+		ProductMenuHelper.gotoPortlet(portlet = "${portlet}");
+	}
+
+	@summary = "Navigate to Product Menu > ${panel} > ${category} > ${portlet}"
+	macro gotoPortletWhenDisableApplicationsMenu {
 		ProductMenuHelper.expandPanel(panel = "${panel}");
 
 		ProductMenuHelper.expandCategory(category = "${category}");
@@ -55,9 +95,9 @@ definition {
 		ProductMenuHelper.gotoPortlet(portlet = "${portlet}");
 	}
 
-	@summary = "Navigate to Product Menu > ${panel} > ${category} > ${scope} > ${portlet}"
+	@summary = "Navigate to Product Menu > ${category} > ${scope} > ${portlet}"
 	macro gotoScopedPortlet {
-		ProductMenuHelper.expandPanel(panel = "${panel}");
+		ProductMenuHelper.openProductMenu();
 
 		ProductMenuHelper.expandCategory(category = "${category}");
 
@@ -69,10 +109,10 @@ definition {
 	@summary = "Navigate to Product Menu > Sites > Sites Modal > ${site}"
 	macro gotoSite {
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "${site}");
+			ApplicationsMenu.gotoSite(site = "${site}");
 		}
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		ProductMenuHelper.openWorkspace();
 
@@ -80,46 +120,25 @@ definition {
 
 		Pause(locator1 = "3000");
 
-		if (isSet(depotName)) {
-			Navigator.gotoNavItem(navItem = "Asset Libraries");
+		Navigator.gotoNavItem(navItem = "All Sites");
 
-			LexiconCard.clickCard(card = "${depotName}");
-		}
-		else {
+		SiteSelector.selectSite(site = "${site}");
 
-			Navigator.gotoNavItem(navItem = "My Sites");
+		ProductMenuHelper.openProductMenu();
 
-			SiteSelector.selectSite(site = "${site}");
-
-			ProductMenuHelper.expandPanel(panel = "Site Administration");
-
-			AssertTextEquals.assertPartialText(
-				locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
-				value1 = "${site}");
-		}
-	}
-
-	@summary = "Navigate to ${site} via the 'Go to Site' link"
-	macro gotoSiteViaLink {
-		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "${site}");
-		}
-
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
-
-		AssertClick(
-			locator1 = "ProductMenu#GO_TO_SITES_LINK",
-			value1 = "Go to Site");
+		AssertTextEquals.assertPartialText(
+			locator1 = "ProductMenu#PRODUCT_MENU_PANEL_SITE_ADMINISTRATION_SITE_NAME",
+			value1 = "${site}");
 	}
 
 	@summary = "Navigate to the Staging site"
 	macro gotoStagingSite {
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "${site}");
+			ApplicationsMenu.gotoSite(site = "${site}");
 		}
 
 		if (IsElementNotPresent(locator1 = "ProductMenu#STAGING_SELECTED")) {
-			ProductMenuHelper.expandPanel(panel = "Site Administration");
+			ProductMenuHelper.openProductMenu();
 
 			AssertClick(
 				locator1 = "ProductMenu#STAGING_LINK",
@@ -131,11 +150,13 @@ definition {
 
 	@summary = "View ${site} is not available in the product menu."
 	macro viewNoSite {
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 		if (IsElementNotPresent(locator1 = "ProductMenu#TOGGLE")) {
-			GlobalMenu.gotoSite(site = "Guest");
+			ApplicationsMenu.gotoSite(site = "${siteName}");
 		}
 
-		ProductMenuHelper.expandPanel(panel = "Site Administration");
+		ProductMenuHelper.openProductMenu();
 
 		if ((IsElementPresent(locator1 = "ProductMenu#BACK_ARROW")) && (IsVisible(locator1 = "ProductMenu#BACK_ARROW"))) {
 			Click(locator1 = "ProductMenu#BACK_ARROW");

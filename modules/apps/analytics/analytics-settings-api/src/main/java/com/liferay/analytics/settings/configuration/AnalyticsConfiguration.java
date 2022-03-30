@@ -18,6 +18,8 @@ import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Marcellus Tavares
  */
@@ -28,19 +30,35 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 @Meta.OCD(
 	id = "com.liferay.analytics.settings.configuration.AnalyticsConfiguration"
 )
+@ProviderType
 public interface AnalyticsConfiguration {
 
 	@Meta.AD(required = false)
 	public String hostsAllowed();
 
 	@Meta.AD(required = false)
+	public String liferayAnalyticsConnectionType();
+
+	@Meta.AD(required = false)
 	public String liferayAnalyticsDataSourceId();
+
+	@Meta.AD(required = false)
+	public boolean liferayAnalyticsEnableAllGroupIds();
 
 	@Meta.AD(required = false)
 	public String liferayAnalyticsEndpointURL();
 
 	@Meta.AD(required = false)
 	public String liferayAnalyticsFaroBackendSecuritySignature();
+
+	@Meta.AD(required = false)
+	public String liferayAnalyticsFaroBackendURL();
+
+	@Meta.AD(required = false)
+	public String[] liferayAnalyticsGroupIds();
+
+	@Meta.AD(required = false)
+	public String liferayAnalyticsProjectId();
 
 	@Meta.AD(required = false)
 	public String liferayAnalyticsURL();
@@ -55,10 +73,16 @@ public interface AnalyticsConfiguration {
 	public boolean syncAllContacts();
 
 	@Meta.AD(required = false)
+	public String[] syncedContactFieldNames();
+
+	@Meta.AD(required = false)
 	public String[] syncedGroupIds();
 
 	@Meta.AD(required = false)
 	public String[] syncedOrganizationIds();
+
+	@Meta.AD(required = false)
+	public String[] syncedUserFieldNames();
 
 	@Meta.AD(required = false)
 	public String[] syncedUserGroupIds();

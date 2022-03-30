@@ -17,9 +17,10 @@ package com.liferay.user.associated.data.web.internal.export.controller;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.zip.ZipReader;
@@ -33,6 +34,9 @@ import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+
+import java.net.URLEncoder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,8 +59,8 @@ public class UADApplicationExportController {
 
 			return _exportApplicationData(applicationKey, userId);
 		}
-		catch (Throwable t) {
-			throw t;
+		catch (Throwable throwable) {
+			throw throwable;
 		}
 	}
 
@@ -134,27 +138,33 @@ public class UADApplicationExportController {
 	private String _getEntryPath(
 		String applicationKey, String uadRegistryKey, String fileName) {
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(applicationKey);
-		sb.append(StringPool.FORWARD_SLASH);
-		sb.append(uadRegistryKey);
-		sb.append(StringPool.FORWARD_SLASH);
-		sb.append(fileName);
-
-		return sb.toString();
+		return StringBundler.concat(
+			applicationKey, StringPool.FORWARD_SLASH, uadRegistryKey,
+			StringPool.FORWARD_SLASH, fileName);
 	}
 
 	private ZipWriter _getZipWriter(String applicationKey, long userId) {
 		User user = _userLocalService.fetchUser(userId);
 
-		StringBundler sb = new StringBundler(8);
+		StringBundler sb = new StringBundler(7);
 
-		sb.append("UAD");
-		sb.append(StringPool.UNDERLINE);
+		sb.append("UAD_");
 
 		if (user != null) {
-			sb.append(HtmlUtil.escape(user.getFullName()));
+			String userName = null;
+
+			try {
+				userName = URLEncoder.encode(user.getFullName(), "UTF-8");
+			}
+			catch (UnsupportedEncodingException unsupportedEncodingException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(unsupportedEncodingException);
+				}
+
+				userName = String.valueOf(userId);
+			}
+
+			sb.append(userName);
 		}
 		else {
 			sb.append(userId);
@@ -173,6 +183,9 @@ public class UADApplicationExportController {
 				SystemProperties.get(SystemProperties.TMP_DIR) +
 					StringPool.SLASH + fileName));
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		UADApplicationExportController.class);
 
 	@Reference
 	private UADExportBackgroundTaskStatusMessageSender

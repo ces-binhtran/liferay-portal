@@ -23,7 +23,7 @@
 			<li>
 
 				<%
-				String taglibSearchCollatedKeywords = renderResponse.getNamespace() + "searchKeywords('" + HtmlUtil.escapeJS(hits.getCollatedSpellCheckResult()) + "')";
+				String taglibSearchCollatedKeywords = liferayPortletResponse.getNamespace() + "searchKeywords('" + HtmlUtil.escapeJS(hits.getCollatedSpellCheckResult()) + "')";
 				%>
 
 				<aui:a href="javascript:;" onclick="<%= taglibSearchCollatedKeywords %>">
@@ -34,7 +34,7 @@
 					for (String suggestedKeyword : keywordsSuggestionHolder.getSuggestedKeywords()) {
 					%>
 
-						<span class='<%= keywordsSuggestionHolder.hasChanged(suggestedKeyword) ? "changed-keyword" : "unchanged-keyword" %>'>
+						<span class="<%= keywordsSuggestionHolder.hasChanged(suggestedKeyword) ? "changed-keyword" : "unchanged-keyword" %>">
 							<%= HtmlUtil.escape(suggestedKeyword) %>
 						</span>
 
@@ -61,7 +61,7 @@
 					<li>
 
 						<%
-						String taglibOnClick = renderResponse.getNamespace() + "searchKeywords('" + HtmlUtil.escapeJS(querySuggestion) + "')";
+						String taglibOnClick = liferayPortletResponse.getNamespace() + "searchKeywords('" + HtmlUtil.escapeJS(querySuggestion) + "')";
 						%>
 
 						<aui:a href="javascript:;" onClick="<%= taglibOnClick %>">
@@ -72,7 +72,7 @@
 							for (String suggestedKeyword : keywordsSuggestionHolder.getSuggestedKeywords()) {
 							%>
 
-								<span class='<%= keywordsSuggestionHolder.hasChanged(suggestedKeyword) ? "changed-keyword" : "unchanged-keyword" %>'>
+								<span class="<%= keywordsSuggestionHolder.hasChanged(suggestedKeyword) ? "changed-keyword" : "unchanged-keyword" %>">
 									<%= HtmlUtil.escape(suggestedKeyword) %>
 								</span>
 

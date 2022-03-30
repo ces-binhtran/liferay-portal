@@ -19,12 +19,15 @@ import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProvider;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectProviderRegistry;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
 import com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration;
+import com.liferay.portal.security.sso.openid.connect.persistence.service.OpenIdConnectSessionLocalService;
 
 import com.nimbusds.openid.connect.sdk.op.OIDCProviderMetadata;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientMetadata;
@@ -42,7 +45,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.osgi.framework.Constants;
 import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedServiceFactory;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Thuong Dinh
@@ -62,6 +67,8 @@ public class OpenIdConnectProviderRegistryImpl
 	public void deleted(String pid) {
 		Dictionary<String, ?> properties = _configurationPidsProperties.remove(
 			pid);
+
+		_openIdConnectSessionLocalService.deleteOpenIdConnectSessions(pid);
 
 		long companyId = GetterUtil.getLong(properties.get("companyId"));
 
@@ -83,7 +90,8 @@ public class OpenIdConnectProviderRegistryImpl
 
 		if (openIdConnectProvider == null) {
 			throw new OpenIdConnectServiceException.ProviderException(
-				"Unable to find an OpenId Connect provider with name " + name);
+				"Unable to find an OpenId Connect provider with name \"" +
+					name + "\"");
 		}
 
 		return openIdConnectProvider;
@@ -105,7 +113,9 @@ public class OpenIdConnectProviderRegistryImpl
 					_companyIdProviderNameOpenIdConnectProviders.get(companyId);
 
 		if (openIdConnectProviderMap == null) {
-			return null;
+			openIdConnectProviderMap =
+				_companyIdProviderNameOpenIdConnectProviders.get(
+					CompanyConstants.SYSTEM);
 		}
 
 		return openIdConnectProviderMap.get(name);
@@ -120,7 +130,9 @@ public class OpenIdConnectProviderRegistryImpl
 					_companyIdProviderNameOpenIdConnectProviders.get(companyId);
 
 		if (openIdConnectProviderMap == null) {
-			return Collections.emptySet();
+			openIdConnectProviderMap =
+				_companyIdProviderNameOpenIdConnectProviders.get(
+					CompanyConstants.SYSTEM);
 		}
 
 		return Collections.unmodifiableSet(openIdConnectProviderMap.keySet());
@@ -157,8 +169,21 @@ public class OpenIdConnectProviderRegistryImpl
 		_rebuild(companyId);
 	}
 
-	protected OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>
-			createOpenIdConnectProvider(
+	@Activate
+	protected void activate() {
+		_companyIdProviderNameOpenIdConnectProviders.putIfAbsent(
+			CompanyConstants.SYSTEM, Collections.emptyMap());
+	}
+
+	private <U, V> void _addDefaults(Map<U, V> map, Map<U, V> defaultsMap) {
+		if (defaultsMap != null) {
+			defaultsMap.forEach(map::putIfAbsent);
+		}
+	}
+
+	private OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>
+			_createOpenIdConnectProvider(
+				String configurationPid,
 				OpenIdConnectProviderConfiguration
 					openIdConnectProviderConfiguration)
 		throws ConfigurationException {
@@ -168,22 +193,23 @@ public class OpenIdConnectProviderRegistryImpl
 				openIdConnectProviderConfiguration.providerName(),
 				openIdConnectProviderConfiguration.openIdConnectClientId(),
 				openIdConnectProviderConfiguration.openIdConnectClientSecret(),
-				openIdConnectProviderConfiguration.scopes(),
-				getOpenIdConnectMetadataFactory(
-					openIdConnectProviderConfiguration));
+				configurationPid, openIdConnectProviderConfiguration.scopes(),
+				_getOpenIdConnectMetadataFactory(
+					openIdConnectProviderConfiguration),
+				openIdConnectProviderConfiguration.tokenConnectionTimeout());
 		}
 		catch (Exception exception) {
 			throw new ConfigurationException(
 				null,
 				StringBundler.concat(
-					"Unable to instantiate provider metadata factory for ",
-					openIdConnectProviderConfiguration.providerName(), ": ",
+					"Unable to instantiate provider metadata factory for \"",
+					openIdConnectProviderConfiguration.providerName(), "\": ",
 					exception.getMessage()),
 				exception);
 		}
 	}
 
-	protected OpenIdConnectMetadataFactory getOpenIdConnectMetadataFactory(
+	private OpenIdConnectMetadataFactory _getOpenIdConnectMetadataFactory(
 			OpenIdConnectProviderConfiguration
 				openIdConnectProviderConfiguration)
 		throws MalformedURLException,
@@ -196,11 +222,14 @@ public class OpenIdConnectProviderRegistryImpl
 				openIdConnectProviderConfiguration.providerName(),
 				new URL(openIdConnectProviderConfiguration.discoveryEndPoint()),
 				openIdConnectProviderConfiguration.
-					discoveryEndPointCacheInMillis());
+					discoveryEndPointCacheInMillis(),
+				openIdConnectProviderConfiguration.
+					registeredIdTokenSigningAlg());
 		}
 
 		return new OpenIdConnectMetadataFactoryImpl(
 			openIdConnectProviderConfiguration.providerName(),
+			openIdConnectProviderConfiguration.registeredIdTokenSigningAlg(),
 			openIdConnectProviderConfiguration.idTokenSigningAlgValues(),
 			openIdConnectProviderConfiguration.issuerURL(),
 			openIdConnectProviderConfiguration.subjectTypes(),
@@ -210,22 +239,17 @@ public class OpenIdConnectProviderRegistryImpl
 			openIdConnectProviderConfiguration.userInfoEndPoint());
 	}
 
-	private <U, V> void _addDefaults(Map<U, V> map, Map<U, V> defaultsMap) {
-		if (defaultsMap != null) {
-			defaultsMap.forEach(map::putIfAbsent);
-		}
-	}
-
 	private void _rebuild() {
 		_rebuild(CompanyConstants.SYSTEM);
 
-		for (long companyId :
-				_companyIdProviderNameOpenIdConnectProviders.keySet()) {
-
-			if (companyId != CompanyConstants.SYSTEM) {
-				_rebuild(companyId);
-			}
-		}
+		_companyLocalService.forEachCompanyId(
+			companyId -> {
+				if (companyId != CompanyConstants.SYSTEM) {
+					_rebuild(companyId);
+				}
+			},
+			ArrayUtil.toLongArray(
+				_companyIdProviderNameOpenIdConnectProviders.keySet()));
 	}
 
 	private void _rebuild(long companyId) {
@@ -234,37 +258,42 @@ public class OpenIdConnectProviderRegistryImpl
 			 OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>>
 				openIdConnectProviderMap = new TreeMap<>();
 
-		for (Dictionary<String, ?> properties :
-				_configurationPidsProperties.values()) {
+		_configurationPidsProperties.forEach(
+			(configurationPid, properties) -> {
+				if (companyId != GetterUtil.getLong(
+						properties.get("companyId"))) {
 
-			if (companyId != GetterUtil.getLong(properties.get("companyId"))) {
-				continue;
-			}
-
-			try {
-				OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>
-					openIdConnectProvider = createOpenIdConnectProvider(
-						ConfigurableUtil.createConfigurable(
-							OpenIdConnectProviderConfiguration.class,
-							properties));
-
-				if (openIdConnectProviderMap.containsKey(
-						openIdConnectProvider.getName())) {
-
-					_log.error(
-						"Duplicate OpenId Connect provider name \"" +
-							openIdConnectProvider.getName() + "\"");
-
-					continue;
+					return;
 				}
 
-				openIdConnectProviderMap.put(
-					openIdConnectProvider.getName(), openIdConnectProvider);
-			}
-			catch (ConfigurationException configurationException) {
-				_log.error(configurationException, configurationException);
-			}
-		}
+				try {
+					OpenIdConnectProvider
+						<OIDCClientMetadata, OIDCProviderMetadata>
+							openIdConnectProvider =
+								_createOpenIdConnectProvider(
+									configurationPid,
+									ConfigurableUtil.createConfigurable(
+										OpenIdConnectProviderConfiguration.
+											class,
+										properties));
+
+					if (openIdConnectProviderMap.containsKey(
+							openIdConnectProvider.getName())) {
+
+						_log.error(
+							"Duplicate OpenId Connect provider name \"" +
+								openIdConnectProvider.getName() + "\"");
+
+						return;
+					}
+
+					openIdConnectProviderMap.put(
+						openIdConnectProvider.getName(), openIdConnectProvider);
+				}
+				catch (ConfigurationException configurationException) {
+					_log.error(configurationException);
+				}
+			});
 
 		if (companyId != CompanyConstants.SYSTEM) {
 			_addDefaults(
@@ -280,14 +309,21 @@ public class OpenIdConnectProviderRegistryImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		OpenIdConnectProviderRegistryImpl.class);
 
-	private volatile Map
+	private final Map
 		<Long,
 		 Map
 			 <String,
 			  OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata>>>
 				_companyIdProviderNameOpenIdConnectProviders =
 					new ConcurrentHashMap<>();
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
 	private final Map<String, Dictionary<String, ?>>
 		_configurationPidsProperties = new ConcurrentHashMap<>();
+
+	@Reference
+	private OpenIdConnectSessionLocalService _openIdConnectSessionLocalService;
 
 }

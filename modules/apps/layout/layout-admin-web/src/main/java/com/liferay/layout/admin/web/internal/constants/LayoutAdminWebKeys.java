@@ -19,10 +19,16 @@ package com.liferay.layout.admin.web.internal.constants;
  */
 public class LayoutAdminWebKeys {
 
+	public static final String LAYOUT_ACTION_DROPDOWN_ITEMS_PROVIDER =
+		"LAYOUT_ACTION_DROPDOWN_ITEMS_PROVIDER";
+
 	public static final String LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT =
 		"LAYOUT_PAGE_LAYOUT_ADMIN_DISPLAY_CONTEXT";
 
 	public static final String MILLER_COLUMNS_DISPLAY_CONTEXT =
 		"MILLER_COLUMNS_DISPLAY_CONTEXT";
+
+	public static final String SELECT_LAYOUT_COLLECTION_DISPLAY_CONTEXT =
+		"SELECT_LAYOUT_COLLECTION_DISPLAY_CONTEXT";
 
 }

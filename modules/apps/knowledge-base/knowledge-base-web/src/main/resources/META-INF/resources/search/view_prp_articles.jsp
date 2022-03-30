@@ -16,41 +16,23 @@
 
 <%@ include file="/search/init.jsp" %>
 
-<%
-long assetCategoryId = ParamUtil.getLong(request, "categoryId");
-String assetTagName = ParamUtil.getString(request, "tag");
-
-String orderByCol = ParamUtil.getString(request, "orderByCol");
-String orderByType = ParamUtil.getString(request, "orderByType", "desc");
-%>
-
 <div class="kb-search-header">
 	<liferay-util:include page="/search/view.jsp" servletContext="<%= application %>" />
 </div>
 
 <liferay-portlet:renderURL varImpl="iteratorURL">
 	<portlet:param name="mvcPath" value="/search/search.jsp" />
-	<portlet:param name="categoryId" value="<%= String.valueOf(assetCategoryId) %>" />
-	<portlet:param name="tag" value="<%= assetTagName %>" />
+	<portlet:param name="categoryId" value='<%= String.valueOf(ParamUtil.getLong(request, "categoryId")) %>' />
+	<portlet:param name="tag" value='<%= ParamUtil.getString(request, "tag") %>' />
 </liferay-portlet:renderURL>
 
+<%
+KBViewPrpArticlesDisplayContext kbViewPrpArticlesDisplayContext = new KBViewPrpArticlesDisplayContext(request, iteratorURL);
+%>
+
 <liferay-ui:search-container
-	iteratorURL="<%= iteratorURL %>"
-	orderByCol="<%= orderByCol %>"
-	orderByType="<%= orderByType %>"
+	searchContainer="<%= kbViewPrpArticlesDisplayContext.getSearchContainer() %>"
 >
-
-	<%
-	AssetEntryQuery assetEntryQuery = new AssetEntryQuery(KBArticle.class.getName(), searchContainer);
-
-	searchContainer.setTotal(AssetEntryServiceUtil.getEntriesCount(assetEntryQuery));
-
-	assetEntryQuery.setEnd(searchContainer.getEnd());
-	assetEntryQuery.setStart(searchContainer.getStart());
-
-	searchContainer.setResults(AssetEntryServiceUtil.getEntries(assetEntryQuery));
-	%>
-
 	<liferay-ui:search-container-row
 		className="com.liferay.asset.kernel.model.AssetEntry"
 		keyProperty="entryId"
@@ -113,6 +95,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 				long viewCount = (kbArticle != null) ? kbArticle.getViewCount() : 0;
 
 				buffer.append(viewCount);
+
 				buffer.append(StringPool.SPACE);
 				buffer.append((viewCount == 1) ? LanguageUtil.get(request, "view") : LanguageUtil.get(request, "views"));
 				%>
@@ -121,25 +104,25 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 		</c:if>
 	</liferay-ui:search-container-row>
 
-	<c:if test="<%= (assetCategoryId > 0) || Validator.isNotNull(assetTagName) %>">
+	<c:if test="<%= (kbViewPrpArticlesDisplayContext.getAssetCategoryId() > 0) || Validator.isNotNull(kbViewPrpArticlesDisplayContext.getAssetTagName()) %>">
 		<div class="alert alert-info">
 			<c:choose>
-				<c:when test="<%= assetCategoryId > 0 %>">
+				<c:when test="<%= kbViewPrpArticlesDisplayContext.getAssetCategoryId() > 0 %>">
 
 					<%
-					AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getAssetCategory(assetCategoryId);
+					AssetCategory assetCategory = AssetCategoryLocalServiceUtil.getAssetCategory(kbViewPrpArticlesDisplayContext.getAssetCategoryId());
 
 					AssetVocabulary assetVocabulary = AssetVocabularyLocalServiceUtil.getAssetVocabulary(assetCategory.getVocabularyId());
 					%>
 
 					<c:choose>
-						<c:when test="<%= Validator.isNotNull(assetTagName) %>">
+						<c:when test="<%= Validator.isNotNull(kbViewPrpArticlesDisplayContext.getAssetTagName()) %>">
 							<c:choose>
 								<c:when test="<%= total > 0 %>">
-									<%= LanguageUtil.format(request, "articles-with-x-x-and-tag-x", new String[] {HtmlUtil.escape(assetVocabulary.getTitle(locale)), HtmlUtil.escape(assetCategory.getTitle(locale)), HtmlUtil.escape(assetTagName)}, false) %>
+									<%= LanguageUtil.format(request, "articles-with-x-x-and-tag-x", new String[] {HtmlUtil.escape(assetVocabulary.getTitle(locale)), HtmlUtil.escape(assetCategory.getTitle(locale)), HtmlUtil.escape(kbViewPrpArticlesDisplayContext.getAssetTagName())}, false) %>
 								</c:when>
 								<c:otherwise>
-									<%= LanguageUtil.format(request, "there-are-no-articles-with-x-x-and-tag-x", new String[] {HtmlUtil.escape(assetVocabulary.getTitle(locale)), HtmlUtil.escape(assetCategory.getTitle(locale)), HtmlUtil.escape(assetTagName)}, false) %>
+									<%= LanguageUtil.format(request, "there-are-no-articles-with-x-x-and-tag-x", new String[] {HtmlUtil.escape(assetVocabulary.getTitle(locale)), HtmlUtil.escape(assetCategory.getTitle(locale)), HtmlUtil.escape(kbViewPrpArticlesDisplayContext.getAssetTagName())}, false) %>
 								</c:otherwise>
 							</c:choose>
 						</c:when>
@@ -158,10 +141,10 @@ String orderByType = ParamUtil.getString(request, "orderByType", "desc");
 				<c:otherwise>
 					<c:choose>
 						<c:when test="<%= total > 0 %>">
-							<%= LanguageUtil.format(request, "articles-with-tag-x", HtmlUtil.escape(assetTagName), false) %>
+							<%= LanguageUtil.format(request, "articles-with-tag-x", HtmlUtil.escape(kbViewPrpArticlesDisplayContext.getAssetTagName()), false) %>
 						</c:when>
 						<c:otherwise>
-							<%= LanguageUtil.format(request, "there-are-no-articles-with-tag-x", HtmlUtil.escape(assetTagName), false) %>
+							<%= LanguageUtil.format(request, "there-are-no-articles-with-tag-x", HtmlUtil.escape(kbViewPrpArticlesDisplayContext.getAssetTagName()), false) %>
 						</c:otherwise>
 					</c:choose>
 				</c:otherwise>

@@ -63,7 +63,7 @@ public class StructuredContentFolderSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (structuredContentFolder.getActions() != null) {
 			if (sb.length() > 1) {
@@ -73,6 +73,20 @@ public class StructuredContentFolderSerDes {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(structuredContentFolder.getActions()));
+		}
+
+		if (structuredContentFolder.getAssetLibraryKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(structuredContentFolder.getAssetLibraryKey()));
+
+			sb.append("\"");
 		}
 
 		if (structuredContentFolder.getCreator() != null) {
@@ -273,7 +287,7 @@ public class StructuredContentFolderSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (structuredContentFolder.getActions() == null) {
 			map.put("actions", null);
@@ -282,6 +296,15 @@ public class StructuredContentFolderSerDes {
 			map.put(
 				"actions",
 				String.valueOf(structuredContentFolder.getActions()));
+		}
+
+		if (structuredContentFolder.getAssetLibraryKey() == null) {
+			map.put("assetLibraryKey", null);
+		}
+		else {
+			map.put(
+				"assetLibraryKey",
+				String.valueOf(structuredContentFolder.getAssetLibraryKey()));
 		}
 
 		if (structuredContentFolder.getCreator() == null) {
@@ -435,6 +458,12 @@ public class StructuredContentFolderSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
+				if (jsonParserFieldValue != null) {
+					structuredContentFolder.setAssetLibraryKey(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "creator")) {
 				if (jsonParserFieldValue != null) {
 					structuredContentFolder.setCreator(
@@ -528,10 +557,6 @@ public class StructuredContentFolderSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -560,7 +585,7 @@ public class StructuredContentFolderSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -596,7 +621,7 @@ public class StructuredContentFolderSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

@@ -19,8 +19,6 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.time.Instant;
-
 import java.util.Date;
 
 /**
@@ -39,9 +37,7 @@ public class FilterUtil {
 		if (value instanceof Date) {
 			Date date = (Date)value;
 
-			Instant instant = date.toInstant();
-
-			value = instant.toString();
+			value = String.valueOf(date.toInstant());
 		}
 		else {
 			String valueString = String.valueOf(value);
@@ -53,21 +49,11 @@ public class FilterUtil {
 			value = StringUtil.quote(valueString, StringPool.APOSTROPHE);
 		}
 
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(fieldName);
-		sb.append(operator);
-		sb.append(value);
-
-		return sb.toString();
+		return StringBundler.concat(fieldName, operator, value);
 	}
 
 	public static String getNullFilter(String fieldName, String operator) {
-		return fieldName.concat(
-			operator
-		).concat(
-			StringPool.NULL
-		);
+		return StringBundler.concat(fieldName, operator, StringPool.NULL);
 	}
 
 	private FilterUtil() {

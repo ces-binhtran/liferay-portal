@@ -36,7 +36,7 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.Constants;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.notifications.test.util.BaseUserNotificationTestCase;
 import com.liferay.portal.test.mail.MailServiceTestUtil;
@@ -47,6 +47,7 @@ import java.util.Dictionary;
 import java.util.List;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,6 +66,7 @@ public class CommentUserNotificationTest extends BaseUserNotificationTestCase {
 		new AggregateTestRule(
 			new LiferayIntegrationTestRule(), SynchronousMailTestRule.INSTANCE);
 
+	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
@@ -232,9 +234,10 @@ public class CommentUserNotificationTest extends BaseUserNotificationTestCase {
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("discussionEmailCommentsAddedEnabled", false);
+		Dictionary<String, Object> dictionary =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"discussionEmailCommentsAddedEnabled", false
+			).build();
 
 		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
 				new ConfigurationTemporarySwapper(

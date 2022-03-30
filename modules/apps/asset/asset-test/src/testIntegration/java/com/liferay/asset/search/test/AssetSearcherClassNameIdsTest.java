@@ -18,8 +18,8 @@ import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
+import com.liferay.bookmarks.constants.BookmarksFolderConstants;
 import com.liferay.bookmarks.model.BookmarksEntry;
-import com.liferay.bookmarks.model.BookmarksFolderConstants;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
@@ -65,7 +65,6 @@ public class AssetSearcherClassNameIdsTest {
 	@Before
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
-		_users = new ArrayList<>();
 
 		_journalArticleFixture.setGroup(_group);
 
@@ -75,26 +74,20 @@ public class AssetSearcherClassNameIdsTest {
 
 	@Test
 	public void testAll() throws Exception {
-		User user = addUser();
-
-		UserTestUtil.setUser(user);
+		UserTestUtil.setUser(addUser());
 
 		addBlogsEntry();
 		addBookmarksEntry();
 		addJournalArticle();
 
-		AssetEntryQuery assetEntryQuery = getAssetEntryQuery();
-
-		Hits hits = search(assetEntryQuery, getSearchContext());
+		Hits hits = search(getAssetEntryQuery(), getSearchContext());
 
 		Assert.assertEquals(hits.toString(), 3, hits.getLength());
 	}
 
 	@Test
 	public void testMultiple() throws Exception {
-		User user = addUser();
-
-		UserTestUtil.setUser(user);
+		UserTestUtil.setUser(addUser());
 
 		addBlogsEntry();
 		addBookmarksEntry();
@@ -111,9 +104,7 @@ public class AssetSearcherClassNameIdsTest {
 
 	@Test
 	public void testSingle() throws Exception {
-		User user = addUser();
-
-		UserTestUtil.setUser(user);
+		UserTestUtil.setUser(addUser());
 
 		addBlogsEntry();
 		addBookmarksEntry();
@@ -212,6 +203,6 @@ public class AssetSearcherClassNameIdsTest {
 
 	private final JournalArticleFixture _journalArticleFixture =
 		new JournalArticleFixture();
-	private List<User> _users;
+	private final List<User> _users = new ArrayList<>();
 
 }

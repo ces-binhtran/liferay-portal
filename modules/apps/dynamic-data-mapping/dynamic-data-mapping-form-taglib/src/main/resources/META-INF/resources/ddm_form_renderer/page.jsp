@@ -25,9 +25,7 @@ if (ddmFormInstance != null) {
 <c:choose>
 	<c:when test="<%= ddmFormInstanceId == 0 %>">
 		<clay:alert
-			message='<%= LanguageUtil.get(resourceBundle, "select-an-existing-form-or-add-a-form-to-be-displayed-in-this-application") %>'
-			style="info"
-			title='<%= LanguageUtil.get(resourceBundle, "info") %>'
+			message="select-an-existing-form-or-add-a-form-to-be-displayed-in-this-application"
 		/>
 	</c:when>
 	<c:otherwise>
@@ -55,18 +53,30 @@ if (ddmFormInstance != null) {
 
 						<%
 						DDMFormValuesValidationException.MustSetValidValue msvv = (DDMFormValuesValidationException.MustSetValidValue)errorException;
+
+						String fieldLabelValue = msvv.getFieldLabelValue(displayLocale);
+
+						if (Validator.isNull(fieldLabelValue)) {
+							fieldLabelValue = msvv.getFieldName();
+						}
 						%>
 
-						<liferay-ui:message arguments="<%= HtmlUtil.escape(msvv.getFieldName()) %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
+						<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
 					</liferay-ui:error>
 
 					<liferay-ui:error exception="<%= DDMFormValuesValidationException.RequiredValue.class %>">
 
 						<%
 						DDMFormValuesValidationException.RequiredValue rv = (DDMFormValuesValidationException.RequiredValue)errorException;
+
+						String fieldLabelValue = rv.getFieldLabelValue(displayLocale);
+
+						if (Validator.isNull(fieldLabelValue)) {
+							fieldLabelValue = rv.getFieldName();
+						}
 						%>
 
-						<liferay-ui:message arguments="<%= HtmlUtil.escape(rv.getFieldName()) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
+						<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
 					</liferay-ui:error>
 
 					<liferay-ui:error exception="<%= NoSuchFormInstanceException.class %>" message="the-selected-form-no-longer-exists" />
@@ -77,9 +87,8 @@ if (ddmFormInstance != null) {
 
 					<c:if test="<%= !hasAddFormInstanceRecordPermission %>">
 						<clay:alert
-							message='<%= LanguageUtil.get(resourceBundle, "you-do-not-have-the-permission-to-submit-this-form") %>'
-							style="warning"
-							title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+							displayType="warning"
+							message="you-do-not-have-the-permission-to-submit-this-form"
 						/>
 					</c:if>
 
@@ -110,16 +119,14 @@ if (ddmFormInstance != null) {
 			</c:when>
 			<c:when test="<%= !hasViewFormInstancePermission %>">
 				<clay:alert
-					message='<%= LanguageUtil.get(resourceBundle, "you-do-not-have-the-permission-to-view-this-form") %>'
-					style="warning"
-					title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+					displayType="warning"
+					message="you-do-not-have-the-permission-to-view-this-form"
 				/>
 			</c:when>
 			<c:otherwise>
 				<clay:alert
-					message='<%= LanguageUtil.get(resourceBundle, "this-form-not-available-or-it-was-not-published") %>'
-					style="warning"
-					title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+					displayType="warning"
+					message="this-form-not-available-or-it-was-not-published"
 				/>
 			</c:otherwise>
 		</c:choose>

@@ -21,7 +21,7 @@ import {
 	STORAGE_KEY_USER_ID,
 } from '../src/utils/constants';
 import {getItem} from '../src/utils/storage';
-import {sendDummyEvents} from './helpers';
+import {sendDummyEvents, trackDummyEvents, wait} from './helpers';
 
 const ANALYTICS_IDENTITY = {email: 'foo@bar.com'};
 const ENDPOINT_URL = 'https://ac-server.io';
@@ -30,6 +30,7 @@ const INITIAL_CONFIG = {
 	channelId: '4321',
 	dataSourceId: '1234',
 	endpointUrl: ENDPOINT_URL,
+	flushInterval: FLUSH_INTERVAL,
 };
 
 describe('Analytics', () => {
@@ -51,6 +52,20 @@ describe('Analytics', () => {
 		fetchMock.restore();
 
 		jest.restoreAllMocks();
+	});
+
+	it('returns channelId from config by default', () => {
+		expect(Analytics._getContext().channelId).toBe('4321');
+	});
+
+	it('returns channelId from middleware', () => {
+		Analytics.registerMiddleware((request) => {
+			request.context.channelId = '5678';
+
+			return request;
+		});
+
+		expect(Analytics._getContext().channelId).toBe('5678');
 	});
 
 	it('is exposed in the global scope', () => {
@@ -106,6 +121,8 @@ describe('Analytics', () => {
 
 		await Analytics.setIdentity(ANALYTICS_IDENTITY);
 
+		await wait(FLUSH_INTERVAL);
+
 		fetchMock.restore();
 		fetchMock.mock(/identity$/, () => {
 			identityCalled += 1;
@@ -116,6 +133,8 @@ describe('Analytics', () => {
 		await Analytics.setIdentity({
 			email: 'john@liferay.com',
 		});
+
+		await wait(FLUSH_INTERVAL);
 
 		expect(identityCalled).toBe(1);
 	});
@@ -136,7 +155,7 @@ describe('Analytics', () => {
 		fetchMock.mock(/identity$/, () => {
 			identityCalled += 1;
 
-			return '';
+			return 200;
 		});
 
 		await Analytics.setIdentity(ANALYTICS_IDENTITY);
@@ -147,6 +166,11 @@ describe('Analytics', () => {
 	it('preserves the user id whenever the set identity is called after a anonymous navigation', async () => {
 		fetchMock.mock(/ac-server/i, () => Promise.resolve(200));
 		fetchMock.mock(/identity$/, () => Promise.resolve(200));
+
+		Analytics.reset();
+		Analytics.dispose();
+
+		Analytics = AnalyticsClient.create(INITIAL_CONFIG);
 
 		sendDummyEvents(Analytics, 1);
 
@@ -216,16 +240,18 @@ describe('Analytics', () => {
 	});
 
 	describe('send()', () => {
-		it('is exposed as an Analytics static method', () => {
+		it('is exposed as an Analytics method', () => {
 			expect(typeof Analytics.send).toBe('function');
 		});
 
-		it('adds the given event to the event queue', () => {
+		it('adds the given event to the event queue', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
 			const eventId = 'eventId';
 			const applicationId = 'applicationId';
 			const properties = {a: 1, b: 2, c: 3};
 
-			Analytics.send(eventId, applicationId, properties);
+			await Analytics.send(eventId, applicationId, properties);
 
 			const events = Analytics.getEvents();
 
@@ -238,10 +264,144 @@ describe('Analytics', () => {
 			]);
 		});
 
-		it('persists the given events to the LocalStorage', () => {
+		it('persists the given events to the LocalStorage', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
 			const eventsNumber = 5;
 
-			sendDummyEvents(Analytics, eventsNumber);
+			await sendDummyEvents(Analytics, eventsNumber);
+
+			const events = Analytics.getEvents();
+
+			expect(events.length).toBeGreaterThanOrEqual(eventsNumber);
+		});
+	});
+
+	describe('track()', () => {
+		afterEach(() => {
+			if (console.error.mockRestore) {
+				console.error.mockRestore();
+			}
+		});
+
+		it('is exposed as an Analytics method', () => {
+			expect(typeof Analytics.track).toBe('function');
+		});
+
+		it('adds the given event to the event queue', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const eventId = 'customEventId';
+			const properties = {a: 1, b: 2, c: 3};
+
+			await Analytics.track(eventId, properties);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'CustomEvent',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('returns a type error if the eventId is not a string', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const eventId = {test: 'test'};
+
+			console.error = jest.fn((val) => val);
+
+			await Analytics.track(eventId);
+
+			expect(console.error).toHaveBeenCalledTimes(1);
+		});
+
+		it('uses the applicationId from options', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const eventId = 'test';
+			const applicationId = 'Page';
+			const properties = {a: 1, b: 2, c: 3};
+
+			await Analytics.track(eventId, properties, {applicationId});
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId,
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('uses the assetType from properties over the applicationId from options', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const assetType = 'Blog';
+			const eventId = 'test';
+			const properties = {a: 1, assetType};
+
+			await Analytics.track(eventId, properties, {applicationId: 'Page'});
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: assetType,
+					eventId,
+					properties: {a: 1},
+				}),
+			]);
+		});
+
+		it('uses CustomEvent as default applicationId', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const eventId = 'customEventId';
+			const properties = {a: 1, b: 2, c: 3};
+
+			await Analytics.track(eventId, properties);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'CustomEvent',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('uses applicationId from options', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+
+			const eventId = 'BlogView';
+			const properties = {a: 1, b: 2, c: 3};
+			const options = {applicationId: 'Blog'};
+
+			await Analytics.track(eventId, properties, options);
+
+			const events = Analytics.getEvents();
+
+			expect(events).toEqual([
+				expect.objectContaining({
+					applicationId: 'Blog',
+					eventId,
+					properties,
+				}),
+			]);
+		});
+
+		it('persists the given events to the LocalStorage', async () => {
+			Analytics = AnalyticsClient.create(INITIAL_CONFIG);
+			const eventsNumber = 5;
+
+			await trackDummyEvents(Analytics, eventsNumber);
 
 			const events = Analytics.getEvents();
 

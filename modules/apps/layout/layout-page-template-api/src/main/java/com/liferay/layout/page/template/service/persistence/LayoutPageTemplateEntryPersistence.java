@@ -17,6 +17,7 @@ package com.liferay.layout.page.template.service.persistence;
 import com.liferay.layout.page.template.exception.NoSuchPageTemplateEntryException;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -33,7 +34,8 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public interface LayoutPageTemplateEntryPersistence
-	extends BasePersistence<LayoutPageTemplateEntry> {
+	extends BasePersistence<LayoutPageTemplateEntry>,
+			CTPersistence<LayoutPageTemplateEntry> {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
@@ -1493,6 +1495,121 @@ public interface LayoutPageTemplateEntryPersistence
 		throws NoSuchPageTemplateEntryException;
 
 	/**
+	 * Returns all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @return the matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T(
+		long groupId, int[] types);
+
+	/**
+	 * Returns a range of all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T(
+		long groupId, int[] types, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T(
+		long groupId, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns all the layout page template entries where groupId = &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @return the matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T(
+		long groupId, int[] types);
+
+	/**
+	 * Returns a range of all the layout page template entries where groupId = &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T(
+		long groupId, int[] types, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T(
+		long groupId, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and type = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T(
+		long groupId, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator,
+		boolean useFinderCache);
+
+	/**
 	 * Removes all the layout page template entries where groupId = &#63; and type = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -1510,6 +1627,15 @@ public interface LayoutPageTemplateEntryPersistence
 	public int countByG_T(long groupId, int type);
 
 	/**
+	 * Returns the number of layout page template entries where groupId = &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @return the number of matching layout page template entries
+	 */
+	public int countByG_T(long groupId, int[] types);
+
+	/**
 	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and type = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -1517,6 +1643,15 @@ public interface LayoutPageTemplateEntryPersistence
 	 * @return the number of matching layout page template entries that the user has permission to view
 	 */
 	public int filterCountByG_T(long groupId, int type);
+
+	/**
+	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @return the number of matching layout page template entries that the user has permission to view
+	 */
+	public int filterCountByG_T(long groupId, int[] types);
 
 	/**
 	 * Returns all the layout page template entries where groupId = &#63; and layoutPageTemplateCollectionId = &#63; and name LIKE &#63;.
@@ -2542,6 +2677,128 @@ public interface LayoutPageTemplateEntryPersistence
 		throws NoSuchPageTemplateEntryException;
 
 	/**
+	 * Returns all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @return the matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN(
+		long groupId, String name, int[] types);
+
+	/**
+	 * Returns a range of all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN(
+		long groupId, String name, int[] types, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN(
+		long groupId, String name, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @return the matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN(
+		long groupId, String name, int[] types);
+
+	/**
+	 * Returns a range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN(
+		long groupId, String name, int[] types, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN(
+		long groupId, String name, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param type the type
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN(
+		long groupId, String name, int[] types, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator,
+		boolean useFinderCache);
+
+	/**
 	 * Removes all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -2561,6 +2818,16 @@ public interface LayoutPageTemplateEntryPersistence
 	public int countByG_T_LikeN(long groupId, String name, int type);
 
 	/**
+	 * Returns the number of layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @return the number of matching layout page template entries
+	 */
+	public int countByG_T_LikeN(long groupId, String name, int[] types);
+
+	/**
 	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -2569,6 +2836,16 @@ public interface LayoutPageTemplateEntryPersistence
 	 * @return the number of matching layout page template entries that the user has permission to view
 	 */
 	public int filterCountByG_T_LikeN(long groupId, String name, int type);
+
+	/**
+	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @return the number of matching layout page template entries that the user has permission to view
+	 */
+	public int filterCountByG_T_LikeN(long groupId, String name, int[] types);
 
 	/**
 	 * Returns all the layout page template entries where groupId = &#63; and type = &#63; and status = &#63;.
@@ -2783,6 +3060,128 @@ public interface LayoutPageTemplateEntryPersistence
 		throws NoSuchPageTemplateEntryException;
 
 	/**
+	 * Returns all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @return the matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_S(
+		long groupId, int[] types, int status);
+
+	/**
+	 * Returns a range of all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_S(
+		long groupId, int[] types, int status, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_S(
+		long groupId, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns all the layout page template entries where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @return the matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_S(
+		long groupId, int[] types, int status);
+
+	/**
+	 * Returns a range of all the layout page template entries where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_S(
+		long groupId, int[] types, int status, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_S(
+		long groupId, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and type = &#63; and status = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param type the type
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_S(
+		long groupId, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator,
+		boolean useFinderCache);
+
+	/**
 	 * Removes all the layout page template entries where groupId = &#63; and type = &#63; and status = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -2802,6 +3201,16 @@ public interface LayoutPageTemplateEntryPersistence
 	public int countByG_T_S(long groupId, int type, int status);
 
 	/**
+	 * Returns the number of layout page template entries where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @return the number of matching layout page template entries
+	 */
+	public int countByG_T_S(long groupId, int[] types, int status);
+
+	/**
 	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -2810,6 +3219,16 @@ public interface LayoutPageTemplateEntryPersistence
 	 * @return the number of matching layout page template entries that the user has permission to view
 	 */
 	public int filterCountByG_T_S(long groupId, int type, int status);
+
+	/**
+	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param types the types
+	 * @param status the status
+	 * @return the number of matching layout page template entries that the user has permission to view
+	 */
+	public int filterCountByG_T_S(long groupId, int[] types, int status);
 
 	/**
 	 * Returns all the layout page template entries where groupId = &#63; and layoutPageTemplateCollectionId = &#63; and name LIKE &#63; and status = &#63;.
@@ -4125,6 +4544,135 @@ public interface LayoutPageTemplateEntryPersistence
 		throws NoSuchPageTemplateEntryException;
 
 	/**
+	 * Returns all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @return the matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status);
+
+	/**
+	 * Returns a range of all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries that the user has permission to view
+	 */
+	public java.util.List<LayoutPageTemplateEntry> filterFindByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @return the matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status);
+
+	/**
+	 * Returns a range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @return the range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status, int start, int end);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator);
+
+	/**
+	 * Returns an ordered range of all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = &#63; and status = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>LayoutPageTemplateEntryModelImpl</code>.
+	 * </p>
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param type the type
+	 * @param status the status
+	 * @param start the lower bound of the range of layout page template entries
+	 * @param end the upper bound of the range of layout page template entries (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching layout page template entries
+	 */
+	public java.util.List<LayoutPageTemplateEntry> findByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator
+			<LayoutPageTemplateEntry> orderByComparator,
+		boolean useFinderCache);
+
+	/**
 	 * Removes all the layout page template entries where groupId = &#63; and name LIKE &#63; and type = &#63; and status = &#63; from the database.
 	 *
 	 * @param groupId the group ID
@@ -4148,6 +4696,18 @@ public interface LayoutPageTemplateEntryPersistence
 		long groupId, String name, int type, int status);
 
 	/**
+	 * Returns the number of layout page template entries where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @return the number of matching layout page template entries
+	 */
+	public int countByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status);
+
+	/**
 	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = &#63; and status = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -4158,6 +4718,18 @@ public interface LayoutPageTemplateEntryPersistence
 	 */
 	public int filterCountByG_T_LikeN_S(
 		long groupId, String name, int type, int status);
+
+	/**
+	 * Returns the number of layout page template entries that the user has permission to view where groupId = &#63; and name LIKE &#63; and type = any &#63; and status = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param name the name
+	 * @param types the types
+	 * @param status the status
+	 * @return the number of matching layout page template entries that the user has permission to view
+	 */
+	public int filterCountByG_T_LikeN_S(
+		long groupId, String name, int[] types, int status);
 
 	/**
 	 * Returns all the layout page template entries where groupId = &#63; and type = &#63; and defaultTemplate = &#63; and status = &#63;.

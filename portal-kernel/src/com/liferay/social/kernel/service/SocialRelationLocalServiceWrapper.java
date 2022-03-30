@@ -30,6 +30,10 @@ public class SocialRelationLocalServiceWrapper
 	implements ServiceWrapper<SocialRelationLocalService>,
 			   SocialRelationLocalService {
 
+	public SocialRelationLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SocialRelationLocalServiceWrapper(
 		SocialRelationLocalService socialRelationLocalService) {
 
@@ -53,6 +57,10 @@ public class SocialRelationLocalServiceWrapper
 
 	/**
 	 * Adds the social relation to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was added
@@ -162,6 +170,10 @@ public class SocialRelationLocalServiceWrapper
 	/**
 	 * Deletes the social relation with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param relationId the primary key of the social relation
 	 * @return the social relation that was removed
 	 * @throws PortalException if a social relation with the primary key could not be found
@@ -176,6 +188,10 @@ public class SocialRelationLocalServiceWrapper
 	/**
 	 * Deletes the social relation from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was removed
 	 */
@@ -187,6 +203,13 @@ public class SocialRelationLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _socialRelationLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _socialRelationLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -586,6 +609,10 @@ public class SocialRelationLocalServiceWrapper
 
 	/**
 	 * Updates the social relation in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was updated

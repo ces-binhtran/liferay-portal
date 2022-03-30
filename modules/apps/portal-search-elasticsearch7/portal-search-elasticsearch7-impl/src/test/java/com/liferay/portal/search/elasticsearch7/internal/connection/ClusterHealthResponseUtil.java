@@ -23,7 +23,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.ClusterClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 
 /**
  * @author André de Oliveira
@@ -41,6 +41,8 @@ public class ClusterHealthResponseUtil {
 
 		ClusterHealthRequest clusterHealthRequest = new ClusterHealthRequest();
 
+		clusterHealthRequest.masterNodeTimeout(
+			new TimeValue(10, TimeUnit.MINUTES));
 		clusterHealthRequest.timeout(new TimeValue(10, TimeUnit.MINUTES));
 		clusterHealthRequest.waitForActiveShards(
 			healthExpectations.getActiveShards());

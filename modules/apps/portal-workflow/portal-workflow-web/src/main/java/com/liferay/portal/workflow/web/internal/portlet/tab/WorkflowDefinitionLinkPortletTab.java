@@ -14,8 +14,8 @@
 
 package com.liferay.portal.workflow.web.internal.portlet.tab;
 
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
@@ -59,9 +59,7 @@ public class WorkflowDefinitionLinkPortletTab extends BaseWorkflowPortletTab {
 			new WorkflowDefinitionLinkDisplayContext(
 				renderRequest, renderResponse,
 				workflowDefinitionLinkLocalService,
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.portal.workflow.web"));
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
 
 		renderRequest.setAttribute(
 			WorkflowWebKeys.WORKFLOW_DEFINITION_LINK_DISPLAY_CONTEXT,

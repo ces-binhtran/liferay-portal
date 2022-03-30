@@ -35,12 +35,18 @@ public class ResourcePermissionModelListener
 	}
 
 	@Override
-	public void onAfterUpdate(ResourcePermission resourcePermission) {
+	public void onAfterUpdate(
+		ResourcePermission originalResourcePermission,
+		ResourcePermission resourcePermission) {
+
 		_clearCache(resourcePermission);
 	}
 
 	@Override
-	public void onBeforeUpdate(ResourcePermission resourcePermission) {
+	public void onBeforeUpdate(
+		ResourcePermission originalResourcePermission,
+		ResourcePermission resourcePermission) {
+
 		ResourcePermissionModelImpl resourcePermissionModelImpl =
 			(ResourcePermissionModelImpl)resourcePermission;
 
@@ -48,9 +54,9 @@ public class ResourcePermissionModelListener
 
 		if ((columnBitmask & _CLEAR_ON_BEFORE_BITMASK) != 0) {
 			PermissionCacheUtil.clearResourcePermissionCache(
-				resourcePermissionModelImpl.getOriginalScope(),
-				resourcePermissionModelImpl.getOriginalName(),
-				resourcePermissionModelImpl.getOriginalPrimKey());
+				resourcePermissionModelImpl.getColumnOriginalValue("scope"),
+				resourcePermissionModelImpl.getColumnOriginalValue("name"),
+				resourcePermissionModelImpl.getColumnOriginalValue("primKey"));
 		}
 	}
 

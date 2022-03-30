@@ -27,17 +27,14 @@ groups.addAll(userDisplayContext.getInheritedSiteGroups());
 List<Organization> organizations = userDisplayContext.getOrganizations();
 
 Long[] organizationIds = UsersAdminUtil.getOrganizationIds(organizations);
+
 List<Role> roles = userDisplayContext.getRoles();
 List<UserGroupRole> organizationRoles = userDisplayContext.getOrganizationRoles();
 List<UserGroupRole> siteRoles = userDisplayContext.getSiteRoles();
 List<UserGroupGroupRole> inheritedSiteRoles = userDisplayContext.getInheritedSiteRoles();
 List<Group> roleGroups = userDisplayContext.getRoleGroups();
 
-currentURLObj.setParameter("historyKey", renderResponse.getNamespace() + "roles");
-
-String regularRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() + "syncRegularRoles";
-String siteRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() + "syncSiteRoles";
-String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespace() + "syncOrganizationRoles";
+currentURLObj.setParameter("historyKey", liferayPortletResponse.getNamespace() + "roles");
 %>
 
 <liferay-util:dynamic-include key="com.liferay.users.admin.web#/user/roles.jsp#pre" />
@@ -72,7 +69,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 			<span class="heading-text"><liferay-ui:message key="regular-roles" /></span>
 		</clay:content-col>
@@ -114,7 +111,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 			modelVar="role"
 		>
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="title"
 			>
 				<liferay-ui:icon
@@ -137,54 +134,19 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 	</liferay-ui:search-container>
 
 	<c:if test="<%= !portletName.equals(myAccountPortletId) %>">
-		<aui:script sandbox="<%= true %>">
+		<aui:script sandbox="<%= true %>" use="liferay-search-container">
 			var selectRegularRoleLink = document.getElementById(
 				'<portlet:namespace />selectRegularRoleLink'
 			);
 
 			if (selectRegularRoleLink) {
-				selectRegularRoleLink.addEventListener('click', function (event) {
+				selectRegularRoleLink.addEventListener('click', (event) => {
 					var searchContainerName = '<portlet:namespace />rolesSearchContainer';
 
 					var searchContainer = Liferay.SearchContainer.get(searchContainerName);
 
-					var searchContainerData = searchContainer.getData();
-
-					if (!searchContainerData.length) {
-						searchContainerData = [];
-					}
-					else {
-						searchContainerData = searchContainerData.split(',');
-					}
-
-					Liferay.Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								modal: true,
-							},
-
-							<%
-							String regularRoleEventName = liferayPortletResponse.getNamespace() + "selectRegularRole";
-							%>
-
-							id: '<%= regularRoleEventName %>',
-							selectedData: searchContainerData,
-							title:
-								'<liferay-ui:message arguments="regular-role" key="select-x" />',
-
-							<%
-							PortletURL selectRegularRoleURL = PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE);
-
-							selectRegularRoleURL.setParameter("p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId()));
-							selectRegularRoleURL.setParameter("eventName", regularRoleEventName);
-							selectRegularRoleURL.setParameter("syncEntitiesEventName", regularRoleSyncEntitiesEventName);
-							selectRegularRoleURL.setWindowState(LiferayWindowState.POP_UP);
-							%>
-
-							uri: '<%= selectRegularRoleURL.toString() %>',
-						},
-						function (event) {
+					Liferay.Util.openSelectionModal({
+						onSelect: function (event) {
 							<portlet:namespace />selectRole(
 								event.entityid,
 								event.entityname,
@@ -193,8 +155,31 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 								event.groupid,
 								event.iconcssclass
 							);
-						}
-					);
+						},
+
+						<%
+						String regularRoleEventName = liferayPortletResponse.getNamespace() + "selectRegularRole";
+						%>
+
+						selectEventName: '<%= regularRoleEventName %>',
+						selectedData: searchContainer.getData(true),
+						title:
+							'<liferay-ui:message arguments="regular-role" key="select-x" />',
+
+						<%
+						PortletURL selectRegularRoleURL = PortletURLBuilder.create(
+							PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE)
+						).setParameter(
+							"eventName", regularRoleEventName
+						).setParameter(
+							"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildPortletURL();
+						%>
+
+						url: '<%= selectRegularRoleURL.toString() %>',
+					});
 				});
 			}
 		</aui:script>
@@ -227,6 +212,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				%>
 
 				<liferay-ui:search-container-column-text
+					cssClass="table-cell-expand"
 					name="title"
 					value="<%= HtmlUtil.escape(ListUtil.toString(groupRoles, Role.NAME_ACCESSOR)) %>"
 				>
@@ -256,7 +242,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 			<span class="heading-text"><liferay-ui:message key="organization-roles" /></span>
 		</clay:content-col>
@@ -303,7 +289,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				modelVar="userGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -314,7 +300,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="organization"
 					value="<%= HtmlUtil.escape(userGroupRole.getGroup().getDescriptiveName(locale)) %>"
 				/>
@@ -350,20 +336,24 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 			<aui:script use="liferay-search-container">
 				var Util = Liferay.Util;
 
-				var searchContainer = Liferay.SearchContainer.get(
-					'<portlet:namespace />organizationRolesSearchContainer'
-				);
+				var searchContainerName =
+					'<portlet:namespace />organizationRolesSearchContainer';
+
+				var searchContainer = Liferay.SearchContainer.get(searchContainerName);
+
+				<portlet:namespace />searchContainerUpdateDataStore(searchContainer);
 
 				var searchContainerContentBox = searchContainer.get('contentBox');
 
 				searchContainerContentBox.delegate(
 					'click',
-					function (event) {
+					(event) => {
 						var link = event.currentTarget;
 						var tr = link.ancestor('tr');
 
 						var groupId = link.getAttribute('data-groupId');
 						var rowId = link.getAttribute('data-rowId');
+						var id = groupId + '-' + rowId;
 
 						var selectOrganizationRole = Util.getWindow(
 							'<portlet:namespace />selectOrganizationRole'
@@ -383,92 +373,31 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 							Util.toggleDisabled(selectButton, false);
 						}
 
-						searchContainer.deleteRow(tr, rowId);
+						searchContainer.deleteRow(tr, id);
 
 						<portlet:namespace />deleteGroupRole(rowId, groupId);
 					},
 					'.modify-link'
 				);
-
-				Liferay.on('<%= organizationRoleSyncEntitiesEventName %>', function (event) {
-					event.selectors.each(function (item, index, collection) {
-						var groupId = item.attr('data-groupid');
-						var roleId = item.attr('data-entityid');
-
-						for (
-							var i = 0;
-							i < <portlet:namespace />addGroupRolesGroupIds.length;
-							i++
-						) {
-							if (
-								<portlet:namespace />addGroupRolesGroupIds[i] == groupId &&
-								<portlet:namespace />addGroupRolesRoleIds[i] == roleId
-							) {
-								Util.toggleDisabled(item, true);
-
-								break;
-							}
-						}
-
-						for (
-							var j = 0;
-							j < <portlet:namespace />deleteGroupRolesGroupIds.length;
-							j++
-						) {
-							if (
-								<portlet:namespace />deleteGroupRolesGroupIds[j] == groupId &&
-								<portlet:namespace />deleteGroupRolesRoleIds[j] == roleId
-							) {
-								Util.toggleDisabled(item, false);
-
-								break;
-							}
-						}
-					});
-				});
 			</aui:script>
 		</c:if>
 	</c:if>
 
 	<c:if test="<%= !organizations.isEmpty() && !portletName.equals(myAccountPortletId) %>">
-		<aui:script sandbox="<%= true %>">
+		<aui:script sandbox="<%= true %>" use="liferay-search-container">
 			var selectOrganizationRoleLink = document.getElementById(
 				'<portlet:namespace />selectOrganizationRoleLink'
 			);
 
 			if (selectOrganizationRoleLink) {
-				selectOrganizationRoleLink.addEventListener('click', function (event) {
-					Liferay.Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								modal: true,
-							},
+				selectOrganizationRoleLink.addEventListener('click', (event) => {
+					var searchContainerName =
+						'<portlet:namespace />organizationRolesSearchContainer';
 
-							<%
-							String organizationRoleEventName = liferayPortletResponse.getNamespace() + "selectOrganizationRole";
-							%>
+					var searchContainer = Liferay.SearchContainer.get(searchContainerName);
 
-							id: '<%= organizationRoleEventName %>',
-							selectedData: [],
-							title:
-								'<liferay-ui:message arguments="organization-role" key="select-x" />',
-
-							<%
-							PortletURL selectOrganizationRoleURL = PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE);
-
-							selectOrganizationRoleURL.setParameter("p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId()));
-							selectOrganizationRoleURL.setParameter("step", "1");
-							selectOrganizationRoleURL.setParameter("roleType", String.valueOf(RoleConstants.TYPE_ORGANIZATION));
-							selectOrganizationRoleURL.setParameter("organizationIds", StringUtil.merge(organizationIds));
-							selectOrganizationRoleURL.setParameter("eventName", organizationRoleEventName);
-							selectOrganizationRoleURL.setParameter("syncEntitiesEventName", organizationRoleSyncEntitiesEventName);
-							selectOrganizationRoleURL.setWindowState(LiferayWindowState.POP_UP);
-							%>
-
-							uri: '<%= selectOrganizationRoleURL.toString() %>',
-						},
-						function (event) {
+					Liferay.Util.openSelectionModal({
+						onSelect: function (event) {
 							<portlet:namespace />selectRole(
 								event.entityid,
 								event.entityname,
@@ -477,8 +406,69 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 								event.groupid,
 								event.iconcssclass
 							);
+						},
+
+						<%
+						String groupEventName = liferayPortletResponse.getNamespace() + "selectOrganization";
+						String organizationRoleEventName = liferayPortletResponse.getNamespace() + "selectOrganizationRole";
+						%>
+
+						selectEventName: '<%= organizationRoleEventName %>',
+						title:
+							'<liferay-ui:message arguments="organization-role" key="select-x" />',
+
+						<%
+						PortletURL selectOrganizationRoleURL = PortletURLBuilder.create(
+							PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE)
+						).setParameter(
+							"eventName", organizationRoleEventName
+						).setParameter(
+							"groupEventName", groupEventName
+						).setParameter(
+							"organizationIds", StringUtil.merge(organizationIds)
+						).setParameter(
+							"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
+						).setParameter(
+							"roleType", RoleConstants.TYPE_ORGANIZATION
+						).setParameter(
+							"step", "1"
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildPortletURL();
+						%>
+
+						url: '<%= selectOrganizationRoleURL.toString() %>',
+					});
+
+					Liferay.on('<%= groupEventName %>', () => {
+						const iframe = document.querySelector('.liferay-modal iframe');
+
+						if (iframe) {
+							const iframeDocument = iframe.contentWindow.document;
+
+							const selectedDataSet = new Set(searchContainer.getData(true));
+
+							const selectButtons = iframeDocument.querySelectorAll(
+								'.selector-button'
+							);
+
+							selectButtons.forEach((selectButton) => {
+								const selectButtonId =
+									selectButton.dataset.groupid +
+									'-' +
+									selectButton.dataset.entityid;
+
+								if (selectedDataSet.has(selectButtonId)) {
+									selectButton.disabled = true;
+									selectButton.classList.add('disabled');
+								}
+								else {
+									selectButton.disabled = false;
+									selectButton.classList.remove('disabled');
+								}
+							});
 						}
-					);
+					});
 				});
 			}
 		</aui:script>
@@ -491,7 +481,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 		cssClass="sheet-subtitle"
 	>
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 			<span class="heading-text"><liferay-ui:message key="site-roles" /></span>
 		</clay:content-col>
@@ -538,7 +528,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				modelVar="userGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -549,7 +539,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="site"
 				>
 					<liferay-staging:descriptive-name
@@ -588,20 +578,23 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 			<aui:script use="liferay-search-container">
 				var Util = Liferay.Util;
 
-				var searchContainer = Liferay.SearchContainer.get(
-					'<portlet:namespace />siteRolesSearchContainer'
-				);
+				var searchContainerName = '<portlet:namespace />siteRolesSearchContainer';
+
+				var searchContainer = Liferay.SearchContainer.get(searchContainerName);
+
+				<portlet:namespace />searchContainerUpdateDataStore(searchContainer);
 
 				var searchContainerContentBox = searchContainer.get('contentBox');
 
 				searchContainerContentBox.delegate(
 					'click',
-					function (event) {
+					(event) => {
 						var link = event.currentTarget;
 						var tr = link.ancestor('tr');
 
 						var groupId = link.getAttribute('data-groupId');
 						var rowId = link.getAttribute('data-rowId');
+						var id = groupId + '-' + rowId;
 
 						var selectSiteRole = Util.getWindow(
 							'<portlet:namespace />selectSiteRole'
@@ -621,92 +614,91 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 							Util.toggleDisabled(selectButton, false);
 						}
 
-						searchContainer.deleteRow(tr, rowId);
+						searchContainer.deleteRow(tr, id);
 
 						<portlet:namespace />deleteGroupRole(rowId, groupId);
 					},
 					'.modify-link'
 				);
 
-				Liferay.on('<%= siteRoleSyncEntitiesEventName %>', function (event) {
-					event.selectors.each(function (item, index, collection) {
-						var groupId = item.attr('data-groupid');
-						var roleId = item.attr('data-entityid');
+				const selectSiteRoleLink = document.getElementById(
+					'<portlet:namespace />selectSiteRoleLink'
+				);
 
-						for (
-							var k = 0;
-							k < <portlet:namespace />addGroupRolesGroupIds.length;
-							k++
-						) {
-							if (
-								<portlet:namespace />addGroupRolesGroupIds[k] == groupId &&
-								<portlet:namespace />addGroupRolesRoleIds[k] == roleId
-							) {
-								Util.toggleDisabled(item, true);
-
-								break;
-							}
-						}
-
-						for (
-							var n = 0;
-							n < <portlet:namespace />deleteGroupRolesGroupIds.length;
-							n++
-						) {
-							if (
-								<portlet:namespace />deleteGroupRolesGroupIds[n] == groupId &&
-								<portlet:namespace />deleteGroupRolesRoleIds[n] == roleId
-							) {
-								Util.toggleDisabled(item, false);
-
-								break;
-							}
-						}
-					});
-				});
-
-				A.one('#<portlet:namespace />selectSiteRoleLink').on('click', function (event) {
-					Util.selectEntity(
-						{
-							dialog: {
-								constrain: true,
-								modal: true,
+				if (selectSiteRoleLink) {
+					selectSiteRoleLink.addEventListener('click', (event) => {
+						Util.openSelectionModal({
+							onSelect: (selectedItem) => {
+								<portlet:namespace />selectRole(
+									selectedItem.entityid,
+									selectedItem.entityname,
+									selectedItem.searchcontainername,
+									selectedItem.groupdescriptivename,
+									selectedItem.groupid,
+									selectedItem.iconcssclass
+								);
 							},
 
 							<%
+							String groupEventName = liferayPortletResponse.getNamespace() + "selectSite";
 							String siteRoleEventName = liferayPortletResponse.getNamespace() + "selectSiteRole";
 							%>
 
-							id: '<%= siteRoleEventName %>',
-							selectedData: [],
+							selectEventName: '<%= siteRoleEventName %>',
+
 							title:
 								'<liferay-ui:message arguments="site-role" key="select-x" />',
+							url:
+								'<%=
+									PortletURLBuilder.create(
+										PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE)
+									).setParameter(
+										"eventName", siteRoleEventName
+									).setParameter(
+										"groupEventName", groupEventName
+									).setParameter(
+										"p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId())
+									).setParameter(
+										"roleType", RoleConstants.TYPE_SITE
+									).setParameter(
+										"step", "1"
+									).setWindowState(
+										LiferayWindowState.POP_UP
+									).buildPortletURL()
+								%>',
+						});
+					});
 
-							<%
-							PortletURL selectSiteRoleURL = PortletProviderUtil.getPortletURL(request, Role.class.getName(), PortletProvider.Action.BROWSE);
+					Liferay.on('<%= groupEventName %>', () => {
+						const iframe = document.querySelector('.liferay-modal iframe');
 
-							selectSiteRoleURL.setParameter("p_u_i_d", (selUser == null) ? "0" : String.valueOf(selUser.getUserId()));
-							selectSiteRoleURL.setParameter("step", "1");
-							selectSiteRoleURL.setParameter("roleType", String.valueOf(RoleConstants.TYPE_SITE));
-							selectSiteRoleURL.setParameter("eventName", siteRoleEventName);
-							selectSiteRoleURL.setParameter("syncEntitiesEventName", siteRoleSyncEntitiesEventName);
-							selectSiteRoleURL.setWindowState(LiferayWindowState.POP_UP);
-							%>
+						if (iframe) {
+							const iframeDocument = iframe.contentWindow.document;
 
-							uri: '<%= selectSiteRoleURL.toString() %>',
-						},
-						function (event) {
-							<portlet:namespace />selectRole(
-								event.entityid,
-								event.entityname,
-								event.searchcontainername,
-								event.groupdescriptivename,
-								event.groupid,
-								event.iconcssclass
+							const selectedDataSet = new Set(searchContainer.getData(true));
+
+							const selectButtons = iframeDocument.querySelectorAll(
+								'.selector-button'
 							);
+
+							selectButtons.forEach((selectButton) => {
+								const selectButtonId =
+									selectButton.dataset.groupid +
+									'-' +
+									selectButton.dataset.entityid;
+
+								if (selectedDataSet.has(selectButtonId)) {
+									selectButton.disabled = true;
+									selectButton.classList.add('disabled');
+								}
+								else {
+									selectButton.disabled = false;
+									selectButton.classList.remove('disabled');
+								}
+							});
 						}
-					);
-				});
+					});
+				}
 			</aui:script>
 		</c:if>
 	</c:if>
@@ -732,7 +724,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				modelVar="userGroupGroupRole"
 			>
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="title"
 				>
 					<liferay-ui:icon
@@ -743,7 +735,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="site"
 				>
 					<liferay-staging:descriptive-name
@@ -752,7 +744,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="user-group"
 					value="<%= HtmlUtil.escape(userGroupGroupRole.getUserGroup().getName()) %>"
 				/>
@@ -792,8 +784,8 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 			function <portlet:namespace />deleteGroupRole(roleId, groupId) {
 				for (var i = 0; i < <portlet:namespace />addGroupRolesRoleIds.length; i++) {
 					if (
-						<portlet:namespace />addGroupRolesGroupIds[i] == groupId &&
-						<portlet:namespace />addGroupRolesRoleIds[i] == roleId
+						<portlet:namespace />addGroupRolesGroupIds[i] === groupId &&
+						<portlet:namespace />addGroupRolesRoleIds[i] === roleId
 					) {
 						<portlet:namespace />addGroupRolesGroupIds.splice(i, 1);
 						<portlet:namespace />addGroupRolesRoleIds.splice(i, 1);
@@ -819,95 +811,110 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				);
 			}
 
-			Liferay.provide(
-				window,
-				'<portlet:namespace />selectRole',
-				function (roleId, name, searchContainer, groupName, groupId, iconCssClass) {
-					var A = AUI();
-					var LString = A.Lang.String;
+			function <portlet:namespace />searchContainerUpdateDataStore(searchContainer) {
+				searchContainer.updateDataStore(
+					searchContainer
+						.get('contentBox')
+						.all('.modify-link')
+						.getData()
+						.map((data) => {
+							return data.groupid + '-' + data.rowid;
+						})
+				);
+			}
 
-					var searchContainerName =
-						'<portlet:namespace />' + searchContainer + 'SearchContainer';
+			window['<portlet:namespace />selectRole'] = function (
+				roleId,
+				name,
+				searchContainer,
+				groupName,
+				groupId,
+				iconCssClass
+			) {
+				var A = AUI();
+				var LString = A.Lang.String;
 
-					searchContainer = Liferay.SearchContainer.get(searchContainerName);
+				var searchContainerName =
+					'<portlet:namespace />' + searchContainer + 'SearchContainer';
 
-					var rowColumns = [];
+				searchContainer = Liferay.SearchContainer.get(searchContainerName);
 
+				var rowColumns = [];
+
+				rowColumns.push(
+					'<i class="' + iconCssClass + '"></i> ' + Liferay.Util.escapeHTML(name)
+				);
+
+				if (groupName) {
+					rowColumns.push(Liferay.Util.escapeHTML(groupName));
+				}
+
+				if (groupId) {
 					rowColumns.push(
-						'<i class="' + iconCssClass + '"></i> ' + LString.escapeHTML(name)
+						'<a class="modify-link" data-groupId="' +
+							groupId +
+							'" data-rowId="' +
+							roleId +
+							'" href="javascript:;"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
 					);
 
-					if (groupName) {
-						rowColumns.push(groupName);
-					}
-
-					if (groupId) {
-						rowColumns.push(
-							'<a class="modify-link" data-groupId="' +
-								groupId +
-								'" data-rowId="' +
-								roleId +
-								'" href="javascript:;"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
-						);
-
-						for (
-							var i = 0;
-							i < <portlet:namespace />deleteGroupRolesRoleIds.length;
-							i++
+					for (
+						var i = 0;
+						i < <portlet:namespace />deleteGroupRolesRoleIds.length;
+						i++
+					) {
+						if (
+							<portlet:namespace />deleteGroupRolesGroupIds[i] === groupId &&
+							<portlet:namespace />deleteGroupRolesRoleIds[i] === roleId
 						) {
-							if (
-								<portlet:namespace />deleteGroupRolesGroupIds[i] ==
-									groupId &&
-								<portlet:namespace />deleteGroupRolesRoleIds[i] == roleId
-							) {
-								<portlet:namespace />deleteGroupRolesGroupIds.splice(i, 1);
-								<portlet:namespace />deleteGroupRolesRoleIds.splice(i, 1);
+							<portlet:namespace />deleteGroupRolesGroupIds.splice(i, 1);
+							<portlet:namespace />deleteGroupRolesRoleIds.splice(i, 1);
 
-								break;
-							}
+							break;
 						}
-
-						<portlet:namespace />addGroupRolesGroupIds.push(groupId);
-						<portlet:namespace />addGroupRolesRoleIds.push(roleId);
-
-						document.<portlet:namespace />fm.<portlet:namespace />addGroupRolesGroupIds.value = <portlet:namespace />addGroupRolesGroupIds.join(
-							','
-						);
-						document.<portlet:namespace />fm.<portlet:namespace />addGroupRolesRoleIds.value = <portlet:namespace />addGroupRolesRoleIds.join(
-							','
-						);
-						document.<portlet:namespace />fm.<portlet:namespace />deleteGroupRolesGroupIds.value = <portlet:namespace />deleteGroupRolesGroupIds.join(
-							','
-						);
-						document.<portlet:namespace />fm.<portlet:namespace />deleteGroupRolesRoleIds.value = <portlet:namespace />deleteGroupRolesRoleIds.join(
-							','
-						);
 					}
-					else {
-						rowColumns.push(
-							'<a class="modify-link" data-rowId="' +
-								roleId +
-								'" href="javascript:;"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
-						);
 
-						A.Array.removeItem(<portlet:namespace />deleteRoleIds, roleId);
+					<portlet:namespace />addGroupRolesGroupIds.push(groupId);
+					<portlet:namespace />addGroupRolesRoleIds.push(roleId);
 
-						<portlet:namespace />addRoleIds.push(roleId);
+					document.<portlet:namespace />fm.<portlet:namespace />addGroupRolesGroupIds.value = <portlet:namespace />addGroupRolesGroupIds.join(
+						','
+					);
+					document.<portlet:namespace />fm.<portlet:namespace />addGroupRolesRoleIds.value = <portlet:namespace />addGroupRolesRoleIds.join(
+						','
+					);
+					document.<portlet:namespace />fm.<portlet:namespace />deleteGroupRolesGroupIds.value = <portlet:namespace />deleteGroupRolesGroupIds.join(
+						','
+					);
+					document.<portlet:namespace />fm.<portlet:namespace />deleteGroupRolesRoleIds.value = <portlet:namespace />deleteGroupRolesRoleIds.join(
+						','
+					);
 
-						document.<portlet:namespace />fm.<portlet:namespace />addRoleIds.value = <portlet:namespace />addRoleIds.join(
-							','
-						);
-						document.<portlet:namespace />fm.<portlet:namespace />deleteRoleIds.value = <portlet:namespace />deleteRoleIds.join(
-							','
-						);
-					}
+					searchContainer.addRow(rowColumns, groupId + '-' + roleId);
+				}
+				else {
+					rowColumns.push(
+						'<a class="modify-link" data-rowId="' +
+							roleId +
+							'" href="javascript:;"><%= UnicodeFormatter.toString(removeRoleIcon) %></a>'
+					);
+
+					A.Array.removeItem(<portlet:namespace />deleteRoleIds, roleId);
+
+					<portlet:namespace />addRoleIds.push(roleId);
+
+					document.<portlet:namespace />fm.<portlet:namespace />addRoleIds.value = <portlet:namespace />addRoleIds.join(
+						','
+					);
+					document.<portlet:namespace />fm.<portlet:namespace />deleteRoleIds.value = <portlet:namespace />deleteRoleIds.join(
+						','
+					);
 
 					searchContainer.addRow(rowColumns, roleId);
+				}
 
-					searchContainer.updateDataStore();
-				},
-				['liferay-search-container']
-			);
+				searchContainer.updateDataStore();
+			};
 		</aui:script>
 
 		<aui:script use="liferay-search-container">
@@ -921,7 +928,7 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 
 			searchContainerContentBox.delegate(
 				'click',
-				function (event) {
+				(event) => {
 					var link = event.currentTarget;
 
 					var rowId = link.attr('data-rowId');
@@ -946,16 +953,6 @@ String organizationRoleSyncEntitiesEventName = liferayPortletResponse.getNamespa
 				},
 				'.modify-link'
 			);
-
-			Liferay.on('<%= regularRoleSyncEntitiesEventName %>', function (event) {
-				event.selectors.each(function (item, index, collection) {
-					var roleId = item.attr('data-entityid');
-
-					if (<portlet:namespace />deleteRoleIds.indexOf(roleId) != -1) {
-						Util.toggleDisabled(item, false);
-					}
-				});
-			});
 		</aui:script>
 	</c:if>
 </clay:sheet-section>

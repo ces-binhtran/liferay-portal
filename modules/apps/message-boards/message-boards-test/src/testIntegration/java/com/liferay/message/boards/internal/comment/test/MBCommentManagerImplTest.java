@@ -41,12 +41,8 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -73,16 +69,13 @@ public class MBCommentManagerImplTest {
 		_group = GroupTestUtil.addGroup();
 		_user = TestPropsValues.getUser();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
 		_fileEntry = DLAppLocalServiceUtil.addFileEntry(
-			_user.getUserId(), _group.getGroupId(),
+			null, _user.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.APPLICATION_OCTET_STREAM,
-			null, serviceContext);
-
-		_initializeCommentManager();
+			null, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 
 		_createDiscussion();
 	}
@@ -148,10 +141,7 @@ public class MBCommentManagerImplTest {
 		DiscussionComment discussionComment =
 			threadDiscussionCommentIterator.next();
 
-		int descendantCommentsCount =
-			discussionComment.getDescendantCommentsCount();
-
-		Assert.assertEquals(3, descendantCommentsCount);
+		Assert.assertEquals(3, discussionComment.getDescendantCommentsCount());
 	}
 
 	@Test
@@ -178,10 +168,8 @@ public class MBCommentManagerImplTest {
 		DiscussionComment rootDiscussionComment =
 			discussion.getRootDiscussionComment();
 
-		int descendantCommentsCount =
-			rootDiscussionComment.getDescendantCommentsCount();
-
-		Assert.assertEquals(2, descendantCommentsCount);
+		Assert.assertEquals(
+			2, rootDiscussionComment.getDescendantCommentsCount());
 	}
 
 	@Test
@@ -204,11 +192,10 @@ public class MBCommentManagerImplTest {
 	private long _addComment() throws Exception {
 		User user = TestPropsValues.getUser();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, user.getUserId());
-
 		IdentityServiceContextFunction serviceContextFunction =
-			new IdentityServiceContextFunction(serviceContext);
+			new IdentityServiceContextFunction(
+				ServiceContextTestUtil.getServiceContext(
+					_group, user.getUserId()));
 
 		return _commentManager.addComment(
 			user.getUserId(), _group.getGroupId(),
@@ -219,11 +206,10 @@ public class MBCommentManagerImplTest {
 	private long _addComment(long parentCommentId) throws Exception {
 		User user = TestPropsValues.getUser();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, user.getUserId());
-
 		IdentityServiceContextFunction serviceContextFunction =
-			new IdentityServiceContextFunction(serviceContext);
+			new IdentityServiceContextFunction(
+				ServiceContextTestUtil.getServiceContext(
+					_group, user.getUserId()));
 
 		return _commentManager.addComment(
 			user.getUserId(), User.class.getName(), user.getUserId(),
@@ -241,31 +227,16 @@ public class MBCommentManagerImplTest {
 	}
 
 	private Function<String, ServiceContext> _createServiceContextFunction() {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
-		return new IdentityServiceContextFunction(serviceContext);
+		return new IdentityServiceContextFunction(
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 	}
 
-	private void _initializeCommentManager() throws Exception {
-		Registry registry = RegistryUtil.getRegistry();
-
-		Collection<CommentManager> services = registry.getServices(
-			CommentManager.class,
-			"(component.name=com.liferay.message.boards.comment.internal." +
-				"MBCommentManagerImpl)");
-
-		if (services.isEmpty()) {
-			throw new IllegalStateException(
-				"MBMessage Comment API implementation was not found");
-		}
-
-		Iterator<CommentManager> iterator = services.iterator();
-
-		_commentManager = iterator.next();
-	}
-
+	@Inject(
+		filter = "component.name=com.liferay.message.boards.comment.internal.MBCommentManagerImpl"
+	)
 	private CommentManager _commentManager;
+
 	private FileEntry _fileEntry;
 
 	@DeleteAfterTestRun

@@ -1,31 +1,10 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.3.1",
-		"@clayui/data-provider": "3.1.1",
-		"@clayui/drop-down": "3.4.3",
-		"@clayui/form": "3.8.0",
-		"@clayui/icon": "3.0.5",
-		"@clayui/link": "3.1.1",
-		"@clayui/loading-indicator": "3.1.0",
-		"@clayui/management-toolbar": "3.2.0",
-		"@clayui/modal": "3.5.0",
-		"@clayui/multi-select": "3.5.4",
-		"@clayui/pagination-bar": "3.1.4",
-		"@clayui/tabs": "3.2.0",
-		"@clayui/tooltip": "3.3.0",
-		"classnames": "2.2.6",
-		"frontend-js-react-web": "*",
 		"lodash.isfunction": "3.0.9",
-		"lodash.times": "^4.3.2",
-		"prop-types": "15.7.2",
-		"react": "16.12.0",
-		"react-dnd": "10.0.1",
-		"react-dnd-html5-backend": "10.0.1",
-		"react-dom": "16.12.0"
+		"lodash.times": "^4.3.2"
 	},
 	"jest": {
 		"setupFilesAfterEnv": [
-			"@testing-library/react/cleanup-after-each",
 			"<rootDir>/test/js/setup.es.js"
 		],
 		"testPathIgnorePatterns": [
@@ -43,5 +22,5 @@
 		"storybook": "liferay-npm-scripts storybook",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "2.0.16"
+	"version": "3.0.28"
 }

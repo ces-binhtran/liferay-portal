@@ -11,6 +11,17 @@
 
 import PropTypes from 'prop-types';
 
+const SegmentsExperimentGoal = PropTypes.shape({
+	label: PropTypes.string.isRequired,
+	target: PropTypes.string,
+	value: PropTypes.string.isRequired,
+});
+
+const SegmentsExperimentStatus = PropTypes.shape({
+	label: PropTypes.string,
+	value: PropTypes.number,
+});
+
 const SegmentsExperimentType = PropTypes.shape({
 	confidenceLevel: PropTypes.number.isRequired,
 	description: PropTypes.string,
@@ -23,13 +34,6 @@ const SegmentsExperimentType = PropTypes.shape({
 	status: SegmentsExperimentStatus,
 });
 
-const SegmentsExperienceType = PropTypes.shape({
-	description: PropTypes.string,
-	name: PropTypes.string.isRequired,
-	segmentsExperienceId: PropTypes.string.isRequired,
-	segmentsExperiment: SegmentsExperimentType,
-});
-
 const SegmentsVariantType = PropTypes.shape({
 	control: PropTypes.bool.isRequired,
 	name: PropTypes.string.isRequired,
@@ -40,19 +44,7 @@ const SegmentsVariantType = PropTypes.shape({
 	winner: PropTypes.bool,
 });
 
-const SegmentsExperimentGoal = PropTypes.shape({
-	label: PropTypes.string.isRequired,
-	target: PropTypes.string,
-	value: PropTypes.string.isRequired,
-});
-
-const SegmentsExperimentStatus = PropTypes.shape({
-	label: PropTypes.string.isRequired,
-	value: PropTypes.string.isRequired,
-});
-
 export {
-	SegmentsExperienceType,
 	SegmentsExperimentGoal,
 	SegmentsExperimentStatus,
 	SegmentsExperimentType,

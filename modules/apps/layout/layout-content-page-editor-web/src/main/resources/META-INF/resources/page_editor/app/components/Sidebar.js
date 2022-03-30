@@ -15,23 +15,24 @@
 import {ClayButtonWithIcon, default as ClayButton} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {ClayTooltipProvider} from '@clayui/tooltip';
+import {
+	ReactPortal,
+	useIsMounted,
+	useStateSafe,
+} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import React from 'react';
 
 import useLazy from '../../core/hooks/useLazy';
 import useLoad from '../../core/hooks/useLoad';
 import usePlugins from '../../core/hooks/usePlugins';
-import useStateSafe from '../../core/hooks/useStateSafe';
 import * as Actions from '../actions/index';
 import {config} from '../config/index';
+import {useSelectItem} from '../contexts/ControlsContext';
+import {useDispatch, useSelector} from '../contexts/StoreContext';
 import selectAvailablePanels from '../selectors/selectAvailablePanels';
-import selectAvailableSidebarPanels from '../selectors/selectAvailableSidebarPanels';
-import {useDispatch, useSelector} from '../store/index';
-import {useDropClear} from '../utils/useDragAndDrop';
+import {useDropClear} from '../utils/drag-and-drop/useDragAndDrop';
 import {useId} from '../utils/useId';
-import {useSelectItem} from './Controls';
 
 const {Suspense, useCallback, useEffect} = React;
 
@@ -40,6 +41,29 @@ const {Suspense, useCallback, useEffect} = React;
  * rejected promises silently.
  */
 const swallow = [(value) => value, (_error) => undefined];
+
+/**
+ * Load the first available panel if the selected sidebar panel ID is not found.
+ * This may happen because the list of panels is modified depending on the user permissions.
+ *
+ * @param {string} panelId
+ * @param {Array} panels
+ * @param {object} sidebarPanels
+ */
+const getActivePanelData = ({panelId, panels, sidebarPanels}) => {
+	let sidebarPanelId = panelId;
+
+	let panel = panels.some((panel) => panel.includes(sidebarPanelId))
+		? sidebarPanels[sidebarPanelId]
+		: null;
+
+	if (!panel) {
+		sidebarPanelId = panels[0][0];
+		panel = sidebarPanels[sidebarPanelId];
+	}
+
+	return {panel, sidebarPanelId};
+};
 
 export default function Sidebar() {
 	const dropClearRef = useDropClear();
@@ -52,15 +76,14 @@ export default function Sidebar() {
 	const sidebarId = useId();
 	const store = useSelector((state) => state);
 
-	const languageId = useSelector((state) => state.languageId);
 	const panels = useSelector(selectAvailablePanels(config.panels));
-	const sidebarPanels = useSelector(
-		selectAvailableSidebarPanels(config.sidebarPanels)
-	);
 	const sidebarOpen = store.sidebar.open;
-	const sidebarPanelId = store.sidebar.panelId;
+	const {panel, sidebarPanelId} = getActivePanelData({
+		panelId: store.sidebar.panelId,
+		panels,
+		sidebarPanels: config.sidebarPanels,
+	});
 
-	const panel = sidebarPanels[sidebarPanelId];
 	const promise = panel
 		? load(sidebarPanelId, panel.pluginEntryPoint)
 		: Promise.resolve();
@@ -77,6 +100,27 @@ export default function Sidebar() {
 	if (sidebarPanelId && panel) {
 		registerPanel = register(sidebarPanelId, promise, {app, panel});
 	}
+
+	const togglePlugin = () => {
+		if (hasError) {
+			setHasError(false);
+		}
+
+		if (registerPanel) {
+			registerPanel.then((plugin) => {
+				if (
+					plugin &&
+					typeof plugin.activate === 'function' &&
+					isMounted()
+				) {
+					plugin.activate();
+				}
+				else if (!plugin) {
+					setHasError(true);
+				}
+			});
+		}
+	};
 
 	useEffect(
 		() => {
@@ -125,6 +169,22 @@ export default function Sidebar() {
 		}
 	}, []);
 
+	useEffect(() => {
+		const wrapper = document.getElementById('wrapper');
+
+		if (!wrapper) {
+			return;
+		}
+
+		wrapper.classList.add('page-editor__wrapper');
+		wrapper.classList.toggle('page-editor__wrapper--padded', sidebarOpen);
+
+		return () => {
+			wrapper.classList.remove('page-editor__wrapper');
+			wrapper.classList.remove('page-editor__wrapper--padded');
+		};
+	}, [sidebarOpen]);
+
 	const SidebarPanel = useLazy(
 		useCallback(({instance}) => {
 			if (typeof instance.renderSidebar === 'function') {
@@ -161,30 +221,12 @@ export default function Sidebar() {
 		);
 	};
 
-	const togglePlugin = () => {
-		if (hasError) {
-			setHasError(false);
-		}
-
-		if (registerPanel) {
-			registerPanel.then((plugin) => {
-				if (
-					plugin &&
-					typeof plugin.activate === 'function' &&
-					isMounted()
-				) {
-					plugin.activate();
-				}
-				else if (!plugin) {
-					setHasError(true);
-				}
-			});
-		}
-	};
-
 	return (
-		<ClayTooltipProvider>
-			<div className="page-editor__sidebar" ref={dropClearRef}>
+		<ReactPortal>
+			<div
+				className="cadmin page-editor__sidebar page-editor__theme-adapter-forms"
+				ref={dropClearRef}
+			>
 				<div
 					className={classNames('page-editor__sidebar__buttons', {
 						light: true,
@@ -193,7 +235,7 @@ export default function Sidebar() {
 				>
 					{panels.reduce((elements, group, groupIndex) => {
 						const buttons = group.map((panelId) => {
-							const panel = sidebarPanels[panelId];
+							const panel = config.sidebarPanels[panelId];
 
 							const active =
 								sidebarOpen && sidebarPanelId === panelId;
@@ -256,11 +298,15 @@ export default function Sidebar() {
 						}
 					}, [])}
 				</div>
+
 				<div
 					className={classNames({
 						'page-editor__sidebar__content': true,
 						'page-editor__sidebar__content--open': sidebarOpen,
-						rtl: config.languageDirection[languageId] === 'rtl',
+						'rtl':
+							Liferay.Language.direction[
+								themeDisplay?.getLanguageId()
+							] === 'rtl',
 					})}
 					onClick={deselectItem}
 				>
@@ -290,7 +336,14 @@ export default function Sidebar() {
 								setHasError(true);
 							}}
 						>
-							<Suspense fallback={<ClayLoadingIndicator />}>
+							<Suspense
+								fallback={
+									<ClayLoadingIndicator
+										className="my-4"
+										small
+									/>
+								}
+							>
 								<SidebarPanel
 									getInstance={getInstance}
 									pluginId={sidebarPanelId}
@@ -300,7 +353,7 @@ export default function Sidebar() {
 					)}
 				</div>
 			</div>
-		</ClayTooltipProvider>
+		</ReactPortal>
 	);
 }
 

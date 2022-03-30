@@ -15,6 +15,7 @@
 package com.liferay.gradle.plugins.extensions;
 
 import com.liferay.gradle.plugins.internal.util.GradleUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.OSDetector;
 
 import java.io.File;
@@ -27,7 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.gradle.api.Project;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -81,6 +81,10 @@ public class AppServer {
 
 	public int getPortNumber() {
 		return GradleUtil.toInteger(_portNumber);
+	}
+
+	public File getShieldedContainerLibPortalDir() {
+		return GradleUtil.toFile(project, _shieldedContainerLibPortalDir);
 	}
 
 	public String getStartExecutable() {
@@ -157,6 +161,12 @@ public class AppServer {
 		_portNumber = portNumber;
 	}
 
+	public void setShieldedContainerLibPortalDir(
+		Object shieldedContainerLibPortalDir) {
+
+		_shieldedContainerLibPortalDir = shieldedContainerLibPortalDir;
+	}
+
 	public void setStartExecutable(Object startExecutable) {
 		_startExecutable = startExecutable;
 	}
@@ -197,6 +207,7 @@ public class AppServer {
 	private final String _name;
 	private Object _portalDir;
 	private Object _portNumber = 8080;
+	private Object _shieldedContainerLibPortalDir;
 	private Object _startExecutable;
 	private final List<Object> _startExecutableArgs = new ArrayList<>();
 	private Object _stopExecutable;

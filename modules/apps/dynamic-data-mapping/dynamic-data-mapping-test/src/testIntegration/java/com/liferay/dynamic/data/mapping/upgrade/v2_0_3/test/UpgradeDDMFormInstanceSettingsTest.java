@@ -15,11 +15,10 @@
 package com.liferay.dynamic.data.mapping.upgrade.v2_0_3.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.dynamic.data.mapping.helper.DDMFormInstanceTestHelper;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceLocalServiceUtil;
-import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
+import com.liferay.dynamic.data.mapping.storage.StorageType;
+import com.liferay.dynamic.data.mapping.test.util.DDMFormInstanceTestUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -32,6 +31,7 @@ import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.UpgradeStep;
 import com.liferay.portal.test.rule.Inject;
@@ -62,8 +62,6 @@ public class UpgradeDDMFormInstanceSettingsTest {
 
 		_jsonFactory = new JSONFactoryImpl();
 
-		_ddmFormInstanceTestHelper = new DDMFormInstanceTestHelper(_group);
-
 		setUpUpgradeDDMFormInstanceSettings();
 	}
 
@@ -73,18 +71,21 @@ public class UpgradeDDMFormInstanceSettingsTest {
 
 		DDMFormInstance formInstance = createFormInstance(settings);
 
-		JSONArray fieldValues = getFieldValuesJSONArray(
+		JSONArray fieldValuesJSONArray = getFieldValuesJSONArray(
 			formInstance.getSettings());
 
-		Assert.assertFalse(containsField(fieldValues, "requireAuthentication"));
+		Assert.assertFalse(
+			containsField(fieldValuesJSONArray, "requireAuthentication"));
 
-		_upgradeDDMFormInstanceSettings.upgrade();
+		_ddmFormInstanceSettingsUpgradeProcess.upgrade();
 
 		formInstance = getRecordSet(formInstance);
 
-		fieldValues = getFieldValuesJSONArray(formInstance.getSettings());
+		fieldValuesJSONArray = getFieldValuesJSONArray(
+			formInstance.getSettings());
 
-		Assert.assertTrue(containsField(fieldValues, "requireAuthentication"));
+		Assert.assertTrue(
+			containsField(fieldValuesJSONArray, "requireAuthentication"));
 	}
 
 	@Test
@@ -93,25 +94,31 @@ public class UpgradeDDMFormInstanceSettingsTest {
 
 		DDMFormInstance formInstance = createFormInstance(settings);
 
-		JSONArray fieldValues = getFieldValuesJSONArray(
+		JSONArray fieldValuesJSONArray = getFieldValuesJSONArray(
 			formInstance.getSettings());
 
-		Assert.assertFalse(containsField(fieldValues, "autosaveEnabled"));
+		Assert.assertFalse(
+			containsField(fieldValuesJSONArray, "autosaveEnabled"));
 
-		_upgradeDDMFormInstanceSettings.upgrade();
+		_ddmFormInstanceSettingsUpgradeProcess.upgrade();
 
 		formInstance = getRecordSet(formInstance);
 
-		fieldValues = getFieldValuesJSONArray(formInstance.getSettings());
+		fieldValuesJSONArray = getFieldValuesJSONArray(
+			formInstance.getSettings());
 
-		Assert.assertTrue(containsField(fieldValues, "autosaveEnabled"));
+		Assert.assertTrue(
+			containsField(fieldValuesJSONArray, "autosaveEnabled"));
 	}
 
-	protected boolean containsField(JSONArray fieldValues, String field) {
-		for (int i = 0; i < fieldValues.length(); i++) {
-			JSONObject fieldValue = fieldValues.getJSONObject(i);
+	protected boolean containsField(
+		JSONArray fieldValuesJSONArray, String field) {
 
-			String fieldName = fieldValue.getString("name");
+		for (int i = 0; i < fieldValuesJSONArray.length(); i++) {
+			JSONObject fieldValueJSONObject =
+				fieldValuesJSONArray.getJSONObject(i);
+
+			String fieldName = fieldValueJSONObject.getString("name");
 
 			if (fieldName.equals(field)) {
 				return true;
@@ -129,7 +136,8 @@ public class UpgradeDDMFormInstanceSettingsTest {
 		).put(
 			getFieldValueJSONObject("redirectURL", "")
 		).put(
-			getFieldValueJSONObject("storageType", "json")
+			getFieldValueJSONObject(
+				"storageType", StorageType.DEFAULT.getValue())
 		).put(
 			getFieldValueJSONObject("workflowDefinition", "")
 		).put(
@@ -160,44 +168,43 @@ public class UpgradeDDMFormInstanceSettingsTest {
 	protected DDMFormInstance createFormInstance(String settings)
 		throws Exception {
 
-		DDMForm form = DDMFormTestUtil.createDDMForm("field");
+		DDMFormInstance ddmFormInstance =
+			DDMFormInstanceTestUtil.addDDMFormInstance(
+				_group, TestPropsValues.getUserId());
 
-		DDMFormInstance formInstance =
-			_ddmFormInstanceTestHelper.addDDMFormInstance(form);
+		ddmFormInstance.setSettings(settings);
 
-		formInstance.setSettings(settings);
-
-		DDMFormInstanceLocalServiceUtil.updateDDMFormInstance(formInstance);
+		DDMFormInstanceLocalServiceUtil.updateDDMFormInstance(ddmFormInstance);
 
 		return DDMFormInstanceLocalServiceUtil.getFormInstance(
-			formInstance.getFormInstanceId());
+			ddmFormInstance.getFormInstanceId());
 	}
 
 	protected String createSettings(boolean hasSetting) {
-		JSONObject object = _jsonFactory.createJSONObject();
+		JSONObject jsonObject = _jsonFactory.createJSONObject();
 
 		JSONArray availableLanguagesJSONArray = getAvailableLanguagesJSONArray(
 			"en_US");
 
-		object.put(
+		jsonObject.put(
 			"availableLanguageIdss", availableLanguagesJSONArray
 		).put(
 			"defaultLanguageId", "en_US"
 		);
 
-		JSONArray fieldValues = createFieldValues(hasSetting);
+		JSONArray fieldValuesJSONArray = createFieldValues(hasSetting);
 
-		object.put("fieldValues", fieldValues);
+		jsonObject.put("fieldValues", fieldValuesJSONArray);
 
-		return object.toJSONString();
+		return jsonObject.toJSONString();
 	}
 
 	protected JSONArray getAvailableLanguagesJSONArray(String languageId) {
-		JSONArray array = _jsonFactory.createJSONArray();
+		JSONArray jsonArray = _jsonFactory.createJSONArray();
 
-		array.put(languageId);
+		jsonArray.put(languageId);
 
-		return array;
+		return jsonArray;
 	}
 
 	protected JSONObject getFieldValueJSONObject(String name, String value) {
@@ -246,10 +253,15 @@ public class UpgradeDDMFormInstanceSettingsTest {
 						String className = clazz.getName();
 
 						if (className.contains(_CLASS_NAME)) {
-							_upgradeDDMFormInstanceSettings =
+							_ddmFormInstanceSettingsUpgradeProcess =
 								(UpgradeProcess)upgradeStep;
 						}
 					}
+				}
+
+				@Override
+				public void registerInitialUpgradeSteps(
+					UpgradeStep... upgradeSteps) {
 				}
 
 			});
@@ -257,19 +269,18 @@ public class UpgradeDDMFormInstanceSettingsTest {
 
 	private static final String _CLASS_NAME =
 		"com.liferay.dynamic.data.mapping.internal.upgrade.v2_0_3." +
-			"UpgradeDDMFormInstanceSettings";
+			"DDMFormInstanceSettingsUpgradeProcess";
 
 	@Inject(
 		filter = "(&(objectClass=com.liferay.dynamic.data.mapping.internal.upgrade.DDMServiceUpgrade))"
 	)
 	private static UpgradeStepRegistrator _upgradeStepRegistrator;
 
-	private DDMFormInstanceTestHelper _ddmFormInstanceTestHelper;
+	private UpgradeProcess _ddmFormInstanceSettingsUpgradeProcess;
 
 	@DeleteAfterTestRun
 	private Group _group;
 
 	private JSONFactory _jsonFactory;
-	private UpgradeProcess _upgradeDDMFormInstanceSettings;
 
 }

@@ -320,6 +320,20 @@ public interface BatchEngineImportTaskModel
 	public void setFieldNameMapping(Map<String, Serializable> fieldNameMapping);
 
 	/**
+	 * Returns the import strategy of this batch engine import task.
+	 *
+	 * @return the import strategy of this batch engine import task
+	 */
+	public int getImportStrategy();
+
+	/**
+	 * Sets the import strategy of this batch engine import task.
+	 *
+	 * @param importStrategy the import strategy of this batch engine import task
+	 */
+	public void setImportStrategy(int importStrategy);
+
+	/**
 	 * Returns the operation of this batch engine import task.
 	 *
 	 * @return the operation of this batch engine import task
@@ -349,6 +363,20 @@ public interface BatchEngineImportTaskModel
 	public void setParameters(Map<String, Serializable> parameters);
 
 	/**
+	 * Returns the processed items count of this batch engine import task.
+	 *
+	 * @return the processed items count of this batch engine import task
+	 */
+	public int getProcessedItemsCount();
+
+	/**
+	 * Sets the processed items count of this batch engine import task.
+	 *
+	 * @param processedItemsCount the processed items count of this batch engine import task
+	 */
+	public void setProcessedItemsCount(int processedItemsCount);
+
+	/**
 	 * Returns the start time of this batch engine import task.
 	 *
 	 * @return the start time of this batch engine import task
@@ -376,5 +404,22 @@ public interface BatchEngineImportTaskModel
 	 * @param taskItemDelegateName the task item delegate name of this batch engine import task
 	 */
 	public void setTaskItemDelegateName(String taskItemDelegateName);
+
+	/**
+	 * Returns the total items count of this batch engine import task.
+	 *
+	 * @return the total items count of this batch engine import task
+	 */
+	public int getTotalItemsCount();
+
+	/**
+	 * Sets the total items count of this batch engine import task.
+	 *
+	 * @param totalItemsCount the total items count of this batch engine import task
+	 */
+	public void setTotalItemsCount(int totalItemsCount);
+
+	@Override
+	public BatchEngineImportTask cloneWithOriginalValues();
 
 }

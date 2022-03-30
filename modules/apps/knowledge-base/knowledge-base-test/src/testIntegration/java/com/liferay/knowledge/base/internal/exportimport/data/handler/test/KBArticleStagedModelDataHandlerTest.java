@@ -15,6 +15,7 @@
 package com.liferay.knowledge.base.internal.exportimport.data.handler.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.test.util.lar.BaseStagedModelDataHandlerTestCase;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
@@ -25,6 +26,7 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.StagedModel;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -43,6 +45,34 @@ import org.junit.runner.RunWith;
 @RunWith(Arquillian.class)
 public class KBArticleStagedModelDataHandlerTest
 	extends BaseStagedModelDataHandlerTestCase {
+
+	@Test
+	public void testExportedKBArticleClassNameIdEqualsZero() throws Exception {
+		Map<String, List<StagedModel>> dependentStagedModelsMap =
+			addDependentStagedModelsMap(stagingGroup);
+
+		StagedModel stagedModel = addStagedModel(
+			stagingGroup, dependentStagedModelsMap);
+
+		exportImportStagedModel(stagedModel);
+
+		KBArticle kbArticle = (KBArticle)stagedModel;
+
+		initExport();
+
+		StagedModelDataHandlerUtil.exportStagedModel(
+			portletDataContext, kbArticle);
+
+		initImport();
+
+		KBArticle exportedKBArticle = (KBArticle)readExportedStagedModel(
+			kbArticle);
+
+		Assert.assertEquals(
+			0L,
+			(long)ReflectionTestUtil.getFieldValue(
+				exportedKBArticle, "_classNameId"));
+	}
 
 	@Test
 	public void testMovingKBArticleUpdatesParentResourcePrimKey()
@@ -71,6 +101,9 @@ public class KBArticleStagedModelDataHandlerTest
 		KBArticle importedKBArticle = (KBArticle)getStagedModel(
 			kbArticle.getUuid(), liveGroup);
 
+		Assert.assertEquals(
+			kbArticle.getExternalReferenceCode(),
+			importedKBArticle.getExternalReferenceCode());
 		Assert.assertEquals(
 			ClassNameLocalServiceUtil.getClassNameId(
 				KBFolderConstants.getClassName()),
@@ -136,7 +169,7 @@ public class KBArticleStagedModelDataHandlerTest
 		throws Exception {
 
 		return KBArticleLocalServiceUtil.addKBArticle(
-			serviceContext.getUserId(), parentResourceClassNameId,
+			null, serviceContext.getUserId(), parentResourceClassNameId,
 			parentResourcePrimKey, StringUtil.randomString(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			StringUtil.randomString(), null, null, null, serviceContext);

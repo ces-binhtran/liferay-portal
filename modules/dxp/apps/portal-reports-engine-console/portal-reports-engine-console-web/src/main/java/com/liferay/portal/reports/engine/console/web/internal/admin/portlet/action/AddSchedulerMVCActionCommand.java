@@ -62,23 +62,11 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ReportsEngineConsolePortletKeys.REPORTS_ADMIN,
-		"mvc.command.name=addScheduler"
+		"mvc.command.name=/reports_admin/add_scheduler"
 	},
 	service = MVCActionCommand.class
 )
 public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
-
-	protected void addWeeklyDayPos(
-		ActionRequest actionRequest, List<DayAndPosition> dayAndPositions,
-		int day) {
-
-		boolean weeklyDayPos = ParamUtil.getBoolean(
-			actionRequest, "weeklyDayPos" + day);
-
-		if (weeklyDayPos) {
-			dayAndPositions.add(new DayAndPosition(day, 0));
-		}
-	}
 
 	@Override
 	protected void doProcessAction(
@@ -213,15 +201,14 @@ public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
 				recurrence.setInterval(dailyInterval);
 			}
 			else {
-				DayAndPosition[] dayAndPositions = {
-					new DayAndPosition(Calendar.MONDAY, 0),
-					new DayAndPosition(Calendar.TUESDAY, 0),
-					new DayAndPosition(Calendar.WEDNESDAY, 0),
-					new DayAndPosition(Calendar.THURSDAY, 0),
-					new DayAndPosition(Calendar.FRIDAY, 0)
-				};
-
-				recurrence.setByDay(dayAndPositions);
+				recurrence.setByDay(
+					new DayAndPosition[] {
+						new DayAndPosition(Calendar.MONDAY, 0),
+						new DayAndPosition(Calendar.TUESDAY, 0),
+						new DayAndPosition(Calendar.WEDNESDAY, 0),
+						new DayAndPosition(Calendar.THURSDAY, 0),
+						new DayAndPosition(Calendar.FRIDAY, 0)
+					});
 			}
 		}
 		else if (recurrenceType == Recurrence.WEEKLY) {
@@ -232,13 +219,14 @@ public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
 
 			List<DayAndPosition> dayAndPositions = new ArrayList<>();
 
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.SUNDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.MONDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.TUESDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.WEDNESDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.THURSDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.FRIDAY);
-			addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.SATURDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.SUNDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.MONDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.TUESDAY);
+			_addWeeklyDayPos(
+				actionRequest, dayAndPositions, Calendar.WEDNESDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.THURSDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.FRIDAY);
+			_addWeeklyDayPos(actionRequest, dayAndPositions, Calendar.SATURDAY);
 
 			if (dayAndPositions.isEmpty()) {
 				dayAndPositions.add(new DayAndPosition(Calendar.MONDAY, 0));
@@ -267,11 +255,10 @@ public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
 				int monthlyPos = ParamUtil.getInteger(
 					actionRequest, "monthlyPos");
 
-				DayAndPosition[] dayAndPositions = {
-					new DayAndPosition(monthlyDay, monthlyPos)
-				};
-
-				recurrence.setByDay(dayAndPositions);
+				recurrence.setByDay(
+					new DayAndPosition[] {
+						new DayAndPosition(monthlyDay, monthlyPos)
+					});
 
 				int monthlyInterval = ParamUtil.getInteger(
 					actionRequest, "monthlyInterval1", 1);
@@ -304,11 +291,10 @@ public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
 				int yearlyPos = ParamUtil.getInteger(
 					actionRequest, "yearlyPos");
 
-				DayAndPosition[] dayAndPositions = {
-					new DayAndPosition(yearlyDay, yearlyPos)
-				};
-
-				recurrence.setByDay(dayAndPositions);
+				recurrence.setByDay(
+					new DayAndPosition[] {
+						new DayAndPosition(yearlyDay, yearlyPos)
+					});
 
 				int yearlyMonth = ParamUtil.getInteger(
 					actionRequest, "yearlyMonth1");
@@ -323,6 +309,18 @@ public class AddSchedulerMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		return RecurrenceSerializer.toCronText(recurrence);
+	}
+
+	private void _addWeeklyDayPos(
+		ActionRequest actionRequest, List<DayAndPosition> dayAndPositions,
+		int day) {
+
+		boolean weeklyDayPos = ParamUtil.getBoolean(
+			actionRequest, "weeklyDayPos" + day);
+
+		if (weeklyDayPos) {
+			dayAndPositions.add(new DayAndPosition(day, 0));
+		}
 	}
 
 	@Reference

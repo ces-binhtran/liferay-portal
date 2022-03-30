@@ -21,6 +21,8 @@ import com.liferay.account.service.AccountEntryLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.User;
@@ -32,6 +34,7 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.util.ListUtil;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -47,7 +50,7 @@ public class AccountEntryUserRelModelListener
 	public void onAfterCreate(AccountEntryUserRel accountEntryUserRel)
 		throws ModelListenerException {
 
-		_updateDefaultAccountEntry(accountEntryUserRel.getAccountUserId());
+		_updateDefaultAccountEntry(accountEntryUserRel);
 
 		_reindexAccountEntry(accountEntryUserRel.getAccountEntryId());
 		_reindexUser(accountEntryUserRel.getAccountUserId());
@@ -72,10 +75,44 @@ public class AccountEntryUserRelModelListener
 				new long[] {accountEntry.getAccountEntryGroupId()});
 		}
 
-		_updateDefaultAccountEntry(accountEntryUserRel.getAccountUserId());
+		_updateDefaultAccountEntry(accountEntryUserRel);
 
 		_reindexAccountEntry(accountEntryUserRel.getAccountEntryId());
 		_reindexUser(accountEntryUserRel.getAccountUserId());
+	}
+
+	@Override
+	public void onBeforeCreate(AccountEntryUserRel accountEntryUserRel)
+		throws ModelListenerException {
+
+		_checkPersonTypeAccountEntry(accountEntryUserRel.getAccountEntryId());
+	}
+
+	private void _checkPersonTypeAccountEntry(long accountEntryId)
+		throws ModelListenerException {
+
+		try {
+			if (accountEntryId == AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT) {
+				return;
+			}
+
+			AccountEntry accountEntry =
+				_accountEntryLocalService.getAccountEntry(accountEntryId);
+
+			if (Objects.equals(
+					accountEntry.getType(),
+					AccountConstants.ACCOUNT_ENTRY_TYPE_PERSON) &&
+				ListUtil.isNotEmpty(
+					_accountEntryUserRelLocalService.
+						getAccountEntryUserRelsByAccountEntryId(
+							accountEntryId))) {
+
+				throw new ModelListenerException();
+			}
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+		}
 	}
 
 	private void _reindexAccountEntry(long accountEntryId) {
@@ -102,35 +139,46 @@ public class AccountEntryUserRelModelListener
 		}
 	}
 
-	private void _updateDefaultAccountEntry(long accountUserId)
+	private void _updateDefaultAccountEntry(
+			AccountEntryUserRel accountEntryUserRel)
 		throws ModelListenerException {
+
+		long accountUserId = accountEntryUserRel.getAccountUserId();
 
 		List<AccountEntryUserRel> accountEntryUserRels =
 			_accountEntryUserRelLocalService.
 				getAccountEntryUserRelsByAccountUserId(accountUserId);
 
 		if (ListUtil.isEmpty(accountEntryUserRels)) {
-			try {
-				_accountEntryUserRelLocalService.addAccountEntryUserRel(
-					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT, accountUserId);
-			}
-			catch (PortalException portalException) {
-				throw new ModelListenerException(portalException);
+			if (accountEntryUserRel.getAccountEntryId() !=
+					AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT) {
+
+				try {
+					_accountEntryUserRelLocalService.addAccountEntryUserRel(
+						AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT,
+						accountUserId);
+				}
+				catch (PortalException portalException) {
+					throw new ModelListenerException(portalException);
+				}
 			}
 		}
 		else if (accountEntryUserRels.size() > 1) {
-			for (AccountEntryUserRel accountEntryUserRel :
+			for (AccountEntryUserRel curAccountEntryUserRel :
 					accountEntryUserRels) {
 
-				if (accountEntryUserRel.getAccountEntryId() ==
+				if (curAccountEntryUserRel.getAccountEntryId() ==
 						AccountConstants.ACCOUNT_ENTRY_ID_DEFAULT) {
 
 					_accountEntryUserRelLocalService.deleteAccountEntryUserRel(
-						accountEntryUserRel);
+						curAccountEntryUserRel);
 				}
 			}
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AccountEntryUserRelModelListener.class);
 
 	@Reference
 	private AccountEntryLocalService _accountEntryLocalService;

@@ -10,8 +10,8 @@
  */
 
 import ClayLoadingIndicator from '@clayui/loading-indicator';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import className from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useContext, useEffect, useMemo} from 'react';
 import {
@@ -25,14 +25,17 @@ import {
 	YAxis,
 } from 'recharts';
 
+import {
+	ChartDispatchContext,
+	ChartStateContext,
+	useIsPreviousPeriodButtonDisabled,
+} from '../context/ChartStateContext';
 import ConnectionContext from '../context/ConnectionContext';
-import {StoreContext, useHistoricalWarning} from '../context/store';
-import {useChartState} from '../state/chartState';
+import {StoreDispatchContext, StoreStateContext} from '../context/StoreContext';
 import {generateDateFormatters as dateFormat} from '../utils/dateFormat';
 import {numberFormat} from '../utils/numberFormat';
 import {ActiveDot as CustomActiveDot, Dot as CustomDot} from './CustomDots';
 import CustomTooltip from './CustomTooltip';
-import TimeSpanSelector from './TimeSpanSelector';
 
 const CHART_COLORS = {
 	analyticsReportsHistoricalReads: '#50D2A0',
@@ -111,10 +114,12 @@ function legendFormatterGenerator(
 						backgroundColor: keyToHexColor(value),
 					}}
 				></span>
-				<span className="mr-2 text-secondary">
+
+				<span className="text-secondary">
 					{keyToTranslatedLabelValue(value)}
 				</span>
-				<span className="font-weight-bold">
+
+				<span className="font-weight-bold inline-item-after">
 					{validAnalyticsConnection &&
 					preformattedNumber !== null &&
 					!publishedToday
@@ -126,49 +131,48 @@ function legendFormatterGenerator(
 	};
 }
 
-export default function Chart({
-	dataProviders = [],
-	defaultTimeRange,
-	defaultTimeSpanOption,
-	languageTag,
-	publishDate,
-	timeSpanOptions,
-}) {
+export default function Chart({dataProviders = [], publishDate}) {
 	const {validAnalyticsConnection} = useContext(ConnectionContext);
 
-	const [hasHistoricalWarning, addHistoricalWarning] = useHistoricalWarning();
+	const storeDispatch = useContext(StoreDispatchContext);
 
-	const [{publishedToday, readsEnabled}] = useContext(StoreContext);
+	const chartDispatch = useContext(ChartDispatchContext);
 
-	const {actions, state: chartState} = useChartState({
-		defaultTimeSpanOption,
-		publishDate,
-	});
+	const {languageTag, publishedToday} = useContext(StoreStateContext);
+
+	const {
+		dataSet,
+		lineChartLoading,
+		timeRange,
+		timeSpanKey,
+		timeSpanOffset,
+	} = useContext(ChartStateContext);
+
+	const isPreviousPeriodButtonDisabled = useIsPreviousPeriodButtonDisabled();
+
+	const dateFormatters = useMemo(() => dateFormat(languageTag), [
+		languageTag,
+	]);
 
 	const isMounted = useIsMounted();
 
 	useEffect(() => {
 		let gone = false;
 
-		actions.setLoading();
-
 		const timeSpanComparator =
-			chartState.timeSpanOption === LAST_24_HOURS
+			timeSpanKey === LAST_24_HOURS
 				? HOUR_IN_MILLISECONDS
 				: DAY_IN_MILLISECONDS;
 
-		const keys = ['analyticsReportsHistoricalViews'];
+		const keys = new Set(['analyticsReportsHistoricalViews']);
 
-		if (readsEnabled) {
-			keys.push('analyticsReportsHistoricalReads');
+		if (dataProviders.length === 2) {
+			keys.add('analyticsReportsHistoricalReads');
 		}
 
 		if (validAnalyticsConnection) {
 			const promises = dataProviders.map((getter) => {
-				return getter({
-					timeSpanKey: chartState.timeSpanOption,
-					timeSpanOffset: chartState.timeSpanOffset,
-				});
+				return getter();
 			});
 
 			allSettled(promises).then((data) => {
@@ -185,22 +189,30 @@ export default function Chart({
 							...data[i].value,
 						};
 					}
-					else if (!hasHistoricalWarning) {
-						addHistoricalWarning();
+					else {
+						storeDispatch({type: 'ADD_WARNING'});
 					}
 				}
 
-				actions.addDataSetItems({
-					dataSetItems,
-					keys,
-					timeSpanComparator,
+				chartDispatch({
+					payload: {
+						dataSetItems,
+						keys,
+						timeSpanComparator,
+					},
+					type: 'ADD_DATA_SET_ITEMS',
+					validAnalyticsConnection,
 				});
 			});
 		}
 		else {
-			actions.addDataSetItems({
-				keys,
-				timeSpanComparator,
+			chartDispatch({
+				payload: {
+					keys,
+					timeSpanComparator,
+				},
+				type: 'ADD_DATA_SET_ITEMS',
+				validAnalyticsConnection,
 			});
 		}
 
@@ -208,65 +220,17 @@ export default function Chart({
 			gone = true;
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [chartState.timeSpanOption, chartState.timeSpanOffset]);
+	}, [timeSpanKey, timeSpanOffset]);
 
-	const dateFormatters = useMemo(() => dateFormat(languageTag), [
-		languageTag,
-	]);
-
-	const {dataSet} = chartState;
 	const {histogram, keyList} = dataSet;
-
-	const disabledPreviousPeriodButton = useMemo(() => {
-		if (histogram.length) {
-			const firstDateLabel = histogram[0].label;
-
-			const firstDate = new Date(firstDateLabel);
-			const publishedDate = new Date(publishDate);
-
-			return firstDate < publishedDate;
-		}
-
-		return true;
-	}, [histogram, publishDate]);
 
 	const referenceDotPosition = useMemo(() => {
 		const publishDateISOString = new Date(publishDate).toISOString();
 
-		return chartState.timeSpanOption === LAST_24_HOURS
+		return timeSpanKey === LAST_24_HOURS
 			? publishDateISOString.split(':')[0].concat(':00:00')
 			: publishDateISOString.split('T')[0].concat('T00:00:00');
-	}, [chartState.timeSpanOption, publishDate]);
-
-	const title = useMemo(() => {
-		if (histogram.length) {
-			const firstDateLabel = histogram[0].label;
-			const lastDateLabel = histogram[histogram.length - 1].label;
-
-			return dateFormatters.formatChartTitle([
-				new Date(firstDateLabel),
-				new Date(lastDateLabel),
-			]);
-		}
-		else {
-			return dateFormatters.formatChartTitle([
-				new Date(defaultTimeRange.startDate),
-				new Date(defaultTimeRange.endDate),
-			]);
-		}
-	}, [dateFormatters, defaultTimeRange, histogram]);
-
-	const handleTimeSpanChange = (event) => {
-		const {value} = event.target;
-
-		actions.changeTimeSpanOption({key: value});
-	};
-	const handlePreviousTimeSpanClick = () => {
-		actions.previousTimeSpan();
-	};
-	const handleNextTimeSpanClick = () => {
-		actions.nextTimeSpan();
-	};
+	}, [timeSpanKey, publishDate]);
 
 	const legendFormatter =
 		dataSet &&
@@ -277,42 +241,25 @@ export default function Chart({
 			validAnalyticsConnection
 		);
 
-	const disabledNextTimeSpan = chartState.timeSpanOffset === 0;
-
 	const xAxisFormatter =
-		chartState.timeSpanOption === LAST_24_HOURS
+		timeSpanKey === LAST_24_HOURS
 			? dateFormatters.formatNumericHour
 			: dateFormatters.formatNumericDay;
 
 	const lineChartWrapperClasses = className('line-chart-wrapper', {
-		'line-chart-wrapper--loading': chartState.loading,
+		'line-chart-wrapper--loading': lineChartLoading,
 	});
 
 	return (
 		<>
-			{timeSpanOptions.length && (
-				<TimeSpanSelector
-					disabledNextTimeSpan={disabledNextTimeSpan}
-					disabledPreviousPeriodButton={disabledPreviousPeriodButton}
-					onNextTimeSpanClick={handleNextTimeSpanClick}
-					onPreviousTimeSpanClick={handlePreviousTimeSpanClick}
-					onTimeSpanChange={handleTimeSpanChange}
-					timeSpanOption={chartState.timeSpanOption}
-					timeSpanOptions={timeSpanOptions}
-				/>
-			)}
-
 			{dataSet ? (
 				<div className={lineChartWrapperClasses}>
-					{chartState.loading && (
+					{lineChartLoading && (
 						<ClayLoadingIndicator
-							style={{
-								left: `${CHART_SIZES.yAxisWidth}px`,
-							}}
+							className="chart-loading-indicator"
+							small
 						/>
 					)}
-
-					{title && <h5 className="mb-3">{title}</h5>}
 
 					<div className="line-chart">
 						<LineChart
@@ -350,10 +297,10 @@ export default function Chart({
 									histogram.length === 0
 										? [
 												new Date(
-													defaultTimeRange.startDate
+													timeRange.startDate
 												).getDate(),
 												new Date(
-													defaultTimeRange.endDate
+													timeRange.endDate
 												).getDate(),
 										  ]
 										: []
@@ -401,13 +348,14 @@ export default function Chart({
 
 							{validAnalyticsConnection && !publishedToday && (
 								<Tooltip
+									animationDuration={0}
 									content={
 										<CustomTooltip
 											publishDateFill={
 												CHART_COLORS.publishDate
 											}
 											showPublishedDateLabel={
-												disabledPreviousPeriodButton
+												isPreviousPeriodButtonDisabled
 											}
 										/>
 									}
@@ -426,7 +374,7 @@ export default function Chart({
 									labelFormatter={
 										dateFormatters.formatLongDate
 									}
-									separator={': '}
+									separator=": "
 								/>
 							)}
 
@@ -442,6 +390,7 @@ export default function Chart({
 										dataKey={keyName}
 										dot={<CustomDot shape={shape} />}
 										fill={color}
+										isAnimationActive={false}
 										key={keyName}
 										stroke={color}
 										strokeWidth={CHART_SIZES.lineWidth}
@@ -484,10 +433,7 @@ function allSettled(promises) {
 
 Chart.propTypes = {
 	dataProviders: PropTypes.arrayOf(PropTypes.func).isRequired,
-	defaultTimeRange: PropTypes.object.isRequired,
-	defaultTimeSpanOption: PropTypes.string.isRequired,
-	languageTag: PropTypes.string.isRequired,
-	publishDate: PropTypes.number.isRequired,
+	publishDate: PropTypes.string.isRequired,
 	timeSpanOptions: PropTypes.arrayOf(
 		PropTypes.shape({
 			key: PropTypes.string.isRequired,

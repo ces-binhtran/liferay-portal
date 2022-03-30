@@ -31,16 +31,17 @@ renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 %>
 
 <clay:management-toolbar
-	displayContext="<%= orphanPortletsManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= orphanPortletsManagementToolbarDisplayContext %>"
+	propsTransformer="js/OrphanPortletsManagementToolbarPropsTransformer"
 />
 
-<portlet:actionURL name="/layout/delete_orphan_portlets" var="deleteOrphanPortletsURL">
+<portlet:actionURL name="/layout_admin/delete_orphan_portlets" var="deleteOrphanPortletsURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 	<portlet:param name="backURL" value="<%= orphanPortletsDisplayContext.getBackURL() %>" />
 	<portlet:param name="selPlid" value="<%= String.valueOf(orphanPortletsDisplayContext.getSelPlid()) %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteOrphanPortletsURL %>" cssClass="container-fluid-1280" name="fm">
+<aui:form action="<%= deleteOrphanPortletsURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 	<div class="alert alert-warning" role="alert">
 		<span class="alert-indicator">
 			<aui:icon image="warning-full" markupView="lexicon" />
@@ -57,7 +58,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 			</c:otherwise>
 		</c:choose>
 
-		<button aria-label='<%= LanguageUtil.get(request, "close") %>' class="close" data-dismiss="liferay-alert" type="button">
+		<button aria-label="<%= LanguageUtil.get(request, "close") %>" class="close" data-dismiss="liferay-alert" type="button">
 			<aui:icon image="times" markupView="lexicon" />
 		</button>
 	</div>
@@ -130,8 +131,3 @@ renderResponse.setTitle(LanguageUtil.get(request, "orphan-widgets"));
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= orphanPortletsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/OrphanPortletsManagementToolbarDefaultEventHandler.es"
-/>

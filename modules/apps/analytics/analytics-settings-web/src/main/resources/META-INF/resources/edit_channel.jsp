@@ -17,12 +17,13 @@
 <%@ include file="/init.jsp" %>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "synced-sites");
-
-String redirect = portletURL.toString();
+String redirect = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/view_configuration_screen"
+).setParameter(
+	"configurationScreenKey", "1-synced-sites"
+).buildString();
 
 String channelId = ParamUtil.getString(request, "channelId");
 String channelName = ParamUtil.getString(request, "channelName");
@@ -34,7 +35,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "edit-property"), currentURL);
 %>
 
-<portlet:actionURL name="/analytics/edit_channel" var="editChannelURL" />
+<portlet:actionURL name="/analytics_settings/edit_channel" var="editChannelURL" />
 
 <clay:container-fluid>
 	<clay:row>
@@ -73,7 +74,7 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 		%>
 
 		<clay:management-toolbar
-			displayContext="<%= new GroupManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupDisplayContext) %>"
+			managementToolbarDisplayContext="<%= new GroupManagementToolbarDisplayContext(groupDisplayContext, request, liferayPortletRequest, liferayPortletResponse) %>"
 		/>
 
 		<liferay-ui:search-container

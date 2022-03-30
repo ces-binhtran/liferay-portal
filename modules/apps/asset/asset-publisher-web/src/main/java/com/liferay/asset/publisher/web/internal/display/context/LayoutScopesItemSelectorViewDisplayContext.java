@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.usersadmin.search.GroupSearch;
-import com.liferay.site.item.selector.criterion.SiteItemSelectorCriterion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,12 +40,27 @@ public class LayoutScopesItemSelectorViewDisplayContext
 	public LayoutScopesItemSelectorViewDisplayContext(
 		HttpServletRequest httpServletRequest,
 		AssetPublisherHelper assetPublisherHelper,
-		SiteItemSelectorCriterion siteItemSelectorCriterion,
+		GroupItemSelectorCriterion groupItemSelectorCriterion,
 		String itemSelectedEventName, PortletURL portletURL) {
 
 		super(
-			httpServletRequest, assetPublisherHelper, siteItemSelectorCriterion,
-			itemSelectedEventName, portletURL);
+			httpServletRequest, assetPublisherHelper,
+			groupItemSelectorCriterion, itemSelectedEventName, portletURL);
+	}
+
+	@Override
+	public long getGroupId() {
+		long groupId = super.getGroupId();
+
+		if (groupId <= 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
+			return themeDisplay.getScopeGroupId();
+		}
+
+		return groupId;
 	}
 
 	@Override
@@ -57,25 +71,17 @@ public class LayoutScopesItemSelectorViewDisplayContext
 
 		long groupId = getGroupId();
 
-		if (groupId <= 0) {
-			groupId = themeDisplay.getScopeGroupId();
-		}
-
 		GroupSearch groupSearch = new GroupSearch(
 			getPortletRequest(), getPortletURL());
 
-		int total = GroupLocalServiceUtil.getGroupsCount(
-			themeDisplay.getCompanyId(), Layout.class.getName(), groupId);
-
-		groupSearch.setTotal(total);
-
-		List<Group> groups = GroupLocalServiceUtil.getGroups(
-			themeDisplay.getCompanyId(), Layout.class.getName(), groupId,
-			groupSearch.getStart(), groupSearch.getEnd());
-
-		groups = _filterLayoutGroups(groups, _isPrivateLayout());
-
-		groupSearch.setResults(groups);
+		groupSearch.setResultsAndTotal(
+			() -> _filterLayoutGroups(
+				GroupLocalServiceUtil.getGroups(
+					themeDisplay.getCompanyId(), Layout.class.getName(),
+					groupId, groupSearch.getStart(), groupSearch.getEnd()),
+				_isPrivateLayout()),
+			GroupLocalServiceUtil.getGroupsCount(
+				themeDisplay.getCompanyId(), Layout.class.getName(), groupId));
 
 		return groupSearch;
 	}

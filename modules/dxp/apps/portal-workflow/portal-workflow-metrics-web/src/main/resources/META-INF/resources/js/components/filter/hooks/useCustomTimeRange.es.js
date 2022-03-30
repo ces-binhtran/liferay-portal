@@ -22,6 +22,11 @@ import {
 	parseDateMoment,
 } from '../util/timeRangeUtil.es';
 
+const updateErrors = (errors, fieldName, message) => ({
+	...(errors || {}),
+	[fieldName]: message,
+});
+
 const validateDate = (dateEndMoment, dateStartMoment) => {
 	const dateNow = moment.utc();
 	let errors;
@@ -46,7 +51,7 @@ const validateDate = (dateEndMoment, dateStartMoment) => {
 };
 
 const validateEarlierDate = (dateEndMoment, dateStartMoment) => {
-	const earlierDate = moment.utc().date(1).month(1).year(1970);
+	const earlierDate = moment.utc([1970, 0, 1, 0]);
 	let errors;
 
 	if (dateEndMoment.isBefore(earlierDate)) {
@@ -93,11 +98,6 @@ const validateRangeConsistency = (dateEndMoment, dateStartMoment) => {
 
 	return errors;
 };
-
-const updateErrors = (errors, fieldName, message) => ({
-	...(errors || {}),
-	[fieldName]: message,
-});
 
 const useCustomTimeRange = (prefixKey, withoutRouteParams) => {
 	const [errors, setErrors] = useState(undefined);

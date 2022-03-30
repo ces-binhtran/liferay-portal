@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Document implements Cloneable {
+public class Document implements Cloneable, Serializable {
 
 	public static Document toDTO(String json) {
 		return DocumentSerDes.toDTO(json);
@@ -99,6 +101,27 @@ public class Document implements Cloneable {
 
 	protected AggregateRating aggregateRating;
 
+	public String getAssetLibraryKey() {
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		try {
+			assetLibraryKey = assetLibraryKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String assetLibraryKey;
+
 	public String getContentUrl() {
 		return contentUrl;
 	}
@@ -119,6 +142,27 @@ public class Document implements Cloneable {
 	}
 
 	protected String contentUrl;
+
+	public String getContentValue() {
+		return contentValue;
+	}
+
+	public void setContentValue(String contentValue) {
+		this.contentValue = contentValue;
+	}
+
+	public void setContentValue(
+		UnsafeSupplier<String, Exception> contentValueUnsafeSupplier) {
+
+		try {
+			contentValue = contentValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String contentValue;
 
 	public Creator getCreator() {
 		return creator;
@@ -288,6 +332,27 @@ public class Document implements Cloneable {
 
 	protected String encodingFormat;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public String getFileExtension() {
 		return fileExtension;
 	}
@@ -391,6 +456,49 @@ public class Document implements Cloneable {
 	}
 
 	protected RelatedContent[] relatedContents;
+
+	public RenderedContent[] getRenderedContents() {
+		return renderedContents;
+	}
+
+	public void setRenderedContents(RenderedContent[] renderedContents) {
+		this.renderedContents = renderedContents;
+	}
+
+	public void setRenderedContents(
+		UnsafeSupplier<RenderedContent[], Exception>
+			renderedContentsUnsafeSupplier) {
+
+		try {
+			renderedContents = renderedContentsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected RenderedContent[] renderedContents;
+
+	public Long getSiteId() {
+		return siteId;
+	}
+
+	public void setSiteId(Long siteId) {
+		this.siteId = siteId;
+	}
+
+	public void setSiteId(
+		UnsafeSupplier<Long, Exception> siteIdUnsafeSupplier) {
+
+		try {
+			siteId = siteIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long siteId;
 
 	public Long getSizeInBytes() {
 		return sizeInBytes;
@@ -545,7 +653,9 @@ public class Document implements Cloneable {
 
 		public static ViewableBy create(String value) {
 			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
+				if (Objects.equals(viewableBy.getValue(), value) ||
+					Objects.equals(viewableBy.name(), value)) {
+
 					return viewableBy;
 				}
 			}

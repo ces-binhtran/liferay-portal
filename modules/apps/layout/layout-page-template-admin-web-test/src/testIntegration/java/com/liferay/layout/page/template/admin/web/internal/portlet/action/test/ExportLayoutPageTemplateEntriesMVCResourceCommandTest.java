@@ -47,12 +47,12 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.io.File;
 
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.Map;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -114,38 +114,40 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					getLayoutPageTemplateCollectionId(),
 				name2);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
-			layoutPageTemplateEntry2.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
+				layoutPageTemplateEntry2.getLayoutPageTemplateEntryId()
+			});
 
 		try (ZipFile zipFile = new ZipFile(file)) {
+			int count = 0;
+
 			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
 
 			while (enumeration.hasMoreElements()) {
 				ZipEntry zipEntry = enumeration.nextElement();
 
-				_validateZipEntry(
-					new String[] {name1, name2}, zipEntry, zipFile);
+				if (!zipEntry.isDirectory()) {
+					_validateZipEntry(
+						new String[] {name1, name2}, zipEntry, zipFile);
+
+					count++;
+				}
 			}
 
-			Assert.assertEquals(7, zipFile.size());
+			Assert.assertEquals(7, count);
 		}
 	}
 
 	@Test
 	public void testGetFileNameMultiplePageTemplates() {
-		long[] layoutPageTemplateEntryIds = {
-			RandomTestUtil.randomLong(), RandomTestUtil.randomLong()
-		};
-
 		String fileName = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFileName", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				RandomTestUtil.randomLong(), RandomTestUtil.randomLong()
+			});
 
 		Assert.assertTrue(fileName.startsWith("page-templates-"));
 		Assert.assertTrue(fileName.endsWith(".zip"));
@@ -169,13 +171,11 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_BASIC, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		String fileName = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFileName", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		Assert.assertTrue(
 			fileName.startsWith(
@@ -202,24 +202,28 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 					getLayoutPageTemplateCollectionId(),
 				name);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		try (ZipFile zipFile = new ZipFile(file)) {
+			int count = 0;
+
 			Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
 
 			while (enumeration.hasMoreElements()) {
 				ZipEntry zipEntry = enumeration.nextElement();
 
-				_validateZipEntry(new String[] {name}, zipEntry, zipFile);
+				if (!zipEntry.isDirectory()) {
+					_validateZipEntry(new String[] {name}, zipEntry, zipFile);
+
+					count++;
+				}
 			}
 
-			Assert.assertEquals(4, zipFile.size());
+			Assert.assertEquals(4, count);
 		}
 	}
 
@@ -239,13 +243,11 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 				RandomTestUtil.randomString(10),
 				WorkflowConstants.STATUS_DRAFT);
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()
+			});
 
 		try (ZipFile zipFile = new ZipFile(file)) {
 			Assert.assertEquals(0, zipFile.size());
@@ -289,10 +291,11 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 				LayoutPageTemplateEntryTypeConstants.TYPE_BASIC, 0, status,
 				_serviceContext);
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group.getGroupId(),
-			layoutPageTemplateEntry.getPlid(), _read("layout_data.json"),
-			_serviceContext);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), layoutPageTemplateEntry.getPlid(),
+				SegmentsExperienceConstants.ID_DEFAULT,
+				_read("layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group.getGroupId(), RandomTestUtil.randomString(),
@@ -407,13 +410,12 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 		boolean equals = false;
 
 		for (String expectedPageTemplateName : expectedPageTemplateNames) {
-			Map<String, String> valuesMap = HashMapBuilder.put(
-				"PAGE_TEMPLATE_NAME", expectedPageTemplateName
-			).build();
-
 			JSONObject expectedJSONObject = JSONFactoryUtil.createJSONObject(
 				StringUtil.replace(
-					_read(expectedFileName), "${", "}", valuesMap));
+					_read(expectedFileName), "${", "}",
+					HashMapBuilder.put(
+						"PAGE_TEMPLATE_NAME", expectedPageTemplateName
+					).build()));
 
 			String expectedJSON1 = expectedJSONObject.toJSONString();
 
@@ -473,7 +475,7 @@ public class ExportLayoutPageTemplateEntriesMVCResourceCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/layout_page_template/export_layout_page_template_entry"
+		filter = "mvc.command.name=/layout_page_template_admin/export_layout_page_template_entries"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
 

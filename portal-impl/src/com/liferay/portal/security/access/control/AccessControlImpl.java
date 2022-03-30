@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.security.auth.AuthException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.auth.verifier.AuthVerifierResult;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
@@ -75,10 +74,8 @@ public class AccessControlImpl implements AccessControl {
 
 			PrincipalThreadLocal.setName(userId);
 
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
 
 			AccessControlThreadLocal.setRemoteAccess(false);
 		}
@@ -89,18 +86,43 @@ public class AccessControlImpl implements AccessControl {
 
 	@Override
 	public AuthVerifierResult.State verifyRequest() throws PortalException {
+		AuthVerifierResult authVerifierResult = null;
+
 		AccessControlContext accessControlContext =
 			AccessControlUtil.getAccessControlContext();
 
-		AuthVerifierResult authVerifierResult =
-			AuthVerifierPipeline.verifyRequest(accessControlContext);
+		Map<String, Object> settings = accessControlContext.getSettings();
+
+		if (!settings.containsKey(AuthVerifierPipeline.class.getName())) {
+			AuthVerifierPipeline portalAuthVerifierPipeline =
+				AuthVerifierPipeline.getPortalAuthVerifierPipeline();
+
+			authVerifierResult = portalAuthVerifierPipeline.verifyRequest(
+				accessControlContext);
+		}
+		else {
+			AuthVerifierPipeline authVerifierPipeline =
+				(AuthVerifierPipeline)settings.get(
+					AuthVerifierPipeline.class.getName());
+
+			authVerifierResult = authVerifierPipeline.verifyRequest(
+				accessControlContext);
+
+			if (authVerifierResult.getState() !=
+					AuthVerifierResult.State.SUCCESS) {
+
+				AuthVerifierPipeline portalAuthVerifierPipeline =
+					AuthVerifierPipeline.getPortalAuthVerifierPipeline();
+
+				authVerifierResult = portalAuthVerifierPipeline.verifyRequest(
+					accessControlContext);
+			}
+		}
 
 		Map<String, Object> authVerifierResultSettings =
 			authVerifierResult.getSettings();
 
 		if (authVerifierResultSettings != null) {
-			Map<String, Object> settings = accessControlContext.getSettings();
-
 			settings.putAll(authVerifierResultSettings);
 		}
 

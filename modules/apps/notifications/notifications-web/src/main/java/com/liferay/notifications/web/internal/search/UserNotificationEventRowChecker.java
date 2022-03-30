@@ -16,6 +16,7 @@ package com.liferay.notifications.web.internal.search;
 
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.model.UserNotificationEvent;
+import com.liferay.portal.kernel.service.UserNotificationEventLocalServiceUtil;
 
 import javax.portlet.PortletResponse;
 
@@ -29,15 +30,23 @@ public class UserNotificationEventRowChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
+	public boolean isDisabled(Object object) {
 		UserNotificationEvent userNotificationEvent =
-			(UserNotificationEvent)obj;
+			(UserNotificationEvent)object;
 
 		if (userNotificationEvent.isActionRequired()) {
 			return true;
 		}
 
-		return super.isDisabled(obj);
+		userNotificationEvent =
+			UserNotificationEventLocalServiceUtil.fetchUserNotificationEvent(
+				userNotificationEvent.getUserNotificationEventId());
+
+		if (userNotificationEvent == null) {
+			return true;
+		}
+
+		return super.isDisabled(object);
 	}
 
 }

@@ -16,6 +16,7 @@ package com.liferay.gradle.plugins.maven.plugin.builder.tasks;
 
 import com.liferay.gradle.plugins.maven.plugin.builder.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.maven.plugin.builder.internal.util.XMLUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.Validator;
 
 import com.thoughtworks.qdox.JavaDocBuilder;
@@ -80,7 +81,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.process.JavaExecSpec;
-import org.gradle.util.GUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -692,8 +692,6 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 	}
 
 	private String _getDependencyName(Dependency dependency) {
-		Logger logger = getLogger();
-
 		if (dependency instanceof ProjectDependency) {
 			ProjectDependency projectDependency = (ProjectDependency)dependency;
 
@@ -704,6 +702,8 @@ public class BuildPluginDescriptorTask extends DefaultTask {
 				return GradleUtil.getArchivesBaseName(dependencyProject);
 			}
 			catch (IllegalStateException illegalStateException) {
+				Logger logger = getLogger();
+
 				if (logger.isWarnEnabled()) {
 					logger.warn(
 						"Unable to find name for " + dependency,

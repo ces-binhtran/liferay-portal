@@ -68,7 +68,7 @@ public class FileEntryAMImageFileEntryItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -79,7 +79,7 @@ public class FileEntryAMImageFileEntryItemSelectorReturnTypeResolverTest {
 		long fileEntryId = jsonObject.getLong("fileEntryId");
 
 		Assert.assertEquals(
-			_dlURLHelper.getImagePreviewURL(
+			_dlURLHelper.getPreviewURL(
 				fileEntry, fileEntry.getFileVersion(), null, StringPool.BLANK,
 				false, false),
 			url);
@@ -91,10 +91,10 @@ public class FileEntryAMImageFileEntryItemSelectorReturnTypeResolverTest {
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 	}
 
 	private byte[] _getImageBytes() throws Exception {
@@ -115,6 +115,7 @@ public class FileEntryAMImageFileEntryItemSelectorReturnTypeResolverTest {
 	@Inject(
 		filter = "component.name=*.FileEntryAMImageFileEntryItemSelectorReturnTypeResolver"
 	)
-	private ItemSelectorReturnTypeResolver _itemSelectorReturnTypeResolver;
+	private ItemSelectorReturnTypeResolver<?, FileEntry>
+		_itemSelectorReturnTypeResolver;
 
 }

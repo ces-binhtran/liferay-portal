@@ -14,6 +14,7 @@
 
 package com.liferay.portal.layoutconfiguration.util.velocity;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.XMLUtil;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -37,7 +38,6 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
-import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.layoutconfiguration.util.PortletRenderer;
@@ -118,10 +118,12 @@ public class TemplateProcessor implements ColumnProcessor {
 
 		String portletId = ParamUtil.getString(_httpServletRequest, "p_p_id");
 
-		try {
-			portlets.add(PortletLocalServiceUtil.getPortletById(portletId));
-		}
-		catch (NullPointerException nullPointerException) {
+		if (Validator.isNotNull(portletId)) {
+			Portlet portlet = PortletLocalServiceUtil.getPortletById(portletId);
+
+			if (portlet != null) {
+				portlets.add(portlet);
+			}
 		}
 
 		ThemeDisplay themeDisplay =
@@ -315,7 +317,7 @@ public class TemplateProcessor implements ColumnProcessor {
 			LayoutTypePortlet layoutTypePortlet, List<Portlet> portlets)
 		throws Exception {
 
-		StringBundler sb = new StringBundler(portlets.size() * 3 + 11);
+		StringBundler sb = new StringBundler((portlets.size() * 3) + 11);
 
 		sb.append("<div class=\"");
 
@@ -332,7 +334,7 @@ public class TemplateProcessor implements ColumnProcessor {
 		if (layoutTypePortlet.isColumnDisabled(columnId) &&
 			layoutTypePortlet.isCustomizable()) {
 
-			sb.append("portlet-dropzone-disabled");
+			sb.append("portlet-dropzone-disabled ");
 		}
 
 		if (Validator.isNotNull(classNames)) {

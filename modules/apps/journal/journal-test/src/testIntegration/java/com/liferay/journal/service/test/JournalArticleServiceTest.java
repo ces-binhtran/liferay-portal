@@ -23,20 +23,21 @@ import com.liferay.dynamic.data.mapping.exception.StructureDefinitionException;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
@@ -61,6 +62,7 @@ import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -121,20 +123,20 @@ public class JournalArticleServiceTest {
 
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
-		PortalPreferences portalPreferenceces =
+		PortalPreferences portalPreferences =
 			PortletPreferencesFactoryUtil.getPortalPreferences(
 				TestPropsValues.getUserId(), true);
 
 		_originalPortalPreferencesXML = PortletPreferencesFactoryUtil.toXML(
-			portalPreferenceces);
+			portalPreferences);
 
-		portalPreferenceces.setValue(
+		portalPreferences.setValue(
 			"", "expireAllArticleVersionsEnabled", "true");
 
 		PortalPreferencesLocalServiceUtil.updatePreferences(
 			TestPropsValues.getCompanyId(),
 			PortletKeys.PREFS_OWNER_TYPE_COMPANY,
-			PortletPreferencesFactoryUtil.toXML(portalPreferenceces));
+			PortletPreferencesFactoryUtil.toXML(portalPreferences));
 	}
 
 	@After
@@ -161,25 +163,66 @@ public class JournalArticleServiceTest {
 
 	@Test(expected = StorageFieldRequiredException.class)
 	public void testAddArticleWithEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = HashMapBuilder.put(
-			"HTML2030", ""
-		).build();
-
 		testAddArticleRequiredFields(
 			"test-ddm-structure-html-required-field.xml",
 			"test-journal-content-html-empty-required-field.xml",
-			requiredFields);
+			HashMapBuilder.put(
+				"HTML2030", ""
+			).build());
+	}
+
+	@Test
+	public void testAddArticleWithExternalReferenceCode() throws Exception {
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		_article = JournalTestUtil.addArticle(
+			externalReferenceCode, _group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, StringPool.BLANK,
+			true);
+
+		Assert.assertNotNull(_article);
+		Assert.assertEquals(
+			externalReferenceCode, _article.getExternalReferenceCode());
+
+		_latestArticle =
+			JournalArticleServiceUtil.fetchLatestArticleByExternalReferenceCode(
+				_group.getGroupId(), externalReferenceCode);
+
+		Assert.assertNotNull(_latestArticle);
+		Assert.assertEquals(
+			externalReferenceCode, _latestArticle.getExternalReferenceCode());
 	}
 
 	@Test
 	public void testAddArticleWithNotEmptyRequiredHTMLField() throws Exception {
-		Map<String, String> requiredFields = HashMapBuilder.put(
-			"HTML2030", "<p>Hello.</p>"
-		).build();
-
 		testAddArticleRequiredFields(
 			"test-ddm-structure-html-required-field.xml",
-			"test-journal-content-html-required-field.xml", requiredFields);
+			"test-journal-content-html-required-field.xml",
+			HashMapBuilder.put(
+				"HTML2030", "<p>Hello.</p>"
+			).build());
+	}
+
+	@Test
+	public void testAddArticleWithoutExternalReferenceCode() throws Exception {
+		String articleId = StringUtil.toUpperCase(
+			RandomTestUtil.randomString());
+
+		_article = JournalTestUtil.addArticle(
+			_group.getGroupId(),
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, articleId, false);
+
+		Assert.assertNotNull(_article);
+		Assert.assertEquals(articleId, _article.getArticleId());
+		Assert.assertEquals(articleId, _article.getExternalReferenceCode());
+
+		_latestArticle =
+			JournalArticleServiceUtil.fetchLatestArticleByExternalReferenceCode(
+				_group.getGroupId(), articleId);
+
+		Assert.assertNotNull(_latestArticle);
+		Assert.assertEquals(
+			articleId, _latestArticle.getExternalReferenceCode());
 	}
 
 	@Test(expected = StructureDefinitionException.class)
@@ -197,10 +240,11 @@ public class JournalArticleServiceTest {
 			content, ddmStructure.getStructureKey(),
 			ddmTemplate.getTemplateKey());
 
+		article.setDocument(SAXReaderUtil.read(content));
+
 		ReflectionTestUtil.invoke(
 			_journalArticleLocalServiceImplInstance, "checkStructure",
-			new Class<?>[] {Long.TYPE, String.class, Double.TYPE},
-			article.getGroupId(), article.getArticleId(), article.getVersion());
+			new Class<?>[] {JournalArticle.class}, article);
 	}
 
 	@Test
@@ -310,6 +354,37 @@ public class JournalArticleServiceTest {
 		_article = JournalTestUtil.updateArticle(_article, "Version 2");
 
 		_latestArticle = fetchLatestArticle(WorkflowConstants.STATUS_DRAFT);
+
+		Assert.assertNull(_latestArticle);
+	}
+
+	@Test
+	public void testFetchLatestArticleByExternalReferenceCode()
+		throws Exception {
+
+		long groupId = _article.getGroupId();
+		String externalReferenceCode = _article.getExternalReferenceCode();
+
+		_article = JournalTestUtil.updateArticle(_article, "Version 2");
+
+		_latestArticle =
+			JournalArticleServiceUtil.fetchLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode);
+
+		Assert.assertEquals(
+			"Version 2", _latestArticle.getTitle(LocaleUtil.getDefault()));
+		Assert.assertEquals(1.1, _latestArticle.getVersion(), 0);
+		Assert.assertEquals(
+			externalReferenceCode, _latestArticle.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testFetchLatestArticleByNonexistentExternalReferenceCode()
+		throws Exception {
+
+		_latestArticle =
+			JournalArticleServiceUtil.fetchLatestArticleByExternalReferenceCode(
+				_article.getGroupId(), RandomTestUtil.randomString());
 
 		Assert.assertNull(_latestArticle);
 	}
@@ -512,6 +587,32 @@ public class JournalArticleServiceTest {
 	}
 
 	@Test
+	public void testGetLatestArticleByExternalReferenceCode() throws Exception {
+		long groupId = _article.getGroupId();
+		String externalReferenceCode = _article.getExternalReferenceCode();
+
+		_article = JournalTestUtil.updateArticle(_article, "Version 2");
+
+		_latestArticle =
+			JournalArticleServiceUtil.getLatestArticleByExternalReferenceCode(
+				groupId, externalReferenceCode);
+
+		Assert.assertEquals(
+			"Version 2", _latestArticle.getTitle(LocaleUtil.getDefault()));
+		Assert.assertEquals(1.1, _latestArticle.getVersion(), 0);
+		Assert.assertEquals(
+			externalReferenceCode, _latestArticle.getExternalReferenceCode());
+	}
+
+	@Test(expected = NoSuchArticleException.class)
+	public void testGetLatestArticleByNonexistentExternalReferenceCode()
+		throws Exception {
+
+		JournalArticleServiceUtil.getLatestArticleByExternalReferenceCode(
+			_article.getGroupId(), RandomTestUtil.randomString());
+	}
+
+	@Test
 	public void testGetLatestArticlesByStatus() throws Exception {
 		List<JournalArticle> articles = addArticles(
 			1, RandomTestUtil.randomString());
@@ -644,7 +745,7 @@ public class JournalArticleServiceTest {
 			TestPropsValues.getCompanyId(), _group.getGroupId(),
 			ListUtil.fromArray(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID),
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, null, null, null,
-			null, keyword, "", "", null, null, status, null, true);
+			null, keyword, "", "", null, null, null, status, true);
 	}
 
 	protected List<JournalArticle> createArticlesWithKeyword(int count)
@@ -696,7 +797,7 @@ public class JournalArticleServiceTest {
 			TestPropsValues.getCompanyId(), _group.getGroupId(),
 			ListUtil.fromArray(JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID),
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, null, null, null,
-			null, keyword, "", "", null, null, status, null, false,
+			null, keyword, "", "", null, null, null, status, false,
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
@@ -715,10 +816,9 @@ public class JournalArticleServiceTest {
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
-
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
-			_group.getGroupId(), JournalArticle.class.getName(), ddmForm);
+			_group.getGroupId(), JournalArticle.class.getName(),
+			ddmFormDeserializerDeserializeResponse.getDDMForm());
 
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
 			_group.getGroupId(), ddmStructure.getStructureId(),

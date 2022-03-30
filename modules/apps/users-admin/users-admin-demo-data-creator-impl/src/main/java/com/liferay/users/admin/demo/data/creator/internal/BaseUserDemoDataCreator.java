@@ -75,33 +75,35 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		Date birthDate = new Date();
 		byte[] portraitBytes = null;
 
-		try (InputStream is = new URL(
-				_RANDOM_USER_API
-			).openStream()) {
+		try {
+			URL url = new URL(_RANDOM_USER_API);
 
-			String json = StringUtil.read(is);
+			try (InputStream inputStream = url.openStream()) {
+				String json = StringUtil.read(inputStream);
 
-			JSONObject rootJSONObject = JSONFactoryUtil.createJSONObject(json);
+				JSONObject rootJSONObject = JSONFactoryUtil.createJSONObject(
+					json);
 
-			JSONArray jsonArray = rootJSONObject.getJSONArray("results");
+				JSONArray jsonArray = rootJSONObject.getJSONArray("results");
 
-			JSONObject userJSONObject = jsonArray.getJSONObject(0);
+				JSONObject userJSONObject = jsonArray.getJSONObject(0);
 
-			emailAddress = _getEmailAddress(emailAddress, userJSONObject);
-			male = StringUtil.equalsIgnoreCase(
-				userJSONObject.getString("gender"), "male");
-			birthDate = _getBirthDate(birthDate, userJSONObject);
+				emailAddress = _getEmailAddress(emailAddress, userJSONObject);
+				male = StringUtil.equalsIgnoreCase(
+					userJSONObject.getString("gender"), "male");
+				birthDate = _getBirthDate(birthDate, userJSONObject);
 
-			JSONObject pictureJSONObject = userJSONObject.getJSONObject(
-				"picture");
+				JSONObject pictureJSONObject = userJSONObject.getJSONObject(
+					"picture");
 
-			String portraitURL = pictureJSONObject.getString("large");
+				String portraitURL = pictureJSONObject.getString("large");
 
-			portraitBytes = _getBytes(new URL(portraitURL));
+				portraitBytes = _getBytes(new URL(portraitURL));
+			}
 		}
 		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioException, ioException);
+				_log.warn(ioException);
 			}
 
 			if (Validator.isNull(emailAddress)) {
@@ -142,30 +144,9 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		}
 		catch (NoSuchUserException noSuchUserException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(noSuchUserException, noSuchUserException);
+				_log.warn(noSuchUserException);
 			}
 		}
-	}
-
-	protected String[] getFullNameArray(String emailAddress) {
-		String emailAccountName = emailAddress.substring(
-			0, emailAddress.indexOf(StringPool.AT));
-
-		String[] fullNameArray = StringUtil.split(
-			emailAccountName, StringPool.PERIOD);
-
-		String firstName = StringUtil.randomString();
-		String lastName = StringUtil.randomString();
-
-		if (fullNameArray.length > 0) {
-			firstName = StringUtil.upperCaseFirstLetter(fullNameArray[0]);
-		}
-
-		if (fullNameArray.length > 1) {
-			lastName = StringUtil.upperCaseFirstLetter(fullNameArray[1]);
-		}
-
-		return new String[] {firstName, lastName};
 	}
 
 	@Reference(unbind = "-")
@@ -189,7 +170,7 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 			String firstName, String lastName, boolean male, Date birthDate)
 		throws PortalException {
 
-		String[] fullNameArray = getFullNameArray(emailAddress);
+		String[] fullNameArray = _getFullNameArray(emailAddress);
 
 		if (Validator.isNull(firstName)) {
 			firstName = fullNameArray[0];
@@ -203,8 +184,6 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		String password1 = "test";
 		String password2 = "test";
 		boolean autoScreenName = Validator.isNull(screenName);
-		long facebookId = 0;
-		String openId = StringPool.BLANK;
 		Locale locale = LocaleUtil.getDefault();
 		String middleName = StringPool.BLANK;
 		long prefixId = 0;
@@ -227,9 +206,9 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 
 		return userLocalService.addUser(
 			UserConstants.USER_ID_DEFAULT, companyId, autoPassword, password1,
-			password2, autoScreenName, screenName, emailAddress, facebookId,
-			openId, locale, firstName, middleName, lastName, prefixId, suffixId,
-			male, birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
+			password2, autoScreenName, screenName, emailAddress, locale,
+			firstName, middleName, lastName, prefixId, suffixId, male,
+			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
 			organizationIds, roleIds, userGroupIds, sendMail,
 			new ServiceContext());
 	}
@@ -245,7 +224,7 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		}
 		catch (ParseException parseException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(parseException, parseException);
+				_log.warn(parseException);
 			}
 		}
 
@@ -253,8 +232,8 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 	}
 
 	private byte[] _getBytes(URL url) throws IOException {
-		try (InputStream is = url.openStream()) {
-			return FileUtil.getBytes(is);
+		try (InputStream inputStream = url.openStream()) {
+			return FileUtil.getBytes(inputStream);
 		}
 	}
 
@@ -281,6 +260,27 @@ public abstract class BaseUserDemoDataCreator implements UserDemoDataCreator {
 		}
 
 		return emailAddress;
+	}
+
+	private String[] _getFullNameArray(String emailAddress) {
+		String emailAccountName = emailAddress.substring(
+			0, emailAddress.indexOf(StringPool.AT));
+
+		String[] fullNameArray = StringUtil.split(
+			emailAccountName, StringPool.PERIOD);
+
+		String firstName = StringUtil.randomString();
+		String lastName = StringUtil.randomString();
+
+		if (fullNameArray.length > 0) {
+			firstName = StringUtil.upperCaseFirstLetter(fullNameArray[0]);
+		}
+
+		if (fullNameArray.length > 1) {
+			lastName = StringUtil.upperCaseFirstLetter(fullNameArray[1]);
+		}
+
+		return new String[] {firstName, lastName};
 	}
 
 	private String _getRandomElement(List<String> list) {

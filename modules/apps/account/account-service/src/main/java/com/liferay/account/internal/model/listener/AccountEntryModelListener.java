@@ -17,9 +17,11 @@ package com.liferay.account.internal.model.listener;
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.model.AccountEntryUserRel;
+import com.liferay.account.model.AccountGroupRel;
 import com.liferay.account.model.AccountRole;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
 import com.liferay.account.service.AccountEntryUserRelLocalService;
+import com.liferay.account.service.AccountGroupRelLocalService;
 import com.liferay.account.service.AccountRoleLocalService;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
@@ -42,6 +44,16 @@ public class AccountEntryModelListener extends BaseModelListener<AccountEntry> {
 	@Override
 	public void onAfterRemove(AccountEntry accountEntry)
 		throws ModelListenerException {
+
+		// Account Groups
+
+		List<AccountGroupRel> accountGroupRels =
+			_accountGroupRelLocalService.getAccountGroupRels(
+				AccountEntry.class.getName(), accountEntry.getAccountEntryId());
+
+		for (AccountGroupRel accountGroupRel : accountGroupRels) {
+			_accountGroupRelLocalService.deleteAccountGroupRel(accountGroupRel);
+		}
 
 		// Account Organizations
 
@@ -86,7 +98,9 @@ public class AccountEntryModelListener extends BaseModelListener<AccountEntry> {
 	}
 
 	@Override
-	public void onAfterUpdate(AccountEntry accountEntry) {
+	public void onAfterUpdate(
+		AccountEntry originalAccountEntry, AccountEntry accountEntry) {
+
 		_reindexAccountEntry(accountEntry);
 	}
 
@@ -108,6 +122,9 @@ public class AccountEntryModelListener extends BaseModelListener<AccountEntry> {
 
 	@Reference
 	private AccountEntryUserRelLocalService _accountEntryUserRelLocalService;
+
+	@Reference
+	private AccountGroupRelLocalService _accountGroupRelLocalService;
 
 	@Reference
 	private AccountRoleLocalService _accountRoleLocalService;

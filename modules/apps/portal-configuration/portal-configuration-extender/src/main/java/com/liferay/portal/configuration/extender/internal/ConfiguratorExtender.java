@@ -125,7 +125,7 @@ public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 					namedConfigurationContent);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -171,13 +171,13 @@ public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 		try {
 			properties = namedConfigurationContent.getProperties();
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
 						"Supplier from description ", namedConfigurationContent,
 						" threw an exception: "),
-					t);
+					throwable);
 			}
 
 			return;
@@ -221,13 +221,14 @@ public class ConfiguratorExtender implements BundleTrackerCustomizer<Bundle> {
 			int index = name.lastIndexOf('-');
 
 			if (index > lastIndexOfSlash) {
-				factoryPid = name.substring(lastIndexOfSlash, index);
+				factoryPid = name.substring(lastIndexOfSlash + 1, index);
 				pid = name.substring(
 					index + 1, name.length() + 1 - filePattern.length());
 			}
 			else {
 				pid = name.substring(
-					lastIndexOfSlash, name.length() + 1 - filePattern.length());
+					lastIndexOfSlash + 1,
+					name.length() + 1 - filePattern.length());
 			}
 
 			namedConfigurationContents.add(

@@ -19,7 +19,6 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureModel;
-import com.liferay.layout.page.template.model.LayoutPageTemplateStructureSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,6 +32,7 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -40,15 +40,15 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -76,7 +76,8 @@ public class LayoutPageTemplateStructureModelImpl
 	public static final String TABLE_NAME = "LayoutPageTemplateStructure";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR},
 		{"layoutPageTemplateStructureId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
@@ -89,6 +90,7 @@ public class LayoutPageTemplateStructureModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("layoutPageTemplateStructureId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -102,7 +104,7 @@ public class LayoutPageTemplateStructureModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table LayoutPageTemplateStructure (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,layoutPageTemplateStructureId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG)";
+		"create table LayoutPageTemplateStructure (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,layoutPageTemplateStructureId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,classNameId LONG,classPK LONG,primary key (layoutPageTemplateStructureId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table LayoutPageTemplateStructure";
@@ -119,79 +121,55 @@ public class LayoutPageTemplateStructureModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CLASSNAMEID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CLASSPK_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long LAYOUTPAGETEMPLATESTRUCTUREID_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static LayoutPageTemplateStructure toModel(
-		LayoutPageTemplateStructureSoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		LayoutPageTemplateStructure model =
-			new LayoutPageTemplateStructureImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setLayoutPageTemplateStructureId(
-			soapModel.getLayoutPageTemplateStructureId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setClassNameId(soapModel.getClassNameId());
-		model.setClassPK(soapModel.getClassPK());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<LayoutPageTemplateStructure> toModels(
-		LayoutPageTemplateStructureSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<LayoutPageTemplateStructure> models =
-			new ArrayList<LayoutPageTemplateStructure>(soapModels.length);
-
-		for (LayoutPageTemplateStructureSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public LayoutPageTemplateStructureModelImpl() {
@@ -246,9 +224,6 @@ public class LayoutPageTemplateStructureModelImpl
 				attributeGetterFunction.apply(
 					(LayoutPageTemplateStructure)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -336,6 +311,12 @@ public class LayoutPageTemplateStructureModelImpl
 			(BiConsumer<LayoutPageTemplateStructure, Long>)
 				LayoutPageTemplateStructure::setMvccVersion);
 		attributeGetterFunctions.put(
+			"ctCollectionId", LayoutPageTemplateStructure::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<LayoutPageTemplateStructure, Long>)
+				LayoutPageTemplateStructure::setCtCollectionId);
+		attributeGetterFunctions.put(
 			"uuid", LayoutPageTemplateStructure::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid",
@@ -411,7 +392,26 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -427,17 +427,20 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -450,6 +453,10 @@ public class LayoutPageTemplateStructureModelImpl
 	public void setLayoutPageTemplateStructureId(
 		long layoutPageTemplateStructureId) {
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_layoutPageTemplateStructureId = layoutPageTemplateStructureId;
 	}
 
@@ -461,19 +468,20 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -484,19 +492,21 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -507,6 +517,10 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -539,6 +553,10 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -550,6 +568,10 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -566,6 +588,10 @@ public class LayoutPageTemplateStructureModelImpl
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_modifiedDate = modifiedDate;
 	}
@@ -598,19 +624,21 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setClassNameId(long classNameId) {
-		_columnBitmask |= CLASSNAMEID_COLUMN_BITMASK;
-
-		if (!_setOriginalClassNameId) {
-			_setOriginalClassNameId = true;
-
-			_originalClassNameId = _classNameId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_classNameId = classNameId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalClassNameId() {
-		return _originalClassNameId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("classNameId"));
 	}
 
 	@JSON
@@ -621,19 +649,20 @@ public class LayoutPageTemplateStructureModelImpl
 
 	@Override
 	public void setClassPK(long classPK) {
-		_columnBitmask |= CLASSPK_COLUMN_BITMASK;
-
-		if (!_setOriginalClassPK) {
-			_setOriginalClassPK = true;
-
-			_originalClassPK = _classPK;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_classPK = classPK;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalClassPK() {
-		return _originalClassPK;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("classPK"));
 	}
 
 	@Override
@@ -645,6 +674,26 @@ public class LayoutPageTemplateStructureModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -683,6 +732,7 @@ public class LayoutPageTemplateStructureModelImpl
 			new LayoutPageTemplateStructureImpl();
 
 		layoutPageTemplateStructureImpl.setMvccVersion(getMvccVersion());
+		layoutPageTemplateStructureImpl.setCtCollectionId(getCtCollectionId());
 		layoutPageTemplateStructureImpl.setUuid(getUuid());
 		layoutPageTemplateStructureImpl.setLayoutPageTemplateStructureId(
 			getLayoutPageTemplateStructureId());
@@ -696,6 +746,39 @@ public class LayoutPageTemplateStructureModelImpl
 		layoutPageTemplateStructureImpl.setClassPK(getClassPK());
 
 		layoutPageTemplateStructureImpl.resetOriginalValues();
+
+		return layoutPageTemplateStructureImpl;
+	}
+
+	@Override
+	public LayoutPageTemplateStructure cloneWithOriginalValues() {
+		LayoutPageTemplateStructureImpl layoutPageTemplateStructureImpl =
+			new LayoutPageTemplateStructureImpl();
+
+		layoutPageTemplateStructureImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		layoutPageTemplateStructureImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		layoutPageTemplateStructureImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		layoutPageTemplateStructureImpl.setLayoutPageTemplateStructureId(
+			this.<Long>getColumnOriginalValue("layoutPageTemplateStructureId"));
+		layoutPageTemplateStructureImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		layoutPageTemplateStructureImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		layoutPageTemplateStructureImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		layoutPageTemplateStructureImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		layoutPageTemplateStructureImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		layoutPageTemplateStructureImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		layoutPageTemplateStructureImpl.setClassNameId(
+			this.<Long>getColumnOriginalValue("classNameId"));
+		layoutPageTemplateStructureImpl.setClassPK(
+			this.<Long>getColumnOriginalValue("classPK"));
 
 		return layoutPageTemplateStructureImpl;
 	}
@@ -718,17 +801,17 @@ public class LayoutPageTemplateStructureModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof LayoutPageTemplateStructure)) {
+		if (!(object instanceof LayoutPageTemplateStructure)) {
 			return false;
 		}
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
-			(LayoutPageTemplateStructure)obj;
+			(LayoutPageTemplateStructure)object;
 
 		long primaryKey = layoutPageTemplateStructure.getPrimaryKey();
 
@@ -745,47 +828,31 @@ public class LayoutPageTemplateStructureModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		LayoutPageTemplateStructureModelImpl
-			layoutPageTemplateStructureModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		layoutPageTemplateStructureModelImpl._originalUuid =
-			layoutPageTemplateStructureModelImpl._uuid;
+		_setModifiedDate = false;
 
-		layoutPageTemplateStructureModelImpl._originalGroupId =
-			layoutPageTemplateStructureModelImpl._groupId;
-
-		layoutPageTemplateStructureModelImpl._setOriginalGroupId = false;
-
-		layoutPageTemplateStructureModelImpl._originalCompanyId =
-			layoutPageTemplateStructureModelImpl._companyId;
-
-		layoutPageTemplateStructureModelImpl._setOriginalCompanyId = false;
-
-		layoutPageTemplateStructureModelImpl._setModifiedDate = false;
-
-		layoutPageTemplateStructureModelImpl._originalClassNameId =
-			layoutPageTemplateStructureModelImpl._classNameId;
-
-		layoutPageTemplateStructureModelImpl._setOriginalClassNameId = false;
-
-		layoutPageTemplateStructureModelImpl._originalClassPK =
-			layoutPageTemplateStructureModelImpl._classPK;
-
-		layoutPageTemplateStructureModelImpl._setOriginalClassPK = false;
-
-		layoutPageTemplateStructureModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -795,6 +862,9 @@ public class LayoutPageTemplateStructureModelImpl
 				new LayoutPageTemplateStructureCacheModel();
 
 		layoutPageTemplateStructureCacheModel.mvccVersion = getMvccVersion();
+
+		layoutPageTemplateStructureCacheModel.ctCollectionId =
+			getCtCollectionId();
 
 		layoutPageTemplateStructureCacheModel.uuid = getUuid();
 
@@ -854,7 +924,7 @@ public class LayoutPageTemplateStructureModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -865,11 +935,27 @@ public class LayoutPageTemplateStructureModelImpl
 			Function<LayoutPageTemplateStructure, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(LayoutPageTemplateStructure)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(LayoutPageTemplateStructure)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -888,7 +974,7 @@ public class LayoutPageTemplateStructureModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -924,30 +1010,112 @@ public class LayoutPageTemplateStructureModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _layoutPageTemplateStructureId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _classNameId;
-	private long _originalClassNameId;
-	private boolean _setOriginalClassNameId;
 	private long _classPK;
-	private long _originalClassPK;
-	private boolean _setOriginalClassPK;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<LayoutPageTemplateStructure, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((LayoutPageTemplateStructure)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"layoutPageTemplateStructureId", _layoutPageTemplateStructureId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("classNameId", _classNameId);
+		_columnOriginalValues.put("classPK", _classPK);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("layoutPageTemplateStructureId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("classNameId", 1024L);
+
+		columnBitmasks.put("classPK", 2048L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private LayoutPageTemplateStructure _escapedModel;
 

@@ -41,7 +41,6 @@ import com.liferay.portal.util.PropsValues;
 
 import java.io.Writer;
 
-import java.nio.Buffer;
 import java.nio.CharBuffer;
 
 import java.util.HashSet;
@@ -66,11 +65,11 @@ public class StripFilter extends BasePortalFilter {
 
 	public StripFilter() {
 		if (PropsValues.MINIFIER_INLINE_CONTENT_CACHE_ENABLED) {
-			_minifierCache = PortalCacheHelperUtil.getPortalCache(
+			_minifierPortalCache = PortalCacheHelperUtil.getPortalCache(
 				PortalCacheManagerNames.SINGLE_VM, StripFilter.class.getName());
 		}
 		else {
-			_minifierCache = null;
+			_minifierPortalCache = null;
 		}
 	}
 
@@ -111,9 +110,7 @@ public class StripFilter extends BasePortalFilter {
 
 		int position = duplicateCharBuffer.position() + length;
 
-		Buffer buffer = duplicateCharBuffer.limit(position);
-
-		String content = buffer.toString();
+		String content = String.valueOf(duplicateCharBuffer.limit(position));
 
 		charBuffer.position(position);
 
@@ -291,7 +288,7 @@ public class StripFilter extends BasePortalFilter {
 
 			String key = String.valueOf(cacheKeyGenerator.getCacheKey(content));
 
-			minifiedContent = _minifierCache.get(key);
+			minifiedContent = _minifierPortalCache.get(key);
 
 			if (minifiedContent == null) {
 				minifiedContent = MinifierUtil.minifyCss(content);
@@ -309,7 +306,7 @@ public class StripFilter extends BasePortalFilter {
 				}
 
 				if (!skipCache) {
-					_minifierCache.put(key, minifiedContent);
+					_minifierPortalCache.put(key, minifiedContent);
 				}
 			}
 		}
@@ -520,7 +517,7 @@ public class StripFilter extends BasePortalFilter {
 
 			String key = String.valueOf(cacheKeyGenerator.getCacheKey(content));
 
-			minifiedContent = _minifierCache.get(key);
+			minifiedContent = _minifierPortalCache.get(key);
 
 			if (minifiedContent == null) {
 				minifiedContent = MinifierUtil.minifyJavaScript(
@@ -540,7 +537,7 @@ public class StripFilter extends BasePortalFilter {
 				}
 
 				if (!skipCache) {
-					_minifierCache.put(key, minifiedContent);
+					_minifierPortalCache.put(key, minifiedContent);
 				}
 			}
 		}
@@ -667,12 +664,9 @@ public class StripFilter extends BasePortalFilter {
 					continue;
 				}
 				else if (hasMarker(charBuffer, _MARKER_SCRIPT_OPEN)) {
-					StringBuffer requestURL =
-						httpServletRequest.getRequestURL();
-
 					processJavaScript(
-						requestURL.toString(), charBuffer, writer,
-						_MARKER_SCRIPT_OPEN);
+						String.valueOf(httpServletRequest.getRequestURL()),
+						charBuffer, writer, _MARKER_SCRIPT_OPEN);
 
 					continue;
 				}
@@ -778,6 +772,6 @@ public class StripFilter extends BasePortalFilter {
 		"[Jj][aA][vV][aA][sS][cC][rR][iI][pP][tT]");
 
 	private final Set<String> _ignorePaths = new HashSet<>();
-	private final PortalCache<String, String> _minifierCache;
+	private final PortalCache<String, String> _minifierPortalCache;
 
 }

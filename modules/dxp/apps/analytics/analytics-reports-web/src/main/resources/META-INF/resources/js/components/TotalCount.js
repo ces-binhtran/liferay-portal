@@ -9,12 +9,13 @@
  * distribution rights of the Software.
  */
 
-import {useIsMounted} from 'frontend-js-react-web';
+import {useStateSafe} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useContext, useEffect} from 'react';
 
 import ConnectionContext from '../context/ConnectionContext';
-import {StoreContext, useWarning} from '../context/store';
+import {StoreDispatchContext, StoreStateContext} from '../context/StoreContext';
+import {numberFormat} from '../utils/numberFormat';
 import Hint from './Hint';
 
 function TotalCount({
@@ -22,58 +23,59 @@ function TotalCount({
 	dataProvider,
 	label,
 	percentage = false,
-	popoverAlign,
 	popoverHeader,
 	popoverMessage,
 	popoverPosition,
 }) {
 	const {validAnalyticsConnection} = useContext(ConnectionContext);
 
-	const [value, setValue] = useState('-');
+	const [value, setValue] = useStateSafe('-');
 
-	const isMounted = useIsMounted();
+	const dispatch = useContext(StoreDispatchContext);
 
-	const [, addWarning] = useWarning();
-
-	const [{publishedToday}] = useContext(StoreContext);
+	const {languageTag, publishedToday} = useContext(StoreStateContext);
 
 	useEffect(() => {
 		if (validAnalyticsConnection) {
 			dataProvider()
-				.then((value) => {
-					if (isMounted()) {
-						setValue(value);
-					}
-				})
+				.then(setValue)
 				.catch(() => {
-					if (isMounted()) {
-						setValue('-');
-						addWarning();
-					}
+					setValue('-');
+					dispatch({type: 'ADD_WARNING'});
 				});
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [dataProvider, validAnalyticsConnection]);
+	}, [dispatch, dataProvider, setValue, validAnalyticsConnection]);
 
 	let displayValue = '-';
 
 	if (validAnalyticsConnection && !publishedToday) {
 		displayValue =
-			percentage && value !== '-' ? <span>{`${value}%`}</span> : value;
+			value !== '-' ? (
+				percentage ? (
+					<span>{`${value}%`}</span>
+				) : (
+					numberFormat(languageTag, value)
+				)
+			) : (
+				value
+			);
 	}
 
 	return (
 		<div className={className}>
 			<span className="text-secondary">{label}</span>
+
 			<span className="text-secondary">
 				<Hint
-					align={popoverAlign}
 					message={popoverMessage}
 					position={popoverPosition}
 					title={popoverHeader}
 				/>
 			</span>
-			<span className="font-weight-bold">{displayValue}</span>
+
+			<span className="font-weight-bold inline-item-after">
+				{displayValue}
+			</span>
 		</div>
 	);
 }
@@ -81,6 +83,7 @@ function TotalCount({
 TotalCount.propTypes = {
 	dataProvider: PropTypes.func.isRequired,
 	label: PropTypes.string.isRequired,
+	percentage: PropTypes.bool,
 	popoverHeader: PropTypes.string.isRequired,
 	popoverMessage: PropTypes.string.isRequired,
 };

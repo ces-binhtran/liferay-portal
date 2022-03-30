@@ -65,10 +65,13 @@ public class BatchEngineImportTaskWrapper
 		attributes.put("errorMessage", getErrorMessage());
 		attributes.put("executeStatus", getExecuteStatus());
 		attributes.put("fieldNameMapping", getFieldNameMapping());
+		attributes.put("importStrategy", getImportStrategy());
 		attributes.put("operation", getOperation());
 		attributes.put("parameters", getParameters());
+		attributes.put("processedItemsCount", getProcessedItemsCount());
 		attributes.put("startTime", getStartTime());
 		attributes.put("taskItemDelegateName", getTaskItemDelegateName());
+		attributes.put("totalItemsCount", getTotalItemsCount());
 
 		return attributes;
 	}
@@ -173,6 +176,12 @@ public class BatchEngineImportTaskWrapper
 			setFieldNameMapping(fieldNameMapping);
 		}
 
+		Integer importStrategy = (Integer)attributes.get("importStrategy");
+
+		if (importStrategy != null) {
+			setImportStrategy(importStrategy);
+		}
+
 		String operation = (String)attributes.get("operation");
 
 		if (operation != null) {
@@ -184,6 +193,13 @@ public class BatchEngineImportTaskWrapper
 
 		if (parameters != null) {
 			setParameters(parameters);
+		}
+
+		Integer processedItemsCount = (Integer)attributes.get(
+			"processedItemsCount");
+
+		if (processedItemsCount != null) {
+			setProcessedItemsCount(processedItemsCount);
 		}
 
 		Date startTime = (Date)attributes.get("startTime");
@@ -198,6 +214,24 @@ public class BatchEngineImportTaskWrapper
 		if (taskItemDelegateName != null) {
 			setTaskItemDelegateName(taskItemDelegateName);
 		}
+
+		Integer totalItemsCount = (Integer)attributes.get("totalItemsCount");
+
+		if (totalItemsCount != null) {
+			setTotalItemsCount(totalItemsCount);
+		}
+	}
+
+	@Override
+	public BatchEngineImportTask cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
+	@Override
+	public java.util.List<BatchEngineImportTaskError>
+		getBatchEngineImportTaskErrors() {
+
+		return model.getBatchEngineImportTaskErrors();
 	}
 
 	/**
@@ -321,6 +355,16 @@ public class BatchEngineImportTaskWrapper
 	}
 
 	/**
+	 * Returns the import strategy of this batch engine import task.
+	 *
+	 * @return the import strategy of this batch engine import task
+	 */
+	@Override
+	public int getImportStrategy() {
+		return model.getImportStrategy();
+	}
+
+	/**
 	 * Returns the modified date of this batch engine import task.
 	 *
 	 * @return the modified date of this batch engine import task
@@ -371,6 +415,16 @@ public class BatchEngineImportTaskWrapper
 	}
 
 	/**
+	 * Returns the processed items count of this batch engine import task.
+	 *
+	 * @return the processed items count of this batch engine import task
+	 */
+	@Override
+	public int getProcessedItemsCount() {
+		return model.getProcessedItemsCount();
+	}
+
+	/**
 	 * Returns the start time of this batch engine import task.
 	 *
 	 * @return the start time of this batch engine import task
@@ -388,6 +442,16 @@ public class BatchEngineImportTaskWrapper
 	@Override
 	public String getTaskItemDelegateName() {
 		return model.getTaskItemDelegateName();
+	}
+
+	/**
+	 * Returns the total items count of this batch engine import task.
+	 *
+	 * @return the total items count of this batch engine import task
+	 */
+	@Override
+	public int getTotalItemsCount() {
+		return model.getTotalItemsCount();
 	}
 
 	/**
@@ -548,6 +612,16 @@ public class BatchEngineImportTaskWrapper
 	}
 
 	/**
+	 * Sets the import strategy of this batch engine import task.
+	 *
+	 * @param importStrategy the import strategy of this batch engine import task
+	 */
+	@Override
+	public void setImportStrategy(int importStrategy) {
+		model.setImportStrategy(importStrategy);
+	}
+
+	/**
 	 * Sets the modified date of this batch engine import task.
 	 *
 	 * @param modifiedDate the modified date of this batch engine import task
@@ -598,6 +672,16 @@ public class BatchEngineImportTaskWrapper
 	}
 
 	/**
+	 * Sets the processed items count of this batch engine import task.
+	 *
+	 * @param processedItemsCount the processed items count of this batch engine import task
+	 */
+	@Override
+	public void setProcessedItemsCount(int processedItemsCount) {
+		model.setProcessedItemsCount(processedItemsCount);
+	}
+
+	/**
 	 * Sets the start time of this batch engine import task.
 	 *
 	 * @param startTime the start time of this batch engine import task
@@ -615,6 +699,16 @@ public class BatchEngineImportTaskWrapper
 	@Override
 	public void setTaskItemDelegateName(String taskItemDelegateName) {
 		model.setTaskItemDelegateName(taskItemDelegateName);
+	}
+
+	/**
+	 * Sets the total items count of this batch engine import task.
+	 *
+	 * @param totalItemsCount the total items count of this batch engine import task
+	 */
+	@Override
+	public void setTotalItemsCount(int totalItemsCount) {
+		model.setTotalItemsCount(totalItemsCount);
 	}
 
 	/**

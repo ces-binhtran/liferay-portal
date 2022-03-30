@@ -1,19 +1,31 @@
 definition {
 
 	macro addAction {
+		WaitForElementPresent(locator1 = "FormRules#RULE_BUILDER_ADD_ACTION");
+
 		Click(locator1 = "FormRules#RULE_BUILDER_ADD_ACTION");
 	}
 
 	macro addCondition {
+		WaitForElementPresent(locator1 = "FormRules#RULE_BUILDER_ADD_CONDITION");
+
 		Click(locator1 = "FormRules#RULE_BUILDER_ADD_CONDITION");
 	}
 
 	macro addRule {
+		WaitForElementPresent(locator1 = "FormRules#RULE_BUILDER_ADD_RULE_BUTTON");
+
 		Click(locator1 = "FormRules#RULE_BUILDER_ADD_RULE_BUTTON");
 
 		FormRules.viewInactiveSaveButton();
 
 		AssertNotVisible(locator1 = "FormRules#RULE_BUILDER_ADD_RULE_BUTTON");
+	}
+
+	macro cancel {
+		AssertClick(
+			locator1 = "FormRules#RULE_BUILDER_CANCEL_BUTTON",
+			value1 = "Cancel");
 	}
 
 	macro chooseCalculateOperator {
@@ -22,6 +34,16 @@ definition {
 		AssertClick(
 			locator1 = "FormRules#RULE_BUILDER_CALCULATE_OPERATOR",
 			value1 = "${calculateOperator}");
+	}
+
+	macro clickOnCalculatorBackspace {
+		Click.javaScriptClick(locator1 = "FormRules#RULE_BUILDER_CALCULATE_BACKSPACE");
+	}
+
+	macro clickOnCalculatorNumbersKeyboard {
+		Click(
+			key_buttonName = "${buttonName}",
+			locator1 = "FormRules#RULE_BUILDER_CALCULATE_NUMBERS_KEYBOARD");
 	}
 
 	macro configureActionOptions {
@@ -58,6 +80,7 @@ definition {
 	macro defineConditionValue {
 		if (isSet(conditionFieldValue)) {
 			var key_conditionRowNumber = "${conditionRowNumber}";
+			var key_fieldColumnNumber = "4";
 
 			Type(
 				locator1 = "FormRules#RULE_BUILDER_CONDITION_VALUE_TEXT_FIELD",
@@ -66,14 +89,50 @@ definition {
 
 		if (isSet(conditionValueField)) {
 			var key_conditionRowNumber = "${conditionRowNumber}";
-			var key_conditionValueField = "${conditionValueField}";
+			var key_selectValue = "${conditionValueField}";
+			var key_fieldColumnNumber = "4";
 
 			Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_VALUE_FIELD");
 
 			AssertClick(
-				locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_VALUE_FIELD",
+				locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 				value1 = "${conditionValueField}");
 		}
+	}
+
+	macro deleteActions {
+		var key_actionRowNumber = "${rowNumber}";
+
+		MouseOver(
+			key_actionRowNumber = "${rowNumber}",
+			locator1 = "FormRules#RULE_ACTION_FIELD");
+
+		Click(
+			key_actionRowNumber = "${rowNumber}",
+			locator1 = "FormRules#RULE_DELETE_ACTION_FIELD");
+
+		Click(locator1 = "FormViewBuilder#DELETE_OBJECT_LABEL_DELETE_BUTTON");
+	}
+
+	macro deleteCondition {
+		MouseOver(
+			key_conditionRowNumber = "${conditionRowNumber}",
+			key_fieldColumnNumber = "1",
+			locator1 = "FormRules#RULE_BUILDER_CONDITION_VALUE_FIELD");
+
+		Click(
+			key_conditionRowNumber = "${conditionRowNumber}",
+			locator1 = "FormRules#RULE_BUILDER_DELETE_CONDITION");
+
+		Click(locator1 = "FormRules#RULE_BUILDER_DELETE_MODAL_CONFIRMATION");
+	}
+
+	macro gotoDelete {
+		var key_ruleNumber = "${ruleNumber}";
+
+		Click.waitForMenuToggleJSClick(locator1 = "FormRules#RULE_BUILDER_ROW_VERTICAL_ELLIPSIS");
+
+		MenuItem.click(menuItem = "Delete");
 	}
 
 	macro gotoEdit {
@@ -91,40 +150,38 @@ definition {
 	}
 
 	macro selectAction {
-		var key_action = "${action}";
+		var key_selectValue = "${action}";
 		var key_actionRowNumber = "${actionRowNumber}";
+		var key_fieldColumnNumber = "1";
 
 		Click(locator1 = "FormRules#RULE_BUILDER_ACTION_FIELD");
 
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_SELECT_ACTION",
+			locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 			value1 = "${action}");
 	}
 
 	macro selectActionTarget {
 		var key_actionRowNumber = "${actionRowNumber}";
-		var key_actionTarget = "${actionTarget}";
+		var key_selectValue = "${actionTarget}";
+		var key_fieldColumnNumber = "2";
 
-		if ("${action}" == "Jump to Page") {
-			Click(locator1 = "FormRules#RULE_BUILDER_JUMP_TO_PAGE_ACTION_TARGET");
-		}
-		else {
-			Click(locator1 = "FormRules#RULE_BUILDER_ACTION_TARGET_FIELD");
-		}
+		Click(locator1 = "FormRules#RULE_BUILDER_ACTION_FIELD");
 
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_SELECT_ACTION_TARGET",
+			locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 			value1 = "${actionTarget}");
 	}
 
-	macro selectAutofillOutput {
-		var key_dataProviderOutput = "${dataProviderOutput}";
+	macro selectAutofillFromDataProvider {
+		var key_dataProviderOption = "${dataProviderOption}";
+		var key_dataProviderParameterName = "${dataProviderParameterName}";
 
-		Click(locator1 = "FormRules#RULE_BUILDER_AUTOFILL_OUTPUT_FIELD");
+		Click(locator1 = "FormRules#RULE_BUILDER_AUTOFILL_FROM_DATA_PROVIDER");
 
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_AUTOFILL_SELECT_OUTPUT_FIELD",
-			value1 = "${dataProviderOutput}");
+			locator1 = "FormRules#RULE_BUILDER_AUTOFILL_SELECT_OPTION_FIELD",
+			value1 = "${dataProviderOption}");
 	}
 
 	macro selectCalculateField {
@@ -134,51 +191,60 @@ definition {
 
 		var key_calculateFieldOption = "${calculateFieldOption}";
 
+		ScrollBy(value1 = "0, 230");
+
 		Click(locator1 = "FormRules#RULE_BUILDER_CALCULATE_ADD_FIELD_LIST");
 	}
 
-	macro selectCalculateResultField {
-		Click(locator1 = "FormRules#RULE_BUILDER_CALCULATE_RESULT_FIELD");
-
-		var key_calculateResultField = "${calculateResultField}";
-
+	macro selectCalculateFieldByFieldReference {
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_CALCULATE_RESULT_FIELD_LIST",
-			value1 = "${calculateResultField}");
+			locator1 = "FormRules#RULE_BUILDER_CALCULATE_ADD_FIELD_BUTTON",
+			value1 = "Add Field");
+
+		var key_calculateFieldOption = "Field Reference: ${calculateFieldOption}";
+
+		ScrollBy(value1 = "0, 230");
+
+		Click(locator1 = "FormRules#RULE_BUILDER_CALCULATE_ADD_FIELD_LIST");
 	}
 
 	macro selectConditionField {
-		var key_conditionField = "${conditionField}";
+		var key_selectValue = "${conditionField}";
 		var key_conditionRowNumber = "${conditionRowNumber}";
+		var key_fieldColumnNumber = "1";
+
+		ScrollBy(value1 = "0, 230");
 
 		Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD");
 
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_FIELD",
+			locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 			value1 = "${conditionField}");
 	}
 
 	macro selectConditionOperator {
-		var key_conditionOperator = "${conditionOperator}";
+		var key_selectValue = "${conditionOperator}";
 		var key_conditionRowNumber = "${conditionRowNumber}";
+		var key_fieldColumnNumber = "2";
 
-		Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_OPERATOR_FIELD");
+		Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD");
 
 		AssertClick(
-			locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_OPERATOR",
+			locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 			value1 = "${conditionOperator}");
 	}
 
 	macro selectConditionValue {
 		var key_conditionRowNumber = "${conditionRowNumber}";
+		var key_fieldColumnNumber = "3";
 
 		if (isSet(conditionValueType)) {
-			Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_VALUE_TYPE_FIELD");
+			Click(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD");
 
-			var key_conditionValueType = "${conditionValueType}";
+			var key_selectValue = "${conditionValueType}";
 
 			AssertClick(
-				locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_VALUE_TYPE",
+				locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE",
 				value1 = "${conditionValueType}");
 		}
 	}
@@ -190,6 +256,38 @@ definition {
 		Click(locator1 = "FormRules#RULE_BUILDER_RULE_CONDITION_DROPDOWN");
 
 		MenuItem.click(menuItem = "${condition}");
+	}
+
+	macro viewAction {
+		var key_selectActionValue = "${action}";
+		var key_actionRowNumber = "${actionRowNumber}";
+		var key_selectActionTargetValue = "${actionTarget}";
+
+		AssertElementPresent(
+			key_actionRowNumber = "${actionRowNumber}",
+			key_selectActionValue = "${action}",
+			locator1 = "FormRules#RULE_ACTION_FIELD_VALUE");
+
+		AssertElementPresent(
+			key_actionRowNumber = "${actionRowNumber}",
+			key_selectActionTargetValue = "${actionTarget}",
+			locator1 = "FormRules#RULE_ACTION_TARGET_FIELD_VALUE");
+	}
+
+	macro viewActionNotPresent {
+		var key_selectActionValue = "${action}";
+		var key_actionRowNumber = "${actionRowNumber}";
+		var key_selectActionTargetValue = "${actionTarget}";
+
+		AssertElementNotPresent(
+			key_actionRowNumber = "${actionRowNumber}",
+			key_selectActionValue = "${action}",
+			locator1 = "FormRules#RULE_ACTION_FIELD_VALUE");
+
+		AssertElementNotPresent(
+			key_actionRowNumber = "${actionRowNumber}",
+			key_selectActionTargetValue = "${actionTarget}",
+			locator1 = "FormRules#RULE_ACTION_TARGET_FIELD_VALUE");
 	}
 
 	macro viewActionSummary {
@@ -209,6 +307,19 @@ definition {
 			value1 = "${actionTarget}");
 	}
 
+	macro viewBrokenRule {
+		AssertElementPresent(
+			key_ruleNumber = "${ruleNumber}",
+			locator1 = "FormRules#RULE_BUILDER_BROKEN");
+	}
+
+	macro viewCalculatorExpression {
+		AssertTextEquals(
+			key_calculatorExpression = "${calculatorExpression}",
+			locator1 = "FormRules#RULE_BUILDER_CALCULATE_RESULT_EXPRESSION",
+			value1 = "${calculatorExpression}");
+	}
+
 	macro viewConditionFieldConstantSummary {
 		AssertTextEquals(
 			key_conditionFieldConstant = "${conditionFieldConstant}",
@@ -225,29 +336,45 @@ definition {
 			value1 = "${conditionField}");
 	}
 
+	macro viewConditionNotPresent {
+		var key_conditionField = "${conditionField}";
+		var key_conditionOperator = "${conditionOperator}";
+		var key_conditionRowNumber = "${conditionRowNumber}";
+
+		if (isSet(conditionValueType) && isSet(conditionFieldValue)) {
+			var key_conditionFieldValue = "${conditionFieldValue}";
+			var key_conditionValueType = "${conditionValueType}";
+
+			AssertElementNotPresent(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD_PARAMETERS_EXTENDED");
+		}
+		else {
+			AssertElementNotPresent(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD_PARAMETERS");
+		}
+	}
+
 	macro viewConditionOperatorOptionsIsPresent {
 		Click(
 			key_conditionRowNumber = "${conditionRowNumber}",
-			locator1 = "FormRules#RULE_BUILDER_CONDITION_OPERATOR_FIELD");
+			key_fieldColumnNumber = "2",
+			locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD");
 
-		for (var conditionOperator : list "Is equal to,Is not equal to,Contains,Does not contain") {
+		for (var conditionOperator : list "Is Equal To,Is Not Equal To,Contains,Does Not Contain") {
 			AssertElementPresent(
-				key_conditionOperator = "${conditionOperator}",
-				key_conditionRowNumber = "${conditionRowNumber}",
-				locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_OPERATOR");
+				key_selectValue = "${conditionOperator}",
+				locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE");
 		}
 	}
 
 	macro viewConditionOperatorOptionsNotPresent {
 		Click(
 			key_conditionRowNumber = "${conditionRowNumber}",
-			locator1 = "FormRules#RULE_BUILDER_CONDITION_OPERATOR_FIELD");
+			key_fieldColumnNumber = "2",
+			locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD");
 
-		for (var conditionOperator : list "Is equal to,Is not equal to,Contains,Does not contain") {
+		for (var conditionOperator : list "Is Equal To,Is Not Equal To,Contains,Does Not Contain") {
 			AssertElementNotPresent(
-				key_conditionOperator = "${conditionOperator}",
-				key_conditionRowNumber = "${conditionRowNumber}",
-				locator1 = "FormRules#RULE_BUILDER_SELECT_CONDITION_OPERATOR");
+				key_selectValue = "${conditionOperator}",
+				locator1 = "FormRules#RULE_BUILDER_FIELD_SELECT_VALUE");
 		}
 	}
 
@@ -261,6 +388,30 @@ definition {
 			value1 = "${conditionOperatorLowerCase}");
 	}
 
+	macro viewConditionPresent {
+		var key_conditionField = "${conditionField}";
+		var key_conditionOperator = "${conditionOperator}";
+		var key_conditionRowNumber = "${conditionRowNumber}";
+
+		if (isSet(conditionValueType) && isSet(conditionFieldValue)) {
+			var key_conditionFieldValue = "${conditionFieldValue}";
+			var key_conditionValueType = "${conditionValueType}";
+
+			AssertElementPresent(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD_PARAMETERS_EXTENDED");
+		}
+		else {
+			AssertElementPresent(locator1 = "FormRules#RULE_BUILDER_CONDITION_FIELD_PARAMETERS");
+		}
+	}
+
+	macro viewConditionSummaryNotPresent {
+		var key_conditionField = "${conditionField}";
+		var key_conditionOperator = "${conditionOperator}";
+		var key_ruleNumber = "${ruleNumber}";
+
+		AssertElementNotPresent(locator1 = "FormRules#RULE_BUILDER_SUMMARY_CONDITION");
+	}
+
 	macro viewInactiveSaveButton {
 		AssertElementPresent(locator1 = "FormRules#RULE_BUILDER_SAVE_BUTTON_DISABLED");
 	}
@@ -269,6 +420,20 @@ definition {
 		AssertTextEquals(
 			locator1 = "Message#EMPTY_INFO",
 			value1 = "There are no rules yet. Click on plus icon below to add the first.");
+	}
+
+	macro viewRuleBuilderAction {
+		AssertElementPresent(
+			key_positionNumber = "${positionNumber}",
+			key_value = "${value}",
+			locator1 = "FormRules#VIEW_RULE_BUILDER_ACTION_CONDITION");
+	}
+
+	macro viewRuleBuilderCondition {
+		AssertElementPresent(
+			key_positionNumber = "${positionNumber}",
+			key_value = "${value}",
+			locator1 = "FormRules#VIEW_RULE_BUILDER_ACTION_CONDITION");
 	}
 
 	macro viewRuleCondition {
@@ -296,9 +461,11 @@ definition {
 			conditionOperator = "${conditionOperator}",
 			ruleNumber = "${ruleNumber}");
 
-		FormRules.viewConditionFieldConstantSummary(
-			conditionFieldConstant = "${conditionFieldConstant}",
-			ruleNumber = "${ruleNumber}");
+		if (isSet(conditionFieldConstant)) {
+			FormRules.viewConditionFieldConstantSummary(
+				conditionFieldConstant = "${conditionFieldConstant}",
+				ruleNumber = "${ruleNumber}");
+		}
 
 		FormRules.viewActionSummary(
 			action = "${action}",

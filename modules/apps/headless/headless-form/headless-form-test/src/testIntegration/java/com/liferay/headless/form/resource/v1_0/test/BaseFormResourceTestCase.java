@@ -35,7 +35,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -52,7 +51,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
@@ -111,7 +109,9 @@ public abstract class BaseFormResourceTestCase {
 
 		FormResource.Builder builder = FormResource.builder();
 
-		formResource = builder.locale(
+		formResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -254,15 +254,15 @@ public abstract class BaseFormResourceTestCase {
 
 	@Test
 	public void testGetSiteFormsPage() throws Exception {
-		Page<Form> page = formResource.getSiteFormsPage(
-			testGetSiteFormsPage_getSiteId(), Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteFormsPage_getSiteId();
 		Long irrelevantSiteId = testGetSiteFormsPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<Form> page = formResource.getSiteFormsPage(
+			siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			Form irrelevantForm = testGetSiteFormsPage_addForm(
 				irrelevantSiteId, randomIrrelevantForm());
 
@@ -280,7 +280,7 @@ public abstract class BaseFormResourceTestCase {
 
 		Form form2 = testGetSiteFormsPage_addForm(siteId, randomForm());
 
-		page = formResource.getSiteFormsPage(siteId, Pagination.of(1, 2));
+		page = formResource.getSiteFormsPage(siteId, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -346,7 +346,7 @@ public abstract class BaseFormResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -367,7 +367,7 @@ public abstract class BaseFormResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/forms");
 
-		Assert.assertEquals(2, formsJSONObject.get("totalCount"));
+		Assert.assertEquals(2, formsJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(form1, form2),
@@ -388,6 +388,20 @@ public abstract class BaseFormResourceTestCase {
 	protected Form testGraphQLForm_addForm() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(Form form, List<Form> forms) {
+		boolean contains = false;
+
+		for (Form item : forms) {
+			if (equals(form, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(forms + " does not contain " + form, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -450,7 +464,7 @@ public abstract class BaseFormResourceTestCase {
 		}
 	}
 
-	protected void assertValid(Form form) {
+	protected void assertValid(Form form) throws Exception {
 		boolean valid = true;
 
 		if (form.getDateCreated() == null) {
@@ -746,8 +760,8 @@ public abstract class BaseFormResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.form.dto.v1_0.Form.class)) {
 
 			if (!ArrayUtil.contains(
@@ -762,12 +776,13 @@ public abstract class BaseFormResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -781,7 +796,7 @@ public abstract class BaseFormResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -985,9 +1000,11 @@ public abstract class BaseFormResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	protected boolean equals(
@@ -1177,6 +1194,19 @@ public abstract class BaseFormResourceTestCase {
 		}
 
 		return true;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1537,12 +1567,12 @@ public abstract class BaseFormResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1552,10 +1582,10 @@ public abstract class BaseFormResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1569,8 +1599,8 @@ public abstract class BaseFormResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseFormResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseFormResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

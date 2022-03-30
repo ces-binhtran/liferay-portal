@@ -81,7 +81,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "${siteName}");
@@ -97,7 +96,7 @@ definition {
 
 		Portlet.viewTitle(portletName = "My Workflow Tasks");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -140,7 +139,7 @@ definition {
 
 		Portlet.viewPG(portletName = "Notifications");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -161,9 +160,10 @@ definition {
 
 		Portlet.viewNoSpecificPG(portletName = "Notifications");
 
+		Navigator.gotoPage(pageName = "Home");
+
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		UserBar.gotoDropdownItem(dropdownItem = "Notifications");
@@ -206,6 +206,33 @@ definition {
 			userContact = "edit");
 	}
 
+	@description = "This is a use case for LPS-120825."
+	@priority = "4"
+	test UpdateUserInformation {
+		UserBar.viewUserDefaultIcon();
+
+		Navigator.gotoAccountSettings();
+
+		User.editUserInformation(
+			userEmailAddressEdit = "testadmin@liferay.com",
+			userScreenNameEdit = "testscreen");
+
+		User.viewUserInfomation(
+			userEmailAddress = "testadmin@liferay.com",
+			userFirstName = "Test",
+			userLastName = "Test",
+			userScreenName = "testscreen");
+
+		JSONUser.updateUser(
+			creatorEmailAddress = "testadmin@liferay.com",
+			creatorPassword = "test",
+			screenNameUpdate = "test",
+			userEmailAddress = "testadmin@liferay.com",
+			userEmailAddressUpdate = "test@liferay.com",
+			userFirstName = "Test",
+			userLastName = "Test");
+	}
+
 	@description = "This is a use case for LPS-105387."
 	@priority = "5"
 	test UpdateUserPortrait {
@@ -222,7 +249,7 @@ definition {
 
 	@priority = "4"
 	test ViewMyAccountUser {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -233,7 +260,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -268,7 +295,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -296,10 +323,9 @@ definition {
 	test ViewMyAccountViaSignInPortlet {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPublicPage(
 			pageName = "Sign In Page",
 			sitePageType = "Widget Page");
 
@@ -322,7 +348,7 @@ definition {
 			userLastName = "user1",
 			userScreenName = "user1");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -354,6 +380,71 @@ definition {
 		LexiconEntry.viewEntryName(rowEntry = "Organization1 Name");
 
 		LexiconEntry.viewNoEntry(rowEntry = "Organization2 Name");
+	}
+
+	@priority = "4"
+	test ViewNoMyDashboardMyProfileLink {
+		property custom.properties = "jsonws.web.service.paths.excludes=${line.separator}layout.user.private.layouts.power.user.required=true${line.separator}layout.user.public.layouts.power.user.required=true";
+
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		JSONUser.addUser(
+			userEmailAddress = "user1@liferay.com",
+			userFirstName = "user1",
+			userLastName = "user1",
+			userScreenName = "user1");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "user1@liferay.com");
+
+		JSONGroup.assignUserToGroup(
+			groupName = "Guest",
+			userEmailAddress = "user1@liferay.com");
+
+		JSONGroup.assignGroupRoleToUser(
+			groupName = "Guest",
+			roleTitle = "Site Content Reviewer",
+			userEmailAddress = "user1@liferay.com");
+
+		User.logoutPG();
+
+		User.loginPG(
+			password = "test",
+			userEmailAddress = "user1@liferay.com");
+
+		UserBar.gotoDropdown();
+
+		UserBar.viewNoDropdownItem(dropdownItem = "My Dashboard");
+
+		UserBar.viewNoDropdownItem(dropdownItem = "My Profile");
+	}
+
+	@ignore = "true"
+	@priority = "3"
+	test ViewUserIconIsAccessibleViaKeyboard {
+		AssertAccessible();
+
+		KeyPress(
+			locator1 = "Button#SUBMIT",
+			value1 = "\TAB");
+
+		KeyPress(
+			locator1 = "UserBar#USER_AVATAR_BUTTON",
+			value1 = "\ENTER");
+
+		KeyPress(
+			key_dropdownItem = "My Profile",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM",
+			value1 = "\TAB");
+
+		KeyPress(
+			key_dropdownItem = "My Dashboard",
+			locator1 = "UserBar#USER_AVATAR_DROPDOWN_ITEM",
+			value1 = "\ENTER");
+
+		AssertAccessible();
 	}
 
 }

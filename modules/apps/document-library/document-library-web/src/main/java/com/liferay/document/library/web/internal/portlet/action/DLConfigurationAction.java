@@ -15,6 +15,9 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContext;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContextProvider;
+import com.liferay.item.selector.ItemSelector;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.portlet.ConfigurationAction;
 import com.liferay.portal.kernel.servlet.SessionErrors;
@@ -22,9 +25,11 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import javax.portlet.ActionRequest;
+import javax.portlet.PortletConfig;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -37,11 +42,27 @@ import org.osgi.service.component.annotations.Reference;
 	service = ConfigurationAction.class
 )
 public class DLConfigurationAction
-	extends ValidateRootFolderConfigurationAction {
+	extends BaseValidateRootFolderConfigurationAction {
 
 	@Override
 	public String getJspPath(HttpServletRequest httpServletRequest) {
 		return "/document_library/configuration.jsp";
+	}
+
+	@Override
+	public void include(
+			PortletConfig portletConfig, HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse)
+		throws Exception {
+
+		httpServletRequest.setAttribute(
+			DLAdminDisplayContext.class.getName(),
+			_dlAdminDisplayContextProvider.getDLAdminDisplayContext(
+				httpServletRequest, httpServletResponse));
+		httpServletRequest.setAttribute(
+			ItemSelector.class.getName(), _itemSelector);
+
+		super.include(portletConfig, httpServletRequest, httpServletResponse);
 	}
 
 	@Override
@@ -70,5 +91,11 @@ public class DLConfigurationAction
 			SessionErrors.add(actionRequest, "displayViewsInvalid");
 		}
 	}
+
+	@Reference
+	private DLAdminDisplayContextProvider _dlAdminDisplayContextProvider;
+
+	@Reference
+	private ItemSelector _itemSelector;
 
 }

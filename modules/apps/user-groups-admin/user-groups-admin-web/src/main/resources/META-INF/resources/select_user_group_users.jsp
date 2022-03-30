@@ -35,7 +35,6 @@ List<NavigationItem> navigationItems = new ArrayList<>();
 NavigationItem entriesNavigationItem = new NavigationItem();
 
 entriesNavigationItem.setActive(true);
-entriesNavigationItem.setHref(StringPool.BLANK);
 entriesNavigationItem.setLabel(LanguageUtil.get(request, "users"));
 
 navigationItems.add(entriesNavigationItem);
@@ -71,7 +70,7 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 	viewTypeItems="<%= editUserGroupAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<liferay-ui:search-container
 		id="selectUsers"
 		searchContainer="<%= searchContainer %>"
@@ -104,7 +103,7 @@ SearchContainer<User> searchContainer = editUserGroupAssignmentsManagementToolba
 		'<portlet:namespace />selectUsers'
 	);
 
-	searchContainer.on('rowToggled', function (event) {
+	searchContainer.on('rowToggled', (event) => {
 		var selectedItems = event.elements.allSelectedElements;
 
 		var data = [];

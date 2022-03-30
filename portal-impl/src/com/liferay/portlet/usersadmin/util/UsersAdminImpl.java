@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.usersadmin.util;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -120,11 +121,15 @@ public class UsersAdminImpl implements UsersAdmin {
 			RenderResponse renderResponse)
 		throws Exception {
 
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcRenderCommandName", "/users_admin/view");
-		portletURL.setParameter("toolbarItem", "view-all-organizations");
-		portletURL.setParameter("usersListView", "tree");
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setMVCRenderCommandName(
+			"/users_admin/view"
+		).setParameter(
+			"toolbarItem", "view-all-organizations"
+		).setParameter(
+			"usersListView", "tree"
+		).buildPortletURL();
 
 		List<Organization> ancestorOrganizations = organization.getAncestors();
 
@@ -478,9 +483,6 @@ public class UsersAdminImpl implements UsersAdmin {
 			actionRequest, "addressPrimary");
 
 		for (int addressesIndex : addressesIndexes) {
-			long addressId = ParamUtil.getLong(
-				actionRequest, "addressId" + addressesIndex);
-
 			String street1 = ParamUtil.getString(
 				actionRequest, "addressStreet1_" + addressesIndex);
 			String street2 = ParamUtil.getString(
@@ -514,18 +516,21 @@ public class UsersAdminImpl implements UsersAdmin {
 				primary = true;
 			}
 
+			long addressId = ParamUtil.getLong(
+				actionRequest, "addressId" + addressesIndex);
+
 			Address address = AddressLocalServiceUtil.createAddress(addressId);
 
+			address.setCountryId(countryId);
+			address.setRegionId(regionId);
+			address.setTypeId(typeId);
+			address.setCity(city);
+			address.setMailing(mailing);
+			address.setPrimary(primary);
 			address.setStreet1(street1);
 			address.setStreet2(street2);
 			address.setStreet3(street3);
-			address.setCity(city);
 			address.setZip(zip);
-			address.setRegionId(regionId);
-			address.setCountryId(countryId);
-			address.setTypeId(typeId);
-			address.setMailing(mailing);
-			address.setPrimary(primary);
 
 			addresses.add(address);
 		}
@@ -559,9 +564,6 @@ public class UsersAdminImpl implements UsersAdmin {
 			actionRequest, "emailAddressPrimary");
 
 		for (int emailAddressesIndex : emailAddressesIndexes) {
-			long emailAddressId = ParamUtil.getLong(
-				actionRequest, "emailAddressId" + emailAddressesIndex);
-
 			String address = ParamUtil.getString(
 				actionRequest, "emailAddressAddress" + emailAddressesIndex);
 
@@ -577,6 +579,9 @@ public class UsersAdminImpl implements UsersAdmin {
 			if (emailAddressesIndex == emailAddressPrimary) {
 				primary = true;
 			}
+
+			long emailAddressId = ParamUtil.getLong(
+				actionRequest, "emailAddressId" + emailAddressesIndex);
 
 			EmailAddress emailAddress =
 				EmailAddressLocalServiceUtil.createEmailAddress(emailAddressId);
@@ -634,7 +639,7 @@ public class UsersAdminImpl implements UsersAdmin {
 
 	@Override
 	public Long[] getOrganizationIds(List<Organization> organizations) {
-		if ((organizations == null) || organizations.isEmpty()) {
+		if (ListUtil.isEmpty(organizations)) {
 			return new Long[0];
 		}
 
@@ -733,15 +738,15 @@ public class UsersAdminImpl implements UsersAdmin {
 			ParamUtil.getString(actionRequest, "orgLaborsIndexes"), 0);
 
 		for (int orgLaborsIndex : orgLaborsIndexes) {
-			long orgLaborId = ParamUtil.getLong(
-				actionRequest, "orgLaborId" + orgLaborsIndex);
-
 			long typeId = ParamUtil.getLong(
 				actionRequest, "orgLaborTypeId" + orgLaborsIndex, -1);
 
 			if (typeId == -1) {
 				continue;
 			}
+
+			long orgLaborId = ParamUtil.getLong(
+				actionRequest, "orgLaborId" + orgLaborsIndex);
 
 			int sunOpen = ParamUtil.getInteger(
 				actionRequest, "sunOpen" + orgLaborsIndex, -1);
@@ -820,9 +825,6 @@ public class UsersAdminImpl implements UsersAdmin {
 		int phonePrimary = ParamUtil.getInteger(actionRequest, "phonePrimary");
 
 		for (int phonesIndex : phonesIndexes) {
-			long phoneId = ParamUtil.getLong(
-				actionRequest, "phoneId" + phonesIndex);
-
 			String number = ParamUtil.getString(
 				actionRequest, "phoneNumber" + phonesIndex);
 			String extension = ParamUtil.getString(
@@ -840,6 +842,9 @@ public class UsersAdminImpl implements UsersAdmin {
 			if (phonesIndex == phonePrimary) {
 				primary = true;
 			}
+
+			long phoneId = ParamUtil.getLong(
+				actionRequest, "phoneId" + phonesIndex);
 
 			Phone phone = PhoneLocalServiceUtil.createPhone(phoneId);
 
@@ -1104,9 +1109,6 @@ public class UsersAdminImpl implements UsersAdmin {
 			actionRequest, "websitePrimary");
 
 		for (int websitesIndex : websitesIndexes) {
-			long websiteId = ParamUtil.getLong(
-				actionRequest, "websiteId" + websitesIndex);
-
 			String url = ParamUtil.getString(
 				actionRequest, "websiteUrl" + websitesIndex);
 
@@ -1122,6 +1124,9 @@ public class UsersAdminImpl implements UsersAdmin {
 			if (websitesIndex == websitePrimary) {
 				primary = true;
 			}
+
+			long websiteId = ParamUtil.getLong(
+				actionRequest, "websiteId" + websitesIndex);
 
 			Website website = WebsiteLocalServiceUtil.createWebsite(websiteId);
 

@@ -17,13 +17,12 @@ package com.liferay.layout.content.page.editor.web.internal.portlet.action.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.structure.DeletedLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -32,20 +31,13 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -83,32 +75,22 @@ public class PublishLayoutMVCActionCommandTest {
 	public void testDeletedItemsAreRemovedWhenLayoutIsPublished()
 		throws Exception {
 
-		Map<Locale, String> nameMap = HashMapBuilder.put(
-			LocaleUtil.US, RandomTestUtil.randomString()
-		).build();
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false, 0, 0, 0,
-			nameMap, new HashMap<>(), new HashMap<>(), new HashMap<>(),
-			new HashMap<>(), LayoutConstants.TYPE_CONTENT, StringPool.BLANK,
-			false, false, 0, new HashMap<>(), _serviceContext);
-
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class.getName()),
-			layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		LayoutStructure layoutStructure = _getLayoutStructure(draftLayout);
 
 		LayoutStructureItem layoutStructureItem1 =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		LayoutStructureItem layoutStructureItem2 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0, 3);
 
 		LayoutStructureItem layoutStructureItem3 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
@@ -155,7 +137,7 @@ public class PublishLayoutMVCActionCommandTest {
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
-					_group.getGroupId(), layout.getPlid(), true);
+					_group.getGroupId(), layout.getPlid());
 
 		return LayoutStructure.of(layoutPageTemplateStructure.getData(0));
 	}
@@ -170,7 +152,9 @@ public class PublishLayoutMVCActionCommandTest {
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
-	@Inject(filter = "mvc.command.name=/content_layout/publish_layout")
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout"
+	)
 	private MVCActionCommand _mvcActionCommand;
 
 	private ServiceContext _serviceContext;

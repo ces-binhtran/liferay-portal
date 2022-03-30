@@ -14,6 +14,8 @@
 
 package com.liferay.portal.kernel.json;
 
+import com.liferay.petra.function.UnsafeSupplier;
+
 import java.io.Externalizable;
 import java.io.Writer;
 
@@ -51,15 +53,17 @@ public interface JSONArray extends Externalizable, Iterable, JSONSerializable {
 
 	public JSONArray put(int value);
 
-	public JSONArray put(JSONArray value);
+	public JSONArray put(JSONArray jsonArray);
 
-	public JSONArray put(JSONObject value);
+	public JSONArray put(JSONObject jsonObject);
 
 	public JSONArray put(long value);
 
 	public JSONArray put(Object value);
 
 	public JSONArray put(String value);
+
+	public JSONArray put(UnsafeSupplier<Object, Exception> valueUnsafeSupplier);
 
 	@Override
 	public String toString();

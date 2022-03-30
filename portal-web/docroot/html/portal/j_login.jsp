@@ -45,14 +45,14 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 
 <c:choose>
 	<c:when test="<%= Validator.isNotNull(jUserName) && Validator.isNotNull(jPassword) %>">
-		<html dir='<liferay-ui:message key="lang.dir" />'>
+		<html dir="<liferay-ui:message key="lang.dir" />">
 			<head>
 				<meta content="<%= ContentTypes.TEXT_HTML_UTF8 %>" http-equiv="content-type" />
 				<meta content="no-cache" http-equiv="Cache-Control" />
 				<meta content="no-cache" http-equiv="Pragma" />
 				<meta content="0" http-equiv="Expires" />
 
-				<script src="<%= themeDisplay.getCDNHost() + themeDisplay.getPathJavaScript() %>/misc/xp_progress.js" type="text/javascript"></script>
+				<link class="lfr-css-file" href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, themeDisplay.getPathThemeCss() + "/clay.css")) %>" rel="stylesheet" type="text/css" />
 			</head>
 
 			<body onLoad="setTimeout('document.fm.submit()', 100);">
@@ -71,9 +71,7 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 
 								<br /><br />
 
-								<script type="text/javascript">
-									var progressBar = createBar(300, 15, '#FFFFFF', 1, '#000000', '', 85, 7, 3, '');
-								</script>
+								<span aria-hidden="true" class="loading-animation loading-animation-sm"></span>
 							</td>
 						</tr>
 					</table>
@@ -104,11 +102,11 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 			session.invalidate();
 		}
 		catch (Exception e) {
-			_log.error(e, e);
+			_log.error(e);
 		}
 		%>
 
-		<html dir='<liferay-ui:message key="lang.dir" />'>
+		<html dir="<liferay-ui:message key="lang.dir" />">
 			<head>
 				<title></title>
 
@@ -121,11 +119,10 @@ if (PropsValues.PORTAL_JAAS_ENABLE && (jUserName != null)) {
 			<body onLoad="javascript:location.replace('<%= themeDisplay.getPathMain() %>')">
 
 			</body>
-
 		</html>
 	</c:otherwise>
 </c:choose>
 
 <%!
-	private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.j_login_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.j_login_jsp");
 %>

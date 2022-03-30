@@ -14,19 +14,21 @@
 
 package com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodParameter;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.JavaMethodSignature;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
+import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
+import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Components;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.OpenAPIYAML;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Operation;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Parameter;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Schema;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
-import com.liferay.portal.vulcan.yaml.config.ConfigYAML;
-import com.liferay.portal.vulcan.yaml.openapi.Components;
-import com.liferay.portal.vulcan.yaml.openapi.OpenAPIYAML;
-import com.liferay.portal.vulcan.yaml.openapi.Operation;
-import com.liferay.portal.vulcan.yaml.openapi.Parameter;
-import com.liferay.portal.vulcan.yaml.openapi.Schema;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 
@@ -43,18 +46,21 @@ import java.util.function.Predicate;
 public class GraphQLOpenAPIParser {
 
 	public static List<JavaMethodSignature> getJavaMethodSignatures(
-		ConfigYAML configYAML, OpenAPIYAML openAPIYAML,
-		Predicate<Operation> predicate) {
+			ConfigYAML configYAML, OpenAPIYAML openAPIYAML,
+			Predicate<Operation> predicate)
+		throws Exception {
 
 		List<JavaMethodSignature> javaMethodSignatures = new ArrayList<>();
 
+		Map<String, Schema> schemas = new TreeMap<>();
+
 		Components components = openAPIYAML.getComponents();
 
-		if (components == null) {
-			return javaMethodSignatures;
+		if (components != null) {
+			schemas.putAll(components.getSchemas());
 		}
 
-		Map<String, Schema> schemas = components.getSchemas();
+		schemas.putAll(OpenAPIUtil.getAllExternalSchemas(openAPIYAML));
 
 		for (String schemaName : schemas.keySet()) {
 			javaMethodSignatures.addAll(
@@ -75,7 +81,7 @@ public class GraphQLOpenAPIParser {
 		String httpMethod = OpenAPIParserUtil.getHTTPMethod(operation);
 
 		if (httpMethod != null) {
-			StringBuilder sb = new StringBuilder("@GraphQLField(");
+			StringBundler sb = new StringBundler("@GraphQLField(");
 
 			if (operation.getDescription() != null) {
 				sb.append("description=\"");
@@ -180,14 +186,8 @@ public class GraphQLOpenAPIParser {
 				String className = returnType.substring(
 					pageClassName.length() + 1, returnType.length() - 1);
 
-				StringBuilder sb = new StringBuilder();
-
-				sb.append(Collection.class.getName());
-				sb.append("<");
-				sb.append(className);
-				sb.append(">");
-
-				returnType = sb.toString();
+				returnType = StringBundler.concat(
+					Collection.class.getName(), "<", className, ">");
 			}
 
 			List<JavaMethodParameter> javaMethodParameters =
@@ -221,7 +221,7 @@ public class GraphQLOpenAPIParser {
 		List<JavaMethodParameter> javaMethodParameters =
 			javaMethodSignature.getJavaMethodParameters();
 
-		StringBuilder sb = new StringBuilder("@GraphQLName(value=\"");
+		StringBundler sb = new StringBundler("@GraphQLName(value=\"");
 
 		sb.append(javaMethodSignature.getMethodName());
 
@@ -257,17 +257,12 @@ public class GraphQLOpenAPIParser {
 			Schema schema = parameter.getSchema();
 
 			if (schema.getType() != null) {
-				StringBuilder sb = new StringBuilder();
-
-				sb.append("@GraphQLName(\"");
-				sb.append(parameter.getName());
-				sb.append("\")");
-
-				return sb.toString();
+				return StringBundler.concat(
+					"@GraphQLName(\"", parameter.getName(), "\")");
 			}
 		}
 
-		StringBuilder sb = new StringBuilder();
+		StringBundler sb = new StringBundler(3);
 
 		sb.append("@GraphQLName(\"");
 

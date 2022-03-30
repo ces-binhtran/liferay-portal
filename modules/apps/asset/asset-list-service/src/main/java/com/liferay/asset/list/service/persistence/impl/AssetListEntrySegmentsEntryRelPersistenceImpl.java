@@ -20,6 +20,7 @@ import com.liferay.asset.list.model.AssetListEntrySegmentsEntryRelTable;
 import com.liferay.asset.list.model.impl.AssetListEntrySegmentsEntryRelImpl;
 import com.liferay.asset.list.model.impl.AssetListEntrySegmentsEntryRelModelImpl;
 import com.liferay.asset.list.service.persistence.AssetListEntrySegmentsEntryRelPersistence;
+import com.liferay.asset.list.service.persistence.AssetListEntrySegmentsEntryRelUtil;
 import com.liferay.asset.list.service.persistence.impl.constants.AssetListPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
@@ -37,17 +38,23 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -79,7 +86,11 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = AssetListEntrySegmentsEntryRelPersistence.class)
+@Component(
+	service = {
+		AssetListEntrySegmentsEntryRelPersistence.class, BasePersistence.class
+	}
+)
 public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	extends BasePersistenceImpl<AssetListEntrySegmentsEntryRel>
 	implements AssetListEntrySegmentsEntryRelPersistence {
@@ -201,7 +212,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetListEntrySegmentsEntryRel
@@ -276,10 +287,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -614,7 +621,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -655,10 +662,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -758,7 +761,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof AssetListEntrySegmentsEntryRel) {
@@ -826,11 +829,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(
-						_finderPathFetchByUUID_G, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -888,7 +886,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -933,10 +931,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1066,7 +1060,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetListEntrySegmentsEntryRel
@@ -1147,10 +1141,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1504,7 +1494,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1549,10 +1539,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1676,7 +1662,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetListEntrySegmentsEntryRel
@@ -1741,10 +1727,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2066,7 +2048,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {assetListEntryId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2096,10 +2078,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2218,7 +2196,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AssetListEntrySegmentsEntryRel
@@ -2283,10 +2261,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2608,7 +2582,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {segmentsEntryId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2638,10 +2612,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2736,8 +2706,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByA_S, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByA_S, finderArgs);
 		}
 
 		if (result instanceof AssetListEntrySegmentsEntryRel) {
@@ -2795,10 +2764,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(_finderPathFetchByA_S, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2854,7 +2819,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			finderArgs = new Object[] {assetListEntryId, segmentsEntryId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2888,10 +2853,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2907,6 +2868,881 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 	private static final String _FINDER_COLUMN_A_S_SEGMENTSENTRYID_2 =
 		"assetListEntrySegmentsEntryRel.segmentsEntryId = ?";
+
+	private FinderPath _finderPathWithPaginationFindByA_S_C;
+	private FinderPath _finderPathWithoutPaginationFindByA_S_C;
+	private FinderPath _finderPathCountByA_S_C;
+	private FinderPath _finderPathWithPaginationCountByA_S_C;
+
+	/**
+	 * Returns all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @return the matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long segmentsEntryId) {
+
+		return findByA_S_C(
+			assetListEntryId, segmentsEntryId, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @return the range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long segmentsEntryId, int start, int end) {
+
+		return findByA_S_C(assetListEntryId, segmentsEntryId, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long segmentsEntryId, int start, int end,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator) {
+
+		return findByA_S_C(
+			assetListEntryId, segmentsEntryId, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long segmentsEntryId, int start, int end,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator,
+		boolean useFinderCache) {
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetListEntrySegmentsEntryRel.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderPath = _finderPathWithoutPaginationFindByA_S_C;
+				finderArgs = new Object[] {assetListEntryId, segmentsEntryId};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderPath = _finderPathWithPaginationFindByA_S_C;
+			finderArgs = new Object[] {
+				assetListEntryId, segmentsEntryId, start, end, orderByComparator
+			};
+		}
+
+		List<AssetListEntrySegmentsEntryRel> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
+				finderPath, finderArgs);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (AssetListEntrySegmentsEntryRel
+						assetListEntrySegmentsEntryRel : list) {
+
+					if ((assetListEntryId !=
+							assetListEntrySegmentsEntryRel.
+								getAssetListEntryId()) ||
+						(segmentsEntryId !=
+							assetListEntrySegmentsEntryRel.
+								getSegmentsEntryId())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = null;
+
+			if (orderByComparator != null) {
+				sb = new StringBundler(
+					4 + (orderByComparator.getOrderByFields().length * 2));
+			}
+			else {
+				sb = new StringBundler(4);
+			}
+
+			sb.append(_SQL_SELECT_ASSETLISTENTRYSEGMENTSENTRYREL_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2);
+
+			sb.append(_FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_2);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(
+					AssetListEntrySegmentsEntryRelModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(assetListEntryId);
+
+				queryPos.add(segmentsEntryId);
+
+				list = (List<AssetListEntrySegmentsEntryRel>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(finderPath, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first asset list entry segments entry rel in the ordered set where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry segments entry rel
+	 * @throws NoSuchEntrySegmentsEntryRelException if a matching asset list entry segments entry rel could not be found
+	 */
+	@Override
+	public AssetListEntrySegmentsEntryRel findByA_S_C_First(
+			long assetListEntryId, long segmentsEntryId,
+			OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator)
+		throws NoSuchEntrySegmentsEntryRelException {
+
+		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel =
+			fetchByA_S_C_First(
+				assetListEntryId, segmentsEntryId, orderByComparator);
+
+		if (assetListEntrySegmentsEntryRel != null) {
+			return assetListEntrySegmentsEntryRel;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("assetListEntryId=");
+		sb.append(assetListEntryId);
+
+		sb.append(", segmentsEntryId=");
+		sb.append(segmentsEntryId);
+
+		sb.append("}");
+
+		throw new NoSuchEntrySegmentsEntryRelException(sb.toString());
+	}
+
+	/**
+	 * Returns the first asset list entry segments entry rel in the ordered set where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching asset list entry segments entry rel, or <code>null</code> if a matching asset list entry segments entry rel could not be found
+	 */
+	@Override
+	public AssetListEntrySegmentsEntryRel fetchByA_S_C_First(
+		long assetListEntryId, long segmentsEntryId,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator) {
+
+		List<AssetListEntrySegmentsEntryRel> list = findByA_S_C(
+			assetListEntryId, segmentsEntryId, 0, 1, orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the last asset list entry segments entry rel in the ordered set where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry segments entry rel
+	 * @throws NoSuchEntrySegmentsEntryRelException if a matching asset list entry segments entry rel could not be found
+	 */
+	@Override
+	public AssetListEntrySegmentsEntryRel findByA_S_C_Last(
+			long assetListEntryId, long segmentsEntryId,
+			OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator)
+		throws NoSuchEntrySegmentsEntryRelException {
+
+		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel =
+			fetchByA_S_C_Last(
+				assetListEntryId, segmentsEntryId, orderByComparator);
+
+		if (assetListEntrySegmentsEntryRel != null) {
+			return assetListEntrySegmentsEntryRel;
+		}
+
+		StringBundler sb = new StringBundler(6);
+
+		sb.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+		sb.append("assetListEntryId=");
+		sb.append(assetListEntryId);
+
+		sb.append(", segmentsEntryId=");
+		sb.append(segmentsEntryId);
+
+		sb.append("}");
+
+		throw new NoSuchEntrySegmentsEntryRelException(sb.toString());
+	}
+
+	/**
+	 * Returns the last asset list entry segments entry rel in the ordered set where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching asset list entry segments entry rel, or <code>null</code> if a matching asset list entry segments entry rel could not be found
+	 */
+	@Override
+	public AssetListEntrySegmentsEntryRel fetchByA_S_C_Last(
+		long assetListEntryId, long segmentsEntryId,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator) {
+
+		int count = countByA_S_C(assetListEntryId, segmentsEntryId);
+
+		if (count == 0) {
+			return null;
+		}
+
+		List<AssetListEntrySegmentsEntryRel> list = findByA_S_C(
+			assetListEntryId, segmentsEntryId, count - 1, count,
+			orderByComparator);
+
+		if (!list.isEmpty()) {
+			return list.get(0);
+		}
+
+		return null;
+	}
+
+	/**
+	 * Returns the asset list entry segments entry rels before and after the current asset list entry segments entry rel in the ordered set where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntrySegmentsEntryRelId the primary key of the current asset list entry segments entry rel
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next asset list entry segments entry rel
+	 * @throws NoSuchEntrySegmentsEntryRelException if a asset list entry segments entry rel with the primary key could not be found
+	 */
+	@Override
+	public AssetListEntrySegmentsEntryRel[] findByA_S_C_PrevAndNext(
+			long assetListEntrySegmentsEntryRelId, long assetListEntryId,
+			long segmentsEntryId,
+			OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator)
+		throws NoSuchEntrySegmentsEntryRelException {
+
+		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel =
+			findByPrimaryKey(assetListEntrySegmentsEntryRelId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			AssetListEntrySegmentsEntryRel[] array =
+				new AssetListEntrySegmentsEntryRelImpl[3];
+
+			array[0] = getByA_S_C_PrevAndNext(
+				session, assetListEntrySegmentsEntryRel, assetListEntryId,
+				segmentsEntryId, orderByComparator, true);
+
+			array[1] = assetListEntrySegmentsEntryRel;
+
+			array[2] = getByA_S_C_PrevAndNext(
+				session, assetListEntrySegmentsEntryRel, assetListEntryId,
+				segmentsEntryId, orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected AssetListEntrySegmentsEntryRel getByA_S_C_PrevAndNext(
+		Session session,
+		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel,
+		long assetListEntryId, long segmentsEntryId,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator,
+		boolean previous) {
+
+		StringBundler sb = null;
+
+		if (orderByComparator != null) {
+			sb = new StringBundler(
+				5 + (orderByComparator.getOrderByConditionFields().length * 3) +
+					(orderByComparator.getOrderByFields().length * 3));
+		}
+		else {
+			sb = new StringBundler(4);
+		}
+
+		sb.append(_SQL_SELECT_ASSETLISTENTRYSEGMENTSENTRYREL_WHERE);
+
+		sb.append(_FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2);
+
+		sb.append(_FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_2);
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields =
+				orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				sb.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(WHERE_GREATER_THAN);
+					}
+					else {
+						sb.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			sb.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				sb.append(_ORDER_BY_ENTITY_ALIAS);
+				sb.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						sb.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						sb.append(ORDER_BY_ASC);
+					}
+					else {
+						sb.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+		else {
+			sb.append(AssetListEntrySegmentsEntryRelModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = sb.toString();
+
+		Query query = session.createQuery(sql);
+
+		query.setFirstResult(0);
+		query.setMaxResults(2);
+
+		QueryPos queryPos = QueryPos.getInstance(query);
+
+		queryPos.add(assetListEntryId);
+
+		queryPos.add(segmentsEntryId);
+
+		if (orderByComparator != null) {
+			for (Object orderByConditionValue :
+					orderByComparator.getOrderByConditionValues(
+						assetListEntrySegmentsEntryRel)) {
+
+				queryPos.add(orderByConditionValue);
+			}
+		}
+
+		List<AssetListEntrySegmentsEntryRel> list = query.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryIds the segments entry IDs
+	 * @return the matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long[] segmentsEntryIds) {
+
+		return findByA_S_C(
+			assetListEntryId, segmentsEntryIds, QueryUtil.ALL_POS,
+			QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryIds the segments entry IDs
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @return the range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long[] segmentsEntryIds, int start, int end) {
+
+		return findByA_S_C(
+			assetListEntryId, segmentsEntryIds, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = any &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryIds the segments entry IDs
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long[] segmentsEntryIds, int start, int end,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator) {
+
+		return findByA_S_C(
+			assetListEntryId, segmentsEntryIds, start, end, orderByComparator,
+			true);
+	}
+
+	/**
+	 * Returns an ordered range of all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;, optionally using the finder cache.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to <code>QueryUtil#ALL_POS</code> will return the full result set. If <code>orderByComparator</code> is specified, then the query will include the given ORDER BY logic. If <code>orderByComparator</code> is absent, then the query will include the default ORDER BY logic from <code>AssetListEntrySegmentsEntryRelModelImpl</code>.
+	 * </p>
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @param start the lower bound of the range of asset list entry segments entry rels
+	 * @param end the upper bound of the range of asset list entry segments entry rels (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the ordered range of matching asset list entry segments entry rels
+	 */
+	@Override
+	public List<AssetListEntrySegmentsEntryRel> findByA_S_C(
+		long assetListEntryId, long[] segmentsEntryIds, int start, int end,
+		OrderByComparator<AssetListEntrySegmentsEntryRel> orderByComparator,
+		boolean useFinderCache) {
+
+		if (segmentsEntryIds == null) {
+			segmentsEntryIds = new long[0];
+		}
+		else if (segmentsEntryIds.length > 1) {
+			segmentsEntryIds = ArrayUtil.sortedUnique(segmentsEntryIds);
+		}
+
+		if (segmentsEntryIds.length == 1) {
+			return findByA_S_C(
+				assetListEntryId, segmentsEntryIds[0], start, end,
+				orderByComparator);
+		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetListEntrySegmentsEntryRel.class);
+
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+			(orderByComparator == null)) {
+
+			if (useFinderCache && productionMode) {
+				finderArgs = new Object[] {
+					assetListEntryId, StringUtil.merge(segmentsEntryIds)
+				};
+			}
+		}
+		else if (useFinderCache && productionMode) {
+			finderArgs = new Object[] {
+				assetListEntryId, StringUtil.merge(segmentsEntryIds), start,
+				end, orderByComparator
+			};
+		}
+
+		List<AssetListEntrySegmentsEntryRel> list = null;
+
+		if (useFinderCache && productionMode) {
+			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
+				_finderPathWithPaginationFindByA_S_C, finderArgs);
+
+			if ((list != null) && !list.isEmpty()) {
+				for (AssetListEntrySegmentsEntryRel
+						assetListEntrySegmentsEntryRel : list) {
+
+					if ((assetListEntryId !=
+							assetListEntrySegmentsEntryRel.
+								getAssetListEntryId()) ||
+						!ArrayUtil.contains(
+							segmentsEntryIds,
+							assetListEntrySegmentsEntryRel.
+								getSegmentsEntryId())) {
+
+						list = null;
+
+						break;
+					}
+				}
+			}
+		}
+
+		if (list == null) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_SQL_SELECT_ASSETLISTENTRYSEGMENTSENTRYREL_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2);
+
+			if (segmentsEntryIds.length > 0) {
+				sb.append("(");
+
+				sb.append(_FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_7);
+
+				sb.append(StringUtil.merge(segmentsEntryIds));
+
+				sb.append(")");
+
+				sb.append(")");
+			}
+
+			sb.setStringAt(
+				removeConjunction(sb.stringAt(sb.index() - 1)), sb.index() - 1);
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(
+					sb, _ORDER_BY_ENTITY_ALIAS, orderByComparator);
+			}
+			else {
+				sb.append(
+					AssetListEntrySegmentsEntryRelModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(assetListEntryId);
+
+				list = (List<AssetListEntrySegmentsEntryRel>)QueryUtil.list(
+					query, getDialect(), start, end);
+
+				cacheResult(list);
+
+				if (useFinderCache && productionMode) {
+					finderCache.putResult(
+						_finderPathWithPaginationFindByA_S_C, finderArgs, list);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Removes all the asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63; from the database.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 */
+	@Override
+	public void removeByA_S_C(long assetListEntryId, long segmentsEntryId) {
+		for (AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel :
+				findByA_S_C(
+					assetListEntryId, segmentsEntryId, QueryUtil.ALL_POS,
+					QueryUtil.ALL_POS, null)) {
+
+			remove(assetListEntrySegmentsEntryRel);
+		}
+	}
+
+	/**
+	 * Returns the number of asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryId the segments entry ID
+	 * @return the number of matching asset list entry segments entry rels
+	 */
+	@Override
+	public int countByA_S_C(long assetListEntryId, long segmentsEntryId) {
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetListEntrySegmentsEntryRel.class);
+
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByA_S_C;
+
+			finderArgs = new Object[] {assetListEntryId, segmentsEntryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler(3);
+
+			sb.append(_SQL_COUNT_ASSETLISTENTRYSEGMENTSENTRYREL_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2);
+
+			sb.append(_FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_2);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(assetListEntryId);
+
+				queryPos.add(segmentsEntryId);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	/**
+	 * Returns the number of asset list entry segments entry rels where assetListEntryId = &#63; and segmentsEntryId = any &#63;.
+	 *
+	 * @param assetListEntryId the asset list entry ID
+	 * @param segmentsEntryIds the segments entry IDs
+	 * @return the number of matching asset list entry segments entry rels
+	 */
+	@Override
+	public int countByA_S_C(long assetListEntryId, long[] segmentsEntryIds) {
+		if (segmentsEntryIds == null) {
+			segmentsEntryIds = new long[0];
+		}
+		else if (segmentsEntryIds.length > 1) {
+			segmentsEntryIds = ArrayUtil.sortedUnique(segmentsEntryIds);
+		}
+
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			AssetListEntrySegmentsEntryRel.class);
+
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderArgs = new Object[] {
+				assetListEntryId, StringUtil.merge(segmentsEntryIds)
+			};
+
+			count = (Long)finderCache.getResult(
+				_finderPathWithPaginationCountByA_S_C, finderArgs);
+		}
+
+		if (count == null) {
+			StringBundler sb = new StringBundler();
+
+			sb.append(_SQL_COUNT_ASSETLISTENTRYSEGMENTSENTRYREL_WHERE);
+
+			sb.append(_FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2);
+
+			if (segmentsEntryIds.length > 0) {
+				sb.append("(");
+
+				sb.append(_FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_7);
+
+				sb.append(StringUtil.merge(segmentsEntryIds));
+
+				sb.append(")");
+
+				sb.append(")");
+			}
+
+			sb.setStringAt(
+				removeConjunction(sb.stringAt(sb.index() - 1)), sb.index() - 1);
+
+			String sql = sb.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query query = session.createQuery(sql);
+
+				QueryPos queryPos = QueryPos.getInstance(query);
+
+				queryPos.add(assetListEntryId);
+
+				count = (Long)query.uniqueResult();
+
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathWithPaginationCountByA_S_C, finderArgs,
+						count);
+				}
+			}
+			catch (Exception exception) {
+				throw processException(exception);
+			}
+			finally {
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	private static final String _FINDER_COLUMN_A_S_C_ASSETLISTENTRYID_2 =
+		"assetListEntrySegmentsEntryRel.assetListEntryId = ? AND ";
+
+	private static final String _FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_2 =
+		"assetListEntrySegmentsEntryRel.segmentsEntryId = ?";
+
+	private static final String _FINDER_COLUMN_A_S_C_SEGMENTSENTRYID_7 =
+		"assetListEntrySegmentsEntryRel.segmentsEntryId IN (";
 
 	public AssetListEntrySegmentsEntryRelPersistenceImpl() {
 		Map<String, String> dbColumnNames = new HashMap<String, String>();
@@ -2935,13 +3771,11 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel) {
 
 		if (assetListEntrySegmentsEntryRel.getCtCollectionId() != 0) {
-			assetListEntrySegmentsEntryRel.resetOriginalValues();
-
 			return;
 		}
 
 		entityCache.putResult(
-			entityCacheEnabled, AssetListEntrySegmentsEntryRelImpl.class,
+			AssetListEntrySegmentsEntryRelImpl.class,
 			assetListEntrySegmentsEntryRel.getPrimaryKey(),
 			assetListEntrySegmentsEntryRel);
 
@@ -2960,9 +3794,9 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				assetListEntrySegmentsEntryRel.getSegmentsEntryId()
 			},
 			assetListEntrySegmentsEntryRel);
-
-		assetListEntrySegmentsEntryRel.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the asset list entry segments entry rels in the entity cache if it is enabled.
@@ -2973,24 +3807,26 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	public void cacheResult(
 		List<AssetListEntrySegmentsEntryRel> assetListEntrySegmentsEntryRels) {
 
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (assetListEntrySegmentsEntryRels.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel :
 				assetListEntrySegmentsEntryRels) {
 
 			if (assetListEntrySegmentsEntryRel.getCtCollectionId() != 0) {
-				assetListEntrySegmentsEntryRel.resetOriginalValues();
-
 				continue;
 			}
 
 			if (entityCache.getResult(
-					entityCacheEnabled,
 					AssetListEntrySegmentsEntryRelImpl.class,
 					assetListEntrySegmentsEntryRel.getPrimaryKey()) == null) {
 
 				cacheResult(assetListEntrySegmentsEntryRel);
-			}
-			else {
-				assetListEntrySegmentsEntryRel.resetOriginalValues();
 			}
 		}
 	}
@@ -3006,9 +3842,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(AssetListEntrySegmentsEntryRelImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AssetListEntrySegmentsEntryRelImpl.class);
 	}
 
 	/**
@@ -3023,49 +3857,30 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel) {
 
 		entityCache.removeResult(
-			entityCacheEnabled, AssetListEntrySegmentsEntryRelImpl.class,
-			assetListEntrySegmentsEntryRel.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(AssetListEntrySegmentsEntryRelModelImpl)
-				assetListEntrySegmentsEntryRel,
-			true);
+			AssetListEntrySegmentsEntryRelImpl.class,
+			assetListEntrySegmentsEntryRel);
 	}
 
 	@Override
 	public void clearCache(
 		List<AssetListEntrySegmentsEntryRel> assetListEntrySegmentsEntryRels) {
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel :
 				assetListEntrySegmentsEntryRels) {
 
 			entityCache.removeResult(
-				entityCacheEnabled, AssetListEntrySegmentsEntryRelImpl.class,
-				assetListEntrySegmentsEntryRel.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(AssetListEntrySegmentsEntryRelModelImpl)
-					assetListEntrySegmentsEntryRel,
-				true);
+				AssetListEntrySegmentsEntryRelImpl.class,
+				assetListEntrySegmentsEntryRel);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(AssetListEntrySegmentsEntryRelImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
-				entityCacheEnabled, AssetListEntrySegmentsEntryRelImpl.class,
-				primaryKey);
+				AssetListEntrySegmentsEntryRelImpl.class, primaryKey);
 		}
 	}
 
@@ -3078,74 +3893,20 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 			assetListEntrySegmentsEntryRelModelImpl.getGroupId()
 		};
 
-		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByUUID_G, args,
-			assetListEntrySegmentsEntryRelModelImpl, false);
+			assetListEntrySegmentsEntryRelModelImpl);
 
 		args = new Object[] {
 			assetListEntrySegmentsEntryRelModelImpl.getAssetListEntryId(),
 			assetListEntrySegmentsEntryRelModelImpl.getSegmentsEntryId()
 		};
 
-		finderCache.putResult(
-			_finderPathCountByA_S, args, Long.valueOf(1), false);
+		finderCache.putResult(_finderPathCountByA_S, args, Long.valueOf(1));
 		finderCache.putResult(
 			_finderPathFetchByA_S, args,
-			assetListEntrySegmentsEntryRelModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		AssetListEntrySegmentsEntryRelModelImpl
-			assetListEntrySegmentsEntryRelModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getUuid(),
-				assetListEntrySegmentsEntryRelModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getOriginalUuid(),
-				assetListEntrySegmentsEntryRelModelImpl.getOriginalGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getAssetListEntryId(),
-				assetListEntrySegmentsEntryRelModelImpl.getSegmentsEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByA_S, args);
-			finderCache.removeResult(_finderPathFetchByA_S, args);
-		}
-
-		if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-			 _finderPathFetchByA_S.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.
-					getOriginalAssetListEntryId(),
-				assetListEntrySegmentsEntryRelModelImpl.
-					getOriginalSegmentsEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByA_S, args);
-			finderCache.removeResult(_finderPathFetchByA_S, args);
-		}
+			assetListEntrySegmentsEntryRelModelImpl);
 	}
 
 	/**
@@ -3236,10 +3997,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	protected AssetListEntrySegmentsEntryRel removeImpl(
 		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel) {
 
-		if (!ctPersistenceHelper.isRemove(assetListEntrySegmentsEntryRel)) {
-			return assetListEntrySegmentsEntryRel;
-		}
-
 		Session session = null;
 
 		try {
@@ -3252,7 +4009,9 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 						assetListEntrySegmentsEntryRel.getPrimaryKeyObj());
 			}
 
-			if (assetListEntrySegmentsEntryRel != null) {
+			if ((assetListEntrySegmentsEntryRel != null) &&
+				ctPersistenceHelper.isRemove(assetListEntrySegmentsEntryRel)) {
+
 				session.delete(assetListEntrySegmentsEntryRel);
 			}
 		}
@@ -3311,25 +4070,25 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (assetListEntrySegmentsEntryRel.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				assetListEntrySegmentsEntryRel.setCreateDate(now);
+				assetListEntrySegmentsEntryRel.setCreateDate(date);
 			}
 			else {
 				assetListEntrySegmentsEntryRel.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!assetListEntrySegmentsEntryRelModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				assetListEntrySegmentsEntryRel.setModifiedDate(now);
+				assetListEntrySegmentsEntryRel.setModifiedDate(date);
 			}
 			else {
 				assetListEntrySegmentsEntryRel.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -3340,21 +4099,12 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 			if (ctPersistenceHelper.isInsert(assetListEntrySegmentsEntryRel)) {
 				if (!isNew) {
-					AssetListEntrySegmentsEntryRel
-						oldAssetListEntrySegmentsEntryRel =
-							(AssetListEntrySegmentsEntryRel)session.get(
-								AssetListEntrySegmentsEntryRelImpl.class,
-								assetListEntrySegmentsEntryRel.
-									getPrimaryKeyObj());
-
-					if (oldAssetListEntrySegmentsEntryRel != null) {
-						session.evict(oldAssetListEntrySegmentsEntryRel);
-					}
+					session.evict(
+						AssetListEntrySegmentsEntryRelImpl.class,
+						assetListEntrySegmentsEntryRel.getPrimaryKeyObj());
 				}
 
 				session.save(assetListEntrySegmentsEntryRel);
-
-				assetListEntrySegmentsEntryRel.setNew(false);
 			}
 			else {
 				assetListEntrySegmentsEntryRel =
@@ -3370,157 +4120,24 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		}
 
 		if (assetListEntrySegmentsEntryRel.getCtCollectionId() != 0) {
+			if (isNew) {
+				assetListEntrySegmentsEntryRel.setNew(false);
+			}
+
 			assetListEntrySegmentsEntryRel.resetOriginalValues();
 
 			return assetListEntrySegmentsEntryRel;
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getUuid()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getUuid(),
-				assetListEntrySegmentsEntryRelModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getAssetListEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByAssetListEntryId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByAssetListEntryId, args);
-
-			args = new Object[] {
-				assetListEntrySegmentsEntryRelModelImpl.getSegmentsEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountBySegmentsEntryId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindBySegmentsEntryId, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.getOriginalUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.getUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-			}
-
-			if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.getOriginalUuid(),
-					assetListEntrySegmentsEntryRelModelImpl.
-						getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.getUuid(),
-					assetListEntrySegmentsEntryRelModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByAssetListEntryId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.
-						getOriginalAssetListEntryId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByAssetListEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByAssetListEntryId, args);
-
-				args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.
-						getAssetListEntryId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByAssetListEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByAssetListEntryId, args);
-			}
-
-			if ((assetListEntrySegmentsEntryRelModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindBySegmentsEntryId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.
-						getOriginalSegmentsEntryId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountBySegmentsEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindBySegmentsEntryId, args);
-
-				args = new Object[] {
-					assetListEntrySegmentsEntryRelModelImpl.getSegmentsEntryId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountBySegmentsEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindBySegmentsEntryId, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, AssetListEntrySegmentsEntryRelImpl.class,
-			assetListEntrySegmentsEntryRel.getPrimaryKey(),
-			assetListEntrySegmentsEntryRel, false);
+			AssetListEntrySegmentsEntryRelImpl.class,
+			assetListEntrySegmentsEntryRelModelImpl, false, true);
 
-		clearUniqueFindersCache(assetListEntrySegmentsEntryRelModelImpl, false);
 		cacheUniqueFindersCache(assetListEntrySegmentsEntryRelModelImpl);
+
+		if (isNew) {
+			assetListEntrySegmentsEntryRel.setNew(false);
+		}
 
 		assetListEntrySegmentsEntryRel.resetOriginalValues();
 
@@ -3656,7 +4273,27 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 			return map;
 		}
 
-		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler((primaryKeys.size() * 2) + 1);
 
 		sb.append(getSelectSQL());
 		sb.append(" WHERE ");
@@ -3790,7 +4427,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<AssetListEntrySegmentsEntryRel>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -3832,10 +4469,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3873,7 +4506,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -3893,11 +4526,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(
-						_finderPathCountAll, FINDER_ARGS_EMPTY);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3932,7 +4560,8 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	public Set<String> getCTColumnNames(
 		CTColumnResolutionType ctColumnResolutionType) {
 
-		return _ctColumnNamesMap.get(ctColumnResolutionType);
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
 	}
 
 	@Override
@@ -3966,7 +4595,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
-		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -3979,6 +4607,7 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		ctStrictColumnNames.add("createDate");
 		ctIgnoreColumnNames.add("modifiedDate");
 		ctStrictColumnNames.add("assetListEntryId");
+		ctStrictColumnNames.add("priority");
 		ctStrictColumnNames.add("segmentsEntryId");
 		ctStrictColumnNames.add("typeSettings");
 		ctStrictColumnNames.add("lastPublishDate");
@@ -3987,7 +4616,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK,
 			Collections.singleton("alEntrySegmentsEntryRelId"));
@@ -4005,151 +4633,165 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		AssetListEntrySegmentsEntryRelModelImpl.setEntityCacheEnabled(
-			entityCacheEnabled);
-		AssetListEntrySegmentsEntryRelModelImpl.setFinderCacheEnabled(
-			finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.UUID_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
 		_finderPathCountByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
 		_finderPathFetchByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByUUID_G",
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.UUID_COLUMN_BITMASK |
-			AssetListEntrySegmentsEntryRelModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
 		_finderPathCountByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.UUID_COLUMN_BITMASK |
-			AssetListEntrySegmentsEntryRelModelImpl.COMPANYID_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathCountByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
 		_finderPathWithPaginationFindByAssetListEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByAssetListEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"assetListEntryId"}, true);
 
 		_finderPathWithoutPaginationFindByAssetListEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByAssetListEntryId",
 			new String[] {Long.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.
-				ASSETLISTENTRYID_COLUMN_BITMASK);
+			new String[] {"assetListEntryId"}, true);
 
 		_finderPathCountByAssetListEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByAssetListEntryId", new String[] {Long.class.getName()});
+			"countByAssetListEntryId", new String[] {Long.class.getName()},
+			new String[] {"assetListEntryId"}, false);
 
 		_finderPathWithPaginationFindBySegmentsEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findBySegmentsEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"segmentsEntryId"}, true);
 
 		_finderPathWithoutPaginationFindBySegmentsEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findBySegmentsEntryId",
 			new String[] {Long.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.
-				SEGMENTSENTRYID_COLUMN_BITMASK);
+			new String[] {"segmentsEntryId"}, true);
 
 		_finderPathCountBySegmentsEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countBySegmentsEntryId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()},
+			new String[] {"segmentsEntryId"}, false);
 
 		_finderPathFetchByA_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			AssetListEntrySegmentsEntryRelImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByA_S",
+			FINDER_CLASS_NAME_ENTITY, "fetchByA_S",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			AssetListEntrySegmentsEntryRelModelImpl.
-				ASSETLISTENTRYID_COLUMN_BITMASK |
-			AssetListEntrySegmentsEntryRelModelImpl.
-				SEGMENTSENTRYID_COLUMN_BITMASK);
+			new String[] {"assetListEntryId", "segmentsEntryId"}, true);
 
 		_finderPathCountByA_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_S",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"assetListEntryId", "segmentsEntryId"}, false);
+
+		_finderPathWithPaginationFindByA_S_C = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByA_S_C",
+			new String[] {
+				Long.class.getName(), Long.class.getName(),
+				Integer.class.getName(), Integer.class.getName(),
+				OrderByComparator.class.getName()
+			},
+			new String[] {"assetListEntryId", "segmentsEntryId"}, true);
+
+		_finderPathWithoutPaginationFindByA_S_C = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByA_S_C",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"assetListEntryId", "segmentsEntryId"}, true);
+
+		_finderPathCountByA_S_C = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByA_S_C",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"assetListEntryId", "segmentsEntryId"}, false);
+
+		_finderPathWithPaginationCountByA_S_C = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByA_S_C",
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"assetListEntryId", "segmentsEntryId"}, false);
+
+		_setAssetListEntrySegmentsEntryRelUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setAssetListEntrySegmentsEntryRelUtilPersistence(null);
+
 		entityCache.removeCache(
 			AssetListEntrySegmentsEntryRelImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setAssetListEntrySegmentsEntryRelUtilPersistence(
+		AssetListEntrySegmentsEntryRelPersistence
+			assetListEntrySegmentsEntryRelPersistence) {
+
+		try {
+			Field field =
+				AssetListEntrySegmentsEntryRelUtil.class.getDeclaredField(
+					"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, assetListEntrySegmentsEntryRelPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -4158,12 +4800,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.asset.list.model.AssetListEntrySegmentsEntryRel"),
-			true);
 	}
 
 	@Override
@@ -4183,8 +4819,6 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected CTPersistenceHelper ctPersistenceHelper;
@@ -4224,13 +4858,13 @@ public class AssetListEntrySegmentsEntryRelPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "assetListEntrySegmentsEntryRelId"});
 
-	static {
-		try {
-			Class.forName(AssetListPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private AssetListEntrySegmentsEntryRelModelArgumentsResolver
+		_assetListEntrySegmentsEntryRelModelArgumentsResolver;
 
 }

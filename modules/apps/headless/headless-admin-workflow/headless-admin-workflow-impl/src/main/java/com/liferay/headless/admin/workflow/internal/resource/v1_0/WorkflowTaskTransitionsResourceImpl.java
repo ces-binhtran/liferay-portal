@@ -15,6 +15,7 @@
 package com.liferay.headless.admin.workflow.internal.resource.v1_0;
 
 import com.liferay.headless.admin.workflow.dto.v1_0.Transition;
+import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskIds;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskTransition;
 import com.liferay.headless.admin.workflow.dto.v1_0.WorkflowTaskTransitions;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.TransitionUtil;
@@ -44,8 +45,8 @@ public class WorkflowTaskTransitionsResourceImpl
 	extends BaseWorkflowTaskTransitionsResourceImpl {
 
 	@Override
-	public WorkflowTaskTransitions getWorkflowTaskTransition(
-			Long[] workflowTaskIds)
+	public WorkflowTaskTransitions postWorkflowTaskTransition(
+			WorkflowTaskIds workflowTaskIds)
 		throws Exception {
 
 		return new WorkflowTaskTransitions() {
@@ -55,7 +56,9 @@ public class WorkflowTaskTransitionsResourceImpl
 						List<WorkflowTaskTransition> workflowTaskTransitions =
 							new ArrayList<>();
 
-						for (Long workflowTaskId : workflowTaskIds) {
+						for (Long workflowTaskId :
+								workflowTaskIds.getWorkflowTaskIds()) {
+
 							workflowTaskTransitions.add(
 								_createWorkflowTaskTransition(
 									_workflowTaskManager.getNextTransitionNames(
@@ -84,10 +87,7 @@ public class WorkflowTaskTransitionsResourceImpl
 			transformToArray(
 				transitionNames,
 				transitionName -> TransitionUtil.toTransition(
-					_language, transitionName,
-					ResourceBundleUtil.getModuleAndPortalResourceBundle(
-						contextAcceptLanguage.getPreferredLocale(),
-						WorkflowTaskTransitionsResourceImpl.class)),
+					contextAcceptLanguage.getPreferredLocale(), transitionName),
 				Transition.class));
 		workflowTaskTransition.setWorkflowDefinitionVersion(
 			String.valueOf(workflowTask.getWorkflowDefinitionVersion()));

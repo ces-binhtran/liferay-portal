@@ -21,10 +21,10 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 %>
 
 <clay:management-toolbar
-	displayContext="<%= new SelectTeamManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectTeamDisplayContext) %>"
+	managementToolbarDisplayContext="<%= new SelectTeamManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectTeamDisplayContext) %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectTeamFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectTeamFm">
 	<liferay-ui:search-container
 		searchContainer="<%= selectTeamDisplayContext.getTeamSearchContainer() %>"
 	>
@@ -46,7 +46,9 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 
 			Group group = themeDisplay.getScopeGroup();
 
-			long[] defaultTeamIds = StringUtil.split(group.getTypeSettingsProperties().getProperty("defaultTeamIds"), 0L);
+			UnicodeProperties typeSettingsUnicodeProperties = group.getTypeSettingsProperties();
+
+			long[] defaultTeamIds = StringUtil.split(typeSettingsUnicodeProperties.getProperty("defaultTeamIds"), 0L);
 
 			long[] teamIds = ParamUtil.getLongValues(request, "teamIds", defaultTeamIds);
 
@@ -83,7 +85,7 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 				</c:when>
 				<c:when test='<%= Objects.equals(selectTeamDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="name"
 					>
 						<c:choose>
@@ -99,7 +101,7 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="description"
 						value="<%= HtmlUtil.escape(curTeam.getDescription()) %>"
 					/>
@@ -113,10 +115,3 @@ SelectTeamDisplayContext selectTeamDisplayContext = new SelectTeamDisplayContext
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectTeamFm',
-		'<%= HtmlUtil.escapeJS(selectTeamDisplayContext.getEventName()) %>'
-	);
-</aui:script>

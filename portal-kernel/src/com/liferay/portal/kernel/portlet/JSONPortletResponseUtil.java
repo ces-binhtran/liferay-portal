@@ -14,7 +14,6 @@
 
 package com.liferay.portal.kernel.portlet;
 
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -34,41 +33,29 @@ public class JSONPortletResponseUtil {
 
 	public static void writeJSON(
 			PortletRequest portletRequest, MimeResponse mimeResponse,
-			Object jsonObj)
+			Object object)
 		throws IOException {
 
-		mimeResponse.setContentType(_getContentType(portletRequest));
+		mimeResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		PortletResponseUtil.write(mimeResponse, jsonObj.toString());
+		PortletResponseUtil.write(mimeResponse, object.toString());
 
 		mimeResponse.flushBuffer();
 	}
 
 	public static void writeJSON(
 			PortletRequest portletRequest, PortletResponse portletResponse,
-			Object jsonObj)
+			Object object)
 		throws IOException {
 
 		HttpServletResponse httpServletResponse =
 			PortalUtil.getHttpServletResponse(portletResponse);
 
-		httpServletResponse.setContentType(_getContentType(portletRequest));
+		httpServletResponse.setContentType(ContentTypes.APPLICATION_JSON);
 
-		ServletResponseUtil.write(httpServletResponse, jsonObj.toString());
+		ServletResponseUtil.write(httpServletResponse, object.toString());
 
 		httpServletResponse.flushBuffer();
-	}
-
-	private static String _getContentType(PortletRequest portletRequest) {
-		String contentType = ContentTypes.APPLICATION_JSON;
-
-		if (BrowserSnifferUtil.isIe(
-				PortalUtil.getHttpServletRequest(portletRequest))) {
-
-			contentType = ContentTypes.TEXT_PLAIN;
-		}
-
-		return contentType;
 	}
 
 }

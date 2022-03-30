@@ -41,9 +41,12 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.model.NestedSetsTreeEntry;
 import com.liferay.portal.tools.service.builder.test.service.NestedSetsTreeEntryLocalService;
+import com.liferay.portal.tools.service.builder.test.service.NestedSetsTreeEntryLocalServiceUtil;
 import com.liferay.portal.tools.service.builder.test.service.persistence.NestedSetsTreeEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,11 +70,15 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>NestedSetsTreeEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.tools.service.builder.test.service.NestedSetsTreeEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>NestedSetsTreeEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>NestedSetsTreeEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the nested sets tree entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect NestedSetsTreeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param nestedSetsTreeEntry the nested sets tree entry
 	 * @return the nested sets tree entry that was added
@@ -103,6 +110,10 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the nested sets tree entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect NestedSetsTreeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param nestedSetsTreeEntryId the primary key of the nested sets tree entry
 	 * @return the nested sets tree entry that was removed
 	 * @throws PortalException if a nested sets tree entry with the primary key could not be found
@@ -119,6 +130,10 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the nested sets tree entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect NestedSetsTreeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param nestedSetsTreeEntry the nested sets tree entry
 	 * @return the nested sets tree entry that was removed
 	 */
@@ -133,6 +148,13 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return nestedSetsTreeEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -298,6 +320,7 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -316,6 +339,7 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 			(NestedSetsTreeEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<NestedSetsTreeEntry> getBasePersistence() {
 		return nestedSetsTreeEntryPersistence;
 	}
@@ -360,6 +384,10 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 
 	/**
 	 * Updates the nested sets tree entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect NestedSetsTreeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param nestedSetsTreeEntry the nested sets tree entry
 	 * @return the nested sets tree entry that was updated
@@ -441,11 +469,15 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.tools.service.builder.test.model.NestedSetsTreeEntry",
 			nestedSetsTreeEntryLocalService);
+
+		_setLocalServiceUtilService(nestedSetsTreeEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.tools.service.builder.test.model.NestedSetsTreeEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -488,6 +520,23 @@ public abstract class NestedSetsTreeEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		NestedSetsTreeEntryLocalService nestedSetsTreeEntryLocalService) {
+
+		try {
+			Field field =
+				NestedSetsTreeEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, nestedSetsTreeEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

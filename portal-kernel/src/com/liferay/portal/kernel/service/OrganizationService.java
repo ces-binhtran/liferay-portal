@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.service;
 
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -22,6 +23,7 @@ import com.liferay.portal.kernel.model.EmailAddress;
 import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Phone;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.Website;
 import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.transaction.Isolation;
@@ -42,6 +44,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -53,7 +56,7 @@ public interface OrganizationService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link OrganizationServiceUtil} to access the organization remote service. Add custom service methods to <code>com.liferay.portal.service.impl.OrganizationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.OrganizationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the organization remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link OrganizationServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -130,6 +133,21 @@ public interface OrganizationService extends BaseService {
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	public User addOrganizationUserByEmailAddress(
+			String emailAddress, long organizationId,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public Organization addOrUpdateOrganization(
+			String externalReferenceCode, long parentOrganizationId,
+			String name, String type, long regionId, long countryId,
+			long statusId, String comments, boolean hasLogo, byte[] logoBytes,
+			boolean site, List<Address> addresses,
+			List<EmailAddress> emailAddresses, List<OrgLabor> orgLabors,
+			List<Phone> phones, List<Website> websites,
+			ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Assigns the password policy to the organizations, removing any other
 	 * currently assigned password policies.
@@ -139,6 +157,10 @@ public interface OrganizationService extends BaseService {
 	 */
 	public void addPasswordPolicyOrganizations(
 			long passwordPolicyId, long[] organizationIds)
+		throws PortalException;
+
+	public void addUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
 		throws PortalException;
 
 	/**
@@ -155,6 +177,10 @@ public interface OrganizationService extends BaseService {
 	 * @param organizationId the primary key of the organization
 	 */
 	public void deleteOrganization(long organizationId) throws PortalException;
+
+	public void deleteUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws PortalException;
 
 	/**
 	 * Returns the organization with the primary key.
@@ -181,6 +207,11 @@ public interface OrganizationService extends BaseService {
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Organization getOrganization(long organizationId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Organization getOrganizationByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**

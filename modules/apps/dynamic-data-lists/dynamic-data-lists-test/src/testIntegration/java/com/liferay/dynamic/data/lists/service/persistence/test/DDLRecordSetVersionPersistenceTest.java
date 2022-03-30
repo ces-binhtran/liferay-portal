@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -129,6 +129,8 @@ public class DDLRecordSetVersionPersistenceTest {
 
 		newDDLRecordSetVersion.setMvccVersion(RandomTestUtil.nextLong());
 
+		newDDLRecordSetVersion.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newDDLRecordSetVersion.setGroupId(RandomTestUtil.nextLong());
 
 		newDDLRecordSetVersion.setCompanyId(RandomTestUtil.nextLong());
@@ -170,6 +172,9 @@ public class DDLRecordSetVersionPersistenceTest {
 		Assert.assertEquals(
 			existingDDLRecordSetVersion.getMvccVersion(),
 			newDDLRecordSetVersion.getMvccVersion());
+		Assert.assertEquals(
+			existingDDLRecordSetVersion.getCtCollectionId(),
+			newDDLRecordSetVersion.getCtCollectionId());
 		Assert.assertEquals(
 			existingDDLRecordSetVersion.getRecordSetVersionId(),
 			newDDLRecordSetVersion.getRecordSetVersionId());
@@ -271,11 +276,11 @@ public class DDLRecordSetVersionPersistenceTest {
 
 	protected OrderByComparator<DDLRecordSetVersion> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"DDLRecordSetVersion", "mvccVersion", true, "recordSetVersionId",
-			true, "groupId", true, "companyId", true, "userId", true,
-			"userName", true, "createDate", true, "recordSetId", true,
-			"DDMStructureVersionId", true, "name", true, "description", true,
-			"version", true, "status", true, "statusByUserId", true,
+			"DDLRecordSetVersion", "mvccVersion", true, "ctCollectionId", true,
+			"recordSetVersionId", true, "groupId", true, "companyId", true,
+			"userId", true, "userName", true, "createDate", true, "recordSetId",
+			true, "DDMStructureVersionId", true, "name", true, "description",
+			true, "version", true, "status", true, "statusByUserId", true,
 			"statusByUserName", true, "statusDate", true);
 	}
 
@@ -508,21 +513,65 @@ public class DDLRecordSetVersionPersistenceTest {
 
 		_persistence.clearCache();
 
-		DDLRecordSetVersion existingDDLRecordSetVersion =
+		_assertOriginalValues(
 			_persistence.findByPrimaryKey(
-				newDDLRecordSetVersion.getPrimaryKey());
+				newDDLRecordSetVersion.getPrimaryKey()));
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		DDLRecordSetVersion newDDLRecordSetVersion = addDDLRecordSetVersion();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DDLRecordSetVersion.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"recordSetVersionId",
+				newDDLRecordSetVersion.getRecordSetVersionId()));
+
+		List<DDLRecordSetVersion> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(
+		DDLRecordSetVersion ddlRecordSetVersion) {
 
 		Assert.assertEquals(
-			Long.valueOf(existingDDLRecordSetVersion.getRecordSetId()),
+			Long.valueOf(ddlRecordSetVersion.getRecordSetId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingDDLRecordSetVersion, "getOriginalRecordSetId",
-				new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingDDLRecordSetVersion.getVersion(),
-				ReflectionTestUtil.invoke(
-					existingDDLRecordSetVersion, "getOriginalVersion",
-					new Class<?>[0])));
+				ddlRecordSetVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "recordSetId"));
+		Assert.assertEquals(
+			ddlRecordSetVersion.getVersion(),
+			ReflectionTestUtil.invoke(
+				ddlRecordSetVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
 	}
 
 	protected DDLRecordSetVersion addDDLRecordSetVersion() throws Exception {
@@ -531,6 +580,8 @@ public class DDLRecordSetVersionPersistenceTest {
 		DDLRecordSetVersion ddlRecordSetVersion = _persistence.create(pk);
 
 		ddlRecordSetVersion.setMvccVersion(RandomTestUtil.nextLong());
+
+		ddlRecordSetVersion.setCtCollectionId(RandomTestUtil.nextLong());
 
 		ddlRecordSetVersion.setGroupId(RandomTestUtil.nextLong());
 

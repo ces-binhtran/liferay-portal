@@ -26,18 +26,22 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -64,8 +68,8 @@ public class PortalPreferencesModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"portalPreferencesId", Types.BIGINT},
-		{"ownerId", Types.BIGINT}, {"ownerType", Types.INTEGER},
-		{"preferences", Types.CLOB}
+		{"companyId", Types.BIGINT}, {"ownerId", Types.BIGINT},
+		{"ownerType", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -74,13 +78,13 @@ public class PortalPreferencesModelImpl
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("portalPreferencesId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ownerId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("ownerType", Types.INTEGER);
-		TABLE_COLUMNS_MAP.put("preferences", Types.CLOB);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table PortalPreferences (mvccVersion LONG default 0 not null,portalPreferencesId LONG not null primary key,ownerId LONG,ownerType INTEGER,preferences TEXT null)";
+		"create table PortalPreferences (mvccVersion LONG default 0 not null,portalPreferencesId LONG not null primary key,companyId LONG,ownerId LONG,ownerType INTEGER)";
 
 	public static final String TABLE_SQL_DROP = "drop table PortalPreferences";
 
@@ -96,25 +100,41 @@ public class PortalPreferencesModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.PortalPreferences"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.PortalPreferences"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.PortalPreferences"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long OWNERID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long OWNERTYPE_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long PORTALPREFERENCESID_COLUMN_BITMASK = 4L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
@@ -172,9 +192,6 @@ public class PortalPreferencesModelImpl
 				attributeName,
 				attributeGetterFunction.apply((PortalPreferences)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -263,6 +280,12 @@ public class PortalPreferencesModelImpl
 			"portalPreferencesId",
 			(BiConsumer<PortalPreferences, Long>)
 				PortalPreferences::setPortalPreferencesId);
+		attributeGetterFunctions.put(
+			"companyId", PortalPreferences::getCompanyId);
+		attributeSetterBiConsumers.put(
+			"companyId",
+			(BiConsumer<PortalPreferences, Long>)
+				PortalPreferences::setCompanyId);
 		attributeGetterFunctions.put("ownerId", PortalPreferences::getOwnerId);
 		attributeSetterBiConsumers.put(
 			"ownerId",
@@ -273,12 +296,6 @@ public class PortalPreferencesModelImpl
 			"ownerType",
 			(BiConsumer<PortalPreferences, Integer>)
 				PortalPreferences::setOwnerType);
-		attributeGetterFunctions.put(
-			"preferences", PortalPreferences::getPreferences);
-		attributeSetterBiConsumers.put(
-			"preferences",
-			(BiConsumer<PortalPreferences, String>)
-				PortalPreferences::setPreferences);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -293,6 +310,10 @@ public class PortalPreferencesModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -303,7 +324,25 @@ public class PortalPreferencesModelImpl
 
 	@Override
 	public void setPortalPreferencesId(long portalPreferencesId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_portalPreferencesId = portalPreferencesId;
+	}
+
+	@Override
+	public long getCompanyId() {
+		return _companyId;
+	}
+
+	@Override
+	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_companyId = companyId;
 	}
 
 	@Override
@@ -313,19 +352,20 @@ public class PortalPreferencesModelImpl
 
 	@Override
 	public void setOwnerId(long ownerId) {
-		_columnBitmask |= OWNERID_COLUMN_BITMASK;
-
-		if (!_setOriginalOwnerId) {
-			_setOriginalOwnerId = true;
-
-			_originalOwnerId = _ownerId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_ownerId = ownerId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalOwnerId() {
-		return _originalOwnerId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("ownerId"));
 	}
 
 	@Override
@@ -335,44 +375,51 @@ public class PortalPreferencesModelImpl
 
 	@Override
 	public void setOwnerType(int ownerType) {
-		_columnBitmask |= OWNERTYPE_COLUMN_BITMASK;
-
-		if (!_setOriginalOwnerType) {
-			_setOriginalOwnerType = true;
-
-			_originalOwnerType = _ownerType;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_ownerType = ownerType;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public int getOriginalOwnerType() {
-		return _originalOwnerType;
-	}
-
-	@Override
-	public String getPreferences() {
-		if (_preferences == null) {
-			return "";
-		}
-		else {
-			return _preferences;
-		}
-	}
-
-	@Override
-	public void setPreferences(String preferences) {
-		_preferences = preferences;
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("ownerType"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
 	@Override
 	public ExpandoBridge getExpandoBridge() {
 		return ExpandoBridgeFactoryUtil.getExpandoBridge(
-			0, PortalPreferences.class.getName(), getPrimaryKey());
+			getCompanyId(), PortalPreferences.class.getName(), getPrimaryKey());
 	}
 
 	@Override
@@ -404,11 +451,30 @@ public class PortalPreferencesModelImpl
 
 		portalPreferencesImpl.setMvccVersion(getMvccVersion());
 		portalPreferencesImpl.setPortalPreferencesId(getPortalPreferencesId());
+		portalPreferencesImpl.setCompanyId(getCompanyId());
 		portalPreferencesImpl.setOwnerId(getOwnerId());
 		portalPreferencesImpl.setOwnerType(getOwnerType());
-		portalPreferencesImpl.setPreferences(getPreferences());
 
 		portalPreferencesImpl.resetOriginalValues();
+
+		return portalPreferencesImpl;
+	}
+
+	@Override
+	public PortalPreferences cloneWithOriginalValues() {
+		PortalPreferencesImpl portalPreferencesImpl =
+			new PortalPreferencesImpl();
+
+		portalPreferencesImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		portalPreferencesImpl.setPortalPreferencesId(
+			this.<Long>getColumnOriginalValue("portalPreferencesId"));
+		portalPreferencesImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		portalPreferencesImpl.setOwnerId(
+			this.<Long>getColumnOriginalValue("ownerId"));
+		portalPreferencesImpl.setOwnerType(
+			this.<Integer>getColumnOriginalValue("ownerType"));
 
 		return portalPreferencesImpl;
 	}
@@ -429,16 +495,16 @@ public class PortalPreferencesModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PortalPreferences)) {
+		if (!(object instanceof PortalPreferences)) {
 			return false;
 		}
 
-		PortalPreferences portalPreferences = (PortalPreferences)obj;
+		PortalPreferences portalPreferences = (PortalPreferences)object;
 
 		long primaryKey = portalPreferences.getPrimaryKey();
 
@@ -455,11 +521,19 @@ public class PortalPreferencesModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -467,19 +541,9 @@ public class PortalPreferencesModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		PortalPreferencesModelImpl portalPreferencesModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		portalPreferencesModelImpl._originalOwnerId =
-			portalPreferencesModelImpl._ownerId;
-
-		portalPreferencesModelImpl._setOriginalOwnerId = false;
-
-		portalPreferencesModelImpl._originalOwnerType =
-			portalPreferencesModelImpl._ownerType;
-
-		portalPreferencesModelImpl._setOriginalOwnerType = false;
-
-		portalPreferencesModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -492,17 +556,11 @@ public class PortalPreferencesModelImpl
 		portalPreferencesCacheModel.portalPreferencesId =
 			getPortalPreferencesId();
 
+		portalPreferencesCacheModel.companyId = getCompanyId();
+
 		portalPreferencesCacheModel.ownerId = getOwnerId();
 
 		portalPreferencesCacheModel.ownerType = getOwnerType();
-
-		portalPreferencesCacheModel.preferences = getPreferences();
-
-		String preferences = portalPreferencesCacheModel.preferences;
-
-		if ((preferences != null) && (preferences.length() == 0)) {
-			portalPreferencesCacheModel.preferences = null;
-		}
 
 		return portalPreferencesCacheModel;
 	}
@@ -513,7 +571,7 @@ public class PortalPreferencesModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -524,9 +582,27 @@ public class PortalPreferencesModelImpl
 			Function<PortalPreferences, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((PortalPreferences)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(PortalPreferences)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -545,7 +621,7 @@ public class PortalPreferencesModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -579,13 +655,68 @@ public class PortalPreferencesModelImpl
 
 	private long _mvccVersion;
 	private long _portalPreferencesId;
+	private long _companyId;
 	private long _ownerId;
-	private long _originalOwnerId;
-	private boolean _setOriginalOwnerId;
 	private int _ownerType;
-	private int _originalOwnerType;
-	private boolean _setOriginalOwnerType;
-	private String _preferences;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<PortalPreferences, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((PortalPreferences)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("portalPreferencesId", _portalPreferencesId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("ownerId", _ownerId);
+		_columnOriginalValues.put("ownerType", _ownerType);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("portalPreferencesId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("ownerId", 8L);
+
+		columnBitmasks.put("ownerType", 16L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private PortalPreferences _escapedModel;
 

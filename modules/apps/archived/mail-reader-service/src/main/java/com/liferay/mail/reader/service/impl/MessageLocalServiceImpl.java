@@ -30,9 +30,11 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.OrderFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -64,7 +66,7 @@ public class MessageLocalServiceImpl extends MessageLocalServiceBaseImpl {
 
 		User user = userLocalService.getUser(userId);
 		Folder folder = folderPersistence.findByPrimaryKey(folderId);
-		Date now = new Date();
+		Date date = new Date();
 
 		long messageId = counterLocalService.increment();
 
@@ -75,8 +77,8 @@ public class MessageLocalServiceImpl extends MessageLocalServiceBaseImpl {
 		message.setCompanyId(user.getCompanyId());
 		message.setUserId(user.getUserId());
 		message.setUserName(user.getFullName());
-		message.setCreateDate(now);
-		message.setModifiedDate(now);
+		message.setCreateDate(date);
+		message.setModifiedDate(date);
 		message.setAccountId(folder.getAccountId());
 		message.setFolderId(folderId);
 		message.setSender(sender);
@@ -111,6 +113,7 @@ public class MessageLocalServiceImpl extends MessageLocalServiceBaseImpl {
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public Message deleteMessage(Message message) throws PortalException {
 
 		// Message
@@ -343,9 +346,9 @@ public class MessageLocalServiceImpl extends MessageLocalServiceBaseImpl {
 	}
 
 	protected String encode(String subject) {
-		byte[] bytes = subject.getBytes(StandardCharsets.ISO_8859_1);
-
-		return new String(bytes, StandardCharsets.UTF_8);
+		return new String(
+			subject.getBytes(StandardCharsets.ISO_8859_1),
+			StandardCharsets.UTF_8);
 	}
 
 	protected String getBody(String body) {

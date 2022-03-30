@@ -13,9 +13,9 @@ definition {
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
-		if ("${saveMappingConfiguration}" == "true") {
+		if ("${saveMappingConfigurationAndLink}" == "true") {
 			Check.checkNotVisible(
-				checkboxName = "Save Mapping Configuration",
+				checkboxName = "Save Mapping Configuration and Link",
 				locator1 = "Checkbox#ANY_CHECKBOX");
 		}
 
@@ -23,16 +23,17 @@ definition {
 			if (isSet(selectCollectionName)) {
 				AssertClick(
 					key_card = "${collectionName}",
-					locator1 = "LexiconCard#CARD",
+					locator1 = "Card#CARD",
 					value1 = "${collectionName}");
 			}
+
 			AssertElementPresent(
 				key_card = "${collectionName}",
-				locator1 = "LexiconCard#CARD_SELECTED");
+				locator1 = "Card#CARD_SELECTED");
 		}
 
 		AssertClick(
-			locator1 = "Button#SAVE",
+			locator1 = "//button[normalize-space()='Save']",
 			value1 = "Save");
 	}
 

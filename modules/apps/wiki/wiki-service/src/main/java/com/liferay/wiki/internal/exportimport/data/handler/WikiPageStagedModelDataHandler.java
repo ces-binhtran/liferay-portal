@@ -218,9 +218,10 @@ public class WikiPageStagedModelDataHandler
 
 			if (existingPage == null) {
 				importedPage = _wikiPageLocalService.addPage(
-					userId, nodeId, page.getTitle(), page.getVersion(),
-					page.getContent(), page.getSummary(), page.isMinorEdit(),
-					page.getFormat(), page.isHead(), page.getParentTitle(),
+					page.getExternalReferenceCode(), userId, nodeId,
+					page.getTitle(), page.getVersion(), page.getContent(),
+					page.getSummary(), page.isMinorEdit(), page.getFormat(),
+					page.isHead(), page.getParentTitle(),
 					page.getRedirectTitle(), serviceContext);
 
 				String pageResourceUuid = GetterUtil.getString(
@@ -372,10 +373,9 @@ public class WikiPageStagedModelDataHandler
 			WikiPage.class.getName());
 
 		if (trashHandler.isRestorable(existingPage.getResourcePrimKey())) {
-			long userId = portletDataContext.getUserId(page.getUserUuid());
-
 			trashHandler.restoreTrashEntry(
-				userId, existingPage.getResourcePrimKey());
+				portletDataContext.getUserId(page.getUserUuid()),
+				existingPage.getResourcePrimKey());
 		}
 	}
 
@@ -395,7 +395,7 @@ public class WikiPageStagedModelDataHandler
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchFileException, noSuchFileException);
+					_log.debug(noSuchFileException);
 				}
 
 				return null;

@@ -15,7 +15,6 @@
 package com.liferay.blogs.web.internal.info.item.renderer;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
-import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.info.item.renderer.InfoItemRenderer;
@@ -35,7 +34,9 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Eudaldo Alonso
  */
-@Component(service = InfoItemRenderer.class)
+@Component(
+	property = "service.ranking:Integer=200", service = InfoItemRenderer.class
+)
 public class BlogsEntryAbstractInfoItemRenderer
 	implements InfoItemRenderer<BlogsEntry> {
 
@@ -54,11 +55,9 @@ public class BlogsEntryAbstractInfoItemRenderer
 				BlogsEntry.class);
 
 		try {
-			AssetRenderer<?> assetRenderer =
-				assetRendererFactory.getAssetRenderer(entry.getEntryId());
-
 			httpServletRequest.setAttribute(
-				WebKeys.ASSET_RENDERER, assetRenderer);
+				WebKeys.ASSET_RENDERER,
+				assetRendererFactory.getAssetRenderer(entry.getEntryId()));
 
 			httpServletRequest.setAttribute(WebKeys.BLOGS_ENTRY, entry);
 

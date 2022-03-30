@@ -13,12 +13,12 @@
  */
 
 import {ClayButtonWithIcon} from '@clayui/button';
-import classNames from 'classnames';
 import {
 	useEventListener,
 	useIsMounted,
 	usePrevious,
-} from 'frontend-js-react-web';
+} from '@liferay/frontend-js-react-web';
+import classNames from 'classnames';
 import {cancelDebounce, debounce, fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useRef, useState} from 'react';
 
@@ -26,7 +26,7 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
  * Defined ratios for preview sizing.
  */
 const SIZE_RATIOS = {
-	desktop: {
+	'desktop': {
 		height: 9,
 		width: 16,
 	},
@@ -76,6 +76,7 @@ const FragmentPreview = ({
 
 	const isMounted = useIsMounted();
 
+	/* eslint-disable-next-line react-hooks/exhaustive-deps */
 	const updatePreview = useCallback(
 		debounce(() => {
 			if (!loading && isMounted()) {
@@ -108,6 +109,7 @@ const FragmentPreview = ({
 		[configuration, css, html, js, iframeRef]
 	);
 
+	/* eslint-disable-next-line react-hooks/exhaustive-deps */
 	const updatePreviewStyles = useCallback(
 		debounce(() => {
 			const ratio = SIZE_RATIOS[currentPreviewSize];

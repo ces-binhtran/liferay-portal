@@ -47,8 +47,8 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	immediate = true,
 	property = {
-		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.TOOLS,
-		"product.navigation.control.menu.entry.order:Integer=200"
+		"product.navigation.control.menu.category.key=" + ProductNavigationControlMenuCategoryKeys.USER,
+		"product.navigation.control.menu.entry.order:Integer=100"
 	},
 	service = ProductNavigationControlMenuEntry.class
 )
@@ -78,6 +78,11 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		}
 
 		return stateCss;
+	}
+
+	@Override
+	public String getIconCssClass(HttpServletRequest httpServletRequest) {
+		return "icon-monospaced";
 	}
 
 	@Override
@@ -123,8 +128,8 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		}
 
 		if (!(hasUpdateLayoutPermission(themeDisplay) ||
-			  hasCustomizePermission(themeDisplay) ||
-			  hasPortletConfigurationPermission(themeDisplay))) {
+			  _hasCustomizePermission(themeDisplay) ||
+			  _hasPortletConfigurationPermission(themeDisplay))) {
 
 			return false;
 		}
@@ -132,18 +137,23 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		return super.isShow(httpServletRequest);
 	}
 
-	protected boolean hasCustomizePermission(ThemeDisplay themeDisplay)
+	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		return LayoutPermissionUtil.contains(
+			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
+			ActionKeys.UPDATE);
+	}
+
+	private boolean _hasCustomizePermission(ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		Layout layout = themeDisplay.getLayout();
 		LayoutTypePortlet layoutTypePortlet =
 			themeDisplay.getLayoutTypePortlet();
 
-		if (!layout.isTypePortlet() || (layoutTypePortlet == null)) {
-			return false;
-		}
-
-		if (!layoutTypePortlet.isCustomizable() ||
+		if (!layout.isTypePortlet() || (layoutTypePortlet == null) ||
+			!layoutTypePortlet.isCustomizable() ||
 			!layoutTypePortlet.isCustomizedView()) {
 
 			return false;
@@ -159,21 +169,13 @@ public class ToggleControlsProductNavigationControlMenuEntry
 		return false;
 	}
 
-	protected boolean hasPortletConfigurationPermission(
+	private boolean _hasPortletConfigurationPermission(
 			ThemeDisplay themeDisplay)
 		throws PortalException {
 
 		return PortletPermissionUtil.hasConfigurationPermission(
 			themeDisplay.getPermissionChecker(), themeDisplay.getSiteGroupId(),
 			themeDisplay.getLayout(), ActionKeys.CONFIGURATION);
-	}
-
-	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		return LayoutPermissionUtil.contains(
-			themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
-			ActionKeys.UPDATE);
 	}
 
 	private static final Map<String, Object> _data =

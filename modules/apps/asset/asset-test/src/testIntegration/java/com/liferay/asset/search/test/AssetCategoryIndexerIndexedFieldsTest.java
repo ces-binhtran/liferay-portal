@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -34,6 +33,8 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
@@ -94,7 +95,7 @@ public class AssetCategoryIndexerIndexedFieldsTest {
 
 		_groups = groupSearchFixture.getGroups();
 		_indexedFieldsFixture = new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
+			resourcePermissionLocalService, uidFactory, documentBuilderFactory);
 	}
 
 	@Test
@@ -155,16 +156,19 @@ public class AssetCategoryIndexerIndexedFieldsTest {
 	protected AssetVocabularyService assetVocabularyService;
 
 	@Inject
-	protected ResourcePermissionLocalService resourcePermissionLocalService;
+	protected DocumentBuilderFactory documentBuilderFactory;
 
 	@Inject
-	protected SearchEngineHelper searchEngineHelper;
+	protected ResourcePermissionLocalService resourcePermissionLocalService;
 
 	@Inject
 	protected Searcher searcher;
 
 	@Inject
 	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+
+	@Inject
+	protected UIDFactory uidFactory;
 
 	protected UserSearchFixture userSearchFixture;
 
@@ -217,8 +221,7 @@ public class AssetCategoryIndexerIndexedFieldsTest {
 			"treePath", assetCategory.getTreePath()
 		).build();
 
-		_indexedFieldsFixture.populateUID(
-			AssetCategory.class.getName(), assetCategory.getCategoryId(), map);
+		_indexedFieldsFixture.populateUID(assetCategory, map);
 
 		_populateDates(assetCategory, map);
 		_populateRoles(assetCategory, map);

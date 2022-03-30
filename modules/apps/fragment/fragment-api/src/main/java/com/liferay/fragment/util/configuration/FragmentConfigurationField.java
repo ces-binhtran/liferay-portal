@@ -14,9 +14,11 @@
 
 package com.liferay.fragment.util.configuration;
 
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.fragment.constants.FragmentConfigurationFieldDataType;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -25,6 +27,7 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Objects;
@@ -42,9 +45,26 @@ public class FragmentConfigurationField {
 		_name = fieldJSONObject.getString("name");
 		_dataType = fieldJSONObject.getString("dataType");
 		_defaultValue = fieldJSONObject.getString("defaultValue");
+		_localizable = fieldJSONObject.getBoolean("localizable");
 		_type = fieldJSONObject.getString("type");
 	}
 
+	public FragmentConfigurationField(
+		String name, String dataType, String defaultValue, boolean localizable,
+		String type) {
+
+		_name = name;
+		_dataType = dataType;
+		_defaultValue = defaultValue;
+		_localizable = localizable;
+		_type = type;
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 * #FragmentConfigurationField(String, String, String, boolean, String)}
+	 */
+	@Deprecated
 	public FragmentConfigurationField(
 		String name, String dataType, String defaultValue, String type) {
 
@@ -52,6 +72,8 @@ public class FragmentConfigurationField {
 		_dataType = dataType;
 		_defaultValue = defaultValue;
 		_type = type;
+
+		_localizable = false;
 	}
 
 	public String getDataType() {
@@ -74,6 +96,31 @@ public class FragmentConfigurationField {
 		return StringPool.BLANK;
 	}
 
+	public FragmentConfigurationFieldDataType
+		getFragmentConfigurationFieldDataType() {
+
+		if (StringUtil.equalsIgnoreCase(getDataType(), "array")) {
+			return FragmentConfigurationFieldDataType.ARRAY;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "bool")) {
+			return FragmentConfigurationFieldDataType.BOOLEAN;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "double")) {
+			return FragmentConfigurationFieldDataType.DOUBLE;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "int")) {
+			return FragmentConfigurationFieldDataType.INTEGER;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "object")) {
+			return FragmentConfigurationFieldDataType.OBJECT;
+		}
+		else if (StringUtil.equalsIgnoreCase(getDataType(), "string")) {
+			return FragmentConfigurationFieldDataType.STRING;
+		}
+
+		return null;
+	}
+
 	public String getName() {
 		return _name;
 	}
@@ -82,14 +129,16 @@ public class FragmentConfigurationField {
 		return _type;
 	}
 
+	public boolean isLocalizable() {
+		return _localizable;
+	}
+
 	private String _getColorPaletteDefaultValue() {
-		JSONObject defaultValueJSONObject = JSONUtil.put(
+		return JSONUtil.put(
 			"cssClass", StringPool.BLANK
 		).put(
 			"rgbValue", StringPool.BLANK
-		);
-
-		return defaultValueJSONObject.toString();
+		).toString();
 	}
 
 	private String _getItemSelectorDefaultValue() {
@@ -107,26 +156,32 @@ public class FragmentConfigurationField {
 				String className = defaultValueJSONObject.getString(
 					"className");
 
-				InfoDisplayContributorTracker infoDisplayContributorTracker =
-					_serviceTracker.getService();
+				LayoutDisplayPageProviderTracker
+					layoutDisplayPageProviderTracker =
+						_serviceTracker.getService();
 
-				InfoDisplayContributor<?> infoDisplayContributor =
-					infoDisplayContributorTracker.getInfoDisplayContributor(
-						className);
+				LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+					layoutDisplayPageProviderTracker.
+						getLayoutDisplayPageProviderByClassName(className);
 
-				if (infoDisplayContributor == null) {
+				if (layoutDisplayPageProvider == null) {
 					return _defaultValue;
 				}
 
 				long classPK = defaultValueJSONObject.getLong("classPK");
 
-				InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
-					infoDisplayContributor.getInfoDisplayObjectProvider(
-						classPK);
+				InfoItemReference infoItemReference = new InfoItemReference(
+					className, classPK);
+
+				LayoutDisplayPageObjectProvider<?>
+					layoutDisplayPageObjectProvider =
+						layoutDisplayPageProvider.
+							getLayoutDisplayPageObjectProvider(
+								infoItemReference);
 
 				defaultValueJSONObject.put(
 					"title",
-					infoDisplayObjectProvider.getTitle(
+					layoutDisplayPageObjectProvider.getTitle(
 						LocaleUtil.getMostRelevantLocale()));
 
 				return defaultValueJSONObject.toString();
@@ -144,7 +199,7 @@ public class FragmentConfigurationField {
 		FragmentConfigurationField.class);
 
 	private static final ServiceTracker
-		<InfoDisplayContributorTracker, InfoDisplayContributorTracker>
+		<LayoutDisplayPageProviderTracker, LayoutDisplayPageProviderTracker>
 			_serviceTracker;
 
 	static {
@@ -152,7 +207,7 @@ public class FragmentConfigurationField {
 			FragmentConfigurationField.class);
 
 		_serviceTracker = new ServiceTracker<>(
-			bundle.getBundleContext(), InfoDisplayContributorTracker.class,
+			bundle.getBundleContext(), LayoutDisplayPageProviderTracker.class,
 			null);
 
 		_serviceTracker.open();
@@ -160,6 +215,7 @@ public class FragmentConfigurationField {
 
 	private final String _dataType;
 	private final String _defaultValue;
+	private final boolean _localizable;
 	private final String _name;
 	private final String _type;
 

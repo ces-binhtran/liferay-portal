@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.util;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.randomizerbumpers.RandomizerBumper;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
@@ -114,7 +115,7 @@ public class StringUtilTest {
 				hexString.charAt(i * 2),
 				StringUtil.HEX_DIGITS[(data[i] & 0xFF) >> 4]);
 			Assert.assertEquals(
-				hexString.charAt(i * 2 + 1),
+				hexString.charAt((i * 2) + 1),
 				StringUtil.HEX_DIGITS[data[i] & 0x0F]);
 		}
 	}
@@ -543,6 +544,9 @@ public class StringUtilTest {
 			"Hello World",
 			StringUtil.replace(
 				"Hello World", StringPool.BLANK, StringPool.BLANK, map));
+		Assert.assertEquals(
+			"AB Hi CD AB Liferay CD",
+			StringUtil.replace("AB Hi CD AB Liferay CD", "AB ", " CD", map));
 	}
 
 	@Test

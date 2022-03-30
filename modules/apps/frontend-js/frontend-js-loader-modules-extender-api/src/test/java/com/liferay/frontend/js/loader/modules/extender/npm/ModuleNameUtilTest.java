@@ -14,11 +14,10 @@
 
 package com.liferay.frontend.js.loader.modules.extender.npm;
 
-import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.util.FileImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
@@ -26,12 +25,9 @@ import org.junit.Test;
  */
 public class ModuleNameUtilTest {
 
-	@Before
-	public void setUp() {
-		FileUtil fileUtil = new FileUtil();
-
-		fileUtil.setFile(new FileImpl());
-	}
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testGetDependencyPath() {
@@ -78,9 +74,8 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackageNameNoModule() throws Exception {
-		String packageName = ModuleNameUtil.getPackageName("mypackage");
-
-		Assert.assertEquals("mypackage", packageName);
+		Assert.assertEquals(
+			"mypackage", ModuleNameUtil.getPackageName("mypackage"));
 	}
 
 	@Test
@@ -123,9 +118,7 @@ public class ModuleNameUtilTest {
 
 	@Test
 	public void testGetPackagePathNoModule() throws Exception {
-		String packagePath = ModuleNameUtil.getPackagePath("mypackage");
-
-		Assert.assertNull(packagePath);
+		Assert.assertNull(ModuleNameUtil.getPackagePath("mypackage"));
 	}
 
 	@Test

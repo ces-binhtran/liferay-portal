@@ -18,6 +18,7 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -29,7 +30,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelperUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -40,9 +44,11 @@ import com.liferay.social.kernel.exception.NoSuchRequestException;
 import com.liferay.social.kernel.model.SocialRequest;
 import com.liferay.social.kernel.model.SocialRequestTable;
 import com.liferay.social.kernel.service.persistence.SocialRequestPersistence;
+import com.liferay.social.kernel.service.persistence.SocialRequestUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -185,7 +191,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -255,10 +261,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -580,8 +582,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -622,10 +623,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -721,7 +718,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof SocialRequest) {
@@ -786,11 +783,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(
-						_finderPathFetchByUUID_G, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -846,8 +838,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -892,10 +883,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1023,7 +1010,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -1099,10 +1086,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1452,8 +1435,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1498,10 +1480,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1622,7 +1600,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -1681,10 +1659,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1994,8 +1968,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {companyId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2025,10 +1998,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2138,7 +2107,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -2197,10 +2166,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2510,8 +2475,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {userId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2541,10 +2505,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2660,7 +2620,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -2719,10 +2679,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3039,8 +2995,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {receiverUserId};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3070,10 +3025,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3192,7 +3143,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -3257,10 +3208,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3594,8 +3541,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {userId, status};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3629,10 +3575,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3755,7 +3697,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -3820,10 +3762,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4158,8 +4096,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {classNameId, classPK};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4193,10 +4130,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4319,7 +4252,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -4384,10 +4317,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4722,8 +4651,7 @@ public class SocialRequestPersistenceImpl
 
 			finderArgs = new Object[] {receiverUserId, status};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4757,10 +4685,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4882,7 +4806,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByU_C_C_T_R, finderArgs, this);
+				_finderPathFetchByU_C_C_T_R, finderArgs);
 		}
 
 		if (result instanceof SocialRequest) {
@@ -4951,11 +4875,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(
-						_finderPathFetchByU_C_C_T_R, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5023,8 +4942,7 @@ public class SocialRequestPersistenceImpl
 				userId, classNameId, classPK, type, receiverUserId
 			};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5070,10 +4988,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5227,7 +5141,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -5307,10 +5221,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5706,8 +5616,7 @@ public class SocialRequestPersistenceImpl
 				userId, classNameId, classPK, type, status
 			};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5753,10 +5662,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5913,7 +5818,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (SocialRequest socialRequest : list) {
@@ -5993,10 +5898,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6396,8 +6297,7 @@ public class SocialRequestPersistenceImpl
 				classNameId, classPK, type, receiverUserId, status
 			};
 
-			count = (Long)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+			count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -6443,10 +6343,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6484,7 +6380,6 @@ public class SocialRequestPersistenceImpl
 
 		setModelImplClass(SocialRequestImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(SocialRequestModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(SocialRequestTable.INSTANCE);
 	}
@@ -6497,13 +6392,10 @@ public class SocialRequestPersistenceImpl
 	@Override
 	public void cacheResult(SocialRequest socialRequest) {
 		if (socialRequest.getCtCollectionId() != 0) {
-			socialRequest.resetOriginalValues();
-
 			return;
 		}
 
 		EntityCacheUtil.putResult(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
 			SocialRequestImpl.class, socialRequest.getPrimaryKey(),
 			socialRequest);
 
@@ -6520,9 +6412,9 @@ public class SocialRequestPersistenceImpl
 				socialRequest.getReceiverUserId()
 			},
 			socialRequest);
-
-		socialRequest.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the social requests in the entity cache if it is enabled.
@@ -6531,22 +6423,23 @@ public class SocialRequestPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<SocialRequest> socialRequests) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (socialRequests.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (SocialRequest socialRequest : socialRequests) {
 			if (socialRequest.getCtCollectionId() != 0) {
-				socialRequest.resetOriginalValues();
-
 				continue;
 			}
 
 			if (EntityCacheUtil.getResult(
-					SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
 					SocialRequestImpl.class, socialRequest.getPrimaryKey()) ==
 						null) {
 
 				cacheResult(socialRequest);
-			}
-			else {
-				socialRequest.resetOriginalValues();
 			}
 		}
 	}
@@ -6555,62 +6448,42 @@ public class SocialRequestPersistenceImpl
 	 * Clears the cache for all social requests.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(SocialRequestImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(SocialRequestImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the social request.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(SocialRequest socialRequest) {
-		EntityCacheUtil.removeResult(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestImpl.class, socialRequest.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((SocialRequestModelImpl)socialRequest, true);
+		EntityCacheUtil.removeResult(SocialRequestImpl.class, socialRequest);
 	}
 
 	@Override
 	public void clearCache(List<SocialRequest> socialRequests) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (SocialRequest socialRequest : socialRequests) {
 			EntityCacheUtil.removeResult(
-				SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-				SocialRequestImpl.class, socialRequest.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(SocialRequestModelImpl)socialRequest, true);
+				SocialRequestImpl.class, socialRequest);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(SocialRequestImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			EntityCacheUtil.removeResult(
-				SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-				SocialRequestImpl.class, primaryKey);
+			EntityCacheUtil.removeResult(SocialRequestImpl.class, primaryKey);
 		}
 	}
 
@@ -6623,9 +6496,9 @@ public class SocialRequestPersistenceImpl
 		};
 
 		FinderCacheUtil.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
+			_finderPathCountByUUID_G, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathFetchByUUID_G, args, socialRequestModelImpl, false);
+			_finderPathFetchByUUID_G, args, socialRequestModelImpl);
 
 		args = new Object[] {
 			socialRequestModelImpl.getUserId(),
@@ -6636,63 +6509,9 @@ public class SocialRequestPersistenceImpl
 		};
 
 		FinderCacheUtil.putResult(
-			_finderPathCountByU_C_C_T_R, args, Long.valueOf(1), false);
+			_finderPathCountByU_C_C_T_R, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathFetchByU_C_C_T_R, args, socialRequestModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		SocialRequestModelImpl socialRequestModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				socialRequestModelImpl.getUuid(),
-				socialRequestModelImpl.getGroupId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUUID_G, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if ((socialRequestModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				socialRequestModelImpl.getOriginalUuid(),
-				socialRequestModelImpl.getOriginalGroupId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUUID_G, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				socialRequestModelImpl.getUserId(),
-				socialRequestModelImpl.getClassNameId(),
-				socialRequestModelImpl.getClassPK(),
-				socialRequestModelImpl.getType(),
-				socialRequestModelImpl.getReceiverUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_C_C_T_R, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_C_C_T_R, args);
-		}
-
-		if ((socialRequestModelImpl.getColumnBitmask() &
-			 _finderPathFetchByU_C_C_T_R.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				socialRequestModelImpl.getOriginalUserId(),
-				socialRequestModelImpl.getOriginalClassNameId(),
-				socialRequestModelImpl.getOriginalClassPK(),
-				socialRequestModelImpl.getOriginalType(),
-				socialRequestModelImpl.getOriginalReceiverUserId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_C_C_T_R, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_C_C_T_R, args);
-		}
+			_finderPathFetchByU_C_C_T_R, args, socialRequestModelImpl);
 	}
 
 	/**
@@ -6772,10 +6591,6 @@ public class SocialRequestPersistenceImpl
 
 	@Override
 	protected SocialRequest removeImpl(SocialRequest socialRequest) {
-		if (!CTPersistenceHelperUtil.isRemove(socialRequest)) {
-			return socialRequest;
-		}
-
 		Session session = null;
 
 		try {
@@ -6786,7 +6601,9 @@ public class SocialRequestPersistenceImpl
 					SocialRequestImpl.class, socialRequest.getPrimaryKeyObj());
 			}
 
-			if (socialRequest != null) {
+			if ((socialRequest != null) &&
+				CTPersistenceHelperUtil.isRemove(socialRequest)) {
+
 				session.delete(socialRequest);
 			}
 		}
@@ -6841,18 +6658,12 @@ public class SocialRequestPersistenceImpl
 
 			if (CTPersistenceHelperUtil.isInsert(socialRequest)) {
 				if (!isNew) {
-					SocialRequest oldSocialRequest = (SocialRequest)session.get(
+					session.evict(
 						SocialRequestImpl.class,
 						socialRequest.getPrimaryKeyObj());
-
-					if (oldSocialRequest != null) {
-						session.evict(oldSocialRequest);
-					}
 				}
 
 				session.save(socialRequest);
-
-				socialRequest.setNew(false);
 			}
 			else {
 				socialRequest = (SocialRequest)session.merge(socialRequest);
@@ -6866,347 +6677,23 @@ public class SocialRequestPersistenceImpl
 		}
 
 		if (socialRequest.getCtCollectionId() != 0) {
+			if (isNew) {
+				socialRequest.setNew(false);
+			}
+
 			socialRequest.resetOriginalValues();
 
 			return socialRequest;
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!SocialRequestModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {socialRequestModelImpl.getUuid()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getUuid(),
-				socialRequestModelImpl.getCompanyId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {socialRequestModelImpl.getCompanyId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {socialRequestModelImpl.getUserId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUserId, args);
-
-			args = new Object[] {socialRequestModelImpl.getReceiverUserId()};
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountByReceiverUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByReceiverUserId, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getUserId(),
-				socialRequestModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByU_S, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getClassNameId(),
-				socialRequestModelImpl.getClassPK()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_C, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getReceiverUserId(),
-				socialRequestModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByR_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByR_S, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getUserId(),
-				socialRequestModelImpl.getClassNameId(),
-				socialRequestModelImpl.getClassPK(),
-				socialRequestModelImpl.getType(),
-				socialRequestModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_C_C_T_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByU_C_C_T_S, args);
-
-			args = new Object[] {
-				socialRequestModelImpl.getClassNameId(),
-				socialRequestModelImpl.getClassPK(),
-				socialRequestModelImpl.getType(),
-				socialRequestModelImpl.getReceiverUserId(),
-				socialRequestModelImpl.getStatus()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_C_T_R_S, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_C_T_R_S, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalUuid()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {socialRequestModelImpl.getUuid()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalUuid(),
-					socialRequestModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getUuid(),
-					socialRequestModelImpl.getCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {socialRequestModelImpl.getCompanyId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-
-				args = new Object[] {socialRequestModelImpl.getUserId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByReceiverUserId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalReceiverUserId()
-				};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByReceiverUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByReceiverUserId, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getReceiverUserId()
-				};
-
-				FinderCacheUtil.removeResult(
-					_finderPathCountByReceiverUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByReceiverUserId, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByU_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalUserId(),
-					socialRequestModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByU_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByU_S, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getUserId(),
-					socialRequestModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByU_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByU_S, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalClassNameId(),
-					socialRequestModelImpl.getOriginalClassPK()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getClassNameId(),
-					socialRequestModelImpl.getClassPK()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByR_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalReceiverUserId(),
-					socialRequestModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByR_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByR_S, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getReceiverUserId(),
-					socialRequestModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByR_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByR_S, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByU_C_C_T_S.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalUserId(),
-					socialRequestModelImpl.getOriginalClassNameId(),
-					socialRequestModelImpl.getOriginalClassPK(),
-					socialRequestModelImpl.getOriginalType(),
-					socialRequestModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByU_C_C_T_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByU_C_C_T_S, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getUserId(),
-					socialRequestModelImpl.getClassNameId(),
-					socialRequestModelImpl.getClassPK(),
-					socialRequestModelImpl.getType(),
-					socialRequestModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByU_C_C_T_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByU_C_C_T_S, args);
-			}
-
-			if ((socialRequestModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_C_T_R_S.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					socialRequestModelImpl.getOriginalClassNameId(),
-					socialRequestModelImpl.getOriginalClassPK(),
-					socialRequestModelImpl.getOriginalType(),
-					socialRequestModelImpl.getOriginalReceiverUserId(),
-					socialRequestModelImpl.getOriginalStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_T_R_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_T_R_S, args);
-
-				args = new Object[] {
-					socialRequestModelImpl.getClassNameId(),
-					socialRequestModelImpl.getClassPK(),
-					socialRequestModelImpl.getType(),
-					socialRequestModelImpl.getReceiverUserId(),
-					socialRequestModelImpl.getStatus()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_T_R_S, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_T_R_S, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestImpl.class, socialRequest.getPrimaryKey(),
-			socialRequest, false);
+			SocialRequestImpl.class, socialRequestModelImpl, false, true);
 
-		clearUniqueFindersCache(socialRequestModelImpl, false);
 		cacheUniqueFindersCache(socialRequestModelImpl);
+
+		if (isNew) {
+			socialRequest.setNew(false);
+		}
 
 		socialRequest.resetOriginalValues();
 
@@ -7328,7 +6815,27 @@ public class SocialRequestPersistenceImpl
 			return map;
 		}
 
-		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler((primaryKeys.size() * 2) + 1);
 
 		sb.append(getSelectSQL());
 		sb.append(" WHERE ");
@@ -7459,7 +6966,7 @@ public class SocialRequestPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<SocialRequest>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -7500,10 +7007,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7539,7 +7042,7 @@ public class SocialRequestPersistenceImpl
 
 		if (productionMode) {
 			count = (Long)FinderCacheUtil.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -7558,11 +7061,6 @@ public class SocialRequestPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					FinderCacheUtil.removeResult(
-						_finderPathCountAll, FINDER_ARGS_EMPTY);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7597,7 +7095,8 @@ public class SocialRequestPersistenceImpl
 	public Set<String> getCTColumnNames(
 		CTColumnResolutionType ctColumnResolutionType) {
 
-		return _ctColumnNamesMap.get(ctColumnResolutionType);
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
 	}
 
 	@Override
@@ -7630,8 +7129,6 @@ public class SocialRequestPersistenceImpl
 
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
-		Set<String> ctIgnoreColumnNames = new HashSet<String>();
-		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -7652,9 +7149,6 @@ public class SocialRequestPersistenceImpl
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
-			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
-		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("requestId"));
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.STRICT, ctStrictColumnNames);
@@ -7671,342 +7165,299 @@ public class SocialRequestPersistenceImpl
 	 * Initializes the social request persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUuid = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid", new String[] {String.class.getName()},
-			SocialRequestModelImpl.UUID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
 		_finderPathCountByUuid = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
 		_finderPathFetchByUUID_G = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			SocialRequestModelImpl.UUID_COLUMN_BITMASK |
-			SocialRequestModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
 		_finderPathCountByUUID_G = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUuid_C",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUuid_C",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			SocialRequestModelImpl.UUID_COLUMN_BITMASK |
-			SocialRequestModelImpl.COMPANYID_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathCountByUuid_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByCompanyId",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
 		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByCompanyId", new String[] {Long.class.getName()},
-			SocialRequestModelImpl.COMPANYID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
 		_finderPathCountByCompanyId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
 		_finderPathWithPaginationFindByUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUserId",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId"}, true);
 
 		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByUserId", new String[] {Long.class.getName()},
-			SocialRequestModelImpl.USERID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
+			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
 		_finderPathCountByUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"userId"},
+			false);
 
 		_finderPathWithPaginationFindByReceiverUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByReceiverUserId",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByReceiverUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"receiverUserId"}, true);
 
 		_finderPathWithoutPaginationFindByReceiverUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByReceiverUserId", new String[] {Long.class.getName()},
-			SocialRequestModelImpl.RECEIVERUSERID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByReceiverUserId",
+			new String[] {Long.class.getName()},
+			new String[] {"receiverUserId"}, true);
 
 		_finderPathCountByReceiverUserId = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByReceiverUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()},
+			new String[] {"receiverUserId"}, false);
 
 		_finderPathWithPaginationFindByU_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByU_S",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByU_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByU_S",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			SocialRequestModelImpl.USERID_COLUMN_BITMASK |
-			SocialRequestModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {"userId", "status"}, true);
 
 		_finderPathCountByU_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_S",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"userId", "status"}, false);
 
 		_finderPathWithPaginationFindByC_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByC_C",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"classNameId", "classPK"}, true);
 
 		_finderPathWithoutPaginationFindByC_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByC_C",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			SocialRequestModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSPK_COLUMN_BITMASK);
+			new String[] {"classNameId", "classPK"}, true);
 
 		_finderPathCountByC_C = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"classNameId", "classPK"}, false);
 
 		_finderPathWithPaginationFindByR_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByR_S",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByR_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"receiverUserId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByR_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByR_S",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByR_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			SocialRequestModelImpl.RECEIVERUSERID_COLUMN_BITMASK |
-			SocialRequestModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {"receiverUserId", "status"}, true);
 
 		_finderPathCountByR_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByR_S",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"receiverUserId", "status"}, false);
 
 		_finderPathFetchByU_C_C_T_R = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByU_C_C_T_R",
+			FINDER_CLASS_NAME_ENTITY, "fetchByU_C_C_T_R",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Long.class.getName()
 			},
-			SocialRequestModelImpl.USERID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSPK_COLUMN_BITMASK |
-			SocialRequestModelImpl.TYPE_COLUMN_BITMASK |
-			SocialRequestModelImpl.RECEIVERUSERID_COLUMN_BITMASK);
+			new String[] {
+				"userId", "classNameId", "classPK", "type_", "receiverUserId"
+			},
+			true);
 
 		_finderPathCountByU_C_C_T_R = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C_C_T_R",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Long.class.getName()
-			});
+			},
+			new String[] {
+				"userId", "classNameId", "classPK", "type_", "receiverUserId"
+			},
+			false);
 
 		_finderPathWithPaginationFindByU_C_C_T_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByU_C_C_T_S",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByU_C_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {
+				"userId", "classNameId", "classPK", "type_", "status"
+			},
+			true);
 
 		_finderPathWithoutPaginationFindByU_C_C_T_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByU_C_C_T_S",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByU_C_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName()
 			},
-			SocialRequestModelImpl.USERID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSPK_COLUMN_BITMASK |
-			SocialRequestModelImpl.TYPE_COLUMN_BITMASK |
-			SocialRequestModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {
+				"userId", "classNameId", "classPK", "type_", "status"
+			},
+			true);
 
 		_finderPathCountByU_C_C_T_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_C_C_T_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {
+				"userId", "classNameId", "classPK", "type_", "status"
+			},
+			false);
 
 		_finderPathWithPaginationFindByC_C_T_R_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByC_C_T_R_S",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_T_R_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {
+				"classNameId", "classPK", "type_", "receiverUserId", "status"
+			},
+			true);
 
 		_finderPathWithoutPaginationFindByC_C_T_R_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED,
-			SocialRequestImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByC_C_T_R_S",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_T_R_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			SocialRequestModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			SocialRequestModelImpl.CLASSPK_COLUMN_BITMASK |
-			SocialRequestModelImpl.TYPE_COLUMN_BITMASK |
-			SocialRequestModelImpl.RECEIVERUSERID_COLUMN_BITMASK |
-			SocialRequestModelImpl.STATUS_COLUMN_BITMASK);
+			new String[] {
+				"classNameId", "classPK", "type_", "receiverUserId", "status"
+			},
+			true);
 
 		_finderPathCountByC_C_T_R_S = new FinderPath(
-			SocialRequestModelImpl.ENTITY_CACHE_ENABLED,
-			SocialRequestModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_T_R_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {
+				"classNameId", "classPK", "type_", "receiverUserId", "status"
+			},
+			false);
+
+		_setSocialRequestUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setSocialRequestUtilPersistence(null);
+
 		EntityCacheUtil.removeCache(SocialRequestImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setSocialRequestUtilPersistence(
+		SocialRequestPersistence socialRequestPersistence) {
+
+		try {
+			Field field = SocialRequestUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, socialRequestPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	private static final String _SQL_SELECT_SOCIALREQUEST =
@@ -8034,5 +7485,10 @@ public class SocialRequestPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "type"});
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
+	}
 
 }

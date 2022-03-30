@@ -36,7 +36,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * @author  Neil Griffin
+ * @author Neil Griffin
  */
 public class ViewEngineContextImpl implements ViewEngineContext {
 
@@ -99,7 +99,7 @@ public class ViewEngineContextImpl implements ViewEngineContext {
 			return _mimeResponse.getPortletOutputStream();
 		}
 		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+			_log.error(ioException);
 
 			return null;
 		}

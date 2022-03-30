@@ -31,7 +31,7 @@ import org.elasticsearch.action.admin.indices.get.GetIndexResponse;
 import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
 import org.elasticsearch.common.settings.Settings;
@@ -53,7 +53,7 @@ public class GetIndexIndexRequestExecutorImpl
 		GetIndexRequest getIndexRequest = createGetIndexRequest(
 			getIndexIndexRequest);
 
-		GetIndexResponse getIndexResponse = getGetIndexResponse(
+		GetIndexResponse getIndexResponse = _getGetIndexResponse(
 			getIndexRequest, getIndexIndexRequest);
 
 		GetIndexIndexResponse getIndexIndexResponse =
@@ -61,54 +61,71 @@ public class GetIndexIndexRequestExecutorImpl
 
 		getIndexIndexResponse.setIndexNames(getIndexResponse.getIndices());
 
-		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>>
+		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetadata>>
 			indicesMappings = getIndexResponse.getMappings();
 
-		getIndexIndexResponse.setMappings(convertMappings(indicesMappings));
+		getIndexIndexResponse.setMappings(_convertMappings(indicesMappings));
 
 		ImmutableOpenMap<String, Settings> indicesSettings =
 			getIndexResponse.getSettings();
 
-		getIndexIndexResponse.setSettings(convertSettings(indicesSettings));
+		getIndexIndexResponse.setSettings(_convertSettings(indicesSettings));
 
 		return getIndexIndexResponse;
 	}
 
-	protected Map<String, Map<String, String>> convertMappings(
-		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetaData>>
+	protected GetIndexRequest createGetIndexRequest(
+		GetIndexIndexRequest getIndexIndexRequest) {
+
+		GetIndexRequest getIndexRequest = new GetIndexRequest();
+
+		getIndexRequest.indices(getIndexIndexRequest.getIndexNames());
+
+		return getIndexRequest;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private Map<String, Map<String, String>> _convertMappings(
+		ImmutableOpenMap<String, ImmutableOpenMap<String, MappingMetadata>>
 			indicesMappings) {
 
 		Iterator
 			<ObjectObjectCursor
-				<String, ImmutableOpenMap<String, MappingMetaData>>> iterator =
+				<String, ImmutableOpenMap<String, MappingMetadata>>> iterator =
 					indicesMappings.iterator();
 
 		Map<String, Map<String, String>> indexMappings = new HashMap<>();
 
 		while (iterator.hasNext()) {
 			ObjectObjectCursor
-				<String, ImmutableOpenMap<String, MappingMetaData>>
+				<String, ImmutableOpenMap<String, MappingMetadata>>
 					objectObjectCursor = iterator.next();
 
-			ImmutableOpenMap<String, MappingMetaData> typeMappingsData =
+			ImmutableOpenMap<String, MappingMetadata> typeMappingsData =
 				objectObjectCursor.value;
 
 			Map<String, String> indiceTypeMappings = new HashMap<>();
 
 			indexMappings.put(objectObjectCursor.key, indiceTypeMappings);
 
-			Iterator<ObjectObjectCursor<String, MappingMetaData>>
+			Iterator<ObjectObjectCursor<String, MappingMetadata>>
 				typeMappingsIterator = typeMappingsData.iterator();
 
 			while (typeMappingsIterator.hasNext()) {
-				ObjectObjectCursor<String, MappingMetaData>
+				ObjectObjectCursor<String, MappingMetadata>
 					typeMappingsObjectObjectCursor =
 						typeMappingsIterator.next();
 
-				MappingMetaData mappingMetaData =
+				MappingMetadata mappingMetadata =
 					typeMappingsObjectObjectCursor.value;
 
-				CompressedXContent mappingContent = mappingMetaData.source();
+				CompressedXContent mappingContent = mappingMetadata.source();
 
 				indiceTypeMappings.put(
 					typeMappingsObjectObjectCursor.key,
@@ -119,7 +136,7 @@ public class GetIndexIndexRequestExecutorImpl
 		return indexMappings;
 	}
 
-	protected Map<String, String> convertSettings(
+	private Map<String, String> _convertSettings(
 		ImmutableOpenMap<String, Settings> indicesSettings) {
 
 		Iterator<ObjectObjectCursor<String, Settings>> iterator =
@@ -139,23 +156,14 @@ public class GetIndexIndexRequestExecutorImpl
 		return indicesSettingsMap;
 	}
 
-	protected GetIndexRequest createGetIndexRequest(
-		GetIndexIndexRequest getIndexIndexRequest) {
-
-		GetIndexRequest getIndexRequest = new GetIndexRequest();
-
-		getIndexRequest.indices(getIndexIndexRequest.getIndexNames());
-
-		return getIndexRequest;
-	}
-
-	protected GetIndexResponse getGetIndexResponse(
+	private GetIndexResponse _getGetIndexResponse(
 		GetIndexRequest getIndexRequest,
 		GetIndexIndexRequest getIndexIndexRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				getIndexIndexRequest.getConnectionId(), true);
+				getIndexIndexRequest.getConnectionId(),
+				getIndexIndexRequest.isPreferLocalCluster());
 
 		IndicesClient indicesClient = restHighLevelClient.indices();
 
@@ -165,13 +173,6 @@ public class GetIndexIndexRequestExecutorImpl
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

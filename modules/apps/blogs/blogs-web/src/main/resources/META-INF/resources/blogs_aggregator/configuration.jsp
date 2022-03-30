@@ -49,119 +49,103 @@ if (organizationId > 0) {
 					<aui:option label="scope" />
 				</aui:select>
 
-				<div class='form-group <%= selectionMethod.equals("users") ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />usersSelectionOptions">
+				<div class="form-group <%= selectionMethod.equals("users") ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />usersSelectionOptions">
 					<aui:input label="organization" name="organizationName" type="resource" value="<%= organizationName %>" />
 
 					<aui:button name="selectOrganizationButton" value="select" />
 
 					<%
-					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + renderResponse.getNamespace() + "');";
+					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('organizationId', 'organizationName', this, '" + liferayPortletResponse.getNamespace() + "');";
 					%>
 
 					<aui:button name="removeOrganizationButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
 				</div>
 
-				<aui:script>
+				<aui:script sandbox="<%= true %>">
 					var <portlet:namespace />selectOrganizationButton = document.getElementById(
 						'<portlet:namespace />selectOrganizationButton'
 					);
 
-					if (<portlet:namespace />selectOrganizationButton) {
-						<portlet:namespace />selectOrganizationButton.addEventListener(
-							'click',
-							function (event) {
-								Liferay.Util.selectEntity(
-									{
-										dialog: {
-											constrain: true,
-											destroyOnHide: true,
-											modal: true,
-										},
+					<portlet:namespace />selectOrganizationButton.addEventListener(
+						'click',
+						(event) => {
+							Liferay.Util.openSelectionModal({
+								onSelect: function (event) {
+									var form = document.getElementById('<portlet:namespace />fm');
 
-										<%
-										String portletId = PortletProviderUtil.getPortletId(User.class.getName(), PortletProvider.Action.VIEW);
-										%>
-
-										id:
-											'<%= PortalUtil.getPortletNamespace(portletId) %>selectOrganization',
-										title:
-											'<liferay-ui:message arguments="organization" key="select-x" />',
-
-										<%
-										PortletURL selectOrganizationURL = PortletProviderUtil.getPortletURL(request, Organization.class.getName(), PortletProvider.Action.BROWSE);
-
-										selectOrganizationURL.setParameter("tabs1", "organizations");
-										selectOrganizationURL.setWindowState(LiferayWindowState.POP_UP);
-										%>
-
-										uri: '<%= selectOrganizationURL.toString() %>',
-									},
-									function (event) {
-										var form = document.getElementById(
-											'<portlet:namespace />fm'
+									if (form) {
+										var organizationId = form.querySelector(
+											'#<portlet:namespace />organizationId'
 										);
 
-										if (form) {
-											var organizationId = form.querySelector(
-												'#<portlet:namespace />organizationId'
-											);
-
-											if (organizationId) {
-												organizationId.setAttribute(
-													'value',
-													event.entityid
-												);
-											}
-
-											var organizationName = form.querySelector(
-												'#<portlet:namespace />organizationName'
-											);
-
-											if (organizationName) {
-												organizationName.setAttribute(
-													'value',
-													event.entityname
-												);
-											}
+										if (organizationId) {
+											organizationId.setAttribute('value', event.entityid);
 										}
 
-										Liferay.Util.toggleDisabled(
-											'#<portlet:namespace />removeOrganizationButton',
-											false
+										var organizationName = form.querySelector(
+											'#<portlet:namespace />organizationName'
 										);
+
+										if (organizationName) {
+											organizationName.setAttribute(
+												'value',
+												event.entityname
+											);
+										}
 									}
-								);
-							}
-						);
-					}
+
+									Liferay.Util.toggleDisabled(
+										'#<portlet:namespace />removeOrganizationButton',
+										false
+									);
+								},
+
+								<%
+								String portletId = PortletProviderUtil.getPortletId(User.class.getName(), PortletProvider.Action.VIEW);
+								%>
+
+								selectEventName:
+									'<%= PortalUtil.getPortletNamespace(portletId) %>selectOrganization',
+
+								title:
+									'<liferay-ui:message arguments="organization" key="select-x" />',
+
+								<%
+								PortletURL selectOrganizationURL = PortletURLBuilder.create(
+									PortletProviderUtil.getPortletURL(request, Organization.class.getName(), PortletProvider.Action.BROWSE)
+								).setTabs1(
+									"organizations"
+								).setWindowState(
+									LiferayWindowState.POP_UP
+								).buildPortletURL();
+								%>
+
+								url: '<%= selectOrganizationURL.toString() %>',
+							});
+						}
+					);
 				</aui:script>
 
-				<aui:script require="metal-dom/src/dom">
-					var dom = metalDomSrcDom.default;
-
-					var <portlet:namespace />selectionMethod = document.getElementById(
+				<aui:script sandbox="<%= true %>">
+					var selectionMethodElement = document.getElementById(
 						'<portlet:namespace />selectionMethod'
 					);
 
-					if (<portlet:namespace />selectionMethod) {
-						<portlet:namespace />selectionMethod.addEventListener('change', function (
-							event
-						) {
+					if (selectionMethodElement) {
+						selectionMethodElement.addEventListener('change', (event) => {
 							var usersSelectionOptions = document.getElementById(
 								'<portlet:namespace />usersSelectionOptions'
 							);
 
 							if (usersSelectionOptions) {
 								var showUsersSelectionOptions = !(
-									<portlet:namespace />selectionMethod.val() === 'users'
+									selectionMethodElement.value === 'users'
 								);
 
-								if (showUsersSelectionOptions) {
-									dom.addClasses(usersSelectionOptions, 'hide');
-								}
-								else {
-									dom.removeClasses(usersSelectionOptions, 'hide');
-								}
+								usersSelectionOptions.classList.toggle(
+									'hide',
+									showUsersSelectionOptions
+								);
 							}
 						});
 					}
@@ -197,7 +181,13 @@ if (organizationId > 0) {
 					<aui:option label="100" />
 				</aui:select>
 
+				<aui:input name="preferences--showTags--" type="checkbox" value="<%= showTags %>" />
+
 				<c:if test="<%= PortalUtil.isRSSFeedsEnabled() %>">
+					<div class="sheet-subtitle">
+						<liferay-ui:message key="rss-settings" />
+					</div>
+
 					<liferay-rss:rss-settings
 						delta="<%= rssDelta %>"
 						displayStyle="<%= rssDisplayStyle %>"
@@ -205,8 +195,6 @@ if (organizationId > 0) {
 						feedType="<%= rssFeedType %>"
 					/>
 				</c:if>
-
-				<aui:input name="preferences--showTags--" type="checkbox" value="<%= showTags %>" />
 			</liferay-frontend:fieldset>
 		</liferay-frontend:fieldset-group>
 	</liferay-frontend:edit-form-body>

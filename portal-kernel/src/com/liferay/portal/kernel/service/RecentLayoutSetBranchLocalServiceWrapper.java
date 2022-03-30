@@ -25,6 +25,10 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 	implements RecentLayoutSetBranchLocalService,
 			   ServiceWrapper<RecentLayoutSetBranchLocalService> {
 
+	public RecentLayoutSetBranchLocalServiceWrapper() {
+		this(null);
+	}
+
 	public RecentLayoutSetBranchLocalServiceWrapper(
 		RecentLayoutSetBranchLocalService recentLayoutSetBranchLocalService) {
 
@@ -43,6 +47,10 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 
 	/**
 	 * Adds the recent layout set branch to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was added
@@ -98,6 +106,10 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 	/**
 	 * Deletes the recent layout set branch with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recentLayoutSetBranchId the primary key of the recent layout set branch
 	 * @return the recent layout set branch that was removed
 	 * @throws PortalException if a recent layout set branch with the primary key could not be found
@@ -113,6 +125,10 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 
 	/**
 	 * Deletes the recent layout set branch from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was removed
@@ -142,6 +158,13 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _recentLayoutSetBranchLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _recentLayoutSetBranchLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -337,6 +360,10 @@ public class RecentLayoutSetBranchLocalServiceWrapper
 
 	/**
 	 * Updates the recent layout set branch in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was updated

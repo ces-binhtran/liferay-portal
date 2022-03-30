@@ -14,29 +14,29 @@
 
 import {ClaySelect} from '@clayui/form';
 import ClayModal from '@clayui/modal';
-import classNames from 'classnames';
 import {addParams} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useMemo, useState} from 'react';
 
+import {LAYOUT_TYPES} from '../config/constants/layoutTypes';
 import {VIEWPORT_SIZES} from '../config/constants/viewportSizes';
 import {config} from '../config/index';
-import {useSelector} from '../store/index';
+import {useDisplayPagePreviewItem} from '../contexts/DisplayPagePreviewItemContext';
+import {useSelector} from '../contexts/StoreContext';
+import selectLanguageId from '../selectors/selectLanguageId';
+import selectSegmentsExperienceId from '../selectors/selectSegmentsExperienceId';
 import {useId} from '../utils/useId';
+import {DisplayPagePreviewItemSelector} from './DisplayPagePreviewItemSelector';
 import Translation from './Translation';
 import ViewportSizeSelector from './ViewportSizeSelector';
 
 const PreviewModal = ({observer}) => {
-	const [languageId, setLanguageId] = useState(
-		useSelector((state) => state.languageId)
-	);
+	const initialSegmentsExperienceId = useSelector(selectSegmentsExperienceId);
+	const [languageId, setLanguageId] = useState(useSelector(selectLanguageId));
+	const displayPagePreviewItem = useDisplayPagePreviewItem();
 
 	const [viewportSize, setViewportSize] = useState(
 		useSelector((state) => state.selectedViewportSize)
-	);
-
-	const initialSegmentsExperienceId = useSelector(
-		(state) => state.segmentsExperienceId
 	);
 
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
@@ -49,17 +49,32 @@ const PreviewModal = ({observer}) => {
 	);
 	const experienceSelectId = useId();
 
-	const previewURL = useMemo(
-		() =>
-			addParams(
+	const previewURL = useMemo(() => {
+		let nextURL = addParams(
+			{
+				[`${config.portletNamespace}languageId`]: languageId,
+				[`${config.portletNamespace}segmentsExperienceId`]: segmentsExperienceId,
+			},
+			config.previewPageURL
+		);
+
+		if (
+			config.layoutType === LAYOUT_TYPES.display &&
+			displayPagePreviewItem
+		) {
+			nextURL = addParams(
 				{
-					[`${config.portletNamespace}languageId`]: languageId,
-					[`${config.portletNamespace}segmentsExperienceId`]: segmentsExperienceId,
+					[`${config.portletNamespace}className`]: displayPagePreviewItem
+						.data.className,
+					[`${config.portletNamespace}classPK`]: displayPagePreviewItem
+						.data.classPK,
 				},
-				config.previewPageURL
-			),
-		[languageId, segmentsExperienceId]
-	);
+				nextURL
+			);
+		}
+
+		return nextURL;
+	}, [languageId, segmentsExperienceId, displayPagePreviewItem]);
 
 	const modalBodyWidth = useMemo(() => {
 		const {maxWidth, minWidth} = config.availableViewportSizes[
@@ -74,25 +89,18 @@ const PreviewModal = ({observer}) => {
 	return (
 		<ClayModal
 			className="page-editor__preview-modal"
+			containerProps={{className: 'cadmin'}}
 			observer={observer}
 			size="full-screen"
 		>
-			<ClayModal.Header className="container-fluid">
-				<ClayModal.Title className="pb-3 pt-3">
-					<div
-						className={classNames(
-							'd-flex',
-							'justify-content-between',
-							{
-								'responsive-mode': config.responsiveEnabled,
-							}
-						)}
-					>
-						<ul className="navbar-nav page-editor__preview-modal__part">
+			<ClayModal.Header>
+				<div className="d-flex flex-grow-1 justify-content-between page-editor__theme-adapter-buttons responsive-mode">
+					<ul className="justify-content-start navbar-nav page-editor__preview-modal__part">
+						{availableSegmentsExperiences && (
 							<li className="mr-2 nav-item">
 								<div className="align-middle d-inline-flex">
 									<label
-										className="mr-2 mt-1"
+										className="mr-2 mt-1 w-100"
 										htmlFor={experienceSelectId}
 									>
 										{Liferay.Language.get('experience')}
@@ -128,35 +136,35 @@ const PreviewModal = ({observer}) => {
 									</ClaySelect>
 								</div>
 							</li>
+						)}
 
-							<li className="nav-item">
-								<Translation
-									availableLanguages={
-										config.availableLanguages
-									}
-									defaultLanguageId={config.defaultLanguageId}
-									dispatch={({languageId: nextLanguageId}) =>
-										setLanguageId(nextLanguageId)
-									}
-									fragmentEntryLinks={fragmentEntryLinks}
-									languageId={languageId}
-									segmentsExperienceId={segmentsExperienceId}
-								/>
-							</li>
-						</ul>
+						<li className="nav-item">
+							<Translation
+								availableLanguages={config.availableLanguages}
+								defaultLanguageId={config.defaultLanguageId}
+								dispatch={({languageId: nextLanguageId}) =>
+									setLanguageId(nextLanguageId)
+								}
+								fragmentEntryLinks={fragmentEntryLinks}
+								languageId={languageId}
+								segmentsExperienceId={segmentsExperienceId}
+							/>
+						</li>
+					</ul>
 
-						<div className="page-editor__preview-modal__part">
-							{config.responsiveEnabled && (
-								<ViewportSizeSelector
-									onSizeSelected={setViewportSize}
-									selectedSize={viewportSize}
-								/>
-							)}
-						</div>
-
-						<div className="page-editor__preview-modal__part"></div>
+					<div className="page-editor__preview-modal__part">
+						<ViewportSizeSelector
+							onSizeSelected={setViewportSize}
+							selectedSize={viewportSize}
+						/>
 					</div>
-				</ClayModal.Title>
+
+					<div className="justify-content-end page-editor__preview-modal__part pr-3">
+						{config.layoutType === LAYOUT_TYPES.display ? (
+							<DisplayPagePreviewItemSelector />
+						) : null}
+					</div>
+				</div>
 			</ClayModal.Header>
 
 			<ClayModal.Body

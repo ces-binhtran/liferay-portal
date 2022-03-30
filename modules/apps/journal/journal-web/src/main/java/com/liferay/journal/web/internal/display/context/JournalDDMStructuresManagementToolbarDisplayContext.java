@@ -23,9 +23,12 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.web.internal.security.permission.resource.DDMStructurePermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -67,7 +70,8 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteDDMStructures");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -76,8 +80,9 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 	public String getAvailableActions(DDMStructure ddmStructure)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (DDMStructurePermission.contains(
 				themeDisplay.getPermissionChecker(), ddmStructure,
@@ -91,11 +96,11 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -107,22 +112,19 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
-				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-					WebKeys.THEME_DISPLAY);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(), "mvcPath",
-					"/edit_ddm_structure.jsp", "redirect",
+					"/edit_data_definition.jsp", "redirect",
 					themeDisplay.getURLCurrent());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "journalDDMStructuresManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -139,8 +141,9 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Group group = themeDisplay.getScopeGroup();
 
@@ -166,6 +169,9 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -178,7 +184,10 @@ public class JournalDDMStructuresManagementToolbarDisplayContext
 
 	@Override
 	protected String[] getOrderByKeys() {
-		return new String[] {"modified-date", "id"};
+		return new String[] {"name", "modified-date", "id"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalDDMStructuresManagementToolbarDisplayContext.class);
 
 }

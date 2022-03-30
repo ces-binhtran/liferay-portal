@@ -14,8 +14,9 @@
 
 package com.liferay.jenkins.results.parser;
 
-import java.util.Properties;
-import java.util.Set;
+import com.liferay.jenkins.results.parser.job.property.JobProperty;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -23,41 +24,17 @@ import java.util.Set;
 public class SubrepositoryAcceptancePullRequestJob
 	extends SubrepositoryGitRepositoryJob implements TestSuiteJob {
 
-	public SubrepositoryAcceptancePullRequestJob(
-		String jobName, String testSuiteName, String repositoryName) {
-
-		super(jobName, repositoryName);
-
-		_testSuiteName = testSuiteName;
-
-		_setTestRunValidation();
-	}
-
 	@Override
-	public Set<String> getBatchNames() {
-		String testBatchNames = JenkinsResultsParserUtil.getProperty(
-			getJobProperties(), "test.batch.names[" + _testSuiteName + "]");
-
-		if (testBatchNames == null) {
-			return super.getBatchNames();
+	public JSONObject getJSONObject() {
+		if (jsonObject != null) {
+			return jsonObject;
 		}
 
-		return getSetFromString(testBatchNames);
-	}
+		jsonObject = super.getJSONObject();
 
-	@Override
-	public Set<String> getDistTypes() {
-		Properties jobProperties = getJobProperties();
+		jsonObject.put("test_suite_name", _testSuiteName);
 
-		String testBatchDistAppServers = JenkinsResultsParserUtil.getProperty(
-			jobProperties, "subrepo.dist.app.servers[" + _testSuiteName + "]");
-
-		if (testBatchDistAppServers == null) {
-			testBatchDistAppServers = JenkinsResultsParserUtil.getProperty(
-				jobProperties, "subrepo.dist.app.servers");
-		}
-
-		return getSetFromString(testBatchDistAppServers);
+		return jsonObject;
 	}
 
 	@Override
@@ -65,18 +42,38 @@ public class SubrepositoryAcceptancePullRequestJob
 		return _testSuiteName;
 	}
 
-	private void _setTestRunValidation() {
-		Properties jobProperties = getJobProperties();
+	protected SubrepositoryAcceptancePullRequestJob(
+		BuildProfile buildProfile, String jobName,
+		String portalUpstreamBranchName, String repositoryName,
+		String testSuiteName, String upstreamBranchName) {
 
-		String testRunValidationProperty = JenkinsResultsParserUtil.getProperty(
-			jobProperties, "test.run.validation[" + _testSuiteName + "]");
+		super(
+			buildProfile, jobName, portalUpstreamBranchName, repositoryName,
+			upstreamBranchName);
 
-		if (testRunValidationProperty == null) {
-			testRunValidationProperty = JenkinsResultsParserUtil.getProperty(
-				jobProperties, "test.run.validation");
-		}
+		_testSuiteName = testSuiteName;
 
-		testRunValidation = Boolean.parseBoolean(testRunValidationProperty);
+		_initialize();
+	}
+
+	protected SubrepositoryAcceptancePullRequestJob(JSONObject jsonObject) {
+		super(jsonObject);
+
+		_testSuiteName = jsonObject.getString("test_suite_name");
+
+		_initialize();
+	}
+
+	private void _initialize() {
+		_setValidationRequired();
+	}
+
+	private void _setValidationRequired() {
+		JobProperty jobProperty = getJobProperty("test.run.validation");
+
+		recordJobProperty(jobProperty);
+
+		validationRequired = Boolean.parseBoolean(jobProperty.getValue());
 	}
 
 	private final String _testSuiteName;

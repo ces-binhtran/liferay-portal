@@ -204,20 +204,6 @@ public interface RedirectNotFoundEntryModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
-	 * Returns the hits of this redirect not found entry.
-	 *
-	 * @return the hits of this redirect not found entry
-	 */
-	public long getHits();
-
-	/**
-	 * Sets the hits of this redirect not found entry.
-	 *
-	 * @param hits the hits of this redirect not found entry
-	 */
-	public void setHits(long hits);
-
-	/**
 	 * Returns the ignored of this redirect not found entry.
 	 *
 	 * @return the ignored of this redirect not found entry
@@ -252,5 +238,8 @@ public interface RedirectNotFoundEntryModel
 	 * @param url the url of this redirect not found entry
 	 */
 	public void setUrl(String url);
+
+	@Override
+	public RedirectNotFoundEntry cloneWithOriginalValues();
 
 }

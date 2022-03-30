@@ -1,6 +1,8 @@
 @media (min-width: 576px) {
 	.ddm-form-builder,
 	.ddm-translation-manager {
+		margin-top: 1.25rem;
+
 		.modal-sm {
 			max-width: 300px;
 			position: relative;
@@ -8,60 +10,26 @@
 	}
 }
 
-.form-builder-publish-popover {
-	max-width: 500px;
+.error-icon {
+	color: #da1414;
+	margin-right: 5px;
 }
 
-.form-builder-publish-popover .publish-popover-content {
-	display: block;
+.ddm-form-web__exception-container {
+	transition: padding ease $transition-time;
 
-	.form-group {
-		margin-bottom: 10px;
+	.alert-dismissible:first-child {
+		margin-top: 24px;
+	}
 
-		&.has-success {
-			margin-bottom: 0;
-
-			.form-feedback-item {
-				display: block;
-			}
-
-			.publish-button-success-icon {
-				display: block;
-			}
-
-			.publish-button-text {
-				display: none;
-			}
-		}
-
-		&.has-error {
-			margin-bottom: 0;
-
-			.form-feedback-item {
-				display: block;
-			}
-		}
-
-		.form-feedback-item {
-			display: none;
-			margin-bottom: 0;
-		}
-
-		.input-group-btn {
-			vertical-align: top;
-		}
-
-		.publish-button-success-icon {
-			display: none;
-			padding-left: 10px;
-			padding-right: 10px;
-		}
+	&--sidebar-open {
+		padding-left: 0;
+		padding-right: 338px;
 	}
 }
 
-.form-builder-publish-popover-content {
-	display: table;
-	width: 500px;
+.invalid-form-instance {
+	font-weight: normal;
 }
 
 .publish-popover-content {
@@ -78,12 +46,20 @@
 	}
 
 	.autosave-feedback {
+		color: #6b6c7e;
 		display: block;
+		font-style: italic;
 		padding-bottom: 18.071px;
-		padding-left: 124px;
+		padding-left: 335px;
+		padding-right: 25px;
 		padding-top: 18.071px;
 		text-align: center;
-		width: 100%;
+	}
+
+	.autosave-feedback-container {
+		align-items: center;
+		display: flex;
+		justify-content: center;
 	}
 
 	.management-bar .liferayalert {
@@ -114,30 +90,6 @@
 		h5,
 		.h5 {
 			margin: 0;
-		}
-
-		.ae-placeholder:empty:before {
-			content: attr(data-placeholder);
-		}
-
-		.alloy-editor-container .alloy-editor.alloy-editor-placeholder,
-		.alloy-editor-container
-			.alloy-editor.alloy-editor-placeholder:empty:not(:focus) {
-			border-width: 0;
-			padding-left: 0;
-
-			.form-feedback-item {
-				top: -15px;
-			}
-
-			p {
-				margin: 0;
-			}
-		}
-
-		.alloy-editor-container
-			.alloy-editor.alloy-editor-placeholder:empty:not(:focus) {
-			color: $form-header-placeholder-color;
 		}
 	}
 
@@ -312,6 +264,10 @@
 	.form-builder-page-header {
 		padding-right: 62px;
 		position: relative;
+
+		.form-control {
+			background-color: transparent;
+		}
 	}
 
 	.form-builder-pages-header {

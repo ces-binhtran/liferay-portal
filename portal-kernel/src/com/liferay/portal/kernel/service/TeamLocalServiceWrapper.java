@@ -28,6 +28,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class TeamLocalServiceWrapper
 	implements ServiceWrapper<TeamLocalService>, TeamLocalService {
 
+	public TeamLocalServiceWrapper() {
+		this(null);
+	}
+
 	public TeamLocalServiceWrapper(TeamLocalService teamLocalService) {
 		_teamLocalService = teamLocalService;
 	}
@@ -44,6 +48,10 @@ public class TeamLocalServiceWrapper
 
 	/**
 	 * Adds the team to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TeamLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param team the team
 	 * @return the team that was added
@@ -141,6 +149,10 @@ public class TeamLocalServiceWrapper
 	/**
 	 * Deletes the team with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TeamLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param teamId the primary key of the team
 	 * @return the team that was removed
 	 * @throws PortalException if a team with the primary key could not be found
@@ -154,6 +166,10 @@ public class TeamLocalServiceWrapper
 
 	/**
 	 * Deletes the team from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TeamLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param team the team
 	 * @return the team that was removed
@@ -218,6 +234,13 @@ public class TeamLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _teamLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _teamLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -592,10 +615,11 @@ public class TeamLocalServiceWrapper
 	public java.util.List<Team> search(
 		long groupId, String name, String description,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Team> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Team>
+			orderByComparator) {
 
 		return _teamLocalService.search(
-			groupId, name, description, params, start, end, obc);
+			groupId, name, description, params, start, end, orderByComparator);
 	}
 
 	@Override
@@ -626,6 +650,10 @@ public class TeamLocalServiceWrapper
 
 	/**
 	 * Updates the team in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TeamLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param team the team
 	 * @return the team that was updated

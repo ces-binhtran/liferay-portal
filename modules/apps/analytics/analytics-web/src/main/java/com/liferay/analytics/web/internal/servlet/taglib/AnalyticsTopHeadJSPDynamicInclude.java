@@ -71,17 +71,19 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			AnalyticsWebKeys.ANALYTICS_CLIENT_CHANNEL_ID,
 			_getLiferayAnalyticsChannelId(httpServletRequest, themeDisplay));
 
-		Map<String, String> analyticsClientConfig = HashMapBuilder.put(
-			"dataSourceId",
-			_getLiferayAnalyticsDataSourceId(themeDisplay.getCompany())
-		).put(
-			"endpointUrl",
-			_getLiferayAnalyticsEndpointURL(themeDisplay.getCompany())
-		).build();
-
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_CLIENT_CONFIG,
-			_serialize(analyticsClientConfig));
+			_serialize(
+				HashMapBuilder.put(
+					"dataSourceId",
+					_getLiferayAnalyticsDataSourceId(themeDisplay.getCompany())
+				).put(
+					"endpointUrl",
+					_getLiferayAnalyticsEndpointURL(themeDisplay.getCompany())
+				).put(
+					"projectId",
+					_getLiferayAnalyticsProjectId(themeDisplay.getCompany())
+				).build()));
 
 		httpServletRequest.setAttribute(
 			AnalyticsWebKeys.ANALYTICS_CLIENT_GROUP_IDS,
@@ -89,6 +91,12 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 				PrefsPropsUtil.getStringArray(
 					themeDisplay.getCompanyId(), "liferayAnalyticsGroupIds",
 					StringPool.COMMA)));
+
+		Layout layout = themeDisplay.getLayout();
+
+		httpServletRequest.setAttribute(
+			AnalyticsWebKeys.ANALYTICS_CLIENT_READABLE_CONTENT,
+			Boolean.toString(layout.isTypeAssetDisplay()));
 
 		super.include(httpServletRequest, httpServletResponse, key);
 	}
@@ -128,9 +136,14 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 		Group group = layout.getGroup();
 
 		if (Objects.equals(group.getGroupKey(), "Forms")) {
-			group = _groupLocalService.fetchGroup(
+			Group refererGroup = _groupLocalService.fetchGroup(
 				GetterUtil.getLong(
 					httpServletRequest.getAttribute("refererGroupId")));
+
+			if (refererGroup != null) {
+				return refererGroup.getTypeSettingsProperty(
+					"analyticsChannelId");
+			}
 		}
 
 		return group.getTypeSettingsProperty("analyticsChannelId");
@@ -146,28 +159,25 @@ public class AnalyticsTopHeadJSPDynamicInclude extends BaseJSPDynamicInclude {
 			company.getCompanyId(), "liferayAnalyticsEndpointURL");
 	}
 
+	private String _getLiferayAnalyticsProjectId(Company company) {
+		return PrefsPropsUtil.getString(
+			company.getCompanyId(), "liferayAnalyticsProjectId");
+	}
+
 	private boolean _isAnalyticsTrackingEnabled(
 		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay) {
 
 		Layout layout = themeDisplay.getLayout();
 
-		if (layout == null) {
-			return false;
-		}
-
-		if (layout.isTypeControlPanel()) {
+		if ((layout == null) || layout.isTypeControlPanel()) {
 			return false;
 		}
 
 		Company company = themeDisplay.getCompany();
 
 		if (Validator.isNull(_getLiferayAnalyticsDataSourceId(company)) ||
-			Validator.isNull(_getLiferayAnalyticsEndpointURL(company))) {
-
-			return false;
-		}
-
-		if (Objects.equals(
+			Validator.isNull(_getLiferayAnalyticsEndpointURL(company)) ||
+			Objects.equals(
 				httpServletRequest.getRequestURI(), "/c/portal/api/jsonws")) {
 
 			return false;

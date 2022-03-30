@@ -23,7 +23,6 @@ import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.web.internal.constants.KBWebKeys;
 import com.liferay.portal.kernel.exception.NoSuchSubscriptionException;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
@@ -159,9 +158,6 @@ public class ArticlePortlet extends BaseKBPortlet {
 	protected long getResourcePrimKey(RenderRequest renderRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			KBWebKeys.THEME_DISPLAY);
-
 		PortletPreferences preferences = renderRequest.getPreferences();
 
 		long defaultValue = GetterUtil.getLong(
@@ -180,7 +176,7 @@ public class ArticlePortlet extends BaseKBPortlet {
 			return 0;
 		}
 
-		long resourcePrimKey = getResourcePrimKeyFromUrlTitle(renderRequest);
+		long resourcePrimKey = _getResourcePrimKeyFromUrlTitle(renderRequest);
 
 		if (resourcePrimKey == 0) {
 			resourcePrimKey = ParamUtil.getLong(
@@ -190,6 +186,9 @@ public class ArticlePortlet extends BaseKBPortlet {
 		if ((resourcePrimKey == 0) || (resourcePrimKey != defaultValue)) {
 			return resourcePrimKey;
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			KBWebKeys.THEME_DISPLAY);
 
 		if (!_kbArticleModelResourcePermission.contains(
 				themeDisplay.getPermissionChecker(), defaultValue,
@@ -201,8 +200,22 @@ public class ArticlePortlet extends BaseKBPortlet {
 		return defaultValue;
 	}
 
-	protected long getResourcePrimKeyFromUrlTitle(RenderRequest renderRequest)
-		throws PortalException {
+	@Reference(unbind = "-")
+	protected void setKBArticleLocalService(
+		KBArticleLocalService kbArticleLocalService) {
+
+		_kbArticleLocalService = kbArticleLocalService;
+	}
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.knowledge.base.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=2.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
+	private long _getResourcePrimKeyFromUrlTitle(RenderRequest renderRequest)
+		throws Exception {
 
 		String urlTitle = ParamUtil.getString(renderRequest, "urlTitle");
 
@@ -231,20 +244,6 @@ public class ArticlePortlet extends BaseKBPortlet {
 		}
 
 		return 0;
-	}
-
-	@Reference(unbind = "-")
-	protected void setKBArticleLocalService(
-		KBArticleLocalService kbArticleLocalService) {
-
-		_kbArticleLocalService = kbArticleLocalService;
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.knowledge.base.web)(&(release.schema.version>=1.2.0)(!(release.schema.version>=2.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
 	}
 
 	private KBArticleLocalService _kbArticleLocalService;

@@ -17,12 +17,10 @@ package com.liferay.portal.change.tracking.internal.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.model.CTCollection;
-import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.change.tracking.model.CTPreferences;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
 import com.liferay.change.tracking.service.CTPreferencesLocalService;
-import com.liferay.counter.kernel.service.CounterLocalService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.io.StreamUtil;
 import com.liferay.petra.string.StringBundler;
@@ -41,9 +39,9 @@ import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
@@ -53,10 +51,6 @@ import java.sql.ResultSet;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-
-import org.apache.log4j.Level;
-import org.apache.log4j.spi.LoggingEvent;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -164,11 +158,9 @@ public class CTSQLTransformerTest {
 
 	@AfterClass
 	public static void tearDownClass() throws Exception {
-		long companyId = TestPropsValues.getCompanyId();
-		long userId = TestPropsValues.getUserId();
-
 		CTPreferences ctPreferences =
-			_ctPreferencesLocalService.getCTPreferences(companyId, userId);
+			_ctPreferencesLocalService.getCTPreferences(
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId());
 
 		_ctPreferencesLocalService.deleteCTPreferences(ctPreferences);
 
@@ -180,11 +172,14 @@ public class CTSQLTransformerTest {
 
 		CTModelRegistry.unregisterCTModel("ReferenceTable");
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.change.tracking.service.impl." +
-						"CTCollectionLocalServiceImpl",
-					Level.WARN)) {
+		try (LogCapture logCapture1 = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.change.tracking.service.impl." +
+					"CTCollectionLocalServiceImpl",
+				LoggerTestUtil.WARN);
+			LogCapture logCapture2 = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.change.tracking.internal.search." +
+					"CTSearchEventListener",
+				LoggerTestUtil.WARN)) {
 
 			for (CTCollection ctCollection : _ctCollections) {
 				_ctCollectionLocalService.deleteCTCollection(ctCollection);
@@ -200,7 +195,7 @@ public class CTSQLTransformerTest {
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out.sql", _getCTCollectionId(6),
+			"join_count_in.sql", "join_count_out_ct.sql", _getCTCollectionId(6),
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -210,12 +205,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(1);
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_add.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_add.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt6 add"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -225,12 +220,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(2);
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_modify.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_modify.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 modify"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -240,12 +235,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(3);
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_modify.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_modify.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 moved"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -255,12 +250,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(4);
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_remove.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"join_count_in.sql", "join_count_out_ct_remove.sql", ctCollectionId,
+			"join_count_in.sql", "join_count_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt5 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 	}
@@ -278,8 +273,8 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out.sql", _getCTCollectionId(6),
-			ps -> ps.setString(1, "rt1 v1"),
+			"join_select_in.sql", "join_select_out_ct.sql",
+			_getCTCollectionId(6), ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(0, rs.getLong("ctCollectionId"));
@@ -293,7 +288,7 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(1);
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_add.sql", ctCollectionId,
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -303,7 +298,7 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_add.sql", ctCollectionId,
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
 			ps -> ps.setString(1, "rt6 add"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -318,12 +313,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(2);
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt1 v1"));
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt1 v1"));
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt1 modify"),
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt1 modify"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(
@@ -338,12 +333,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(3);
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt1 v1"));
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt1 v1"));
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt1 moved"),
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt1 moved"),
 			rs -> {
 				Assert.assertEquals(2, rs.getLong("mainTableId"));
 				Assert.assertEquals(0, rs.getLong("ctCollectionId"));
@@ -357,8 +352,8 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(4);
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_remove.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(0, rs.getLong("ctCollectionId"));
@@ -367,8 +362,8 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"join_select_in.sql", "join_select_out_ct_remove.sql",
-			ctCollectionId, ps -> ps.setString(1, "rt5 v1"));
+			"join_select_in.sql", "join_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setString(1, "rt5 v1"));
 	}
 
 	@Test
@@ -385,8 +380,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testLeftJoinAdd() throws Exception {
 		_assertQuery(
-			"left_join_in.sql", "left_join_out_ct_add.sql",
-			_getCTCollectionId(1),
+			"left_join_in.sql", "left_join_out_ct.sql", _getCTCollectionId(1),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(3, rs.getLong("mainTableId")),
@@ -398,8 +392,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testLeftJoinModify() throws Exception {
 		_assertQuery(
-			"left_join_in.sql", "left_join_out_ct_modify.sql",
-			_getCTCollectionId(2),
+			"left_join_in.sql", "left_join_out_ct.sql", _getCTCollectionId(2),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(3, rs.getLong("mainTableId")),
@@ -410,8 +403,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testLeftJoinRemove() throws Exception {
 		_assertQuery(
-			"left_join_in.sql", "left_join_out_ct_remove.sql",
-			_getCTCollectionId(4),
+			"left_join_in.sql", "left_join_out_ct.sql", _getCTCollectionId(4),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(3, rs.getLong("mainTableId")),
@@ -435,7 +427,7 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(1);
 
 		_assertQuery(
-			"self_join_in.sql", "self_join_out_ct_add.sql", ctCollectionId,
+			"self_join_in.sql", "self_join_out_ct.sql", ctCollectionId,
 			ps -> {
 			},
 			rs -> {
@@ -448,8 +440,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testSelfJoinModify() throws Exception {
 		_assertQuery(
-			"self_join_in.sql", "self_join_out_ct_modify.sql",
-			_getCTCollectionId(2),
+			"self_join_in.sql", "self_join_out_ct.sql", _getCTCollectionId(2),
 			ps -> {
 			},
 			rs -> {
@@ -461,8 +452,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testSelfJoinRemove() throws Exception {
 		_assertQuery(
-			"self_join_in.sql", "self_join_out_ct_remove.sql",
-			_getCTCollectionId(4),
+			"self_join_in.sql", "self_join_out_ct.sql", _getCTCollectionId(4),
 			ps -> {
 			},
 			rs -> {
@@ -480,7 +470,7 @@ public class CTSQLTransformerTest {
 			rs -> Assert.assertEquals(5, rs.getLong(1)));
 
 		_assertQuery(
-			"simple_count_in.sql", "simple_count_out.sql",
+			"simple_count_in.sql", "simple_count_out_ct.sql",
 			_getCTCollectionId(6),
 			ps -> {
 			},
@@ -489,11 +479,9 @@ public class CTSQLTransformerTest {
 
 	@Test
 	public void testSimpleCountAdd() throws Exception {
-		long ctCollectionId = _getCTCollectionId(1);
-
 		_assertQuery(
-			"simple_count_in.sql", "simple_count_out_ct_add.sql",
-			ctCollectionId,
+			"simple_count_in.sql", "simple_count_out_ct.sql",
+			_getCTCollectionId(1),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(6, rs.getLong(1)));
@@ -501,11 +489,9 @@ public class CTSQLTransformerTest {
 
 	@Test
 	public void testSimpleCountModify() throws Exception {
-		long ctCollectionId = _getCTCollectionId(2);
-
 		_assertQuery(
-			"simple_count_in.sql", "simple_count_out_ct_modify.sql",
-			ctCollectionId,
+			"simple_count_in.sql", "simple_count_out_ct.sql",
+			_getCTCollectionId(2),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(5, rs.getLong(1)));
@@ -513,11 +499,9 @@ public class CTSQLTransformerTest {
 
 	@Test
 	public void testSimpleCountMoved() throws Exception {
-		long ctCollectionId = _getCTCollectionId(3);
-
 		_assertQuery(
-			"simple_count_in.sql", "simple_count_out_ct_modify.sql",
-			ctCollectionId,
+			"simple_count_in.sql", "simple_count_out_ct.sql",
+			_getCTCollectionId(3),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(5, rs.getLong(1)));
@@ -525,11 +509,9 @@ public class CTSQLTransformerTest {
 
 	@Test
 	public void testSimpleCountRemove() throws Exception {
-		long ctCollectionId = _getCTCollectionId(4);
-
 		_assertQuery(
-			"simple_count_in.sql", "simple_count_out_ct_remove.sql",
-			ctCollectionId,
+			"simple_count_in.sql", "simple_count_out_ct.sql",
+			_getCTCollectionId(4),
 			ps -> {
 			},
 			rs -> Assert.assertEquals(4, rs.getLong(1)));
@@ -568,7 +550,7 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"simple_select_in.sql", "simple_select_out.sql",
+			"simple_select_in.sql", "simple_select_out_ct.sql",
 			_getCTCollectionId(6), ps -> ps.setLong(1, groupId),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -602,8 +584,8 @@ public class CTSQLTransformerTest {
 		long groupId = 3;
 
 		_assertQuery(
-			"simple_select_in.sql", "simple_select_out_ct_add.sql",
-			ctCollectionId, ps -> ps.setLong(1, groupId),
+			"simple_select_in.sql", "simple_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setLong(1, groupId),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(0, rs.getLong("ctCollectionId"));
@@ -643,8 +625,8 @@ public class CTSQLTransformerTest {
 		long groupId = 3;
 
 		_assertQuery(
-			"simple_select_in.sql", "simple_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setLong(1, groupId),
+			"simple_select_in.sql", "simple_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setLong(1, groupId),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(
@@ -678,8 +660,8 @@ public class CTSQLTransformerTest {
 		long groupId = 4;
 
 		_assertQuery(
-			"simple_select_in.sql", "simple_select_out_ct_modify.sql",
-			ctCollectionId, ps -> ps.setLong(1, groupId),
+			"simple_select_in.sql", "simple_select_out_ct.sql", ctCollectionId,
+			ps -> ps.setLong(1, groupId),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(
@@ -697,12 +679,11 @@ public class CTSQLTransformerTest {
 
 	@Test
 	public void testSimpleSelectRemove() throws Exception {
-		long ctCollectionId = _getCTCollectionId(4);
 		long groupId = 3;
 
 		_assertQuery(
-			"simple_select_in.sql", "simple_select_out_ct_remove.sql",
-			ctCollectionId, ps -> ps.setLong(1, groupId),
+			"simple_select_in.sql", "simple_select_out_ct.sql",
+			_getCTCollectionId(4), ps -> ps.setLong(1, groupId),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
 				Assert.assertEquals(0, rs.getLong("ctCollectionId"));
@@ -731,7 +712,7 @@ public class CTSQLTransformerTest {
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			_getCTCollectionId(6), ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -741,12 +722,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(1);
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_add.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_add.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt6 add"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -756,12 +737,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(2);
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_modify.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_modify.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 modify"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -771,12 +752,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(3);
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_modify.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_modify.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 moved"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 	}
@@ -786,12 +767,12 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(4);
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_remove.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> Assert.assertEquals(1, rs.getLong(1)));
 
 		_assertQuery(
-			"subquery_count_in.sql", "subquery_count_out_ct_remove.sql",
+			"subquery_count_in.sql", "subquery_count_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt5 v1"),
 			rs -> Assert.assertEquals(0, rs.getLong(1)));
 	}
@@ -809,7 +790,7 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			_getCTCollectionId(6), ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -824,7 +805,7 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(1);
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_add.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -834,7 +815,7 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_add.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt6 add"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -849,11 +830,11 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(2);
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_modify.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"));
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_modify.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 modify"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -869,11 +850,11 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(3);
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_modify.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"));
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_modify.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 moved"),
 			rs -> {
 				Assert.assertEquals(2, rs.getLong("mainTableId"));
@@ -888,7 +869,7 @@ public class CTSQLTransformerTest {
 		long ctCollectionId = _getCTCollectionId(4);
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_remove.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt1 v1"),
 			rs -> {
 				Assert.assertEquals(1, rs.getLong("mainTableId"));
@@ -898,7 +879,7 @@ public class CTSQLTransformerTest {
 			});
 
 		_assertQuery(
-			"subquery_select_in.sql", "subquery_select_out_ct_remove.sql",
+			"subquery_select_in.sql", "subquery_select_out_ct.sql",
 			ctCollectionId, ps -> ps.setString(1, "rt5 v1"));
 	}
 
@@ -912,7 +893,7 @@ public class CTSQLTransformerTest {
 			rs -> Assert.assertEquals(5, rs.getLong(1)));
 
 		_assertQuery(
-			"union_select_count_in.sql", "union_select_count_out.sql",
+			"union_select_count_in.sql", "union_select_count_out_ct.sql",
 			_getCTCollectionId(6),
 			ps -> {
 			},
@@ -923,7 +904,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testUnionCountAdd() throws Exception {
 		_assertQuery(
-			"union_select_count_in.sql", "union_select_count_out_ct_add.sql",
+			"union_select_count_in.sql", "union_select_count_out_ct.sql",
 			_getCTCollectionId(1),
 			ps -> {
 			},
@@ -934,7 +915,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testUnionCountModify() throws Exception {
 		_assertQuery(
-			"union_select_count_in.sql", "union_select_count_out_ct_modify.sql",
+			"union_select_count_in.sql", "union_select_count_out_ct.sql",
 			_getCTCollectionId(2),
 			ps -> {
 			},
@@ -945,7 +926,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testUnionCountMoved() throws Exception {
 		_assertQuery(
-			"union_select_count_in.sql", "union_select_count_out_ct_modify.sql",
+			"union_select_count_in.sql", "union_select_count_out_ct.sql",
 			_getCTCollectionId(3),
 			ps -> {
 			},
@@ -956,7 +937,7 @@ public class CTSQLTransformerTest {
 	@Test
 	public void testUnionCountRemove() throws Exception {
 		_assertQuery(
-			"union_select_count_in.sql", "union_select_count_out_ct_remove.sql",
+			"union_select_count_in.sql", "union_select_count_out_ct.sql",
 			_getCTCollectionId(4),
 			ps -> {
 			},
@@ -1033,16 +1014,9 @@ public class CTSQLTransformerTest {
 		}
 
 		if (ctCollection == null) {
-			long ctCollectionId = _counterLocalService.increment();
-
-			ctCollection = _ctCollectionLocalService.createCTCollection(
-				ctCollectionId);
-
-			ctCollection.setName(String.valueOf(ctCollectionId));
-			ctCollection.setStatus(WorkflowConstants.STATUS_DRAFT);
-
-			ctCollection = _ctCollectionLocalService.updateCTCollection(
-				ctCollection);
+			ctCollection = _ctCollectionLocalService.addCTCollection(
+				TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
+				CTSQLTransformerTest.class.getName(), null);
 
 			_ctCollections.add(ctCollection);
 		}
@@ -1131,21 +1105,21 @@ public class CTSQLTransformerTest {
 		PrincipalThreadLocal.setName(userId);
 
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			PreparedStatement preparedStatement = connection.prepareStatement(
 				_getSQL(inputSQLFile, expectedOutputSQLFile, ctCollectionId))) {
 
-			preparedStatementUnsafeConsumer.accept(ps);
+			preparedStatementUnsafeConsumer.accept(preparedStatement);
 
-			try (ResultSet rs = ps.executeQuery()) {
+			try (ResultSet resultSet = preparedStatement.executeQuery()) {
 				for (UnsafeConsumer<ResultSet, Exception> unsafeConsumer :
 						resultSetUnsafeConsumers) {
 
-					Assert.assertTrue(rs.next());
+					Assert.assertTrue(resultSet.next());
 
-					unsafeConsumer.accept(rs);
+					unsafeConsumer.accept(resultSet);
 				}
 
-				Assert.assertFalse(rs.next());
+				Assert.assertFalse(resultSet.next());
 			}
 		}
 		finally {
@@ -1160,10 +1134,11 @@ public class CTSQLTransformerTest {
 		throws Exception {
 
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(sql);
-			ResultSet rs = ps.executeQuery()) {
+			PreparedStatement preparedStatement = connection.prepareStatement(
+				sql);
+			ResultSet resultSet = preparedStatement.executeQuery()) {
 
-			unsafeConsumer.accept(rs);
+			unsafeConsumer.accept(resultSet);
 		}
 	}
 
@@ -1193,42 +1168,18 @@ public class CTSQLTransformerTest {
 		PrincipalThreadLocal.setName(userId);
 
 		try (Connection connection = DataAccess.getConnection();
-			PreparedStatement ps = connection.prepareStatement(
+			PreparedStatement preparedStatement = connection.prepareStatement(
 				_getSQL(inputSQLFile, expectedOutputSQLFile, ctCollectionId))) {
 
-			preparedStatementUnsafeConsumer.accept(ps);
+			preparedStatementUnsafeConsumer.accept(preparedStatement);
 
-			Assert.assertEquals(1, ps.executeUpdate());
+			Assert.assertEquals(1, preparedStatement.executeUpdate());
 		}
 		finally {
 			CompanyThreadLocal.setCompanyId(originalCompanyId);
 
 			PrincipalThreadLocal.setName(originalUserId);
 		}
-	}
-
-	private String _getModifiedAndRemovedModelClassPKSQL(
-		long ctCollectionId, Class<?> modelClass) {
-
-		List<CTEntry> ctEntries = _ctEntryLocalService.getCTEntries(
-			ctCollectionId, _classNameLocalService.getClassNameId(modelClass));
-
-		StringBundler sb = new StringBundler();
-
-		for (CTEntry ctEntry : ctEntries) {
-			if (ctEntry.getChangeType() !=
-					CTConstants.CT_CHANGE_TYPE_ADDITION) {
-
-				sb.append(ctEntry.getModelClassPK());
-				sb.append(",");
-			}
-		}
-
-		if (sb.index() > 0) {
-			sb.setIndex(sb.index() - 1);
-		}
-
-		return sb.toString();
 	}
 
 	private String _getSQL(
@@ -1245,39 +1196,36 @@ public class CTSQLTransformerTest {
 				CTSQLTransformerTest.class.getResourceAsStream(
 					"dependencies/" + expectedOutputSQLFile)));
 
-		Map<String, String> replaceMap = HashMapBuilder.put(
-			"CT_COLLECTION_ID", String.valueOf(ctCollectionId)
-		).put(
-			"MAIN_TABLE_CT_ENTRY_MODEL_CLASS_PKS",
-			_getModifiedAndRemovedModelClassPKSQL(
-				ctCollectionId, MainTable.class)
-		).put(
-			"REFERENCE_TABLE_CT_ENTRY_MODEL_CLASS_PKS",
-			_getModifiedAndRemovedModelClassPKSQL(
-				ctCollectionId, ReferenceTable.class)
-		).build();
-
 		expectedOutputSQL = StringUtil.replace(
-			expectedOutputSQL, "[$", "$]", replaceMap);
+			expectedOutputSQL, "[$", "$]",
+			HashMapBuilder.put(
+				"CT_COLLECTION_ID", String.valueOf(ctCollectionId)
+			).put(
+				"MAIN_TABLE_CLASS_NAME_ID",
+				String.valueOf(
+					_classNameLocalService.getClassNameId(MainTable.class))
+			).put(
+				"REFERENCE_TABLE_CLASS_NAME_ID",
+				String.valueOf(
+					_classNameLocalService.getClassNameId(ReferenceTable.class))
+			).build());
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.change.tracking.internal." +
-						"CTSQLContextFactoryImpl",
-					Level.WARN)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.portal.change.tracking.internal." +
+					"CTSQLTransformerImpl",
+				LoggerTestUtil.WARN)) {
 
 			String newSQL = _ctSQLTransformer.transform(inputSQL);
 
 			Assert.assertEquals(expectedOutputSQL, newSQL);
 
-			List<LoggingEvent> loggingEvents =
-				captureAppender.getLoggingEvents();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			if (expectedOutputSQLFile.contains("_ct_")) {
-				Assert.assertFalse(newSQL, loggingEvents.isEmpty());
+			if (expectedOutputSQLFile.endsWith("_ct.sql")) {
+				Assert.assertFalse(newSQL, logEntries.isEmpty());
 			}
 			else {
-				Assert.assertTrue(newSQL, loggingEvents.isEmpty());
+				Assert.assertTrue(newSQL, logEntries.isEmpty());
 			}
 
 			return newSQL;
@@ -1286,15 +1234,12 @@ public class CTSQLTransformerTest {
 
 	private String _normalizeSQL(String sql) {
 		return StringUtil.replace(
-			sql.trim(), new String[] {"\n", "   ", "  ", "( ", " )"},
-			new String[] {" ", " ", " ", "(", ")"});
+			sql.trim(), new String[] {"\n", "    ", "   ", "  ", "( ", " )"},
+			new String[] {" ", " ", " ", " ", "(", ")"});
 	}
 
 	@Inject
 	private static ClassNameLocalService _classNameLocalService;
-
-	@Inject
-	private static CounterLocalService _counterLocalService;
 
 	@Inject
 	private static CTCollectionLocalService _ctCollectionLocalService;

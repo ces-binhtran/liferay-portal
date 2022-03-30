@@ -17,7 +17,7 @@ package com.liferay.oauth2.provider.web.internal.display.context;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
-import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -49,10 +49,7 @@ public class OAuth2ConnectedApplicationsManagementToolbarDisplayContext
 	public List<DropdownItem> getActionDropdownItems() {
 		return DropdownItemListBuilder.add(
 			dropdownItem -> {
-				dropdownItem.setHref(
-					StringBundler.concat(
-						"javascript:", liferayPortletResponse.getNamespace(),
-						"removeAccess();"));
+				dropdownItem.putData("action", "removeAccess");
 				dropdownItem.setIcon("trash");
 				dropdownItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "remove-access"));
@@ -61,17 +58,27 @@ public class OAuth2ConnectedApplicationsManagementToolbarDisplayContext
 		).build();
 	}
 
+	public Map<String, Object> getAdditionalProps() {
+		return HashMapBuilder.<String, Object>put(
+			"revokeOauthAuthorizationsURL",
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/connected_applications/revoke_oauth2_authorizations"
+			).buildString()
+		).build();
+	}
+
 	public List<DropdownItem> getFilterDropdownItems() {
 		return DropdownItemListBuilder.addGroup(
 			dropdownGroupItem -> {
-				Map<String, String> orderColumnsMap = HashMapBuilder.put(
-					"createDate", "authorization"
-				).put(
-					"oAuth2ApplicationId", "application-id"
-				).build();
-
 				dropdownGroupItem.setDropdownItems(
-					getOrderByDropdownItems(orderColumnsMap));
+					getOrderByDropdownItems(
+						HashMapBuilder.put(
+							"createDate", "authorization"
+						).put(
+							"oAuth2ApplicationId", "application-id"
+						).build()));
 
 				dropdownGroupItem.setLabel(
 					LanguageUtil.get(httpServletRequest, "order-by"));

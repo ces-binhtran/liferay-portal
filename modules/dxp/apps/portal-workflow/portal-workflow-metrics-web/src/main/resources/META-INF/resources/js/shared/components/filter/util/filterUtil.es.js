@@ -35,9 +35,18 @@ const buildFilterItem = (data) => {
 	};
 };
 
-const buildFilterItems = ({items, propertyKey = 'key', selectedKeys}) => {
+const buildFilterItems = ({
+	formatItem,
+	items,
+	propertyKey = 'key',
+	selectedKeys,
+}) => {
 	return items.map((item, index) => {
 		const key = String(item[propertyKey]);
+
+		if (formatItem) {
+			item = formatItem(item);
+		}
 
 		return {
 			...item,
@@ -120,23 +129,6 @@ const mergeItemsArray = (baseItems = [], ...items) => {
 	return baseItems.concat(...items);
 };
 
-const pushToHistory = (filterQuery, routerProps) => {
-	const {
-		history,
-		location: {search},
-		match: {params, path},
-	} = routerProps;
-
-	const pathname = pathToRegexp.compile(path)({...params, page: 1});
-
-	if (filterQuery !== search) {
-		history.push({
-			pathname,
-			search: filterQuery,
-		});
-	}
-};
-
 const reduceFilters = (filterItems, paramKey) => {
 	return filterItems.reduce(
 		(acc, cur) => `&${paramKey}=${cur.key}${acc}`,
@@ -198,7 +190,6 @@ export {
 	getSelectedItems,
 	getSelectedItemsQuery,
 	mergeItemsArray,
-	pushToHistory,
 	reduceFilters,
 	removeFilters,
 	removeItem,

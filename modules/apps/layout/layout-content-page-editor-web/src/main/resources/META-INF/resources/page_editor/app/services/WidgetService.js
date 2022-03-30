@@ -32,6 +32,7 @@ export default {
 		onNetworkStatus,
 		parentItemId,
 		portletId,
+		portletItemId,
 		position,
 		segmentsExperienceId,
 	}) {
@@ -41,12 +42,21 @@ export default {
 				body: {
 					parentItemId,
 					portletId,
+					portletItemId,
 					position,
 					segmentsExperienceId,
 				},
 			},
 			onNetworkStatus,
 			{requestGenerateDraft: true}
+		);
+	},
+
+	getWidgets(segmentsExperienceId) {
+		return serviceFetch(
+			config.getWidgetsURL,
+			{body: {segmentsExperienceId}},
+			() => {}
 		);
 	},
 };

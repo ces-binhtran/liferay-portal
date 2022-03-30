@@ -9,14 +9,14 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, waitForElement} from '@testing-library/react';
+import {act, cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import WorkloadByAssigneeCard from '../../../../src/main/resources/META-INF/resources/js/components/process-metrics/workload-by-assignee-card/WorkloadByAssigneeCard.es';
 import {MockRouter} from '../../../mock/MockRouter.es';
 
 describe('The workload by assignee card should', () => {
-	let getAllByTestId;
+	let getByText;
 
 	const items = [
 		{
@@ -37,33 +37,32 @@ describe('The workload by assignee card should', () => {
 		},
 	];
 
-	const jestMock = jest
-		.fn()
-		.mockResolvedValue({data: {items, totalCount: 2}});
-
-	const clientMock = {
-		post: jestMock,
-		request: jestMock,
-	};
-
 	afterEach(cleanup);
 
-	beforeEach(() => {
+	beforeEach(async () => {
+		fetch.mockResolvedValue({
+			json: () => Promise.resolve({items, totalCount: 2}),
+			ok: true,
+		});
+
 		const renderResult = render(
-			<MockRouter client={clientMock}>
+			<MockRouter>
 				<WorkloadByAssigneeCard routeParams={{processId: 12345}} />
 			</MockRouter>
 		);
 
-		getAllByTestId = renderResult.getAllByTestId;
+		getByText = renderResult.getByText;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered with "User 1" and "User 2" items', async () => {
-		const assigneeNames = await waitForElement(() =>
-			getAllByTestId('assigneeName')
-		);
+	it('Be rendered with "User 1" and "User 2" items', async () => {
+		const assigneeName1 = getByText('User 1');
+		const assigneeName2 = getByText('User 2');
 
-		expect(assigneeNames[0].innerHTML).toBe('User 1');
-		expect(assigneeNames[1].innerHTML).toBe('User 2');
+		expect(assigneeName1).toBeTruthy();
+		expect(assigneeName2).toBeTruthy();
 	});
 });

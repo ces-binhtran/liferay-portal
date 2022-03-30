@@ -19,47 +19,38 @@
 <%
 String namespace = AUIUtil.getNamespace(liferayPortletRequest, liferayPortletResponse);
 
-boolean checkContentDisplayPage = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:checkContentDisplayPage"));
-String checkedNodes = (String)request.getAttribute("liferay-layout:layouts-tree:checkedNodes");
-boolean defaultStateChecked = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:defaultStateChecked"));
 boolean draggableTree = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:draggableTree"));
-boolean expandFirstNode = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:expandFirstNode"));
 long groupId = GetterUtil.getLong((String)request.getAttribute("liferay-layout:layouts-tree:groupId"));
-boolean incomplete = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:incomplete"));
 LayoutSetBranch layoutSetBranch = (LayoutSetBranch)request.getAttribute("liferay-layout:layouts-tree:layoutSetBranch");
 String linkTemplate = (String)request.getAttribute("liferay-layout:layouts-tree:linkTemplate");
-String modules = (String)request.getAttribute("liferay-layout:layouts-tree:modules");
 JSONArray portletURLsJSONArray = (JSONArray)request.getAttribute("liferay-layout:layouts-tree:portletURLsJSONArray");
 boolean privateLayout = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:privateLayout"));
 String rootLinkTemplate = (String)request.getAttribute("liferay-layout:layouts-tree:rootLinkTemplate");
 String rootNodeName = (String)request.getAttribute("liferay-layout:layouts-tree:rootNodeName");
-boolean saveState = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:saveState"));
-String scriptPosition = (String)request.getAttribute("liferay-layout:layouts-tree:scriptPosition");
-boolean selectableTree = GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:selectableTree"));
 Long selPlid = (Long)request.getAttribute("liferay-layout:layouts-tree:selPlid");
 String treeId = (String)request.getAttribute("liferay-layout:layouts-tree:treeId");
 %>
 
-<aui:script position="<%= scriptPosition %>" use="<%= modules %>">
+<aui:script position='<%= (String)request.getAttribute("liferay-layout:layouts-tree:scriptPosition") %>' use='<%= (String)request.getAttribute("liferay-layout:layouts-tree:modules") %>'>
 	var plugins = [];
 
-	<c:if test="<%= selectableTree %>">
+	<c:if test='<%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:selectableTree")) %>'>
 		plugins.push({
 			cfg: {
-				default: <%= defaultStateChecked %>,
+				default: <%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:defaultStateChecked")) %>,
 			},
 			fn: A.Plugin.LayoutsTreeSelectable,
 		});
 	</c:if>
 
-	<c:if test="<%= checkContentDisplayPage %>">
+	<c:if test='<%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:checkContentDisplayPage")) %>'>
 		plugins.push(A.Plugin.LayoutsTreeCheckContentDisplayPage);
 	</c:if>
 
-	<c:if test="<%= saveState %>">
+	<c:if test='<%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:saveState")) %>'>
 		plugins.push({
 			cfg: {
-				checkedNodes: <%= checkedNodes %>,
+				checkedNodes: <%= (String)request.getAttribute("liferay-layout:layouts-tree:checkedNodes") %>,
 				rootNodeExpanded: <%= GetterUtil.getBoolean(SessionClicks.get(request, "com.liferay.frontend.js.web_" + treeId + "RootNode", null), true) %>,
 			},
 			fn: A.Plugin.LayoutsTreeState,
@@ -74,7 +65,7 @@ String treeId = (String)request.getAttribute("liferay-layout:layouts-tree:treeId
 
 	var treeview = new TreeViewType({
 		boundingBox: '#<portlet:namespace /><%= HtmlUtil.escape(treeId) %>Output',
-		incomplete: <%= incomplete %>,
+		incomplete: <%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:incomplete")) %>,
 
 		<%
 		long[] openNodes = StringUtil.split(SessionTreeJSClicks.getOpenNodes(request, treeId), 0L);
@@ -101,7 +92,7 @@ String treeId = (String)request.getAttribute("liferay-layout:layouts-tree:treeId
 		plugins: plugins,
 		root: {
 			defaultParentLayoutId: <%= LayoutConstants.DEFAULT_PARENT_LAYOUT_ID %>,
-			expand: <%= expandFirstNode %>,
+			expand: <%= GetterUtil.getBoolean((String)request.getAttribute("liferay-layout:layouts-tree:expandFirstNode")) %>,
 			groupId: <%= groupId %>,
 			label: '<%= HtmlUtil.escapeJS(rootNodeName) %>',
 
@@ -121,7 +112,7 @@ String treeId = (String)request.getAttribute("liferay-layout:layouts-tree:treeId
 
 	Liferay.component('<%= namespace + treeId %>', treeview);
 
-	Liferay.once('screenLoad', function () {
+	Liferay.once('screenLoad', () => {
 		treeview.destroy();
 	});
 </aui:script>

@@ -50,6 +50,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.io.File;
 
@@ -103,11 +104,11 @@ public class ExportImportMasterLayoutsTest {
 		Layout layout1 = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry1.getPlid());
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(),
-			layoutPageTemplateEntry1.getPlid(),
-			_read("export_import_master_layout_layout_data.json"),
-			_serviceContext1);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group1.getGroupId(), layoutPageTemplateEntry1.getPlid(),
+				SegmentsExperienceConstants.ID_DEFAULT,
+				_read("export_import_master_layout_layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group1.getGroupId(), RandomTestUtil.randomString(),
@@ -127,13 +128,11 @@ public class ExportImportMasterLayoutsTest {
 			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
 			fileEntry.getFileEntryId());
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry1.getLayoutPageTemplateEntryId()
+			});
 
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
@@ -301,7 +300,7 @@ public class ExportImportMasterLayoutsTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/layout_page_template/export_master_layout"
+		filter = "mvc.command.name=/layout_page_template_admin/export_master_layouts"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
 

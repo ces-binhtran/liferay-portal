@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, fireEvent, render} from '@testing-library/react';
+import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import SLAInfo from '../../../src/main/resources/META-INF/resources/js/components/process-metrics/SLAInfo.es';
@@ -18,36 +18,40 @@ import {MockRouter} from '../../mock/MockRouter.es';
 import '@testing-library/jest-dom/extend-expect';
 
 describe('The SLAInfo component should', () => {
-	let container, getByTestId;
+	let container;
+	let getByText;
 
 	describe('SLA count 0', () => {
-		const clientMock = {
-			get: jest
-				.fn()
-				.mockResolvedValue({data: {items: [], totalCount: 0}}),
-		};
+		beforeAll(async () => {
+			fetch.mockResolvedValue({
+				json: () => Promise.resolve({items: [], totalCount: 0}),
+				ok: true,
+			});
 
-		beforeAll(() => {
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<SLAInfo processId="1" />
 				</MockRouter>
 			);
 
 			container = renderResult.container;
-			getByTestId = renderResult.getByTestId;
+			getByText = renderResult.getByText;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show alert with correct data', () => {
-			const slaInfoAlert = getByTestId('slaInfoAlert');
-			const slaInfoLink = getByTestId('slaInfoLink');
+		it('Show alert with correct data', () => {
+			const slaInfoAlert = getByText(
+				'no-slas-are-defined-for-this-process'
+			);
+			const slaInfoLink = getByText('add-a-new-sla');
 
 			expect(slaInfoLink.getAttribute('href')).toContain('/sla/1/new');
-			expect(slaInfoAlert).toHaveTextContent(
-				'no-slas-are-defined-for-this-process add-a-new-sla'
-			);
+			expect(slaInfoAlert).toBeTruthy();
 
-			fireEvent.click(slaInfoAlert.children[1]);
+			fireEvent.click(container.querySelector('button.close'));
 
 			expect(container.innerHTML).toBe('');
 
@@ -56,70 +60,76 @@ describe('The SLAInfo component should', () => {
 	});
 
 	describe('SLA blocked count 1', () => {
-		const clientMock = {
-			get: jest
-				.fn()
-				.mockResolvedValue({data: {items: [], totalCount: 1}}),
-		};
+		beforeAll(async () => {
+			fetch.mockResolvedValue({
+				json: () => Promise.resolve({items: [], totalCount: 1}),
+				ok: true,
+			});
 
-		beforeAll(() => {
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<SLAInfo processId="1" />
 				</MockRouter>
 			);
 
 			container = renderResult.container;
-			getByTestId = renderResult.getByTestId;
+			getByText = renderResult.getByText;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show alert with correct data', () => {
-			const slaInfoAlert = getByTestId('slaInfoAlert');
-			const slaInfoLink = getByTestId('slaInfoLink');
+		it('Show alert with correct data', () => {
+			const slaInfoAlert = getByText(
+				'x-sla-is-blocked fix-the-sla-configuration-to-resume-accurate-reporting'
+			);
+			const slaInfoLink = getByText('set-up-slas');
 
 			expect(slaInfoLink.getAttribute('href')).toContain(
 				'/sla/1/list/20/1'
 			);
-			expect(slaInfoAlert).toHaveTextContent(
-				'x-sla-is-blocked fix-the-sla-configuration-to-resume-accurate-reporting set-up-slas'
-			);
+			expect(slaInfoAlert).toBeTruthy();
 
-			fireEvent.click(slaInfoAlert.children[1]);
+			fireEvent.click(container.querySelector('button.close'));
 
 			expect(container.innerHTML).toBe('');
 		});
 	});
 
 	describe('SLA blocked count greater than 1', () => {
-		const clientMock = {
-			get: jest
-				.fn()
-				.mockResolvedValue({data: {items: [], totalCount: 2}}),
-		};
+		beforeAll(async () => {
+			fetch.mockResolvedValue({
+				json: () => Promise.resolve({items: [], totalCount: 2}),
+				ok: true,
+			});
 
-		beforeAll(() => {
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<SLAInfo processId="1" />
 				</MockRouter>
 			);
 
 			container = renderResult.container;
-			getByTestId = renderResult.getByTestId;
+			getByText = renderResult.getByText;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show alert with correct data', () => {
-			const slaInfoAlert = getByTestId('slaInfoAlert');
-			const slaInfoLink = getByTestId('slaInfoLink');
+		it('Show alert with correct data', () => {
+			const slaInfoAlert = getByText(
+				'x-slas-are-blocked fix-the-sla-configuration-to-resume-accurate-reporting'
+			);
+			const slaInfoLink = getByText('set-up-slas');
 
 			expect(slaInfoLink.getAttribute('href')).toContain(
 				'/sla/1/list/20/1'
 			);
-			expect(slaInfoAlert).toHaveTextContent(
-				'x-slas-are-blocked fix-the-sla-configuration-to-resume-accurate-reporting set-up-slas'
-			);
+			expect(slaInfoAlert).toBeTruthy();
 
-			fireEvent.click(slaInfoAlert.children[1]);
+			fireEvent.click(container.querySelector('button.close'));
 
 			expect(container.innerHTML).toBe('');
 		});

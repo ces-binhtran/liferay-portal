@@ -1,0 +1,53 @@
+{
+	"pageElement": {
+		"pageElements": [
+			{
+				"definition": {
+					"fragmentStyle": {
+						"borderWidth": "0"
+					},
+					"layout": {
+						"borderWidth": 0,
+						"htmlTag": "Div",
+						"marginBottom": 0,
+						"marginLeft": 0,
+						"marginRight": 0,
+						"marginTop": 0,
+						"paddingBottom": 0,
+						"paddingLeft": 0,
+						"paddingRight": 0,
+						"paddingTop": 0,
+						"widthType": "Fluid"
+					}
+				},
+				"pageElements": [
+					{
+						"definition": {
+							"fragment": {
+								"key": "layout"
+							},
+							"fragmentConfig": {
+								"layoutName": "Applications"
+							},
+							"fragmentFields": [
+							]
+						},
+						"pageElements": [
+							{
+								"type": "FragmentDropZone"
+							}
+						],
+						"type": "Fragment"
+					}
+				],
+				"type": "Section"
+			}
+		],
+		"type": "Root"
+	},
+	"settings": {
+		"masterPage": {
+			"key": "public"
+		}
+	}
+}

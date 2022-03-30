@@ -71,15 +71,14 @@ public class AMBlogsEntryStagedModelDataHandlerTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "600"
-		).put(
-			"max-width", "800"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
 			stagingGroup.getCompanyId(), StringUtil.randomString(),
-			StringUtil.randomString(), StringUtil.randomString(), properties);
+			StringUtil.randomString(), StringUtil.randomString(),
+			HashMapBuilder.put(
+				"max-height", "600"
+			).put(
+				"max-width", "800"
+			).build());
 	}
 
 	@Test
@@ -210,10 +209,11 @@ public class AMBlogsEntryStagedModelDataHandlerTest
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), stagingGroup.getGroupId(),
+			null, TestPropsValues.getUserId(), stagingGroup.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			StringUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			FileUtil.getBytes(getClass(), "image.jpg"), serviceContext);
+			FileUtil.getBytes(getClass(), "image.jpg"), null, null,
+			serviceContext);
 	}
 
 	private String _getDynamicContent(FileEntry... fileEntries)

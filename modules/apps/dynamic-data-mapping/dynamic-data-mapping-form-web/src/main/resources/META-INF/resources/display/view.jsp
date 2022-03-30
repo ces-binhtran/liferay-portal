@@ -17,9 +17,8 @@
 <%@ include file="/display/init.jsp" %>
 
 <%
-String redirect = ParamUtil.getString(request, "redirect", currentURL);
-
 long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
+boolean limitToOneSubmissionPerUser = DDMFormInstanceSubmissionLimitStatusUtil.isLimitToOneSubmissionPerUser(ddmFormDisplayContext.getFormInstance());
 %>
 
 <c:choose>
@@ -28,62 +27,98 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 			<liferay-ui:message key="select-an-existing-form-or-add-a-form-to-be-displayed-in-this-application" />
 		</div>
 	</c:when>
-	<c:when test="<%= !ddmFormDisplayContext.hasAddFormInstanceRecordPermission() && !ddmFormDisplayContext.hasViewPermission() %>">
+	<c:when test="<%= ddmFormDisplayContext.getFormInstance() == null %>">
 		<div class="ddm-form-basic-info">
 			<clay:container-fluid>
 				<clay:alert
-					message='<%= LanguageUtil.get(resourceBundle, "you-do-not-have-the-permission-to-view-this-form") %>'
-					style="warning"
-					title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+					displayType="warning"
+					message="this-form-not-available-or-it-was-not-published"
 				/>
 			</clay:container-fluid>
 		</div>
 	</c:when>
-	<c:when test="<%= ddmFormDisplayContext.isRequireAuthentication() %>">
+	<c:when test="<%= !ddmFormDisplayContext.hasAddFormInstanceRecordPermission() && !ddmFormDisplayContext.hasViewPermission() %>">
 		<div class="ddm-form-basic-info">
 			<clay:container-fluid>
 				<clay:alert
-					message='<%= LanguageUtil.get(resourceBundle, "you-need-to-be-signed-in-to-view-this-form") %>'
-					style="warning"
-					title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+					displayType="warning"
+					message="you-do-not-have-the-permission-to-view-this-form"
+				/>
+			</clay:container-fluid>
+		</div>
+	</c:when>
+	<c:when test="<%= (!ddmFormDisplayContext.isLoggedUser() && limitToOneSubmissionPerUser) || ddmFormDisplayContext.isRequireAuthentication() %>">
+		<div class="ddm-form-basic-info">
+			<clay:container-fluid>
+				<clay:alert
+					displayType="warning"
+					message="you-need-to-be-signed-in-to-view-this-form"
 				/>
 			</clay:container-fluid>
 		</div>
 	</c:when>
 	<c:otherwise>
+		<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_mapping_form/get_form_report_data" var="formReportDataURL">
+			<portlet:param name="formInstanceId" value="<%= String.valueOf(formInstanceId) %>" />
+		</liferay-portlet:resourceURL>
 
 		<%
+		DDMFormInstance formInstance = ddmFormDisplayContext.getFormInstance();
+
+		boolean expired = DDMFormInstanceExpirationStatusUtil.isFormExpired(formInstance, timeZone);
+
+		boolean preview = ddmFormDisplayContext.isPreview();
+		boolean showSuccessPage = ddmFormDisplayContext.isShowSuccessPage();
+
 		String languageId = ddmFormDisplayContext.getDefaultLanguageId();
 
 		Locale displayLocale = LocaleUtil.fromLanguageId(languageId);
 		%>
 
 		<c:choose>
-			<c:when test="<%= ddmFormDisplayContext.isShowSuccessPage() %>">
+			<c:when test="<%= !preview && (ddmFormDisplayContext.isSubmissionLimitReached() || expired || showSuccessPage) %>">
 
 				<%
-				DDMFormSuccessPageSettings ddmFormSuccessPageSettings = ddmFormDisplayContext.getDDMFormSuccessPageSettings();
+				String pageDescription = null;
+				String pageTitle = null;
 
-				LocalizedValue title = ddmFormSuccessPageSettings.getTitle();
-				LocalizedValue body = ddmFormSuccessPageSettings.getBody();
+				if (expired) {
+					pageDescription = LanguageUtil.get(request, "this-form-has-an-expiration-date");
+					pageTitle = LanguageUtil.get(request, "this-form-is-no-longer-available");
+				}
+				else if (showSuccessPage) {
+					pageDescription = ddmFormDisplayContext.getSuccessPageDescription(displayLocale);
+					pageTitle = ddmFormDisplayContext.getSuccessPageTitle(displayLocale);
+				}
+				else {
+					pageDescription = LanguageUtil.get(request, "you-can-fill-out-this-form-only-once.-contact-the-owner-of-the-form-if-you-think-this-is-a-mistake");
+					pageTitle = LanguageUtil.get(request, "you-have-already-responded");
+				}
 				%>
 
-				<div class="portlet-forms">
-					<div class="ddm-form-basic-info ddm-form-success-page">
-						<clay:container-fluid>
-							<h1 class="ddm-form-name"><%= HtmlUtil.escape(GetterUtil.getString(title.getString(displayLocale), title.getString(title.getDefaultLocale()))) %></h1>
-
-							<p class="ddm-form-description"><%= HtmlUtil.escape(GetterUtil.getString(body.getString(displayLocale), body.getString(body.getDefaultLocale()))) %></p>
-						</clay:container-fluid>
-					</div>
-				</div>
+				<react:component
+					module="admin/js/components/DefaultPage"
+					props='<%=
+						HashMapBuilder.<String, Object>put(
+							"formDescription", formInstance.getDescription(displayLocale)
+						).put(
+							"formReportDataURL", formReportDataURL.toString()
+						).put(
+							"formTitle", formInstance.getName(displayLocale)
+						).put(
+							"pageDescription", pageDescription
+						).put(
+							"pageTitle", pageTitle
+						).put(
+							"showPartialResultsToRespondents", ddmFormDisplayContext.isShowPartialResultsToRespondents()
+						).put(
+							"showSubmitAgainButton", !expired && !limitToOneSubmissionPerUser
+						).build()
+					%>'
+				/>
 			</c:when>
 			<c:when test="<%= ddmFormDisplayContext.isFormAvailable() %>">
-				<portlet:actionURL name="addFormInstanceRecord" var="addFormInstanceRecordActionURL" />
-
-				<%
-				DDMFormInstance formInstance = ddmFormDisplayContext.getFormInstance();
-				%>
+				<portlet:actionURL name="/dynamic_data_mapping_form/add_form_instance_record" var="addFormInstanceRecordActionURL" />
 
 				<div class="portlet-forms">
 					<aui:form action="<%= addFormInstanceRecordActionURL %>" data-DDMFormInstanceId="<%= formInstanceId %>" data-senna-off="true" method="post" name="fm">
@@ -94,7 +129,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 						%>
 
 						<c:if test="<%= Validator.isNull(redirectURL) %>">
-							<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+							<aui:input name="redirect" type="hidden" value='<%= ParamUtil.getString(request, "redirect", currentURL) %>' />
 						</c:if>
 
 						<aui:input name="groupId" type="hidden" value="<%= formInstance.getGroupId() %>" />
@@ -111,28 +146,45 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 
 							<%
 							DDMFormValuesValidationException.MustSetValidValue msvv = (DDMFormValuesValidationException.MustSetValidValue)errorException;
+
+							String fieldLabelValue = msvv.getFieldLabelValue(displayLocale);
+
+							if (Validator.isNull(fieldLabelValue)) {
+								fieldLabelValue = msvv.getFieldName();
+							}
 							%>
 
-							<liferay-ui:message arguments="<%= HtmlUtil.escape(msvv.getFieldName()) %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
+							<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="validation-failed-for-field-x" translateArguments="<%= false %>" />
 						</liferay-ui:error>
 
 						<liferay-ui:error exception="<%= DDMFormValuesValidationException.RequiredValue.class %>">
 
 							<%
 							DDMFormValuesValidationException.RequiredValue rv = (DDMFormValuesValidationException.RequiredValue)errorException;
+
+							String fieldLabelValue = rv.getFieldLabelValue(displayLocale);
+
+							if (Validator.isNull(fieldLabelValue)) {
+								fieldLabelValue = rv.getFieldName();
+							}
 							%>
 
-							<liferay-ui:message arguments="<%= HtmlUtil.escape(rv.getFieldName()) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
+							<liferay-ui:message arguments="<%= HtmlUtil.escape(fieldLabelValue) %>" key="no-value-is-defined-for-field-x" translateArguments="<%= false %>" />
 						</liferay-ui:error>
 
 						<liferay-ui:error exception="<%= NoSuchFormInstanceException.class %>" message="the-selected-form-no-longer-exists" />
 						<liferay-ui:error exception="<%= NoSuchStructureException.class %>" message="unable-to-retrieve-the-definition-of-the-selected-form" />
 						<liferay-ui:error exception="<%= NoSuchStructureLayoutException.class %>" message="unable-to-retrieve-the-layout-of-the-selected-form" />
+						<liferay-ui:error exception="<%= ObjectEntryValuesException.Exceeds280Characters.class %>" message="the-maximum-length-is-280-characters-for-text-fields" />
+						<liferay-ui:error exception="<%= ObjectEntryValuesException.ExceedsIntegerSize.class %>" message="object-entry-value-exceeds-integer-field-allowed-size" />
+						<liferay-ui:error exception="<%= ObjectEntryValuesException.ExceedsLongMaxSize.class %>" message="object-entry-value-exceeds-maximum-long-field-allowed-size" />
+						<liferay-ui:error exception="<%= ObjectEntryValuesException.ExceedsLongMinSize.class %>" message="object-entry-value-exceeds-minimum-long-field-allowed-size" />
+						<liferay-ui:error exception="<%= ObjectEntryValuesException.ExceedsLongSize.class %>" message="object-entry-value-exceeds-long-field-allowed-size" />
 						<liferay-ui:error exception="<%= StorageException.class %>" message="there-was-an-error-when-accessing-the-data-storage" />
 
 						<liferay-ui:error-principal />
 
-						<c:if test="<%= ddmFormDisplayContext.isFormShared() %>">
+						<c:if test="<%= ddmFormDisplayContext.isFormShared() || preview %>">
 							<clay:container-fluid>
 								<div class="locale-actions">
 									<liferay-ui:language
@@ -148,46 +200,89 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 							<div class="ddm-form-basic-info">
 								<clay:container-fluid>
 									<clay:alert
-										message='<%= LanguageUtil.get(resourceBundle, "you-do-not-have-the-permission-to-submit-this-form") %>'
-										style="warning"
-										title='<%= LanguageUtil.get(resourceBundle, "warning") %>'
+										displayType="warning"
+										message="you-do-not-have-the-permission-to-submit-this-form"
 									/>
 								</clay:container-fluid>
 							</div>
 						</c:if>
 
-						<div class="ddm-form-basic-info">
+						<c:if test="<%= !ddmFormDisplayContext.hasValidStorageType(formInstance) %>">
+							<div class="ddm-form-basic-info">
+								<clay:container-fluid>
+									<clay:alert
+										displayType="danger"
+										message='<%= LanguageUtil.format(request, "this-form-was-created-using-a-storage-type-x-that-is-not-available-for-this-liferay-dxp-installation.-install-x-to-make-it-available-for-editing", formInstance.getStorageType()) %>'
+									/>
+								</clay:container-fluid>
+							</div>
+						</c:if>
+
+						<div class="ddm-form-upload-permission-message hide mt-4">
 							<clay:container-fluid>
-								<h1 class="ddm-form-name"><%= HtmlUtil.escape(formInstance.getName(displayLocale)) %></h1>
-
-								<%
-								String description = HtmlUtil.escape(formInstance.getDescription(displayLocale));
-								%>
-
-								<c:if test="<%= Validator.isNotNull(description) %>">
-									<p class="ddm-form-description"><%= description %></p>
-								</c:if>
+								<clay:alert
+									displayType="warning"
+									message="you-do-not-have-the-permission-to-access-the-upload-fields-on-this-form"
+								/>
 							</clay:container-fluid>
 						</div>
 
+						<clay:container-fluid>
+							<react:component
+								module="admin/js/util/ShowPartialResultsAlert"
+								props='<%=
+									HashMapBuilder.<String, Object>put(
+										"dismissible", true
+									).put(
+										"showPartialResultsToRespondents", ddmFormDisplayContext.isShowPartialResultsToRespondents()
+									).build()
+								%>'
+							/>
+						</clay:container-fluid>
+
+						<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_mapping_form/get_form_report_data" var="formReportDataURL">
+							<portlet:param name="formInstanceId" value="<%= String.valueOf(formInstanceId) %>" />
+						</liferay-portlet:resourceURL>
+
+						<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_mapping_form/validate_csrf_token" var="validateCSRFTokenURL" />
+
 						<clay:container-fluid
 							cssClass="ddm-form-builder-app ddm-form-builder-app-not-ready"
-							id='<%= ddmFormDisplayContext.getContainerId() + "container" %>'
+							id="<%= ddmFormDisplayContext.getContainerId() %>"
 						>
-							<%= ddmFormDisplayContext.getDDMFormHTML() %>
-
-							<aui:input name="empty" type="hidden" value="" />
+							<react:component
+								module="admin/js/FormView"
+								props='<%=
+									HashMapBuilder.<String, Object>put(
+										"description", StringUtil.trim(formInstance.getDescription(displayLocale))
+									).put(
+										"formReportDataURL", formReportDataURL.toString()
+									).put(
+										"title", formInstance.getName(displayLocale)
+									).put(
+										"validateCSRFTokenURL", validateCSRFTokenURL.toString()
+									).putAll(
+										ddmFormDisplayContext.getDDMFormContext()
+									).build()
+								%>'
+							/>
 						</clay:container-fluid>
+
+						<aui:input name="empty" type="hidden" value="" />
 					</aui:form>
 				</div>
 
 				<aui:script use="aui-base">
+					function <portlet:namespace />clearInterval(intervalId) {
+						if (intervalId) {
+							clearInterval(intervalId);
+						}
+					}
+
 					var <portlet:namespace />intervalId;
 
 					function <portlet:namespace />clearPortletHandlers(event) {
-						if (<portlet:namespace />intervalId) {
-							clearInterval(<portlet:namespace />intervalId);
-						}
+						<portlet:namespace />clearInterval(<portlet:namespace />intervalId);
 
 						Liferay.detach('destroyPortlet', <portlet:namespace />clearPortletHandlers);
 					}
@@ -202,7 +297,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 					function <portlet:namespace />fireFormView() {
 						Liferay.fire('ddmFormView', {
 							formId: '<%= formInstanceId %>',
-							title: '<%= HtmlUtil.escape(formInstance.getName(displayLocale)) %>',
+							title: '<%= HtmlUtil.escapeJS(formInstance.getName(displayLocale)) %>',
 						});
 					}
 
@@ -210,17 +305,23 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 						<c:when test="<%= ddmFormDisplayContext.isAutosaveEnabled() %>">
 							var <portlet:namespace />form;
 
-							<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="addFormInstanceRecord" var="autoSaveFormInstanceRecordURL">
+							<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/dynamic_data_mapping_form/add_form_instance_record" var="autoSaveFormInstanceRecordURL">
 								<portlet:param name="autoSave" value="<%= Boolean.TRUE.toString() %>" />
 								<portlet:param name="languageId" value="<%= languageId %>" />
-								<portlet:param name="preview" value="<%= String.valueOf(ddmFormDisplayContext.isPreview()) %>" />
+								<portlet:param name="preview" value="<%= String.valueOf(preview) %>" />
 							</liferay-portlet:resourceURL>
 
+							Liferay.on('sessionExpired', (event) => {
+								<portlet:namespace />clearInterval(<portlet:namespace />intervalId);
+							});
+
 							function <portlet:namespace />autoSave() {
+								var form = <portlet:namespace />form;
+								var isRendered = form.reactComponentRef && form.reactComponentRef.current;
 								var data = new URLSearchParams({
 									<portlet:namespace />formInstanceId: <%= formInstanceId %>,
 									<portlet:namespace />serializedDDMFormValues: JSON.stringify(
-										<portlet:namespace />form.toJSON()
+										isRendered ? form.reactComponentRef.current.toJSON() : {}
 									),
 								});
 
@@ -231,9 +332,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 							}
 
 							function <portlet:namespace />startAutoSave() {
-								if (<portlet:namespace />intervalId) {
-									clearInterval(<portlet:namespace />intervalId);
-								}
+								<portlet:namespace />clearInterval(<portlet:namespace />intervalId);
 
 								<portlet:namespace />intervalId = setInterval(
 									<portlet:namespace />autoSave,
@@ -243,9 +342,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 						</c:when>
 						<c:otherwise>
 							function <portlet:namespace />startAutoExtendSession() {
-								if (<portlet:namespace />intervalId) {
-									clearInterval(<portlet:namespace />intervalId);
-								}
+								<portlet:namespace />clearInterval(<portlet:namespace />intervalId);
 
 								var tenSeconds = 10000;
 
@@ -265,7 +362,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 
 					function <portlet:namespace />enableForm() {
 						var container = document.querySelector(
-							'#<%= ddmFormDisplayContext.getContainerId() %>container'
+							'#<%= ddmFormDisplayContext.getContainerId() %>'
 						);
 
 						container.classList.remove('ddm-form-builder-app-not-ready');
@@ -277,7 +374,23 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 
 						<c:choose>
 							<c:when test="<%= ddmFormDisplayContext.isAutosaveEnabled() %>">
-								<portlet:namespace />startAutoSave();
+								var container = document.querySelector(
+									'#<%= ddmFormDisplayContext.getContainerId() %>'
+								);
+
+								container.onclick = function (event) {
+									<portlet:namespace />startAutoSave();
+
+									container.onclick = null;
+									container.onkeypress = null;
+								};
+
+								container.onkeypress = function (event) {
+									<portlet:namespace />startAutoSave();
+
+									container.onclick = null;
+									container.onkeypress = null;
+								};
 							</c:when>
 							<c:otherwise>
 								<portlet:namespace />startAutoExtendSession();
@@ -285,8 +398,12 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 						</c:choose>
 					}
 
-					<portlet:namespace />sessionIntervalId = setInterval(function () {
-						if (Liferay.Session) {
+					<c:if test="<%= ddmFormDisplayContext.isRememberMe() %>">
+						var rememberMe = true;
+					</c:if>
+
+					<portlet:namespace />sessionIntervalId = setInterval(() => {
+						if (Liferay.Session || rememberMe) {
 							clearInterval(<portlet:namespace />sessionIntervalId);
 
 							<portlet:namespace />form = Liferay.component(
@@ -299,7 +416,7 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 							else {
 								Liferay.componentReady(
 									'<%= ddmFormDisplayContext.getContainerId() %>'
-								).then(function (component) {
+								).then((component) => {
 									<portlet:namespace />form = component;
 
 									if (component) {
@@ -321,10 +438,9 @@ long formInstanceId = ddmFormDisplayContext.getFormInstanceId();
 </c:choose>
 
 <c:if test="<%= ddmFormDisplayContext.isShowConfigurationIcon() %>">
-	<div class="icons-container lfr-meta-actions">
+	<div class="c-mt-3 icons-container">
 		<div class="btn-group lfr-icon-actions">
 			<liferay-ui:icon
-				cssClass="btn btn-link"
 				icon="cog"
 				label="<%= true %>"
 				markupView="lexicon"

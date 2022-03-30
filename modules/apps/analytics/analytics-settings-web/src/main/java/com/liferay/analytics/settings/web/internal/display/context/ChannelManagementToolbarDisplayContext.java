@@ -14,10 +14,10 @@
 
 package com.liferay.analytics.settings.web.internal.display.context;
 
-import com.liferay.analytics.settings.web.internal.search.ChannelSearch;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -39,17 +39,14 @@ public class ChannelManagementToolbarDisplayContext
 	extends SearchContainerManagementToolbarDisplayContext {
 
 	public ChannelManagementToolbarDisplayContext(
+		ChannelDisplayContext channelDisplayContext,
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
-		LiferayPortletResponse liferayPortletResponse,
-		ChannelDisplayContext channelDisplayContext,
-		ChannelSearch channelSearch) {
+		LiferayPortletResponse liferayPortletResponse) {
 
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
-			channelSearch);
-
-		_channelDisplayContext = channelDisplayContext;
+			channelDisplayContext.getChannelSearch());
 
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
@@ -61,11 +58,11 @@ public class ChannelManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -100,11 +97,15 @@ public class ChannelManagementToolbarDisplayContext
 	}
 
 	@Override
+	public String getSortingURL() {
+		return null;
+	}
+
+	@Override
 	public Boolean isSelectable() {
 		return false;
 	}
 
-	private final ChannelDisplayContext _channelDisplayContext;
 	private final ResourceBundle _resourceBundle;
 
 }

@@ -9,7 +9,8 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import {act, cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import WorkloadByAssigneePage from '../../../src/main/resources/META-INF/resources/js/components/workload-by-assignee-page/WorkloadByAssigneePage.es';
@@ -40,11 +41,11 @@ const wrapper = ({children}) => (
 );
 
 describe('The workload by assignee page body should', () => {
-	let getAllByTestId;
+	let getAllByRole;
 
 	afterEach(cleanup);
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		const renderResult = render(
 			<WorkloadByAssigneePage.Body
 				{...{items, totalCount: items.length}}
@@ -54,13 +55,17 @@ describe('The workload by assignee page body should', () => {
 			{wrapper}
 		);
 
-		getAllByTestId = renderResult.getAllByTestId;
+		getAllByRole = renderResult.getAllByRole;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered with "User 1" and "User 2" names', () => {
-		const assigneeNames = getAllByTestId('assigneeName');
+	it('Be rendered with "User 1" and "User 2" names', () => {
+		const rows = getAllByRole('row');
 
-		expect(assigneeNames[0].innerHTML).toBe('User 1');
-		expect(assigneeNames[1].innerHTML).toBe('User 2');
+		expect(rows[1]).toHaveTextContent('User 1');
+		expect(rows[2]).toHaveTextContent('User 2');
 	});
 });

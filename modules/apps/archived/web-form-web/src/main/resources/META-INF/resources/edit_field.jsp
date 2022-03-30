@@ -23,9 +23,11 @@ int index = GetterUtil.getInteger((String)request.getAttribute("configuration.js
 
 int formFieldsIndex = GetterUtil.getInteger((String)request.getAttribute("configuration.jsp-formFieldsIndex"));
 boolean fieldsEditingDisabled = GetterUtil.getBoolean((String)request.getAttribute("configuration.jsp-fieldsEditingDisabled"));
+
 String fieldLabelXml = GetterUtil.getString(LocalizationUtil.getLocalizationXmlFromPreferences(portletPreferences, renderRequest, "fieldLabel" + formFieldsIndex));
 
 String fieldLabel = LocalizationUtil.getLocalization(fieldLabelXml, themeDisplay.getLanguageId());
+
 String fieldType = PrefsParamUtil.getString(portletPreferences, renderRequest, "fieldType" + formFieldsIndex);
 boolean fieldOptional = PrefsParamUtil.getBoolean(portletPreferences, renderRequest, "fieldOptional" + formFieldsIndex);
 
@@ -168,7 +170,7 @@ boolean ignoreRequestValue = index != formFieldsIndex;
 
 					<aui:a cssClass="validation-link" href="javascript:;"><liferay-ui:message key="validation" /> &raquo;</aui:a>
 
-					<div class='validation-input <%= Validator.isNull(fieldValidationScript) ? "hide" : "" %>'>
+					<div class="validation-input <%= Validator.isNull(fieldValidationScript) ? "hide" : "" %>">
 						<aui:col width="<%= 50 %>">
 							<aui:input cols="80" cssClass="validation-script" ignoreRequestValue="<%= ignoreRequestValue %>" label="validation-script" name='<%= "fieldValidationScript" + index %>' style="width: 95%;" type="textarea" value="<%= fieldValidationScript %>" wrap="off" />
 

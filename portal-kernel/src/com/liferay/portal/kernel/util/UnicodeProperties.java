@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 
 import java.io.IOException;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,6 +52,12 @@ public class UnicodeProperties extends HashMap<String, String> {
 	}
 
 	public UnicodeProperties(boolean safe) {
+		_safe = safe;
+	}
+
+	public UnicodeProperties(Map<String, String> map, boolean safe) {
+		super((map != null) ? map : Collections.<String, String>emptyMap());
+
 		_safe = safe;
 	}
 
@@ -191,12 +198,12 @@ public class UnicodeProperties extends HashMap<String, String> {
 		return sb.toString();
 	}
 
-	private static String _decode(String value) {
+	private String _decode(String value) {
 		return StringUtil.replace(
 			value, _SAFE_NEWLINE_CHARACTER, StringPool.NEW_LINE);
 	}
 
-	private static String _encode(String value) {
+	private String _encode(String value) {
 		String encodedValue = StringUtil.replace(
 			value, StringPool.RETURN_NEW_LINE, _SAFE_NEWLINE_CHARACTER);
 

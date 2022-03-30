@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/update_row_columns"
+		"mvc.command.name=/layout_content_page_editor/update_row_columns"
 	},
 	service = MVCActionCommand.class
 )
@@ -62,8 +61,7 @@ public class UpdateRowColumnsMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 		String itemId = ParamUtil.getString(actionRequest, "itemId");
 		int numberOfColumns = ParamUtil.getInteger(
 			actionRequest, "numberOfColumns");
@@ -91,15 +89,18 @@ public class UpdateRowColumnsMVCActionCommand
 			deletedFragmentEntryLinkIds.add(fragmentEntryLinkId);
 		}
 
-		LayoutStructure layoutStructure =
-			LayoutStructureUtil.getLayoutStructure(
-				themeDisplay.getScopeGroupId(), themeDisplay.getPlid(),
-				segmentsExperienceId);
-
 		return JSONUtil.put(
 			"deletedFragmentEntryLinkIds", deletedFragmentEntryLinkIds.toArray()
 		).put(
-			"layoutData", layoutStructure.toJSONObject()
+			"layoutData",
+			() -> {
+				LayoutStructure layoutStructure =
+					LayoutStructureUtil.getLayoutStructure(
+						themeDisplay.getScopeGroupId(), themeDisplay.getPlid(),
+						segmentsExperienceId);
+
+				return layoutStructure.toJSONObject();
+			}
 		);
 	}
 

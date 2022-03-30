@@ -137,7 +137,7 @@ public class TestPortalCacheListener<K extends Serializable, V>
 	}
 
 	private String _allActions() {
-		StringBundler sb = new StringBundler(2 + 2 * _actions.size());
+		StringBundler sb = new StringBundler(2 + (2 * _actions.size()));
 
 		sb.append("All actions{");
 
@@ -235,19 +235,9 @@ public class TestPortalCacheListener<K extends Serializable, V>
 
 		@Override
 		public String toString() {
-			StringBundler sb = new StringBundler(9);
-
-			sb.append("{actiontype: ");
-			sb.append(_actionType);
-			sb.append(", key: ");
-			sb.append(_key);
-			sb.append(", timetolive: ");
-			sb.append(_timeToLive);
-			sb.append(", value: ");
-			sb.append(_value);
-			sb.append("}");
-
-			return sb.toString();
+			return StringBundler.concat(
+				"{actiontype: ", _actionType, ", key: ", _key, ", timetolive: ",
+				_timeToLive, ", value: ", _value, "}");
 		}
 
 		private static final Object _NULL_OBJECT = new Object();

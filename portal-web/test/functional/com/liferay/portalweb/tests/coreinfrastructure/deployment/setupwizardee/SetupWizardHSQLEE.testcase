@@ -24,17 +24,15 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.db2.driver"),
 			jdbcURL = PropsUtil.get("database.db2.url"));
 
-		Smoke.viewWelcomePage(
-			userFirstName = "Joe",
-			userLastName = "Bloggs");
+		Smoke.viewWelcomeContentPage();
 
 		Smoke.runSmoke();
 	}
 
 	@priority = "3"
 	test HSQLtoDB2SampleDataEnabled {
-		property databases.size = "1";
 		property database.types = "db2";
+		property databases.size = "1";
 		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoDB2SampleDataEnabled";
 
 		SetupWizard.configurePG(
@@ -49,7 +47,7 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.db2.driver"),
 			jdbcURL = PropsUtil.get("database.db2.url"));
 
-		Smoke.viewWelcomePage();
+		Smoke.viewWelcomeContentPage();
 
 		SetupWizard.viewSampleDataEnabledInPropertiesFile();
 
@@ -74,17 +72,15 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.oracle.driver"),
 			jdbcURL = PropsUtil.get("database.oracle.url"));
 
-		Smoke.viewWelcomePage(
-			userFirstName = "Joe",
-			userLastName = "Bloggs");
+		Smoke.viewWelcomeContentPage();
 
 		Smoke.runSmoke();
 	}
 
 	@priority = "3"
 	test HSQLtoOracleSampleDataEnabled {
-		property databases.size = "1";
 		property database.types = "oracle";
+		property databases.size = "1";
 		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoOracleSampleDataEnabled";
 
 		SetupWizard.configurePG(
@@ -99,7 +95,7 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.oracle.driver"),
 			jdbcURL = PropsUtil.get("database.oracle.url"));
 
-		Smoke.viewWelcomePage();
+		Smoke.viewWelcomeContentPage();
 
 		SetupWizard.viewSampleDataEnabledInPropertiesFile();
 
@@ -124,17 +120,15 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.sqlserver.driver"),
 			jdbcURL = PropsUtil.get("database.sqlserver.url"));
 
-		Smoke.viewWelcomePage(
-			userFirstName = "Joe",
-			userLastName = "Bloggs");
+		Smoke.viewWelcomeContentPage();
 
 		Smoke.runSmoke();
 	}
 
 	@priority = "3"
 	test HSQLtoSQLServerSampleDataEnabled {
-		property databases.size = "1";
 		property database.types = "sqlserver";
+		property databases.size = "1";
 		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSQLServerSampleDataEnabled";
 
 		SetupWizard.configurePG(
@@ -149,7 +143,7 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.sqlserver.driver"),
 			jdbcURL = PropsUtil.get("database.sqlserver.url"));
 
-		Smoke.viewWelcomePage();
+		Smoke.viewWelcomeContentPage();
 
 		SetupWizard.viewSampleDataEnabledInPropertiesFile();
 
@@ -173,17 +167,15 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.sybase.driver"),
 			jdbcURL = PropsUtil.get("database.sybase.url"));
 
-		Smoke.viewWelcomePage(
-			userFirstName = "Joe",
-			userLastName = "Bloggs");
+		Smoke.viewWelcomeContentPage();
 
 		Smoke.runSmoke();
 	}
 
 	@priority = "3"
 	test HSQLtoSybaseSampleDataEnabled {
-		property databases.size = "1";
 		property database.types = "sybase";
+		property databases.size = "1";
 		property test.name.skip.portal.instance = "SetupWizardHSQL#HSQLtoSybaseSampleDataEnabled";
 
 		SetupWizard.configurePG(
@@ -198,7 +190,7 @@ definition {
 			jdbcDriverClassName = PropsUtil.get("database.sybase.driver"),
 			jdbcURL = PropsUtil.get("database.sybase.url"));
 
-		Smoke.viewWelcomePage();
+		Smoke.viewWelcomeContentPage();
 
 		SetupWizard.viewSampleDataEnabledInPropertiesFile();
 

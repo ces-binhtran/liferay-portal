@@ -17,7 +17,6 @@ package com.liferay.dynamic.data.mapping.form.web.internal.portlet.action;
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -110,7 +109,7 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 			return Collections.emptyList();
 		}
 
-		return _userLocalService.searchSocial(
+		return _userLocalService.searchBySocial(
 			themeDisplay.getCompanyId(), user.getGroupIds(), query, 0, 20,
 			new UserScreenNameComparator());
 	}
@@ -131,13 +130,12 @@ public class AutocompleteUserMVCResourceCommand extends BaseMVCResourceCommand {
 				continue;
 			}
 
-			JSONObject jsonObject = JSONUtil.put(
-				"emailAddress", user.getEmailAddress()
-			).put(
-				"fullName", user.getFullName()
-			);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"emailAddress", user.getEmailAddress()
+				).put(
+					"fullName", user.getFullName()
+				));
 		}
 
 		return jsonArray;

@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.PasswordPolicy;
 import com.liferay.portal.kernel.model.PasswordPolicyModel;
-import com.liferay.portal.kernel.model.PasswordPolicySoap;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -33,21 +32,22 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -152,105 +152,54 @@ public class PasswordPolicyModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.PasswordPolicy"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.PasswordPolicy"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.PasswordPolicy"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEFAULTPOLICY_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long PASSWORDPOLICYID_COLUMN_BITMASK = 16L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static PasswordPolicy toModel(PasswordPolicySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		PasswordPolicy model = new PasswordPolicyImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setPasswordPolicyId(soapModel.getPasswordPolicyId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setDefaultPolicy(soapModel.isDefaultPolicy());
-		model.setName(soapModel.getName());
-		model.setDescription(soapModel.getDescription());
-		model.setChangeable(soapModel.isChangeable());
-		model.setChangeRequired(soapModel.isChangeRequired());
-		model.setMinAge(soapModel.getMinAge());
-		model.setCheckSyntax(soapModel.isCheckSyntax());
-		model.setAllowDictionaryWords(soapModel.isAllowDictionaryWords());
-		model.setMinAlphanumeric(soapModel.getMinAlphanumeric());
-		model.setMinLength(soapModel.getMinLength());
-		model.setMinLowerCase(soapModel.getMinLowerCase());
-		model.setMinNumbers(soapModel.getMinNumbers());
-		model.setMinSymbols(soapModel.getMinSymbols());
-		model.setMinUpperCase(soapModel.getMinUpperCase());
-		model.setRegex(soapModel.getRegex());
-		model.setHistory(soapModel.isHistory());
-		model.setHistoryCount(soapModel.getHistoryCount());
-		model.setExpireable(soapModel.isExpireable());
-		model.setMaxAge(soapModel.getMaxAge());
-		model.setWarningTime(soapModel.getWarningTime());
-		model.setGraceLimit(soapModel.getGraceLimit());
-		model.setLockout(soapModel.isLockout());
-		model.setMaxFailure(soapModel.getMaxFailure());
-		model.setLockoutDuration(soapModel.getLockoutDuration());
-		model.setRequireUnlock(soapModel.isRequireUnlock());
-		model.setResetFailureCount(soapModel.getResetFailureCount());
-		model.setResetTicketMaxAge(soapModel.getResetTicketMaxAge());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<PasswordPolicy> toModels(
-		PasswordPolicySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<PasswordPolicy> models = new ArrayList<PasswordPolicy>(
-			soapModels.length);
-
-		for (PasswordPolicySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -307,9 +256,6 @@ public class PasswordPolicyModelImpl
 				attributeName,
 				attributeGetterFunction.apply((PasswordPolicy)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -575,6 +521,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -591,17 +541,20 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -612,6 +565,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setPasswordPolicyId(long passwordPolicyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_passwordPolicyId = passwordPolicyId;
 	}
 
@@ -623,19 +580,21 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -646,6 +605,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -678,6 +641,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -689,6 +656,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -705,6 +676,10 @@ public class PasswordPolicyModelImpl
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_modifiedDate = modifiedDate;
 	}
@@ -723,19 +698,21 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setDefaultPolicy(boolean defaultPolicy) {
-		_columnBitmask |= DEFAULTPOLICY_COLUMN_BITMASK;
-
-		if (!_setOriginalDefaultPolicy) {
-			_setOriginalDefaultPolicy = true;
-
-			_originalDefaultPolicy = _defaultPolicy;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_defaultPolicy = defaultPolicy;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalDefaultPolicy() {
-		return _originalDefaultPolicy;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("defaultPolicy"));
 	}
 
 	@JSON
@@ -751,17 +728,20 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setName(String name) {
-		_columnBitmask |= NAME_COLUMN_BITMASK;
-
-		if (_originalName == null) {
-			_originalName = _name;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_name = name;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalName() {
-		return GetterUtil.getString(_originalName);
+		return getColumnOriginalValue("name");
 	}
 
 	@JSON
@@ -777,6 +757,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_description = description;
 	}
 
@@ -794,6 +778,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setChangeable(boolean changeable) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_changeable = changeable;
 	}
 
@@ -811,6 +799,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setChangeRequired(boolean changeRequired) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_changeRequired = changeRequired;
 	}
 
@@ -822,6 +814,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinAge(long minAge) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minAge = minAge;
 	}
 
@@ -839,6 +835,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setCheckSyntax(boolean checkSyntax) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_checkSyntax = checkSyntax;
 	}
 
@@ -856,6 +856,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setAllowDictionaryWords(boolean allowDictionaryWords) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_allowDictionaryWords = allowDictionaryWords;
 	}
 
@@ -867,6 +871,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinAlphanumeric(int minAlphanumeric) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minAlphanumeric = minAlphanumeric;
 	}
 
@@ -878,6 +886,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinLength(int minLength) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minLength = minLength;
 	}
 
@@ -889,6 +901,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinLowerCase(int minLowerCase) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minLowerCase = minLowerCase;
 	}
 
@@ -900,6 +916,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinNumbers(int minNumbers) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minNumbers = minNumbers;
 	}
 
@@ -911,6 +931,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinSymbols(int minSymbols) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minSymbols = minSymbols;
 	}
 
@@ -922,6 +946,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMinUpperCase(int minUpperCase) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_minUpperCase = minUpperCase;
 	}
 
@@ -938,6 +966,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setRegex(String regex) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_regex = regex;
 	}
 
@@ -955,6 +987,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setHistory(boolean history) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_history = history;
 	}
 
@@ -966,6 +1002,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setHistoryCount(int historyCount) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_historyCount = historyCount;
 	}
 
@@ -983,6 +1023,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setExpireable(boolean expireable) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_expireable = expireable;
 	}
 
@@ -994,6 +1038,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMaxAge(long maxAge) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_maxAge = maxAge;
 	}
 
@@ -1005,6 +1053,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setWarningTime(long warningTime) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_warningTime = warningTime;
 	}
 
@@ -1016,6 +1068,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setGraceLimit(int graceLimit) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_graceLimit = graceLimit;
 	}
 
@@ -1033,6 +1089,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setLockout(boolean lockout) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lockout = lockout;
 	}
 
@@ -1044,6 +1104,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setMaxFailure(int maxFailure) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_maxFailure = maxFailure;
 	}
 
@@ -1055,6 +1119,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setLockoutDuration(long lockoutDuration) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lockoutDuration = lockoutDuration;
 	}
 
@@ -1072,6 +1140,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setRequireUnlock(boolean requireUnlock) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_requireUnlock = requireUnlock;
 	}
 
@@ -1083,6 +1155,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setResetFailureCount(long resetFailureCount) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_resetFailureCount = resetFailureCount;
 	}
 
@@ -1094,6 +1170,10 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void setResetTicketMaxAge(long resetTicketMaxAge) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_resetTicketMaxAge = resetTicketMaxAge;
 	}
 
@@ -1104,6 +1184,26 @@ public class PasswordPolicyModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -1181,6 +1281,83 @@ public class PasswordPolicyModelImpl
 	}
 
 	@Override
+	public PasswordPolicy cloneWithOriginalValues() {
+		PasswordPolicyImpl passwordPolicyImpl = new PasswordPolicyImpl();
+
+		passwordPolicyImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		passwordPolicyImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		passwordPolicyImpl.setPasswordPolicyId(
+			this.<Long>getColumnOriginalValue("passwordPolicyId"));
+		passwordPolicyImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		passwordPolicyImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		passwordPolicyImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		passwordPolicyImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		passwordPolicyImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		passwordPolicyImpl.setDefaultPolicy(
+			this.<Boolean>getColumnOriginalValue("defaultPolicy"));
+		passwordPolicyImpl.setName(this.<String>getColumnOriginalValue("name"));
+		passwordPolicyImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		passwordPolicyImpl.setChangeable(
+			this.<Boolean>getColumnOriginalValue("changeable"));
+		passwordPolicyImpl.setChangeRequired(
+			this.<Boolean>getColumnOriginalValue("changeRequired"));
+		passwordPolicyImpl.setMinAge(
+			this.<Long>getColumnOriginalValue("minAge"));
+		passwordPolicyImpl.setCheckSyntax(
+			this.<Boolean>getColumnOriginalValue("checkSyntax"));
+		passwordPolicyImpl.setAllowDictionaryWords(
+			this.<Boolean>getColumnOriginalValue("allowDictionaryWords"));
+		passwordPolicyImpl.setMinAlphanumeric(
+			this.<Integer>getColumnOriginalValue("minAlphanumeric"));
+		passwordPolicyImpl.setMinLength(
+			this.<Integer>getColumnOriginalValue("minLength"));
+		passwordPolicyImpl.setMinLowerCase(
+			this.<Integer>getColumnOriginalValue("minLowerCase"));
+		passwordPolicyImpl.setMinNumbers(
+			this.<Integer>getColumnOriginalValue("minNumbers"));
+		passwordPolicyImpl.setMinSymbols(
+			this.<Integer>getColumnOriginalValue("minSymbols"));
+		passwordPolicyImpl.setMinUpperCase(
+			this.<Integer>getColumnOriginalValue("minUpperCase"));
+		passwordPolicyImpl.setRegex(
+			this.<String>getColumnOriginalValue("regex"));
+		passwordPolicyImpl.setHistory(
+			this.<Boolean>getColumnOriginalValue("history"));
+		passwordPolicyImpl.setHistoryCount(
+			this.<Integer>getColumnOriginalValue("historyCount"));
+		passwordPolicyImpl.setExpireable(
+			this.<Boolean>getColumnOriginalValue("expireable"));
+		passwordPolicyImpl.setMaxAge(
+			this.<Long>getColumnOriginalValue("maxAge"));
+		passwordPolicyImpl.setWarningTime(
+			this.<Long>getColumnOriginalValue("warningTime"));
+		passwordPolicyImpl.setGraceLimit(
+			this.<Integer>getColumnOriginalValue("graceLimit"));
+		passwordPolicyImpl.setLockout(
+			this.<Boolean>getColumnOriginalValue("lockout"));
+		passwordPolicyImpl.setMaxFailure(
+			this.<Integer>getColumnOriginalValue("maxFailure"));
+		passwordPolicyImpl.setLockoutDuration(
+			this.<Long>getColumnOriginalValue("lockoutDuration"));
+		passwordPolicyImpl.setRequireUnlock(
+			this.<Boolean>getColumnOriginalValue("requireUnlock"));
+		passwordPolicyImpl.setResetFailureCount(
+			this.<Long>getColumnOriginalValue("resetFailureCount"));
+		passwordPolicyImpl.setResetTicketMaxAge(
+			this.<Long>getColumnOriginalValue("resetTicketMaxAge"));
+
+		return passwordPolicyImpl;
+	}
+
+	@Override
 	public int compareTo(PasswordPolicy passwordPolicy) {
 		long primaryKey = passwordPolicy.getPrimaryKey();
 
@@ -1196,16 +1373,16 @@ public class PasswordPolicyModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof PasswordPolicy)) {
+		if (!(object instanceof PasswordPolicy)) {
 			return false;
 		}
 
-		PasswordPolicy passwordPolicy = (PasswordPolicy)obj;
+		PasswordPolicy passwordPolicy = (PasswordPolicy)object;
 
 		long primaryKey = passwordPolicy.getPrimaryKey();
 
@@ -1222,11 +1399,19 @@ public class PasswordPolicyModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -1234,25 +1419,11 @@ public class PasswordPolicyModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		PasswordPolicyModelImpl passwordPolicyModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		passwordPolicyModelImpl._originalUuid = passwordPolicyModelImpl._uuid;
+		_setModifiedDate = false;
 
-		passwordPolicyModelImpl._originalCompanyId =
-			passwordPolicyModelImpl._companyId;
-
-		passwordPolicyModelImpl._setOriginalCompanyId = false;
-
-		passwordPolicyModelImpl._setModifiedDate = false;
-
-		passwordPolicyModelImpl._originalDefaultPolicy =
-			passwordPolicyModelImpl._defaultPolicy;
-
-		passwordPolicyModelImpl._setOriginalDefaultPolicy = false;
-
-		passwordPolicyModelImpl._originalName = passwordPolicyModelImpl._name;
-
-		passwordPolicyModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -1384,7 +1555,7 @@ public class PasswordPolicyModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1395,9 +1566,26 @@ public class PasswordPolicyModelImpl
 			Function<PasswordPolicy, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((PasswordPolicy)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((PasswordPolicy)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1416,7 +1604,7 @@ public class PasswordPolicyModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1450,21 +1638,15 @@ public class PasswordPolicyModelImpl
 
 	private long _mvccVersion;
 	private String _uuid;
-	private String _originalUuid;
 	private long _passwordPolicyId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private boolean _defaultPolicy;
-	private boolean _originalDefaultPolicy;
-	private boolean _setOriginalDefaultPolicy;
 	private String _name;
-	private String _originalName;
 	private String _description;
 	private boolean _changeable;
 	private boolean _changeRequired;
@@ -1490,6 +1672,168 @@ public class PasswordPolicyModelImpl
 	private boolean _requireUnlock;
 	private long _resetFailureCount;
 	private long _resetTicketMaxAge;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<PasswordPolicy, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((PasswordPolicy)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("passwordPolicyId", _passwordPolicyId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("defaultPolicy", _defaultPolicy);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("changeable", _changeable);
+		_columnOriginalValues.put("changeRequired", _changeRequired);
+		_columnOriginalValues.put("minAge", _minAge);
+		_columnOriginalValues.put("checkSyntax", _checkSyntax);
+		_columnOriginalValues.put(
+			"allowDictionaryWords", _allowDictionaryWords);
+		_columnOriginalValues.put("minAlphanumeric", _minAlphanumeric);
+		_columnOriginalValues.put("minLength", _minLength);
+		_columnOriginalValues.put("minLowerCase", _minLowerCase);
+		_columnOriginalValues.put("minNumbers", _minNumbers);
+		_columnOriginalValues.put("minSymbols", _minSymbols);
+		_columnOriginalValues.put("minUpperCase", _minUpperCase);
+		_columnOriginalValues.put("regex", _regex);
+		_columnOriginalValues.put("history", _history);
+		_columnOriginalValues.put("historyCount", _historyCount);
+		_columnOriginalValues.put("expireable", _expireable);
+		_columnOriginalValues.put("maxAge", _maxAge);
+		_columnOriginalValues.put("warningTime", _warningTime);
+		_columnOriginalValues.put("graceLimit", _graceLimit);
+		_columnOriginalValues.put("lockout", _lockout);
+		_columnOriginalValues.put("maxFailure", _maxFailure);
+		_columnOriginalValues.put("lockoutDuration", _lockoutDuration);
+		_columnOriginalValues.put("requireUnlock", _requireUnlock);
+		_columnOriginalValues.put("resetFailureCount", _resetFailureCount);
+		_columnOriginalValues.put("resetTicketMaxAge", _resetTicketMaxAge);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("uuid_", 2L);
+
+		columnBitmasks.put("passwordPolicyId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userId", 16L);
+
+		columnBitmasks.put("userName", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("modifiedDate", 128L);
+
+		columnBitmasks.put("defaultPolicy", 256L);
+
+		columnBitmasks.put("name", 512L);
+
+		columnBitmasks.put("description", 1024L);
+
+		columnBitmasks.put("changeable", 2048L);
+
+		columnBitmasks.put("changeRequired", 4096L);
+
+		columnBitmasks.put("minAge", 8192L);
+
+		columnBitmasks.put("checkSyntax", 16384L);
+
+		columnBitmasks.put("allowDictionaryWords", 32768L);
+
+		columnBitmasks.put("minAlphanumeric", 65536L);
+
+		columnBitmasks.put("minLength", 131072L);
+
+		columnBitmasks.put("minLowerCase", 262144L);
+
+		columnBitmasks.put("minNumbers", 524288L);
+
+		columnBitmasks.put("minSymbols", 1048576L);
+
+		columnBitmasks.put("minUpperCase", 2097152L);
+
+		columnBitmasks.put("regex", 4194304L);
+
+		columnBitmasks.put("history", 8388608L);
+
+		columnBitmasks.put("historyCount", 16777216L);
+
+		columnBitmasks.put("expireable", 33554432L);
+
+		columnBitmasks.put("maxAge", 67108864L);
+
+		columnBitmasks.put("warningTime", 134217728L);
+
+		columnBitmasks.put("graceLimit", 268435456L);
+
+		columnBitmasks.put("lockout", 536870912L);
+
+		columnBitmasks.put("maxFailure", 1073741824L);
+
+		columnBitmasks.put("lockoutDuration", 2147483648L);
+
+		columnBitmasks.put("requireUnlock", 4294967296L);
+
+		columnBitmasks.put("resetFailureCount", 8589934592L);
+
+		columnBitmasks.put("resetTicketMaxAge", 17179869184L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private PasswordPolicy _escapedModel;
 

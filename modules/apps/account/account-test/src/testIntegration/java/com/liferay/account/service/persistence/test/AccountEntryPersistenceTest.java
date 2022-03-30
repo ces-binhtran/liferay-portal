@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -138,15 +138,32 @@ public class AccountEntryPersistenceTest {
 
 		newAccountEntry.setModifiedDate(RandomTestUtil.nextDate());
 
-		newAccountEntry.setParentAccountEntryId(RandomTestUtil.nextLong());
+		newAccountEntry.setDefaultBillingAddressId(RandomTestUtil.nextLong());
 
-		newAccountEntry.setName(RandomTestUtil.randomString());
+		newAccountEntry.setDefaultCPaymentMethodKey(
+			RandomTestUtil.randomString());
+
+		newAccountEntry.setDefaultDeliveryCTermEntryId(
+			RandomTestUtil.nextLong());
+
+		newAccountEntry.setDefaultPaymentCTermEntryId(
+			RandomTestUtil.nextLong());
+
+		newAccountEntry.setDefaultShippingAddressId(RandomTestUtil.nextLong());
+
+		newAccountEntry.setParentAccountEntryId(RandomTestUtil.nextLong());
 
 		newAccountEntry.setDescription(RandomTestUtil.randomString());
 
 		newAccountEntry.setDomains(RandomTestUtil.randomString());
 
+		newAccountEntry.setEmailAddress(RandomTestUtil.randomString());
+
 		newAccountEntry.setLogoId(RandomTestUtil.nextLong());
+
+		newAccountEntry.setName(RandomTestUtil.randomString());
+
+		newAccountEntry.setTaxExemptionCode(RandomTestUtil.randomString());
 
 		newAccountEntry.setTaxIdNumber(RandomTestUtil.randomString());
 
@@ -182,17 +199,38 @@ public class AccountEntryPersistenceTest {
 			Time.getShortTimestamp(existingAccountEntry.getModifiedDate()),
 			Time.getShortTimestamp(newAccountEntry.getModifiedDate()));
 		Assert.assertEquals(
+			existingAccountEntry.getDefaultBillingAddressId(),
+			newAccountEntry.getDefaultBillingAddressId());
+		Assert.assertEquals(
+			existingAccountEntry.getDefaultCPaymentMethodKey(),
+			newAccountEntry.getDefaultCPaymentMethodKey());
+		Assert.assertEquals(
+			existingAccountEntry.getDefaultDeliveryCTermEntryId(),
+			newAccountEntry.getDefaultDeliveryCTermEntryId());
+		Assert.assertEquals(
+			existingAccountEntry.getDefaultPaymentCTermEntryId(),
+			newAccountEntry.getDefaultPaymentCTermEntryId());
+		Assert.assertEquals(
+			existingAccountEntry.getDefaultShippingAddressId(),
+			newAccountEntry.getDefaultShippingAddressId());
+		Assert.assertEquals(
 			existingAccountEntry.getParentAccountEntryId(),
 			newAccountEntry.getParentAccountEntryId());
-		Assert.assertEquals(
-			existingAccountEntry.getName(), newAccountEntry.getName());
 		Assert.assertEquals(
 			existingAccountEntry.getDescription(),
 			newAccountEntry.getDescription());
 		Assert.assertEquals(
 			existingAccountEntry.getDomains(), newAccountEntry.getDomains());
 		Assert.assertEquals(
+			existingAccountEntry.getEmailAddress(),
+			newAccountEntry.getEmailAddress());
+		Assert.assertEquals(
 			existingAccountEntry.getLogoId(), newAccountEntry.getLogoId());
+		Assert.assertEquals(
+			existingAccountEntry.getName(), newAccountEntry.getName());
+		Assert.assertEquals(
+			existingAccountEntry.getTaxExemptionCode(),
+			newAccountEntry.getTaxExemptionCode());
 		Assert.assertEquals(
 			existingAccountEntry.getTaxIdNumber(),
 			newAccountEntry.getTaxIdNumber());
@@ -215,6 +253,15 @@ public class AccountEntryPersistenceTest {
 			RandomTestUtil.nextLong(), RandomTestUtil.nextInt());
 
 		_persistence.countByC_S(0L, 0);
+	}
+
+	@Test
+	public void testCountByU_T() throws Exception {
+		_persistence.countByU_T(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByU_T(0L, "null");
+
+		_persistence.countByU_T(0L, (String)null);
 	}
 
 	@Test
@@ -254,9 +301,12 @@ public class AccountEntryPersistenceTest {
 			"AccountEntry", "mvccVersion", true, "externalReferenceCode", true,
 			"accountEntryId", true, "companyId", true, "userId", true,
 			"userName", true, "createDate", true, "modifiedDate", true,
-			"parentAccountEntryId", true, "name", true, "description", true,
-			"domains", true, "logoId", true, "taxIdNumber", true, "type", true,
-			"status", true);
+			"defaultBillingAddressId", true, "defaultCPaymentMethodKey", true,
+			"defaultDeliveryCTermEntryId", true, "defaultPaymentCTermEntryId",
+			true, "defaultShippingAddressId", true, "parentAccountEntryId",
+			true, "description", true, "domains", true, "emailAddress", true,
+			"logoId", true, "name", true, "taxExemptionCode", true,
+			"taxIdNumber", true, "type", true, "status", true);
 	}
 
 	@Test
@@ -478,19 +528,61 @@ public class AccountEntryPersistenceTest {
 
 		_persistence.clearCache();
 
-		AccountEntry existingAccountEntry = _persistence.findByPrimaryKey(
-			newAccountEntry.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newAccountEntry.getPrimaryKey()));
+	}
 
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		AccountEntry newAccountEntry = addAccountEntry();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			AccountEntry.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"accountEntryId", newAccountEntry.getAccountEntryId()));
+
+		List<AccountEntry> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(AccountEntry accountEntry) {
 		Assert.assertEquals(
-			Long.valueOf(existingAccountEntry.getCompanyId()),
+			Long.valueOf(accountEntry.getCompanyId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingAccountEntry, "getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingAccountEntry.getExternalReferenceCode(),
-				ReflectionTestUtil.invoke(
-					existingAccountEntry, "getOriginalExternalReferenceCode",
-					new Class<?>[0])));
+				accountEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			accountEntry.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				accountEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
 	}
 
 	protected AccountEntry addAccountEntry() throws Exception {
@@ -512,15 +604,29 @@ public class AccountEntryPersistenceTest {
 
 		accountEntry.setModifiedDate(RandomTestUtil.nextDate());
 
-		accountEntry.setParentAccountEntryId(RandomTestUtil.nextLong());
+		accountEntry.setDefaultBillingAddressId(RandomTestUtil.nextLong());
 
-		accountEntry.setName(RandomTestUtil.randomString());
+		accountEntry.setDefaultCPaymentMethodKey(RandomTestUtil.randomString());
+
+		accountEntry.setDefaultDeliveryCTermEntryId(RandomTestUtil.nextLong());
+
+		accountEntry.setDefaultPaymentCTermEntryId(RandomTestUtil.nextLong());
+
+		accountEntry.setDefaultShippingAddressId(RandomTestUtil.nextLong());
+
+		accountEntry.setParentAccountEntryId(RandomTestUtil.nextLong());
 
 		accountEntry.setDescription(RandomTestUtil.randomString());
 
 		accountEntry.setDomains(RandomTestUtil.randomString());
 
+		accountEntry.setEmailAddress(RandomTestUtil.randomString());
+
 		accountEntry.setLogoId(RandomTestUtil.nextLong());
+
+		accountEntry.setName(RandomTestUtil.randomString());
+
+		accountEntry.setTaxExemptionCode(RandomTestUtil.randomString());
 
 		accountEntry.setTaxIdNumber(RandomTestUtil.randomString());
 

@@ -29,10 +29,10 @@ import com.liferay.layout.util.structure.DropZoneLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -50,9 +50,6 @@ import com.liferay.portal.kernel.zip.ZipWriterFactoryUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.io.File;
 import java.io.IOException;
@@ -76,7 +73,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Rubén Pulido
@@ -99,11 +98,14 @@ public class MasterLayoutsImporterTest {
 
 		_user = TestPropsValues.getUser();
 
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			MasterLayoutsImporterTest.class);
 
-		_serviceRegistration = registry.registerService(
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
 			FragmentCollectionContributor.class,
-			new TestMasterPageFragmentCollectionContributor());
+			new TestMasterPageFragmentCollectionContributor(), null);
 	}
 
 	@After
@@ -257,14 +259,11 @@ public class MasterLayoutsImporterTest {
 	private File _generateZipFile(String testCaseName) throws Exception {
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
-		StringBuilder sb = new StringBuilder(3);
-
-		sb.append(_BASE_PATH + testCaseName);
-		sb.append(StringPool.FORWARD_SLASH + _ROOT_FOLDER);
-		sb.append(StringPool.FORWARD_SLASH);
-
 		Enumeration<URL> enumeration = _bundle.findEntries(
-			sb.toString(),
+			StringBundler.concat(
+				_BASE_PATH + testCaseName,
+				StringPool.FORWARD_SLASH + _ROOT_FOLDER,
+				StringPool.FORWARD_SLASH),
 			LayoutPageTemplateExportImportConstants.FILE_NAME_MASTER_PAGE,
 			true);
 
@@ -274,8 +273,6 @@ public class MasterLayoutsImporterTest {
 
 				_populateZipWriter(zipWriter, url);
 			}
-
-			zipWriter.finish();
 
 			return zipWriter.getFile();
 		}
@@ -321,10 +318,8 @@ public class MasterLayoutsImporterTest {
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		try {
 			layoutPageTemplatesImporterResultEntries =
@@ -370,9 +365,9 @@ public class MasterLayoutsImporterTest {
 			true);
 
 		while (enumeration.hasMoreElements()) {
-			URL elementUrl = enumeration.nextElement();
+			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementUrl);
+			_addZipWriterEntry(zipWriter, elementURL);
 		}
 
 		enumeration = _bundle.findEntries(
@@ -381,9 +376,9 @@ public class MasterLayoutsImporterTest {
 			true);
 
 		while (enumeration.hasMoreElements()) {
-			URL elementUrl = enumeration.nextElement();
+			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementUrl);
+			_addZipWriterEntry(zipWriter, elementURL);
 		}
 	}
 
@@ -460,10 +455,10 @@ public class MasterLayoutsImporterTest {
 			"test-master-page-fragment-collection-contributor";
 
 		public static final String TEST_MASTER_PAGE_FRAGMENT_ENTRY_1 =
-			"test-master-page-fragment-entry-1";
+			"fragment-entry-1";
 
 		public static final String TEST_MASTER_PAGE_FRAGMENT_ENTRY_2 =
-			"test-master-page-fragment-entry-2";
+			"fragment-entry-2";
 
 		@Override
 		public String getFragmentCollectionKey() {
@@ -472,15 +467,9 @@ public class MasterLayoutsImporterTest {
 
 		@Override
 		public List<FragmentEntry> getFragmentEntries() {
-			List<FragmentEntry> fragmentEntries = new ArrayList<>();
-
-			fragmentEntries.add(
-				_getFragmentEntry(TEST_MASTER_PAGE_FRAGMENT_ENTRY_1, 0));
-
-			fragmentEntries.add(
+			return ListUtil.fromArray(
+				_getFragmentEntry(TEST_MASTER_PAGE_FRAGMENT_ENTRY_1, 0),
 				_getFragmentEntry(TEST_MASTER_PAGE_FRAGMENT_ENTRY_2, 0));
-
-			return fragmentEntries;
 		}
 
 		@Override

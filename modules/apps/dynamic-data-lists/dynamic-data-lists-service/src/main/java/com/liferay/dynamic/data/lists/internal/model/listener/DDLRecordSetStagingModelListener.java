@@ -14,8 +14,8 @@
 
 package com.liferay.dynamic.data.lists.internal.model.listener;
 
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.ModelListener;
@@ -50,7 +50,8 @@ public class DDLRecordSetStagingModelListener
 	}
 
 	@Override
-	public void onAfterUpdate(DDLRecordSet ddlRecordSet)
+	public void onAfterUpdate(
+			DDLRecordSet originalDDLRecordSet, DDLRecordSet ddlRecordSet)
 		throws ModelListenerException {
 
 		if (_isSkipEvent(ddlRecordSet)) {

@@ -14,12 +14,12 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer;
 
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.filter.SynonymSetFilterWriter;
 import com.liferay.portal.search.tuning.synonyms.web.internal.filter.name.SynonymSetFilterNameHolder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSet;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexNameBuilder;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -35,15 +35,16 @@ public class IndexToFilterSynchronizerImpl
 	implements IndexToFilterSynchronizer {
 
 	@Override
-	public void copyToFilter(String companyIndexName) {
-		updateFilters(
-			companyIndexName,
-			getSynonymFromIndex(
-				_synonymSetIndexNameBuilder.getSynonymSetIndexName(
-					companyIndexName)));
+	public void copyToFilter(
+		SynonymSetIndexName synonymSetIndexName, String companyIndexName,
+		boolean deletion) {
+
+		_updateFilters(
+			companyIndexName, _getSynonymFromIndex(synonymSetIndexName),
+			deletion);
 	}
 
-	protected String[] getSynonymFromIndex(
+	private String[] _getSynonymFromIndex(
 		SynonymSetIndexName synonymSetIndexName) {
 
 		List<SynonymSet> synonymSets = _synonymSetIndexReader.search(
@@ -58,10 +59,12 @@ public class IndexToFilterSynchronizerImpl
 		);
 	}
 
-	protected void updateFilters(String companyIndexName, String[] synonyms) {
+	private void _updateFilters(
+		String companyIndexName, String[] synonyms, boolean deletion) {
+
 		for (String filterName : _synonymSetFilterNameHolder.getFilterNames()) {
 			_synonymSetFilterWriter.updateSynonymSets(
-				companyIndexName, filterName, synonyms);
+				companyIndexName, filterName, synonyms, deletion);
 		}
 	}
 

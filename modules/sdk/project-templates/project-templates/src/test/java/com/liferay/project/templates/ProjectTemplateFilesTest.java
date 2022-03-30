@@ -100,7 +100,7 @@ public class ProjectTemplateFilesTest {
 		_xmlDeclarations.put(fileName, template);
 	}
 
-	private static boolean _expressionContainedInList(
+	private boolean _expressionContainedInList(
 		Collection<String> list, String expression) {
 
 		Stream<String> stream = list.stream();
@@ -561,7 +561,7 @@ public class ProjectTemplateFilesTest {
 		_testPropertyValue(path, properties, "licenses", "LGPL");
 		_testPropertyValue(
 			path, properties, "liferay-versions",
-			"7.0.0+,7.1.0+,7.2.0+,7.3.0+");
+			"7.0.0+,7.1.0+,7.2.0+,7.3.0+,7.4.0+");
 		_testPropertyValue(path, properties, "long-description", "");
 		_testPropertyValue(path, properties, "module-group-id", "liferay");
 		_testPropertyValue(path, properties, "module-incremental-version", "1");
@@ -665,11 +665,6 @@ public class ProjectTemplateFilesTest {
 		else {
 			dependencyElements = Collections.emptyList();
 		}
-
-		Assert.assertEquals(
-			"Number of dependencies in " + pomXmlPath + " must match " +
-				buildGradlePath,
-			buildGradleDependencies.size(), dependencyElements.size());
 
 		for (int i = 0; i < buildGradleDependencies.size(); i++) {
 			BuildGradleDependency buildGradleDependency =
@@ -869,6 +864,13 @@ public class ProjectTemplateFilesTest {
 							liferayPluginPackagePropertiesPath);
 					}
 
+					Path restConfigYAMLPath = dirPath.resolve(
+						"rest-config.yaml");
+
+					if (Files.exists(restConfigYAMLPath)) {
+						requireAuthorProperty.set(true);
+					}
+
 					return FileVisitResult.CONTINUE;
 				}
 
@@ -1054,7 +1056,7 @@ public class ProjectTemplateFilesTest {
 	private static final Set<String> _textFileExtensions = new HashSet<>(
 		Arrays.asList(
 			"bnd", "gradle", "java", "js", "json", "jsp", "jspf", "properties",
-			"vm", "xml"));
+			"vm", "xml", "yaml"));
 	private static final Pattern _velocityDirectivePattern = Pattern.compile(
 		"#(if|set)\\s*\\(\\s*(.+)\\s*\\)");
 	private static final Pattern _velocitySetDirectivePattern = Pattern.compile(

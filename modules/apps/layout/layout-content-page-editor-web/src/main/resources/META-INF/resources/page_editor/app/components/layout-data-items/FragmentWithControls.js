@@ -12,133 +12,131 @@
  * details.
  */
 
-import React, {useCallback, useMemo} from 'react';
+import classNames from 'classnames';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
+import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
+import {FREEMARKER_FRAGMENT_ENTRY_PROCESSOR} from '../../config/constants/freemarkerFragmentEntryProcessor';
 import {
-	LayoutDataPropTypes,
-	getLayoutDataItemPropTypes,
-} from '../../../prop-types/index';
-import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
-import selectCanUpdateLayoutContent from '../../selectors/selectCanUpdateLayoutContent';
-import {useDispatch, useSelector} from '../../store/index';
-import duplicateItem from '../../thunks/duplicateItem';
-import {useSelectItem} from '../Controls';
-import Topper from '../Topper';
-import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
+	useHoveredItemId,
+	useHoveredItemType,
+} from '../../contexts/ControlsContext';
+import {useSelector} from '../../contexts/StoreContext';
+import {getFrontendTokenValue} from '../../utils/getFrontendTokenValue';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import {isValidSpacingOption} from '../../utils/isValidSpacingOption';
 import FragmentContent from '../fragment-content/FragmentContent';
+import Topper from '../topper/Topper';
+import getAllPortals from './getAllPortals';
+import isHovered from './isHovered';
 
-const FragmentWithControls = React.forwardRef(({item, layoutData}, ref) => {
-	const canUpdateLayoutContent = useSelector(selectCanUpdateLayoutContent);
-	const dispatch = useDispatch();
+const FIELD_TYPES = ['itemSelector', 'collectionSelector'];
+
+const FragmentWithControls = React.forwardRef(({item}, ref) => {
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
-	const segmentsExperienceId = useSelector(
-		(state) => state.segmentsExperienceId
+	const hoveredItemType = useHoveredItemType();
+	const hoveredItemId = useHoveredItemId();
+	const [hovered, setHovered] = useState(false);
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
 	);
-	const selectItem = useSelectItem();
-	const widgets = useSelector((state) => state.widgets);
 
-	const fragmentEntryLink =
-		fragmentEntryLinks[item.config.fragmentEntryLinkId];
-
+	const getPortals = useCallback((element) => getAllPortals(element), []);
+	const itemConfig = getResponsiveConfig(item.config, selectedViewportSize);
 	const [setRef, itemElement] = useSetRef(ref);
 
-	const handleButtonClick = useCallback(
-		(id) => {
-			if (id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id) {
-				dispatch(
-					duplicateItem({
-						itemId: item.itemId,
-						segmentsExperienceId,
-						selectItem,
-					})
-				);
-			}
-		},
-		[dispatch, item.itemId, segmentsExperienceId, selectItem]
-	);
+	const editableValues = useMemo(() => {
+		const fieldNames = [];
+		const fragment = fragmentEntryLinks[item.config.fragmentEntryLinkId];
 
-	const floatingToolbarButtons = useMemo(() => {
-		const buttons = [];
+		if (fragment) {
+			fragment.configuration?.fieldSets?.forEach((fieldSet) => {
+				fieldSet.fields.forEach((field) => {
+					if (FIELD_TYPES.includes(field.type)) {
+						fieldNames.push(field.name);
+					}
+				});
+			});
 
-		const portletId = fragmentEntryLink.editableValues.portletId;
+			const filteredFieldNames = fieldNames.filter(
+				(fieldName) =>
+					fragment.editableValues[
+						FREEMARKER_FRAGMENT_ENTRY_PROCESSOR
+					]?.[fieldName]?.classPK
+			);
 
-		const widget = portletId && getWidget(widgets, portletId);
-
-		if (!widget || widget.instanceable) {
-			buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem);
-		}
-
-		const configuration = fragmentEntryLink.configuration;
-
-		if (
-			configuration &&
-			Array.isArray(configuration.fieldSets) &&
-			configuration.fieldSets.length
-		) {
-			buttons.push(
-				LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.fragmentConfiguration
+			return filteredFieldNames.map(
+				(fieldName) =>
+					fragment.editableValues[
+						FREEMARKER_FRAGMENT_ENTRY_PROCESSOR
+					]?.[fieldName] || {}
 			);
 		}
+	}, [item, fragmentEntryLinks]);
 
-		return buttons;
-	}, [
-		fragmentEntryLink.configuration,
-		fragmentEntryLink.editableValues.portletId,
-		widgets,
-	]);
+	useEffect(() => {
+		if (editableValues.length) {
+			const someEditableIsHovered = editableValues.some((editableValue) =>
+				isHovered({
+					editableValue,
+					hoveredItemId,
+					hoveredItemType,
+				})
+			);
+
+			setHovered(someEditableIsHovered);
+		}
+	}, [hoveredItemType, hoveredItemId, editableValues]);
+
+	const {
+		display,
+		marginBottom,
+		marginLeft,
+		marginRight,
+		marginTop,
+		maxWidth,
+		minWidth,
+		shadow,
+		width,
+	} = itemConfig.styles;
+
+	const style = {};
+
+	style.boxShadow = getFrontendTokenValue(shadow);
+	style.display = display;
+	style.maxWidth = maxWidth;
+	style.minWidth = minWidth;
+	style.width = width;
 
 	return (
-		<Topper item={item} itemElement={itemElement} layoutData={layoutData}>
-			<>
-				{canUpdateLayoutContent && (
-					<FloatingToolbar
-						buttons={floatingToolbarButtons}
-						item={item}
-						itemElement={itemElement}
-						onButtonClick={handleButtonClick}
-					/>
-				)}
-
-				<FragmentContent
-					fragmentEntryLinkId={fragmentEntryLink.fragmentEntryLinkId}
-					itemId={item.itemId}
-					ref={setRef}
-				/>
-			</>
+		<Topper
+			className={classNames({
+				[`mb-${marginBottom}`]: isValidSpacingOption(marginBottom),
+				[`ml-${marginLeft}`]: isValidSpacingOption(marginLeft),
+				[`mr-${marginRight}`]: isValidSpacingOption(marginRight),
+				[`mt-${marginTop}`]: isValidSpacingOption(marginTop),
+				'page-editor__topper--hovered': hovered,
+			})}
+			item={item}
+			itemElement={itemElement}
+			style={style}
+		>
+			<FragmentContent
+				elementRef={setRef}
+				fragmentEntryLinkId={item.config.fragmentEntryLinkId}
+				getPortals={getPortals}
+				item={item}
+				withinTopper
+			/>
 		</Topper>
 	);
 });
-
-function getWidget(widgets, portletId) {
-	let widget = null;
-
-	const widgetsLength = widgets.length;
-
-	for (let i = 0; i < widgetsLength; i++) {
-		const {categories = [], portlets = []} = widgets[i];
-		const categoryPortlet = portlets.find(
-			(_portlet) => _portlet.portletId === portletId
-		);
-		const subCategoryPortlet = getWidget(categories, portletId);
-
-		if (categoryPortlet) {
-			widget = categoryPortlet;
-		}
-
-		if (subCategoryPortlet) {
-			widget = subCategoryPortlet;
-		}
-	}
-
-	return widget;
-}
 
 FragmentWithControls.displayName = 'FragmentWithControls';
 
 FragmentWithControls.propTypes = {
 	item: getLayoutDataItemPropTypes().isRequired,
-	layoutData: LayoutDataPropTypes.isRequired,
 };
 
 export default FragmentWithControls;

@@ -22,11 +22,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -47,10 +50,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("Index")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Index")
-public class Index {
+public class Index implements Serializable {
 
 	public static Index toDTO(String json) {
 		return ObjectMapperUtil.readValue(Index.class, json);
+	}
+
+	public static Index unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Index.class, json);
 	}
 
 	@Schema
@@ -218,6 +225,7 @@ public class Index {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.portal.workflow.metrics.rest.dto.v1_0.Index",
 		name = "x-class-name"
 	)
@@ -230,13 +238,17 @@ public class Index {
 
 		@JsonCreator
 		public static Group create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (Group group : values()) {
 				if (Objects.equals(group.getValue(), value)) {
 					return group;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -258,9 +270,19 @@ public class Index {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -276,14 +298,12 @@ public class Index {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -310,7 +330,7 @@ public class Index {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -318,7 +338,7 @@ public class Index {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -326,5 +346,10 @@ public class Index {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

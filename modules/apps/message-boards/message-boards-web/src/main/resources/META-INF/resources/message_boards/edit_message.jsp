@@ -34,15 +34,19 @@ MBThread thread = null;
 MBMessage curParentMessage = null;
 
 if (threadId > 0) {
+	thread = MBThreadLocalServiceUtil.getThread(threadId);
+
 	try {
 		curParentMessage = MBMessageServiceUtil.getMessage(parentMessageId);
 
 		if (Validator.isNull(subject)) {
-			if (curParentMessage.getSubject().startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
-				subject = curParentMessage.getSubject();
+			String curParentMessageSubject = curParentMessage.getSubject();
+
+			if (curParentMessageSubject.startsWith(MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE)) {
+				subject = curParentMessageSubject;
 			}
 			else {
-				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + curParentMessage.getSubject();
+				subject = MBMessageConstants.MESSAGE_SUBJECT_PREFIX_RE + curParentMessageSubject;
 			}
 		}
 	}
@@ -63,12 +67,13 @@ if (message != null) {
 boolean allowPingbacks = PropsValues.MESSAGE_BOARDS_PINGBACK_ENABLED && BeanParamUtil.getBoolean(message, request, "allowPingbacks", true);
 
 if (Validator.isNull(redirect)) {
-	PortletURL viewMessageURL = renderResponse.createRenderURL();
-
-	viewMessageURL.setParameter("mvcRenderCommandName", "/message_boards/view_message");
-	viewMessageURL.setParameter("messageId", String.valueOf(messageId));
-
-	redirect = viewMessageURL.toString();
+	redirect = PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCRenderCommandName(
+		"/message_boards/view_message"
+	).setParameter(
+		"messageId", messageId
+	).buildString();
 }
 
 if (curParentMessage != null) {
@@ -95,14 +100,14 @@ else {
 
 String headerTitle = LanguageUtil.get(request, "add-message");
 
-if (curParentMessage != null) {
-	headerTitle = LanguageUtil.format(request, "reply-to-x", HtmlUtil.escape(curParentMessage.getSubject()), false);
-}
-else if (message != null) {
+if (message != null) {
 	headerTitle = LanguageUtil.format(request, "edit-x", HtmlUtil.escape(message.getSubject()), false);
 }
+else if (curParentMessage != null) {
+	headerTitle = LanguageUtil.format(request, "reply-to-x", HtmlUtil.escape(curParentMessage.getSubject()), false);
+}
 
-boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation"));
+boolean portletTitleBasedNavigation = GetterUtil.getBoolean(portletConfig.getInitParameter("portlet-title-based-navigation")) || Objects.equals(portletDisplay.getPortletResource(), PortletKeys.MY_WORKFLOW_TASK);
 
 if (portletTitleBasedNavigation) {
 	portletDisplay.setShowBackIcon(true);
@@ -113,7 +118,8 @@ if (portletTitleBasedNavigation) {
 %>
 
 <clay:container-fluid
-	id='<%= renderResponse.getNamespace() + "mbEditPageContainer" %>'
+	cssClass="container-form-lg"
+	id='<%= liferayPortletResponse.getNamespace() + "mbEditPageContainer" %>'
 >
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<h3><%= headerTitle %></h3>
@@ -126,6 +132,7 @@ if (portletTitleBasedNavigation) {
 	<aui:form action="<%= editMessageURL %>" enctype="multipart/form-data" method="post" name="fm" onSubmit="event.preventDefault();">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="portletResource" type="hidden" value="<%= portletDisplay.getPortletResource() %>" />
 		<aui:input name="messageId" type="hidden" value="<%= messageId %>" />
 		<aui:input name="mbCategoryId" type="hidden" value="<%= categoryId %>" />
 		<aui:input name="threadId" type="hidden" value="<%= threadId %>" />
@@ -162,7 +169,12 @@ if (portletTitleBasedNavigation) {
 		<liferay-ui:error exception="<%= FileNameException.class %>" message="please-enter-a-file-with-a-valid-file-name" />
 
 		<liferay-ui:error exception="<%= FileSizeException.class %>">
-			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(DLValidatorUtil.getMaxAllowableSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
+
+			<%
+			FileSizeException fileSizeException = (FileSizeException)errorException;
+			%>
+
+			<liferay-ui:message arguments="<%= LanguageUtil.formatStorageSize(fileSizeException.getMaxSize(), locale) %>" key="please-enter-a-file-with-a-valid-file-size-no-larger-than-x" translateArguments="<%= false %>" />
 		</liferay-ui:error>
 
 		<liferay-ui:error exception="<%= LockedThreadException.class %>" message="thread-is-locked" />
@@ -233,7 +245,7 @@ if (portletTitleBasedNavigation) {
 				<aui:fieldset collapsed="<%= true %>" collapsible="<%= true %>" label="attachments">
 					<liferay-util:include page="/message_boards/edit_message_attachment.jsp" servletContext="<%= application %>" />
 
-					<div class='<%= (existingAttachmentsFileEntries.size() == 0) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />fileAttachments">
+					<div class="<%= (existingAttachmentsFileEntries.size() == 0) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />fileAttachments">
 						<liferay-ui:search-container
 							emptyResultsMessage="this-message-does-not-have-file-attachments"
 							headerNames="file-name,size,action"
@@ -302,6 +314,7 @@ if (portletTitleBasedNavigation) {
 					<liferay-asset:asset-categories-selector
 						className="<%= MBMessage.class.getName() %>"
 						classPK="<%= (message != null) ? message.getMessageId() : 0 %>"
+						visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 					/>
 
 					<liferay-asset:asset-tags-selector
@@ -327,18 +340,18 @@ if (portletTitleBasedNavigation) {
 					boolean disabled = false;
 					boolean question = threadAsQuestionByDefault;
 
-					if (message != null) {
-						thread = MBThreadLocalServiceUtil.getThread(threadId);
+					String displayStyle = category.getDisplayStyle();
 
+					if (message != null) {
 						if (thread.isQuestion() || message.isAnswer()) {
 							question = true;
 
-							if ((category != null) && category.getDisplayStyle().equals("question")) {
+							if ((category != null) && Objects.equals(displayStyle, "question")) {
 								disabled = true;
 							}
 						}
 					}
-					else if ((category != null) && category.getDisplayStyle().equals("question")) {
+					else if ((category != null) && Objects.equals(displayStyle, "question")) {
 						disabled = true;
 						question = true;
 					}
@@ -370,15 +383,15 @@ if (portletTitleBasedNavigation) {
 
 							try {
 								String priorityName = priority[0];
-								double priorityValue = GetterUtil.getDouble(priority[2]);
 
-								if (priorityValue > 0) {
+								double priorityValue = GetterUtil.getDouble(priority[2]);
 						%>
 
+								<c:if test="<%= priorityValue > 0 %>">
 									<aui:option label="<%= HtmlUtil.escape(priorityName) %>" selected="<%= threadPriority == priorityValue %>" value="<%= priorityValue %>" />
+								</c:if>
 
 						<%
-								}
 							}
 							catch (Exception e) {
 							}
@@ -404,37 +417,20 @@ if (portletTitleBasedNavigation) {
 			<c:if test="<%= (message == null) && captchaConfiguration.messageBoardsEditMessageCaptchaEnabled() %>">
 				<liferay-captcha:captcha />
 			</c:if>
-		</aui:fieldset-group>
-
-		<%
-		boolean pending = false;
-
-		if (message != null) {
-			pending = message.isPending();
-		}
-		%>
-
-		<c:if test="<%= pending %>">
-			<div class="alert alert-info">
-				<liferay-ui:message key="there-is-a-publication-workflow-in-process" />
-			</div>
-		</c:if>
-
-		<aui:button-row>
 
 			<%
-			String saveButtonLabel = "save";
+			boolean pending = false;
 
-			if ((message == null) || message.isDraft() || message.isApproved()) {
-				saveButtonLabel = "save-as-draft";
-			}
-
-			String publishButtonLabel = "publish";
-
-			if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, MBMessage.class.getName())) {
-				publishButtonLabel = "submit-for-publication";
+			if (message != null) {
+				pending = message.isPending();
 			}
 			%>
+
+			<c:if test="<%= pending %>">
+				<div class="alert alert-info">
+					<liferay-ui:message key="there-is-a-publication-workflow-in-process" />
+				</div>
+			</c:if>
 
 			<c:if test="<%= (message != null) && message.isApproved() && WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(message.getCompanyId(), message.getGroupId(), MBMessage.class.getName()) %>">
 				<div class="alert alert-info">
@@ -442,46 +438,48 @@ if (portletTitleBasedNavigation) {
 				</div>
 			</c:if>
 
-			<aui:button disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
+			<div class="sheet-footer">
+				<div class="btn-group">
 
-			<c:if test="<%= themeDisplay.isSignedIn() %>">
-				<aui:button name="saveButton" value="<%= saveButtonLabel %>" />
-			</c:if>
+					<%
+					String saveButtonLabel = "save";
 
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
+					if ((message == null) || message.isDraft() || message.isApproved()) {
+						saveButtonLabel = "save-as-draft";
+					}
+
+					String publishButtonLabel = "publish";
+
+					if (WorkflowDefinitionLinkLocalServiceUtil.hasWorkflowDefinitionLink(themeDisplay.getCompanyId(), scopeGroupId, MBMessage.class.getName())) {
+						publishButtonLabel = "submit-for-publication";
+					}
+					%>
+
+					<div class="btn-group-item">
+						<aui:button disabled="<%= pending %>" name="publishButton" type="submit" value="<%= publishButtonLabel %>" />
+					</div>
+
+					<c:if test="<%= themeDisplay.isSignedIn() %>">
+						<div class="btn-group-item">
+							<aui:button name="saveButton" value="<%= saveButtonLabel %>" />
+						</div>
+					</c:if>
+
+					<div class="btn-group-item">
+						<aui:button href="<%= redirect %>" type="cancel" />
+					</div>
+				</div>
+			</div>
+		</aui:fieldset-group>
 	</aui:form>
 </clay:container-fluid>
 
-<aui:script require='<%= npmResolvedPackageName + "/message_boards/js/MBPortlet.es as MBPortlet" %>'>
-	new MBPortlet.default({
-		constants: {
-			ACTION_PUBLISH: '<%= WorkflowConstants.ACTION_PUBLISH %>',
-			ACTION_SAVE_DRAFT: '<%= WorkflowConstants.ACTION_SAVE_DRAFT %>',
-			CMD: '<%= Constants.CMD %>',
-		},
-		currentAction:
-			'<%= (message == null) ? Constants.ADD : Constants.UPDATE %>',
+<%
+MBEditMessageDisplayContext mbEditMessageDisplayContext = new MBEditMessageDisplayContext(liferayPortletRequest, liferayPortletResponse, message);
+%>
 
-		<c:if test="<%= message != null %>">
-			<portlet:resourceURL id="/message_boards/get_attachments" var="getAttachmentsURL">
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:resourceURL>
-
-			getAttachmentsURL: '<%= getAttachmentsURL %>',
-		</c:if>
-
-		namespace: '<portlet:namespace />',
-		rootNode: '#<portlet:namespace />mbEditPageContainer',
-
-		<c:if test="<%= message != null %>">
-			<portlet:renderURL var="viewTrashAttachmentsURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcRenderCommandName" value="/message_boards/view_deleted_message_attachments" />
-				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="messageId" value="<%= String.valueOf(message.getMessageId()) %>" />
-			</portlet:renderURL>
-
-			viewTrashAttachmentsURL: '<%= viewTrashAttachmentsURL %>',
-		</c:if>
-	});
-</aui:script>
+<liferay-frontend:component
+	context="<%= mbEditMessageDisplayContext.getMBPortletComponentContext() %>"
+	module="message_boards/js/MBPortlet.es"
+	servletContext="<%= application %>"
+/>

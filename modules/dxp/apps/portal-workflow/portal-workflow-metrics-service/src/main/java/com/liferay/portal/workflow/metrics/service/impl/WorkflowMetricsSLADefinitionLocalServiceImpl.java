@@ -107,10 +107,10 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 		workflowMetricsSLADefinition.setUserId(user.getUserId());
 		workflowMetricsSLADefinition.setUserName(user.getFullName());
 
-		Date now = new Date();
+		Date date = new Date();
 
-		workflowMetricsSLADefinition.setCreateDate(now);
-		workflowMetricsSLADefinition.setModifiedDate(now);
+		workflowMetricsSLADefinition.setCreateDate(date);
+		workflowMetricsSLADefinition.setModifiedDate(date);
 
 		workflowMetricsSLADefinition.setActive(true);
 		workflowMetricsSLADefinition.setCalendarKey(calendarKey);
@@ -156,10 +156,9 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 			workflowMetricsSLADefinitionPersistence.update(
 				workflowMetricsSLADefinition);
 
-		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-
 		addWorkflowMetricsSLADefinitionVersion(
-			user, workflowMetricsSLADefinition);
+			userLocalService.getUser(serviceContext.getGuestOrUserId()),
+			workflowMetricsSLADefinition);
 
 		long companyId = workflowMetricsSLADefinition.getCompanyId();
 		long processId = workflowMetricsSLADefinition.getProcessId();
@@ -185,10 +184,12 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 	@Override
 	public List<WorkflowMetricsSLADefinition> getWorkflowMetricsSLADefinitions(
 		long companyId, boolean active, long processId, int status, int start,
-		int end, OrderByComparator<WorkflowMetricsSLADefinition> obc) {
+		int end,
+		OrderByComparator<WorkflowMetricsSLADefinition> orderByComparator) {
 
 		return workflowMetricsSLADefinitionPersistence.findByC_A_P_S(
-			companyId, active, processId, status, start, end, obc);
+			companyId, active, processId, status, start, end,
+			orderByComparator);
 	}
 
 	@Override
@@ -206,6 +207,14 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 
 		return workflowMetricsSLADefinitionPersistence.findByC_S(
 			companyId, status);
+	}
+
+	@Override
+	public List<WorkflowMetricsSLADefinition> getWorkflowMetricsSLADefinitions(
+		long companyId, String name, long processId) {
+
+		return workflowMetricsSLADefinitionPersistence.findByC_A_N_P(
+			companyId, true, name, processId);
 	}
 
 	@Override
@@ -250,10 +259,10 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 				startNodeKeys, stopNodeKeys);
 		}
 
-		Date now = new Date();
+		Date date = new Date();
 
 		workflowMetricsSLADefinition.setModifiedDate(
-			serviceContext.getModifiedDate(now));
+			serviceContext.getModifiedDate(date));
 
 		workflowMetricsSLADefinition.setCalendarKey(calendarKey);
 		workflowMetricsSLADefinition.setDescription(description);
@@ -276,7 +285,7 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 		workflowMetricsSLADefinition.setStatusByUserName(user.getFullName());
 
 		workflowMetricsSLADefinition.setStatusDate(
-			serviceContext.getModifiedDate(now));
+			serviceContext.getModifiedDate(date));
 
 		workflowMetricsSLADefinition =
 			workflowMetricsSLADefinitionPersistence.update(
@@ -288,9 +297,16 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 		long companyId = workflowMetricsSLADefinition.getCompanyId();
 		long processId = workflowMetricsSLADefinition.getProcessId();
 
-		_workflowMetricsPortalExecutor.execute(
-			() -> _slaInstanceResultWorkflowMetricsIndexer.deleteDocuments(
-				companyId, processId, workflowMetricsSLADefinitionId));
+		if (status == WorkflowConstants.STATUS_DRAFT) {
+			_workflowMetricsPortalExecutor.execute(
+				() -> _slaInstanceResultWorkflowMetricsIndexer.blockDocuments(
+					companyId, processId, workflowMetricsSLADefinitionId));
+		}
+		else {
+			_workflowMetricsPortalExecutor.execute(
+				() -> _slaInstanceResultWorkflowMetricsIndexer.deleteDocuments(
+					companyId, processId, workflowMetricsSLADefinitionId));
+		}
 
 		_workflowMetricsPortalExecutor.execute(
 			() -> _slaTaskResultWorkflowMetricsIndexer.deleteDocuments(
@@ -320,10 +336,10 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 		workflowMetricsSLADefinitionVersion.setUserId(user.getUserId());
 		workflowMetricsSLADefinitionVersion.setUserName(user.getFullName());
 
-		Date now = new Date();
+		Date date = new Date();
 
-		workflowMetricsSLADefinitionVersion.setCreateDate(now);
-		workflowMetricsSLADefinitionVersion.setModifiedDate(now);
+		workflowMetricsSLADefinitionVersion.setCreateDate(date);
+		workflowMetricsSLADefinitionVersion.setModifiedDate(date);
 
 		workflowMetricsSLADefinitionVersion.setActive(
 			workflowMetricsSLADefinition.isActive());
@@ -351,9 +367,10 @@ public class WorkflowMetricsSLADefinitionLocalServiceImpl
 			workflowMetricsSLADefinition.getWorkflowMetricsSLADefinitionId());
 		workflowMetricsSLADefinitionVersion.setStatus(
 			workflowMetricsSLADefinition.getStatus());
+
 		workflowMetricsSLADefinition.setStatusByUserId(user.getUserId());
 		workflowMetricsSLADefinition.setStatusByUserName(user.getFullName());
-		workflowMetricsSLADefinition.setStatusDate(now);
+		workflowMetricsSLADefinition.setStatusDate(date);
 
 		return workflowMetricsSLADefinitionVersionPersistence.update(
 			workflowMetricsSLADefinitionVersion);

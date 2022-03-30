@@ -17,22 +17,39 @@
 <%@ include file="/init.jsp" %>
 
 <%
-long accountEntryId = ParamUtil.getLong(request, "accountEntryId");
+SelectAccountUsersDisplayContext selectAccountUsersDisplayContext = new SelectAccountUsersDisplayContext(liferayPortletRequest, liferayPortletResponse);
 
-SearchContainer<AccountUserDisplay> userSearchContainer = AssignableAccountUserDisplaySearchContainerFactory.create(accountEntryId, liferayPortletRequest, liferayPortletResponse);
+SearchContainer<AccountUserDisplay> userSearchContainer = AssignableAccountUserDisplaySearchContainerFactory.create(selectAccountUsersDisplayContext.getAccountEntryId(), liferayPortletRequest, liferayPortletResponse, selectAccountUsersDisplayContext.getRowChecker());
 
-SelectAccountUsersManagementToolbarDisplayContext selectAccountUsersManagementToolbarDisplayContext = new SelectAccountUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userSearchContainer);
+SelectAccountUsersManagementToolbarDisplayContext selectAccountUsersManagementToolbarDisplayContext = new SelectAccountUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userSearchContainer, selectAccountUsersDisplayContext);
 %>
 
+<portlet:renderURL var="addAccountEntryUserURL">
+	<portlet:param name="mvcRenderCommandName" value="/account_admin/add_account_user" />
+	<portlet:param name="redirect" value='<%= ParamUtil.getString(request, "redirect") %>' />
+	<portlet:param name="backURL" value='<%= ParamUtil.getString(request, "redirect") %>' />
+	<portlet:param name="accountEntryId" value="<%= String.valueOf(selectAccountUsersDisplayContext.getAccountEntryId()) %>" />
+</portlet:renderURL>
+
 <clay:management-toolbar
-	displayContext="<%= selectAccountUsersManagementToolbarDisplayContext %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"addAccountEntryUserURL", addAccountEntryUserURL.toString()
+		).put(
+			"openModalOnRedirect", selectAccountUsersDisplayContext.isOpenModalOnRedirect()
+		).build()
+	%>'
+	managementToolbarDisplayContext="<%= selectAccountUsersManagementToolbarDisplayContext %>"
+	propsTransformer="account_entries_admin/js/SelectAccountUsersManagementToolbarPropsTransformer"
+	showCreationMenu="<%= selectAccountUsersDisplayContext.isShowCreateButton() %>"
 />
 
-<clay:container-fluid>
+<clay:container-fluid
+	id='<%= liferayPortletResponse.getNamespace() + "selectAccountUser" %>'
+>
 	<c:if test='<%= !Objects.equals(selectAccountUsersManagementToolbarDisplayContext.getNavigation(), "all-users") %>'>
 		<clay:alert
-			message='<%= LanguageUtil.get(request, "showing-users-with-valid-domains-only") %>'
-			title='<%= LanguageUtil.get(request, "info") %>'
+			message="showing-users-with-valid-domains-only"
 		/>
 	</c:if>
 
@@ -58,9 +75,35 @@ SelectAccountUsersManagementToolbarDisplayContext selectAccountUsersManagementTo
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand-small table-cell-minw-150"
-				name="account-roles"
-				value="<%= accountUserDisplay.getAccountRoleNames(accountEntryId, locale) %>"
+				name="job-title"
+				property="jobTitle"
 			/>
+
+			<liferay-ui:search-container-column-text
+				cssClass="table-cell-expand-small table-cell-minw-150"
+				name="account-roles"
+				value="<%= accountUserDisplay.getAccountRoleNamesString(selectAccountUsersDisplayContext.getAccountEntryId(), locale) %>"
+			/>
+
+			<c:if test="<%= selectAccountUsersDisplayContext.isSingleSelect() %>">
+				<liferay-ui:search-container-column-text>
+					<aui:button
+						cssClass="choose-user selector-button"
+						data='<%=
+							HashMapBuilder.<String, Object>put(
+								"emailaddress", accountUserDisplay.getEmailAddress()
+							).put(
+								"entityid", accountUserDisplay.getUserId()
+							).put(
+								"entityname", accountUserDisplay.getName()
+							).put(
+								"jobtitle", accountUserDisplay.getJobTitle()
+							).build()
+						%>'
+						value="choose"
+					/>
+				</liferay-ui:search-container-column-text>
+			</c:if>
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
@@ -68,28 +111,3 @@ SelectAccountUsersManagementToolbarDisplayContext selectAccountUsersManagementTo
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get(
-		'<portlet:namespace />accountUsers'
-	);
-
-	searchContainer.on('rowToggled', function (event) {
-		var selectedItems = event.elements.allSelectedElements;
-
-		var result = {};
-
-		if (!selectedItems.isEmpty()) {
-			result = {
-				data: {
-					value: selectedItems.get('value').join(','),
-				},
-			};
-		}
-
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(renderResponse.getNamespace() + "assignAccountUsers") %>',
-			result
-		);
-	});
-</aui:script>

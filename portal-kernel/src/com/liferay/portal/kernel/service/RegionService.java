@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.security.access.control.AccessControlled;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.util.List;
 
@@ -48,11 +49,14 @@ public interface RegionService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link RegionServiceUtil} to access the region remote service. Add custom service methods to <code>com.liferay.portal.service.impl.RegionServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.RegionServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the region remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link RegionServiceUtil} if injection and service tracking are not available.
 	 */
 	public Region addRegion(
-			long countryId, String regionCode, String name, boolean active)
+			long countryId, boolean active, String name, double position,
+			String regionCode, ServiceContext serviceContext)
 		throws PortalException;
+
+	public void deleteRegion(long regionId) throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Region fetchRegion(long regionId);
@@ -86,5 +90,33 @@ public interface RegionService extends BaseService {
 	@AccessControlled(guestAccessEnabled = true)
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Region> getRegions(long countryId, boolean active);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Region> getRegions(
+		long countryId, boolean active, int start, int end,
+		OrderByComparator<Region> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Region> getRegions(
+		long countryId, int start, int end,
+		OrderByComparator<Region> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Region> getRegions(long companyId, String a2, boolean active)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getRegionsCount(long countryId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getRegionsCount(long countryId, boolean active);
+
+	public Region updateActive(long regionId, boolean active)
+		throws PortalException;
+
+	public Region updateRegion(
+			long regionId, boolean active, String name, double position,
+			String regionCode)
+		throws PortalException;
 
 }

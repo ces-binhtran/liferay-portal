@@ -25,6 +25,7 @@ import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.ObjectReviewedUtil;
 import com.liferay.headless.admin.workflow.internal.dto.v1_0.util.RoleUtil;
 import com.liferay.headless.admin.workflow.resource.v1_0.WorkflowTaskResource;
+import com.liferay.portal.kernel.exception.NoSuchModelException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.service.RoleLocalService;
@@ -36,11 +37,13 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowException;
 import com.liferay.portal.kernel.workflow.WorkflowInstance;
 import com.liferay.portal.kernel.workflow.WorkflowInstanceManager;
 import com.liferay.portal.kernel.workflow.WorkflowTaskAssignee;
 import com.liferay.portal.kernel.workflow.WorkflowTaskManager;
 import com.liferay.portal.kernel.workflow.comparator.WorkflowComparatorFactory;
+import com.liferay.portal.kernel.workflow.search.WorkflowModelSearchResult;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 
@@ -123,9 +126,20 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 
 	@Override
 	public WorkflowTask getWorkflowTask(Long workflowTaskId) throws Exception {
-		return _toWorkflowTask(
-			_workflowTaskManager.getWorkflowTask(
-				contextCompany.getCompanyId(), workflowTaskId));
+		try {
+			return _toWorkflowTask(
+				_workflowTaskManager.getWorkflowTask(
+					contextCompany.getCompanyId(), workflowTaskId));
+		}
+		catch (WorkflowException workflowException) {
+			Throwable throwable = workflowException.getCause();
+
+			if (throwable instanceof NoSuchModelException) {
+				throw (NoSuchModelException)throwable;
+			}
+
+			throw workflowException;
+		}
 	}
 
 	@Override
@@ -243,17 +257,28 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 			WorkflowTaskAssignToUser[] workflowTaskAssignToUsers)
 		throws Exception {
 
-		for (WorkflowTaskAssignToUser workflowTaskAssignToUser :
-				workflowTaskAssignToUsers) {
+		try {
+			for (WorkflowTaskAssignToUser workflowTaskAssignToUser :
+					workflowTaskAssignToUsers) {
 
-			_workflowTaskManager.assignWorkflowTaskToUser(
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				workflowTaskAssignToUser.getWorkflowTaskId(),
-				workflowTaskAssignToUser.getAssigneeId(),
-				workflowTaskAssignToUser.getComment(),
-				workflowTaskAssignToUser.getDueDate(),
-				_getWorkflowContext(
-					workflowTaskAssignToUser.getWorkflowTaskId()));
+				_workflowTaskManager.assignWorkflowTaskToUser(
+					contextCompany.getCompanyId(), contextUser.getUserId(),
+					workflowTaskAssignToUser.getWorkflowTaskId(),
+					workflowTaskAssignToUser.getAssigneeId(),
+					workflowTaskAssignToUser.getComment(),
+					workflowTaskAssignToUser.getDueDate(),
+					_getWorkflowContext(
+						workflowTaskAssignToUser.getWorkflowTaskId()));
+			}
+		}
+		catch (WorkflowException workflowException) {
+			Throwable throwable = workflowException.getCause();
+
+			if (throwable instanceof NoSuchModelException) {
+				throw (NoSuchModelException)throwable;
+			}
+
+			throw workflowException;
 		}
 	}
 
@@ -262,13 +287,24 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 			ChangeTransition[] changeTransitions)
 		throws Exception {
 
-		for (ChangeTransition changeTransition : changeTransitions) {
-			_workflowTaskManager.completeWorkflowTask(
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				changeTransition.getWorkflowTaskId(),
-				changeTransition.getTransitionName(),
-				changeTransition.getComment(),
-				_getWorkflowContext(changeTransition.getWorkflowTaskId()));
+		try {
+			for (ChangeTransition changeTransition : changeTransitions) {
+				_workflowTaskManager.completeWorkflowTask(
+					contextCompany.getCompanyId(), contextUser.getUserId(),
+					changeTransition.getWorkflowTaskId(),
+					changeTransition.getTransitionName(),
+					changeTransition.getComment(),
+					_getWorkflowContext(changeTransition.getWorkflowTaskId()));
+			}
+		}
+		catch (WorkflowException workflowException) {
+			Throwable throwable = workflowException.getCause();
+
+			if (throwable instanceof NoSuchModelException) {
+				throw (NoSuchModelException)throwable;
+			}
+
+			throw workflowException;
 		}
 	}
 
@@ -277,14 +313,25 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 			WorkflowTaskAssignToMe[] workflowTaskAssignToMes)
 		throws Exception {
 
-		for (WorkflowTaskAssignToMe workflowTaskAssignToMe :
-				workflowTaskAssignToMes) {
+		try {
+			for (WorkflowTaskAssignToMe workflowTaskAssignToMe :
+					workflowTaskAssignToMes) {
 
-			_workflowTaskManager.updateDueDate(
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				workflowTaskAssignToMe.getWorkflowTaskId(),
-				workflowTaskAssignToMe.getComment(),
-				workflowTaskAssignToMe.getDueDate());
+				_workflowTaskManager.updateDueDate(
+					contextCompany.getCompanyId(), contextUser.getUserId(),
+					workflowTaskAssignToMe.getWorkflowTaskId(),
+					workflowTaskAssignToMe.getComment(),
+					workflowTaskAssignToMe.getDueDate());
+			}
+		}
+		catch (WorkflowException workflowException) {
+			Throwable throwable = workflowException.getCause();
+
+			if (throwable instanceof NoSuchModelException) {
+				throw (NoSuchModelException)throwable;
+			}
+
+			throw workflowException;
 		}
 	}
 
@@ -360,9 +407,9 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 				com.liferay.portal.kernel.model.Role.class.getName();
 		}
 
-		return Page.of(
-			transform(
-				_workflowTaskManager.search(
+		WorkflowModelSearchResult
+			<com.liferay.portal.kernel.workflow.WorkflowTask> workflowTasks =
+				_workflowTaskManager.searchWorkflowTasks(
 					contextCompany.getCompanyId(), contextUser.getUserId(),
 					workflowTasksBulkSelection.getAssetTitle(),
 					workflowTasksBulkSelection.getWorkflowTaskNames(),
@@ -372,31 +419,18 @@ public class WorkflowTaskResourceImpl extends BaseWorkflowTaskResourceImpl {
 					workflowTasksBulkSelection.getAssigneeIds(),
 					workflowTasksBulkSelection.getDateDueStart(),
 					workflowTasksBulkSelection.getDateDueEnd(),
-					workflowTasksBulkSelection.getCompleted(),
+					workflowTasksBulkSelection.getCompleted(), false,
 					workflowTasksBulkSelection.getSearchByUserRoles(),
 					workflowTasksBulkSelection.getWorkflowDefinitionId(),
 					workflowTasksBulkSelection.getWorkflowInstanceIds(),
 					GetterUtil.getBoolean(
 						workflowTasksBulkSelection.getAndOperator(), true),
 					pagination.getStartPosition(), pagination.getEndPosition(),
-					_toOrderByComparator((Sort)ArrayUtil.getValue(sorts, 0))),
-				this::_toWorkflowTask),
-			pagination,
-			_workflowTaskManager.searchCount(
-				contextCompany.getCompanyId(), contextUser.getUserId(),
-				workflowTasksBulkSelection.getAssetTitle(),
-				workflowTasksBulkSelection.getWorkflowTaskNames(),
-				workflowTasksBulkSelection.getAssetTypes(),
-				workflowTasksBulkSelection.getAssetPrimaryKeys(),
-				assigneeClassName, workflowTasksBulkSelection.getAssigneeIds(),
-				workflowTasksBulkSelection.getDateDueStart(),
-				workflowTasksBulkSelection.getDateDueEnd(),
-				workflowTasksBulkSelection.getCompleted(),
-				workflowTasksBulkSelection.getSearchByUserRoles(),
-				workflowTasksBulkSelection.getWorkflowDefinitionId(),
-				workflowTasksBulkSelection.getWorkflowInstanceIds(),
-				GetterUtil.getBoolean(
-					workflowTasksBulkSelection.getAndOperator(), true)));
+					_toOrderByComparator((Sort)ArrayUtil.getValue(sorts, 0)));
+
+		return Page.of(
+			transform(workflowTasks.getWorkflowModels(), this::_toWorkflowTask),
+			pagination, workflowTasks.getLength());
 	}
 
 	@Override

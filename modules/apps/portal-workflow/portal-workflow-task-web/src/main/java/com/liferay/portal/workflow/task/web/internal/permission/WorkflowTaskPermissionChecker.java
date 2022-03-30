@@ -22,11 +22,16 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
+import com.liferay.portal.kernel.service.UserNotificationEventLocalServiceUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.MapUtil;
+import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandler;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
@@ -44,16 +49,61 @@ import java.util.Map;
  */
 public class WorkflowTaskPermissionChecker {
 
+	public void check(
+			long groupId, WorkflowTask workflowTask,
+			PermissionChecker permissionChecker)
+		throws PortalException {
+
+		if (!hasPermission(groupId, workflowTask, permissionChecker)) {
+			throw new PrincipalException.MustHavePermission(
+				permissionChecker, WorkflowTask.class.getName(),
+				workflowTask.getWorkflowTaskId(), ActionKeys.VIEW);
+		}
+	}
+
 	public boolean hasPermission(
 		long groupId, WorkflowTask workflowTask,
 		PermissionChecker permissionChecker) {
 
 		if (permissionChecker.isOmniadmin() ||
-			permissionChecker.isCompanyAdmin() ||
-			(workflowTask.isCompleted() &&
-			 hasAssetViewPermission(workflowTask, permissionChecker))) {
+			permissionChecker.isCompanyAdmin()) {
 
 			return true;
+		}
+
+		int userNotificationEventsCount =
+			UserNotificationEventLocalServiceUtil.
+				getUserNotificationEventsCount(
+					permissionChecker.getUserId(), PortletKeys.MY_WORKFLOW_TASK,
+					HashMapBuilder.put(
+						"workflowInstanceId",
+						String.valueOf(workflowTask.getWorkflowInstanceId())
+					).put(
+						"workflowTaskId",
+						String.valueOf(workflowTask.getWorkflowTaskId())
+					).build());
+
+		if (hasAssetViewPermission(workflowTask, permissionChecker) &&
+			((userNotificationEventsCount > 0) ||
+			 (workflowTask.isCompleted() &&
+			  (workflowTask.getAssigneeUserId() ==
+				  permissionChecker.getUserId())))) {
+
+			return true;
+		}
+
+		long[] roleIds = getRoleIds(groupId, permissionChecker);
+
+		for (WorkflowTaskAssignee workflowTaskAssignee :
+				workflowTask.getWorkflowTaskAssignees()) {
+
+			if (_isWorkflowTaskAssignableToRoles(
+					workflowTaskAssignee, roleIds) ||
+				_isWorkflowTaskAssignableToUser(
+					workflowTaskAssignee, permissionChecker.getUserId())) {
+
+				return true;
+			}
 		}
 
 		if (!hasAssetViewPermission(workflowTask, permissionChecker) &&
@@ -63,49 +113,7 @@ public class WorkflowTaskPermissionChecker {
 			return false;
 		}
 
-		long[] roleIds = getRoleIds(groupId, permissionChecker);
-
-		for (WorkflowTaskAssignee workflowTaskAssignee :
-				workflowTask.getWorkflowTaskAssignees()) {
-
-			if (isWorkflowTaskAssignableToRoles(
-					workflowTaskAssignee, roleIds) ||
-				isWorkflowTaskAssignableToUser(
-					workflowTaskAssignee, permissionChecker.getUserId())) {
-
-				return true;
-			}
-		}
-
 		return false;
-	}
-
-	protected List<Group> getAncestorGroups(Group group)
-		throws PortalException {
-
-		List<Group> groups = new ArrayList<>();
-
-		for (Group ancestorGroup : group.getAncestors()) {
-			groups.add(ancestorGroup);
-		}
-
-		return groups;
-	}
-
-	protected List<Group> getAncestorOrganizationGroups(Group group)
-		throws PortalException {
-
-		List<Group> groups = new ArrayList<>();
-
-		Organization organization =
-			OrganizationLocalServiceUtil.getOrganization(
-				group.getOrganizationId());
-
-		for (Organization ancestorOrganization : organization.getAncestors()) {
-			groups.add(ancestorOrganization.getGroup());
-		}
-
-		return groups;
 	}
 
 	protected long[] getRoleIds(
@@ -121,11 +129,11 @@ public class WorkflowTaskPermissionChecker {
 				Group group = GroupLocalServiceUtil.getGroup(groupId);
 
 				if (group.isOrganization()) {
-					groups.addAll(getAncestorOrganizationGroups(group));
+					groups.addAll(_getAncestorOrganizationGroups(group));
 				}
 
 				if (group.isSite()) {
-					groups.addAll(getAncestorGroups(group));
+					groups.addAll(_getAncestorGroups(group));
 				}
 			}
 
@@ -137,7 +145,7 @@ public class WorkflowTaskPermissionChecker {
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return roleIds;
@@ -166,16 +174,46 @@ public class WorkflowTaskPermissionChecker {
 			AssetRenderer<?> assetRenderer = workflowHandler.getAssetRenderer(
 				classPK);
 
+			if (assetRenderer == null) {
+				return false;
+			}
+
 			return assetRenderer.hasViewPermission(permissionChecker);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return false;
 	}
 
-	protected boolean isWorkflowTaskAssignableToRoles(
+	private List<Group> _getAncestorGroups(Group group) throws PortalException {
+		List<Group> groups = new ArrayList<>();
+
+		for (Group ancestorGroup : group.getAncestors()) {
+			groups.add(ancestorGroup);
+		}
+
+		return groups;
+	}
+
+	private List<Group> _getAncestorOrganizationGroups(Group group)
+		throws PortalException {
+
+		List<Group> groups = new ArrayList<>();
+
+		Organization organization =
+			OrganizationLocalServiceUtil.getOrganization(
+				group.getOrganizationId());
+
+		for (Organization ancestorOrganization : organization.getAncestors()) {
+			groups.add(ancestorOrganization.getGroup());
+		}
+
+		return groups;
+	}
+
+	private boolean _isWorkflowTaskAssignableToRoles(
 		WorkflowTaskAssignee workflowTaskAssignee, long[] roleIds) {
 
 		String assigneeClassName = workflowTaskAssignee.getAssigneeClassName();
@@ -193,7 +231,7 @@ public class WorkflowTaskPermissionChecker {
 		return false;
 	}
 
-	protected boolean isWorkflowTaskAssignableToUser(
+	private boolean _isWorkflowTaskAssignableToUser(
 		WorkflowTaskAssignee workflowTaskAssignee, long userId) {
 
 		String assigneeClassName = workflowTaskAssignee.getAssigneeClassName();

@@ -15,6 +15,7 @@
 package com.liferay.portlet;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -53,16 +54,6 @@ import javax.servlet.http.HttpServletResponse;
  * @author Raymond Augé
  */
 public class SecurityPortletContainerWrapper implements PortletContainer {
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static PortletContainer createSecurityPortletContainerWrapper(
-		PortletContainer portletContainer) {
-
-		return new SecurityPortletContainerWrapper(portletContainer);
-	}
 
 	public SecurityPortletContainerWrapper(PortletContainer portletContainer) {
 		_portletContainer = portletContainer;
@@ -148,7 +139,7 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(principalException, principalException);
+				_log.debug(principalException);
 			}
 
 			processRenderException(
@@ -179,7 +170,7 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(principalException, principalException);
+				_log.debug(principalException);
 			}
 
 			processRenderException(
@@ -303,13 +294,9 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 			return String.valueOf(httpServletRequest.getRequestURI());
 		}
 
-		String portalURL = PortalUtil.getPortalURL(httpServletRequest);
-
-		return portalURL.concat(
-			lastPath.getContextPath()
-		).concat(
-			lastPath.getPath()
-		);
+		return StringBundler.concat(
+			PortalUtil.getPortalURL(httpServletRequest),
+			lastPath.getContextPath(), lastPath.getPath());
 	}
 
 	protected HttpServletRequest getOwnerLayoutRequestWrapper(
@@ -324,10 +311,6 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 
 		Layout ownerLayout = null;
 		LayoutTypePortlet ownerLayoutTypePortlet = null;
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
 
 		Layout requestLayout = (Layout)httpServletRequest.getAttribute(
 			WebKeys.LAYOUT);
@@ -348,6 +331,10 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 		if (ownerLayout == null) {
 			return httpServletRequest;
 		}
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		Layout currentLayout = themeDisplay.getLayout();
 
@@ -405,10 +392,13 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 		PrincipalException principalException) {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug(principalException, principalException);
+			_log.debug(principalException);
 		}
 
-		if (_log.isWarnEnabled()) {
+		if (_log.isWarnEnabled() &&
+			!(principalException instanceof
+				PrincipalException.MustHaveSessionCSRFToken)) {
+
 			String url = getOriginalURL(httpServletRequest);
 
 			_log.warn(
@@ -459,7 +449,7 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 		PrincipalException principalException) {
 
 		if (_log.isDebugEnabled()) {
-			_log.debug(principalException, principalException);
+			_log.debug(principalException);
 		}
 
 		httpServletResponse.setHeader(
@@ -467,6 +457,12 @@ public class SecurityPortletContainerWrapper implements PortletContainer {
 			HttpHeaders.CACHE_CONTROL_NO_CACHE_VALUE);
 
 		httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+
+		if (principalException instanceof
+				PrincipalException.MustHaveSessionCSRFToken) {
+
+			return;
+		}
 
 		if (_log.isWarnEnabled()) {
 			String url = getOriginalURL(httpServletRequest);

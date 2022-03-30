@@ -269,13 +269,12 @@ public class LayoutTypePortletImpl
 
 	@Override
 	public List<Portlet> getAllPortlets() {
-		List<Portlet> explicitlyAddedPortlets = getExplicitlyAddedPortlets();
-
 		List<Portlet> staticPortlets = getStaticPortlets(
 			PropsKeys.LAYOUT_STATIC_PORTLETS_ALL);
 
 		return addStaticPortlets(
-			explicitlyAddedPortlets, staticPortlets, getEmbeddedPortlets());
+			getExplicitlyAddedPortlets(), staticPortlets,
+			getEmbeddedPortlets());
 	}
 
 	@Override
@@ -604,11 +603,9 @@ public class LayoutTypePortletImpl
 		List<String> columns = getColumns();
 
 		for (String columnId : columns) {
-			if (hasNonstaticPortletId(columnId, portletId)) {
-				return true;
-			}
+			if (hasNonstaticPortletId(columnId, portletId) ||
+				hasStaticPortletId(columnId, portletId)) {
 
-			if (hasStaticPortletId(columnId, portletId)) {
 				return true;
 			}
 		}
@@ -827,7 +824,7 @@ public class LayoutTypePortletImpl
 			return propertiesModifiedDate.after(preferencesModifiedDate);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;
@@ -1023,7 +1020,7 @@ public class LayoutTypePortletImpl
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return;
 		}
@@ -1087,7 +1084,7 @@ public class LayoutTypePortletImpl
 				onRemoveFromLayout(new String[] {portletId});
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -1174,7 +1171,7 @@ public class LayoutTypePortletImpl
 			onRemoveFromLayout(customPortletIds.toArray(new String[0]));
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		_portalPreferences.resetValues(CustomizedPages.namespacePlid(plid));
@@ -1353,7 +1350,7 @@ public class LayoutTypePortletImpl
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		if (portlet.isSystem()) {
@@ -1559,6 +1556,9 @@ public class LayoutTypePortletImpl
 				portletPreferencesIds.getPortletId(), sourcePortletPreferences);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 	}
 
@@ -1855,7 +1855,7 @@ public class LayoutTypePortletImpl
 			return layoutSet.getThemeId();
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return null;
@@ -1908,7 +1908,7 @@ public class LayoutTypePortletImpl
 				}
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 
 			String newPortletId = null;
@@ -1923,7 +1923,7 @@ public class LayoutTypePortletImpl
 					portlet.isPreferencesUniquePerLayout();
 			}
 			catch (SystemException systemException) {
-				_log.error(systemException, systemException);
+				_log.error(systemException);
 			}
 
 			if (PortletIdCodec.hasInstanceId(portletId) ||
@@ -2021,7 +2021,7 @@ public class LayoutTypePortletImpl
 			return group.isLayoutSetPrototype();
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;
@@ -2066,7 +2066,7 @@ public class LayoutTypePortletImpl
 				getPlid());
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 	}
 

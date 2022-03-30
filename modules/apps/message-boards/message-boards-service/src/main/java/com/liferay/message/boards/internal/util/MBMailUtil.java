@@ -34,8 +34,6 @@ import com.liferay.portal.util.PropsValues;
 
 import java.io.InputStream;
 
-import java.util.Map;
-
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.Part;
@@ -89,14 +87,12 @@ public class MBMailUtil {
 				}
 			}
 			else if (partContent instanceof String) {
-				Map<String, Object> options =
-					HashMapBuilder.<String, Object>put(
-						"emailPartToMBMessageBody", Boolean.TRUE
-					).build();
-
 				String messageBody = SanitizerUtil.sanitize(
 					0, 0, 0, MBMessage.class.getName(), 0, contentType,
-					Sanitizer.MODE_ALL, (String)partContent, options);
+					Sanitizer.MODE_ALL, (String)partContent,
+					HashMapBuilder.<String, Object>put(
+						"emailPartToMBMessageBody", Boolean.TRUE
+					).build());
 
 				if (contentType.startsWith(ContentTypes.TEXT_HTML)) {
 					mbMailMessage.setHtmlBody(messageBody);
@@ -198,18 +194,10 @@ public class MBMailUtil {
 			return defaultMailingListAddress;
 		}
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append(MESSAGE_POP_PORTLET_PREFIX);
-		sb.append(categoryId);
-		sb.append(StringPool.PERIOD);
-		sb.append(messageId);
-		sb.append(StringPool.AT);
-		sb.append(PropsValues.POP_SERVER_SUBDOMAIN);
-		sb.append(StringPool.PERIOD);
-		sb.append(mx);
-
-		return sb.toString();
+		return StringBundler.concat(
+			MESSAGE_POP_PORTLET_PREFIX, categoryId, StringPool.PERIOD,
+			messageId, StringPool.AT, PropsValues.POP_SERVER_SUBDOMAIN,
+			StringPool.PERIOD, mx);
 	}
 
 	public static String getSubjectForEmail(MBMessage message)

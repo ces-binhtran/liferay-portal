@@ -57,7 +57,7 @@ public class TaskSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (task.getAssetTitle() != null) {
 			if (sb.length() > 1) {
@@ -314,7 +314,7 @@ public class TaskSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (task.getAssetTitle() == null) {
 			map.put("assetTitle", null);
@@ -592,10 +592,6 @@ public class TaskSerDes {
 					task.setProcessVersion((String)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -624,7 +620,7 @@ public class TaskSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -660,7 +656,7 @@ public class TaskSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

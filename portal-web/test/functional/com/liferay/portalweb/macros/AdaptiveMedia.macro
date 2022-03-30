@@ -18,12 +18,12 @@ definition {
 		AssertVisible(locator1 = "AdaptiveMediaTable#PROGRESS");
 
 		AssertElementPresent(locator1 = "AdaptiveMediaTable#PROGRESS_SUCCESS");
-
-		Alert.viewSuccessMessage();
 	}
 
 	macro addImageResolution {
-		LexiconEntry.gotoAdd();
+		if (IsTextNotEqual(locator1 = "ControlMenu#HEADING", value1 = "New Image Resolution")) {
+			LexiconEntry.gotoAdd();
+		}
 
 		PortletEntry.inputName(name = "${imageName}");
 
@@ -31,24 +31,28 @@ definition {
 			PortletEntry.inputDescription(description = "${description}");
 		}
 
-		Type(
-			locator1 = "TextInput#MAX_WIDTH",
-			value1 = "${maxWidth}");
-
-		Type(
-			locator1 = "TextInput#MAX_HEIGHT",
-			value1 = "${maxHeight}");
-
-		if (isSet(addHighDensityDisplay)) {
-			Check(locator1 = "Checkbox#ADD_HIGH_DENSITY_DISPLAY");
+		if (isSet(maxWidth)) {
+			Type(
+				locator1 = "TextInput#MAX_WIDTH",
+				value1 = "${maxWidth}");
 		}
 
-		if (isSet(customID)) {
-			Click(locator1 = "Radio#CUSTOM_URL");
+		if (isSet(maxHeight)) {
+			Type(
+				locator1 = "TextInput#MAX_HEIGHT",
+				value1 = "${maxHeight}");
+		}
+
+		if (isSet(addHighDensityDisplay)) {
+			Check.checkNotVisible(locator1 = "Checkbox#ADD_HIGH_DENSITY_DISPLAY");
+		}
+
+		if (isSet(customId)) {
+			Click.clickAtNotVisible(locator1 = "Radio#CUSTOM_URL");
 
 			Type(
 				locator1 = "TextInput#IMAGE_ID",
-				value1 = "${customID}");
+				value1 = "${customId}");
 		}
 
 		AssertClick(
@@ -56,14 +60,16 @@ definition {
 			value1 = "Save");
 
 		if (isSet(duplicate)) {
-			Alert.viewErrorMessage(errorMessage = "A configuration with this ID already exists. Please enter a unique ID.");
+			Alert.viewErrorMessage(errorMessage = "A configuration with this ID already exists. Enter a unique ID.");
 		}
 		else if (isSet(zero)) {
-			Alert.viewErrorMessage(errorMessage = "Please enter a max width or max height value larger than 0.");
+			AssertTextEquals(
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
+				value1 = "Please enter a max width or max height value larger than 0.");
 		}
 		else if (isSet(noDimensions)) {
 			AssertTextEquals(
-				locator1 = "Message#REQUIRED_INFO",
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 				value1 = "At least one value is required.");
 		}
 		else {
@@ -90,8 +96,8 @@ definition {
 
 		AssertElementNotPresent(locator1 = "Message#SUCCESS");
 
-		AssertTextEquals(
-			locator1 = "Message#REQUIRED_INFO",
+		AssertTextEquals.assertPartialText(
+			locator1 = "TextInput#REQUIRED_ALERT",
 			value1 = "At least one value is required.");
 	}
 
@@ -132,7 +138,7 @@ definition {
 
 		MenuItem.click(menuItem = "Edit");
 
-		if (!(contains("${imageNameEdit}", "{imageNameEdit}"))) {
+		if (isSet(imageNameEdit)) {
 			PortletEntry.inputName(name = "${imageNameEdit}");
 		}
 
@@ -145,29 +151,33 @@ definition {
 
 			AssertNotEditable(locator1 = "TextInput#MAX_WIDTH");
 
-			AssertNotEditable(locator1 = "Radio#AUTOMATIC_URL");
+			AssertElementPresent(locator1 = "Radio#AUTOMATIC_URL_DISABLED");
 
-			AssertNotEditable(locator1 = "Radio#CUSTOM_URL");
+			AssertElementPresent(locator1 = "Radio#CUSTOM_URL_DISABLED");
 		}
 		else {
-			if (!(contains("${maxHeightEdit}", "{maxHeightEdit}"))) {
-				Type(
+			if (isSet(maxHeightEdit)) {
+				TripleClick(locator1 = "TextInput#MAX_HEIGHT");
+
+				Type.sendKeys(
 					locator1 = "TextInput#MAX_HEIGHT",
 					value1 = "${maxHeightEdit}");
 			}
 
-			if (!(contains("${maxWidthEdit}", "{maxWidthEdit}"))) {
-				Type(
+			if (isSet(maxWidthEdit)) {
+				TripleClick(locator1 = "TextInput#MAX_WIDTH");
+
+				Type.sendKeys(
 					locator1 = "TextInput#MAX_WIDTH",
 					value1 = "${maxWidthEdit}");
 			}
 
-			if (!(contains("${imageIDEdit}", "{imageIDEdit}"))) {
-				Click(locator1 = "Radio#CUSTOM_URL");
+			if (isSet(imageIdEdit)) {
+				Click.clickAtNotVisible(locator1 = "Radio#CUSTOM_URL");
 
 				Type(
 					locator1 = "TextInput#IMAGE_ID",
-					value1 = "${imageIDEdit}");
+					value1 = "${imageIdEdit}");
 			}
 		}
 
@@ -177,8 +187,13 @@ definition {
 
 		if (isSet(noDimensions)) {
 			AssertTextEquals(
-				locator1 = "Message#REQUIRED_INFO",
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
 				value1 = "At least one value is required.");
+		}
+		else if (isSet(zero)) {
+			AssertTextEquals(
+				locator1 = "Message#ERROR_FORM_FIELD_REQUIRED",
+				value1 = "Please enter a max width or max height value larger than 0.");
 		}
 		else {
 			AssertElementNotPresent(locator1 = "Message#ERROR");
@@ -205,6 +220,22 @@ definition {
 		AssertClick(
 			locator1 = "AdaptiveMediaTable#NAME",
 			value1 = "${imageName}");
+	}
+
+	macro openAdaptiveMediaAdmin {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_adaptive_media_web_portlet_AMPortlet&p_p_lifecycle=0&p_p_state=maximized&p_p_mode=view");
+	}
+
+	macro openToAddImageResolution {
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_adaptive_media_web_portlet_AMPortlet&_com_liferay_adaptive_media_web_portlet_AMPortlet_mvcRenderCommandName=%2Fadaptive_media%2Fedit_image_configuration_entry&_com_liferay_adaptive_media_web_portlet_AMPortlet_redirect=${baseURL}/group/control_panel/manage?p_p_id=com_liferay_adaptive_media_web_portlet_AMPortlet&_com_liferay_adaptive_media_web_portlet_AMPortlet_mvcRenderCommandName=%2Fadaptive_media%2Fedit_image_configuration_entry");
 	}
 
 	macro selectAdaptiveMediaImage {
@@ -252,7 +283,7 @@ definition {
 	macro viewImageVariantID {
 		AssertTextEquals(
 			locator1 = "TextInput#IMAGE_ID",
-			value1 = "${imageVariantID}");
+			value1 = "${imageVariantId}");
 	}
 
 	macro viewImageVariantURL {

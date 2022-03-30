@@ -14,6 +14,16 @@ create index IX_D8EDC33A on DDMDataProviderInstanceLink (dataProviderInstanceId,
 create unique index IX_EC5795A0 on DDMDataProviderInstanceLink (dataProviderInstanceId, structureId, ctCollectionId);
 create index IX_C304699F on DDMDataProviderInstanceLink (structureId, ctCollectionId);
 
+create index IX_5378BAAD on DDMField (companyId, fieldType[$COLUMN_LENGTH:255$], ctCollectionId);
+create index IX_582EBFF1 on DDMField (storageId, ctCollectionId);
+create unique index IX_1BB20E75 on DDMField (storageId, instanceId[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_5C0B8AE5 on DDMField (structureVersionId, ctCollectionId);
+
+create index IX_52703248 on DDMFieldAttribute (attributeName[$COLUMN_LENGTH:255$], smallAttributeValue[$COLUMN_LENGTH:255$], ctCollectionId);
+create unique index IX_22EEBF0C on DDMFieldAttribute (fieldId, attributeName[$COLUMN_LENGTH:255$], languageId[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_EC62446F on DDMFieldAttribute (storageId, ctCollectionId);
+create index IX_1E90C536 on DDMFieldAttribute (storageId, languageId[$COLUMN_LENGTH:75$], ctCollectionId);
+
 create index IX_78F4C5C on DDMFormInstance (groupId, ctCollectionId);
 create index IX_382197E on DDMFormInstance (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
 create index IX_72D3F266 on DDMFormInstance (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
@@ -32,6 +42,7 @@ create index IX_EA8F43DE on DDMFormInstanceRecordVersion (formInstanceId, formIn
 create index IX_46C6B23E on DDMFormInstanceRecordVersion (formInstanceRecordId, ctCollectionId);
 create index IX_EB3C8524 on DDMFormInstanceRecordVersion (formInstanceRecordId, status, ctCollectionId);
 create unique index IX_272BBC86 on DDMFormInstanceRecordVersion (formInstanceRecordId, version[$COLUMN_LENGTH:75$], ctCollectionId);
+create index IX_F4924F07 on DDMFormInstanceRecordVersion (userId, formInstanceId, ctCollectionId);
 create index IX_CABC7FCA on DDMFormInstanceRecordVersion (userId, formInstanceId, formInstanceVersion[$COLUMN_LENGTH:75$], status, ctCollectionId);
 
 create index IX_4F6D9746 on DDMFormInstanceReport (formInstanceId, ctCollectionId);
@@ -46,7 +57,6 @@ create index IX_13E12C80 on DDMStorageLink (structureVersionId, ctCollectionId);
 create index IX_981FDA0 on DDMStorageLink (uuid_[$COLUMN_LENGTH:75$], companyId, ctCollectionId);
 create index IX_9F994F84 on DDMStorageLink (uuid_[$COLUMN_LENGTH:75$], ctCollectionId);
 
-create index IX_79BF4CC0 on DDMStructure (classNameId, ctCollectionId);
 create index IX_988632F0 on DDMStructure (companyId, classNameId, ctCollectionId);
 create index IX_B44FCCCA on DDMStructure (ctCollectionId);
 create index IX_66F194AE on DDMStructure (groupId, classNameId, ctCollectionId);
@@ -71,7 +81,6 @@ create unique index IX_73BD3E8A on DDMStructureLayout (uuid_[$COLUMN_LENGTH:75$]
 
 create index IX_4C181B39 on DDMStructureLink (classNameId, classPK, ctCollectionId);
 create unique index IX_C8DE7401 on DDMStructureLink (classNameId, classPK, structureId, ctCollectionId);
-create index IX_7E340866 on DDMStructureLink (classNameId, ctCollectionId);
 create index IX_A2D51B64 on DDMStructureLink (ctCollectionId);
 create index IX_FD8251B6 on DDMStructureLink (structureId, ctCollectionId);
 
@@ -99,7 +108,6 @@ create index IX_17F6EC05 on DDMTemplate (uuid_[$COLUMN_LENGTH:75$], ctCollection
 create unique index IX_147A0D41 on DDMTemplate (uuid_[$COLUMN_LENGTH:75$], groupId, ctCollectionId);
 
 create unique index IX_79ED5CFA on DDMTemplateLink (classNameId, classPK, ctCollectionId);
-create index IX_8C969985 on DDMTemplateLink (classNameId, ctCollectionId);
 create index IX_E8A223E5 on DDMTemplateLink (ctCollectionId);
 create index IX_CFC177CE on DDMTemplateLink (templateId, ctCollectionId);
 

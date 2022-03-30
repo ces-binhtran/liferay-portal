@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.messaging.BaseMessageListener;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.MessageListener;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.ShardedModel;
 
 import java.util.List;
 
@@ -55,6 +56,7 @@ public class AddAnalyticsMessagesMessageListener extends BaseMessageListener {
 			return;
 		}
 
+		String action = (String)message.get("action");
 		EntityModelListener entityModelListener =
 			(EntityModelListener)message.get("entityModelListener");
 
@@ -62,8 +64,13 @@ public class AddAnalyticsMessagesMessageListener extends BaseMessageListener {
 			(List<? extends BaseModel>)message.getPayload();
 
 		for (BaseModel<?> baseModel : baseModels) {
+			ShardedModel shardedModel = (ShardedModel)baseModel;
+
 			entityModelListener.addAnalyticsMessage(
-				"update", entityModelListener.getAttributeNames(), baseModel);
+				action,
+				entityModelListener.getAttributeNames(
+					shardedModel.getCompanyId()),
+				baseModel);
 		}
 
 		if (_log.isInfoEnabled()) {

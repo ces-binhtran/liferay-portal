@@ -14,13 +14,16 @@
 
 package com.liferay.portal.kernel.test.portlet;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
+import com.liferay.portal.kernel.util.ArrayUtil;
 
 import java.io.IOException;
 import java.io.Writer;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 import javax.portlet.MutableRenderParameters;
@@ -69,12 +72,18 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public String getParameter(String name) {
-		return null;
+		String[] parameters = _parameters.get(name);
+
+		if (ArrayUtil.isEmpty(parameters)) {
+			return null;
+		}
+
+		return parameters[0];
 	}
 
 	@Override
 	public Map<String, String[]> getParameterMap() {
-		return null;
+		return _parameters;
 	}
 
 	@Override
@@ -89,7 +98,7 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public String getPortletId() {
-		return null;
+		return _portletId;
 	}
 
 	@Override
@@ -199,22 +208,27 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public void setParameter(String name, String value) {
+		_parameters.put(name, new String[] {value});
 	}
 
 	@Override
 	public void setParameter(String name, String... values) {
+		_parameters.put(name, values);
 	}
 
 	@Override
 	public void setParameter(String name, String value, boolean append) {
+		_parameters.put(name, new String[] {value});
 	}
 
 	@Override
 	public void setParameter(String name, String[] values, boolean append) {
+		_parameters.put(name, values);
 	}
 
 	@Override
 	public void setParameters(Map<String, String[]> parameters) {
+		_parameters = parameters;
 	}
 
 	@Override
@@ -223,6 +237,7 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 
 	@Override
 	public void setPortletId(String portletId) {
+		_portletId = portletId;
 	}
 
 	@Override
@@ -265,6 +280,37 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 	}
 
 	@Override
+	public String toString() {
+		Set<Map.Entry<String, String[]>> entries = _parameters.entrySet();
+
+		StringBundler sb = new StringBundler();
+
+		if (isSecure()) {
+			sb.append("https");
+		}
+		else {
+			sb.append("http");
+		}
+
+		sb.append("//localhost/test?");
+
+		for (Map.Entry<String, String[]> entry : entries) {
+			sb.append(_portletId);
+			sb.append("_");
+			sb.append(entry.getKey());
+			sb.append("=");
+			sb.append(entry.getValue()[0]);
+			sb.append(";");
+		}
+
+		if (!entries.isEmpty()) {
+			sb.setIndex(sb.index() - 1);
+		}
+
+		return sb.toString();
+	}
+
+	@Override
 	public void visitReservedParameters(BiConsumer<String, String> biConsumer) {
 	}
 
@@ -275,5 +321,8 @@ public class MockLiferayPortletURL implements LiferayPortletURL {
 	@Override
 	public void write(Writer writer, boolean escapeXML) throws IOException {
 	}
+
+	private Map<String, String[]> _parameters = new ConcurrentHashMap<>();
+	private String _portletId = "param";
 
 }

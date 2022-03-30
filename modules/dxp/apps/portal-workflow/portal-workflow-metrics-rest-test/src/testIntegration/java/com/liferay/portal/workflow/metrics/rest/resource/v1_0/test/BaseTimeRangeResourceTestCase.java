@@ -27,7 +27,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -49,7 +48,6 @@ import com.liferay.portal.workflow.metrics.rest.client.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.client.resource.v1_0.TimeRangeResource;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.TimeRangeSerDes;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
@@ -108,7 +106,9 @@ public abstract class BaseTimeRangeResourceTestCase {
 
 		TimeRangeResource.Builder builder = TimeRangeResource.builder();
 
-		timeRangeResource = builder.locale(
+		timeRangeResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -191,7 +191,30 @@ public abstract class BaseTimeRangeResourceTestCase {
 
 	@Test
 	public void testGetTimeRangesPage() throws Exception {
-		Assert.assertTrue(false);
+		Page<TimeRange> page = timeRangeResource.getTimeRangesPage();
+
+		long totalCount = page.getTotalCount();
+
+		TimeRange timeRange1 = testGetTimeRangesPage_addTimeRange(
+			randomTimeRange());
+
+		TimeRange timeRange2 = testGetTimeRangesPage_addTimeRange(
+			randomTimeRange());
+
+		page = timeRangeResource.getTimeRangesPage();
+
+		Assert.assertEquals(totalCount + 2, page.getTotalCount());
+
+		assertContains(timeRange1, (List<TimeRange>)page.getItems());
+		assertContains(timeRange2, (List<TimeRange>)page.getItems());
+		assertValid(page);
+	}
+
+	protected TimeRange testGetTimeRangesPage_addTimeRange(TimeRange timeRange)
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
 	}
 
 	@Test
@@ -209,7 +232,7 @@ public abstract class BaseTimeRangeResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/timeRanges");
 
-		Assert.assertEquals(0, timeRangesJSONObject.get("totalCount"));
+		long totalCount = timeRangesJSONObject.getLong("totalCount");
 
 		TimeRange timeRange1 = testGraphQLTimeRange_addTimeRange();
 		TimeRange timeRange2 = testGraphQLTimeRange_addTimeRange();
@@ -218,10 +241,16 @@ public abstract class BaseTimeRangeResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/timeRanges");
 
-		Assert.assertEquals(2, timeRangesJSONObject.get("totalCount"));
+		Assert.assertEquals(
+			totalCount + 2, timeRangesJSONObject.getLong("totalCount"));
 
-		assertEqualsIgnoringOrder(
-			Arrays.asList(timeRange1, timeRange2),
+		assertContains(
+			timeRange1,
+			Arrays.asList(
+				TimeRangeSerDes.toDTOs(
+					timeRangesJSONObject.getString("items"))));
+		assertContains(
+			timeRange2,
 			Arrays.asList(
 				TimeRangeSerDes.toDTOs(
 					timeRangesJSONObject.getString("items"))));
@@ -230,6 +259,23 @@ public abstract class BaseTimeRangeResourceTestCase {
 	protected TimeRange testGraphQLTimeRange_addTimeRange() throws Exception {
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		TimeRange timeRange, List<TimeRange> timeRanges) {
+
+		boolean contains = false;
+
+		for (TimeRange item : timeRanges) {
+			if (equals(timeRange, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			timeRanges + " does not contain " + timeRange, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -280,7 +326,7 @@ public abstract class BaseTimeRangeResourceTestCase {
 		}
 	}
 
-	protected void assertValid(TimeRange timeRange) {
+	protected void assertValid(TimeRange timeRange) throws Exception {
 		boolean valid = true;
 
 		if (timeRange.getId() == null) {
@@ -354,8 +400,8 @@ public abstract class BaseTimeRangeResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.portal.workflow.metrics.rest.dto.v1_0.TimeRange.
 						class)) {
 
@@ -371,12 +417,13 @@ public abstract class BaseTimeRangeResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -390,7 +437,7 @@ public abstract class BaseTimeRangeResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -490,9 +537,24 @@ public abstract class BaseTimeRangeResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -613,8 +675,9 @@ public abstract class BaseTimeRangeResourceTestCase {
 		}
 
 		if (entityFieldName.equals("id")) {
-			throw new IllegalArgumentException(
-				"Invalid entity field " + entityFieldName);
+			sb.append(String.valueOf(timeRange.getId()));
+
+			return sb.toString();
 		}
 
 		if (entityFieldName.equals("name")) {
@@ -732,12 +795,12 @@ public abstract class BaseTimeRangeResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -747,10 +810,10 @@ public abstract class BaseTimeRangeResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -764,8 +827,8 @@ public abstract class BaseTimeRangeResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseTimeRangeResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseTimeRangeResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

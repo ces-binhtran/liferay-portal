@@ -24,7 +24,7 @@ import {InstanceListContext} from '../../InstanceListPageProvider.es';
 import {ModalContext} from '../ModalProvider.es';
 import UpdateDueDateStep from './UpdateDueDateStep.es';
 
-const SingleUpdateDueDateModal = () => {
+export default function SingleUpdateDueDateModal() {
 	const [errorToast, setErrorToast] = useState(false);
 	const [retry, setRetry] = useState(0);
 	const [sendingPost, setSendingPost] = useState(false);
@@ -32,120 +32,109 @@ const SingleUpdateDueDateModal = () => {
 	const toaster = useToaster();
 
 	const {
+		closeModal,
 		setUpdateDueDate,
-		setVisibleModal,
 		updateDueDate,
 		visibleModal,
 	} = useContext(ModalContext);
-	const {selectedInstance, setSelectedItem, setSelectedItems} = useContext(
+	const {selectedInstance, setSelectedItems} = useContext(
 		InstanceListContext
 	);
 
 	const {comment, dueDate} = updateDueDate;
 
+	const onCloseModal = (refetch) => {
+		closeModal(refetch);
+		setSelectedItems([]);
+		setUpdateDueDate({
+			comment: undefined,
+			dueDate: undefined,
+		});
+	};
+
 	const {observer, onClose} = useModal({
-		onClose: () => {
-			setSelectedItem({});
-			setSelectedItems([]);
-			setVisibleModal('');
-			setUpdateDueDate({
-				comment: undefined,
-				dueDate: undefined,
-			});
-		},
+		onClose: onCloseModal,
 	});
 
 	const {data, fetchData} = useFetch({
 		admin: true,
 		params: {completed: false, page: 1, pageSize: 1},
-		url: `/workflow-instances/${selectedInstance.id}/workflow-tasks`,
+		url: `/workflow-instances/${selectedInstance?.id}/workflow-tasks`,
 	});
 
-	const {dateDue, id: taskId} = useMemo(
-		() => (data.items && data.items[0] ? data.items[0] : {}),
-		[data]
-	);
+	const {dateDue, id: taskId} = data?.items?.[0] || {};
 
 	const {postData} = usePost({
 		admin: true,
 		body: {comment, dueDate},
+		callback: () => {
+			toaster.success(
+				Liferay.Language.get(
+					'the-due-date-for-this-task-has-been-updated'
+				)
+			);
+
+			onCloseModal(true);
+			setSendingPost(false);
+			setErrorToast(false);
+		},
 		url: `/workflow-tasks/${taskId}/update-due-date`,
 	});
 
 	const handleDone = useCallback(() => {
-		if (dueDate) {
-			setSendingPost(true);
-			setErrorToast(false);
+		setSendingPost(true);
+		setErrorToast(false);
 
-			postData()
-				.then(() => {
-					onClose();
-					toaster.success(
-						Liferay.Language.get(
-							'the-due-date-for-this-task-has-been-updated'
-						)
-					);
-					setSendingPost(false);
-					setErrorToast(false);
-				})
-				.catch(() => {
-					setErrorToast(
-						`${Liferay.Language.get(
-							'your-request-has-failed'
-						)} ${Liferay.Language.get('select-done-to-retry')}`
-					);
-					setSendingPost(false);
-				});
-		}
+		postData().catch((dataError) => {
+			const errorMessage = `${Liferay.Language.get(
+				'your-request-has-failed'
+			)} ${Liferay.Language.get('select-done-to-retry')}`;
+
+			setErrorToast(dataError?.title ?? errorMessage);
+			setSendingPost(false);
+		});
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [postData]);
+	}, [toaster]);
 
 	const promises = useMemo(() => {
 		setErrorToast(false);
 
-		if (selectedInstance.id && visibleModal === 'updateDueDate') {
+		if (selectedInstance?.id && visibleModal === 'updateDueDate') {
 			return [
-				fetchData().catch((err) => {
+				fetchData().catch((error) => {
 					setErrorToast(
 						Liferay.Language.get('your-request-has-failed')
 					);
 
-					return Promise.reject(err);
+					return Promise.reject(error);
 				}),
 			];
 		}
 
 		return [];
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [fetchData, retry, visibleModal]);
 
-	const statesProps = useMemo(
-		() => ({
-			errorProps: {
-				actionButton: (
-					<RetryButton
-						onClick={() => setRetry((retry) => retry + 1)}
-					/>
-				),
-				className: 'mt-5 py-5',
-				hideAnimation: true,
-				message: Liferay.Language.get('unable-to-retrieve-data'),
-				messageClassName: 'small',
-			},
-			loadingProps: {className: 'mt-3 py-7'},
-		}),
-		[setRetry]
-	);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [retry, selectedInstance, visibleModal]);
+
+	const statesProps = {
+		errorProps: {
+			actionButton: (
+				<RetryButton onClick={() => setRetry((retry) => retry + 1)} />
+			),
+			className: 'mt-5 py-5',
+			hideAnimation: true,
+			message: Liferay.Language.get('unable-to-retrieve-data'),
+			messageClassName: 'small',
+		},
+		loadingProps: {className: 'mt-3 py-7'},
+	};
 
 	return (
 		<>
 			<PromisesResolver promises={promises}>
 				{visibleModal === 'updateDueDate' && (
-					<ClayModal
-						data-testid="updateDueDateModal"
-						observer={observer}
-						size="md"
-					>
+					<ClayModal observer={observer} size="md">
 						<ClayModal.Header>
 							{Liferay.Language.get('update-task-due-date')}
 						</ClayModal.Header>
@@ -153,7 +142,6 @@ const SingleUpdateDueDateModal = () => {
 						{errorToast && (
 							<ClayAlert
 								className="mb-0"
-								data-testid="alertError"
 								displayType="danger"
 								title={Liferay.Language.get('error')}
 							>
@@ -170,7 +158,6 @@ const SingleUpdateDueDateModal = () => {
 								<>
 									<ClayButton
 										className="mr-3"
-										data-testid="cancelButton"
 										disabled={sendingPost}
 										displayType="secondary"
 										onClick={onClose}
@@ -179,7 +166,6 @@ const SingleUpdateDueDateModal = () => {
 									</ClayButton>
 
 									<ClayButton
-										data-testid="doneButton"
 										disabled={sendingPost || !dueDate}
 										onClick={handleDone}
 									>
@@ -193,6 +179,4 @@ const SingleUpdateDueDateModal = () => {
 			</PromisesResolver>
 		</>
 	);
-};
-
-export default SingleUpdateDueDateModal;
+}

@@ -22,8 +22,8 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalFolderLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.trash.TrashHandler;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -100,7 +101,7 @@ public class JournalFolderStagedModelDataHandler
 			List<JournalFolder> ancestorFolders = folder.getAncestors();
 
 			StringBundler sb = new StringBundler(
-				4 * ancestorFolders.size() + 1);
+				(4 * ancestorFolders.size()) + 1);
 
 			Collections.reverse(ancestorFolders);
 
@@ -117,7 +118,7 @@ public class JournalFolderStagedModelDataHandler
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 
@@ -139,10 +140,29 @@ public class JournalFolderStagedModelDataHandler
 
 		Element folderElement = portletDataContext.getExportDataElement(folder);
 
-		exportFolderDDMStructures(portletDataContext, folder);
+		_exportFolderDDMStructures(portletDataContext, folder);
 
 		portletDataContext.addClassedModel(
 			folderElement, ExportImportPathUtil.getModelPath(folder), folder);
+	}
+
+	@Override
+	protected void doImportMissingReference(
+		PortletDataContext portletDataContext, String uuid, long groupId,
+		long folderId) {
+
+		JournalFolder existingJournalFolder = fetchMissingReference(
+			uuid, groupId);
+
+		if (existingJournalFolder == null) {
+			return;
+		}
+
+		Map<Long, Long> journalFolderIds =
+			(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+				Folder.class);
+
+		journalFolderIds.put(folderId, existingJournalFolder.getFolderId());
 	}
 
 	@Override
@@ -205,7 +225,7 @@ public class JournalFolderStagedModelDataHandler
 		importedFolder = _journalFolderLocalService.updateJournalFolder(
 			importedFolder);
 
-		importFolderDDMStructures(portletDataContext, folder, importedFolder);
+		_importFolderDDMStructures(portletDataContext, folder, importedFolder);
 
 		portletDataContext.importClassedModel(folder, importedFolder);
 	}
@@ -225,14 +245,27 @@ public class JournalFolderStagedModelDataHandler
 		TrashHandler trashHandler = existingFolder.getTrashHandler();
 
 		if (trashHandler.isRestorable(existingFolder.getFolderId())) {
-			long userId = portletDataContext.getUserId(folder.getUserUuid());
-
 			trashHandler.restoreTrashEntry(
-				userId, existingFolder.getFolderId());
+				portletDataContext.getUserId(folder.getUserUuid()),
+				existingFolder.getFolderId());
 		}
 	}
 
-	protected void exportFolderDDMStructures(
+	@Reference(unbind = "-")
+	protected void setDDMStructureLocalService(
+		DDMStructureLocalService ddmStructureLocalService) {
+
+		_ddmStructureLocalService = ddmStructureLocalService;
+	}
+
+	@Reference(unbind = "-")
+	protected void setJournalFolderLocalService(
+		JournalFolderLocalService journalFolderLocalService) {
+
+		_journalFolderLocalService = journalFolderLocalService;
+	}
+
+	private void _exportFolderDDMStructures(
 			PortletDataContext portletDataContext, JournalFolder folder)
 		throws Exception {
 
@@ -253,7 +286,7 @@ public class JournalFolderStagedModelDataHandler
 		}
 	}
 
-	protected void importFolderDDMStructures(
+	private void _importFolderDDMStructures(
 			PortletDataContext portletDataContext, JournalFolder folder,
 			JournalFolder importedFolder)
 		throws Exception {
@@ -297,20 +330,6 @@ public class JournalFolderStagedModelDataHandler
 				importedFolder,
 				ArrayUtil.toLongArray(currentFolderDDMStructureIds));
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureLocalService(
-		DDMStructureLocalService ddmStructureLocalService) {
-
-		_ddmStructureLocalService = ddmStructureLocalService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setJournalFolderLocalService(
-		JournalFolderLocalService journalFolderLocalService) {
-
-		_journalFolderLocalService = journalFolderLocalService;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

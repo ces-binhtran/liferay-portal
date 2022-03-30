@@ -25,7 +25,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
@@ -34,6 +33,8 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.test.util.ExpandoTableSearchFixture;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
@@ -72,11 +73,11 @@ public class UserGroupIndexerIndexedFieldsTest {
 
 	@Before
 	public void setUp() throws Exception {
-		setUpExpandoTableSearchFixture();
+		_setUpExpandoTableSearchFixture();
 
 		setUpUserSearchFixture();
 
-		setUpIndexedFieldsFixture();
+		_setUpIndexedFieldsFixture();
 
 		setUpUserGroupIndexerFixture();
 
@@ -107,14 +108,12 @@ public class UserGroupIndexerIndexedFieldsTest {
 			UserGroup.class, ExpandoColumnConstants.INDEX_TYPE_KEYWORD,
 			expandoColumnObs, expandoColumnName);
 
-		Map<String, Serializable> expandoValues =
+		UserGroup userGroup = userGroupFixture.createUserGroup(
 			HashMapBuilder.<String, Serializable>put(
 				expandoColumnName, "Software Developer"
 			).put(
 				expandoColumnObs, "Software Engineer"
-			).build();
-
-		UserGroup userGroup = userGroupFixture.createUserGroup(expandoValues);
+			).build());
 
 		String searchTerm = userGroup.getName();
 
@@ -128,21 +127,6 @@ public class UserGroupIndexerIndexedFieldsTest {
 
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
-
-	protected void setUpExpandoTableSearchFixture() {
-		expandoTableSearchFixture = new ExpandoTableSearchFixture(
-			classNameLocalService, expandoColumnLocalService,
-			expandoTableLocalService);
-
-		_expandoColumns = expandoTableSearchFixture.getExpandoColumns();
-
-		_expandoTables = expandoTableSearchFixture.getExpandoTables();
-	}
-
-	protected void setUpIndexedFieldsFixture() {
-		indexedFieldsFixture = new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
-	}
 
 	protected void setUpUserGroupFixture() {
 		userGroupFixture = new UserGroupFixture(_group, userGroupLocalService);
@@ -170,6 +154,9 @@ public class UserGroupIndexerIndexedFieldsTest {
 	protected ClassNameLocalService classNameLocalService;
 
 	@Inject
+	protected DocumentBuilderFactory documentBuilderFactory;
+
+	@Inject
 	protected ExpandoColumnLocalService expandoColumnLocalService;
 
 	@Inject
@@ -182,7 +169,7 @@ public class UserGroupIndexerIndexedFieldsTest {
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 
 	@Inject
-	protected SearchEngineHelper searchEngineHelper;
+	protected UIDFactory uidFactory;
 
 	protected UserGroupFixture userGroupFixture;
 	protected IndexerFixture<UserGroup> userGroupIndexerFixture;
@@ -215,8 +202,7 @@ public class UserGroupIndexerIndexedFieldsTest {
 			"name_sortable", StringUtil.lowerCase(userGroup.getName())
 		).build();
 
-		indexedFieldsFixture.populateUID(
-			UserGroup.class.getName(), userGroup.getUserGroupId(), map);
+		indexedFieldsFixture.populateUID(userGroup, map);
 
 		_populateDates(userGroup, map);
 		_populateRoles(userGroup, map);
@@ -254,6 +240,21 @@ public class UserGroupIndexerIndexedFieldsTest {
 		indexedFieldsFixture.populateRoleIdFields(
 			userGroup.getCompanyId(), UserGroup.class.getName(),
 			userGroup.getUserGroupId(), userGroup.getGroupId(), null, map);
+	}
+
+	private void _setUpExpandoTableSearchFixture() {
+		expandoTableSearchFixture = new ExpandoTableSearchFixture(
+			classNameLocalService, expandoColumnLocalService,
+			expandoTableLocalService);
+
+		_expandoColumns = expandoTableSearchFixture.getExpandoColumns();
+
+		_expandoTables = expandoTableSearchFixture.getExpandoTables();
+	}
+
+	private void _setUpIndexedFieldsFixture() {
+		indexedFieldsFixture = new IndexedFieldsFixture(
+			resourcePermissionLocalService, uidFactory, documentBuilderFactory);
 	}
 
 	@DeleteAfterTestRun

@@ -23,16 +23,16 @@ import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
-import com.liferay.layout.util.structure.FragmentLayoutStructureItem;
+import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
+import com.liferay.layout.test.util.LayoutTestUtil;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortletIdException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.LayoutSet;
 import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -40,7 +40,6 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionRequest;
 import com.liferay.portal.kernel.test.portlet.MockLiferayPortletActionResponse;
@@ -49,7 +48,6 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -58,6 +56,7 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.List;
 import java.util.Locale;
@@ -92,28 +91,24 @@ public class AddPortletMVCActionCommandTest {
 
 		_company = _companyLocalService.getCompany(_group.getCompanyId());
 
-		_layout = _addLayout();
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		_layoutStructure = new LayoutStructure();
+		LayoutPageTemplateStructure layoutPageTemplateStructure =
+			LayoutPageTemplateStructureLocalServiceUtil.
+				fetchLayoutPageTemplateStructure(
+					_group.getGroupId(), _layout.getPlid());
 
-		_layoutStructure.addRootLayoutStructureItem();
+		String data = layoutPageTemplateStructure.getData(
+			SegmentsExperienceConstants.ID_DEFAULT);
 
-		_layoutPageTemplateStructure =
-			_layoutPageTemplateStructureLocalService.
-				addLayoutPageTemplateStructure(
-					TestPropsValues.getUserId(), _group.getGroupId(),
-					_layout.getPlid(), _layoutStructure.toString(),
-					ServiceContextTestUtil.getServiceContext(
-						_group, TestPropsValues.getUserId()));
+		_layoutStructure = LayoutStructure.of(data);
 	}
 
 	@Test
 	public void testCanAddFragmentEntryLinkFromWidget() throws Exception {
 		List<FragmentEntryLink> originalFragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-				_group.getGroupId(),
-				_portal.getClassNameId(Layout.class.getName()),
-				_layout.getPlid());
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+				_group.getGroupId(), _layout.getPlid());
 
 		MockLiferayPortletActionRequest mockLiferayPortletActionRequest =
 			_getMockLiferayPortletActionRequest();
@@ -122,16 +117,14 @@ public class AddPortletMVCActionCommandTest {
 			"portletId", JournalPortletKeys.JOURNAL);
 
 		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
 
 		List<FragmentEntryLink> actualFragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-				_group.getGroupId(),
-				_portal.getClassNameId(Layout.class.getName()),
-				_layout.getPlid());
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+				_group.getGroupId(), _layout.getPlid());
 
 		Assert.assertEquals(
 			actualFragmentEntryLinks.toString(),
@@ -148,7 +141,7 @@ public class AddPortletMVCActionCommandTest {
 			"portletId", RandomTestUtil.randomString());
 
 		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -163,13 +156,13 @@ public class AddPortletMVCActionCommandTest {
 			"portletId", BlogsPortletKeys.BLOGS);
 
 		ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -186,7 +179,7 @@ public class AddPortletMVCActionCommandTest {
 			"portletId", JournalPortletKeys.JOURNAL);
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -233,7 +226,7 @@ public class AddPortletMVCActionCommandTest {
 		mockLiferayPortletActionRequest.addParameter("position", "0");
 
 		JSONObject jsonObject = ReflectionTestUtil.invoke(
-			_mvcActionCommand, "processAddPortlet",
+			_mvcActionCommand, "_processAddPortlet",
 			new Class<?>[] {ActionRequest.class, ActionResponse.class},
 			mockLiferayPortletActionRequest,
 			new MockLiferayPortletActionResponse());
@@ -256,18 +249,18 @@ public class AddPortletMVCActionCommandTest {
 
 		Assert.assertNotNull(layoutStructureItem);
 		Assert.assertTrue(
-			layoutStructureItem instanceof FragmentLayoutStructureItem);
+			layoutStructureItem instanceof FragmentStyledLayoutStructureItem);
 
-		FragmentLayoutStructureItem fragmentLayoutStructureItem =
-			(FragmentLayoutStructureItem)layoutStructureItem;
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 		Assert.assertEquals(
 			fragmentEntryLinkId,
-			fragmentLayoutStructureItem.getFragmentEntryLinkId());
+			fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 		Assert.assertEquals(
 			_layoutStructure.getMainItemId(),
-			fragmentLayoutStructureItem.getParentItemId());
+			fragmentStyledLayoutStructureItem.getParentItemId());
 
 		LayoutStructureItem rootLayoutStructureItem =
 			layoutStructure.getMainLayoutStructureItem();
@@ -276,20 +269,8 @@ public class AddPortletMVCActionCommandTest {
 			rootLayoutStructureItem.getChildrenItemIds();
 
 		Assert.assertEquals(
-			fragmentLayoutStructureItem.getItemId(), childrenItemIds.get(0));
-	}
-
-	private Layout _addLayout() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				TestPropsValues.getGroupId(), TestPropsValues.getUserId());
-
-		return _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-			StringPool.BLANK, serviceContext);
+			fragmentStyledLayoutStructureItem.getItemId(),
+			childrenItemIds.get(0));
 	}
 
 	private MockLiferayPortletActionRequest
@@ -356,16 +337,13 @@ public class AddPortletMVCActionCommandTest {
 	@Inject
 	private LayoutLocalService _layoutLocalService;
 
-	@DeleteAfterTestRun
-	private LayoutPageTemplateStructure _layoutPageTemplateStructure;
-
 	@Inject
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
 	private LayoutStructure _layoutStructure;
 
-	@Inject(filter = "mvc.command.name=/content_layout/add_portlet")
+	@Inject(filter = "mvc.command.name=/layout_content_page_editor/add_portlet")
 	private MVCActionCommand _mvcActionCommand;
 
 	@Inject

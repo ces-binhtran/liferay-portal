@@ -14,25 +14,35 @@
 
 package com.liferay.layout.seo.internal.canonical.url;
 
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.layout.seo.canonical.url.LayoutSEOCanonicalURLProvider;
 import com.liferay.layout.seo.internal.configuration.LayoutSEOCompanyConfiguration;
+import com.liferay.layout.seo.internal.util.FriendlyURLMapperProvider;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.servlet.http.HttpServletRequest;
+
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -81,11 +91,11 @@ public class LayoutSEOCanonicalURLProviderImpl
 			return alternateURLs;
 		}
 
-		Map<Locale, String> canonicalURLMap = new HashMap<>(alternateURLs);
-
-		canonicalURLMap.putAll(layoutSEOEntry.getCanonicalURLMap());
-
-		return canonicalURLMap;
+		return HashMapBuilder.create(
+			alternateURLs
+		).putAll(
+			layoutSEOEntry.getCanonicalURLMap()
+		).build();
 	}
 
 	@Override
@@ -102,6 +112,17 @@ public class LayoutSEOCanonicalURLProviderImpl
 			_portal.getAlternateURLs(canonicalURL, themeDisplay, layout));
 	}
 
+	@Activate
+	protected void activate() {
+		_friendlyURLMapperProvider = new FriendlyURLMapperProvider(
+			_assetDisplayPageFriendlyURLProvider, _classNameLocalService);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_friendlyURLMapperProvider = null;
+	}
+
 	private String _getDefaultCanonicalURL(
 			Layout layout, Locale locale, String canonicalURL,
 			Map<Locale, String> alternateURLs)
@@ -111,14 +132,31 @@ public class LayoutSEOCanonicalURLProviderImpl
 			_configurationProvider.getCompanyConfiguration(
 				LayoutSEOCompanyConfiguration.class, layout.getCompanyId());
 
+		FriendlyURLMapperProvider.FriendlyURLMapper friendlyURLMapper =
+			_friendlyURLMapperProvider.getFriendlyURLMapper(
+				_getHttpServletRequest());
+
 		if (Objects.equals(
 				layoutSEOCompanyConfiguration.canonicalURL(),
 				"default-language-url")) {
 
-			return canonicalURL;
+			return friendlyURLMapper.getMappedFriendlyURL(
+				canonicalURL, LocaleUtil.getDefault());
 		}
 
-		return alternateURLs.getOrDefault(locale, canonicalURL);
+		return friendlyURLMapper.getMappedFriendlyURL(
+			alternateURLs.get(locale), locale);
+	}
+
+	private HttpServletRequest _getHttpServletRequest() {
+		ServiceContext serviceContext =
+			ServiceContextThreadLocal.getServiceContext();
+
+		if (serviceContext != null) {
+			return serviceContext.getRequest();
+		}
+
+		return null;
 	}
 
 	private String _getLayoutCanonicalURL(Locale locale, Layout layout) {
@@ -137,7 +175,16 @@ public class LayoutSEOCanonicalURLProviderImpl
 	}
 
 	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
 	private ConfigurationProvider _configurationProvider;
+
+	private FriendlyURLMapperProvider _friendlyURLMapperProvider;
 
 	@Reference
 	private Http _http;

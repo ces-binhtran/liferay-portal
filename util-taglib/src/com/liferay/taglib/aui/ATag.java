@@ -27,7 +27,6 @@ import com.liferay.taglib.util.InlineUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletResponse;
 
@@ -54,19 +53,17 @@ public class ATag extends BaseATag {
 					(ThemeDisplay)httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				ResourceBundle resourceBundle =
-					TagResourceBundleUtil.getResourceBundle(pageContext);
-
 				jspWriter.write(StringPool.SPACE);
 				jspWriter.write("<svg class=\"lexicon-icon ");
 				jspWriter.write("lexicon-icon-shortcut\" focusable=\"false\" ");
-				jspWriter.write("role=\"img\"><use data-href=\"");
+				jspWriter.write("role=\"img\"><use href=\"");
 				jspWriter.write(themeDisplay.getPathThemeImages());
-				jspWriter.write("/lexicon/icons.svg#shortcut\" /><span ");
+				jspWriter.write("/clay/icons.svg#shortcut\" /><span ");
 				jspWriter.write("class=\"sr-only\">");
 
 				String opensNewWindowLabel = LanguageUtil.get(
-					resourceBundle, "opens-new-window");
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					"opens-new-window");
 
 				jspWriter.write(opensNewWindowLabel);
 
@@ -90,6 +87,7 @@ public class ATag extends BaseATag {
 	protected int processStartTag() throws Exception {
 		JspWriter jspWriter = pageContext.getOut();
 
+		String ariaLabel = getAriaLabel();
 		String ariaRole = getAriaRole();
 		String cssClass = getCssClass();
 		Map<String, Object> data = getData();
@@ -118,6 +116,12 @@ public class ATag extends BaseATag {
 		}
 		else {
 			jspWriter.write("<span ");
+		}
+
+		if (Validator.isNotNull(ariaLabel)) {
+			jspWriter.write("aria-label=\"");
+			jspWriter.write(ariaLabel);
+			jspWriter.write("\" ");
 		}
 
 		if (Validator.isNotNull(cssClass)) {
@@ -152,13 +156,13 @@ public class ATag extends BaseATag {
 		}
 
 		if (Validator.isNotNull(title)) {
-			ResourceBundle resourceBundle =
-				TagResourceBundleUtil.getResourceBundle(pageContext);
-
 			jspWriter.write("title=\"");
 
 			if (Validator.isNotNull(title)) {
-				jspWriter.write(LanguageUtil.get(resourceBundle, title));
+				jspWriter.write(
+					LanguageUtil.get(
+						TagResourceBundleUtil.getResourceBundle(pageContext),
+						title));
 			}
 
 			jspWriter.write("\" ");

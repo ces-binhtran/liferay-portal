@@ -18,11 +18,11 @@ AUI.add(
 		var Lang = A.Lang;
 
 		var CONTENT_TEMPLATE =
-			'<div class="lfr-fullscreen-source-editor-header row">' +
+			'<div class="cadmin lfr-fullscreen-source-editor-header row">' +
 			'<div class="col-6">' +
 			'<button class="btn btn-secondary btn-sm float-right lfr-portal-tooltip" data-title="{iconMoonTooltip}" id="switchTheme" type="button">' +
 			'<svg class="lexicon-icon lexicon-icon-moon" focusable="false" role="img">' +
-			'<use data-href="{pathThemeImages}/lexicon/icons.svg#moon" />' +
+			'<use href="{pathThemeImages}/clay/icons.svg#moon" />' +
 			'</svg>' +
 			'</button>' +
 			'</div>' +
@@ -30,17 +30,17 @@ AUI.add(
 			'<div class="btn-group" role="group">' +
 			'<button class="btn btn-secondary btn-sm" data-layout="vertical">' +
 			'<svg class="lexicon-icon lexicon-icon-columns" focusable="false" role="img">' +
-			'<use data-href="{pathThemeImages}/lexicon/icons.svg#columns" />' +
+			'<use href="{pathThemeImages}/clay/icons.svg#columns" />' +
 			'</svg>' +
 			'</button>' +
 			'<button class="btn btn-secondary btn-sm" data-layout="horizontal">' +
 			'<svg class="lexicon-icon lexicon-icon-cards" focusable="false" role="img">' +
-			'<use data-href="{pathThemeImages}/lexicon/icons.svg#cards" />' +
+			'<use href="{pathThemeImages}/clay/icons.svg#cards" />' +
 			'</svg>' +
 			'</button>' +
 			'<button class="btn btn-secondary btn-sm" data-layout="simple">' +
 			'<svg class="lexicon-icon lexicon-icon-expand" focusable="false" role="img">' +
-			'<use data-href="{pathThemeImages}/lexicon/icons.svg#expand" />' +
+			'<use href="{pathThemeImages}/clay/icons.svg#expand" />' +
 			'</svg>' +
 			'</button>' +
 			'</div>' +
@@ -135,9 +135,11 @@ AUI.add(
 				_onEditorChange(event) {
 					var instance = this;
 
-					instance._previewPanel.html(
-						instance._getHtml(event.newVal)
-					);
+					if (event.newVal || event.newVal === '') {
+						instance._previewPanel.html(
+							instance._getHtml(event.newVal)
+						);
+					}
 				},
 
 				_onLayoutChange(event) {

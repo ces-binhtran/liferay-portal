@@ -40,8 +40,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
-import java.util.Map;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,17 +63,15 @@ public class AMImageContentTransformerTest {
 	public void setUp() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "600"
-		).put(
-			"max-width", "800"
-		).build();
-
 		_amImageConfigurationEntry =
 			_amImageConfigurationHelper.addAMImageConfigurationEntry(
 				_group.getCompanyId(), StringUtil.randomString(),
 				StringUtil.randomString(), StringUtil.randomString(),
-				properties);
+				HashMapBuilder.put(
+					"max-height", "600"
+				).put(
+					"max-width", "800"
+				).build());
 	}
 
 	@After
@@ -116,11 +112,11 @@ public class AMImageContentTransformerTest {
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
 			FileUtil.getBytes(AMImageContentTransformerTest.class, "image.jpg"),
-			serviceContext);
+			null, null, serviceContext);
 	}
 
 	private AMImageConfigurationEntry _amImageConfigurationEntry;

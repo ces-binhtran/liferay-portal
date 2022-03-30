@@ -33,7 +33,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.async.PortletAsyncListenerFactory;
 import com.liferay.portal.kernel.portlet.async.PortletAsyncScopeManagerFactory;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -128,7 +128,7 @@ public class SpringBeanPortletExtension {
 			}
 		}
 		catch (ClassNotFoundException classNotFoundException) {
-			_log.error(classNotFoundException, classNotFoundException);
+			_log.error(classNotFoundException);
 		}
 	}
 
@@ -138,10 +138,10 @@ public class SpringBeanPortletExtension {
 		BundleContext bundleContext =
 			(BundleContext)servletContext.getAttribute("osgi-bundlecontext");
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			"servlet.context.name", servletContext.getServletContextName());
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"servlet.context.name", servletContext.getServletContextName()
+			).build();
 
 		_serviceRegistrations.add(
 			bundleContext.registerService(
@@ -215,14 +215,14 @@ public class SpringBeanPortletExtension {
 					catch (ReflectiveOperationException
 								reflectiveOperationException) {
 
-						Throwable cause =
+						Throwable throwable =
 							reflectiveOperationException.getCause();
 
-						if (cause instanceof PortletException) {
-							throw (PortletException)cause;
+						if (throwable instanceof PortletException) {
+							throw (PortletException)throwable;
 						}
 
-						throw new PortletException(cause);
+						throw new PortletException(throwable);
 					}
 				}
 
@@ -334,11 +334,22 @@ public class SpringBeanPortletExtension {
 			if (beanPortletMethodType == BeanPortletMethodType.ACTION) {
 				ActionRequest actionRequest = (ActionRequest)portletRequest;
 
-				ActionParameters actionParameters =
-					actionRequest.getActionParameters();
+				String actionName = null;
 
-				String actionName = actionParameters.getValue(
-					ActionRequest.ACTION_NAME);
+				PortletContext portletContext =
+					portletConfig.getPortletContext();
+
+				if (portletContext.getEffectiveMajorVersion() >= 3) {
+					ActionParameters actionParameters =
+						actionRequest.getActionParameters();
+
+					actionName = actionParameters.getValue(
+						ActionRequest.ACTION_NAME);
+				}
+				else {
+					actionName = actionRequest.getParameter(
+						ActionRequest.ACTION_NAME);
+				}
 
 				String beanMethodActionName = beanPortletMethod.getActionName();
 
@@ -458,13 +469,13 @@ public class SpringBeanPortletExtension {
 			}
 		}
 		catch (InvocationTargetException invocationTargetException) {
-			Throwable cause = invocationTargetException.getCause();
+			Throwable throwable = invocationTargetException.getCause();
 
-			if (cause instanceof PortletException) {
-				throw (PortletException)cause;
+			if (throwable instanceof PortletException) {
+				throw (PortletException)throwable;
 			}
 
-			throw new PortletException(cause);
+			throw new PortletException(throwable);
 		}
 		catch (PortletException portletException) {
 			throw portletException;

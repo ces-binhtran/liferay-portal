@@ -94,28 +94,26 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
 		Layout layout = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class.getName()),
-			layoutPageTemplateEntry.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		LayoutStructure layoutStructure = _getLayoutStructure(draftLayout);
 
 		LayoutStructureItem layoutStructureItem1 =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		LayoutStructureItem layoutStructureItem2 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		LayoutStructureItem layoutStructureItem3 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
@@ -159,7 +157,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
-					_group.getGroupId(), layout.getPlid(), true);
+					_group.getGroupId(), layout.getPlid());
 
 		return LayoutStructure.of(layoutPageTemplateStructure.getData(0));
 	}
@@ -182,7 +180,7 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/content_layout/publish_layout_page_template_entry"
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout_page_template_entry"
 	)
 	private MVCActionCommand _mvcActionCommand;
 

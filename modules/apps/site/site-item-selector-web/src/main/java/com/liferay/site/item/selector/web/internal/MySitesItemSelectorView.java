@@ -19,6 +19,9 @@ import com.liferay.item.selector.ItemSelectorView;
 import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -67,8 +70,24 @@ public class MySitesItemSelectorView
 
 	@Override
 	public String getTitle(Locale locale) {
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
 		return ResourceBundleUtil.getString(
-			_portal.getResourceBundle(locale), "my-sites");
+			_portal.getResourceBundle(locale),
+			permissionChecker.isCompanyAdmin() ? "all-sites" : "my-sites");
+	}
+
+	@Override
+	public boolean isVisible(
+		SiteItemSelectorCriterion siteItemSelectorCriterion,
+		ThemeDisplay themeDisplay) {
+
+		if (siteItemSelectorCriterion.isIncludeMySites()) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -78,20 +97,20 @@ public class MySitesItemSelectorView
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
-		_myGroupItemSelectorViewRender.renderHTML(
+		_myGroupItemSelectorViewRenderer.renderHTML(
 			servletRequest, servletResponse, siteItemSelectorCriterion,
 			portletURL, itemSelectedEventName, search);
 	}
 
 	@Activate
 	protected void activate() {
-		_myGroupItemSelectorViewRender = new MyGroupItemSelectorViewRenderer(
+		_myGroupItemSelectorViewRenderer = new MyGroupItemSelectorViewRenderer(
 			_groupSearchProvider, _groupURLProvider, _servletContext);
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_myGroupItemSelectorViewRender = null;
+		_myGroupItemSelectorViewRenderer = null;
 	}
 
 	private static final List<ItemSelectorReturnType>
@@ -107,7 +126,7 @@ public class MySitesItemSelectorView
 	@Reference
 	private GroupURLProvider _groupURLProvider;
 
-	private MyGroupItemSelectorViewRenderer _myGroupItemSelectorViewRender;
+	private MyGroupItemSelectorViewRenderer _myGroupItemSelectorViewRenderer;
 
 	@Reference
 	private Portal _portal;

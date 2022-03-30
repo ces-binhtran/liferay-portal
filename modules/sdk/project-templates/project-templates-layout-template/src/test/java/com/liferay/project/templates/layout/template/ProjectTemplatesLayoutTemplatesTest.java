@@ -48,7 +48,9 @@ public class ProjectTemplatesLayoutTemplatesTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.2"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.1-1"}
+			});
 	}
 
 	@BeforeClass
@@ -80,10 +82,11 @@ public class ProjectTemplatesLayoutTemplatesTest
 			temporaryFolder, "gradle", "gradleWS", _liferayVersion,
 			mavenExecutor);
 
-		File gradleWorkspaceWarsDir = new File(gradleWorkspaceDir, "wars");
+		File gradleWorkspaceModulesDir = new File(
+			gradleWorkspaceDir, "modules");
 
 		File gradleProjectDir = buildTemplateWithGradle(
-			gradleWorkspaceWarsDir, template, name, "--liferay-version",
+			gradleWorkspaceModulesDir, template, name, "--liferay-version",
 			_liferayVersion);
 
 		if (_liferayVersion.startsWith("7.0")) {
@@ -110,6 +113,12 @@ public class ProjectTemplatesLayoutTemplatesTest
 				"src/main/webapp/WEB-INF/liferay-layout-templates.xml",
 				"liferay-layout-templates_7_3_0.dtd");
 		}
+		else if (_liferayVersion.startsWith("7.4")) {
+			testContains(
+				gradleProjectDir,
+				"src/main/webapp/WEB-INF/liferay-layout-templates.xml",
+				"liferay-layout-templates_7_4_0.dtd");
+		}
 
 		testExists(gradleProjectDir, "src/main/webapp/foo.png");
 
@@ -132,10 +141,10 @@ public class ProjectTemplatesLayoutTemplatesTest
 			temporaryFolder, "maven", "mavenWS", _liferayVersion,
 			mavenExecutor);
 
-		File mavenWarsDir = new File(mavenWorkspaceDir, "wars");
+		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
 
 		File mavenProjectDir = buildTemplateWithMaven(
-			mavenWarsDir, mavenWarsDir, template, name, "com.test",
+			mavenModulesDir, mavenModulesDir, template, name, "com.test",
 			mavenExecutor, "-DliferayVersion=" + _liferayVersion);
 
 		createNewFiles(
@@ -148,7 +157,7 @@ public class ProjectTemplatesLayoutTemplatesTest
 			buildProjects(
 				_gradleDistribution, mavenExecutor, gradleWorkspaceDir,
 				mavenProjectDir, gradleOutputDir, mavenOutputDir,
-				":wars:" + name + GRADLE_TASK_PATH_BUILD);
+				":modules:" + name + GRADLE_TASK_PATH_BUILD);
 		}
 	}
 

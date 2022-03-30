@@ -32,13 +32,13 @@ import com.liferay.portal.kernel.service.ResourcePermissionLocalServiceUtil;
 import com.liferay.portal.kernel.service.RoleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -168,9 +168,7 @@ public class SocialActivityServiceTest {
 			}
 		}
 		finally {
-			User user = UserLocalServiceUtil.getUser(userId);
-
-			UserTestUtil.setUser(user);
+			UserTestUtil.setUser(UserLocalServiceUtil.getUser(userId));
 		}
 	}
 
@@ -182,10 +180,10 @@ public class SocialActivityServiceTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, fileName,
 			ContentTypes.TEXT_PLAIN, title, StringPool.BLANK, StringPool.BLANK,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 	}
 
 	protected void deleteGuestPermission(FileEntry fileEntry) throws Exception {

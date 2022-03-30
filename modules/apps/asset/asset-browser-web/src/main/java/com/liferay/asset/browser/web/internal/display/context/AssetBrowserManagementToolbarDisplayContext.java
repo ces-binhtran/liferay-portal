@@ -22,19 +22,30 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
+import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.HttpUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.portlet.PortletException;
 import javax.portlet.PortletURL;
@@ -52,7 +63,7 @@ public class AssetBrowserManagementToolbarDisplayContext
 			LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			AssetBrowserDisplayContext assetBrowserDisplayContext)
-		throws PortletException {
+		throws PortalException, PortletException {
 
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
@@ -68,11 +79,13 @@ public class AssetBrowserManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).setParameter(
+			"scope", StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -97,7 +110,38 @@ public class AssetBrowserManagementToolbarDisplayContext
 				dropdownItem.setHref(addButtonURL);
 				dropdownItem.setLabel(
 					LanguageUtil.format(
-						request, "add-x", _getAddButtonLabel(), false));
+						httpServletRequest, "add-x", _getAddButtonLabel(),
+						false));
+			}
+		).build();
+	}
+
+	@Override
+	public List<LabelItem> getFilterLabelItems() {
+		String scope = ParamUtil.getString(httpServletRequest, "scope");
+
+		if (Validator.isNull(scope) || scope.equals("current")) {
+			return null;
+		}
+
+		return LabelItemListBuilder.add(
+			labelItem -> {
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							getPortletURL(), liferayPortletResponse)
+					).setParameter(
+						"scope", (String)null
+					).buildString());
+
+				labelItem.setCloseable(true);
+
+				String label = String.format(
+					"%s: %s", LanguageUtil.get(httpServletRequest, "scope"),
+					_getScopeLabel(scope));
+
+				labelItem.setLabel(label);
 			}
 		).build();
 	}
@@ -107,17 +151,33 @@ public class AssetBrowserManagementToolbarDisplayContext
 		long[] groupIds = _assetBrowserDisplayContext.getSelectedGroupIds();
 
 		if (groupIds.length <= 1) {
-			return null;
+			return DropdownItemListBuilder.add(
+				dropdownItem -> {
+					dropdownItem.setActive(_isEverywhereScopeFilter());
+					dropdownItem.setHref(
+						getPortletURL(), "scope", "everywhere");
+					dropdownItem.setLabel(
+						LanguageUtil.get(httpServletRequest, "everywhere"));
+				}
+			).add(
+				dropdownItem -> {
+					dropdownItem.setActive(!_isEverywhereScopeFilter());
+					dropdownItem.setHref(getPortletURL(), "scope", "current");
+					dropdownItem.setLabel(_getCurrentScopeLabel());
+				}
+			).build();
 		}
 
 		return new DropdownItemList() {
 			{
 				add(
 					dropdownItem -> {
-						dropdownItem.setActive(
-							_assetBrowserDisplayContext.getGroupId() == 0);
-						dropdownItem.setHref(getPortletURL(), "groupId", 0);
-						dropdownItem.setLabel(LanguageUtil.get(request, "all"));
+						dropdownItem.setActive(_isEverywhereScopeFilter());
+						dropdownItem.setHref(
+							getPortletURL(), "scope", "everywhere", "groupId",
+							null);
+						dropdownItem.setLabel(
+							LanguageUtil.get(httpServletRequest, "everywhere"));
 					});
 
 				for (long groupId : groupIds) {
@@ -133,7 +193,8 @@ public class AssetBrowserManagementToolbarDisplayContext
 								_assetBrowserDisplayContext.getGroupId() ==
 									groupId);
 							dropdownItem.setHref(
-								getPortletURL(), "groupId", groupId);
+								getPortletURL(), "groupId", groupId, "scope",
+								"current");
 							dropdownItem.setLabel(
 								HtmlUtil.escape(
 									group.getDescriptiveName(
@@ -167,13 +228,18 @@ public class AssetBrowserManagementToolbarDisplayContext
 	}
 
 	@Override
+	protected String getDisplayStyle() {
+		return _assetBrowserDisplayContext.getDisplayStyle();
+	}
+
+	@Override
 	protected String[] getDisplayViews() {
 		return new String[] {"list", "descriptive", "icon"};
 	}
 
 	@Override
 	protected String getFilterNavigationDropdownItemsLabel() {
-		return LanguageUtil.get(request, "sites-and-libraries");
+		return LanguageUtil.get(httpServletRequest, "sites-and-libraries");
 	}
 
 	@Override
@@ -183,7 +249,13 @@ public class AssetBrowserManagementToolbarDisplayContext
 
 	@Override
 	protected String[] getOrderByKeys() {
-		return new String[] {"title", "modified-date"};
+		String[] orderColumns = {"title", "modified-date"};
+
+		if (_assetBrowserDisplayContext.isSearch()) {
+			orderColumns = ArrayUtil.append(orderColumns, "relevance");
+		}
+
+		return orderColumns;
 	}
 
 	@Override
@@ -236,6 +308,10 @@ public class AssetBrowserManagementToolbarDisplayContext
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return StringPool.BLANK;
 		}
 
@@ -248,6 +324,47 @@ public class AssetBrowserManagementToolbarDisplayContext
 		return HttpUtil.addParameter(
 			addPortletURL.toString(), "refererPlid", _themeDisplay.getPlid());
 	}
+
+	private String _getCurrentScopeLabel() {
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (group.isSite()) {
+			return LanguageUtil.get(httpServletRequest, "current-site");
+		}
+
+		if (group.isOrganization()) {
+			return LanguageUtil.get(httpServletRequest, "current-organization");
+		}
+
+		if (group.isDepot()) {
+			return LanguageUtil.get(
+				httpServletRequest, "current-asset-library");
+		}
+
+		return LanguageUtil.get(httpServletRequest, "current-scope");
+	}
+
+	private String _getScopeLabel(String scope) {
+		if (scope.equals("everywhere")) {
+			return LanguageUtil.get(httpServletRequest, "everywhere");
+		}
+
+		return _getCurrentScopeLabel();
+	}
+
+	private boolean _isEverywhereScopeFilter() {
+		if (Objects.equals(
+				ParamUtil.getString(httpServletRequest, "scope"),
+				"everywhere")) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetBrowserManagementToolbarDisplayContext.class);
 
 	private final AssetBrowserDisplayContext _assetBrowserDisplayContext;
 	private final AssetHelper _assetHelper;

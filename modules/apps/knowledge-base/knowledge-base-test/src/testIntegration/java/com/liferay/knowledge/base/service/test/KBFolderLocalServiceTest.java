@@ -17,6 +17,7 @@ package com.liferay.knowledge.base.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.knowledge.base.constants.KBArticleConstants;
 import com.liferay.knowledge.base.constants.KBFolderConstants;
+import com.liferay.knowledge.base.exception.DuplicateKBFolderExternalReferenceCodeException;
 import com.liferay.knowledge.base.exception.InvalidKBFolderNameException;
 import com.liferay.knowledge.base.exception.KBFolderParentException;
 import com.liferay.knowledge.base.exception.NoSuchFolderException;
@@ -72,6 +73,54 @@ public class KBFolderLocalServiceTest {
 		_user = TestPropsValues.getUser();
 
 		_kbFolder = addKBFolder(KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+	}
+
+	@Test(expected = DuplicateKBFolderExternalReferenceCodeException.class)
+	public void testAddKBFolderWithExistingExternalReferenceCode()
+		throws Exception {
+
+		KBFolder kbFolder = addKBFolder(
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
+
+		KBFolderLocalServiceUtil.addKBFolder(
+			kbFolder.getExternalReferenceCode(), _user.getUserId(),
+			_group.getGroupId(),
+			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
+	}
+
+	@Test
+	public void testAddKBFolderWithExternalReferenceCode() throws Exception {
+		String externalReferenceCode = RandomTestUtil.randomString();
+
+		KBFolder kbFolder = KBFolderLocalServiceUtil.addKBFolder(
+			externalReferenceCode, _user.getUserId(), _group.getGroupId(),
+			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
+
+		Assert.assertEquals(
+			externalReferenceCode, kbFolder.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testAddKBFolderWithoutExternalReferenceCode() throws Exception {
+		KBFolder kbFolder = KBFolderLocalServiceUtil.addKBFolder(
+			null, _user.getUserId(), _group.getGroupId(),
+			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
+			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
+
+		Assert.assertEquals(
+			kbFolder.getExternalReferenceCode(),
+			String.valueOf(kbFolder.getKbFolderId()));
 	}
 
 	@Test
@@ -256,10 +305,10 @@ public class KBFolderLocalServiceTest {
 			new Date(date.getTime() + Time.SECOND));
 		KBArticle kbArticle2 = addKBArticle(
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			new Date(date.getTime() + Time.SECOND * 3));
+			new Date(date.getTime() + (Time.SECOND * 3)));
 		KBArticle kbArticle3 = addKBArticle(
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			new Date(date.getTime() + Time.SECOND * 2));
+			new Date(date.getTime() + (Time.SECOND * 2)));
 
 		List<Object> kbFoldersAndKBArticles =
 			KBFolderLocalServiceUtil.getKBFoldersAndKBArticles(
@@ -399,10 +448,10 @@ public class KBFolderLocalServiceTest {
 			new Date(date.getTime() + Time.SECOND));
 		KBArticle kbArticle2 = addKBArticle(
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			new Date(date.getTime() + Time.SECOND * 3));
+			new Date(date.getTime() + (Time.SECOND * 3)));
 		KBArticle kbArticle3 = addKBArticle(
 			KBFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			new Date(date.getTime() + Time.SECOND * 2));
+			new Date(date.getTime() + (Time.SECOND * 2)));
 
 		List<Object> kbFoldersAndKBArticles =
 			KBFolderLocalServiceUtil.getKBFoldersAndKBArticles(
@@ -713,15 +762,14 @@ public class KBFolderLocalServiceTest {
 	protected KBArticle addChildKBArticle(KBArticle kbArticle, String title)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
 		return KBArticleLocalServiceUtil.addKBArticle(
-			_user.getUserId(),
+			null, _user.getUserId(),
 			PortalUtil.getClassNameId(KBArticleConstants.getClassName()),
 			kbArticle.getResourcePrimKey(), title, title,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(), null,
-			new String[0], new String[0], serviceContext);
+			new String[0], new String[0],
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 	}
 
 	protected KBArticle addKBArticle(long parentKbFolderId, Date createDate)
@@ -736,7 +784,7 @@ public class KBFolderLocalServiceTest {
 		serviceContext.setModifiedDate(createDate);
 
 		return KBArticleLocalServiceUtil.addKBArticle(
-			_user.getUserId(),
+			null, _user.getUserId(),
 			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
 			parentKbFolderId, title, title, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, new String[0], new String[0],
@@ -746,41 +794,36 @@ public class KBFolderLocalServiceTest {
 	protected KBArticle addKBArticle(long parentKbFolderId, String title)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
 		return KBArticleLocalServiceUtil.addKBArticle(
-			_user.getUserId(),
+			null, _user.getUserId(),
 			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
 			parentKbFolderId, title, title, RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), null, new String[0], new String[0],
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 	}
 
 	protected KBFolder addKBFolder(long parentResourcePrimKey)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
 		return KBFolderLocalServiceUtil.addKBFolder(
-			_user.getUserId(), _group.getGroupId(),
+			null, _user.getUserId(), _group.getGroupId(),
 			PortalUtil.getClassNameId(KBFolderConstants.getClassName()),
 			parentResourcePrimKey, RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), serviceContext);
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 	}
 
 	protected KBArticle updateKBArticle(KBArticle kbArticle, String title)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group, _user.getUserId());
-
 		return KBArticleLocalServiceUtil.updateKBArticle(
 			kbArticle.getUserId(), kbArticle.getResourcePrimKey(), title,
 			kbArticle.getContent(), kbArticle.getDescription(),
 			kbArticle.getSourceURL(), null, new String[0], new long[0],
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(
+				_group, _user.getUserId()));
 	}
 
 	@DeleteAfterTestRun

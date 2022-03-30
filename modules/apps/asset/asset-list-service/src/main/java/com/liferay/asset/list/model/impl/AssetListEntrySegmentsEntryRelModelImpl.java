@@ -31,12 +31,14 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -44,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -75,8 +78,9 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
-		{"assetListEntryId", Types.BIGINT}, {"segmentsEntryId", Types.BIGINT},
-		{"typeSettings", Types.CLOB}, {"lastPublishDate", Types.TIMESTAMP}
+		{"assetListEntryId", Types.BIGINT}, {"priority", Types.INTEGER},
+		{"segmentsEntryId", Types.BIGINT}, {"typeSettings", Types.CLOB},
+		{"lastPublishDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -94,13 +98,14 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 		TABLE_COLUMNS_MAP.put("createDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("modifiedDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("assetListEntryId", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("priority", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("segmentsEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("typeSettings", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("lastPublishDate", Types.TIMESTAMP);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table AssetListEntrySegmentsEntryRel (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,alEntrySegmentsEntryRelId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,assetListEntryId LONG,segmentsEntryId LONG,typeSettings TEXT null,lastPublishDate DATE null,primary key (alEntrySegmentsEntryRelId, ctCollectionId))";
+		"create table AssetListEntrySegmentsEntryRel (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,alEntrySegmentsEntryRelId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,assetListEntryId LONG,priority INTEGER,segmentsEntryId LONG,typeSettings TEXT null,lastPublishDate DATE null,primary key (alEntrySegmentsEntryRelId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table AssetListEntrySegmentsEntryRel";
@@ -117,25 +122,56 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ASSETLISTENTRYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long SEGMENTSENTRYID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ASSETLISTENTRYSEGMENTSENTRYRELID_COLUMN_BITMASK =
 		32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public AssetListEntrySegmentsEntryRelModelImpl() {
@@ -190,9 +226,6 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 				attributeGetterFunction.apply(
 					(AssetListEntrySegmentsEntryRel)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -346,6 +379,12 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 			(BiConsumer<AssetListEntrySegmentsEntryRel, Long>)
 				AssetListEntrySegmentsEntryRel::setAssetListEntryId);
 		attributeGetterFunctions.put(
+			"priority", AssetListEntrySegmentsEntryRel::getPriority);
+		attributeSetterBiConsumers.put(
+			"priority",
+			(BiConsumer<AssetListEntrySegmentsEntryRel, Integer>)
+				AssetListEntrySegmentsEntryRel::setPriority);
+		attributeGetterFunctions.put(
 			"segmentsEntryId",
 			AssetListEntrySegmentsEntryRel::getSegmentsEntryId);
 		attributeSetterBiConsumers.put(
@@ -379,6 +418,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -389,6 +432,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_ctCollectionId = ctCollectionId;
 	}
 
@@ -404,17 +451,20 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@Override
@@ -426,6 +476,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 	public void setAssetListEntrySegmentsEntryRelId(
 		long assetListEntrySegmentsEntryRelId) {
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_assetListEntrySegmentsEntryRelId = assetListEntrySegmentsEntryRelId;
 	}
 
@@ -436,19 +490,20 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -458,19 +513,21 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -480,6 +537,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -511,6 +572,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -521,6 +586,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -537,6 +606,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -547,19 +620,35 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setAssetListEntryId(long assetListEntryId) {
-		_columnBitmask |= ASSETLISTENTRYID_COLUMN_BITMASK;
-
-		if (!_setOriginalAssetListEntryId) {
-			_setOriginalAssetListEntryId = true;
-
-			_originalAssetListEntryId = _assetListEntryId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_assetListEntryId = assetListEntryId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalAssetListEntryId() {
-		return _originalAssetListEntryId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("assetListEntryId"));
+	}
+
+	@Override
+	public int getPriority() {
+		return _priority;
+	}
+
+	@Override
+	public void setPriority(int priority) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_priority = priority;
 	}
 
 	@Override
@@ -569,19 +658,21 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setSegmentsEntryId(long segmentsEntryId) {
-		_columnBitmask |= SEGMENTSENTRYID_COLUMN_BITMASK;
-
-		if (!_setOriginalSegmentsEntryId) {
-			_setOriginalSegmentsEntryId = true;
-
-			_originalSegmentsEntryId = _segmentsEntryId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_segmentsEntryId = segmentsEntryId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalSegmentsEntryId() {
-		return _originalSegmentsEntryId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("segmentsEntryId"));
 	}
 
 	@Override
@@ -596,6 +687,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setTypeSettings(String typeSettings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_typeSettings = typeSettings;
 	}
 
@@ -606,6 +701,10 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -617,6 +716,26 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -668,6 +787,7 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 		assetListEntrySegmentsEntryRelImpl.setModifiedDate(getModifiedDate());
 		assetListEntrySegmentsEntryRelImpl.setAssetListEntryId(
 			getAssetListEntryId());
+		assetListEntrySegmentsEntryRelImpl.setPriority(getPriority());
 		assetListEntrySegmentsEntryRelImpl.setSegmentsEntryId(
 			getSegmentsEntryId());
 		assetListEntrySegmentsEntryRelImpl.setTypeSettings(getTypeSettings());
@@ -675,6 +795,45 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 			getLastPublishDate());
 
 		assetListEntrySegmentsEntryRelImpl.resetOriginalValues();
+
+		return assetListEntrySegmentsEntryRelImpl;
+	}
+
+	@Override
+	public AssetListEntrySegmentsEntryRel cloneWithOriginalValues() {
+		AssetListEntrySegmentsEntryRelImpl assetListEntrySegmentsEntryRelImpl =
+			new AssetListEntrySegmentsEntryRelImpl();
+
+		assetListEntrySegmentsEntryRelImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		assetListEntrySegmentsEntryRelImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		assetListEntrySegmentsEntryRelImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		assetListEntrySegmentsEntryRelImpl.setAssetListEntrySegmentsEntryRelId(
+			this.<Long>getColumnOriginalValue("alEntrySegmentsEntryRelId"));
+		assetListEntrySegmentsEntryRelImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		assetListEntrySegmentsEntryRelImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		assetListEntrySegmentsEntryRelImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		assetListEntrySegmentsEntryRelImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		assetListEntrySegmentsEntryRelImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		assetListEntrySegmentsEntryRelImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		assetListEntrySegmentsEntryRelImpl.setAssetListEntryId(
+			this.<Long>getColumnOriginalValue("assetListEntryId"));
+		assetListEntrySegmentsEntryRelImpl.setPriority(
+			this.<Integer>getColumnOriginalValue("priority"));
+		assetListEntrySegmentsEntryRelImpl.setSegmentsEntryId(
+			this.<Long>getColumnOriginalValue("segmentsEntryId"));
+		assetListEntrySegmentsEntryRelImpl.setTypeSettings(
+			this.<String>getColumnOriginalValue("typeSettings"));
+		assetListEntrySegmentsEntryRelImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return assetListEntrySegmentsEntryRelImpl;
 	}
@@ -697,17 +856,17 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AssetListEntrySegmentsEntryRel)) {
+		if (!(object instanceof AssetListEntrySegmentsEntryRel)) {
 			return false;
 		}
 
 		AssetListEntrySegmentsEntryRel assetListEntrySegmentsEntryRel =
-			(AssetListEntrySegmentsEntryRel)obj;
+			(AssetListEntrySegmentsEntryRel)object;
 
 		long primaryKey = assetListEntrySegmentsEntryRel.getPrimaryKey();
 
@@ -724,49 +883,31 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		AssetListEntrySegmentsEntryRelModelImpl
-			assetListEntrySegmentsEntryRelModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		assetListEntrySegmentsEntryRelModelImpl._originalUuid =
-			assetListEntrySegmentsEntryRelModelImpl._uuid;
+		_setModifiedDate = false;
 
-		assetListEntrySegmentsEntryRelModelImpl._originalGroupId =
-			assetListEntrySegmentsEntryRelModelImpl._groupId;
-
-		assetListEntrySegmentsEntryRelModelImpl._setOriginalGroupId = false;
-
-		assetListEntrySegmentsEntryRelModelImpl._originalCompanyId =
-			assetListEntrySegmentsEntryRelModelImpl._companyId;
-
-		assetListEntrySegmentsEntryRelModelImpl._setOriginalCompanyId = false;
-
-		assetListEntrySegmentsEntryRelModelImpl._setModifiedDate = false;
-
-		assetListEntrySegmentsEntryRelModelImpl._originalAssetListEntryId =
-			assetListEntrySegmentsEntryRelModelImpl._assetListEntryId;
-
-		assetListEntrySegmentsEntryRelModelImpl._setOriginalAssetListEntryId =
-			false;
-
-		assetListEntrySegmentsEntryRelModelImpl._originalSegmentsEntryId =
-			assetListEntrySegmentsEntryRelModelImpl._segmentsEntryId;
-
-		assetListEntrySegmentsEntryRelModelImpl._setOriginalSegmentsEntryId =
-			false;
-
-		assetListEntrySegmentsEntryRelModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -831,6 +972,8 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 		assetListEntrySegmentsEntryRelCacheModel.assetListEntryId =
 			getAssetListEntryId();
 
+		assetListEntrySegmentsEntryRelCacheModel.priority = getPriority();
+
 		assetListEntrySegmentsEntryRelCacheModel.segmentsEntryId =
 			getSegmentsEntryId();
 
@@ -864,7 +1007,7 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -875,11 +1018,27 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 			Function<AssetListEntrySegmentsEntryRel, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply(
-					(AssetListEntrySegmentsEntryRel)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(AssetListEntrySegmentsEntryRel)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -898,7 +1057,7 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -934,33 +1093,126 @@ public class AssetListEntrySegmentsEntryRelModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _assetListEntrySegmentsEntryRelId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _assetListEntryId;
-	private long _originalAssetListEntryId;
-	private boolean _setOriginalAssetListEntryId;
+	private int _priority;
 	private long _segmentsEntryId;
-	private long _originalSegmentsEntryId;
-	private boolean _setOriginalSegmentsEntryId;
 	private String _typeSettings;
 	private Date _lastPublishDate;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<AssetListEntrySegmentsEntryRel, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((AssetListEntrySegmentsEntryRel)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"alEntrySegmentsEntryRelId", _assetListEntrySegmentsEntryRelId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("assetListEntryId", _assetListEntryId);
+		_columnOriginalValues.put("priority", _priority);
+		_columnOriginalValues.put("segmentsEntryId", _segmentsEntryId);
+		_columnOriginalValues.put("typeSettings", _typeSettings);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+		attributeNames.put(
+			"alEntrySegmentsEntryRelId", "assetListEntrySegmentsEntryRelId");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("alEntrySegmentsEntryRelId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("assetListEntryId", 1024L);
+
+		columnBitmasks.put("priority", 2048L);
+
+		columnBitmasks.put("segmentsEntryId", 4096L);
+
+		columnBitmasks.put("typeSettings", 8192L);
+
+		columnBitmasks.put("lastPublishDate", 16384L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private AssetListEntrySegmentsEntryRel _escapedModel;
 

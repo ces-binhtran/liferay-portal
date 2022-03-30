@@ -19,9 +19,11 @@
 <%
 String servletPath = GetterUtil.getString(request.getServletPath());
 
-PortletURL baseURL = liferayPortletResponse.createRenderURL();
-
-baseURL.setParameter("p_u_i_d", String.valueOf(selectedUser.getUserId()));
+PortletURL baseURL = PortletURLBuilder.createRenderURL(
+	liferayPortletResponse
+).setParameter(
+	"p_u_i_d", selectedUser.getUserId()
+).buildPortletURL();
 %>
 
 <clay:navigation-bar
@@ -35,10 +37,11 @@ baseURL.setParameter("p_u_i_d", String.valueOf(selectedUser.getUserId()));
 						PortletURL reviewDataURL = null;
 
 						try {
-							reviewDataURL = PortletURLUtil.clone(baseURL, renderResponse);
-
-							reviewDataURL.setParameter("mvcRenderCommandName", "/review_uad_data");
-
+							reviewDataURL = PortletURLBuilder.create(
+								PortletURLUtil.clone(baseURL, renderResponse)
+							).setMVCRenderCommandName(
+								"/user_associated_data/review_uad_data"
+							).buildPortletURL();
 						}
 						catch (PortletException e) {
 							reviewDataURL = baseURL;
@@ -46,7 +49,7 @@ baseURL.setParameter("p_u_i_d", String.valueOf(selectedUser.getUserId()));
 
 						navigationItem.setActive(active);
 						navigationItem.setHref(reviewDataURL.toString());
-						navigationItem.setLabel(LanguageUtil.get(request, "review-data"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "review-data"));
 					});
 				add(
 					navigationItem -> {
@@ -55,10 +58,11 @@ baseURL.setParameter("p_u_i_d", String.valueOf(selectedUser.getUserId()));
 						PortletURL nonreviewableDataURL = null;
 
 						try {
-							nonreviewableDataURL = PortletURLUtil.clone(baseURL, renderResponse);
-
-							nonreviewableDataURL.setParameter("mvcRenderCommandName", "/anonymize_nonreviewable_uad_data");
-
+							nonreviewableDataURL = PortletURLBuilder.create(
+								PortletURLUtil.clone(baseURL, renderResponse)
+							).setMVCRenderCommandName(
+								"/user_associated_data/anonymize_nonreviewable_uad_data"
+							).buildPortletURL();
 						}
 						catch (PortletException e) {
 							nonreviewableDataURL = baseURL;
@@ -66,8 +70,9 @@ baseURL.setParameter("p_u_i_d", String.valueOf(selectedUser.getUserId()));
 
 						navigationItem.setActive(active);
 						navigationItem.setHref(nonreviewableDataURL.toString());
-						navigationItem.setLabel(LanguageUtil.get(request, "auto-anonymize-data"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "auto-anonymize-data"));
 					});
 			}
-		} %>'
+		}
+	%>'
 />

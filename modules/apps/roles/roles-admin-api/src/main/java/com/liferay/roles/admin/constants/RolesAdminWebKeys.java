@@ -21,9 +21,14 @@ public class RolesAdminWebKeys {
 
 	public static final String CURRENT_ROLE_TYPE = "CURRENT_ROLE_TYPE";
 
+	public static final String EXCLUDED_PANEL_APP_KEYS =
+		"EXCLUDED_PANEL_APP_KEYS";
+
 	public static final String ITEM_SELECTOR = "ITEM_SELECTOR";
 
 	public static final String MODAL_SEGMENT_STATE = "MODAL_SEGMENT_STATE";
+
+	public static final String PANEL_CATEGORY_KEYS = "PANEL_CATEGORY_KEYS";
 
 	public static final String ROLE_TYPE_CONTRIBUTOR_PROVIDER =
 		"ROLE_TYPE_CONTRIBUTOR_PROVIDER";

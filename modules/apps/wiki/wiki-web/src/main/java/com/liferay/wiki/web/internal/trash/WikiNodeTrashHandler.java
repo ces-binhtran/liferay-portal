@@ -14,6 +14,7 @@
 
 package com.liferay.wiki.web.internal.trash;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.TrashedModel;
@@ -105,13 +106,13 @@ public class WikiNodeTrashHandler extends BaseWikiTrashHandler {
 			PortletRequest portletRequest, long classPK)
 		throws PortalException {
 
-		PortletURL portletURL = getRestoreURL(portletRequest, classPK, false);
-
 		WikiNode node = _wikiNodeLocalService.getNode(classPK);
 
-		portletURL.setParameter("nodeId", String.valueOf(node.getNodeId()));
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			getRestoreURL(portletRequest, classPK, false)
+		).setParameter(
+			"nodeId", node.getNodeId()
+		).buildString();
 	}
 
 	@Override
@@ -158,11 +159,12 @@ public class WikiNodeTrashHandler extends BaseWikiTrashHandler {
 
 	@Override
 	public List<TrashedModel> getTrashModelTrashedModels(
-		long classPK, int start, int end, OrderByComparator<?> obc) {
+		long classPK, int start, int end,
+		OrderByComparator<?> orderByComparator) {
 
 		List<WikiPage> pages = _wikiPageLocalService.getPages(
 			classPK, true, WorkflowConstants.STATUS_IN_TRASH, start, end,
-			(OrderByComparator<WikiPage>)obc);
+			(OrderByComparator<WikiPage>)orderByComparator);
 
 		List<TrashedModel> trashedModels = new ArrayList<>(pages.size());
 

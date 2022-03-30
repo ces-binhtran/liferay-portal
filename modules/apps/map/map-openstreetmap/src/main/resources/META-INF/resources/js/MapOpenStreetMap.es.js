@@ -12,8 +12,7 @@
  * details.
  */
 
-import MapBase from 'map-common/js/MapBase.es';
-import {toElement} from 'metal-dom';
+import MapBase from '@liferay/map-common/js/MapBase.es';
 import {Config} from 'metal-state';
 
 import OpenStreetMapDialog from './OpenStreetMapDialog.es';
@@ -33,6 +32,12 @@ class MapOpenStreetMap extends MapBase {
 	 * @review
 	 */
 	constructor(...args) {
+		MapBase.DialogImpl = OpenStreetMapDialog;
+		MapBase.GeocoderImpl = OpenStreetMapGeocoder;
+		MapBase.GeoJSONImpl = OpenStreetMapGeoJSON;
+		MapBase.MarkerImpl = OpenStreetMapMarker;
+		MapBase.SearchImpl = null;
+
 		super(...args);
 
 		this._map = null;
@@ -50,7 +55,7 @@ class MapOpenStreetMap extends MapBase {
 		};
 
 		const map = L.map(
-			toElement(this.boundingBox),
+			document.querySelector(this.boundingBox),
 			Object.assign(mapConfig, controlsConfig)
 		);
 
@@ -79,7 +84,11 @@ class MapOpenStreetMap extends MapBase {
 	addControl(control, position) {
 		const LeafLetControl = L.Control.extend({
 			onAdd() {
-				return toElement(control);
+				if (typeof control === 'string') {
+					control = document.querySelector(control);
+				}
+
+				return control;
 			},
 
 			options: {
@@ -112,16 +121,6 @@ class MapOpenStreetMap extends MapBase {
 		}
 	}
 }
-
-MapBase.DialogImpl = OpenStreetMapDialog;
-
-MapBase.GeocoderImpl = OpenStreetMapGeocoder;
-
-MapBase.GeoJSONImpl = OpenStreetMapGeoJSON;
-
-MapBase.MarkerImpl = OpenStreetMapMarker;
-
-MapBase.SearchImpl = null;
 
 MapOpenStreetMap.CONTROLS_MAP = {
 	[MapBase.CONTROLS.ATTRIBUTION]: 'attributionControl',

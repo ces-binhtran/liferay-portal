@@ -22,6 +22,7 @@ import com.liferay.headless.delivery.client.problem.Problem;
 import com.liferay.headless.delivery.client.serdes.v1_0.CommentSerDes;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
@@ -41,13 +42,13 @@ public interface CommentResource {
 	}
 
 	public Page<Comment> getBlogPostingCommentsPage(
-			Long blogPostingId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long blogPostingId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getBlogPostingCommentsPageHttpResponse(
-			Long blogPostingId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long blogPostingId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public Comment postBlogPostingComment(Long blogPostingId, Comment comment)
@@ -96,13 +97,13 @@ public interface CommentResource {
 		throws Exception;
 
 	public Page<Comment> getCommentCommentsPage(
-			Long parentCommentId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long parentCommentId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getCommentCommentsPageHttpResponse(
-			Long parentCommentId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long parentCommentId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public Comment postCommentComment(Long parentCommentId, Comment comment)
@@ -113,13 +114,13 @@ public interface CommentResource {
 		throws Exception;
 
 	public Page<Comment> getDocumentCommentsPage(
-			Long documentId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long documentId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse getDocumentCommentsPageHttpResponse(
-			Long documentId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long documentId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public Comment postDocumentComment(Long documentId, Comment comment)
@@ -138,13 +139,14 @@ public interface CommentResource {
 		throws Exception;
 
 	public Page<Comment> getStructuredContentCommentsPage(
-			Long structuredContentId, String search, String filterString,
-			Pagination pagination, String sortString)
+			Long structuredContentId, String search, List<String> aggregations,
+			String filterString, Pagination pagination, String sortString)
 		throws Exception;
 
 	public HttpInvoker.HttpResponse
 			getStructuredContentCommentsPageHttpResponse(
-				Long structuredContentId, String search, String filterString,
+				Long structuredContentId, String search,
+				List<String> aggregations, String filterString,
 				Pagination pagination, String sortString)
 		throws Exception;
 
@@ -204,14 +206,30 @@ public interface CommentResource {
 			return this;
 		}
 
+		public Builder parameters(String... parameters) {
+			if ((parameters.length % 2) != 0) {
+				throw new IllegalArgumentException(
+					"Parameters length is not an even number");
+			}
+
+			for (int i = 0; i < parameters.length; i += 2) {
+				String parameterName = String.valueOf(parameters[i]);
+				String parameterValue = String.valueOf(parameters[i + 1]);
+
+				_parameters.put(parameterName, parameterValue);
+			}
+
+			return this;
+		}
+
 		private Builder() {
 		}
 
 		private Map<String, String> _headers = new LinkedHashMap<>();
 		private String _host = "localhost";
 		private Locale _locale;
-		private String _login = "test@liferay.com";
-		private String _password = "test";
+		private String _login = "";
+		private String _password = "";
 		private Map<String, String> _parameters = new LinkedHashMap<>();
 		private int _port = 8080;
 		private String _scheme = "http";
@@ -221,22 +239,39 @@ public interface CommentResource {
 	public static class CommentResourceImpl implements CommentResource {
 
 		public Page<Comment> getBlogPostingCommentsPage(
-				Long blogPostingId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long blogPostingId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getBlogPostingCommentsPageHttpResponse(
-					blogPostingId, search, filterString, pagination,
-					sortString);
+					blogPostingId, search, aggregations, filterString,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, CommentSerDes::toDTO);
@@ -251,8 +286,8 @@ public interface CommentResource {
 		}
 
 		public HttpInvoker.HttpResponse getBlogPostingCommentsPageHttpResponse(
-				Long blogPostingId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long blogPostingId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -298,8 +333,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -316,11 +352,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -364,8 +417,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -383,11 +437,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse postBlogPostingCommentBatchHttpResponse(
@@ -425,8 +496,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments/batch",
-				blogPostingId);
+						"/o/headless-delivery/v1.0/blog-postings/{blogPostingId}/comments/batch");
+
+			httpInvoker.path("blogPostingId", blogPostingId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -440,11 +512,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return;
@@ -486,8 +575,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -503,11 +593,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse deleteCommentBatchHttpResponse(
@@ -515,6 +622,8 @@ public interface CommentResource {
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
+
+			httpInvoker.body(object.toString(), "application/json");
 
 			if (_builder._locale != null) {
 				httpInvoker.header(
@@ -557,11 +666,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -602,8 +728,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -619,11 +746,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -667,8 +811,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{commentId}",
-				commentId);
+						"/o/headless-delivery/v1.0/comments/{commentId}");
+
+			httpInvoker.path("commentId", commentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -684,11 +829,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse putCommentBatchHttpResponse(
@@ -735,22 +897,39 @@ public interface CommentResource {
 		}
 
 		public Page<Comment> getCommentCommentsPage(
-				Long parentCommentId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long parentCommentId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getCommentCommentsPageHttpResponse(
-					parentCommentId, search, filterString, pagination,
-					sortString);
+					parentCommentId, search, aggregations, filterString,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, CommentSerDes::toDTO);
@@ -765,8 +944,8 @@ public interface CommentResource {
 		}
 
 		public HttpInvoker.HttpResponse getCommentCommentsPageHttpResponse(
-				Long parentCommentId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long parentCommentId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -812,8 +991,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments",
-				parentCommentId);
+						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments");
+
+			httpInvoker.path("parentCommentId", parentCommentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -829,11 +1009,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -877,8 +1074,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments",
-				parentCommentId);
+						"/o/headless-delivery/v1.0/comments/{parentCommentId}/comments");
+
+			httpInvoker.path("parentCommentId", parentCommentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -887,21 +1085,39 @@ public interface CommentResource {
 		}
 
 		public Page<Comment> getDocumentCommentsPage(
-				Long documentId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long documentId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getDocumentCommentsPageHttpResponse(
-					documentId, search, filterString, pagination, sortString);
+					documentId, search, aggregations, filterString, pagination,
+					sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, CommentSerDes::toDTO);
@@ -916,8 +1132,8 @@ public interface CommentResource {
 		}
 
 		public HttpInvoker.HttpResponse getDocumentCommentsPageHttpResponse(
-				Long documentId, String search, String filterString,
-				Pagination pagination, String sortString)
+				Long documentId, String search, List<String> aggregations,
+				String filterString, Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -963,8 +1179,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -980,11 +1197,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -1028,8 +1262,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1047,11 +1282,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse postDocumentCommentBatchHttpResponse(
@@ -1089,8 +1341,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/documents/{documentId}/comments/batch",
-				documentId);
+						"/o/headless-delivery/v1.0/documents/{documentId}/comments/batch");
+
+			httpInvoker.path("documentId", documentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1099,22 +1352,40 @@ public interface CommentResource {
 		}
 
 		public Page<Comment> getStructuredContentCommentsPage(
-				Long structuredContentId, String search, String filterString,
+				Long structuredContentId, String search,
+				List<String> aggregations, String filterString,
 				Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker.HttpResponse httpResponse =
 				getStructuredContentCommentsPageHttpResponse(
-					structuredContentId, search, filterString, pagination,
-					sortString);
+					structuredContentId, search, aggregations, filterString,
+					pagination, sortString);
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return Page.of(content, CommentSerDes::toDTO);
@@ -1131,8 +1402,8 @@ public interface CommentResource {
 		public HttpInvoker.HttpResponse
 				getStructuredContentCommentsPageHttpResponse(
 					Long structuredContentId, String search,
-					String filterString, Pagination pagination,
-					String sortString)
+					List<String> aggregations, String filterString,
+					Pagination pagination, String sortString)
 			throws Exception {
 
 			HttpInvoker httpInvoker = HttpInvoker.newHttpInvoker();
@@ -1178,8 +1449,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1197,11 +1469,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 
 			try {
 				return CommentSerDes.toDTO(content);
@@ -1246,8 +1535,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);
@@ -1265,11 +1555,28 @@ public interface CommentResource {
 
 			String content = httpResponse.getContent();
 
-			_logger.fine("HTTP response content: " + content);
+			if ((httpResponse.getStatusCode() / 100) != 2) {
+				_logger.log(
+					Level.WARNING,
+					"Unable to process HTTP response content: " + content);
+				_logger.log(
+					Level.WARNING,
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.log(
+					Level.WARNING,
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
 
-			_logger.fine("HTTP response message: " + httpResponse.getMessage());
-			_logger.fine(
-				"HTTP response status code: " + httpResponse.getStatusCode());
+				throw new Problem.ProblemException(Problem.toDTO(content));
+			}
+			else {
+				_logger.fine("HTTP response content: " + content);
+				_logger.fine(
+					"HTTP response message: " + httpResponse.getMessage());
+				_logger.fine(
+					"HTTP response status code: " +
+						httpResponse.getStatusCode());
+			}
 		}
 
 		public HttpInvoker.HttpResponse
@@ -1308,8 +1615,9 @@ public interface CommentResource {
 			httpInvoker.path(
 				_builder._scheme + "://" + _builder._host + ":" +
 					_builder._port +
-						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments/batch",
-				structuredContentId);
+						"/o/headless-delivery/v1.0/structured-contents/{structuredContentId}/comments/batch");
+
+			httpInvoker.path("structuredContentId", structuredContentId);
 
 			httpInvoker.userNameAndPassword(
 				_builder._login + ":" + _builder._password);

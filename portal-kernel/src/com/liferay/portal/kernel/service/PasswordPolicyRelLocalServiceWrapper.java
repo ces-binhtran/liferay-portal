@@ -25,6 +25,10 @@ public class PasswordPolicyRelLocalServiceWrapper
 	implements PasswordPolicyRelLocalService,
 			   ServiceWrapper<PasswordPolicyRelLocalService> {
 
+	public PasswordPolicyRelLocalServiceWrapper() {
+		this(null);
+	}
+
 	public PasswordPolicyRelLocalServiceWrapper(
 		PasswordPolicyRelLocalService passwordPolicyRelLocalService) {
 
@@ -42,6 +46,10 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	/**
 	 * Adds the password policy rel to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect PasswordPolicyRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param passwordPolicyRel the password policy rel
 	 * @return the password policy rel that was added
@@ -93,6 +101,10 @@ public class PasswordPolicyRelLocalServiceWrapper
 	/**
 	 * Deletes the password policy rel with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect PasswordPolicyRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param passwordPolicyRelId the primary key of the password policy rel
 	 * @return the password policy rel that was removed
 	 * @throws PortalException if a password policy rel with the primary key could not be found
@@ -116,6 +128,10 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	/**
 	 * Deletes the password policy rel from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect PasswordPolicyRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param passwordPolicyRel the password policy rel
 	 * @return the password policy rel that was removed
@@ -167,6 +183,13 @@ public class PasswordPolicyRelLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _passwordPolicyRelLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _passwordPolicyRelLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -385,6 +408,10 @@ public class PasswordPolicyRelLocalServiceWrapper
 
 	/**
 	 * Updates the password policy rel in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect PasswordPolicyRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param passwordPolicyRel the password policy rel
 	 * @return the password policy rel that was updated

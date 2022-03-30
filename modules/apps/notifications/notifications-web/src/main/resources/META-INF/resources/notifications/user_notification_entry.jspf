@@ -21,7 +21,7 @@ boolean anonymous = jsonObject.getBoolean("anonymous");
 
 long userNotificationEventUserId = jsonObject.getLong("userId");
 
-boolean notificationUnread = !actionRequired && !userNotificationEvent.isArchived() && ((userNotificationFeedEntry != null) && userNotificationFeedEntry.isApplicable());
+boolean notificationUnread = !actionRequired && !userNotificationEvent.isArchived() && (userNotificationFeedEntry != null) && userNotificationFeedEntry.isApplicable();
 
 if (notificationUnread) {
 	row.setCssClass("list-group-item-primary");
@@ -81,7 +81,7 @@ if (notificationUnread) {
 					<c:if test="<%= notificationUnread %>">
 						<h4>
 					</c:if>
-						<a href="<%= markNotificationAsReadURL.toString() %>">
+						<a data-senna-off="true" href="<%= markNotificationAsReadURL.toString() %>">
 							<%= userNotificationFeedEntry.getBody() %>
 						</a>
 					<c:if test="<%= notificationUnread %>">

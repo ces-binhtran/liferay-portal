@@ -18,9 +18,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.search.buffer.IndexerRequestBuffer;
-import com.liferay.portal.search.buffer.IndexerRequestBufferExecutor;
-import com.liferay.portal.search.buffer.IndexerRequestBufferOverflowHandler;
 import com.liferay.portal.search.configuration.IndexerRegistryConfiguration;
 
 import java.util.Map;
@@ -93,14 +90,12 @@ public class DefaultIndexerRequestBufferOverflowHandler
 			(minimumBufferAvailabilityPercentage < 0.1)) {
 
 			if (_log.isWarnEnabled()) {
-				StringBundler sb = new StringBundler(4);
-
-				sb.append("Invalid minimum buffer availability percentage: ");
-				sb.append(minimumBufferAvailabilityPercentage);
-				sb.append(", using default value");
-				sb.append(_DEFAULT_MINIMUM_BUFFER_AVAILABILITY_PERCENTAGE);
-
-				_log.warn(sb.toString());
+				_log.warn(
+					StringBundler.concat(
+						"Invalid minimum buffer availability percentage: ",
+						minimumBufferAvailabilityPercentage,
+						", using default value",
+						_DEFAULT_MINIMUM_BUFFER_AVAILABILITY_PERCENTAGE));
 			}
 		}
 

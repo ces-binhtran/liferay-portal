@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.configuration.icon.minimize.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -77,11 +78,9 @@ public class MinimizePortletConfigurationIcon
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		return "Liferay.Portlet.minimize('#p_p_id_".concat(
-			portletDisplay.getId()
-		).concat(
-			"_', this); return false;"
-		);
+		return StringBundler.concat(
+			"Liferay.Portlet.minimize('#p_p_id_", portletDisplay.getId(),
+			"_', this); return false;");
 	}
 
 	@Override
@@ -143,7 +142,7 @@ public class MinimizePortletConfigurationIcon
 
 		if ((!themeDisplay.isSignedIn() ||
 			 (group.hasStagingGroup() && !group.isStagingGroup()) ||
-			 !hasUpdateLayoutPermission(themeDisplay)) &&
+			 !_hasUpdateLayoutPermission(themeDisplay)) &&
 			!PropsValues.LAYOUT_GUEST_SHOW_MIN_ICON) {
 
 			return false;
@@ -157,14 +156,14 @@ public class MinimizePortletConfigurationIcon
 		return false;
 	}
 
-	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay) {
+	private boolean _hasUpdateLayoutPermission(ThemeDisplay themeDisplay) {
 		try {
 			return LayoutPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
 				ActionKeys.UPDATE);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			return false;
 		}

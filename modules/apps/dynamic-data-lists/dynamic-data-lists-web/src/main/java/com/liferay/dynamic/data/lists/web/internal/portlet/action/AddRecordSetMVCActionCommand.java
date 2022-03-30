@@ -15,8 +15,8 @@
 package com.liferay.dynamic.data.lists.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.lists.constants.DDLPortletKeys;
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.PortletPreferencesException;
@@ -51,74 +51,22 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDLPortletKeys.DYNAMIC_DATA_LISTS,
-		"mvc.command.name=addRecordSet"
+		"mvc.command.name=/dynamic_data_lists/add_record_set"
 	},
 	service = MVCActionCommand.class
 )
 public class AddRecordSetMVCActionCommand extends BaseMVCActionCommand {
-
-	protected DDLRecordSet addRecordSet(ActionRequest actionRequest)
-		throws PortalException {
-
-		long groupId = ParamUtil.getLong(actionRequest, "groupId");
-		long ddmStructureId = ParamUtil.getLong(
-			actionRequest, "ddmStructureId");
-		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
-			actionRequest, "name");
-		Map<Locale, String> descriptionMap =
-			LocalizationUtil.getLocalizationMap(actionRequest, "description");
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			DDLRecordSet.class.getName(), actionRequest);
-
-		return ddlRecordSetService.addRecordSet(
-			groupId, ddmStructureId, null, nameMap, descriptionMap,
-			DDLRecordSetConstants.MIN_DISPLAY_ROWS_DEFAULT,
-			DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS, serviceContext);
-	}
 
 	@Override
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		DDLRecordSet recordSet = addRecordSet(actionRequest);
+		DDLRecordSet recordSet = _addRecordSet(actionRequest);
 
 		updateWorkflowDefinitionLink(actionRequest, recordSet);
 
 		updatePortletPreferences(actionRequest, recordSet);
-	}
-
-	protected PortletPreferences getStrictPortletSetup(
-			ActionRequest actionRequest)
-		throws PortalException {
-
-		String portletResource = ParamUtil.getString(
-			actionRequest, "portletResource");
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		return getStrictPortletSetup(themeDisplay.getLayout(), portletResource);
-	}
-
-	protected PortletPreferences getStrictPortletSetup(
-			Layout layout, String portletId)
-		throws PortalException {
-
-		if (Validator.isNull(portletId)) {
-			return null;
-		}
-
-		PortletPreferences portletPreferences =
-			PortletPreferencesFactoryUtil.getStrictPortletSetup(
-				layout, portletId);
-
-		if (portletPreferences instanceof StrictPortletPreferencesImpl) {
-			throw new PortletPreferencesException.MustBeStrict(portletId);
-		}
-
-		return portletPreferences;
 	}
 
 	@Reference(unbind = "-")
@@ -140,7 +88,7 @@ public class AddRecordSetMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, DDLRecordSet recordSet)
 		throws Exception {
 
-		PortletPreferences portletPreferences = getStrictPortletSetup(
+		PortletPreferences portletPreferences = _getStrictPortletSetup(
 			actionRequest);
 
 		if (portletPreferences == null) {
@@ -178,5 +126,58 @@ public class AddRecordSetMVCActionCommand extends BaseMVCActionCommand {
 	protected DDLRecordSetService ddlRecordSetService;
 	protected WorkflowDefinitionLinkLocalService
 		workflowDefinitionLinkLocalService;
+
+	private DDLRecordSet _addRecordSet(ActionRequest actionRequest)
+		throws Exception {
+
+		long groupId = ParamUtil.getLong(actionRequest, "groupId");
+		long ddmStructureId = ParamUtil.getLong(
+			actionRequest, "ddmStructureId");
+		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
+			actionRequest, "name");
+		Map<Locale, String> descriptionMap =
+			LocalizationUtil.getLocalizationMap(actionRequest, "description");
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			DDLRecordSet.class.getName(), actionRequest);
+
+		return ddlRecordSetService.addRecordSet(
+			groupId, ddmStructureId, null, nameMap, descriptionMap,
+			DDLRecordSetConstants.MIN_DISPLAY_ROWS_DEFAULT,
+			DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS, serviceContext);
+	}
+
+	private PortletPreferences _getStrictPortletSetup(
+			ActionRequest actionRequest)
+		throws Exception {
+
+		String portletResource = ParamUtil.getString(
+			actionRequest, "portletResource");
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		return _getStrictPortletSetup(
+			themeDisplay.getLayout(), portletResource);
+	}
+
+	private PortletPreferences _getStrictPortletSetup(
+			Layout layout, String portletId)
+		throws Exception {
+
+		if (Validator.isNull(portletId)) {
+			return null;
+		}
+
+		PortletPreferences portletPreferences =
+			PortletPreferencesFactoryUtil.getStrictPortletSetup(
+				layout, portletId);
+
+		if (portletPreferences instanceof StrictPortletPreferencesImpl) {
+			throw new PortletPreferencesException.MustBeStrict(portletId);
+		}
+
+		return portletPreferences;
+	}
 
 }

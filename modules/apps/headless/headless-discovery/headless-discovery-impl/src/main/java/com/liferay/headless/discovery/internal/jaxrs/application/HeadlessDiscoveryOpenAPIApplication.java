@@ -14,9 +14,9 @@
 
 package com.liferay.headless.discovery.internal.jaxrs.application;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
-
-import java.net.URI;
+import com.liferay.portal.vulcan.util.UriInfoUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -67,37 +67,28 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 
 		Map<String, List<String>> pathsMap = new TreeMap<>();
 
-		URI uri = _uriInfo.getAbsolutePath();
-
-		String absolutePath = uri.toString();
-
 		String serverURL = StringUtil.removeSubstring(
-			absolutePath, "/openapi/");
+			UriInfoUtil.getAbsolutePath(_uriInfo), "/openapi/");
 
 		RuntimeDTO runtimeDTO = _jaxrsServiceRuntime.getRuntimeDTO();
 
 		for (ApplicationDTO applicationDTO : runtimeDTO.applicationDTOs) {
 			List<String> paths = new ArrayList<>();
 
-			for (ResourceDTO resourceDTO : applicationDTO.resourceDTOs) {
-				for (ResourceMethodInfoDTO resourceMethodInfoDTO :
-						resourceDTO.resourceMethods) {
+			String base = applicationDTO.base;
 
-					String path = resourceMethodInfoDTO.path;
-
-					if (path.contains("/openapi")) {
-						String openAPIPath = StringUtil.replace(
-							resourceMethodInfoDTO.path, "{type:json|yaml}",
-							"yaml");
-
-						paths.add(
-							serverURL + applicationDTO.base + openAPIPath);
-					}
-				}
+			if (!base.startsWith(StringPool.FORWARD_SLASH)) {
+				base = StringPool.FORWARD_SLASH + base;
 			}
 
+			for (ResourceDTO resourceDTO : applicationDTO.resourceDTOs) {
+				_addPaths(base, paths, resourceDTO.resourceMethods, serverURL);
+			}
+
+			_addPaths(base, paths, applicationDTO.resourceMethods, serverURL);
+
 			if (!paths.isEmpty()) {
-				String baseURL = applicationDTO.base;
+				String baseURL = base;
 
 				if ((accept != null) &&
 					accept.contains(MediaType.APPLICATION_XML)) {
@@ -110,6 +101,24 @@ public class HeadlessDiscoveryOpenAPIApplication extends Application {
 		}
 
 		return pathsMap;
+	}
+
+	private void _addPaths(
+		String basePath, List<String> paths,
+		ResourceMethodInfoDTO[] resourceMethodInfoDTOS, String serverURL) {
+
+		for (ResourceMethodInfoDTO resourceMethodInfoDTO :
+				resourceMethodInfoDTOS) {
+
+			String path = resourceMethodInfoDTO.path;
+
+			if (path.contains("/openapi")) {
+				String openAPIPath = StringUtil.replace(
+					resourceMethodInfoDTO.path, "{type:json|yaml}", "yaml");
+
+				paths.add(serverURL + basePath + openAPIPath);
+			}
+		}
 	}
 
 	@Reference

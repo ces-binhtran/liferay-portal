@@ -9,8 +9,9 @@
  * distribution rights of the Software.
  */
 
-import ClayForm from '@clayui/form';
-import React, {useCallback, useContext, useMemo} from 'react';
+import {ClaySelect} from '@clayui/form';
+import ClayLayout from '@clayui/layout';
+import React, {useCallback, useContext} from 'react';
 import MaskedInput from 'react-text-mask';
 import createNumberMask from 'text-mask-addons/dist/createNumberMask';
 
@@ -26,7 +27,7 @@ import {
 import {SLAFormContext} from '../SLAFormPageProvider.es';
 import {validateDuration, validateHours} from '../util/slaFormUtil.es';
 
-const DurationSection = ({onChangeHandler}) => {
+export default function DurationSection({onChangeHandler}) {
 	const {
 		calendars,
 		defaultCalendar,
@@ -35,16 +36,12 @@ const DurationSection = ({onChangeHandler}) => {
 		sla: {calendarKey = defaultCalendar.key, days, hours},
 	} = useContext(SLAFormContext);
 
-	const daysMask = useMemo(
-		() =>
-			createNumberMask({
-				allowLeadingZeroes: true,
-				includeThousandsSeparator: false,
-				integerLimit: 4,
-				prefix: '',
-			}),
-		[]
-	);
+	const daysMask = createNumberMask({
+		allowLeadingZeroes: true,
+		includeThousandsSeparator: false,
+		integerLimit: 4,
+		prefix: '',
+	});
 
 	const onDurationChanged = useCallback(
 		(newDays) => {
@@ -81,17 +78,23 @@ const DurationSection = ({onChangeHandler}) => {
 		}
 	}, [days, errors, hours, setErrors]);
 
+	const getCalendarLabel = (calendar) =>
+		`${calendar.title} ${
+			calendar.defaultCalendar
+				? `(${Liferay.Language.get('system-default')})`
+				: ''
+		}`;
+
 	return (
 		<>
 			<h3 className="sheet-subtitle">
 				<FieldLabel
-					data-testid="duration"
 					required
 					text={Liferay.Language.get('duration').toUpperCase()}
 				/>
 			</h3>
 
-			<div className="sheet-text" data-testid="durationDescription">
+			<div className="sheet-text">
 				{calendars.length > 1
 					? Liferay.Language.get(
 							'define-the-sla-duration-and-calendar-format'
@@ -99,80 +102,75 @@ const DurationSection = ({onChangeHandler}) => {
 					: Liferay.Language.get('define-the-sla-duration')}
 			</div>
 
-			<div className="row">
-				<FormGroupWithStatus
-					className="col col-sm-3 form-group"
-					data-testid="daysField"
-					error={errors[DURATION]}
-					htmlFor="slaDurationDays"
-					label={Liferay.Language.get('days')}
-				>
-					<MaskedInput
-						className="form-control"
-						id="slaDurationDays"
-						mask={daysMask}
-						maxLength={4}
-						name={DAYS}
-						onChange={onChangeHandler(onDurationChanged)}
-						value={days}
-					/>
+			<ClayLayout.Row>
+				<ClayLayout.Col sm="3">
+					<FormGroupWithStatus
+						className="form-group"
+						description={Liferay.Language.get(
+							'enter-a-whole-number'
+						)}
+						error={errors[DURATION]}
+						htmlFor="slaDurationDays"
+						label={Liferay.Language.get('days')}
+					>
+						<MaskedInput
+							className="form-control"
+							id="slaDurationDays"
+							mask={daysMask}
+							maxLength={4}
+							name={DAYS}
+							onChange={onChangeHandler(onDurationChanged)}
+							value={days}
+						/>
+					</FormGroupWithStatus>
+				</ClayLayout.Col>
 
-					<ClayForm.FeedbackGroup>
-						<ClayForm.FeedbackItem>
-							<ClayForm.Text data-testid="durationDaysDescription">
-								{Liferay.Language.get('enter-a-whole-number')}
-							</ClayForm.Text>
-						</ClayForm.FeedbackItem>
-					</ClayForm.FeedbackGroup>
-				</FormGroupWithStatus>
-
-				<FormGroupWithStatus
-					className="col col-sm-3 form-group"
-					data-testid="hoursField"
-					error={errors[DURATION] || errors[HOURS]}
-					htmlFor="slaDurationHours"
-					label={Liferay.Language.get('hours')}
-				>
-					<MaskedInput
-						className="form-control"
-						id="slaDurationHours"
-						mask={[/\d/, /\d/, ':', /\d/, /\d/]}
-						name={HOURS}
-						onBlur={onHoursBlurred}
-						onChange={onChangeHandler(onDurationChanged)}
-						placeholder="00:00"
-						value={hours}
-					/>
-				</FormGroupWithStatus>
+				<ClayLayout.Col sm="3">
+					<FormGroupWithStatus
+						className="form-group"
+						error={errors[DURATION] || errors[HOURS]}
+						htmlFor="slaDurationHours"
+						label={Liferay.Language.get('hours')}
+					>
+						<MaskedInput
+							className="form-control"
+							id="slaDurationHours"
+							mask={[/\d/, /\d/, ':', /\d/, /\d/]}
+							name={HOURS}
+							onBlur={onHoursBlurred}
+							onChange={onChangeHandler(onDurationChanged)}
+							placeholder="00:00"
+							value={hours}
+						/>
+					</FormGroupWithStatus>
+				</ClayLayout.Col>
 
 				{calendars.length > 1 && (
-					<FormGroupWithStatus
-						className="col col-sm-6 form-group"
-						htmlFor="slaCalendarKey"
-						label={Liferay.Language.get('calendar')}
-					>
-						<select
-							className="form-control"
-							id="slaCalendarKey"
-							name={CALENDAR_KEY}
-							onChange={onChangeHandler()}
-							value={calendarKey}
+					<ClayLayout.Col sm="6">
+						<FormGroupWithStatus
+							className="form-group"
+							htmlFor="slaCalendarKey"
+							label={Liferay.Language.get('calendar')}
 						>
-							{calendars.map((calendar, index) => (
-								<option key={index} value={calendar.key}>
-									{calendar.title}{' '}
-									{calendar.defaultCalendar &&
-										`(${Liferay.Language.get(
-											'system-default'
-										)})`}
-								</option>
-							))}
-						</select>
-					</FormGroupWithStatus>
+							<ClaySelect
+								className="form-control"
+								id="slaCalendarKey"
+								name={CALENDAR_KEY}
+								onChange={onChangeHandler()}
+								value={calendarKey}
+							>
+								{calendars.map((calendar, index) => (
+									<ClaySelect.Option
+										key={index}
+										label={getCalendarLabel(calendar)}
+										value={calendar.key}
+									/>
+								))}
+							</ClaySelect>
+						</FormGroupWithStatus>
+					</ClayLayout.Col>
 				)}
-			</div>
+			</ClayLayout.Row>
 		</>
 	);
-};
-
-export {DurationSection};
+}

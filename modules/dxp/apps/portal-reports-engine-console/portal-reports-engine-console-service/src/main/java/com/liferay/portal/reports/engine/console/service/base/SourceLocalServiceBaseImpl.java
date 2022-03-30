@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.reports.engine.console.model.Source;
 import com.liferay.portal.reports.engine.console.service.SourceLocalService;
+import com.liferay.portal.reports.engine.console.service.SourceLocalServiceUtil;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionFinder;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionPersistence;
 import com.liferay.portal.reports.engine.console.service.persistence.EntryFinder;
@@ -55,10 +56,13 @@ import com.liferay.portal.reports.engine.console.service.persistence.SourcePersi
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -79,11 +83,15 @@ public abstract class SourceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SourceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.reports.engine.console.service.SourceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SourceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SourceLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the source to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param source the source
 	 * @return the source that was added
@@ -111,6 +119,10 @@ public abstract class SourceLocalServiceBaseImpl
 	/**
 	 * Deletes the source with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sourceId the primary key of the source
 	 * @return the source that was removed
 	 * @throws PortalException if a source with the primary key could not be found
@@ -123,6 +135,10 @@ public abstract class SourceLocalServiceBaseImpl
 
 	/**
 	 * Deletes the source from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param source the source
 	 * @return the source that was removed
@@ -137,6 +153,13 @@ public abstract class SourceLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return sourcePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -366,6 +389,7 @@ public abstract class SourceLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -382,6 +406,7 @@ public abstract class SourceLocalServiceBaseImpl
 		return sourceLocalService.deleteSource((Source)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<Source> getBasePersistence() {
 		return sourcePersistence;
 	}
@@ -473,6 +498,10 @@ public abstract class SourceLocalServiceBaseImpl
 	/**
 	 * Updates the source in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param source the source
 	 * @return the source that was updated
 	 */
@@ -480,6 +509,11 @@ public abstract class SourceLocalServiceBaseImpl
 	@Override
 	public Source updateSource(Source source) {
 		return sourcePersistence.update(source);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -493,6 +527,8 @@ public abstract class SourceLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		sourceLocalService = (SourceLocalService)aopProxy;
+
+		_setLocalServiceUtilService(sourceLocalService);
 	}
 
 	/**
@@ -534,6 +570,22 @@ public abstract class SourceLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		SourceLocalService sourceLocalService) {
+
+		try {
+			Field field = SourceLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, sourceLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

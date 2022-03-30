@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -54,14 +53,13 @@ import com.liferay.users.admin.test.util.search.UserGroupSearchFixture;
 import com.liferay.users.admin.test.util.search.UserSearchFixture;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -108,13 +106,15 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 		_userGroups = userGroupSearchFixture.getUserGroups();
 
 		indexedFieldsFixture = new IndexedFieldsFixture(
-			_resourcePermissionLocalService, _searchEngineHelper, _uidFactory,
+			_resourcePermissionLocalService, _uidFactory,
 			_documentBuilderFactory);
 	}
 
 	@Test
 	public void testAssociationsThatDoNotIndexGroupIdFields() {
-		String[] fieldNames = {Field.GROUP_ID, Field.SCOPE_GROUP_ID, Field.UID};
+		String[] fieldNames = {
+			_CT_COLLECTION_ID, Field.GROUP_ID, Field.SCOPE_GROUP_ID, Field.UID
+		};
 
 		UserGroup userGroup = addUserGroup();
 
@@ -122,7 +122,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		User user = addUser();
 
-		final Map<String, String> map = getBaseFieldValuesMap(user);
+		Map<String, String> map = new HashMap<>();
 
 		indexedFieldsFixture.populateUID(user, map);
 
@@ -142,18 +142,22 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 	@Test
 	public void testAssociationsThatIndexMoreFields() {
 		String[] fieldNames = {
-			"ancestorOrganizationIds", Field.COMPANY_ID, Field.ENTRY_CLASS_NAME,
-			Field.ENTRY_CLASS_PK, Field.GROUP_ID, "groupIds", "organizationIds",
-			"organizationCount", Field.SCOPE_GROUP_ID, Field.UID,
-			"userGroupIds", Field.USER_ID
+			"ancestorOrganizationIds", Field.COMPANY_ID, _CT_COLLECTION_ID,
+			Field.ENTRY_CLASS_NAME, Field.ENTRY_CLASS_PK, Field.GROUP_ID,
+			"groupIds", "organizationIds", "organizationCount",
+			Field.SCOPE_GROUP_ID, Field.UID, "userGroupIds", Field.USER_ID
 		};
 
 		UserGroup userGroup = addUserGroup();
 
 		User user = addUser();
 
-		final Map<String, String> map1 = HashMapBuilder.putAll(
-			getBaseFieldValuesMap(user)
+		Map<String, String> map1 = HashMapBuilder.put(
+			Field.COMPANY_ID, String.valueOf(user.getCompanyId())
+		).put(
+			Field.ENTRY_CLASS_NAME, user.getModelClassName()
+		).put(
+			Field.ENTRY_CLASS_PK, String.valueOf(user.getPrimaryKeyObj())
 		).put(
 			Field.USER_ID, String.valueOf(user.getPrimaryKeyObj())
 		).put(
@@ -174,7 +178,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		_userLocalService.addOrganizationUser(organizationId, user);
 
-		final Map<String, String> map2 = HashMapBuilder.putAll(
+		Map<String, String> map2 = HashMapBuilder.putAll(
 			map1
 		).put(
 			"organizationCount", "1"
@@ -188,7 +192,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		_userLocalService.addUserGroupUser(userGroupId, user);
 
-		final Map<String, String> map3 = HashMapBuilder.putAll(
+		Map<String, String> map3 = HashMapBuilder.putAll(
 			map2
 		).put(
 			"userGroupIds", String.valueOf(userGroupId)
@@ -202,15 +206,15 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		_userGroupLocalService.addGroupUserGroup(groupId, userGroup);
 
-		final Map<String, String> map4 = HashMapBuilder.putAll(
-			map3
-		).put(
-			Field.GROUP_ID, String.valueOf(groupId)
-		).put(
-			Field.SCOPE_GROUP_ID, String.valueOf(groupId)
-		).build();
-
-		assertFieldValues(user, fieldNames, map4);
+		assertFieldValues(
+			user, fieldNames,
+			HashMapBuilder.putAll(
+				map3
+			).put(
+				Field.GROUP_ID, String.valueOf(groupId)
+			).put(
+				Field.SCOPE_GROUP_ID, String.valueOf(groupId)
+			).build());
 	}
 
 	@Test
@@ -220,16 +224,14 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 		SearchRequestBuilder searchRequestBuilder = getSearchRequestBuilder(
 			group.getCompanyId()
 		).fields(
-			Field.GROUP_ID
+			_CT_COLLECTION_ID, Field.GROUP_ID, Field.UID, Field.USER_ID
 		).modelIndexerClasses(
 			User.class
 		);
 
-		long userId = TestPropsValues.getUserId();
-
 		SearchResponse searchResponse1 = _searcher.search(
 			searchRequestBuilder.query(
-				_queries.term(Field.USER_ID, userId)
+				_queries.term(Field.USER_ID, TestPropsValues.getUserId())
 			).build());
 
 		Stream<Document> stream = searchResponse1.getDocumentsStream();
@@ -241,7 +243,12 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 
 		long groupId = group.getGroupId();
 
-		_assertContains(groupIds, groupId);
+		if (!groupIds.contains(groupId)) {
+			DocumentsAssert.assertValuesIgnoreRelevance(
+				searchResponse1.getRequestString(),
+				searchResponse1.getDocumentsStream(), Field.GROUP_ID,
+				_toSingletonListString(_toSortedListString(groupIds.stream())));
+		}
 
 		SearchResponse searchResponse2 = _searcher.search(
 			searchRequestBuilder.query(
@@ -275,16 +282,6 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 			String.valueOf(user), searchUser(user, fieldNames), map);
 	}
 
-	protected Map<String, String> getBaseFieldValuesMap(User user) {
-		return HashMapBuilder.put(
-			Field.COMPANY_ID, String.valueOf(user.getCompanyId())
-		).put(
-			Field.ENTRY_CLASS_NAME, user.getModelClassName()
-		).put(
-			Field.ENTRY_CLASS_PK, String.valueOf(user.getPrimaryKeyObj())
-		).build();
-	}
-
 	protected SearchRequestBuilder getSearchRequestBuilder(long companyId) {
 		return _searchRequestBuilderFactory.builder(
 		).companyId(
@@ -309,9 +306,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 		Document document = stream.findFirst(
 		).get();
 
-		indexedFieldsFixture.postProcessDocument(document);
-
-		return document;
+		return indexedFieldsFixture.postProcessDocument(document);
 	}
 
 	protected GroupSearchFixture groupSearchFixture;
@@ -320,7 +315,7 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 	protected UserGroupSearchFixture userGroupSearchFixture;
 	protected UserSearchFixture userSearchFixture;
 
-	private static String _toListString(Stream<?> stream) {
+	private String _toListString(Stream<?> stream) {
 		return stream.map(
 			String::valueOf
 		).collect(
@@ -330,22 +325,18 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 		);
 	}
 
-	private static String _toSingletonListString(String string) {
+	private String _toSingletonListString(String string) {
 		return String.valueOf(Collections.singletonList(string));
 	}
 
-	private static String _toSortedListString(Stream<?> stream) {
+	private String _toSortedListString(Stream<?> stream) {
 		return _toListString(
 			stream.map(
 				String::valueOf
 			).sorted());
 	}
 
-	private void _assertContains(Collection<Long> values, Long value) {
-		Assert.assertTrue(
-			_toSortedListString(values.stream()) + " should contain " + value,
-			values.contains(value));
-	}
+	private static final String _CT_COLLECTION_ID = "ctCollectionId";
 
 	@Inject
 	private static DocumentBuilderFactory _documentBuilderFactory;
@@ -362,9 +353,6 @@ public class UserIndexerIndexedFieldsByAssociationTest {
 	@Inject
 	private static ResourcePermissionLocalService
 		_resourcePermissionLocalService;
-
-	@Inject
-	private static SearchEngineHelper _searchEngineHelper;
 
 	@Inject
 	private static Searcher _searcher;

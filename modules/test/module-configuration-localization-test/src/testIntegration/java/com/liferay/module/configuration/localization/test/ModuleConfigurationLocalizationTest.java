@@ -21,12 +21,12 @@ import com.liferay.portal.configuration.metatype.definitions.ExtendedAttributeDe
 import com.liferay.portal.configuration.metatype.definitions.ExtendedMetaTypeInformation;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedMetaTypeService;
 import com.liferay.portal.configuration.metatype.definitions.ExtendedObjectClassDefinition;
+import com.liferay.portal.kernel.resource.bundle.AggregateResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -62,12 +62,12 @@ public class ModuleConfigurationLocalizationTest {
 
 	@Test
 	public void testConfigurationLocalization() {
+		StringBundler sb = new StringBundler();
+
 		Bundle currentBundle = FrameworkUtil.getBundle(
 			ModuleConfigurationLocalizationTest.class);
 
 		BundleContext bundleContext = currentBundle.getBundleContext();
-
-		StringBundler sb = new StringBundler();
 
 		for (Bundle bundle : bundleContext.getBundles()) {
 			String bundleError = _collectBundleError(bundle);
@@ -134,27 +134,17 @@ public class ModuleConfigurationLocalizationTest {
 					bundle.getSymbolicName());
 
 		if (resourceBundleLoader == null) {
-			sb.append(
-				"\n\tMissing default language file for configuration pids: ");
-
-			for (String pid : pids) {
-				sb.append(pid);
-				sb.append(StringPool.COMMA);
-			}
-
-			sb.setIndex(sb.index() - 1);
-
-			return sb.toString();
+			resourceBundleLoader =
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 		}
-
-		ResourceBundleLoader aggregateResourceBundleLoader =
-			new AggregateResourceBundleLoader(
+		else {
+			resourceBundleLoader = new AggregateResourceBundleLoader(
 				resourceBundleLoader,
 				ResourceBundleLoaderUtil.getPortalResourceBundleLoader());
+		}
 
-		ResourceBundle resourceBundle =
-			aggregateResourceBundleLoader.loadResourceBundle(
-				LocaleUtil.getDefault());
+		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
+			LocaleUtil.getDefault());
 
 		for (String pid : pids) {
 			String configurationError = _collectConfigurationError(

@@ -1,11 +1,24 @@
 definition {
 
 	macro configureSearchResults {
-		Portlet.gotoPortletOptions(
-			portletName = "Search Results",
-			portletOption = "Configuration");
+		if (isSet(index)) {
+			SearchResultPortlet.gotoWidgetOptionsSpecific(
+				index = "${index}",
+				portletOption = "Configuration");
+		}
+		else {
+			Portlet.gotoPortletOptions(
+				portletName = "Search Results",
+				portletOption = "Configuration");
+		}
 
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
+
+		if ("${disableHighlighting}" == "true") {
+			Uncheck(
+				checkboxName = "Enable Highlighting",
+				locator1 = "Checkbox#ANY_CHECKBOX");
+		}
 
 		if (isSet(federatedSearchKey)) {
 			Type(
@@ -21,9 +34,32 @@ definition {
 				value1 = "${fieldsToDisplay}");
 		}
 
+		if (isSet(paginationDelta)) {
+			Type(
+				key_fieldLabel = "Pagination Delta",
+				locator1 = "TextInput#GENERIC_TEXT_INPUT",
+				value1 = "${paginationDelta}");
+		}
+
 		PortletEntry.save();
 
 		IFrame.closeFrame();
+	}
+
+	macro gotoWidgetOptionsSpecific {
+		MouseOver.mouseOverNotVisible(
+			key_index = "${index}",
+			locator1 = "SearchResults#RESULTS_PORTLET_WIDGET_ELLIPSIS_ICON_SPECIFIC");
+
+		Click(
+			key_index = "${index}",
+			locator1 = "SearchResults#RESULTS_PORTLET_WIDGET_ELLIPSIS_ICON_SPECIFIC");
+
+		if (isSet(portletOption)) {
+			var key_menuItem = "${portletOption}";
+
+			Click(locator1 = "MenuItem#ANY_MENU_ITEM");
+		}
 	}
 
 	macro paginateAndViewSearchResults {

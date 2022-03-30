@@ -16,6 +16,8 @@ package com.liferay.product.navigation.control.menu.web.internal.servlet.taglib.
 
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.HorizontalCard;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -48,6 +50,9 @@ public class AssetRendererHorizontalCard implements HorizontalCard {
 			return _assetRenderer.getIconCssClass();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -55,15 +60,18 @@ public class AssetRendererHorizontalCard implements HorizontalCard {
 
 	@Override
 	public String getTitle() {
-		String title = _assetRenderer.getTitle(_themeDisplay.getLocale());
-
-		return HtmlUtil.escape(StringUtil.shorten(title, 60));
+		return HtmlUtil.escape(
+			StringUtil.shorten(
+				_assetRenderer.getTitle(_themeDisplay.getLocale()), 60));
 	}
 
 	@Override
 	public boolean isSelectable() {
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetRendererHorizontalCard.class);
 
 	private final AssetRenderer<?> _assetRenderer;
 	private final ThemeDisplay _themeDisplay;

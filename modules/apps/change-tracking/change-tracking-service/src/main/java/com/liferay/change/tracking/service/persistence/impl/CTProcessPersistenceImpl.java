@@ -20,6 +20,7 @@ import com.liferay.change.tracking.model.CTProcessTable;
 import com.liferay.change.tracking.model.impl.CTProcessImpl;
 import com.liferay.change.tracking.model.impl.CTProcessModelImpl;
 import com.liferay.change.tracking.service.persistence.CTProcessPersistence;
+import com.liferay.change.tracking.service.persistence.CTProcessUtil;
 import com.liferay.change.tracking.service.persistence.impl.constants.CTPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Configuration;
@@ -34,15 +35,22 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,7 +72,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = CTProcessPersistence.class)
+@Component(service = {CTProcessPersistence.class, BasePersistence.class})
 public class CTProcessPersistenceImpl
 	extends BasePersistenceImpl<CTProcess> implements CTProcessPersistence {
 
@@ -181,7 +189,7 @@ public class CTProcessPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CTProcess>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CTProcess ctProcess : list) {
@@ -240,10 +248,6 @@ public class CTProcessPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -543,7 +547,7 @@ public class CTProcessPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -570,8 +574,6 @@ public class CTProcessPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -585,9 +587,9 @@ public class CTProcessPersistenceImpl
 	private static final String _FINDER_COLUMN_COMPANYID_COMPANYID_2 =
 		"ctProcess.companyId = ?";
 
-	private FinderPath _finderPathWithPaginationFindByCollectionId;
-	private FinderPath _finderPathWithoutPaginationFindByCollectionId;
-	private FinderPath _finderPathCountByCollectionId;
+	private FinderPath _finderPathWithPaginationFindByCtCollectionId;
+	private FinderPath _finderPathWithoutPaginationFindByCtCollectionId;
+	private FinderPath _finderPathCountByCtCollectionId;
 
 	/**
 	 * Returns all the ct processes where ctCollectionId = &#63;.
@@ -596,8 +598,8 @@ public class CTProcessPersistenceImpl
 	 * @return the matching ct processes
 	 */
 	@Override
-	public List<CTProcess> findByCollectionId(long ctCollectionId) {
-		return findByCollectionId(
+	public List<CTProcess> findByCtCollectionId(long ctCollectionId) {
+		return findByCtCollectionId(
 			ctCollectionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 	}
 
@@ -614,10 +616,10 @@ public class CTProcessPersistenceImpl
 	 * @return the range of matching ct processes
 	 */
 	@Override
-	public List<CTProcess> findByCollectionId(
+	public List<CTProcess> findByCtCollectionId(
 		long ctCollectionId, int start, int end) {
 
-		return findByCollectionId(ctCollectionId, start, end, null);
+		return findByCtCollectionId(ctCollectionId, start, end, null);
 	}
 
 	/**
@@ -634,11 +636,11 @@ public class CTProcessPersistenceImpl
 	 * @return the ordered range of matching ct processes
 	 */
 	@Override
-	public List<CTProcess> findByCollectionId(
+	public List<CTProcess> findByCtCollectionId(
 		long ctCollectionId, int start, int end,
 		OrderByComparator<CTProcess> orderByComparator) {
 
-		return findByCollectionId(
+		return findByCtCollectionId(
 			ctCollectionId, start, end, orderByComparator, true);
 	}
 
@@ -657,7 +659,7 @@ public class CTProcessPersistenceImpl
 	 * @return the ordered range of matching ct processes
 	 */
 	@Override
-	public List<CTProcess> findByCollectionId(
+	public List<CTProcess> findByCtCollectionId(
 		long ctCollectionId, int start, int end,
 		OrderByComparator<CTProcess> orderByComparator,
 		boolean useFinderCache) {
@@ -669,12 +671,12 @@ public class CTProcessPersistenceImpl
 			(orderByComparator == null)) {
 
 			if (useFinderCache) {
-				finderPath = _finderPathWithoutPaginationFindByCollectionId;
+				finderPath = _finderPathWithoutPaginationFindByCtCollectionId;
 				finderArgs = new Object[] {ctCollectionId};
 			}
 		}
 		else if (useFinderCache) {
-			finderPath = _finderPathWithPaginationFindByCollectionId;
+			finderPath = _finderPathWithPaginationFindByCtCollectionId;
 			finderArgs = new Object[] {
 				ctCollectionId, start, end, orderByComparator
 			};
@@ -684,7 +686,7 @@ public class CTProcessPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CTProcess>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (CTProcess ctProcess : list) {
@@ -710,7 +712,7 @@ public class CTProcessPersistenceImpl
 
 			sb.append(_SQL_SELECT_CTPROCESS_WHERE);
 
-			sb.append(_FINDER_COLUMN_COLLECTIONID_CTCOLLECTIONID_2);
+			sb.append(_FINDER_COLUMN_CTCOLLECTIONID_CTCOLLECTIONID_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -743,10 +745,6 @@ public class CTProcessPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -766,11 +764,11 @@ public class CTProcessPersistenceImpl
 	 * @throws NoSuchProcessException if a matching ct process could not be found
 	 */
 	@Override
-	public CTProcess findByCollectionId_First(
+	public CTProcess findByCtCollectionId_First(
 			long ctCollectionId, OrderByComparator<CTProcess> orderByComparator)
 		throws NoSuchProcessException {
 
-		CTProcess ctProcess = fetchByCollectionId_First(
+		CTProcess ctProcess = fetchByCtCollectionId_First(
 			ctCollectionId, orderByComparator);
 
 		if (ctProcess != null) {
@@ -797,10 +795,10 @@ public class CTProcessPersistenceImpl
 	 * @return the first matching ct process, or <code>null</code> if a matching ct process could not be found
 	 */
 	@Override
-	public CTProcess fetchByCollectionId_First(
+	public CTProcess fetchByCtCollectionId_First(
 		long ctCollectionId, OrderByComparator<CTProcess> orderByComparator) {
 
-		List<CTProcess> list = findByCollectionId(
+		List<CTProcess> list = findByCtCollectionId(
 			ctCollectionId, 0, 1, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -819,11 +817,11 @@ public class CTProcessPersistenceImpl
 	 * @throws NoSuchProcessException if a matching ct process could not be found
 	 */
 	@Override
-	public CTProcess findByCollectionId_Last(
+	public CTProcess findByCtCollectionId_Last(
 			long ctCollectionId, OrderByComparator<CTProcess> orderByComparator)
 		throws NoSuchProcessException {
 
-		CTProcess ctProcess = fetchByCollectionId_Last(
+		CTProcess ctProcess = fetchByCtCollectionId_Last(
 			ctCollectionId, orderByComparator);
 
 		if (ctProcess != null) {
@@ -850,16 +848,16 @@ public class CTProcessPersistenceImpl
 	 * @return the last matching ct process, or <code>null</code> if a matching ct process could not be found
 	 */
 	@Override
-	public CTProcess fetchByCollectionId_Last(
+	public CTProcess fetchByCtCollectionId_Last(
 		long ctCollectionId, OrderByComparator<CTProcess> orderByComparator) {
 
-		int count = countByCollectionId(ctCollectionId);
+		int count = countByCtCollectionId(ctCollectionId);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<CTProcess> list = findByCollectionId(
+		List<CTProcess> list = findByCtCollectionId(
 			ctCollectionId, count - 1, count, orderByComparator);
 
 		if (!list.isEmpty()) {
@@ -879,7 +877,7 @@ public class CTProcessPersistenceImpl
 	 * @throws NoSuchProcessException if a ct process with the primary key could not be found
 	 */
 	@Override
-	public CTProcess[] findByCollectionId_PrevAndNext(
+	public CTProcess[] findByCtCollectionId_PrevAndNext(
 			long ctProcessId, long ctCollectionId,
 			OrderByComparator<CTProcess> orderByComparator)
 		throws NoSuchProcessException {
@@ -893,12 +891,12 @@ public class CTProcessPersistenceImpl
 
 			CTProcess[] array = new CTProcessImpl[3];
 
-			array[0] = getByCollectionId_PrevAndNext(
+			array[0] = getByCtCollectionId_PrevAndNext(
 				session, ctProcess, ctCollectionId, orderByComparator, true);
 
 			array[1] = ctProcess;
 
-			array[2] = getByCollectionId_PrevAndNext(
+			array[2] = getByCtCollectionId_PrevAndNext(
 				session, ctProcess, ctCollectionId, orderByComparator, false);
 
 			return array;
@@ -911,7 +909,7 @@ public class CTProcessPersistenceImpl
 		}
 	}
 
-	protected CTProcess getByCollectionId_PrevAndNext(
+	protected CTProcess getByCtCollectionId_PrevAndNext(
 		Session session, CTProcess ctProcess, long ctCollectionId,
 		OrderByComparator<CTProcess> orderByComparator, boolean previous) {
 
@@ -928,7 +926,7 @@ public class CTProcessPersistenceImpl
 
 		sb.append(_SQL_SELECT_CTPROCESS_WHERE);
 
-		sb.append(_FINDER_COLUMN_COLLECTIONID_CTCOLLECTIONID_2);
+		sb.append(_FINDER_COLUMN_CTCOLLECTIONID_CTCOLLECTIONID_2);
 
 		if (orderByComparator != null) {
 			String[] orderByConditionFields =
@@ -1025,9 +1023,9 @@ public class CTProcessPersistenceImpl
 	 * @param ctCollectionId the ct collection ID
 	 */
 	@Override
-	public void removeByCollectionId(long ctCollectionId) {
+	public void removeByCtCollectionId(long ctCollectionId) {
 		for (CTProcess ctProcess :
-				findByCollectionId(
+				findByCtCollectionId(
 					ctCollectionId, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 					null)) {
 
@@ -1042,19 +1040,19 @@ public class CTProcessPersistenceImpl
 	 * @return the number of matching ct processes
 	 */
 	@Override
-	public int countByCollectionId(long ctCollectionId) {
-		FinderPath finderPath = _finderPathCountByCollectionId;
+	public int countByCtCollectionId(long ctCollectionId) {
+		FinderPath finderPath = _finderPathCountByCtCollectionId;
 
 		Object[] finderArgs = new Object[] {ctCollectionId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
 
 			sb.append(_SQL_COUNT_CTPROCESS_WHERE);
 
-			sb.append(_FINDER_COLUMN_COLLECTIONID_CTCOLLECTIONID_2);
+			sb.append(_FINDER_COLUMN_CTCOLLECTIONID_CTCOLLECTIONID_2);
 
 			String sql = sb.toString();
 
@@ -1074,8 +1072,6 @@ public class CTProcessPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1086,7 +1082,7 @@ public class CTProcessPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_COLLECTIONID_CTCOLLECTIONID_2 =
+	private static final String _FINDER_COLUMN_CTCOLLECTIONID_CTCOLLECTIONID_2 =
 		"ctProcess.ctCollectionId = ?";
 
 	public CTProcessPersistenceImpl() {
@@ -1106,11 +1102,10 @@ public class CTProcessPersistenceImpl
 	@Override
 	public void cacheResult(CTProcess ctProcess) {
 		entityCache.putResult(
-			entityCacheEnabled, CTProcessImpl.class, ctProcess.getPrimaryKey(),
-			ctProcess);
-
-		ctProcess.resetOriginalValues();
+			CTProcessImpl.class, ctProcess.getPrimaryKey(), ctProcess);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the ct processes in the entity cache if it is enabled.
@@ -1119,15 +1114,18 @@ public class CTProcessPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<CTProcess> ctProcesses) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (ctProcesses.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (CTProcess ctProcess : ctProcesses) {
 			if (entityCache.getResult(
-					entityCacheEnabled, CTProcessImpl.class,
-					ctProcess.getPrimaryKey()) == null) {
+					CTProcessImpl.class, ctProcess.getPrimaryKey()) == null) {
 
 				cacheResult(ctProcess);
-			}
-			else {
-				ctProcess.resetOriginalValues();
 			}
 		}
 	}
@@ -1143,9 +1141,7 @@ public class CTProcessPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(CTProcessImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CTProcessImpl.class);
 	}
 
 	/**
@@ -1157,34 +1153,22 @@ public class CTProcessPersistenceImpl
 	 */
 	@Override
 	public void clearCache(CTProcess ctProcess) {
-		entityCache.removeResult(
-			entityCacheEnabled, CTProcessImpl.class, ctProcess.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(CTProcessImpl.class, ctProcess);
 	}
 
 	@Override
 	public void clearCache(List<CTProcess> ctProcesses) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (CTProcess ctProcess : ctProcesses) {
-			entityCache.removeResult(
-				entityCacheEnabled, CTProcessImpl.class,
-				ctProcess.getPrimaryKey());
+			entityCache.removeResult(CTProcessImpl.class, ctProcess);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(CTProcessImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, CTProcessImpl.class, primaryKey);
+			entityCache.removeResult(CTProcessImpl.class, primaryKey);
 		}
 	}
 
@@ -1311,15 +1295,27 @@ public class CTProcessPersistenceImpl
 
 		CTProcessModelImpl ctProcessModelImpl = (CTProcessModelImpl)ctProcess;
 
+		if (isNew && (ctProcess.getCreateDate() == null)) {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			Date date = new Date();
+
+			if (serviceContext == null) {
+				ctProcess.setCreateDate(date);
+			}
+			else {
+				ctProcess.setCreateDate(serviceContext.getCreateDate(date));
+			}
+		}
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			if (ctProcess.isNew()) {
+			if (isNew) {
 				session.save(ctProcess);
-
-				ctProcess.setNew(false);
 			}
 			else {
 				ctProcess = (CTProcess)session.merge(ctProcess);
@@ -1332,71 +1328,12 @@ public class CTProcessPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {ctProcessModelImpl.getCompanyId()};
-
-			finderCache.removeResult(_finderPathCountByCompanyId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {ctProcessModelImpl.getCtCollectionId()};
-
-			finderCache.removeResult(_finderPathCountByCollectionId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByCollectionId, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((ctProcessModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					ctProcessModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {ctProcessModelImpl.getCompanyId()};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((ctProcessModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCollectionId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					ctProcessModelImpl.getOriginalCtCollectionId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCollectionId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCollectionId, args);
-
-				args = new Object[] {ctProcessModelImpl.getCtCollectionId()};
-
-				finderCache.removeResult(_finderPathCountByCollectionId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCollectionId, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, CTProcessImpl.class, ctProcess.getPrimaryKey(),
-			ctProcess, false);
+			CTProcessImpl.class, ctProcessModelImpl, false, true);
+
+		if (isNew) {
+			ctProcess.setNew(false);
+		}
 
 		ctProcess.resetOriginalValues();
 
@@ -1536,7 +1473,7 @@ public class CTProcessPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<CTProcess>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1577,10 +1514,6 @@ public class CTProcessPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1610,7 +1543,7 @@ public class CTProcessPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1626,9 +1559,6 @@ public class CTProcessPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1664,70 +1594,80 @@ public class CTProcessPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		CTProcessModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		CTProcessModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
 		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			CTProcessModelImpl.COMPANYID_COLUMN_BITMASK |
-			CTProcessModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
 		_finderPathCountByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
-		_finderPathWithPaginationFindByCollectionId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCollectionId",
+		_finderPathWithPaginationFindByCtCollectionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCtCollectionId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"ctCollectionId"}, true);
 
-		_finderPathWithoutPaginationFindByCollectionId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, CTProcessImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCollectionId",
+		_finderPathWithoutPaginationFindByCtCollectionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCtCollectionId",
 			new String[] {Long.class.getName()},
-			CTProcessModelImpl.CTCOLLECTIONID_COLUMN_BITMASK |
-			CTProcessModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"ctCollectionId"}, true);
 
-		_finderPathCountByCollectionId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCollectionId",
-			new String[] {Long.class.getName()});
+		_finderPathCountByCtCollectionId = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCtCollectionId",
+			new String[] {Long.class.getName()},
+			new String[] {"ctCollectionId"}, false);
+
+		_setCTProcessUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setCTProcessUtilPersistence(null);
+
 		entityCache.removeCache(CTProcessImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setCTProcessUtilPersistence(
+		CTProcessPersistence ctProcessPersistence) {
+
+		try {
+			Field field = CTProcessUtil.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, ctProcessPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -1736,12 +1676,6 @@ public class CTProcessPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.change.tracking.model.CTProcess"),
-			true);
 	}
 
 	@Override
@@ -1761,8 +1695,6 @@ public class CTProcessPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -1793,13 +1725,12 @@ public class CTProcessPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		CTProcessPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(CTPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private CTProcessModelArgumentsResolver _ctProcessModelArgumentsResolver;
 
 }

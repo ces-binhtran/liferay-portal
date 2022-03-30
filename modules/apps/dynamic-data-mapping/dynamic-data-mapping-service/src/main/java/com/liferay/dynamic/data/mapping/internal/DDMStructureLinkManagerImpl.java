@@ -58,15 +58,15 @@ public class DDMStructureLinkManagerImpl implements DDMStructureLinkManager {
 	}
 
 	@Override
-	public List<DDMStructureLink> getClassNameStructureLinks(long classNameId) {
+	public List<DDMStructureLink> getStructureLinks(long structureId) {
 		List<DDMStructureLink> ddmStructureLinks = new ArrayList<>();
 
 		for (com.liferay.dynamic.data.mapping.model.DDMStructureLink
-				structureLink :
-					_ddmStructureLinkLocalService.getClassNameStructureLinks(
-						classNameId)) {
+				ddmStructureLink :
+					_ddmStructureLinkLocalService.getStructureLinks(
+						structureId)) {
 
-			ddmStructureLinks.add(new DDMStructureLinkImpl(structureLink));
+			ddmStructureLinks.add(new DDMStructureLinkImpl(ddmStructureLink));
 		}
 
 		return ddmStructureLinks;

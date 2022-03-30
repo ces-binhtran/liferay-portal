@@ -1,5 +1,105 @@
 # Liferay Gradle Plugins Lang Builder Change Log
 
+## 3.0.29 - 2021-12-08
+
+### Dependencies
+- [LPS-143566] Update the com.liferay.lang.builder dependency to version 1.0.46.
+- [LPS-143280] Update the com.liferay.gradle.util dependency to version 1.0.45.
+
+## 3.0.28 - 2021-09-29
+
+### Commits
+- [LPS-138487] republish (03764ac72b)
+
+### Dependencies
+- [LPS-138487] Update the com.liferay.lang.builder dependency to version 1.0.45.
+
+## 3.0.27 - 2021-09-07
+
+### Dependencies
+- [LPS-138487] Update the com.liferay.lang.builder dependency to version 1.0.44.
+
+## 3.0.26 - 2021-09-03
+
+### Commits
+- [LPS-105380] Remove final from parameters (a4e6ca0985)
+- [LPS-105380] Revert "LPS-105380 Remove final from parameters" (b2f9eed2c2)
+- [LPS-105380] Remove final from parameters (f615ff77ff)
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (d4477c5996)
+- [LPS-130505] SF, no need to call methods (54557cd107)
+
+### Dependencies
+- [LPS-138487] Update the com.liferay.lang.builder dependency to version 1.0.43.
+
+## 3.0.25 - 2021-04-12
+
+### Commits
+- [LPS-105380] Make var final (12e010029a)
+
+### Dependencies
+- [LPS-130464] Update the com.liferay.lang.builder dependency to version 1.0.42.
+
+## 3.0.24 - 2020-11-04
+
+### Dependencies
+- [LPS-122403] Update the com.liferay.lang.builder dependency to version 1.0.41.
+
+## 3.0.23 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+
+## 3.0.22 - 2020-10-28
+
+### Commits
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-122599] Update the com.liferay.lang.builder dependency to version 1.0.40.
+
+## 3.0.21 - 2020-10-21
+
+### Dependencies
+- [LPS-122403] Update the com.liferay.lang.builder dependency to version 1.0.39.
+
+## 3.0.20 - 2020-09-04
+
+### Dependencies
+- [LPS-48290] Update the com.liferay.lang.builder dependency to version 1.0.38.
+
+## 3.0.19 - 2020-07-21
+
+### Dependencies
+- [LPS-115438] Update the com.liferay.lang.builder dependency to version 1.0.37.
+
+## 3.0.18 - 2020-07-21
+
+### Dependencies
+- [LPS-117015] Update the com.liferay.lang.builder dependency to version 1.0.36.
+
+## 3.0.17 - 2020-07-20
+
+### Commits
+- [LPS-115366] Update documentation link (fb7af3b6f1)
+- [LPS-108328] Remove version number check (69092ebf90)
+
+### Dependencies
+- [LPS-115438] Update the com.liferay.lang.builder dependency to version 1.0.35.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 3.0.16 - 2020-03-04
 
 ### Commits
@@ -412,6 +512,7 @@ version 2.4.
 - [LPS-51081] Update the groovy-all dependency to version 2.3.10.
 
 [LPS-10661]: https://issues.liferay.com/browse/LPS-10661
+[LPS-48290]: https://issues.liferay.com/browse/LPS-48290
 [LPS-51081]: https://issues.liferay.com/browse/LPS-51081
 [LPS-51801]: https://issues.liferay.com/browse/LPS-51801
 [LPS-55187]: https://issues.liferay.com/browse/LPS-55187
@@ -468,6 +569,7 @@ version 2.4.
 [LPS-87192]: https://issues.liferay.com/browse/LPS-87192
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
 [LPS-87590]: https://issues.liferay.com/browse/LPS-87590
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-89388]: https://issues.liferay.com/browse/LPS-89388
 [LPS-94555]: https://issues.liferay.com/browse/LPS-94555
 [LPS-95819]: https://issues.liferay.com/browse/LPS-95819
@@ -475,7 +577,24 @@ version 2.4.
 [LPS-96860]: https://issues.liferay.com/browse/LPS-96860
 [LPS-100515]: https://issues.liferay.com/browse/LPS-100515
 [LPS-102700]: https://issues.liferay.com/browse/LPS-102700
+[LPS-105380]: https://issues.liferay.com/browse/LPS-105380
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-106614]: https://issues.liferay.com/browse/LPS-106614
 [LPS-108328]: https://issues.liferay.com/browse/LPS-108328
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020
+[LPS-115366]: https://issues.liferay.com/browse/LPS-115366
+[LPS-115438]: https://issues.liferay.com/browse/LPS-115438
+[LPS-117015]: https://issues.liferay.com/browse/LPS-117015
+[LPS-122403]: https://issues.liferay.com/browse/LPS-122403
+[LPS-122599]: https://issues.liferay.com/browse/LPS-122599
+[LPS-130464]: https://issues.liferay.com/browse/LPS-130464
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-138487]: https://issues.liferay.com/browse/LPS-138487
+[LPS-143280]: https://issues.liferay.com/browse/LPS-143280
+[LPS-143566]: https://issues.liferay.com/browse/LPS-143566
 [LRDOCS-4319]: https://issues.liferay.com/browse/LRDOCS-4319

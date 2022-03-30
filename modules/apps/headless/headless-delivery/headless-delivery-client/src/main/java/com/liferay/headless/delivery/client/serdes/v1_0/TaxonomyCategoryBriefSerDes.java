@@ -55,6 +55,27 @@ public class TaxonomyCategoryBriefSerDes {
 
 		sb.append("{");
 
+		if (taxonomyCategoryBrief.getEmbeddedTaxonomyCategory() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"embeddedTaxonomyCategory\": ");
+
+			if (taxonomyCategoryBrief.getEmbeddedTaxonomyCategory() instanceof
+					String) {
+
+				sb.append("\"");
+				sb.append(
+					(String)
+						taxonomyCategoryBrief.getEmbeddedTaxonomyCategory());
+				sb.append("\"");
+			}
+			else {
+				sb.append(taxonomyCategoryBrief.getEmbeddedTaxonomyCategory());
+			}
+		}
+
 		if (taxonomyCategoryBrief.getTaxonomyCategoryId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -111,6 +132,16 @@ public class TaxonomyCategoryBriefSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (taxonomyCategoryBrief.getEmbeddedTaxonomyCategory() == null) {
+			map.put("embeddedTaxonomyCategory", null);
+		}
+		else {
+			map.put(
+				"embeddedTaxonomyCategory",
+				String.valueOf(
+					taxonomyCategoryBrief.getEmbeddedTaxonomyCategory()));
+		}
+
 		if (taxonomyCategoryBrief.getTaxonomyCategoryId() == null) {
 			map.put("taxonomyCategoryId", null);
 		}
@@ -161,7 +192,17 @@ public class TaxonomyCategoryBriefSerDes {
 			TaxonomyCategoryBrief taxonomyCategoryBrief,
 			String jsonParserFieldName, Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "taxonomyCategoryId")) {
+			if (Objects.equals(
+					jsonParserFieldName, "embeddedTaxonomyCategory")) {
+
+				if (jsonParserFieldValue != null) {
+					taxonomyCategoryBrief.setEmbeddedTaxonomyCategory(
+						(Object)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "taxonomyCategoryId")) {
+
 				if (jsonParserFieldValue != null) {
 					taxonomyCategoryBrief.setTaxonomyCategoryId(
 						Long.valueOf((String)jsonParserFieldValue));
@@ -183,10 +224,6 @@ public class TaxonomyCategoryBriefSerDes {
 						(Map)TaxonomyCategoryBriefSerDes.toMap(
 							(String)jsonParserFieldValue));
 				}
-			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
 			}
 		}
 
@@ -216,7 +253,7 @@ public class TaxonomyCategoryBriefSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -252,7 +289,7 @@ public class TaxonomyCategoryBriefSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

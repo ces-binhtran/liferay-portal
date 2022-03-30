@@ -18,6 +18,7 @@
 
 <%
 boolean enabled = true;
+
 String emailFromName = ParamUtil.getString(request, "preferences--emailFromName--", reportsGroupServiceEmailConfiguration.emailFromName());
 String emailFromAddress = ParamUtil.getString(request, "preferences--emailFromAddress--", reportsGroupServiceEmailConfiguration.emailFromAddress());
 
@@ -35,13 +36,9 @@ Map<String, String> emailDefinitionTerms = EmailConfigurationUtil.getEmailDefini
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
 
-	<%
-	String tabs1Names = "email-from,delivery-email,notifications-email";
-	%>
-
 	<div class="portlet-configuration-body-content">
 		<liferay-ui:tabs
-			names="<%= tabs1Names %>"
+			names="email-from,delivery-email,notifications-email"
 			refresh="<%= false %>"
 		>
 			<liferay-ui:error key="emailDeliveryBody" message="please-enter-a-valid-body" />

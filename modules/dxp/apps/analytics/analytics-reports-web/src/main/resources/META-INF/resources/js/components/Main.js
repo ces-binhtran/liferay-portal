@@ -10,38 +10,74 @@
  */
 
 import PropTypes from 'prop-types';
-import React, {useContext} from 'react';
+import React, {useContext, useMemo} from 'react';
 
-import {StoreContext} from '../context/store';
+import {
+	ChartStateContext,
+	useDateTitle,
+	useIsPreviousPeriodButtonDisabled,
+} from '../context/ChartStateContext';
+import {StoreStateContext} from '../context/StoreContext';
+import {generateDateFormatters as dateFormat} from '../utils/dateFormat';
 import BasicInformation from './BasicInformation';
 import Chart from './Chart';
+import TimeSpanSelector from './TimeSpanSelector';
 import TotalCount from './TotalCount';
 import TrafficSources from './TrafficSources';
 
 export default function Main({
-	authorName,
+	author,
+	canonicalURL,
 	chartDataProviders,
-	defaultTimeRange,
-	defaultTimeSpanOption,
-	languageTag,
+	className,
+	onSelectedLanguageClick,
 	onTrafficSourceClick,
 	pagePublishDate,
 	pageTitle,
 	timeSpanOptions,
 	totalReadsDataProvider,
 	totalViewsDataProvider,
-	trafficSources,
+	trafficSourcesDataProvider,
+	viewURLs,
 }) {
-	const [{readsEnabled}] = useContext(StoreContext);
+	const {timeSpanKey, timeSpanOffset} = useContext(ChartStateContext);
+	const {languageTag} = useContext(StoreStateContext);
+
+	const isPreviousPeriodButtonDisabled = useIsPreviousPeriodButtonDisabled();
+
+	const {firstDate, lastDate} = useDateTitle();
+
+	const dateFormatters = useMemo(() => dateFormat(languageTag), [
+		languageTag,
+	]);
+
+	const title = dateFormatters.formatChartTitle([firstDate, lastDate]);
 
 	return (
-		<>
+		<div className={`analytics-reports-app-main pb-3 px-3 ${className}`}>
 			<BasicInformation
-				authorName={authorName}
-				languageTag={languageTag}
+				author={author}
+				canonicalURL={canonicalURL}
+				onSelectedLanguageClick={onSelectedLanguageClick}
 				publishDate={pagePublishDate}
 				title={pageTitle}
+				viewURLs={viewURLs}
 			/>
+
+			{!!timeSpanOptions.length && (
+				<div className="c-mb-2 c-mt-4">
+					<TimeSpanSelector
+						disabledNextTimeSpan={timeSpanOffset === 0}
+						disabledPreviousPeriodButton={
+							isPreviousPeriodButtonDisabled
+						}
+						timeSpanKey={timeSpanKey}
+						timeSpanOptions={timeSpanOptions}
+					/>
+				</div>
+			)}
+
+			{title && <h5 className="c-mb-4">{title}</h5>}
 
 			<h5 className="mt-3 sheet-subtitle">
 				{Liferay.Language.get('engagement')}
@@ -57,8 +93,9 @@ export default function Main({
 				)}
 			/>
 
-			{readsEnabled && (
+			{totalReadsDataProvider && (
 				<TotalCount
+					className="mb-2"
 					dataProvider={totalReadsDataProvider}
 					label={Liferay.Util.sub(
 						Liferay.Language.get('total-reads')
@@ -72,32 +109,32 @@ export default function Main({
 
 			<Chart
 				dataProviders={chartDataProviders}
-				defaultTimeRange={defaultTimeRange}
-				defaultTimeSpanOption={defaultTimeSpanOption}
-				languageTag={languageTag}
 				publishDate={pagePublishDate}
 				timeSpanOptions={timeSpanOptions}
 			/>
 
-			{trafficSources.length > 0 && (
-				<TrafficSources
-					languageTag={languageTag}
-					onTrafficSourceClick={onTrafficSourceClick}
-					trafficSources={trafficSources}
-				/>
-			)}
-		</>
+			<TrafficSources
+				dataProvider={trafficSourcesDataProvider}
+				onTrafficSourceClick={onTrafficSourceClick}
+			/>
+		</div>
 	);
 }
 
-Main.proptypes = {
-	authorName: PropTypes.string.isRequired,
+Main.defaultProps = {
+	author: null,
+	className: '',
+	totalReadsDataProvider: null,
+};
+
+Main.propTypes = {
+	author: PropTypes.object,
+	canonicalURL: PropTypes.string.isRequired,
 	chartDataProviders: PropTypes.arrayOf(PropTypes.func.isRequired).isRequired,
-	defaultTimeRange: PropTypes.object.isRequired,
-	defaultTimeSpanOption: PropTypes.string.isRequired,
-	languageTag: PropTypes.string.isRequired,
+	className: PropTypes.string,
+	onSelectedLanguageClick: PropTypes.func.isRequired,
 	onTrafficSourceClick: PropTypes.func.isRequired,
-	pagePublishDate: PropTypes.number.isRequired,
+	pagePublishDate: PropTypes.string.isRequired,
 	pageTitle: PropTypes.string.isRequired,
 	timeSpanOptions: PropTypes.arrayOf(
 		PropTypes.shape({
@@ -105,7 +142,16 @@ Main.proptypes = {
 			label: PropTypes.string,
 		})
 	).isRequired,
-	totalReadsDataProvider: PropTypes.func.isRequired,
+	totalReadsDataProvider: PropTypes.func,
 	totalViewsDataProvider: PropTypes.func.isRequired,
-	trafficSources: PropTypes.array.isRequired,
+	trafficSourcesDataProvider: PropTypes.func.isRequired,
+	viewURLs: PropTypes.arrayOf(
+		PropTypes.shape({
+			default: PropTypes.bool.isRequired,
+			languageId: PropTypes.string.isRequired,
+			languageLabel: PropTypes.string.isRequired,
+			selected: PropTypes.bool.isRequired,
+			viewURL: PropTypes.string.isRequired,
+		})
+	).isRequired,
 };

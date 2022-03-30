@@ -42,10 +42,10 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 	<div class="portlet-configuration-body-content">
 		<clay:container-fluid>
 			<div class="alert alert-info">
-				<span class='displaying-help-message-holder <%= (selFormInstance == null) ? StringPool.BLANK : "hide" %>'>
+				<span class="displaying-help-message-holder <%= (selFormInstance == null) ? StringPool.BLANK : "hide" %>">
 					<liferay-ui:message key="please-select-a-form-from-the-list-below" />
 				</span>
-				<span class='displaying-form-instance-id-holder <%= (selFormInstance == null) ? "hide" : StringPool.BLANK %>'>
+				<span class="displaying-form-instance-id-holder <%= (selFormInstance == null) ? "hide" : StringPool.BLANK %>">
 					<liferay-ui:message key="displaying-form" />: <span class="displaying-form-instance-id"><%= (selFormInstance != null) ? HtmlUtil.escape(selFormInstance.getName(locale)) : StringPool.BLANK %></span>
 				</span>
 			</div>
@@ -56,7 +56,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 						<liferay-ui:search-container
 							emptyResultsMessage="no-forms-were-found"
 							iteratorURL="<%= configurationRenderURL %>"
-							total="<%= DDMFormInstanceServiceUtil.searchCount(company.getCompanyId(), scopeGroupId, keywords) %>"
+							total="<%= DDMFormInstanceServiceUtil.searchCount(company.getCompanyId(), scopeGroupId, keywords, WorkflowConstants.STATUS_APPROVED) %>"
 						>
 							<div class="form-search input-append">
 								<liferay-ui:input-search
@@ -66,7 +66,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 							</div>
 
 							<liferay-ui:search-container-results
-								results="<%= DDMFormInstanceServiceUtil.search(company.getCompanyId(), scopeGroupId, keywords, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
+								results="<%= DDMFormInstanceServiceUtil.search(company.getCompanyId(), scopeGroupId, keywords, WorkflowConstants.STATUS_APPROVED, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()) %>"
 							/>
 
 							<liferay-ui:search-container-row
@@ -79,7 +79,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 								StringBundler sb = new StringBundler(7);
 
 								sb.append("javascript:");
-								sb.append(renderResponse.getNamespace());
+								sb.append(liferayPortletResponse.getNamespace());
 								sb.append("selectFormInstance('");
 								sb.append(formInstance.getFormInstanceId());
 								sb.append("','");
@@ -132,7 +132,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 
 <aui:form action="<%= configurationActionURL %>" method="post" name="fm">
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
-	<aui:input name="redirect" type="hidden" value='<%= configurationRenderURL.toString() + StringPool.AMPERSAND + renderResponse.getNamespace() + "cur" + cur %>' />
+	<aui:input name="redirect" type="hidden" value='<%= configurationRenderURL.toString() + StringPool.AMPERSAND + liferayPortletResponse.getNamespace() + "cur" + cur %>' />
 	<aui:input name="preferences--formInstanceId--" type="hidden" value="<%= formInstanceId %>" />
 	<aui:input name="preferences--groupId--" type="hidden" value="<%= scopeGroupId %>" />
 
@@ -145,7 +145,7 @@ DDMFormInstance selFormInstance = DDMFormInstanceServiceUtil.fetchFormInstance(f
 	Liferay.provide(
 		window,
 		'<portlet:namespace />selectFormInstance',
-		function (formInstanceId, formInstanceName) {
+		(formInstanceId, formInstanceName) => {
 			var A = AUI();
 
 			document.<portlet:namespace />fm.<portlet:namespace />formInstanceId.value = formInstanceId;

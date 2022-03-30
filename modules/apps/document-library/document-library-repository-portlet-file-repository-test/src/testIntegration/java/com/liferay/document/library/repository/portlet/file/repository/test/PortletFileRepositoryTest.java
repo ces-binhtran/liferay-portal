@@ -28,12 +28,12 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil
 import com.liferay.portal.kernel.repository.capabilities.WorkflowCapability;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -229,19 +229,11 @@ public class PortletFileRepositoryTest {
 
 		String queryString = "param=value";
 
-		StringBundler sb = new StringBundler(8);
-
-		sb.append("/documents/portlet_file_entry/");
-		sb.append(_group.getGroupId());
-		sb.append(StringPool.SLASH);
-		sb.append(fileEntry.getTitle());
-		sb.append(StringPool.SLASH);
-		sb.append(fileEntry.getUuid());
-		sb.append(StringPool.QUESTION);
-		sb.append(queryString);
-
 		Assert.assertEquals(
-			sb.toString(),
+			StringBundler.concat(
+				"/documents/portlet_file_entry/", _group.getGroupId(),
+				StringPool.SLASH, fileEntry.getTitle(), StringPool.SLASH,
+				fileEntry.getUuid(), StringPool.QUESTION, queryString),
 			PortletFileRepositoryUtil.getPortletFileEntryURL(
 				null, fileEntry, StringPool.AMPERSAND + queryString));
 	}

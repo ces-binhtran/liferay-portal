@@ -17,29 +17,12 @@
 <%@ include file="/export/init.jsp" %>
 
 <%
-long groupId = ParamUtil.getLong(request, "groupId");
-boolean privateLayout = ParamUtil.getBoolean(request, "privateLayout");
-String displayStyle = ParamUtil.getString(request, "displayStyle");
-String navigation = ParamUtil.getString(request, "navigation");
-String orderByCol = ParamUtil.getString(request, "orderByCol");
-String orderByType = ParamUtil.getString(request, "orderByType");
-String searchContainerId = ParamUtil.getString(request, "searchContainerId");
+ExportLayoutsProcessesDisplayContext exportLayoutsProcessesDisplayContext = new ExportLayoutsProcessesDisplayContext(request, liferayPortletResponse);
 
-PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "exportLayoutsView");
-portletURL.setParameter("groupId", String.valueOf(groupId));
-portletURL.setParameter("privateLayout", String.valueOf(privateLayout));
-portletURL.setParameter("displayStyle", displayStyle);
-portletURL.setParameter("navigation", navigation);
-portletURL.setParameter("orderByCol", orderByCol);
-portletURL.setParameter("orderByType", orderByType);
-portletURL.setParameter("searchContainerId", searchContainerId);
-
-OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFactoryUtil.getBackgroundTaskOrderByComparator(orderByCol, orderByType);
+PortletURL portletURL = exportLayoutsProcessesDisplayContext.getPortletURL();
 %>
 
-<portlet:actionURL name="deleteBackgroundTasks" var="deleteBackgroundTasksURL">
+<portlet:actionURL name="/export_import/delete_layout_export_background_tasks" var="deleteBackgroundTasksURL">
 	<portlet:param name="redirect" value="<%= currentURL.toString() %>" />
 </portlet:actionURL>
 
@@ -49,41 +32,8 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 	<aui:input name="deleteBackgroundTaskIds" type="hidden" />
 
 	<liferay-ui:search-container
-		emptyResultsMessage="no-export-processes-were-found"
-		id="<%= searchContainerId %>"
-		iteratorURL="<%= portletURL %>"
-		orderByCol="<%= orderByCol %>"
-		orderByComparator="<%= orderByComparator %>"
-		orderByType="<%= orderByType %>"
-		rowChecker="<%= new EmptyOnClickRowChecker(liferayPortletResponse) %>"
+		searchContainer="<%= exportLayoutsProcessesDisplayContext.getSearchContainer() %>"
 	>
-		<liferay-ui:search-container-results>
-
-			<%
-			int backgroundTasksCount = 0;
-			List<BackgroundTask> backgroundTasks = null;
-
-			if (navigation.equals("all")) {
-				backgroundTasksCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(groupId, BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR);
-				backgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(groupId, BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator());
-			}
-			else {
-				boolean completed = false;
-
-				if (navigation.equals("completed")) {
-					completed = true;
-				}
-
-				backgroundTasksCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(groupId, BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR, completed);
-				backgroundTasks = BackgroundTaskManagerUtil.getBackgroundTasks(groupId, BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR, completed, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator());
-			}
-
-			searchContainer.setResults(backgroundTasks);
-			searchContainer.setTotal(backgroundTasksCount);
-			%>
-
-		</liferay-ui:search-container-results>
-
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.backgroundtask.BackgroundTask"
 			keyProperty="backgroundTaskId"
@@ -97,7 +47,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 			%>
 
 			<c:choose>
-				<c:when test='<%= displayStyle.equals("descriptive") %>'>
+				<c:when test='<%= Objects.equals(exportLayoutsProcessesDisplayContext.getDisplayStyle(), "descriptive") %>'>
 					<liferay-ui:search-container-column-text>
 						<liferay-ui:user-portrait
 							userId="<%= backgroundTask.getUserId() %>"
@@ -132,9 +82,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 							</span>
 
 							<%
-							List<FileEntry> attachmentsFileEntries = backgroundTask.getAttachmentsFileEntries();
-
-							for (FileEntry fileEntry : attachmentsFileEntries) {
+							for (FileEntry fileEntry : backgroundTask.getAttachmentsFileEntries()) {
 							%>
 
 								<liferay-ui:icon
@@ -174,7 +122,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 								}
 								%>
 
-								<div class="active progress progress-xs">
+								<div class="active progress">
 									<div class="progress-bar" style="width: <%= percentage %>%;">
 										<c:if test="<%= allProgressBarCountersTotal > 0 %>">
 											<%= percentage + StringPool.PERCENT %>
@@ -206,7 +154,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 
 						<c:if test="<%= Validator.isNotNull(backgroundTask.getStatusMessage()) %>">
 							<span class="background-task-status-row">
-								<a class="details-link" href="javascript:;" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= backgroundTask.getBackgroundTaskId() %>)">
+								<a class="details-link" href="javascript:;" onclick="<portlet:namespace />viewBackgroundTaskDetails(<%= backgroundTask.getBackgroundTaskId() %>);">
 									<liferay-ui:message key="see-more-details" />
 								</a>
 							</span>
@@ -219,7 +167,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 						</c:if>
 					</liferay-ui:search-container-column-text>
 				</c:when>
-				<c:when test='<%= displayStyle.equals("list") %>'>
+				<c:when test='<%= Objects.equals(exportLayoutsProcessesDisplayContext.getDisplayStyle(), "list") %>'>
 					<liferay-ui:search-container-column-text
 						name="user"
 					>
@@ -235,7 +183,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 						cssClass="table-cell-expand table-cell-minw-200 table-title"
 						name="title"
 					>
-						<span id='<%= liferayPortletResponse.getNamespace() + "backgroundTaskName" + String.valueOf(backgroundTask.getBackgroundTaskId()) %>'>
+						<span id="<%= liferayPortletResponse.getNamespace() + "backgroundTaskName" + String.valueOf(backgroundTask.getBackgroundTaskId()) %>">
 							<liferay-ui:message key="<%= HtmlUtil.escape(backgroundTaskName) %>" />
 						</span>
 					</liferay-ui:search-container-column-text>
@@ -270,19 +218,14 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 					>
 
 						<%
-						List<FileEntry> attachmentsFileEntries = backgroundTask.getAttachmentsFileEntries();
-
-						for (FileEntry fileEntry : attachmentsFileEntries) {
-						%>
-
-							<%
+						for (FileEntry fileEntry : backgroundTask.getAttachmentsFileEntries()) {
 							StringBundler sb = new StringBundler(4);
 
 							sb.append(fileEntry.getTitle());
 							sb.append(StringPool.OPEN_PARENTHESIS);
 							sb.append(LanguageUtil.formatStorageSize(fileEntry.getSize(), locale));
 							sb.append(StringPool.CLOSE_PARENTHESIS);
-							%>
+						%>
 
 							<liferay-ui:icon
 								icon="download"
@@ -310,8 +253,8 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 						markupView="lexicon"
 						showWhenSingleIcon="<%= true %>"
 					>
-						<portlet:actionURL name="editExportConfiguration" var="relaunchURL">
-							<portlet:param name="mvcRenderCommandName" value="exportLayoutsView" />
+						<portlet:actionURL name="/export_import/edit_export_configuration" var="relaunchURL">
+							<portlet:param name="mvcRenderCommandName" value="/export_import/view_export_layouts" />
 							<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.RELAUNCH %>" />
 							<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
 							<portlet:param name="backgroundTaskId" value="<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>" />
@@ -324,7 +267,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 							url="<%= relaunchURL %>"
 						/>
 
-						<portlet:actionURL name="deleteBackgroundTasks" var="deleteBackgroundTaskURL">
+						<portlet:actionURL name="/export_import/delete_layout_export_background_tasks" var="deleteBackgroundTaskURL">
 							<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
 							<portlet:param name="deleteBackgroundTaskIds" value="<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>" />
 						</portlet:actionURL>
@@ -344,7 +287,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 		</liferay-ui:search-container-row>
 
 		<liferay-ui:search-iterator
-			displayStyle="<%= displayStyle %>"
+			displayStyle="<%= exportLayoutsProcessesDisplayContext.getDisplayStyle() %>"
 			markupView="lexicon"
 			resultRowSplitter="<%= new ExportImportResultRowSplitter() %>"
 		/>
@@ -352,7 +295,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 </aui:form>
 
 <%
-int incompleteBackgroundTaskCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(groupId, BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR, false);
+int incompleteBackgroundTaskCount = BackgroundTaskManagerUtil.getBackgroundTasksCount(exportLayoutsProcessesDisplayContext.getGroupId(), BackgroundTaskExecutorNames.LAYOUT_EXPORT_BACKGROUND_TASK_EXECUTOR, false);
 %>
 
 <div class="hide incomplete-process-message">
@@ -362,26 +305,6 @@ int incompleteBackgroundTaskCount = BackgroundTaskManagerUtil.getBackgroundTasks
 </div>
 
 <script>
-	function <portlet:namespace />deleteEntries() {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-the-selected-entries") %>'
-			)
-		) {
-			var form = document.<portlet:namespace />fm;
-
-			Liferay.Util.postForm(form, {
-				data: {
-					<%= Constants.CMD %>: '<%= Constants.DELETE %>',
-					deleteBackgroundTaskIds: Liferay.Util.listCheckedExcept(
-						form,
-						'<portlet:namespace />allRowIds'
-					),
-				},
-			});
-		}
-	}
-
 	function <portlet:namespace />viewBackgroundTaskDetails(backgroundTaskId) {
 		var title = '';
 

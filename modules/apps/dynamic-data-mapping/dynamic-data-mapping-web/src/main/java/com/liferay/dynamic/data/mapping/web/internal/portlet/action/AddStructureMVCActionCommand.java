@@ -15,10 +15,10 @@
 package com.liferay.dynamic.data.mapping.web.internal.portlet.action;
 
 import com.liferay.dynamic.data.mapping.constants.DDMPortletKeys;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.util.DDM;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -43,13 +43,37 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING,
-		"mvc.command.name=addStructure"
+		"mvc.command.name=/dynamic_data_mapping/add_structure"
 	},
 	service = MVCActionCommand.class
 )
-public class AddStructureMVCActionCommand extends DDMBaseMVCActionCommand {
+public class AddStructureMVCActionCommand extends BaseDDMMVCActionCommand {
 
-	protected DDMStructure addStructure(ActionRequest actionRequest)
+	@Override
+	protected void doProcessAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		DDMStructure structure = _addStructure(actionRequest);
+
+		addSuccessMessage(actionRequest, actionResponse);
+
+		setRedirectAttribute(actionRequest, structure);
+	}
+
+	@Reference(unbind = "-")
+	protected void setDDM(DDM ddm) {
+		_ddm = ddm;
+	}
+
+	@Reference(unbind = "-")
+	protected void setDDMStructureService(
+		DDMStructureService ddmStructureService) {
+
+		_ddmStructureService = ddmStructureService;
+	}
+
+	private DDMStructure _addStructure(ActionRequest actionRequest)
 		throws Exception {
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
@@ -78,30 +102,6 @@ public class AddStructureMVCActionCommand extends DDMBaseMVCActionCommand {
 			groupId, parentStructureId, scopeClassNameId, structureKey, nameMap,
 			descriptionMap, ddmForm, ddmFormLayout, storageType,
 			DDMStructureConstants.TYPE_DEFAULT, serviceContext);
-	}
-
-	@Override
-	protected void doProcessAction(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		DDMStructure structure = addStructure(actionRequest);
-
-		addSuccessMessage(actionRequest, actionResponse);
-
-		setRedirectAttribute(actionRequest, structure);
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDM(DDM ddm) {
-		_ddm = ddm;
-	}
-
-	@Reference(unbind = "-")
-	protected void setDDMStructureService(
-		DDMStructureService ddmStructureService) {
-
-		_ddmStructureService = ddmStructureService;
 	}
 
 	private DDM _ddm;

@@ -193,13 +193,14 @@ public class LayoutPageTemplateCollectionServiceTest {
 					_group.getGroupId(), "Layout Page Template Collection 2",
 					null, serviceContext);
 
-		long[] layoutPageTemplateCollections = {
-			layoutPageTemplateCollection1.getLayoutPageTemplateCollectionId(),
-			layoutPageTemplateCollection2.getLayoutPageTemplateCollectionId()
-		};
-
 		_layoutPageTemplateCollectionService.
-			deleteLayoutPageTemplateCollections(layoutPageTemplateCollections);
+			deleteLayoutPageTemplateCollections(
+				new long[] {
+					layoutPageTemplateCollection1.
+						getLayoutPageTemplateCollectionId(),
+					layoutPageTemplateCollection2.
+						getLayoutPageTemplateCollectionId()
+				});
 
 		Assert.assertNull(
 			_layoutPageTemplateCollectionService.
@@ -460,7 +461,7 @@ public class LayoutPageTemplateCollectionServiceTest {
 			_group.getGroupId(),
 			layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(),
 			"Layout Page Template Entry",
-			LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE,
+			LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE, 0,
 			WorkflowConstants.STATUS_DRAFT, serviceContext);
 
 		_layoutPageTemplateCollectionService.deleteLayoutPageTemplateCollection(

@@ -19,8 +19,11 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -61,7 +64,8 @@ public class EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteUserGroups");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -69,11 +73,11 @@ public class EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -89,46 +93,44 @@ public class EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext
 					dropdownItem.putData("action", "selectUserGroup");
 
 					ThemeDisplay themeDisplay =
-						(ThemeDisplay)request.getAttribute(
+						(ThemeDisplay)httpServletRequest.getAttribute(
 							WebKeys.THEME_DISPLAY);
 
-					PortletURL selectUserGroupURL =
-						liferayPortletResponse.createRenderURL();
-
-					selectUserGroupURL.setParameter(
-						"mvcPath", "/select_user_groups.jsp");
-					selectUserGroupURL.setParameter(
-						"redirect", themeDisplay.getURLCurrent());
-					selectUserGroupURL.setParameter(
-						"teamId",
-						String.valueOf(
-							_editSiteTeamAssignmentsUserGroupsDisplayContext.
-								getTeamId()));
-					selectUserGroupURL.setWindowState(
-						LiferayWindowState.POP_UP);
-
 					dropdownItem.putData(
-						"selectUserGroupURL", selectUserGroupURL.toString());
+						"selectUserGroupURL",
+						PortletURLBuilder.createRenderURL(
+							liferayPortletResponse
+						).setMVCPath(
+							"/select_user_groups.jsp"
+						).setRedirect(
+							themeDisplay.getURLCurrent()
+						).setParameter(
+							"teamId",
+							_editSiteTeamAssignmentsUserGroupsDisplayContext.
+								getTeamId()
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildString());
 
 					String title = LanguageUtil.format(
-						request, "add-new-user-group-to-x",
+						httpServletRequest, "add-new-user-group-to-x",
 						_editSiteTeamAssignmentsUserGroupsDisplayContext.
 							getTeamName());
 
 					dropdownItem.putData("title", title);
 
-					dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					dropdownItem.setLabel(
+						LanguageUtil.get(httpServletRequest, "add"));
 				}
 			).build();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "editTeamAssignmentsUserGroupsManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -149,6 +151,12 @@ public class EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext
 	}
 
 	@Override
+	protected String getDisplayStyle() {
+		return _editSiteTeamAssignmentsUserGroupsDisplayContext.
+			getDisplayStyle();
+	}
+
+	@Override
 	protected String[] getDisplayViews() {
 		return new String[] {"list", "descriptive"};
 	}
@@ -162,6 +170,9 @@ public class EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"name", "description"};
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		EditSiteTeamAssignmentsUserGroupsManagementToolbarDisplayContext.class);
 
 	private final EditSiteTeamAssignmentsUserGroupsDisplayContext
 		_editSiteTeamAssignmentsUserGroupsDisplayContext;

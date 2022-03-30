@@ -14,8 +14,6 @@
 
 package com.liferay.portlet.ratings.service.base;
 
-import com.liferay.asset.kernel.service.persistence.AssetEntryFinder;
-import com.liferay.asset.kernel.service.persistence.AssetEntryPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -55,10 +53,13 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.ratings.kernel.model.RatingsEntry;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
+import com.liferay.ratings.kernel.service.RatingsEntryLocalServiceUtil;
 import com.liferay.ratings.kernel.service.persistence.RatingsEntryPersistence;
 import com.liferay.ratings.kernel.service.persistence.RatingsStatsPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -82,11 +83,15 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>RatingsEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.ratings.kernel.service.RatingsEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>RatingsEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>RatingsEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ratings entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RatingsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ratingsEntry the ratings entry
 	 * @return the ratings entry that was added
@@ -114,6 +119,10 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the ratings entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RatingsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param entryId the primary key of the ratings entry
 	 * @return the ratings entry that was removed
 	 * @throws PortalException if a ratings entry with the primary key could not be found
@@ -129,6 +138,10 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the ratings entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RatingsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ratingsEntry the ratings entry
 	 * @return the ratings entry that was removed
 	 */
@@ -141,6 +154,13 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ratingsEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -397,6 +417,7 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -415,6 +436,7 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 			(RatingsEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<RatingsEntry> getBasePersistence() {
 		return ratingsEntryPersistence;
 	}
@@ -474,6 +496,10 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 
 	/**
 	 * Updates the ratings entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RatingsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ratingsEntry the ratings entry
 	 * @return the ratings entry that was updated
@@ -714,76 +740,19 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 		this.userFinder = userFinder;
 	}
 
-	/**
-	 * Returns the asset entry local service.
-	 *
-	 * @return the asset entry local service
-	 */
-	public com.liferay.asset.kernel.service.AssetEntryLocalService
-		getAssetEntryLocalService() {
-
-		return assetEntryLocalService;
-	}
-
-	/**
-	 * Sets the asset entry local service.
-	 *
-	 * @param assetEntryLocalService the asset entry local service
-	 */
-	public void setAssetEntryLocalService(
-		com.liferay.asset.kernel.service.AssetEntryLocalService
-			assetEntryLocalService) {
-
-		this.assetEntryLocalService = assetEntryLocalService;
-	}
-
-	/**
-	 * Returns the asset entry persistence.
-	 *
-	 * @return the asset entry persistence
-	 */
-	public AssetEntryPersistence getAssetEntryPersistence() {
-		return assetEntryPersistence;
-	}
-
-	/**
-	 * Sets the asset entry persistence.
-	 *
-	 * @param assetEntryPersistence the asset entry persistence
-	 */
-	public void setAssetEntryPersistence(
-		AssetEntryPersistence assetEntryPersistence) {
-
-		this.assetEntryPersistence = assetEntryPersistence;
-	}
-
-	/**
-	 * Returns the asset entry finder.
-	 *
-	 * @return the asset entry finder
-	 */
-	public AssetEntryFinder getAssetEntryFinder() {
-		return assetEntryFinder;
-	}
-
-	/**
-	 * Sets the asset entry finder.
-	 *
-	 * @param assetEntryFinder the asset entry finder
-	 */
-	public void setAssetEntryFinder(AssetEntryFinder assetEntryFinder) {
-		this.assetEntryFinder = assetEntryFinder;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.ratings.kernel.model.RatingsEntry",
 			ratingsEntryLocalService);
+
+		_setLocalServiceUtilService(ratingsEntryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.ratings.kernel.model.RatingsEntry");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -843,6 +812,22 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		RatingsEntryLocalService ratingsEntryLocalService) {
+
+		try {
+			Field field = RatingsEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ratingsEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = RatingsEntryLocalService.class)
 	protected RatingsEntryLocalService ratingsEntryLocalService;
 
@@ -890,18 +875,6 @@ public abstract class RatingsEntryLocalServiceBaseImpl
 
 	@BeanReference(type = UserFinder.class)
 	protected UserFinder userFinder;
-
-	@BeanReference(
-		type = com.liferay.asset.kernel.service.AssetEntryLocalService.class
-	)
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@BeanReference(type = AssetEntryPersistence.class)
-	protected AssetEntryPersistence assetEntryPersistence;
-
-	@BeanReference(type = AssetEntryFinder.class)
-	protected AssetEntryFinder assetEntryFinder;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

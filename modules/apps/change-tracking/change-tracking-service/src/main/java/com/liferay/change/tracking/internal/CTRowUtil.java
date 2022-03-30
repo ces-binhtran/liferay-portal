@@ -45,7 +45,7 @@ public class CTRowUtil {
 
 		if (_isPostgresBlobTable(tableColumnsMap)) {
 			StringBundler sb = new StringBundler(
-				3 * tableColumnsMap.size() + 4);
+				(3 * tableColumnsMap.size()) + 4);
 
 			sb.append("insert into ");
 			sb.append(ctPersistence.getTableName());
@@ -64,36 +64,37 @@ public class CTRowUtil {
 
 			sb.append(")");
 
-			try (PreparedStatement selectPS = connection.prepareStatement(
-					selectSQL);
-				PreparedStatement insertPS = connection.prepareStatement(
-					sb.toString());
-				ResultSet rs = selectPS.executeQuery()) {
+			try (PreparedStatement selectPreparedStatement =
+					connection.prepareStatement(selectSQL);
+				PreparedStatement insertPreparedStatement =
+					connection.prepareStatement(sb.toString());
+				ResultSet resultSet = selectPreparedStatement.executeQuery()) {
 
-				while (rs.next()) {
+				while (resultSet.next()) {
 					int parameterIndex = 1;
 
 					for (int type : tableColumnsMap.values()) {
 						if (type == Types.BLOB) {
-							Blob blob = rs.getBlob(parameterIndex);
+							Blob blob = resultSet.getBlob(parameterIndex);
 
-							insertPS.setBlob(
+							insertPreparedStatement.setBlob(
 								parameterIndex, blob.getBinaryStream());
 						}
 						else {
-							insertPS.setObject(
-								parameterIndex, rs.getObject(parameterIndex));
+							insertPreparedStatement.setObject(
+								parameterIndex,
+								resultSet.getObject(parameterIndex));
 						}
 
 						parameterIndex++;
 					}
 
-					insertPS.addBatch();
+					insertPreparedStatement.addBatch();
 				}
 
 				int result = 0;
 
-				for (int count : insertPS.executeBatch()) {
+				for (int count : insertPreparedStatement.executeBatch()) {
 					result += count;
 				}
 
@@ -101,7 +102,7 @@ public class CTRowUtil {
 			}
 		}
 
-		StringBundler sb = new StringBundler(2 * tableColumnsMap.size() + 4);
+		StringBundler sb = new StringBundler((2 * tableColumnsMap.size()) + 4);
 
 		sb.append("insert into ");
 		sb.append(ctPersistence.getTableName());
@@ -126,20 +127,14 @@ public class CTRowUtil {
 	public static String getConstraintConflictsSQL(
 		String tableName, String primaryColumnName,
 		String[] uniqueIndexColumnNames, long sourceCTCollectionId,
-		long targetCTCollectionId, boolean includeSourceCTPrimaryKey) {
+		long targetCTCollectionId) {
 
 		StringBundler sb = new StringBundler(
-			4 * uniqueIndexColumnNames.length + 17);
+			(4 * uniqueIndexColumnNames.length) + 17);
 
-		sb.append("select ");
-
-		if (includeSourceCTPrimaryKey) {
-			sb.append("sourceTable.");
-			sb.append(primaryColumnName);
-			sb.append(" as sourcePK, ");
-		}
-
-		sb.append("targetTable.");
+		sb.append("select sourceTable.");
+		sb.append(primaryColumnName);
+		sb.append(" as sourcePK, targetTable.");
 		sb.append(primaryColumnName);
 		sb.append(" as targetPK from ");
 		sb.append(tableName);

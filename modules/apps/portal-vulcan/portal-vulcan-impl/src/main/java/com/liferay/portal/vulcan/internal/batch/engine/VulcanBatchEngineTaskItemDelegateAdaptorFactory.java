@@ -15,7 +15,9 @@
 package com.liferay.portal.vulcan.internal.batch.engine;
 
 import com.liferay.batch.engine.BatchEngineTaskItemDelegate;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.vulcan.batch.engine.VulcanBatchEngineTaskItemDelegate;
 
 import org.osgi.framework.BundleContext;
@@ -46,7 +48,7 @@ public class VulcanBatchEngineTaskItemDelegateAdaptorFactory {
 		_serviceTracker = new ServiceTracker<>(
 			bundleContext, filter,
 			new VulcanBatchEngineTaskItemDelegateServiceTrackerCustomizer(
-				bundleContext, _groupLocalService));
+				bundleContext, _depotEntryLocalService, _groupLocalService));
 
 		_serviceTracker.open();
 	}
@@ -57,6 +59,9 @@ public class VulcanBatchEngineTaskItemDelegateAdaptorFactory {
 	}
 
 	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
 	private GroupLocalService _groupLocalService;
 
 	private ServiceTracker<?, ?> _serviceTracker;
@@ -64,11 +69,11 @@ public class VulcanBatchEngineTaskItemDelegateAdaptorFactory {
 	private static class
 		VulcanBatchEngineTaskItemDelegateServiceTrackerCustomizer
 			implements ServiceTrackerCustomizer
-				<VulcanBatchEngineTaskItemDelegate, ServiceRegistration<?>> {
+				<VulcanBatchEngineTaskItemDelegate<?>, ServiceRegistration<?>> {
 
 		@Override
 		public ServiceRegistration<?> addingService(
-			ServiceReference<VulcanBatchEngineTaskItemDelegate>
+			ServiceReference<VulcanBatchEngineTaskItemDelegate<?>>
 				serviceReference) {
 
 			VulcanBatchEngineTaskItemDelegate<?>
@@ -78,23 +83,29 @@ public class VulcanBatchEngineTaskItemDelegateAdaptorFactory {
 			VulcanBatchEngineTaskItemDelegateAdaptor<?>
 				vulcanBatchEngineTaskItemDelegateAdaptor =
 					new VulcanBatchEngineTaskItemDelegateAdaptor<>(
-						_groupLocalService, vulcanBatchEngineTaskItemDelegate);
+						_depotEntryLocalService, _groupLocalService,
+						vulcanBatchEngineTaskItemDelegate);
 
 			return _bundleContext.registerService(
 				BatchEngineTaskItemDelegate.class,
-				vulcanBatchEngineTaskItemDelegateAdaptor, null);
+				vulcanBatchEngineTaskItemDelegateAdaptor,
+				HashMapDictionaryBuilder.put(
+					"batch.engine.task.item.delegate.name",
+					serviceReference.getProperty(
+						"batch.engine.task.item.delegate.name")
+				).build());
 		}
 
 		@Override
 		public void modifiedService(
-			ServiceReference<VulcanBatchEngineTaskItemDelegate>
+			ServiceReference<VulcanBatchEngineTaskItemDelegate<?>>
 				serviceReference,
 			ServiceRegistration<?> serviceRegistration) {
 		}
 
 		@Override
 		public void removedService(
-			ServiceReference<VulcanBatchEngineTaskItemDelegate>
+			ServiceReference<VulcanBatchEngineTaskItemDelegate<?>>
 				serviceReference,
 			ServiceRegistration<?> serviceRegistration) {
 
@@ -104,13 +115,17 @@ public class VulcanBatchEngineTaskItemDelegateAdaptorFactory {
 		}
 
 		private VulcanBatchEngineTaskItemDelegateServiceTrackerCustomizer(
-			BundleContext bundleContext, GroupLocalService groupLocalService) {
+			BundleContext bundleContext,
+			DepotEntryLocalService depotEntryLocalService,
+			GroupLocalService groupLocalService) {
 
 			_bundleContext = bundleContext;
+			_depotEntryLocalService = depotEntryLocalService;
 			_groupLocalService = groupLocalService;
 		}
 
 		private final BundleContext _bundleContext;
+		private final DepotEntryLocalService _depotEntryLocalService;
 		private final GroupLocalService _groupLocalService;
 
 	}

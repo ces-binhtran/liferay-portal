@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.FragmentFieldBackgroundImageSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,22 +28,47 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class FragmentFieldBackgroundImage implements Cloneable {
+public class FragmentFieldBackgroundImage implements Cloneable, Serializable {
 
 	public static FragmentFieldBackgroundImage toDTO(String json) {
 		return FragmentFieldBackgroundImageSerDes.toDTO(json);
 	}
 
-	public FragmentImage getBackgroundImage() {
+	public FragmentImage getBackgroundFragmentImage() {
+		return backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		FragmentImage backgroundFragmentImage) {
+
+		this.backgroundFragmentImage = backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		UnsafeSupplier<FragmentImage, Exception>
+			backgroundFragmentImageUnsafeSupplier) {
+
+		try {
+			backgroundFragmentImage =
+				backgroundFragmentImageUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentImage backgroundFragmentImage;
+
+	public BackgroundImage getBackgroundImage() {
 		return backgroundImage;
 	}
 
-	public void setBackgroundImage(FragmentImage backgroundImage) {
+	public void setBackgroundImage(BackgroundImage backgroundImage) {
 		this.backgroundImage = backgroundImage;
 	}
 
 	public void setBackgroundImage(
-		UnsafeSupplier<FragmentImage, Exception>
+		UnsafeSupplier<BackgroundImage, Exception>
 			backgroundImageUnsafeSupplier) {
 
 		try {
@@ -52,7 +79,7 @@ public class FragmentFieldBackgroundImage implements Cloneable {
 		}
 	}
 
-	protected FragmentImage backgroundImage;
+	protected BackgroundImage backgroundImage;
 
 	@Override
 	public FragmentFieldBackgroundImage clone()

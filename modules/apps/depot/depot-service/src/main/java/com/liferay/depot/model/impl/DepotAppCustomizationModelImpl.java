@@ -26,18 +26,22 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -100,20 +104,43 @@ public class DepotAppCustomizationModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEPOTENTRYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ENABLED_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long PORTLETID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEPOTAPPCUSTOMIZATIONID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public DepotAppCustomizationModelImpl() {
@@ -167,9 +194,6 @@ public class DepotAppCustomizationModelImpl
 				attributeName,
 				attributeGetterFunction.apply((DepotAppCustomization)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -299,6 +323,10 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -309,6 +337,10 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setDepotAppCustomizationId(long depotAppCustomizationId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_depotAppCustomizationId = depotAppCustomizationId;
 	}
 
@@ -319,6 +351,10 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -329,19 +365,21 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setDepotEntryId(long depotEntryId) {
-		_columnBitmask |= DEPOTENTRYID_COLUMN_BITMASK;
-
-		if (!_setOriginalDepotEntryId) {
-			_setOriginalDepotEntryId = true;
-
-			_originalDepotEntryId = _depotEntryId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_depotEntryId = depotEntryId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalDepotEntryId() {
-		return _originalDepotEntryId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("depotEntryId"));
 	}
 
 	@Override
@@ -356,19 +394,21 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setEnabled(boolean enabled) {
-		_columnBitmask |= ENABLED_COLUMN_BITMASK;
-
-		if (!_setOriginalEnabled) {
-			_setOriginalEnabled = true;
-
-			_originalEnabled = _enabled;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_enabled = enabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalEnabled() {
-		return _originalEnabled;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("enabled"));
 	}
 
 	@Override
@@ -383,20 +423,43 @@ public class DepotAppCustomizationModelImpl
 
 	@Override
 	public void setPortletId(String portletId) {
-		_columnBitmask |= PORTLETID_COLUMN_BITMASK;
-
-		if (_originalPortletId == null) {
-			_originalPortletId = _portletId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_portletId = portletId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalPortletId() {
-		return GetterUtil.getString(_originalPortletId);
+		return getColumnOriginalValue("portletId");
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -448,6 +511,27 @@ public class DepotAppCustomizationModelImpl
 	}
 
 	@Override
+	public DepotAppCustomization cloneWithOriginalValues() {
+		DepotAppCustomizationImpl depotAppCustomizationImpl =
+			new DepotAppCustomizationImpl();
+
+		depotAppCustomizationImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		depotAppCustomizationImpl.setDepotAppCustomizationId(
+			this.<Long>getColumnOriginalValue("depotAppCustomizationId"));
+		depotAppCustomizationImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		depotAppCustomizationImpl.setDepotEntryId(
+			this.<Long>getColumnOriginalValue("depotEntryId"));
+		depotAppCustomizationImpl.setEnabled(
+			this.<Boolean>getColumnOriginalValue("enabled"));
+		depotAppCustomizationImpl.setPortletId(
+			this.<String>getColumnOriginalValue("portletId"));
+
+		return depotAppCustomizationImpl;
+	}
+
+	@Override
 	public int compareTo(DepotAppCustomization depotAppCustomization) {
 		long primaryKey = depotAppCustomization.getPrimaryKey();
 
@@ -463,17 +547,17 @@ public class DepotAppCustomizationModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DepotAppCustomization)) {
+		if (!(object instanceof DepotAppCustomization)) {
 			return false;
 		}
 
 		DepotAppCustomization depotAppCustomization =
-			(DepotAppCustomization)obj;
+			(DepotAppCustomization)object;
 
 		long primaryKey = depotAppCustomization.getPrimaryKey();
 
@@ -490,34 +574,29 @@ public class DepotAppCustomizationModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		DepotAppCustomizationModelImpl depotAppCustomizationModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		depotAppCustomizationModelImpl._originalDepotEntryId =
-			depotAppCustomizationModelImpl._depotEntryId;
-
-		depotAppCustomizationModelImpl._setOriginalDepotEntryId = false;
-
-		depotAppCustomizationModelImpl._originalEnabled =
-			depotAppCustomizationModelImpl._enabled;
-
-		depotAppCustomizationModelImpl._setOriginalEnabled = false;
-
-		depotAppCustomizationModelImpl._originalPortletId =
-			depotAppCustomizationModelImpl._portletId;
-
-		depotAppCustomizationModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -553,7 +632,7 @@ public class DepotAppCustomizationModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -564,10 +643,27 @@ public class DepotAppCustomizationModelImpl
 			Function<DepotAppCustomization, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((DepotAppCustomization)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(DepotAppCustomization)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -586,7 +682,7 @@ public class DepotAppCustomizationModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -619,20 +715,75 @@ public class DepotAppCustomizationModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private long _depotAppCustomizationId;
 	private long _companyId;
 	private long _depotEntryId;
-	private long _originalDepotEntryId;
-	private boolean _setOriginalDepotEntryId;
 	private boolean _enabled;
-	private boolean _originalEnabled;
-	private boolean _setOriginalEnabled;
 	private String _portletId;
-	private String _originalPortletId;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<DepotAppCustomization, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((DepotAppCustomization)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put(
+			"depotAppCustomizationId", _depotAppCustomizationId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("depotEntryId", _depotEntryId);
+		_columnOriginalValues.put("enabled", _enabled);
+		_columnOriginalValues.put("portletId", _portletId);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("depotAppCustomizationId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("depotEntryId", 8L);
+
+		columnBitmasks.put("enabled", 16L);
+
+		columnBitmasks.put("portletId", 32L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private DepotAppCustomization _escapedModel;
 

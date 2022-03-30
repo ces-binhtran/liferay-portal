@@ -1,0 +1,10 @@
+{
+	"dependencies": {
+	},
+	"name": "commerce-theme-minium-impl",
+	"scripts": {
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check"
+	},
+	"version": "5.0.14"
+}

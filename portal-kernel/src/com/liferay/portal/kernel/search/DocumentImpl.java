@@ -48,6 +48,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * @author Brian Wing Shun Chan
@@ -130,30 +131,31 @@ public class DocumentImpl implements Document {
 
 	@Override
 	public void addFile(String name, byte[] bytes, String fileExt) {
-		InputStream is = new UnsyncByteArrayInputStream(bytes);
+		InputStream inputStream = new UnsyncByteArrayInputStream(bytes);
 
-		addFile(name, is, fileExt);
+		addFile(name, inputStream, fileExt);
 	}
 
 	@Override
 	public void addFile(String name, File file, String fileExt)
 		throws IOException {
 
-		InputStream is = new FileInputStream(file);
+		InputStream inputStream = new FileInputStream(file);
 
-		addFile(name, is, fileExt);
+		addFile(name, inputStream, fileExt);
 	}
 
 	@Override
-	public void addFile(String name, InputStream is, String fileExt) {
-		addText(name, FileUtil.extractText(is, fileExt));
+	public void addFile(String name, InputStream inputStream, String fileExt) {
+		addText(name, FileUtil.extractText(inputStream));
 	}
 
 	@Override
 	public void addFile(
-		String name, InputStream is, String fileExt, int maxStringLength) {
+		String name, InputStream inputStream, String fileExt,
+		int maxStringLength) {
 
-		addText(name, FileUtil.extractText(is, fileExt, maxStringLength));
+		addText(name, FileUtil.extractText(inputStream, maxStringLength));
 	}
 
 	@Override
@@ -345,6 +347,10 @@ public class DocumentImpl implements Document {
 
 	@Override
 	public void addKeyword(String name, String value, boolean lowerCase) {
+		if (Validator.isNull(value)) {
+			return;
+		}
+
 		createKeywordField(name, value, lowerCase);
 
 		createSortableKeywordField(name, value);
@@ -361,11 +367,7 @@ public class DocumentImpl implements Document {
 
 	@Override
 	public void addKeywordSortable(String name, Boolean value) {
-		String valueString = String.valueOf(value);
-
-		createKeywordField(name, valueString, false);
-
-		_createSortableTextField(name, true, valueString);
+		addKeywordSortable(name, String.valueOf(value));
 	}
 
 	@Override
@@ -383,6 +385,10 @@ public class DocumentImpl implements Document {
 
 	@Override
 	public void addKeywordSortable(String name, String value) {
+		if (Validator.isNull(value)) {
+			return;
+		}
+
 		createKeywordField(name, value, false);
 
 		_createSortableTextField(name, true, value);
@@ -390,9 +396,25 @@ public class DocumentImpl implements Document {
 
 	@Override
 	public void addKeywordSortable(String name, String[] values) {
-		createField(name, values);
+		if (values == null) {
+			return;
+		}
 
-		_createSortableTextField(name, true, values);
+		Stream<String> valuesStream = Arrays.stream(values);
+
+		String[] filteredValues = valuesStream.filter(
+			value -> Validator.isNotNull(value)
+		).toArray(
+			String[]::new
+		);
+
+		if (ArrayUtil.isEmpty(filteredValues)) {
+			return;
+		}
+
+		createField(name, filteredValues);
+
+		_createSortableTextField(name, true, filteredValues);
 	}
 
 	@Override
@@ -730,9 +752,8 @@ public class DocumentImpl implements Document {
 		String portletId, String field1, String field2, String field3,
 		String field4) {
 
-		String uid = Field.getUID(portletId, field1, field2, field3, field4);
-
-		addKeyword(Field.UID, uid);
+		addKeyword(
+			Field.UID, Field.getUID(portletId, field1, field2, field3, field4));
 	}
 
 	@Override
@@ -750,9 +771,7 @@ public class DocumentImpl implements Document {
 			return get(name);
 		}
 
-		String localizedName = Field.getLocalizedName(locale, name);
-
-		Field field = getField(localizedName);
+		Field field = getField(Field.getLocalizedName(locale, name));
 
 		if (field == null) {
 			field = getField(name);
@@ -771,14 +790,10 @@ public class DocumentImpl implements Document {
 			return get(name, defaultName);
 		}
 
-		String localizedName = Field.getLocalizedName(locale, name);
-
-		Field field = getField(localizedName);
+		Field field = getField(Field.getLocalizedName(locale, name));
 
 		if (field == null) {
-			localizedName = Field.getLocalizedName(locale, defaultName);
-
-			field = getField(localizedName);
+			field = getField(Field.getLocalizedName(locale, defaultName));
 		}
 
 		if (field == null) {
@@ -1007,11 +1022,7 @@ public class DocumentImpl implements Document {
 		Class<? extends Number> clazz) {
 
 		if (typify) {
-			name = name.concat(
-				StringPool.UNDERLINE
-			).concat(
-				"Number"
-			);
+			name = name + "_Number";
 		}
 
 		Field field = createField(Field.getSortableFieldName(name), value);
@@ -1057,22 +1068,6 @@ public class DocumentImpl implements Document {
 		_sortableTextFields = sortableTextFields;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *			 #toString(StringBundler, Collection)}
-	 */
-	@Deprecated
-	protected void toString(
-		com.liferay.portal.kernel.util.StringBundler sb,
-		Collection<Field> fields) {
-
-		StringBundler petraSB = new StringBundler();
-
-		toString(petraSB, fields);
-
-		sb.append(petraSB.getStrings());
-	}
-
 	protected void toString(StringBundler sb, Collection<Field> fields) {
 		sb.append(StringPool.OPEN_CURLY_BRACE);
 
@@ -1103,15 +1098,27 @@ public class DocumentImpl implements Document {
 		sb.append(StringPool.CLOSE_CURLY_BRACE);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #toString(StringBundler, Collection)}
+	 */
+	@Deprecated
+	protected void toString(
+		com.liferay.portal.kernel.util.StringBundler sb,
+		Collection<Field> fields) {
+
+		StringBundler petraSB = new StringBundler();
+
+		toString(petraSB, fields);
+
+		sb.append(petraSB.getStrings());
+	}
+
 	private void _createSortableTextField(
 		String name, boolean typify, String value) {
 
 		if (typify) {
-			name = name.concat(
-				StringPool.UNDERLINE
-			).concat(
-				"String"
-			);
+			name = name + "_String";
 		}
 
 		String truncatedValue = value;

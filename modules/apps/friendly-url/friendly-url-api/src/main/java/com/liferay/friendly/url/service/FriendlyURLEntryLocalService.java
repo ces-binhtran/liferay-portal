@@ -15,10 +15,12 @@
 package com.liferay.friendly.url.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.friendly.url.exception.NoSuchFriendlyURLEntryLocalizationException;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -56,6 +58,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see FriendlyURLEntryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -68,11 +71,15 @@ public interface FriendlyURLEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link FriendlyURLEntryLocalServiceUtil} to access the friendly url entry local service. Add custom service methods to <code>com.liferay.friendly.url.service.impl.FriendlyURLEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.friendly.url.service.impl.FriendlyURLEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the friendly url entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link FriendlyURLEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the friendly url entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was added
@@ -120,6 +127,10 @@ public interface FriendlyURLEntryLocalService
 	/**
 	 * Deletes the friendly url entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was removed
 	 */
@@ -129,6 +140,10 @@ public interface FriendlyURLEntryLocalService
 
 	/**
 	 * Deletes the friendly url entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntryId the primary key of the friendly url entry
 	 * @return the friendly url entry that was removed
@@ -159,6 +174,9 @@ public interface FriendlyURLEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -257,6 +275,11 @@ public interface FriendlyURLEntryLocalService
 		long friendlyURLEntryId, String languageId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntry fetchMainFriendlyURLEntry(
+			long classNameId, long classPK)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -341,6 +364,11 @@ public interface FriendlyURLEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
+			long groupId, long classNameId, String urlTitle)
+		throws NoSuchFriendlyURLEntryLocalizationException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
 			long friendlyURLEntryId, String languageId)
 		throws PortalException;
 
@@ -382,14 +410,28 @@ public interface FriendlyURLEntryLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getUniqueUrlTitle(long, long, long, String, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public String getUniqueUrlTitle(
 		long groupId, long classNameId, long classPK, String urlTitle);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public String getUniqueUrlTitle(
+		long groupId, long classNameId, long classPK, String urlTitle,
+		String languageId);
 
 	public void setMainFriendlyURLEntry(FriendlyURLEntry friendlyURLEntry);
 
 	/**
 	 * Updates the friendly url entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was updated

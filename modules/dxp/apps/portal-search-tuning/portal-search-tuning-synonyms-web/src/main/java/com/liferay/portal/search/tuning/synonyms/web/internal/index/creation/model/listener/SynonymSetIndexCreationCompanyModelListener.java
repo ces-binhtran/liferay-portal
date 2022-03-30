@@ -17,14 +17,10 @@ package com.liferay.portal.search.tuning.synonyms.web.internal.index.creation.mo
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.ModelListener;
-import com.liferay.portal.search.engine.SearchEngineInformation;
-import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexCreator;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexName;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexNameBuilder;
-
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -38,15 +34,9 @@ public class SynonymSetIndexCreationCompanyModelListener
 
 	@Override
 	public void onAfterCreate(Company company) {
-		if (Objects.equals(
-				_searchEngineInformation.getVendorString(), "Solr")) {
-
-			return;
-		}
-
 		SynonymSetIndexName synonymSetIndexName =
 			_synonymSetIndexNameBuilder.getSynonymSetIndexName(
-				getCompanyIndexName(company));
+				company.getCompanyId());
 
 		if (_synonymSetIndexReader.isExists(synonymSetIndexName)) {
 			return;
@@ -57,15 +47,9 @@ public class SynonymSetIndexCreationCompanyModelListener
 
 	@Override
 	public void onBeforeRemove(Company company) {
-		if (Objects.equals(
-				_searchEngineInformation.getVendorString(), "Solr")) {
-
-			return;
-		}
-
 		SynonymSetIndexName synonymSetIndexName =
 			_synonymSetIndexNameBuilder.getSynonymSetIndexName(
-				getCompanyIndexName(company));
+				company.getCompanyId());
 
 		if (!_synonymSetIndexReader.isExists(synonymSetIndexName)) {
 			return;
@@ -73,16 +57,6 @@ public class SynonymSetIndexCreationCompanyModelListener
 
 		_synonymSetIndexCreator.delete(synonymSetIndexName);
 	}
-
-	protected String getCompanyIndexName(Company company) {
-		return _indexNameBuilder.getIndexName(company.getCompanyId());
-	}
-
-	@Reference
-	private IndexNameBuilder _indexNameBuilder;
-
-	@Reference
-	private SearchEngineInformation _searchEngineInformation;
 
 	@Reference
 	private SynonymSetIndexCreator _synonymSetIndexCreator;

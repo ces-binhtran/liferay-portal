@@ -20,6 +20,14 @@ const addSpy = jest.fn().mockImplementation(() => callOrder.push('addSpy'));
 const spy1 = jest.fn().mockImplementation(() => callOrder.push('spy1'));
 const spy2 = jest.fn().mockImplementation(() => callOrder.push('spy2'));
 
+class MyClass {
+	add(n1, n2) {
+		addSpy();
+
+		return n1 + n2;
+	}
+}
+
 describe('Ajax', () => {
 	beforeEach(() => {
 		addSpy.mockClear();
@@ -29,11 +37,11 @@ describe('Ajax', () => {
 	});
 
 	it('calls listener before original method', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
-		AOP.before(spy1, obj, 'add');
+		AOP.before(spy1, object, 'add');
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(spy1).toHaveBeenCalledTimes(1);
@@ -43,11 +51,11 @@ describe('Ajax', () => {
 	});
 
 	it('calls listener after original method', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
-		AOP.after(spy1, obj, 'add');
+		AOP.after(spy1, object, 'add');
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(spy1).toHaveBeenCalledTimes(1);
@@ -57,12 +65,12 @@ describe('Ajax', () => {
 	});
 
 	it('calls multiple listeners in correct order', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
-		AOP.before(spy1, obj, 'add');
-		AOP.before(spy2, obj, 'add');
+		AOP.before(spy1, object, 'add');
+		AOP.before(spy2, object, 'add');
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(spy1).toHaveBeenCalledTimes(1);
@@ -74,30 +82,30 @@ describe('Ajax', () => {
 	});
 
 	it('does not call listener if returned handle is removed', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
-		const handle = AOP.before(spy1, obj, 'add');
+		const handle = AOP.before(spy1, object, 'add');
 
-		obj.add(1, 2);
+		object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(spy1).toHaveBeenCalledTimes(1);
 
 		handle.detach();
 
-		obj.add(1, 2);
+		object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(2);
 		expect(spy1).toHaveBeenCalledTimes(1);
 	});
 
 	it('only removes listeners that are detached', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
-		const handle1 = AOP.before(spy1, obj, 'add');
-		AOP.before(spy2, obj, 'add');
+		const handle1 = AOP.before(spy1, object, 'add');
+		AOP.before(spy2, object, 'add');
 
-		obj.add(1, 2);
+		object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(spy1).toHaveBeenCalledTimes(1);
@@ -105,7 +113,7 @@ describe('Ajax', () => {
 
 		handle1.detach();
 
-		obj.add(1, 2);
+		object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(2);
 		expect(spy1).toHaveBeenCalledTimes(1);
@@ -113,34 +121,34 @@ describe('Ajax', () => {
 	});
 
 	it('prevents wrapped function from firing when AOP.prevent is returned by listener', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.before(
 			() => {
 				return AOP.prevent();
 			},
-			obj,
+			object,
 			'add'
 		);
 
-		obj.add(1, 2);
+		object.add(1, 2);
 
 		expect(addSpy).not.toHaveBeenCalled();
 	});
 
 	it('prevents wrapped function and all further before subscribers from firing when AOP.halt is returned by listener', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.before(
 			() => {
 				return AOP.halt('new value');
 			},
-			obj,
+			object,
 			'add'
 		);
-		AOP.before(spy1, obj, 'add');
+		AOP.before(spy1, object, 'add');
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).not.toHaveBeenCalled();
 		expect(spy1).not.toHaveBeenCalled();
@@ -148,42 +156,42 @@ describe('Ajax', () => {
 	});
 
 	it('prevents all further after subscribers from firing when AOP.halt is returned by listener', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.after(
 			() => {
 				return AOP.halt('new value');
 			},
-			obj,
+			object,
 			'add'
 		);
-		AOP.after(spy1, obj, 'add');
+		AOP.after(spy1, object, 'add');
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(spy1).not.toHaveBeenCalled();
 		expect(retVal).toEqual('new value');
 	});
 
 	it('modifies return value when AOP.alterReturn is returned by `after` listener', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.after(
 			() => {
 				return AOP.alterReturn(AOP.currentRetVal + 1);
 			},
-			obj,
+			object,
 			'add'
 		);
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(retVal).toEqual(4);
 	});
 
 	it('tracks changes made to return value with subsequent changes made by AOP.alterReturn', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.after(
 			() => {
@@ -191,7 +199,7 @@ describe('Ajax', () => {
 
 				return AOP.alterReturn(22);
 			},
-			obj,
+			object,
 			'add'
 		);
 		AOP.after(
@@ -200,7 +208,7 @@ describe('Ajax', () => {
 
 				return AOP.alterReturn('now a string');
 			},
-			obj,
+			object,
 			'add'
 		);
 		AOP.after(
@@ -209,18 +217,18 @@ describe('Ajax', () => {
 
 				return AOP.alterReturn(AOP.currentRetVal + ':');
 			},
-			obj,
+			object,
 			'add'
 		);
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(retVal).toEqual('now a string:');
 	});
 
 	it('tracks original return value when changes are made by AOP.alterReturn', () => {
-		const obj = new MyClass();
+		const object = new MyClass();
 
 		AOP.after(
 			() => {
@@ -228,7 +236,7 @@ describe('Ajax', () => {
 
 				return AOP.alterReturn(22);
 			},
-			obj,
+			object,
 			'add'
 		);
 		AOP.after(
@@ -237,21 +245,13 @@ describe('Ajax', () => {
 
 				return AOP.alterReturn(AOP.originalRetVal);
 			},
-			obj,
+			object,
 			'add'
 		);
 
-		const retVal = obj.add(1, 2);
+		const retVal = object.add(1, 2);
 
 		expect(addSpy).toHaveBeenCalledTimes(1);
 		expect(retVal).toEqual(3);
 	});
 });
-
-class MyClass {
-	add(n1, n2) {
-		addSpy();
-
-		return n1 + n2;
-	}
-}

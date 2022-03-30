@@ -25,10 +25,10 @@ import com.liferay.document.library.kernel.service.DLTrashServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -70,10 +70,10 @@ public class DLFileEntryActivityInterpreterTest
 				group.getGroupId(), TestPropsValues.getUserId());
 
 		_fileEntry = DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			null, TestPropsValues.getUserId(), group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 	}
 
 	@Override
@@ -106,7 +106,8 @@ public class DLFileEntryActivityInterpreterTest
 			_fileEntry.getFileEntryId(), RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(),
 			StringPool.BLANK, StringPool.BLANK, DLVersionNumberIncrease.MINOR,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, _fileEntry.getExpirationDate(),
+			_fileEntry.getReviewDate(), serviceContext);
 	}
 
 	@Override

@@ -18,7 +18,9 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.security.auth.AuthTokenUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -89,6 +91,16 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 			httpServletRequest.setAttribute(
 				SamlWebKeys.SAML_SP_IDP_CONNECTION, samlSpIdpConnection);
 
+			if (GetterUtil.getBoolean(
+					ParamUtil.getBoolean(httpServletRequest, "forceAuthn"))) {
+
+				AuthTokenUtil.checkCSRFToken(
+					httpServletRequest, SamlLoginAction.class.getName());
+
+				httpServletRequest.setAttribute(
+					SamlWebKeys.FORCE_REAUTHENTICATION, Boolean.TRUE);
+			}
+
 			return null;
 		}
 
@@ -122,7 +134,7 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 
 		httpServletRequest.setAttribute(
 			SamlWebKeys.SAML_SSO_LOGIN_CONTEXT,
-			toJSONObject(samlSpIdpConnections));
+			_toJSONObject(samlSpIdpConnections));
 
 		JspUtil.dispatch(
 			httpServletRequest, httpServletResponse,
@@ -144,21 +156,20 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		return samlSpIdpConnection.isEnabled();
 	}
 
-	protected JSONObject toJSONObject(
+	private JSONObject _toJSONObject(
 		List<SamlSpIdpConnection> samlSpIdpConnections) {
 
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (SamlSpIdpConnection samlSpIdpConnection : samlSpIdpConnections) {
-			JSONObject samlIdpConnectionJSONObject = JSONUtil.put(
-				"enabled", samlSpIdpConnection.isEnabled()
-			).put(
-				"entityId", samlSpIdpConnection.getSamlIdpEntityId()
-			).put(
-				"name", samlSpIdpConnection.getName()
-			);
-
-			jsonArray.put(samlIdpConnectionJSONObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"enabled", samlSpIdpConnection.isEnabled()
+				).put(
+					"entityId", samlSpIdpConnection.getSamlIdpEntityId()
+				).put(
+					"name", samlSpIdpConnection.getName()
+				));
 		}
 
 		return JSONUtil.put("relevantIdpConnections", jsonArray);

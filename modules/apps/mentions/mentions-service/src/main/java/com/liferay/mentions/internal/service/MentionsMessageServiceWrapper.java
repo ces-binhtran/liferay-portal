@@ -47,16 +47,6 @@ import org.osgi.service.component.annotations.Reference;
 public class MentionsMessageServiceWrapper
 	extends MBMessageLocalServiceWrapper {
 
-	public MentionsMessageServiceWrapper() {
-		super(null);
-	}
-
-	public MentionsMessageServiceWrapper(
-		MBMessageLocalService mbMessageLocalService) {
-
-		super(mbMessageLocalService);
-	}
-
 	@Override
 	public MBMessage updateStatus(
 			long userId, long messageId, int status,
@@ -72,14 +62,10 @@ public class MentionsMessageServiceWrapper
 			userId, messageId, status, serviceContext, workflowContext);
 
 		if ((status != WorkflowConstants.STATUS_APPROVED) ||
-			(oldStatus == WorkflowConstants.STATUS_IN_TRASH)) {
+			(oldStatus == WorkflowConstants.STATUS_IN_TRASH) ||
+			!MentionsUtil.isMentionsEnabled(
+				_portal.getSiteGroupId(message.getGroupId()))) {
 
-			return message;
-		}
-
-		long siteGroupId = _portal.getSiteGroupId(message.getGroupId());
-
-		if (!MentionsUtil.isMentionsEnabled(siteGroupId)) {
 			return message;
 		}
 

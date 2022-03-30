@@ -17,9 +17,10 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String eventName = (String)request.getAttribute("view.jsp-eventName");
+SegmentsDisplayContext segmentsDisplayContext = (SegmentsDisplayContext)request.getAttribute(SegmentsWebKeys.SEGMENTS_DISPLAY_CONTEXT);
 String[] excludedRoleNames = (String[])request.getAttribute(SegmentsWebKeys.EXCLUDED_ROLE_NAMES);
 ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
+String eventName = (String)request.getAttribute("view.jsp-eventName");
 
 SegmentsEntry segmentsEntry = (SegmentsEntry)row.getObject();
 %>
@@ -33,7 +34,7 @@ SegmentsEntry segmentsEntry = (SegmentsEntry)row.getObject();
 >
 	<c:if test="<%= SegmentsEntryPermission.contains(permissionChecker, segmentsEntry, ActionKeys.UPDATE) %>">
 		<portlet:renderURL var="editURL">
-			<portlet:param name="mvcRenderCommandName" value="editSegmentsEntry" />
+			<portlet:param name="mvcRenderCommandName" value="/segments/edit_segments_entry" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(segmentsEntry.getSegmentsEntryId()) %>" />
 		</portlet:renderURL>
@@ -46,8 +47,9 @@ SegmentsEntry segmentsEntry = (SegmentsEntry)row.getObject();
 
 	<c:if test="<%= SegmentsEntryPermission.contains(permissionChecker, segmentsEntry, ActionKeys.VIEW) %>">
 		<portlet:renderURL var="previewMembersURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-			<portlet:param name="mvcRenderCommandName" value="previewSegmentsEntryUsers" />
+			<portlet:param name="mvcRenderCommandName" value="/segments/preview_segments_entry_users" />
 			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(segmentsEntry.getSegmentsEntryId()) %>" />
+			<portlet:param name="clearSessionCriteria" value="<%= Boolean.TRUE.toString() %>" />
 		</portlet:renderURL>
 
 		<liferay-ui:icon
@@ -74,16 +76,22 @@ SegmentsEntry segmentsEntry = (SegmentsEntry)row.getObject();
 
 		PortletURL itemSelectorURL = itemSelector.getItemSelectorURL(RequestBackedPortletURLFactoryUtil.create(renderRequest), eventName, roleItemSelectorCriterion);
 
-		Map<String, Object> data = HashMapBuilder.<String, Object>put(
-			"itemSelectorURL", itemSelectorURL.toString()
-		).put(
-			"segmentsEntryId", segmentsEntry.getSegmentsEntryId()
-		).build();
+		String linkCssClass = "assign-site-roles-link dropdown-item";
+
+		if (!segmentsDisplayContext.isRoleSegmentationEnabled()) {
+			linkCssClass += " action disabled";
+		}
 		%>
 
 		<liferay-ui:icon
-			data="<%= data %>"
-			linkCssClass="assign-site-roles-link"
+			data='<%=
+				HashMapBuilder.<String, Object>put(
+					"itemSelectorURL", itemSelectorURL.toString()
+				).put(
+					"segmentsEntryId", segmentsEntry.getSegmentsEntryId()
+				).build()
+			%>'
+			linkCssClass="<%= linkCssClass %>"
 			message="assign-site-roles"
 			url="javascript:;"
 		/>
@@ -107,7 +115,7 @@ SegmentsEntry segmentsEntry = (SegmentsEntry)row.getObject();
 	</c:if>
 
 	<c:if test="<%= SegmentsEntryPermission.contains(permissionChecker, segmentsEntry, ActionKeys.DELETE) %>">
-		<portlet:actionURL name="deleteSegmentsEntry" var="deleteURL">
+		<portlet:actionURL name="/segments/delete_segments_entry" var="deleteURL">
 			<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE %>" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="segmentsEntryId" value="<%= String.valueOf(segmentsEntry.getSegmentsEntryId()) %>" />

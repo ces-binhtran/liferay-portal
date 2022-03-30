@@ -60,11 +60,15 @@ public interface ReleaseLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ReleaseLocalServiceUtil} to access the release local service. Add custom service methods to <code>com.liferay.portal.service.impl.ReleaseLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.ReleaseLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the release local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ReleaseLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the release to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReleaseLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param release the release
 	 * @return the release that was added
@@ -92,12 +96,6 @@ public interface ReleaseLocalService
 	public Release createRelease(long releaseId);
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void createTablesAndPopulate();
-
-	/**
 	 * @throws PortalException
 	 */
 	@Override
@@ -106,6 +104,10 @@ public interface ReleaseLocalService
 
 	/**
 	 * Deletes the release with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReleaseLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param releaseId the primary key of the release
 	 * @return the release that was removed
@@ -117,6 +119,10 @@ public interface ReleaseLocalService
 	/**
 	 * Deletes the release from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReleaseLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param release the release
 	 * @return the release that was removed
 	 */
@@ -125,6 +131,9 @@ public interface ReleaseLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -201,13 +210,6 @@ public interface ReleaseLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Transactional
-	public int getBuildNumberOrCreate() throws PortalException;
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
@@ -266,6 +268,10 @@ public interface ReleaseLocalService
 	/**
 	 * Updates the release in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReleaseLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param release the release
 	 * @return the release that was updated
 	 */
@@ -274,7 +280,7 @@ public interface ReleaseLocalService
 
 	public void updateRelease(
 			String servletContextName, List<UpgradeProcess> upgradeProcesses,
-			int buildNumber, int previousBuildNumber, boolean indexOnUpgrade)
+			int buildNumber, int previousBuildNumber)
 		throws PortalException;
 
 	public void updateRelease(

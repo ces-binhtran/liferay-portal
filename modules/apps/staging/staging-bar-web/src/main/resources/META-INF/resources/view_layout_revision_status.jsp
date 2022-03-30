@@ -22,6 +22,12 @@ LayoutRevision layoutRevision = (LayoutRevision)request.getAttribute(WebKeys.LAY
 if ((layoutRevision == null) && (layout != null)) {
 	layoutRevision = LayoutStagingUtil.getLayoutRevision(layout);
 }
+
+Long liveLayoutRevisionId = null;
+
+if (layoutRevision.isApproved()) {
+	liveLayoutRevisionId = _getLastImportLayoutRevisionId(group, layout, themeDisplay.getUser());
+}
 %>
 
 <span class="staging-bar-workflow-text text-center">
@@ -29,13 +35,21 @@ if ((layoutRevision == null) && (layout != null)) {
 		<div class="staging-alert-container">
 			<span class="alert-indicator">
 				<svg aria-hidden="true" class="lexicon-icon lexicon-icon-info-circle">
-					<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg#info-circle" />
+					<use xlink:href="<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg#info-circle" />
 				</svg>
 			</span>
 
 			<aui:model-context bean="<%= layoutRevision %>" model="<%= LayoutRevision.class %>" />
 
-			<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= layoutRevision.getStatus() %>" statusMessage='<%= layoutRevision.isHead() ? "ready-for-publication" : null %>' />
+			<%
+			int status = layoutRevision.getStatus();
+
+			if (layout.isTypeContent()) {
+				status = WorkflowConstants.STATUS_APPROVED;
+			}
+			%>
+
+			<aui:workflow-status markupView="lexicon" showIcon="<%= false %>" showLabel="<%= false %>" status="<%= status %>" statusMessage="<%= _getStatusMessage(layoutRevision, GetterUtil.getLong(liveLayoutRevisionId)) %>" />
 		</div>
 	</div>
 </span>

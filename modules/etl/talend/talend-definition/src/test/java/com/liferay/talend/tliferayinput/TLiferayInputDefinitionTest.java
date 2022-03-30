@@ -14,15 +14,12 @@
 
 package com.liferay.talend.tliferayinput;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.not;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -51,29 +48,27 @@ public class TLiferayInputDefinitionTest {
 	public void testGetFamilies() {
 		String[] actualFamilies = _tLiferayInputDefinition.getFamilies();
 
-		assertThat(Arrays.asList(actualFamilies), contains("Business/Liferay"));
+		MatcherAssert.assertThat(
+			Arrays.asList(actualFamilies),
+			Matchers.contains("Business/Liferay"));
 	}
 
 	@Test
 	public void testGetPropertyClass() {
 		Class<?> propertyClass = _tLiferayInputDefinition.getPropertyClass();
 
-		String canonicalName = propertyClass.getCanonicalName();
-
-		assertThat(
-			canonicalName,
-			equalTo(
+		MatcherAssert.assertThat(
+			propertyClass.getCanonicalName(),
+			Matchers.equalTo(
 				"com.liferay.talend.tliferayinput.TLiferayInputProperties"));
 	}
 
 	@Test
 	public void testGetReturnProperties() {
-		Property<?>[] returnProperties =
-			_tLiferayInputDefinition.getReturnProperties();
+		List<Property<?>> propertyList = Arrays.asList(
+			_tLiferayInputDefinition.getReturnProperties());
 
-		List<Property<?>> propertyList = Arrays.asList(returnProperties);
-
-		assertThat(propertyList, hasSize(2));
+		MatcherAssert.assertThat(propertyList, Matchers.hasSize(2));
 
 		Assert.assertTrue(
 			propertyList.contains(
@@ -88,11 +83,9 @@ public class TLiferayInputDefinitionTest {
 		RuntimeInfo runtimeInfo = _tLiferayInputDefinition.getRuntimeInfo(
 			ExecutionEngine.DI, null, ConnectorTopology.OUTGOING);
 
-		String runtimeClassName = runtimeInfo.getRuntimeClassName();
-
-		assertThat(
-			runtimeClassName,
-			equalTo("com.liferay.talend.runtime.LiferaySource"));
+		MatcherAssert.assertThat(
+			runtimeInfo.getRuntimeClassName(),
+			Matchers.equalTo("com.liferay.talend.runtime.LiferaySource"));
 	}
 
 	@Test
@@ -109,12 +102,9 @@ public class TLiferayInputDefinitionTest {
 
 	@Test
 	public void testGetRuntimeInfoWrongTopology() {
-		expectedException.expect(TalendRuntimeException.class);
-		expectedException.expectMessage(
-			"WRONG_CONNECTOR:{component=tLiferayInput}");
-
-		_tLiferayInputDefinition.getRuntimeInfo(
-			ExecutionEngine.DI, null, ConnectorTopology.INCOMING);
+		Assert.assertNull(
+			_tLiferayInputDefinition.getRuntimeInfo(
+				ExecutionEngine.DI, null, ConnectorTopology.INCOMING));
 	}
 
 	@Test
@@ -122,11 +112,12 @@ public class TLiferayInputDefinitionTest {
 		Set<ConnectorTopology> connectorTopologies =
 			_tLiferayInputDefinition.getSupportedConnectorTopologies();
 
-		assertThat(connectorTopologies, contains(ConnectorTopology.OUTGOING));
-		assertThat(
+		MatcherAssert.assertThat(
+			connectorTopologies, Matchers.contains(ConnectorTopology.OUTGOING));
+		MatcherAssert.assertThat(
 			connectorTopologies,
-			not(
-				contains(
+			Matchers.not(
+				Matchers.contains(
 					ConnectorTopology.INCOMING, ConnectorTopology.NONE,
 					ConnectorTopology.INCOMING_AND_OUTGOING)));
 	}

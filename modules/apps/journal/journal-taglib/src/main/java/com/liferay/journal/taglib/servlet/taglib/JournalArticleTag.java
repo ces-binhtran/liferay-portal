@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.portlet.PortletRequestModel;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.JavaConstants;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -45,13 +46,18 @@ public class JournalArticleTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest = getRequest();
 
-		PortletRequest portletRequest = (PortletRequest)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_REQUEST);
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		PortletRequest portletRequest =
+			(PortletRequest)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_REQUEST);
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		PortletRequestModel portletRequestModel = null;
 
@@ -60,13 +66,16 @@ public class JournalArticleTag extends IncludeTag {
 				portletRequest, portletResponse);
 		}
 
-		_article = JournalArticleLocalServiceUtil.fetchLatestArticle(
-			_groupId, _articleId, WorkflowConstants.STATUS_APPROVED);
+		if (_article == null) {
+			_article = JournalArticleLocalServiceUtil.fetchLatestArticle(
+				_groupId, _articleId, WorkflowConstants.STATUS_APPROVED);
+		}
 
 		try {
 			_articleDisplay = JournalArticleLocalServiceUtil.getArticleDisplay(
-				_article.getGroupId(), _article.getArticleId(),
-				_article.getVersion(), _ddmTemplateKey, Constants.VIEW,
+				_article, _ddmTemplateKey,
+				ParamUtil.getString(
+					httpServletRequest, "p_l_mode", Constants.VIEW),
 				getLanguageId(), 1, portletRequestModel, themeDisplay);
 		}
 		catch (PortalException portalException) {
@@ -81,6 +90,10 @@ public class JournalArticleTag extends IncludeTag {
 		return super.doStartTag();
 	}
 
+	public JournalArticle getArticle() {
+		return _article;
+	}
+
 	public String getArticleId() {
 		return _articleId;
 	}
@@ -93,12 +106,26 @@ public class JournalArticleTag extends IncludeTag {
 		return _wrapperCssClass;
 	}
 
+	public boolean isDataAnalyticsTrackingEnabled() {
+		return _dataAnalyticsTrackingEnabled;
+	}
+
 	public boolean isShowTitle() {
 		return _showTitle;
 	}
 
+	public void setArticle(JournalArticle article) {
+		_article = article;
+	}
+
 	public void setArticleId(String articleId) {
 		_articleId = articleId;
+	}
+
+	public void setDataAnalyticsTrackingEnabled(
+		boolean dataAnalyticsTrackingEnabled) {
+
+		_dataAnalyticsTrackingEnabled = dataAnalyticsTrackingEnabled;
 	}
 
 	public void setDdmTemplateKey(String ddmTemplateKey) {
@@ -117,7 +144,7 @@ public class JournalArticleTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setShowTitle(boolean showTitle) {
@@ -135,6 +162,7 @@ public class JournalArticleTag extends IncludeTag {
 		_article = null;
 		_articleDisplay = null;
 		_articleId = null;
+		_dataAnalyticsTrackingEnabled = true;
 		_ddmTemplateKey = null;
 		_groupId = 0;
 		_languageId = null;
@@ -155,7 +183,7 @@ public class JournalArticleTag extends IncludeTag {
 			return _languageId;
 		}
 
-		return LanguageUtil.getLanguageId(request);
+		return LanguageUtil.getLanguageId(getRequest());
 	}
 
 	@Override
@@ -166,7 +194,12 @@ public class JournalArticleTag extends IncludeTag {
 	@Override
 	protected void setAttributes(HttpServletRequest httpServletRequest) {
 		httpServletRequest.setAttribute(
+			"liferay-journal:journal-article:article", _article);
+		httpServletRequest.setAttribute(
 			"liferay-journal:journal-article:articleDisplay", _articleDisplay);
+		httpServletRequest.setAttribute(
+			"liferay-journal:journal-article:dataAnalyticsTrackingEnabled",
+			String.valueOf(_dataAnalyticsTrackingEnabled));
 		httpServletRequest.setAttribute(
 			"liferay-journal:journal-article:showTitle",
 			String.valueOf(_showTitle));
@@ -183,6 +216,7 @@ public class JournalArticleTag extends IncludeTag {
 	private JournalArticle _article;
 	private JournalArticleDisplay _articleDisplay;
 	private String _articleId;
+	private boolean _dataAnalyticsTrackingEnabled = true;
 	private String _ddmTemplateKey;
 	private long _groupId;
 	private String _languageId;

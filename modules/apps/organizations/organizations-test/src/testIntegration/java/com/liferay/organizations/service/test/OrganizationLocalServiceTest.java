@@ -16,9 +16,10 @@ package com.liferay.organizations.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.asset.kernel.service.AssetEntryLocalServiceUtil;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.OrganizationParentException;
 import com.liferay.portal.kernel.model.Group;
@@ -27,25 +28,33 @@ import com.liferay.portal.kernel.model.ListTypeConstants;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.OrganizationConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
+import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
-import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.SearchTestRule;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.junit.After;
@@ -60,6 +69,7 @@ import org.junit.runner.RunWith;
  * @author Jorge Ferrer
  * @author Sergio González
  */
+@DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class OrganizationLocalServiceTest {
 
@@ -77,17 +87,20 @@ public class OrganizationLocalServiceTest {
 	@After
 	public void tearDown() throws Exception {
 		PermissionThreadLocal.setPermissionChecker(_originalPermissionChecker);
+
+		for (String pid : _pids) {
+			ConfigurationTestUtil.deleteConfiguration(pid);
+		}
 	}
 
 	@Test
 	public void testAddOrganization() throws Exception {
 		User user = TestPropsValues.getUser();
 
-		Organization organization =
-			OrganizationLocalServiceUtil.addOrganization(
-				user.getUserId(),
-				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
-				"Organization", false);
+		Organization organization = _organizationLocalService.addOrganization(
+			user.getUserId(),
+			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
+			"Organization", false);
 
 		_organizations.add(organization);
 
@@ -97,7 +110,7 @@ public class OrganizationLocalServiceTest {
 			organizations.toString(), organizations.contains(organization));
 
 		Assert.assertFalse(
-			OrganizationLocalServiceUtil.hasUserOrganization(
+			_organizationLocalService.hasUserOrganization(
 				user.getUserId(), organization.getOrganizationId()));
 	}
 
@@ -295,43 +308,90 @@ public class OrganizationLocalServiceTest {
 	}
 
 	@Test
+	public void testAddUserOrganizationByEmailAddress() throws Exception {
+		Organization organization = OrganizationTestUtil.addOrganization();
+
+		User user = UserTestUtil.addUser();
+
+		Assert.assertFalse(
+			_organizationLocalService.hasUserOrganization(
+				user.getUserId(), organization.getOrganizationId()));
+
+		_organizationLocalService.addUserOrganizationByEmailAddress(
+			user.getEmailAddress(), organization.getOrganizationId());
+
+		Assert.assertTrue(
+			_organizationLocalService.hasUserOrganization(
+				user.getUserId(), organization.getOrganizationId()));
+
+		BaseModelSearchResult<User> baseModelSearchResult =
+			_userLocalService.searchUsers(
+				user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
+				LinkedHashMapBuilder.<String, Object>put(
+					"usersOrgs", Long.valueOf(organization.getOrganizationId())
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS,
+				new Sort("userId", false));
+
+		Assert.assertEquals(1, baseModelSearchResult.getLength());
+
+		List<User> users = baseModelSearchResult.getBaseModels();
+
+		Assert.assertEquals(user, users.get(0));
+
+		_organizationLocalService.deleteUserOrganizationByEmailAddress(
+			user.getEmailAddress(), organization.getOrganizationId());
+
+		Assert.assertFalse(
+			_organizationLocalService.hasUserOrganization(
+				user.getUserId(), organization.getOrganizationId()));
+
+		baseModelSearchResult = _userLocalService.searchUsers(
+			user.getCompanyId(), null, WorkflowConstants.STATUS_APPROVED,
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersOrgs", Long.valueOf(organization.getOrganizationId())
+			).build(),
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, new Sort("userId", false));
+
+		Assert.assertEquals(0, baseModelSearchResult.getLength());
+	}
+
+	@Test
 	public void testGetNoAssetOrganizations() throws Exception {
 		for (Organization organization :
-				OrganizationLocalServiceUtil.getNoAssetOrganizations()) {
+				_organizationLocalService.getNoAssetOrganizations()) {
 
-			OrganizationLocalServiceUtil.deleteOrganization(organization);
+			_organizationLocalService.deleteOrganization(organization);
 		}
 
-		Organization organizationA =
-			OrganizationLocalServiceUtil.addOrganization(
-				TestPropsValues.getUserId(),
-				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
-				RandomTestUtil.randomString(),
-				OrganizationConstants.TYPE_ORGANIZATION, 0, 0,
-				ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
-				false, new ServiceContext());
+		Organization organizationA = _organizationLocalService.addOrganization(
+			TestPropsValues.getUserId(),
+			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
+			RandomTestUtil.randomString(),
+			OrganizationConstants.TYPE_ORGANIZATION, 0, 0,
+			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
+			false, new ServiceContext());
 
-		Organization organizationB =
-			OrganizationLocalServiceUtil.addOrganization(
-				TestPropsValues.getUserId(),
-				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID, "Test2",
-				OrganizationConstants.TYPE_ORGANIZATION, 0, 0,
-				ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
-				false, new ServiceContext());
+		Organization organizationB = _organizationLocalService.addOrganization(
+			TestPropsValues.getUserId(),
+			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID, "Test2",
+			OrganizationConstants.TYPE_ORGANIZATION, 0, 0,
+			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
+			false, new ServiceContext());
 
 		_organizations.add(organizationB);
 
 		_organizations.add(organizationA);
 
-		AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
 			Organization.class.getName(), organizationB.getOrganizationId());
 
 		Assert.assertNotNull(assetEntry);
 
-		AssetEntryLocalServiceUtil.deleteAssetEntry(assetEntry);
+		_assetEntryLocalService.deleteAssetEntry(assetEntry);
 
 		List<Organization> organizations =
-			OrganizationLocalServiceUtil.getNoAssetOrganizations();
+			_organizationLocalService.getNoAssetOrganizations();
 
 		Assert.assertEquals(organizations.toString(), 1, organizations.size());
 		Assert.assertEquals(organizationB, organizations.get(0));
@@ -349,7 +409,7 @@ public class OrganizationLocalServiceTest {
 
 		_organizations.add(organization);
 
-		UserLocalServiceUtil.addOrganizationUser(
+		_userLocalService.addOrganizationUser(
 			organization.getOrganizationId(), TestPropsValues.getUserId());
 
 		Assert.assertEquals(2, getOrganizationsAndUsersCount(organization));
@@ -362,7 +422,7 @@ public class OrganizationLocalServiceTest {
 		Assert.assertTrue(
 			results.toString(), results.contains(TestPropsValues.getUser()));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organization.getOrganizationId(), TestPropsValues.getUser());
 	}
 
@@ -374,7 +434,7 @@ public class OrganizationLocalServiceTest {
 
 		_organizations.add(organization);
 
-		UserLocalServiceUtil.addOrganizationUser(
+		_userLocalService.addOrganizationUser(
 			organization.getOrganizationId(), TestPropsValues.getUserId());
 
 		Assert.assertEquals(1, getOrganizationsAndUsersCount(organization));
@@ -385,7 +445,7 @@ public class OrganizationLocalServiceTest {
 		Assert.assertTrue(
 			results.toString(), results.contains(TestPropsValues.getUser()));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organization.getOrganizationId(), TestPropsValues.getUser());
 	}
 
@@ -438,19 +498,19 @@ public class OrganizationLocalServiceTest {
 		_organizations.add(organizationA);
 		_organizations.add(organizationB);
 
-		UserLocalServiceUtil.addOrganizationUser(
+		_userLocalService.addOrganizationUser(
 			organizationA.getOrganizationId(), TestPropsValues.getUserId());
 
 		Assert.assertTrue(
-			OrganizationLocalServiceUtil.hasUserOrganization(
+			_organizationLocalService.hasUserOrganization(
 				TestPropsValues.getUserId(), organizationA.getOrganizationId(),
 				false, false));
 		Assert.assertFalse(
-			OrganizationLocalServiceUtil.hasUserOrganization(
+			_organizationLocalService.hasUserOrganization(
 				TestPropsValues.getUserId(), organizationB.getOrganizationId(),
 				false, false));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organizationA.getOrganizationId(), TestPropsValues.getUser());
 	}
 
@@ -467,19 +527,19 @@ public class OrganizationLocalServiceTest {
 
 		_organizations.add(organizationA);
 
-		UserLocalServiceUtil.addOrganizationUser(
+		_userLocalService.addOrganizationUser(
 			organizationAA.getOrganizationId(), TestPropsValues.getUserId());
 
 		Assert.assertTrue(
-			OrganizationLocalServiceUtil.hasUserOrganization(
+			_organizationLocalService.hasUserOrganization(
 				TestPropsValues.getUserId(), organizationA.getOrganizationId(),
 				true, false));
 		Assert.assertTrue(
-			OrganizationLocalServiceUtil.hasUserOrganization(
+			_organizationLocalService.hasUserOrganization(
 				TestPropsValues.getUserId(), organizationA.getOrganizationId(),
 				true, true));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organizationAA.getOrganizationId(), TestPropsValues.getUser());
 	}
 
@@ -498,7 +558,7 @@ public class OrganizationLocalServiceTest {
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			"Organization B", false);
 
-		organizationAA = OrganizationLocalServiceUtil.updateOrganization(
+		organizationAA = _organizationLocalService.updateOrganization(
 			organizationAA.getCompanyId(), organizationAA.getOrganizationId(),
 			organizationB.getOrganizationId(), organizationAA.getName(),
 			organizationAA.getType(), organizationAA.getRegionId(),
@@ -535,7 +595,7 @@ public class OrganizationLocalServiceTest {
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			"Organization B", true);
 
-		organizationAA = OrganizationLocalServiceUtil.updateOrganization(
+		organizationAA = _organizationLocalService.updateOrganization(
 			organizationAA.getCompanyId(), organizationAA.getOrganizationId(),
 			organizationB.getOrganizationId(), organizationAA.getName(),
 			organizationAA.getType(), organizationAA.getRegionId(),
@@ -572,7 +632,7 @@ public class OrganizationLocalServiceTest {
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			"Organization B", false);
 
-		organizationAA = OrganizationLocalServiceUtil.updateOrganization(
+		organizationAA = _organizationLocalService.updateOrganization(
 			organizationAA.getCompanyId(), organizationAA.getOrganizationId(),
 			organizationB.getOrganizationId(), organizationAA.getName(),
 			organizationAA.getType(), organizationAA.getRegionId(),
@@ -609,7 +669,7 @@ public class OrganizationLocalServiceTest {
 			OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID,
 			"Organization B", true);
 
-		organizationAA = OrganizationLocalServiceUtil.updateOrganization(
+		organizationAA = _organizationLocalService.updateOrganization(
 			organizationAA.getCompanyId(), organizationAA.getOrganizationId(),
 			organizationB.getOrganizationId(), organizationAA.getName(),
 			organizationAA.getType(), organizationAA.getRegionId(),
@@ -692,7 +752,7 @@ public class OrganizationLocalServiceTest {
 
 		_updateOrganization(organizationB);
 
-		organizationBBB = OrganizationLocalServiceUtil.fetchOrganization(
+		organizationBBB = _organizationLocalService.fetchOrganization(
 			organizationBBB.getOrganizationId());
 
 		String deepTreePath = _getTreePath(
@@ -707,10 +767,28 @@ public class OrganizationLocalServiceTest {
 
 		_updateOrganization(organizationB);
 
-		organizationBBB = OrganizationLocalServiceUtil.fetchOrganization(
+		organizationBBB = _organizationLocalService.fetchOrganization(
 			organizationBBB.getOrganizationId());
 
 		Assert.assertEquals(shallowTreePath, organizationBBB.getTreePath());
+	}
+
+	@Test
+	public void testSearchByUserName() throws Exception {
+		User user = UserTestUtil.addUser();
+
+		_organizationLocalService.addOrganization(
+			user.getUserId(), OrganizationConstants.ANY_PARENT_ORGANIZATION_ID,
+			RandomTestUtil.randomString(), false);
+
+		BaseModelSearchResult<Organization> baseModelSearchResult =
+			_organizationLocalService.searchOrganizations(
+				TestPropsValues.getCompanyId(),
+				OrganizationConstants.ANY_PARENT_ORGANIZATION_ID,
+				user.getFullName(), new LinkedHashMap<>(), QueryUtil.ALL_POS,
+				QueryUtil.ALL_POS, null);
+
+		Assert.assertEquals(0, baseModelSearchResult.getLength());
 	}
 
 	@Test
@@ -726,7 +804,7 @@ public class OrganizationLocalServiceTest {
 
 		_user = UserTestUtil.addUser("user1", TestPropsValues.getGroupId());
 
-		UserLocalServiceUtil.addOrganizationUsers(
+		_userLocalService.addOrganizationUsers(
 			organization.getOrganizationId(), new long[] {_user.getUserId()});
 
 		Hits hits = searchOrganizationsAndUsers(organization, null);
@@ -750,7 +828,7 @@ public class OrganizationLocalServiceTest {
 			document.toString(), String.valueOf(_user.getUserId()),
 			document.get(Field.USER_ID));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organization.getOrganizationId(), _user);
 	}
 
@@ -764,7 +842,7 @@ public class OrganizationLocalServiceTest {
 
 		_user = UserTestUtil.addUser("user1", TestPropsValues.getGroupId());
 
-		UserLocalServiceUtil.addOrganizationUsers(
+		_userLocalService.addOrganizationUsers(
 			organization.getOrganizationId(), new long[] {_user.getUserId()});
 
 		Hits hits = searchOrganizationsAndUsers(organization, null);
@@ -789,7 +867,7 @@ public class OrganizationLocalServiceTest {
 			document.toString(), String.valueOf(_user.getUserId()),
 			document.get(Field.USER_ID));
 
-		UserLocalServiceUtil.deleteOrganizationUser(
+		_userLocalService.deleteOrganizationUser(
 			organization.getOrganizationId(), _user);
 	}
 
@@ -850,18 +928,48 @@ public class OrganizationLocalServiceTest {
 		Assert.assertEquals(hits.toString(), 0, hits.getLength());
 	}
 
+	@Test
+	public void testSearchOrganizationsByType() throws Exception {
+		_organizations.add(OrganizationTestUtil.addOrganization());
+
+		for (int i = 0; i < 5; i++) {
+			String organizationType = RandomTestUtil.randomString();
+
+			_pids.add(
+				ConfigurationTestUtil.createFactoryConfiguration(
+					"com.liferay.organizations.internal.configuration." +
+						"OrganizationTypeConfiguration",
+					HashMapDictionaryBuilder.<String, Object>put(
+						"name", organizationType
+					).build()));
+
+			_organizations.add(
+				OrganizationTestUtil.addOrganization(organizationType));
+			_organizations.add(
+				OrganizationTestUtil.addOrganization(organizationType));
+		}
+
+		List<Organization> expectedOrganizations = new ArrayList<>(
+			_organizationLocalService.getOrganizations(
+				TestPropsValues.getCompanyId(),
+				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID));
+
+		_testSearchOrganizationsByType(expectedOrganizations, "asc");
+		_testSearchOrganizationsByType(expectedOrganizations, "desc");
+	}
+
 	@Rule
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected List<Object> getOrganizationsAndUsers(Organization organization) {
-		return OrganizationLocalServiceUtil.getOrganizationsAndUsers(
+		return _organizationLocalService.getOrganizationsAndUsers(
 			organization.getCompanyId(), organization.getOrganizationId(),
 			WorkflowConstants.STATUS_ANY, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
 			null);
 	}
 
 	protected int getOrganizationsAndUsersCount(Organization organization) {
-		return OrganizationLocalServiceUtil.getOrganizationsAndUsersCount(
+		return _organizationLocalService.getOrganizationsAndUsersCount(
 			organization.getCompanyId(), organization.getOrganizationId(),
 			WorkflowConstants.STATUS_ANY);
 	}
@@ -870,7 +978,7 @@ public class OrganizationLocalServiceTest {
 			Organization parentOrganization, String keywords)
 		throws Exception {
 
-		return OrganizationLocalServiceUtil.searchOrganizationsAndUsers(
+		return _organizationLocalService.searchOrganizationsAndUsers(
 			parentOrganization.getCompanyId(),
 			parentOrganization.getOrganizationId(), keywords,
 			WorkflowConstants.STATUS_ANY, null, QueryUtil.ALL_POS,
@@ -890,12 +998,61 @@ public class OrganizationLocalServiceTest {
 		return sb.toString();
 	}
 
+	private void _testSearchOrganizationsByType(
+			List<Organization> expectedOrganizations, String orderByType)
+		throws Exception {
+
+		Sort sort = SortFactoryUtil.getSort(
+			Organization.class, "type", orderByType);
+
+		BaseModelSearchResult<Organization> baseModelSearchResult =
+			_organizationLocalService.searchOrganizations(
+				TestPropsValues.getCompanyId(),
+				OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID, null,
+				null, QueryUtil.ALL_POS, QueryUtil.ALL_POS, sort);
+
+		Comparator<Organization> comparator =
+			(organization1, organization2) -> {
+				String typeOrder1 = organization1.getType();
+				String typeOrder2 = organization2.getType();
+
+				int value = typeOrder1.compareToIgnoreCase(typeOrder2);
+
+				if (value == 0) {
+					String name1 = organization1.getName();
+					String name2 = organization2.getName();
+
+					value = name1.compareToIgnoreCase(name2);
+				}
+
+				return value;
+			};
+
+		if (sort.isReverse()) {
+			comparator = comparator.reversed();
+		}
+
+		expectedOrganizations.sort(comparator);
+
+		List<Organization> actualOrganizations =
+			baseModelSearchResult.getBaseModels();
+
+		Assert.assertEquals(
+			actualOrganizations.toString(), expectedOrganizations.size(),
+			actualOrganizations.size());
+
+		for (int i = 0; i < expectedOrganizations.size(); i++) {
+			Assert.assertEquals(
+				expectedOrganizations.get(i), actualOrganizations.get(i));
+		}
+	}
+
 	private Organization _updateOrganization(Organization organization)
 		throws Exception {
 
 		Group organizationGroup = organization.getGroup();
 
-		return OrganizationLocalServiceUtil.updateOrganization(
+		return _organizationLocalService.updateOrganization(
 			organization.getCompanyId(), organization.getOrganizationId(),
 			organization.getParentOrganizationId(), organization.getName(),
 			organization.getType(), organization.getRegionId(),
@@ -904,12 +1061,18 @@ public class OrganizationLocalServiceTest {
 			null);
 	}
 
-	@DeleteAfterTestRun
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Inject
+	private OrganizationLocalService _organizationLocalService;
+
 	private final List<Organization> _organizations = new ArrayList<>();
-
 	private PermissionChecker _originalPermissionChecker;
-
-	@DeleteAfterTestRun
+	private final List<String> _pids = new ArrayList<>();
 	private User _user;
+
+	@Inject
+	private UserLocalService _userLocalService;
 
 }

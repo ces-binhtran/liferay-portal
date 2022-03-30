@@ -39,8 +39,6 @@
 			}
 		],
 		"name": {
-			"en_US": "Structure",
-			"pt_BR": "Estrutura"
 		},
 		"paginationMode": "wizard"
 	},
@@ -49,5 +47,5 @@
 		"en_US": "Data Definition Description",
 		"pt_BR": "Descrição do Data Definition"
 	},
-	"storageType": "json"
+	"storageType": "default"
 }

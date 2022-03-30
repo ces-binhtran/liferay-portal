@@ -33,17 +33,25 @@ Role role = RoleServiceUtil.fetchRole(roleId);
 String portletResource = ParamUtil.getString(request, "portletResource");
 
 if (Validator.isNull(redirect)) {
-	PortletURL portletURL = renderResponse.createRenderURL();
-
-	portletURL.setParameter("mvcPath", "/edit_role_permissions.jsp");
-	portletURL.setParameter(Constants.CMD, Constants.VIEW);
-	portletURL.setParameter("tabs1", "define-permissions");
-	portletURL.setParameter("tabs2", tabs2);
-	portletURL.setParameter("tabs3", tabs3);
-	portletURL.setParameter("backURL", backURL);
-	portletURL.setParameter("roleId", String.valueOf(role.getRoleId()));
-
-	redirect = portletURL.toString();
+	redirect = PortletURLBuilder.createRenderURL(
+		renderResponse
+	).setMVCPath(
+		"/edit_role_permissions.jsp"
+	).setCMD(
+		Constants.VIEW
+	).setBackURL(
+		backURL
+	).setTabs1(
+		roleDisplayContext.getEditRolePermissionsTabs1()
+	).setTabs2(
+		tabs2
+	).setParameter(
+		"accountRoleGroupScope", roleDisplayContext.isAccountRoleGroupScope()
+	).setParameter(
+		"roleId", role.getRoleId()
+	).setParameter(
+		"tabs3", tabs3
+	).buildString();
 }
 
 request.setAttribute("edit_role_permissions.jsp-role", role);
@@ -67,7 +75,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 <clay:container-fluid
 	cssClass="container-form-lg"
-	id='<%= renderResponse.getNamespace() + "permissionContainer" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "permissionContainer" %>'
 >
 	<clay:row>
 		<c:if test="<%= !portletName.equals(PortletKeys.SERVER_ADMIN) %>">
@@ -80,7 +88,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 		<clay:col
 			cssClass="lfr-permission-content-container"
-			id='<%= renderResponse.getNamespace() + "permissionContentContainer" %>'
+			id='<%= liferayPortletResponse.getNamespace() + "permissionContentContainer" %>'
 			md="<%= portletName.equals(PortletKeys.SERVER_ADMIN) ? String.valueOf(12) : String.valueOf(9) %>"
 		>
 			<c:choose>
@@ -113,7 +121,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 	}
 </aui:script>
 
-<aui:script use="aui-loading-mask-deprecated,aui-parse-content,aui-toggler,autocomplete-base,autocomplete-filters,liferay-notification">
+<aui:script use="aui-loading-mask-deprecated,aui-parse-content,aui-toggler,autocomplete-base,autocomplete-filters">
 	var AParseContent = A.Plugin.ParseContent;
 
 	var permissionNavigationDataContainer = A.one(
@@ -145,7 +153,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 		var getItems = function () {
 			var results = [];
 
-			permissionNavigationItems.each(function (item, index, collection) {
+			permissionNavigationItems.each((item, index, collection) => {
 				results.push({
 					data: item.text().trim(),
 					node: item,
@@ -184,7 +192,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 			source: getItems(),
 		});
 
-		permissionNavigationSearch.on('query', function (event) {
+		permissionNavigationSearch.on('query', (event) => {
 			if (event.query) {
 				togglerDelegate.expandAll();
 			}
@@ -193,22 +201,18 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 			}
 		});
 
-		permissionNavigationSearch.on('results', function (event) {
-			permissionNavigationItems.each(function (item, index, collection) {
+		permissionNavigationSearch.on('results', (event) => {
+			permissionNavigationItems.each((item, index, collection) => {
 				item.addClass('hide');
 			});
 
-			event.results.forEach(function (item, index) {
+			event.results.forEach((item, index) => {
 				item.raw.node.removeClass('hide');
 			});
 
 			var foundVisibleSection;
 
-			permissionNavigationSectionsNode.each(function (
-				item,
-				index,
-				collection
-			) {
+			permissionNavigationSectionsNode.each((item, index, collection) => {
 				var action = 'addClass';
 
 				var visibleItem = item.one(
@@ -248,7 +252,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 		permissionContainerNode.delegate(
 			'click',
-			function (event) {
+			(event) => {
 				event.preventDefault();
 
 				var href = event.currentTarget.attr('data-resource-href');
@@ -262,7 +266,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 				permissionContentContainerNode.unplug(AParseContent);
 
 				Liferay.Util.fetch(href)
-					.then(function (response) {
+					.then((response) => {
 						if (response.status === 401) {
 							window.location.reload();
 						}
@@ -275,7 +279,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 							);
 						}
 					})
-					.then(function (response) {
+					.then((response) => {
 						permissionContentContainerNode.loadingmask.hide();
 
 						permissionContentContainerNode.unplug(A.LoadingMask);
@@ -296,21 +300,13 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 						event.currentTarget.addClass('active');
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						permissionContentContainerNode.loadingmask.hide();
 
 						permissionContentContainerNode.unplug(A.LoadingMask);
 
-						new Liferay.Notification({
-							closeable: true,
-							delay: {
-								hide: 0,
-								show: 0,
-							},
-							duration: 500,
+						Liferay.Util.openToast({
 							message: error.message,
-							render: true,
-							title: '<liferay-ui:message key="warning" />',
 							type: 'warning',
 						});
 					});
@@ -326,7 +322,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 		permissionContainerNode.delegate(
 			'change',
-			function (event) {
+			(event) => {
 				var unselectedTargetsNode = permissionContainerNode.one(
 					'#<portlet:namespace />unselectedTargets'
 				);
@@ -335,7 +331,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 
 				var form = A.one(document.<portlet:namespace />fm);
 
-				form.all('input[type=checkbox]').each(function (item, index) {
+				form.all('input[type=checkbox]').each((item, index) => {
 					var checkbox = A.one(item);
 
 					var value = checkbox.val();
@@ -360,7 +356,7 @@ if (!portletName.equals(PortletKeys.SERVER_ADMIN)) {
 		);
 	}
 
-	A.on('domready', function (event) {
+	A.on('domready', (event) => {
 		togglerDelegate = new A.TogglerDelegate({
 			container: <portlet:namespace />permissionNavigationDataContainer,
 			content: '.permission-navigation-item-content',

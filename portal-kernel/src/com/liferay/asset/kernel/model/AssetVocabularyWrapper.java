@@ -60,6 +60,7 @@ public class AssetVocabularyWrapper
 		attributes.put("title", getTitle());
 		attributes.put("description", getDescription());
 		attributes.put("settings", getSettings());
+		attributes.put("visibilityType", getVisibilityType());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
@@ -158,11 +159,22 @@ public class AssetVocabularyWrapper
 			setSettings(settings);
 		}
 
+		Integer visibilityType = (Integer)attributes.get("visibilityType");
+
+		if (visibilityType != null) {
+			setVisibilityType(visibilityType);
+		}
+
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
 
 		if (lastPublishDate != null) {
 			setLastPublishDate(lastPublishDate);
 		}
+	}
+
+	@Override
+	public AssetVocabulary cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	@Override
@@ -512,6 +524,16 @@ public class AssetVocabularyWrapper
 	}
 
 	/**
+	 * Returns the visibility type of this asset vocabulary.
+	 *
+	 * @return the visibility type of this asset vocabulary
+	 */
+	@Override
+	public int getVisibilityType() {
+		return model.getVisibilityType();
+	}
+
+	/**
 	 * Returns the vocabulary ID of this asset vocabulary.
 	 *
 	 * @return the vocabulary ID of this asset vocabulary
@@ -856,6 +878,16 @@ public class AssetVocabularyWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	/**
+	 * Sets the visibility type of this asset vocabulary.
+	 *
+	 * @param visibilityType the visibility type of this asset vocabulary
+	 */
+	@Override
+	public void setVisibilityType(int visibilityType) {
+		model.setVisibilityType(visibilityType);
 	}
 
 	/**

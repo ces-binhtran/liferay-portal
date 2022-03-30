@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMStorageLink;
 import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMStorageLinkPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -47,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,11 +75,15 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMStorageLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMStorageLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMStorageLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMStorageLinkLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ddm storage link to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was added
@@ -103,6 +111,10 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm storage link with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param storageLinkId the primary key of the ddm storage link
 	 * @return the ddm storage link that was removed
 	 * @throws PortalException if a ddm storage link with the primary key could not be found
@@ -118,6 +130,10 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm storage link from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was removed
 	 */
@@ -130,6 +146,13 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmStorageLinkPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -298,6 +321,7 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -316,6 +340,7 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 			(DDMStorageLink)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DDMStorageLink> getBasePersistence() {
 		return ddmStorageLinkPersistence;
 	}
@@ -376,6 +401,10 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	/**
 	 * Updates the ddm storage link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was updated
 	 */
@@ -383,6 +412,11 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	@Override
 	public DDMStorageLink updateDDMStorageLink(DDMStorageLink ddmStorageLink) {
 		return ddmStorageLinkPersistence.update(ddmStorageLink);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -396,6 +430,8 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmStorageLinkLocalService = (DDMStorageLinkLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmStorageLinkLocalService);
 	}
 
 	/**
@@ -452,6 +488,22 @@ public abstract class DDMStorageLinkLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		DDMStorageLinkLocalService ddmStorageLinkLocalService) {
+
+		try {
+			Field field = DDMStorageLinkLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmStorageLinkLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

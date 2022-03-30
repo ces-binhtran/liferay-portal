@@ -25,12 +25,12 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -132,9 +132,9 @@ public class DLFileShortcutLocalServiceTreeTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(), folderId,
+			null, TestPropsValues.getUserId(), _group.getGroupId(), folderId,
 			sourceFileName, ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 	}
 
 	protected FileShortcut addFileShortcut(

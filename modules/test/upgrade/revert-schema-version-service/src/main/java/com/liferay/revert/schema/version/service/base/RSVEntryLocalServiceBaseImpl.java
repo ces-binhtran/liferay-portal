@@ -40,14 +40,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.revert.schema.version.model.RSVEntry;
 import com.liferay.revert.schema.version.service.RSVEntryLocalService;
+import com.liferay.revert.schema.version.service.RSVEntryLocalServiceUtil;
 import com.liferay.revert.schema.version.service.persistence.RSVEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,11 +72,15 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>RSVEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.revert.schema.version.service.RSVEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>RSVEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>RSVEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the rsv entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was added
@@ -100,6 +108,10 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the rsv entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntryId the primary key of the rsv entry
 	 * @return the rsv entry that was removed
 	 * @throws PortalException if a rsv entry with the primary key could not be found
@@ -113,6 +125,10 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the rsv entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was removed
 	 */
@@ -125,6 +141,13 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return rsvEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -275,6 +298,7 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -291,6 +315,7 @@ public abstract class RSVEntryLocalServiceBaseImpl
 		return rsvEntryLocalService.deleteRSVEntry((RSVEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<RSVEntry> getBasePersistence() {
 		return rsvEntryPersistence;
 	}
@@ -334,6 +359,10 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	/**
 	 * Updates the rsv entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was updated
 	 */
@@ -341,6 +370,11 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	@Override
 	public RSVEntry updateRSVEntry(RSVEntry rsvEntry) {
 		return rsvEntryPersistence.update(rsvEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -354,6 +388,8 @@ public abstract class RSVEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		rsvEntryLocalService = (RSVEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(rsvEntryLocalService);
 	}
 
 	/**
@@ -395,6 +431,22 @@ public abstract class RSVEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		RSVEntryLocalService rsvEntryLocalService) {
+
+		try {
+			Field field = RSVEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, rsvEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

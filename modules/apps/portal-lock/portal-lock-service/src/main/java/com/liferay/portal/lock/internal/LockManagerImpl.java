@@ -87,7 +87,7 @@ public class LockManagerImpl implements LockManager {
 			return new LockImpl(_lockLocalService.getLock(className, key));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -97,7 +97,7 @@ public class LockManagerImpl implements LockManager {
 			return new LockImpl(_lockLocalService.getLock(className, key));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -110,7 +110,7 @@ public class LockManagerImpl implements LockManager {
 				_lockLocalService.getLockByUuidAndCompanyId(uuid, companyId));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -157,7 +157,7 @@ public class LockManagerImpl implements LockManager {
 					renew));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -184,7 +184,7 @@ public class LockManagerImpl implements LockManager {
 					renew));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -212,7 +212,7 @@ public class LockManagerImpl implements LockManager {
 				_lockLocalService.refresh(uuid, companyId, expirationTime));
 		}
 		catch (PortalException portalException) {
-			throw translate(portalException);
+			throw _translate(portalException);
 		}
 	}
 
@@ -242,7 +242,7 @@ public class LockManagerImpl implements LockManager {
 		_lockLocalService = lockLocalService;
 	}
 
-	protected PortalException translate(PortalException portalException) {
+	private PortalException _translate(PortalException portalException) {
 		if (portalException instanceof
 				com.liferay.portal.lock.exception.DuplicateLockException) {
 
@@ -255,35 +255,35 @@ public class LockManagerImpl implements LockManager {
 				new LockImpl(duplicateLockException.getLock()));
 		}
 
-		Throwable cause = portalException.getCause();
+		Throwable throwable = portalException.getCause();
 		String message = portalException.getMessage();
 
 		if (portalException instanceof
 				com.liferay.portal.lock.exception.ExpiredLockException) {
 
-			if (cause == null) {
+			if (throwable == null) {
 				return new ExpiredLockException(message);
 			}
 
-			return new ExpiredLockException(message, cause);
+			return new ExpiredLockException(message, throwable);
 		}
 		else if (portalException instanceof
 					com.liferay.portal.lock.exception.InvalidLockException) {
 
-			if (cause == null) {
+			if (throwable == null) {
 				return new InvalidLockException(message);
 			}
 
-			return new InvalidLockException(message, cause);
+			return new InvalidLockException(message, throwable);
 		}
 		else if (portalException instanceof
 					com.liferay.portal.lock.exception.NoSuchLockException) {
 
-			if (cause == null) {
+			if (throwable == null) {
 				return new NoSuchLockException(message);
 			}
 
-			return new NoSuchLockException(message, cause);
+			return new NoSuchLockException(message, throwable);
 		}
 
 		return portalException;

@@ -21,9 +21,7 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 /**
  * @author Alejandro Tardín
  */
-@ExtendedObjectClassDefinition(
-	category = "pages", scope = ExtendedObjectClassDefinition.Scope.COMPANY
-)
+@ExtendedObjectClassDefinition(category = "pages")
 @Meta.OCD(
 	description = "redirect-configuration-description",
 	id = "com.liferay.redirect.internal.configuration.RedirectConfiguration",
@@ -32,9 +30,29 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 public interface RedirectConfiguration {
 
 	@Meta.AD(
+		deflt = "false", description = "redirect-not-found-entry-enabled-help",
+		name = "enabled", required = false
+	)
+	public boolean enabled();
+
+	@Meta.AD(
 		deflt = "30", description = "redirect-not-found-entry-max-age-help",
 		name = "redirect-not-found-entry-max-age", required = false
 	)
 	public int redirectNotFoundEntryMaxAge();
+
+	@Meta.AD(
+		deflt = "1000",
+		description = "maximum-number-of-redirect-not-found-entries-help",
+		name = "maximum-number-of-redirect-not-found-entries", required = false
+	)
+	public int maximumNumberOfRedirectNotFoundEntries();
+
+	@Meta.AD(
+		deflt = "24",
+		description = "check-redirect-not-found-entries-interval-help",
+		name = "check-redirect-not-found-entries-interval", required = false
+	)
+	public int checkRedirectNotFoundEntriesInterval();
 
 }

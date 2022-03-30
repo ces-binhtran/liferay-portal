@@ -29,13 +29,13 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 
 <portlet:renderURL var="viewUADExportProcesses">
 	<portlet:param name="p_u_i_d" value="<%= String.valueOf(selectedUser.getUserId()) %>" />
-	<portlet:param name="mvcRenderCommandName" value="/view_uad_export_processes" />
+	<portlet:param name="mvcRenderCommandName" value="/user_associated_data/view_uad_export_processes" />
 </portlet:renderURL>
 
 <clay:container-fluid
 	cssClass="container-form-lg"
 >
-	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "exportApplicationData();" %>'>
+	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "exportApplicationData();" %>'>
 		<aui:input name="p_u_i_d" type="hidden" value="<%= String.valueOf(selectedUser.getUserId()) %>" />
 		<aui:input name="redirect" type="hidden" value="<%= viewUADExportProcesses.toString() %>" />
 		<aui:input name="applicationKeys" type="hidden" />
@@ -63,7 +63,6 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 				<clay:management-toolbar
 					disabled="<%= disableManagementBar %>"
 					itemsTotal="<%= uadApplicationExportDisplayList.size() %>"
-					namespace="<%= renderResponse.getNamespace() %>"
 					searchContainerId="uadApplicationExportDisplay"
 					selectable="<%= true %>"
 					showSearch="<%= false %>"
@@ -155,7 +154,7 @@ renderResponse.setTitle(StringBundler.concat(selectedUser.getFullName(), " - ", 
 
 			submitForm(
 				form,
-				'<portlet:actionURL name="/export_application_data" />'
+				'<portlet:actionURL name="/user_associated_data/export_application_data" />'
 			);
 		}
 	}

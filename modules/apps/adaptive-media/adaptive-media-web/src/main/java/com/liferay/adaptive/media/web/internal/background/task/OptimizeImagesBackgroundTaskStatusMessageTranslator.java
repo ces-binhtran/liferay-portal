@@ -35,7 +35,7 @@ public class OptimizeImagesBackgroundTaskStatusMessageTranslator
 			AMOptimizeImagesBackgroundTaskConstants.PHASE);
 
 		if (Validator.isNotNull(phase)) {
-			setPhaseAttributes(backgroundTaskStatus, message);
+			_setPhaseAttributes(backgroundTaskStatus, message);
 
 			return;
 		}
@@ -67,13 +67,13 @@ public class OptimizeImagesBackgroundTaskStatusMessageTranslator
 		int percentage = 100;
 
 		if (((count + errors) != 0) && (total != 0)) {
-			percentage = (int)(count + errors / total);
+			percentage = (int)(count + (errors / total));
 		}
 
 		backgroundTaskStatus.setAttribute("percentage", percentage);
 	}
 
-	protected void setPhaseAttributes(
+	private void _setPhaseAttributes(
 		BackgroundTaskStatus backgroundTaskStatus, Message message) {
 
 		backgroundTaskStatus.setAttribute(

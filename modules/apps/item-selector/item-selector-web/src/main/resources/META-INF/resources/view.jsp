@@ -46,12 +46,8 @@ List<NavigationItem> navigationItems = localizedItemSelectorRendering.getNavigat
 			/>
 		</c:if>
 
-		<%
-		boolean showGroupSelector = ParamUtil.getBoolean(request, "showGroupSelector");
-		%>
-
 		<c:choose>
-			<c:when test="<%= showGroupSelector %>">
+			<c:when test='<%= ParamUtil.getBoolean(request, "showGroupSelector") %>'>
 				<liferay-item-selector:group-selector />
 			</c:when>
 			<c:otherwise>
@@ -68,5 +64,5 @@ List<NavigationItem> navigationItems = localizedItemSelectorRendering.getNavigat
 </c:choose>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_item_selector_web.view_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_item_selector_web.view_jsp");
 %>

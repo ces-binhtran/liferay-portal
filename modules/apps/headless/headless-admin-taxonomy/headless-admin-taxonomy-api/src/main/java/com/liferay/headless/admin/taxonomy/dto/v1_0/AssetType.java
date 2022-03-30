@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -40,13 +43,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("AssetType")
+@GraphQLName(
+	description = "Represents the asset type associated with a `TaxonomyCategory`.",
+	value = "AssetType"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "AssetType")
-public class AssetType {
+public class AssetType implements Serializable {
 
 	public static AssetType toDTO(String json) {
 		return ObjectMapperUtil.readValue(AssetType.class, json);
+	}
+
+	public static AssetType unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(AssetType.class, json);
 	}
 
 	@Schema(description = "A flag that marks if this type is required.")
@@ -206,15 +216,26 @@ public class AssetType {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.taxonomy.dto.v1_0.AssetType",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -230,14 +251,12 @@ public class AssetType {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -264,7 +283,7 @@ public class AssetType {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -272,7 +291,7 @@ public class AssetType {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -280,5 +299,10 @@ public class AssetType {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

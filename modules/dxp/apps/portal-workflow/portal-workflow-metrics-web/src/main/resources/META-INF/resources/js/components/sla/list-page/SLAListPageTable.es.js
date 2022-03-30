@@ -10,65 +10,38 @@
  */
 
 import ClayTable from '@clayui/table';
-import React, {useMemo} from 'react';
+import React from 'react';
 
-import {Item} from './SLAListPageTableItem.es';
+import Item from './SLAListPageTableItem.es';
 
-const Table = ({items}) => {
-	const blockedItems = useMemo(
-		() => items.filter(({status}) => status === 2),
-		[items]
-	);
+function Table({items}) {
+	const blockedItems = items.filter(({status}) => status === 2);
+	const unblockedItems = items.filter(({status}) => status !== 2);
 
 	const showBlockedDivider = blockedItems.length > 0;
-	const unblockedItems = useMemo(
-		() => items.filter(({status}) => status !== 2),
-		[items]
-	);
-
 	const showRunningDivider = showBlockedDivider && unblockedItems.length > 0;
 
 	return (
 		<ClayTable className="table-responsive">
 			<ClayTable.Head>
 				<ClayTable.Row>
-					<ClayTable.Cell
-						data-testid="slaNameHead"
-						headingCell
-						style={{width: '27%'}}
-					>
+					<ClayTable.Cell headingCell style={{width: '27%'}}>
 						{Liferay.Language.get('sla-name')}
 					</ClayTable.Cell>
 
-					<ClayTable.Cell
-						data-testid="slaDescriptionHead"
-						headingCell
-						style={{width: '24%'}}
-					>
+					<ClayTable.Cell headingCell style={{width: '24%'}}>
 						{Liferay.Language.get('description')}
 					</ClayTable.Cell>
 
-					<ClayTable.Cell
-						data-testid="slaStatusHead"
-						headingCell
-						style={{width: '17%'}}
-					>
+					<ClayTable.Cell headingCell style={{width: '17%'}}>
 						{Liferay.Language.get('status')}
 					</ClayTable.Cell>
 
-					<ClayTable.Cell
-						data-testid="slaDurationHead"
-						headingCell
-						style={{width: '17%'}}
-					>
+					<ClayTable.Cell headingCell style={{width: '17%'}}>
 						{Liferay.Language.get('duration')}
 					</ClayTable.Cell>
 
-					<ClayTable.Cell
-						data-testid="slaDateModifiedHead"
-						headingCell
-						style={{width: '25%'}}
-					>
+					<ClayTable.Cell headingCell style={{width: '25%'}}>
 						{Liferay.Language.get('last-modified')}
 					</ClayTable.Cell>
 
@@ -79,10 +52,7 @@ const Table = ({items}) => {
 			<ClayTable.Body>
 				{showBlockedDivider && (
 					<ClayTable.Row className="table-divider">
-						<ClayTable.Cell
-							colSpan="9"
-							data-testid="slaBlockedDivider"
-						>
+						<ClayTable.Cell colSpan="9">
 							{Liferay.Language.get('blocked').toUpperCase()}
 						</ClayTable.Cell>
 					</ClayTable.Row>
@@ -94,10 +64,7 @@ const Table = ({items}) => {
 
 				{showRunningDivider && (
 					<ClayTable.Row className="table-divider">
-						<ClayTable.Cell
-							colSpan="9"
-							data-testid="slaRunningDivider"
-						>
+						<ClayTable.Cell colSpan="9">
 							{Liferay.Language.get('running').toUpperCase()}
 						</ClayTable.Cell>
 					</ClayTable.Row>
@@ -109,8 +76,8 @@ const Table = ({items}) => {
 			</ClayTable.Body>
 		</ClayTable>
 	);
-};
+}
 
 Table.Item = Item;
 
-export {Table};
+export default Table;

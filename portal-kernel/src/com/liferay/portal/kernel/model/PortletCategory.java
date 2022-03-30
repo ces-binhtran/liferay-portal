@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.model;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 
 import java.io.Serializable;
@@ -61,6 +62,7 @@ public class PortletCategory implements Serializable {
 		}
 		else {
 			_name = name;
+
 			_parentPortletCategory = null;
 			_path = name;
 		}
@@ -69,11 +71,8 @@ public class PortletCategory implements Serializable {
 	public void addCategory(PortletCategory portletCategory) {
 		portletCategory.setParentCategory(this);
 
-		String path = _path.concat(
-			_DELIMITER
-		).concat(
-			portletCategory.getName()
-		);
+		String path = StringBundler.concat(
+			_path, _DELIMITER, portletCategory.getName());
 
 		portletCategory.setPath(path);
 

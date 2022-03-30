@@ -50,18 +50,18 @@ public class AnalyzeIndexRequestExecutorImpl
 		AnalyzeRequest analyzeRequest = createAnalyzeRequest(
 			analyzeIndexRequest);
 
-		AnalyzeResponse analyzeResponse = getAnalyzeResponse(
+		AnalyzeResponse analyzeResponse = _getAnalyzeResponse(
 			analyzeRequest, analyzeIndexRequest);
 
 		AnalyzeIndexResponse analyzeIndexResponse = new AnalyzeIndexResponse();
 
 		if (analyzeResponse.detail() != null) {
-			processDetailAnalyzeResponse(
+			_processDetailAnalyzeResponse(
 				analyzeIndexResponse, analyzeResponse.detail());
 		}
 		else {
 			List<AnalysisIndexResponseToken> analysisIndexResponseTokens =
-				translateAnalyzeResponseTokens(analyzeResponse.getTokens());
+				_translateAnalyzeResponseTokens(analyzeResponse.getTokens());
 
 			analyzeIndexResponse.addAnalysisIndexResponseTokens(
 				analysisIndexResponseTokens);
@@ -131,13 +131,21 @@ public class AnalyzeIndexRequestExecutorImpl
 		return customAnalyzerBuilder.build(analyzeIndexRequest.getTexts());
 	}
 
-	protected AnalyzeResponse getAnalyzeResponse(
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private AnalyzeResponse _getAnalyzeResponse(
 		AnalyzeRequest analyzeRequest,
 		AnalyzeIndexRequest analyzeIndexRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				analyzeIndexRequest.getConnectionId(), true);
+				analyzeIndexRequest.getConnectionId(),
+				analyzeIndexRequest.isPreferLocalCluster());
 
 		IndicesClient indicesClient = restHighLevelClient.indices();
 
@@ -150,7 +158,7 @@ public class AnalyzeIndexRequestExecutorImpl
 		}
 	}
 
-	protected void processDetailAnalyzeResponse(
+	private void _processDetailAnalyzeResponse(
 		AnalyzeIndexResponse analyzeIndexResponse,
 		DetailAnalyzeResponse detailAnalyzeResponse) {
 
@@ -161,7 +169,7 @@ public class AnalyzeIndexRequestExecutorImpl
 			String analyzerName = analyzeTokenList.getName();
 
 			List<AnalysisIndexResponseToken> analysisIndexResponseTokens =
-				translateAnalyzeResponseTokens(
+				_translateAnalyzeResponseTokens(
 					ListUtil.fromArray(analyzeTokenList.getTokens()));
 
 			AnalyzeIndexResponse.DetailsAnalyzer detailsAnalyzer =
@@ -204,7 +212,7 @@ public class AnalyzeIndexRequestExecutorImpl
 				String tokenFilterName = analyzeTokenList.getName();
 
 				List<AnalysisIndexResponseToken> analysisIndexResponseTokens =
-					translateAnalyzeResponseTokens(
+					_translateAnalyzeResponseTokens(
 						ListUtil.fromArray(analyzeTokenList.getTokens()));
 
 				AnalyzeIndexResponse.DetailsTokenFilter detailsTokenFilter =
@@ -222,7 +230,7 @@ public class AnalyzeIndexRequestExecutorImpl
 			String tokenizerName = tokenizerAnalyzeTokenList.getName();
 
 			List<AnalysisIndexResponseToken> analysisIndexResponseTokens =
-				translateAnalyzeResponseTokens(
+				_translateAnalyzeResponseTokens(
 					ListUtil.fromArray(tokenizerAnalyzeTokenList.getTokens()));
 
 			AnalyzeIndexResponse.DetailsTokenizer detailsTokenizer =
@@ -233,14 +241,7 @@ public class AnalyzeIndexRequestExecutorImpl
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
-	}
-
-	protected List<AnalysisIndexResponseToken> translateAnalyzeResponseTokens(
+	private List<AnalysisIndexResponseToken> _translateAnalyzeResponseTokens(
 		List<AnalyzeResponse.AnalyzeToken> analyzeTokens) {
 
 		List<AnalysisIndexResponseToken> analysisIndexResponseTokens =

@@ -15,9 +15,9 @@
 package com.liferay.dynamic.data.mapping.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateServiceUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
@@ -173,8 +173,8 @@ public class DDMTemplateSearchTest {
 			PortalUtil.getClassNameId(JournalArticle.class), null, nameMap,
 			null, DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, null,
 			TemplateConstants.LANG_TYPE_VM,
-			DDMTemplateTestUtil.getSampleTemplateXSL(), false, false, null,
-			null, serviceContext);
+			DDMTemplateTestUtil.getSampleTemplateVM(), false, false, null, null,
+			serviceContext);
 	}
 
 	protected void assertSearch() throws Exception {

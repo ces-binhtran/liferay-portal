@@ -14,18 +14,31 @@
 
 package com.liferay.frontend.taglib.clay.internal.servlet.taglib;
 
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
+import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolver;
+import com.liferay.frontend.js.module.launcher.JSModuleResolver;
+import com.liferay.frontend.taglib.clay.internal.js.loader.modules.extender.npm.NPMResolverProvider;
 import com.liferay.frontend.taglib.clay.internal.servlet.ServletContextUtil;
+import com.liferay.frontend.taglib.clay.internal.util.ServicesProvider;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringPool;
 import com.liferay.petra.string.StringUtil;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.template.react.renderer.ComponentDescriptor;
+import com.liferay.portal.template.react.renderer.ReactRenderer;
 import com.liferay.taglib.util.AttributesTagSupport;
 import com.liferay.taglib.util.InlineUtil;
 
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.portlet.PortletResponse;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
@@ -58,9 +71,12 @@ public class BaseContainerTag extends AttributesTagSupport {
 		}
 	}
 
+	public Map<String, Object> getAdditionalProps() {
+		return _additionalProps;
+	}
+
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getCssClass()}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getCssClass()}
 	 */
 	@Deprecated
 	public String getClassName() {
@@ -108,16 +124,45 @@ public class BaseContainerTag extends AttributesTagSupport {
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getCssClass()}
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getCssClass()}
 	 */
 	@Deprecated
 	public String getElementClasses() {
 		return getCssClass();
 	}
 
+	public String getHydratedContainerElement() {
+		return _hydratedContainerElement;
+	}
+
 	public String getId() {
 		return _id;
+	}
+
+	public String getNamespace() {
+		if (_namespace != null) {
+			return _namespace;
+		}
+
+		HttpServletRequest httpServletRequest = getRequest();
+
+		PortletResponse portletResponse =
+			(PortletResponse)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_RESPONSE);
+
+		if (portletResponse != null) {
+			_namespace = portletResponse.getNamespace();
+		}
+
+		return _namespace;
+	}
+
+	public String getPropsTransformer() {
+		return _propsTransformer;
+	}
+
+	public void setAdditionalProps(Map<String, Object> additionalProps) {
+		_additionalProps = additionalProps;
 	}
 
 	/**
@@ -178,18 +223,37 @@ public class BaseContainerTag extends AttributesTagSupport {
 		setCssClass(elementClasses);
 	}
 
+	public void setHydratedContainerElement(String hydratedContainerElement) {
+		_hydratedContainerElement = hydratedContainerElement;
+	}
+
 	public void setId(String id) {
 		_id = id;
+	}
+
+	public void setNamespace(String namespace) {
+		_namespace = namespace;
 	}
 
 	@Override
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
+	}
+
+	public void setPropsTransformer(String propsTransformer) {
+		_propsTransformer = propsTransformer;
+	}
+
+	public void setPropsTransformerServletContext(
+		ServletContext propsTransformerServletContext) {
+
+		_propsTransformerServletContext = propsTransformerServletContext;
 	}
 
 	protected void cleanUp() {
+		_additionalProps = null;
 		_componentId = null;
 		_containerElement = null;
 		_contributorKey = null;
@@ -197,7 +261,11 @@ public class BaseContainerTag extends AttributesTagSupport {
 		_data = null;
 		_defaultEventHandler = null;
 		_elementClasses = null;
+		_hydratedContainerElement = "div";
 		_id = null;
+		_namespace = null;
+		_propsTransformer = null;
+		_propsTransformerServletContext = null;
 	}
 
 	protected void doClearTag() {
@@ -208,12 +276,54 @@ public class BaseContainerTag extends AttributesTagSupport {
 		cleanUp();
 	}
 
+	protected String getHydratedModuleName() {
+		return null;
+	}
+
+	protected ServletContext getPropsTransformerServletContext() {
+		if (_propsTransformerServletContext != null) {
+			return _propsTransformerServletContext;
+		}
+
+		return pageContext.getServletContext();
+	}
+
+	protected Map<String, Object> prepareProps(Map<String, Object> props) {
+		if (_additionalProps != null) {
+			props.put("additionalProps", _additionalProps);
+		}
+
+		props.put("cssClass", getCssClass());
+
+		String defaultEventHandler = getDefaultEventHandler();
+
+		if (Validator.isNotNull(defaultEventHandler)) {
+			props.put("defaultEventHandler", defaultEventHandler);
+		}
+
+		props.put("id", getId());
+
+		props.putAll(getDynamicAttributes());
+
+		return props;
+	}
+
 	protected String processCssClasses(Set<String> cssClasses) {
-		if (Validator.isNotNull(_cssClass)) {
-			cssClasses.addAll(StringUtil.split(_cssClass, CharPool.SPACE));
+		String cssClass = getCssClass();
+
+		if (Validator.isNotNull(cssClass)) {
+			cssClasses.addAll(StringUtil.split(cssClass, CharPool.SPACE));
 		}
 
 		return StringUtil.merge(cssClasses, StringPool.SPACE);
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #prepareProps()}
+	 */
+	@Deprecated
+	protected Map<String, Object> processData(Map<String, Object> data) {
+		return data;
 	}
 
 	protected int processEndTag() throws Exception {
@@ -223,11 +333,68 @@ public class BaseContainerTag extends AttributesTagSupport {
 		jspWriter.write(_containerElement);
 		jspWriter.write(">");
 
-		return EVAL_BODY_INCLUDE;
+		String hydratedModuleName = getHydratedModuleName();
+
+		if (hydratedModuleName != null) {
+			NPMResolver npmResolver = NPMResolverProvider.getNPMResolver();
+
+			String moduleName = npmResolver.resolveModuleName(
+				hydratedModuleName);
+
+			String propsTransformer = null;
+
+			if (Validator.isNotNull(_propsTransformer)) {
+				String resolvedPackageName;
+
+				try {
+					resolvedPackageName = NPMResolvedPackageNameUtil.get(
+						getPropsTransformerServletContext());
+				}
+				catch (UnsupportedOperationException
+							unsupportedOperationException) {
+
+					JSModuleResolver jsModuleResolver =
+						ServicesProvider.getJSModuleResolver();
+
+					resolvedPackageName = jsModuleResolver.resolveModule(
+						getPropsTransformerServletContext(), null);
+				}
+
+				propsTransformer =
+					resolvedPackageName + "/" + _propsTransformer;
+			}
+			else if (Validator.isNotNull(getDefaultEventHandler())) {
+				propsTransformer = npmResolver.resolveModuleName(
+					"frontend-taglib-clay" +
+						"/DefaultEventHandlersPropsTransformer");
+			}
+
+			ComponentDescriptor componentDescriptor = new ComponentDescriptor(
+				moduleName, getId(), new LinkedHashSet<>(), false,
+				propsTransformer);
+
+			ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
+
+			reactRenderer.renderReact(
+				componentDescriptor, prepareProps(new HashMap<>()),
+				getRequest(), jspWriter);
+
+			jspWriter.write("</");
+			jspWriter.write(_hydratedContainerElement);
+			jspWriter.write(">");
+		}
+
+		return EVAL_PAGE;
 	}
 
 	protected int processStartTag() throws Exception {
 		JspWriter jspWriter = pageContext.getOut();
+
+		if (getHydratedModuleName() != null) {
+			jspWriter.write("<");
+			jspWriter.write(_hydratedContainerElement);
+			jspWriter.write(">");
+		}
 
 		if (_containerElement == null) {
 			setContainerElement("div");
@@ -235,32 +402,48 @@ public class BaseContainerTag extends AttributesTagSupport {
 
 		jspWriter.write("<");
 		jspWriter.write(_containerElement);
-		jspWriter.write(" class=\"");
-		jspWriter.write(processCssClasses(new LinkedHashSet<>()));
-		jspWriter.write("\"");
 
-		if (Validator.isNotNull(_id)) {
-			jspWriter.write(" id=\"");
-			jspWriter.write(_id);
-			jspWriter.write("\"");
+		writeCssClassAttribute();
+
+		if (Validator.isNotNull(getId())) {
+			writeIdAttribute();
 		}
 
-		_writeDynamicAttributes(jspWriter);
+		writeDynamicAttributes();
 
 		jspWriter.write(">");
 
 		return EVAL_BODY_INCLUDE;
 	}
 
-	private void _writeDynamicAttributes(JspWriter jspWriter) throws Exception {
+	protected void writeCssClassAttribute() throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write(" class=\"");
+		jspWriter.write(processCssClasses(new LinkedHashSet<>()));
+		jspWriter.write("\"");
+	}
+
+	protected void writeDynamicAttributes() throws Exception {
 		String dynamicAttributesString = InlineUtil.buildDynamicAttributes(
 			getDynamicAttributes());
 
 		if (!dynamicAttributesString.isEmpty()) {
+			JspWriter jspWriter = pageContext.getOut();
+
 			jspWriter.write(dynamicAttributesString);
 		}
 	}
 
+	protected void writeIdAttribute() throws Exception {
+		JspWriter jspWriter = pageContext.getOut();
+
+		jspWriter.write(" id=\"");
+		jspWriter.write(getId());
+		jspWriter.write("\"");
+	}
+
+	private Map<String, Object> _additionalProps;
 	private String _componentId;
 	private String _containerElement;
 	private String _contributorKey;
@@ -268,6 +451,10 @@ public class BaseContainerTag extends AttributesTagSupport {
 	private Map<String, String> _data;
 	private String _defaultEventHandler;
 	private String _elementClasses;
+	private String _hydratedContainerElement = "div";
 	private String _id;
+	private String _namespace;
+	private String _propsTransformer;
+	private ServletContext _propsTransformerServletContext;
 
 }

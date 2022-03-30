@@ -17,24 +17,22 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectMasterLayout");
-
-SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request);
-
-List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries();
+SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request, liferayPortletResponse);
 %>
 
-<aui:form cssClass="container-fluid-1280 mt-3" name="fm">
+<aui:form cssClass="container-fluid container-fluid-max-xl container-view" name="fm">
 	<ul class="card-page card-page-equal-height">
 
 		<%
-		for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : masterLayoutPageTemplateEntries) {
+		for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries()) {
 		%>
 
-			<li class="card-page-item col-md-3 col-sm-6 form-check-card">
-				<clay:vertical-card
-					verticalCard="<%= new SelectMasterLayoutVerticalCard(masterLayoutPageTemplateEntry, renderRequest) %>"
-				/>
+			<li class="card-page-item card-page-item-asset">
+				<div class="form-check form-check-card">
+					<clay:vertical-card
+						verticalCard="<%= new SelectMasterLayoutVerticalCard(masterLayoutPageTemplateEntry, renderRequest) %>"
+					/>
+				</div>
 			</li>
 
 		<%
@@ -44,35 +42,7 @@ List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPage
 	</ul>
 </aui:form>
 
-<aui:script require="metal-dom/src/dom as dom">
-	var delegateHandler = dom.delegate(
-		document.body,
-		'click',
-		'.select-master-layout-option',
-		function (event) {
-			dom.removeClasses(
-				document.querySelectorAll('.form-check-card.active'),
-				'active'
-			);
-			dom.addClasses(
-				dom.closest(event.delegateTarget, '.form-check-card'),
-				'active'
-			);
-
-			Liferay.Util.getOpener().Liferay.fire(
-				'<%= HtmlUtil.escape(eventName) %>',
-				{
-					data: event.delegateTarget.dataset,
-				}
-			);
-		}
-	);
-
-	var onDestroyPortlet = function () {
-		delegateHandler.removeListener();
-
-		Liferay.detach('destroyPortlet', onDestroyPortlet);
-	};
-
-	Liferay.on('destroyPortlet', onDestroyPortlet);
-</aui:script>
+<liferay-frontend:component
+	context="<%= selectLayoutPageTemplateEntryDisplayContext.getComponentContext() %>"
+	module="js/SelectCardHandler"
+/>

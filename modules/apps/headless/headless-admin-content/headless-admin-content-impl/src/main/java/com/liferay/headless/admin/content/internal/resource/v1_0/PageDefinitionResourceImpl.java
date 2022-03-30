@@ -47,6 +47,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.permission.LayoutPermission;
 import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
+import com.liferay.portal.kernel.servlet.DynamicServletRequest;
 import com.liferay.portal.kernel.servlet.ServletContextPool;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
@@ -90,12 +91,6 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 			Long siteId, PageDefinition pageDefinition)
 		throws Exception {
 
-		Map<Locale, String> nameMap = Collections.singletonMap(
-			contextAcceptLanguage.getPreferredLocale(), StringUtil.randomId());
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			contextHttpServletRequest);
-
 		PermissionChecker permissionChecker =
 			PermissionCheckerFactoryUtil.create(contextUser);
 
@@ -115,6 +110,12 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 				).build());
 		}
 
+		Map<Locale, String> nameMap = Collections.singletonMap(
+			contextAcceptLanguage.getPreferredLocale(), StringUtil.randomId());
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			contextHttpServletRequest);
+
 		Layout layout = _layoutLocalService.addLayout(
 			contextUser.getUserId(), siteId, false,
 			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
@@ -130,7 +131,7 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 
 		_fragmentEntryLinkLocalService.
 			deleteLayoutPageTemplateEntryFragmentEntryLinks(
-				siteId, _portal.getClassNameId(Layout.class), layout.getPlid());
+				siteId, layout.getPlid());
 
 		ContextResolver<ObjectMapper> contextResolver =
 			_providers.getContextResolver(
@@ -165,6 +166,9 @@ public class PageDefinitionResourceImpl extends BasePageDefinitionResourceImpl {
 				"Unable to post page definition preview"
 			).build();
 		}
+
+		contextHttpServletRequest = DynamicServletRequest.addQueryString(
+			contextHttpServletRequest, "p_l_id=" + layout.getPlid(), false);
 
 		contextHttpServletRequest.setAttribute(
 			WebKeys.THEME_DISPLAY, _getThemeDisplay(layout));

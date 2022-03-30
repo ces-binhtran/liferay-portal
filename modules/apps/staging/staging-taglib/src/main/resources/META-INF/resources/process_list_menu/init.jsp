@@ -16,12 +16,23 @@
 
 <%@ include file="/init.jsp" %>
 
+<%@ page import="com.liferay.staging.constants.StagingProcessesPortletKeys" %>
+
 <%
 BackgroundTask backgroundTask = (BackgroundTask)request.getAttribute("liferay-staging:process-list-menu:backgroundTask");
 boolean deleteMenu = GetterUtil.getBoolean(request.getAttribute("liferay-staging:process-list-menu:deleteMenu"));
 boolean localPublishing = GetterUtil.getBoolean(request.getAttribute("liferay-staging:process-list-menu:localPublishing"));
 boolean relaunchMenu = GetterUtil.getBoolean(request.getAttribute("liferay-staging:process-list-menu:relaunchMenu"));
 boolean summaryMenu = GetterUtil.getBoolean(request.getAttribute("liferay-staging:process-list-menu:summaryMenu"));
+
+Map<String, Serializable> contextMap = backgroundTask.getTaskContextMap();
+
+long exportImportConfigurationId = GetterUtil.getLong(String.valueOf(contextMap.get("exportImportConfigurationId")));
+
+if (exportImportConfigurationId == 0) {
+	relaunchMenu = false;
+	summaryMenu = false;
+}
 
 Date completionDate = backgroundTask.getCompletionDate();
 

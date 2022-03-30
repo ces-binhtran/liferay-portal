@@ -18,7 +18,6 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.util.ExpandoConverterUtil;
 import com.liferay.info.field.InfoField;
-import com.liferay.info.field.type.InfoFieldType;
 import com.liferay.info.field.type.TextInfoFieldType;
 import com.liferay.info.item.field.reader.LocalizedInfoItemFieldReader;
 import com.liferay.info.localized.InfoLocalizedValue;
@@ -59,17 +58,23 @@ public class ExpandoInfoItemFieldReader
 	}
 
 	@Override
-	public InfoField getField() {
-		InfoFieldType fieldType = TextInfoFieldType.INSTANCE;
+	public InfoField getInfoField() {
+		InfoLocalizedValue<String> labelInfoLocalizedValue =
+			InfoLocalizedValue.<String>builder(
+			).value(
+				LocaleUtil.getDefault(), _attributeName
+			).defaultLocale(
+				LocaleUtil.getDefault()
+			).build();
 
-		InfoLocalizedValue labelInfoLocalizedValue = InfoLocalizedValue.builder(
-		).addValue(
-			LocaleUtil.getDefault(), _attributeName
-		).defaultLocale(
-			LocaleUtil.getDefault()
+		return InfoField.builder(
+		).infoFieldType(
+			TextInfoFieldType.INSTANCE
+		).name(
+			getName()
+		).labelInfoLocalizedValue(
+			labelInfoLocalizedValue
 		).build();
-
-		return new InfoField(fieldType, labelInfoLocalizedValue, getName());
 	}
 
 	public String getName() {
@@ -128,13 +133,9 @@ public class ExpandoInfoItemFieldReader
 				JSONObject jsonObject = JSONFactoryUtil.createJSONObject(
 					attributeValue.toString());
 
-				StringBundler sb = new StringBundler(3);
-
-				sb.append(jsonObject.get("latitude"));
-				sb.append(StringPool.COMMA_AND_SPACE);
-				sb.append(jsonObject.get("longitude"));
-
-				attributeValue = sb.toString();
+				attributeValue = StringBundler.concat(
+					jsonObject.get("latitude"), StringPool.COMMA_AND_SPACE,
+					jsonObject.get("longitude"));
 			}
 			catch (JSONException jsonException) {
 				_log.error("Unable to parse geolocation JSON", jsonException);

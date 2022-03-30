@@ -16,6 +16,7 @@ package com.liferay.site.teams.web.internal.exportimport.data.handler;
 
 import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
+import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -120,7 +121,7 @@ public class TeamStagedModelDataHandler
 			PortletDataContext portletDataContext, Team team)
 		throws Exception {
 
-		Team existingTeam = fetchExistingTeam(
+		Team existingTeam = _fetchExistingTeam(
 			team.getUuid(), portletDataContext.getScopeGroupId(),
 			team.getName());
 
@@ -156,10 +157,12 @@ public class TeamStagedModelDataHandler
 				uuid, companyId);
 
 			if ((user != null) &&
-				_userLocalService.hasGroupUser(
-					importedTeam.getGroupId(), user.getUserId()) &&
 				!_userLocalService.hasTeamUser(
-					importedTeam.getTeamId(), user.getUserId())) {
+					importedTeam.getTeamId(), user.getUserId()) &&
+				((ExportImportThreadLocal.isStagingInProcess() &&
+				  !ExportImportThreadLocal.isStagingInProcessOnRemoteLive()) ||
+				 _userLocalService.hasGroupUser(
+					 importedTeam.getGroupId(), user.getUserId()))) {
 
 				_userLocalService.addTeamUser(importedTeam.getTeamId(), user);
 			}
@@ -189,16 +192,6 @@ public class TeamStagedModelDataHandler
 		portletDataContext.importClassedModel(team, importedTeam);
 	}
 
-	protected Team fetchExistingTeam(String uuid, long groupId, String name) {
-		Team team = fetchStagedModelByUuidAndGroupId(uuid, groupId);
-
-		if (team != null) {
-			return team;
-		}
-
-		return _teamLocalService.fetchTeam(groupId, name);
-	}
-
 	@Override
 	protected boolean isSkipImportReferenceStagedModels() {
 		return true;
@@ -219,6 +212,16 @@ public class TeamStagedModelDataHandler
 	@Reference(unbind = "-")
 	protected void setUserLocalService(UserLocalService userLocalService) {
 		_userLocalService = userLocalService;
+	}
+
+	private Team _fetchExistingTeam(String uuid, long groupId, String name) {
+		Team team = fetchStagedModelByUuidAndGroupId(uuid, groupId);
+
+		if (team != null) {
+			return team;
+		}
+
+		return _teamLocalService.fetchTeam(groupId, name);
 	}
 
 	private TeamLocalService _teamLocalService;

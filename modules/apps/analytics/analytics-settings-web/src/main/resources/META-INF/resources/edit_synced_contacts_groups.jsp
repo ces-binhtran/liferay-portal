@@ -17,21 +17,27 @@
 <%@ include file="/init.jsp" %>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/view_configuration_screen"
+).setParameter(
+	"configurationScreenKey", "2-synced-contact-data"
+).buildPortletURL();
 
-portletURL.setParameter("mvcRenderCommandName", "/view_configuration_screen");
-portletURL.setParameter("configurationScreenKey", "synced-contacts");
-
-String redirect = portletURL.toString();
+String redirect = ParamUtil.getString(request, "redirect", portletURL.toString());
 
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(ParamUtil.getString(request, "backURL", redirect));
 
+PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "select-contact-data"), portletURL.toString());
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "select-contacts"), redirect);
 PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "sync-by-user-groups"), currentURL);
 %>
 
-<portlet:actionURL name="/analytics/edit_synced_contacts" var="editSyncedContactsURL" />
+<portlet:renderURL var="editSyncedContactsFieldsURL">
+	<portlet:param name="mvcRenderCommandName" value="/analytics_settings/edit_synced_contacts_fields" />
+</portlet:renderURL>
 
 <clay:container-fluid>
 	<clay:row>
@@ -66,12 +72,12 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 	%>
 
 	<clay:management-toolbar
-		displayContext="<%= new UserGroupManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userGroupDisplayContext) %>"
+		managementToolbarDisplayContext="<%= new UserGroupManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, userGroupDisplayContext) %>"
 	/>
 
-	<aui:form action="<%= editSyncedContactsURL %>" method="post" name="fm">
+	<aui:form action="<%= editSyncedContactsFieldsURL %>" method="post" name="fm">
 		<aui:input name="<%= Constants.CMD %>" type="hidden" value="update_synced_groups" />
-		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
+		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 		<liferay-ui:search-container
 			id="selectUserGroups"
@@ -97,9 +103,11 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "
 			/>
 		</liferay-ui:search-container>
 
-		<aui:button-row>
-			<aui:button type="submit" value="save" />
-			<aui:button href="<%= redirect %>" type="cancel" value="cancel" />
-		</aui:button-row>
+		<div class="text-right">
+			<aui:button-row>
+				<aui:button href="<%= redirect %>" type="cancel" value="cancel" />
+				<aui:button type="submit" value="save-and-next" />
+			</aui:button-row>
+		</div>
 	</aui:form>
 </clay:sheet>

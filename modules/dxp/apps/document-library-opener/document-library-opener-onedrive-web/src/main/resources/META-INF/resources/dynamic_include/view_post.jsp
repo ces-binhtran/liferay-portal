@@ -17,7 +17,7 @@
 <%@ include file="/dynamic_include/init.jsp" %>
 
 <liferay-frontend:component
-	componentId='<%= renderResponse.getNamespace() + "DocumentLibraryOpener" %>'
+	componentId='<%= liferayPortletResponse.getNamespace() + "DocumentLibraryOpener" %>'
 	module="js/DocumentLibraryOpener.es"
 />
 
@@ -27,7 +27,7 @@
 		dialogTitle
 	) {
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.createWithName({
 					dialogTitle: dialogTitle,
 					formSubmitURL: formSubmitURL,
@@ -41,7 +41,7 @@
 		dialogTitle
 	) {
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.edit({
 					formSubmitURL: formSubmitURL,
 				});
@@ -50,15 +50,15 @@
 	};
 
 	<%
-	String dialogMessage = (String)request.getAttribute("dialogMessage");
 	String oneDriveBackgroundTaskStatusURL = (String)request.getAttribute("oneDriveBackgroundTaskStatusURL");
 	%>
 
 	<c:if test="<%= oneDriveBackgroundTaskStatusURL != null %>">
 		Liferay.componentReady('<portlet:namespace />DocumentLibraryOpener').then(
-			function (openerOnedrive) {
+			(openerOnedrive) => {
 				openerOnedrive.open({
-					dialogMessage: '<%= dialogMessage %>',
+					dialogMessage:
+						'<%= (String)request.getAttribute("dialogMessage") %>',
 					statusURL: '<%= oneDriveBackgroundTaskStatusURL %>',
 				});
 			}
@@ -67,5 +67,5 @@
 </aui:script>
 
 <liferay-util:html-top>
-	<link href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>' rel="stylesheet" type="text/css" />
+	<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>

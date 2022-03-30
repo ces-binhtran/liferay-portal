@@ -17,6 +17,8 @@ package com.liferay.document.library.web.internal.display.context;
 import com.liferay.asset.kernel.model.AssetVocabulary;
 import com.liferay.asset.kernel.service.AssetCategoryServiceUtil;
 import com.liferay.asset.kernel.service.AssetVocabularyServiceUtil;
+import com.liferay.digital.signature.configuration.DigitalSignatureConfiguration;
+import com.liferay.digital.signature.configuration.DigitalSignatureConfigurationUtil;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileEntryType;
@@ -25,21 +27,22 @@ import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.service.DLFileEntryTypeLocalServiceUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
+import com.liferay.document.library.web.internal.configuration.FFManagementToolbarConfigurationUtil;
 import com.liferay.document.library.web.internal.constants.DLWebKeys;
-import com.liferay.document.library.web.internal.display.context.logic.DLPortletInstanceSettingsHelper;
-import com.liferay.document.library.web.internal.display.context.util.DLRequestHelper;
+import com.liferay.document.library.web.internal.display.context.helper.DLPortletInstanceSettingsHelper;
+import com.liferay.document.library.web.internal.display.context.helper.DLRequestHelper;
 import com.liferay.document.library.web.internal.helper.DLTrashHelper;
-import com.liferay.document.library.web.internal.security.permission.resource.DLFileEntryPermission;
-import com.liferay.document.library.web.internal.security.permission.resource.DLFolderPermission;
 import com.liferay.document.library.web.internal.settings.DLPortletInstanceSettings;
+import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.ViewTypeItemList;
-import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -49,15 +52,11 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletURLUtil;
 import com.liferay.portal.kernel.portlet.toolbar.contributor.PortletToolbarContributor;
-import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.repository.model.Folder;
-import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ClassNameLocalServiceUtil;
 import com.liferay.portal.kernel.servlet.taglib.ui.Menu;
 import com.liferay.portal.kernel.servlet.taglib.ui.URLMenuItem;
+import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -65,11 +64,9 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
-import com.liferay.portal.util.RepositoryUtil;
 import com.liferay.staging.StagingGroupHelper;
 import com.liferay.staging.StagingGroupHelperUtil;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,18 +79,25 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * @author Alejandro Tardín
  */
-public class DLAdminManagementToolbarDisplayContext {
+public class DLAdminManagementToolbarDisplayContext
+	extends SearchContainerManagementToolbarDisplayContext {
 
 	public DLAdminManagementToolbarDisplayContext(
 		HttpServletRequest httpServletRequest,
 		LiferayPortletRequest liferayPortletRequest,
 		LiferayPortletResponse liferayPortletResponse,
-		DLAdminDisplayContext dlAdminDisplayContext) {
+		DLAdminDisplayContext dlAdminDisplayContext,
+		DLTrashHelper dlTrashHelper) {
+
+		super(
+			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
+			dlAdminDisplayContext.getSearchContainer());
 
 		_httpServletRequest = httpServletRequest;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 		_dlAdminDisplayContext = dlAdminDisplayContext;
+		_dlTrashHelper = dlTrashHelper;
 
 		_currentURLObj = PortletURLUtil.getCurrent(
 			liferayPortletRequest, liferayPortletResponse);
@@ -103,23 +107,34 @@ public class DLAdminManagementToolbarDisplayContext {
 		_dlPortletInstanceSettingsHelper = new DLPortletInstanceSettingsHelper(
 			_dlRequestHelper);
 
-		_dlTrashHelper = (DLTrashHelper)_httpServletRequest.getAttribute(
-			DLWebKeys.DOCUMENT_LIBRARY_TRASH_HELPER);
-
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 	}
 
-	public List<DropdownItem> getActionDropdownItems() throws PortalException {
+	@Override
+	public List<DropdownItem> getActionDropdownItems() {
 		if (!_dlPortletInstanceSettingsHelper.isShowActions()) {
 			return null;
 		}
 
+		DigitalSignatureConfiguration digitalSignatureConfiguration =
+			DigitalSignatureConfigurationUtil.getDigitalSignatureConfiguration(
+				_themeDisplay.getCompanyId(), _themeDisplay.getSiteGroupId());
 		boolean enableOnBulk = _isEnableOnBulk();
 		boolean stagedActions = _isStagedActions();
 		User user = _themeDisplay.getUser();
 
 		return DropdownItemListBuilder.add(
+			() -> digitalSignatureConfiguration.enabled() && stagedActions,
+			dropdownItem -> {
+				dropdownItem.putData("action", "collectDigitalSignature");
+				dropdownItem.setIcon("signature");
+				dropdownItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "collect-digital-signature"));
+				dropdownItem.setQuickAction(true);
+			}
+		).add(
 			() -> stagedActions,
 			dropdownItem -> {
 				dropdownItem.putData("action", "download");
@@ -214,107 +229,30 @@ public class DLAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public List<String> getAvailableActions(FileEntry fileEntry)
-		throws PortalException {
-
-		List<String> availableActions = new ArrayList<>();
-
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
-
-		if (DLFileEntryPermission.contains(
-				permissionChecker, fileEntry, ActionKeys.DELETE)) {
-
-			availableActions.add("deleteEntries");
-		}
-
-		if (DLFileEntryPermission.contains(
-				permissionChecker, fileEntry, ActionKeys.UPDATE)) {
-
-			availableActions.add("move");
-
-			if (fileEntry.isCheckedOut()) {
-				availableActions.add("checkin");
-			}
-			else {
-				availableActions.add("checkout");
-			}
-
-			if (!RepositoryUtil.isExternalRepository(
-					fileEntry.getRepositoryId()) &&
-				!_hasWorkflowDefinitionLink(fileEntry) &&
-				!_isCheckedOutByAnotherUser(fileEntry)) {
-
-				if (_hasValidAssetVocabularies(
-						_themeDisplay.getScopeGroupId())) {
-
-					availableActions.add("editCategories");
-				}
-
-				availableActions.add("editTags");
-			}
-		}
-
-		if (DLFileEntryPermission.contains(
-				permissionChecker, fileEntry, ActionKeys.VIEW)) {
-
-			availableActions.add("download");
-		}
-
-		return availableActions;
-	}
-
-	public List<String> getAvailableActions(Folder folder)
-		throws PortalException {
-
-		List<String> availableActions = new ArrayList<>();
-
-		PermissionChecker permissionChecker =
-			_themeDisplay.getPermissionChecker();
-
-		if (DLFolderPermission.contains(
-				permissionChecker, folder, ActionKeys.DELETE)) {
-
-			availableActions.add("deleteEntries");
-		}
-
-		if (DLFolderPermission.contains(
-				permissionChecker, folder, ActionKeys.UPDATE) &&
-			!folder.isMountPoint()) {
-
-			availableActions.add("move");
-		}
-
-		if (DLFolderPermission.contains(
-				permissionChecker, folder, ActionKeys.VIEW) &&
-			!RepositoryUtil.isExternalRepository(folder.getRepositoryId())) {
-
-			availableActions.add("download");
-		}
-
-		return availableActions;
-	}
-
+	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = _liferayPortletResponse.createRenderURL();
-
-		clearResultsURL.setParameter(
-			"mvcRenderCommandName", "/document_library/view");
-		clearResultsURL.setParameter(
-			"folderId", String.valueOf(_getFolderId()));
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/document_library/view"
+		).setParameter(
+			"folderId", _getFolderId()
+		).buildString();
 	}
 
+	@Override
 	public String getComponentId() {
 		return _liferayPortletResponse.getNamespace() +
 			"entriesManagementToolbar";
 	}
 
+	@Override
 	public CreationMenu getCreationMenu() {
-		String portletName = _liferayPortletRequest.getPortletName();
+		PortletDisplay portletDisplay = _themeDisplay.getPortletDisplay();
 
-		if (!portletName.equals(DLPortletKeys.DOCUMENT_LIBRARY_ADMIN)) {
+		String rootPortletId = portletDisplay.getRootPortletId();
+
+		if (rootPortletId.equals(DLPortletKeys.MEDIA_GALLERY_DISPLAY)) {
 			return null;
 		}
 
@@ -352,6 +290,12 @@ public class DLAdminManagementToolbarDisplayContext {
 		return creationMenu;
 	}
 
+	@Override
+	public String getDefaultEventHandler() {
+		return liferayPortletResponse.getNamespace() + "DocumentLibrary";
+	}
+
+	@Override
 	public List<DropdownItem> getFilterDropdownItems() {
 		if (_isSearch()) {
 			return null;
@@ -366,6 +310,9 @@ public class DLAdminManagementToolbarDisplayContext {
 						_httpServletRequest, "filter-by-navigation"));
 			}
 		).addGroup(
+			() ->
+				!FFManagementToolbarConfigurationUtil.
+					enableDesignImprovements(),
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(_getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
@@ -374,18 +321,21 @@ public class DLAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
+	@Override
 	public List<LabelItem> getFilterLabelItems() {
 		long fileEntryTypeId = _getFileEntryTypeId();
 
 		return LabelItemListBuilder.add(
 			() -> fileEntryTypeId != -1,
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				removeLabelURL.setParameter("fileEntryTypeId", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setParameter(
+						"fileEntryTypeId", (String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
 
@@ -407,19 +357,21 @@ public class DLAdminManagementToolbarDisplayContext {
 				String label = String.format(
 					"%s: %s",
 					LanguageUtil.get(_httpServletRequest, "document-type"),
-					fileEntryTypeName);
+					HtmlUtil.escape(fileEntryTypeName));
 
 				labelItem.setLabel(label);
 			}
 		).add(
 			() -> Objects.equals(_getNavigation(), "mine"),
 			labelItem -> {
-				PortletURL removeLabelURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				removeLabelURL.setParameter("navigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setNavigation(
+						(String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
 
@@ -434,15 +386,33 @@ public class DLAdminManagementToolbarDisplayContext {
 		).build();
 	}
 
-	public PortletURL getSearchURL() {
-		PortletURL searchURL = _liferayPortletResponse.createRenderURL();
+	@Override
+	public String getInfoPanelId() {
+		return "infoPanelId";
+	}
 
-		searchURL.setParameter(
-			"mvcRenderCommandName", "/document_library/search");
+	@Override
+	public List<DropdownItem> getOrderDropdownItems() {
+		if (_isSearch() ||
+			!FFManagementToolbarConfigurationUtil.enableDesignImprovements()) {
 
+			return null;
+		}
+
+		return _getOrderByDropdownItems();
+	}
+
+	@Override
+	public String getSearchActionURL() {
 		long repositoryId = _getRepositoryId();
 
-		searchURL.setParameter("repositoryId", String.valueOf(repositoryId));
+		PortletURL searchURL = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			"/document_library/search"
+		).setParameter(
+			"repositoryId", repositoryId
+		).buildPortletURL();
 
 		long searchRepositoryId = ParamUtil.getLong(
 			_httpServletRequest, "searchRepositoryId", repositoryId);
@@ -462,9 +432,15 @@ public class DLAdminManagementToolbarDisplayContext {
 
 		searchURL.setParameter("showSearchInfo", Boolean.TRUE.toString());
 
-		return searchURL;
+		return searchURL.toString();
 	}
 
+	@Override
+	public String getSearchContainerId() {
+		return "entries";
+	}
+
+	@Override
 	public String getSortingOrder() {
 		if (_isSearch()) {
 			return null;
@@ -473,46 +449,34 @@ public class DLAdminManagementToolbarDisplayContext {
 		return _dlAdminDisplayContext.getOrderByType();
 	}
 
-	public PortletURL getSortingURL() {
+	@Override
+	public String getSortingURL() {
 		if (_isSearch()) {
 			return null;
 		}
 
-		PortletURL sortingURL = _getCurrentSortingURL();
-
-		sortingURL.setParameter(
+		return PortletURLBuilder.create(
+			_getCurrentSortingURL()
+		).setParameter(
 			"orderByType",
-			Objects.equals(_getOrderByType(), "asc") ? "desc" : "asc");
-
-		return sortingURL;
+			Objects.equals(_getOrderByType(), "asc") ? "desc" : "asc"
+		).buildString();
 	}
 
-	public int getTotalItems() {
-		SearchContainer<Object> searchContainer =
-			_dlAdminDisplayContext.getSearchContainer();
-
-		return searchContainer.getTotal();
+	@Override
+	public Boolean getSupportsBulkActions() {
+		return true;
 	}
 
-	public ViewTypeItemList getViewTypes() {
+	@Override
+	public List<ViewTypeItem> getViewTypeItems() {
 		if (_isSearch()) {
 			return null;
 		}
-
-		String navigation = ParamUtil.getString(
-			_httpServletRequest, "navigation", "home");
-
-		int curEntry = ParamUtil.getInteger(_httpServletRequest, "curEntry");
-		int deltaEntry = ParamUtil.getInteger(
-			_httpServletRequest, "deltaEntry");
 
 		long folderId = _getFolderId();
 
-		long fileEntryTypeId = _getFileEntryTypeId();
-
 		String keywords = ParamUtil.getString(_httpServletRequest, "keywords");
-
-		PortletURL displayStyleURL = _liferayPortletResponse.createRenderURL();
 
 		String mvcRenderCommandName = "/document_library/search";
 
@@ -525,46 +489,77 @@ public class DLAdminManagementToolbarDisplayContext {
 			}
 		}
 
-		displayStyleURL.setParameter(
-			"mvcRenderCommandName", mvcRenderCommandName);
+		PortletURL displayStyleURL = PortletURLBuilder.createRenderURL(
+			_liferayPortletResponse
+		).setMVCRenderCommandName(
+			mvcRenderCommandName
+		).setNavigation(
+			() -> {
+				String navigation = ParamUtil.getString(
+					_httpServletRequest, "navigation", "home");
 
-		displayStyleURL.setParameter(
-			"navigation", HtmlUtil.escapeJS(navigation));
+				return HtmlUtil.escapeJS(navigation);
+			}
+		).setParameter(
+			"curEntry",
+			() -> {
+				int curEntry = ParamUtil.getInteger(
+					_httpServletRequest, "curEntry");
 
-		if (curEntry > 0) {
-			displayStyleURL.setParameter("curEntry", String.valueOf(curEntry));
-		}
+				if (curEntry > 0) {
+					return curEntry;
+				}
 
-		if (deltaEntry > 0) {
-			displayStyleURL.setParameter(
-				"deltaEntry", String.valueOf(deltaEntry));
-		}
+				return null;
+			}
+		).setParameter(
+			"deltaEntry",
+			() -> {
+				int deltaEntry = ParamUtil.getInteger(
+					_httpServletRequest, "deltaEntry");
 
-		displayStyleURL.setParameter("folderId", String.valueOf(folderId));
+				if (deltaEntry > 0) {
+					return deltaEntry;
+				}
 
-		if (fileEntryTypeId != -1) {
-			displayStyleURL.setParameter(
-				"fileEntryTypeId", String.valueOf(fileEntryTypeId));
-		}
+				return null;
+			}
+		).setParameter(
+			"fileEntryTypeId",
+			() -> {
+				long fileEntryTypeId = _getFileEntryTypeId();
+
+				if (fileEntryTypeId != -1) {
+					return fileEntryTypeId;
+				}
+
+				return null;
+			}
+		).setParameter(
+			"folderId", folderId
+		).buildPortletURL();
 
 		return new ViewTypeItemList(displayStyleURL, _getDisplayStyle()) {
 			{
-				if (ArrayUtil.contains(_getDisplayViews(), "icon")) {
-					addCardViewTypeItem();
-				}
+				String[] displayViews = _getDisplayViews();
 
-				if (ArrayUtil.contains(_getDisplayViews(), "descriptive")) {
-					addListViewTypeItem();
-				}
-
-				if (ArrayUtil.contains(_getDisplayViews(), "list")) {
-					addTableViewTypeItem();
+				for (String displayView : displayViews) {
+					if (displayView.equals("icon")) {
+						addCardViewTypeItem();
+					}
+					else if (displayView.equals("descriptive")) {
+						addListViewTypeItem();
+					}
+					else if (displayView.equals("list")) {
+						addTableViewTypeItem();
+					}
 				}
 			}
 		};
 	}
 
-	public boolean isDisabled() {
+	@Override
+	public Boolean isDisabled() {
 		try {
 			int count =
 				DLAppServiceUtil.getFoldersAndFileEntriesAndFileShortcutsCount(
@@ -582,12 +577,20 @@ public class DLAdminManagementToolbarDisplayContext {
 		}
 	}
 
-	public boolean isSelectable() {
+	@Override
+	public Boolean isShowInfoButton() {
 		return true;
 	}
 
-	public boolean isShowSearch() {
-		return _dlPortletInstanceSettingsHelper.isShowSearch();
+	@Override
+	public Boolean isShowSearch() {
+		if (_dlPortletInstanceSettingsHelper.isShowSearch() &&
+			super.isShowSearch()) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private PortletURL _getCurrentSortingURL() {
@@ -614,11 +617,8 @@ public class DLAdminManagementToolbarDisplayContext {
 		}
 
 		sortingURL.setParameter("folderId", String.valueOf(folderId));
-
-		long fileEntryTypeId = _getFileEntryTypeId();
-
 		sortingURL.setParameter(
-			"fileEntryTypeId", String.valueOf(fileEntryTypeId));
+			"fileEntryTypeId", String.valueOf(_getFileEntryTypeId()));
 
 		return sortingURL;
 	}
@@ -640,7 +640,7 @@ public class DLAdminManagementToolbarDisplayContext {
 
 	private List<DropdownItem> _getFilterNavigationDropdownItems() {
 		long fileEntryTypeId = _getFileEntryTypeId();
-		final String navigation = ParamUtil.getString(
+		String navigation = ParamUtil.getString(
 			_httpServletRequest, "navigation", "home");
 
 		return DropdownItemListBuilder.add(
@@ -648,34 +648,54 @@ public class DLAdminManagementToolbarDisplayContext {
 				dropdownItem.setActive(
 					navigation.equals("home") && (fileEntryTypeId == -1));
 
-				PortletURL viewAllDocumentsURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				viewAllDocumentsURL.setParameter(
-					"mvcRenderCommandName", "/document_library/view");
-				viewAllDocumentsURL.setParameter("navigation", "home");
-				viewAllDocumentsURL.setParameter("browseBy", (String)null);
-				viewAllDocumentsURL.setParameter(
-					"fileEntryTypeId", (String)null);
-
-				dropdownItem.setHref(viewAllDocumentsURL);
+				dropdownItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setMVCRenderCommandName(
+						"/document_library/view"
+					).setNavigation(
+						"home"
+					).setParameter(
+						"browseBy", (String)null
+					).setParameter(
+						"fileEntryTypeId", (String)null
+					).buildPortletURL());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "all"));
+			}
+		).add(
+			dropdownItem -> {
+				dropdownItem.setActive(navigation.equals("recent"));
+
+				dropdownItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setMVCRenderCommandName(
+						"/document_library/view"
+					).setNavigation(
+						"recent"
+					).buildPortletURL());
+
+				dropdownItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "recent"));
 			}
 		).add(
 			_themeDisplay::isSignedIn,
 			dropdownItem -> {
 				dropdownItem.setActive(navigation.equals("mine"));
 
-				PortletURL viewMyDocumentsURL = PortletURLUtil.clone(
-					_currentURLObj, _liferayPortletResponse);
-
-				viewMyDocumentsURL.setParameter(
-					"mvcRenderCommandName", "/document_library/view");
-				viewMyDocumentsURL.setParameter("navigation", "mine");
-
-				dropdownItem.setHref(viewMyDocumentsURL);
+				dropdownItem.setHref(
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(
+							_currentURLObj, _liferayPortletResponse)
+					).setMVCRenderCommandName(
+						"/document_library/view"
+					).setNavigation(
+						"mine"
+					).buildPortletURL());
 
 				dropdownItem.setLabel(
 					LanguageUtil.get(_httpServletRequest, "mine"));
@@ -730,17 +750,24 @@ public class DLAdminManagementToolbarDisplayContext {
 	}
 
 	private List<DropdownItem> _getOrderByDropdownItems() {
-		final Map<String, String> orderColumns = HashMapBuilder.put(
+		Map<String, String> orderColumns = HashMapBuilder.put(
 			"creationDate", "create-date"
+		).put(
+			"downloads",
+			() -> {
+				if (_getFileEntryTypeId() == -1) {
+					return "downloads";
+				}
+
+				return null;
+			}
+		).put(
+			"modifiedDate", "modified-date"
+		).put(
+			"size", "size"
+		).put(
+			"title", "name"
 		).build();
-
-		if (_getFileEntryTypeId() == -1) {
-			orderColumns.put("downloads", "downloads");
-		}
-
-		orderColumns.put("modifiedDate", "modified-date");
-		orderColumns.put("size", "size");
-		orderColumns.put("title", "name");
 
 		return new DropdownItemList() {
 			{
@@ -811,36 +838,12 @@ public class DLAdminManagementToolbarDisplayContext {
 		return _hasValidAssetVocabularies;
 	}
 
-	private boolean _hasWorkflowDefinitionLink(FileEntry fileEntry) {
-		if (!(fileEntry.getModel() instanceof DLFileEntry)) {
-			return false;
-		}
-
-		DLFileEntry dlFileEntry = (DLFileEntry)fileEntry.getModel();
-
-		if (_hasWorkflowDefinitionLink(
-				dlFileEntry.getFolderId(), dlFileEntry.getFileEntryTypeId())) {
-
-			return true;
-		}
-
-		return false;
-	}
-
 	private boolean _hasWorkflowDefinitionLink(
 		long folderId, long fileEntryTypeId) {
 
 		return DLUtil.hasWorkflowDefinitionLink(
 			_themeDisplay.getCompanyId(), _themeDisplay.getScopeGroupId(),
 			folderId, fileEntryTypeId);
-	}
-
-	private boolean _isCheckedOutByAnotherUser(FileEntry fileEntry) {
-		if (fileEntry.isCheckedOut() && !fileEntry.hasLock()) {
-			return true;
-		}
-
-		return false;
 	}
 
 	private boolean _isEnableOnBulk() {

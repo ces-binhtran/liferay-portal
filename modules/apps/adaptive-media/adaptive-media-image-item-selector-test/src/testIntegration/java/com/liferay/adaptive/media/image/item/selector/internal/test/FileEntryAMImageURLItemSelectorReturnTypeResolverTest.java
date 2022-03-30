@@ -43,7 +43,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +111,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -157,7 +156,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -203,7 +202,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		_addTestVariant("small", "uuid0", 50, 50);
 		_addTestVariant("small.hd", "uuid1", 99, 100);
@@ -247,7 +246,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -288,7 +287,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -326,7 +325,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		_addTestVariant("small", "uuid0", 50, 50);
 		_addTestVariant("small.hd", "uuid1", 100, 101);
@@ -367,7 +366,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		_addTestVariant("small", "uuid0", 50, 50);
 		_addTestVariant("small.hd", "uuid1", 98, 200);
@@ -408,7 +407,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		_addTestVariant("small", "uuid0", 50, 50);
 		_addTestVariant("small.hd", "uuid1", 102, 200);
@@ -452,7 +451,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -493,7 +492,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group, TestPropsValues.getUserId());
 
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+		FileEntry fileEntry = _addImageFileEntry(serviceContext);
 
 		String value = _itemSelectorReturnTypeResolver.getValue(
 			fileEntry, null);
@@ -527,25 +526,23 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 	}
 
 	private void _addTestVariant(
 			String name, String uuid, int height, int width)
 		throws Exception {
 
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", String.valueOf(height)
-		).put(
-			"max-width", String.valueOf(width)
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), name, StringPool.BLANK, uuid,
-			properties);
+			HashMapBuilder.put(
+				"max-height", String.valueOf(height)
+			).put(
+				"max-width", String.valueOf(width)
+			).build());
 	}
 
 	private void _assertAttibutes(
@@ -602,24 +599,13 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 
 		Matcher matcher = _pattern.matcher(srcSource);
 
-		StringBundler sb = new StringBundler(13);
-
-		sb.append("/o/adaptive-media/image/");
-		sb.append(fileEntryId);
-		sb.append("/");
-		sb.append(originalConfigurationEntryUuid);
-		sb.append("/");
-		sb.append(title);
-		sb.append(", /o/adaptive-media/image/");
-		sb.append(fileEntryId);
-		sb.append("/");
-		sb.append(hdConfigurationEntryUuid);
-		sb.append("/");
-		sb.append(title);
-		sb.append(" 2x");
-
 		Assert.assertEquals(
-			sb.toString(), matcher.replaceAll(StringPool.BLANK));
+			StringBundler.concat(
+				"/o/adaptive-media/image/", fileEntryId, "/",
+				originalConfigurationEntryUuid, "/", title,
+				", /o/adaptive-media/image/", fileEntryId, "/",
+				hdConfigurationEntryUuid, "/", title, " 2x"),
+			matcher.replaceAll(StringPool.BLANK));
 	}
 
 	private void _assertSrcSource(
@@ -660,6 +646,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolverTest {
 	@Inject(
 		filter = "component.name=*.FileEntryAMImageURLItemSelectorReturnTypeResolver"
 	)
-	private ItemSelectorReturnTypeResolver _itemSelectorReturnTypeResolver;
+	private ItemSelectorReturnTypeResolver<?, FileEntry>
+		_itemSelectorReturnTypeResolver;
 
 }

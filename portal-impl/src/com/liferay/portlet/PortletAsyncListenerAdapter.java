@@ -120,10 +120,10 @@ public class PortletAsyncListenerAdapter implements AsyncListener {
 	public void onError(AsyncEvent asyncEvent) throws IOException {
 		_firedOnError = true;
 
-		Throwable t = asyncEvent.getThrowable();
+		Throwable throwable = asyncEvent.getThrowable();
 
 		if (_portletAsyncListenerAdapterEntries.isEmpty()) {
-			_log.error(t, t);
+			_log.error(throwable, throwable);
 		}
 
 		try {
@@ -137,7 +137,8 @@ public class PortletAsyncListenerAdapter implements AsyncListener {
 					new PortletAsyncEvent(
 						_portletAsyncContext,
 						asyncListenerAdapterEntry.getResourceRequest(),
-						asyncListenerAdapterEntry.getResourceResponse(), t));
+						asyncListenerAdapterEntry.getResourceResponse(),
+						throwable));
 			}
 		}
 		finally {
@@ -145,6 +146,9 @@ public class PortletAsyncListenerAdapter implements AsyncListener {
 				_portletAsyncContext.complete();
 			}
 			catch (IllegalStateException illegalStateException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(illegalStateException);
+				}
 			}
 		}
 	}
@@ -209,6 +213,9 @@ public class PortletAsyncListenerAdapter implements AsyncListener {
 				_portletAsyncContext.complete();
 			}
 			catch (IllegalStateException illegalStateException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(illegalStateException);
+				}
 			}
 		}
 	}

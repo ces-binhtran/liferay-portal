@@ -33,7 +33,6 @@ import com.liferay.site.navigation.taglib.internal.util.NavItemUtil;
 import com.liferay.taglib.util.IncludeTag;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -101,37 +100,38 @@ public class NavigationTag extends IncludeTag {
 		List<NavItem> branchNavItems = null;
 		List<NavItem> navItems = null;
 
+		HttpServletRequest httpServletRequest = getRequest();
+
 		try {
-			branchNavItems = getBranchNavItems(request);
+			branchNavItems = getBranchNavItems(httpServletRequest);
 
 			navItems = NavItemUtil.getNavItems(
-				request, _rootLayoutType, _rootLayoutLevel, _rootLayoutUuid,
-				branchNavItems);
+				NavigationMenuMode.DEFAULT, httpServletRequest, _rootLayoutType,
+				_rootLayoutLevel, _rootLayoutUuid, branchNavItems);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		HttpServletResponse httpServletResponse =
 			(HttpServletResponse)pageContext.getResponse();
 
-		Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-			"branchNavItems", branchNavItems
-		).put(
-			"displayDepth", _displayDepth
-		).put(
-			"includedLayouts", _includedLayouts
-		).put(
-			"preview", _preview
-		).put(
-			"rootLayoutLevel", _rootLayoutLevel
-		).put(
-			"rootLayoutType", _rootLayoutType
-		).build();
-
 		String result = portletDisplayTemplate.renderDDMTemplate(
-			request, httpServletResponse, portletDisplayDDMTemplate, navItems,
-			contextObjects);
+			httpServletRequest, httpServletResponse, portletDisplayDDMTemplate,
+			navItems,
+			HashMapBuilder.<String, Object>put(
+				"branchNavItems", branchNavItems
+			).put(
+				"displayDepth", _displayDepth
+			).put(
+				"includedLayouts", _includedLayouts
+			).put(
+				"preview", _preview
+			).put(
+				"rootLayoutLevel", _rootLayoutLevel
+			).put(
+				"rootLayoutType", _rootLayoutType
+			).build());
 
 		JspWriter jspWriter = pageContext.getOut();
 
@@ -160,7 +160,7 @@ public class NavigationTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setPreview(boolean preview) {
@@ -214,8 +214,11 @@ public class NavigationTag extends IncludeTag {
 			return _ddmTemplateGroupId;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return themeDisplay.getScopeGroupId();
 	}

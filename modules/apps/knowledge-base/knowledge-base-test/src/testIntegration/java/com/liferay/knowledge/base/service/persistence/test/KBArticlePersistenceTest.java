@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -46,7 +47,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -143,6 +143,8 @@ public class KBArticlePersistenceTest {
 
 		newKBArticle.setModifiedDate(RandomTestUtil.nextDate());
 
+		newKBArticle.setExternalReferenceCode(RandomTestUtil.randomString());
+
 		newKBArticle.setRootResourcePrimKey(RandomTestUtil.nextLong());
 
 		newKBArticle.setParentResourceClassNameId(RandomTestUtil.nextLong());
@@ -209,6 +211,9 @@ public class KBArticlePersistenceTest {
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingKBArticle.getModifiedDate()),
 			Time.getShortTimestamp(newKBArticle.getModifiedDate()));
+		Assert.assertEquals(
+			existingKBArticle.getExternalReferenceCode(),
+			newKBArticle.getExternalReferenceCode());
 		Assert.assertEquals(
 			existingKBArticle.getRootResourcePrimKey(),
 			newKBArticle.getRootResourcePrimKey());
@@ -348,6 +353,15 @@ public class KBArticlePersistenceTest {
 		_persistence.countByR_S(
 			new long[] {RandomTestUtil.nextLong(), 0L},
 			RandomTestUtil.nextInt());
+	}
+
+	@Test
+	public void testCountByG_ERC() throws Exception {
+		_persistence.countByG_ERC(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByG_ERC(0L, "null");
+
+		_persistence.countByG_ERC(0L, (String)null);
 	}
 
 	@Test
@@ -501,6 +515,16 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
+	public void testCountByG_ERC_V() throws Exception {
+		_persistence.countByG_ERC_V(
+			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
+
+		_persistence.countByG_ERC_V(0L, "null", 0);
+
+		_persistence.countByG_ERC_V(0L, (String)null, 0);
+	}
+
+	@Test
 	public void testCountByG_P_L() throws Exception {
 		_persistence.countByG_P_L(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -580,19 +604,20 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_S_L() throws Exception {
-		_persistence.countByG_S_L(
+	public void testCountByG_LikeS_L() throws Exception {
+		_persistence.countByG_LikeS_L(
 			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
 
-		_persistence.countByG_S_L(0L, "null", RandomTestUtil.randomBoolean());
+		_persistence.countByG_LikeS_L(
+			0L, "null", RandomTestUtil.randomBoolean());
 
-		_persistence.countByG_S_L(
+		_persistence.countByG_LikeS_L(
 			0L, (String)null, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
-	public void testCountByG_S_LArrayable() throws Exception {
-		_persistence.countByG_S_L(
+	public void testCountByG_LikeS_LArrayable() throws Exception {
+		_persistence.countByG_LikeS_L(
 			RandomTestUtil.nextLong(),
 			new String[] {
 				RandomTestUtil.randomString(), "", "null", null, null
@@ -601,19 +626,20 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_S_M() throws Exception {
-		_persistence.countByG_S_M(
+	public void testCountByG_LikeS_M() throws Exception {
+		_persistence.countByG_LikeS_M(
 			RandomTestUtil.nextLong(), "", RandomTestUtil.randomBoolean());
 
-		_persistence.countByG_S_M(0L, "null", RandomTestUtil.randomBoolean());
+		_persistence.countByG_LikeS_M(
+			0L, "null", RandomTestUtil.randomBoolean());
 
-		_persistence.countByG_S_M(
+		_persistence.countByG_LikeS_M(
 			0L, (String)null, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
-	public void testCountByG_S_MArrayable() throws Exception {
-		_persistence.countByG_S_M(
+	public void testCountByG_LikeS_MArrayable() throws Exception {
+		_persistence.countByG_LikeS_M(
 			RandomTestUtil.nextLong(),
 			new String[] {
 				RandomTestUtil.randomString(), "", "null", null, null
@@ -622,18 +648,18 @@ public class KBArticlePersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_S_S() throws Exception {
-		_persistence.countByG_S_S(
+	public void testCountByG_LikeS_S() throws Exception {
+		_persistence.countByG_LikeS_S(
 			RandomTestUtil.nextLong(), "", RandomTestUtil.nextInt());
 
-		_persistence.countByG_S_S(0L, "null", 0);
+		_persistence.countByG_LikeS_S(0L, "null", 0);
 
-		_persistence.countByG_S_S(0L, (String)null, 0);
+		_persistence.countByG_LikeS_S(0L, (String)null, 0);
 	}
 
 	@Test
-	public void testCountByG_S_SArrayable() throws Exception {
-		_persistence.countByG_S_S(
+	public void testCountByG_LikeS_SArrayable() throws Exception {
+		_persistence.countByG_LikeS_S(
 			RandomTestUtil.nextLong(),
 			new String[] {
 				RandomTestUtil.randomString(), "", "null", null, null
@@ -705,13 +731,13 @@ public class KBArticlePersistenceTest {
 			"KBArticle", "mvccVersion", true, "uuid", true, "kbArticleId", true,
 			"resourcePrimKey", true, "groupId", true, "companyId", true,
 			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "rootResourcePrimKey", true,
-			"parentResourceClassNameId", true, "parentResourcePrimKey", true,
-			"kbFolderId", true, "version", true, "title", true, "urlTitle",
-			true, "description", true, "priority", true, "sections", true,
-			"latest", true, "main", true, "sourceURL", true, "lastPublishDate",
-			true, "status", true, "statusByUserId", true, "statusByUserName",
-			true, "statusDate", true);
+			"modifiedDate", true, "externalReferenceCode", true,
+			"rootResourcePrimKey", true, "parentResourceClassNameId", true,
+			"parentResourcePrimKey", true, "kbFolderId", true, "version", true,
+			"title", true, "urlTitle", true, "description", true, "priority",
+			true, "sections", true, "latest", true, "main", true, "sourceURL",
+			true, "lastPublishDate", true, "status", true, "statusByUserId",
+			true, "statusByUserName", true, "statusDate", true);
 	}
 
 	@Test
@@ -929,42 +955,104 @@ public class KBArticlePersistenceTest {
 
 		_persistence.clearCache();
 
-		KBArticle existingKBArticle = _persistence.findByPrimaryKey(
-			newKBArticle.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newKBArticle.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingKBArticle.getUuid(),
-				ReflectionTestUtil.invoke(
-					existingKBArticle, "getOriginalUuid", new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		KBArticle newKBArticle = addKBArticle();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			KBArticle.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"kbArticleId", newKBArticle.getKbArticleId()));
+
+		List<KBArticle> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(KBArticle kbArticle) {
 		Assert.assertEquals(
-			Long.valueOf(existingKBArticle.getGroupId()),
+			kbArticle.getUuid(),
+			ReflectionTestUtil.invoke(
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "uuid_"));
+		Assert.assertEquals(
+			Long.valueOf(kbArticle.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingKBArticle, "getOriginalGroupId", new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 
 		Assert.assertEquals(
-			Long.valueOf(existingKBArticle.getResourcePrimKey()),
+			Long.valueOf(kbArticle.getResourcePrimKey()),
 			ReflectionTestUtil.<Long>invoke(
-				existingKBArticle, "getOriginalResourcePrimKey",
-				new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "resourcePrimKey"));
 		Assert.assertEquals(
-			Integer.valueOf(existingKBArticle.getVersion()),
+			Integer.valueOf(kbArticle.getVersion()),
 			ReflectionTestUtil.<Integer>invoke(
-				existingKBArticle, "getOriginalVersion", new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
 
 		Assert.assertEquals(
-			Long.valueOf(existingKBArticle.getResourcePrimKey()),
+			Long.valueOf(kbArticle.getResourcePrimKey()),
 			ReflectionTestUtil.<Long>invoke(
-				existingKBArticle, "getOriginalResourcePrimKey",
-				new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "resourcePrimKey"));
 		Assert.assertEquals(
-			Long.valueOf(existingKBArticle.getGroupId()),
+			Long.valueOf(kbArticle.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingKBArticle, "getOriginalGroupId", new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 		Assert.assertEquals(
-			Integer.valueOf(existingKBArticle.getVersion()),
+			Integer.valueOf(kbArticle.getVersion()),
 			ReflectionTestUtil.<Integer>invoke(
-				existingKBArticle, "getOriginalVersion", new Class<?>[0]));
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
+
+		Assert.assertEquals(
+			Long.valueOf(kbArticle.getGroupId()),
+			ReflectionTestUtil.<Long>invoke(
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
+		Assert.assertEquals(
+			kbArticle.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
+		Assert.assertEquals(
+			Integer.valueOf(kbArticle.getVersion()),
+			ReflectionTestUtil.<Integer>invoke(
+				kbArticle, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
 	}
 
 	protected KBArticle addKBArticle() throws Exception {
@@ -989,6 +1077,8 @@ public class KBArticlePersistenceTest {
 		kbArticle.setCreateDate(RandomTestUtil.nextDate());
 
 		kbArticle.setModifiedDate(RandomTestUtil.nextDate());
+
+		kbArticle.setExternalReferenceCode(RandomTestUtil.randomString());
 
 		kbArticle.setRootResourcePrimKey(RandomTestUtil.nextLong());
 

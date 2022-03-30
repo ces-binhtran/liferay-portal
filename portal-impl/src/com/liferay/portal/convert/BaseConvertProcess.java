@@ -17,8 +17,8 @@ package com.liferay.portal.convert;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.util.MaintenanceUtil;
@@ -168,9 +168,17 @@ public abstract class BaseConvertProcess implements ConvertProcess {
 
 		ServletContext servletContext = getServletContext(httpServletRequest);
 
-		return ResourceBundleLoaderUtil.
-			getResourceBundleLoaderByServletContextName(
-				servletContext.getServletContextName());
+		ResourceBundleLoader resourceBundleLoader =
+			ResourceBundleLoaderUtil.
+				getResourceBundleLoaderByServletContextName(
+					servletContext.getServletContextName());
+
+		if (resourceBundleLoader == null) {
+			resourceBundleLoader =
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
+		}
+
+		return resourceBundleLoader;
 	}
 
 	protected ServletContext getServletContext(

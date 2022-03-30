@@ -28,6 +28,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class RoleLocalServiceWrapper
 	implements RoleLocalService, ServiceWrapper<RoleLocalService> {
 
+	public RoleLocalServiceWrapper() {
+		this(null);
+	}
+
 	public RoleLocalServiceWrapper(RoleLocalService roleLocalService) {
 		_roleLocalService = roleLocalService;
 	}
@@ -88,6 +92,10 @@ public class RoleLocalServiceWrapper
 
 	/**
 	 * Adds the role to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param role the role
 	 * @return the role that was added
@@ -232,6 +240,10 @@ public class RoleLocalServiceWrapper
 	/**
 	 * Deletes the role with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param roleId the primary key of the role
 	 * @return the role that was removed
 	 * @throws PortalException if a role with the primary key could not be found
@@ -245,6 +257,10 @@ public class RoleLocalServiceWrapper
 
 	/**
 	 * Deletes the role from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param role the role
 	 * @return the role that was removed
@@ -300,6 +316,13 @@ public class RoleLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _roleLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _roleLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -575,8 +598,6 @@ public class RoleLocalServiceWrapper
 	 * @param scope the permission scope
 	 * @param primKey the primary key of the resource's class
 	 * @return the role names and action IDs
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByC_N_S_P(
-	 long, String, int, String)
 	 */
 	@Override
 	public java.util.Map<String, java.util.List<String>> getResourceRoles(
@@ -596,8 +617,6 @@ public class RoleLocalServiceWrapper
 	 * @param primKey the primary key of the resource's class
 	 * @param actionId the name of the resource action
 	 * @return the roles
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByC_N_S_P_A(
-	 long, String, int, String, String)
 	 */
 	@Override
 	public java.util.List<Role> getResourceRoles(
@@ -873,8 +892,6 @@ public class RoleLocalServiceWrapper
 	 * @param userId the primary key of the user
 	 * @param groupId the primary key of the group
 	 * @return the user's roles within the user group
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByUserGroupGroupRole(
-	 long, long)
 	 */
 	@Override
 	public java.util.List<Role> getUserGroupGroupRoles(
@@ -902,8 +919,6 @@ public class RoleLocalServiceWrapper
 	 * @param userId the primary key of the user
 	 * @param groupId the primary key of the group
 	 * @return the user's roles within the user group
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByUserGroupRole(
-	 long, long)
 	 */
 	@Override
 	public java.util.List<Role> getUserGroupRoles(long userId, long groupId) {
@@ -927,8 +942,6 @@ public class RoleLocalServiceWrapper
 	 * @param userId the primary key of the user
 	 * @param groups the groups (optionally <code>null</code>)
 	 * @return the union of all the user's roles within the groups
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByU_G(
-	 long, List)
 	 */
 	@Override
 	public java.util.List<Role> getUserRelatedRoles(
@@ -944,8 +957,6 @@ public class RoleLocalServiceWrapper
 	 * @param userId the primary key of the user
 	 * @param groupId the primary key of the group
 	 * @return the user's roles within the group
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByU_G(
-	 long, long)
 	 */
 	@Override
 	public java.util.List<Role> getUserRelatedRoles(long userId, long groupId) {
@@ -958,8 +969,6 @@ public class RoleLocalServiceWrapper
 	 * @param userId the primary key of the user
 	 * @param groupIds the primary keys of the groups
 	 * @return the union of all the user's roles within the groups
-	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder#findByU_G(
-	 long, long[])
 	 */
 	@Override
 	public java.util.List<Role> getUserRelatedRoles(
@@ -1061,33 +1070,6 @@ public class RoleLocalServiceWrapper
 	}
 
 	/**
-	 * Returns a role with the name in the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @param name the role's name (optionally <code>null</code>)
-	 * @return the role with the name, or <code>null</code> if a role with the
-	 name could not be found in the company
-	 */
-	@Override
-	public Role loadFetchRole(long companyId, String name) {
-		return _roleLocalService.loadFetchRole(companyId, name);
-	}
-
-	/**
-	 * Returns a role with the name in the company.
-	 *
-	 * @param companyId the primary key of the company
-	 * @param name the role's name
-	 * @return the role with the name in the company
-	 */
-	@Override
-	public Role loadGetRole(long companyId, String name)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _roleLocalService.loadGetRole(companyId, name);
-	}
-
-	/**
 	 * Returns an ordered range of all the roles that match the keywords and
 	 * types.
 	 *
@@ -1097,7 +1079,7 @@ public class RoleLocalServiceWrapper
 	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
 	 * refers to the first result in the set. Setting both <code>start</code>
 	 * and <code>end</code> to {@link
-	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * QueryUtil#ALL_POS} will return the full
 	 * result set.
 	 * </p>
 	 *
@@ -1108,19 +1090,20 @@ public class RoleLocalServiceWrapper
 	 * @param start the lower bound of the range of roles to return
 	 * @param end the upper bound of the range of roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Override
 	public java.util.List<Role> search(
 		long companyId, String keywords, Integer[] types, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Role> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Role>
+			orderByComparator) {
 
 		return _roleLocalService.search(
-			companyId, keywords, types, start, end, obc);
+			companyId, keywords, types, start, end, orderByComparator);
 	}
 
 	/**
@@ -1133,7 +1116,7 @@ public class RoleLocalServiceWrapper
 	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
 	 * refers to the first result in the set. Setting both <code>start</code>
 	 * and <code>end</code> to {@link
-	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * QueryUtil#ALL_POS} will return the full
 	 * result set.
 	 * </p>
 	 *
@@ -1147,20 +1130,21 @@ public class RoleLocalServiceWrapper
 	 * @param start the lower bound of the range of roles to return
 	 * @param end the upper bound of the range of roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Override
 	public java.util.List<Role> search(
 		long companyId, String keywords, Integer[] types,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Role> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Role>
+			orderByComparator) {
 
 		return _roleLocalService.search(
-			companyId, keywords, types, params, start, end, obc);
+			companyId, keywords, types, params, start, end, orderByComparator);
 	}
 
 	/**
@@ -1173,7 +1157,7 @@ public class RoleLocalServiceWrapper
 	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
 	 * refers to the first result in the set. Setting both <code>start</code>
 	 * and <code>end</code> to {@link
-	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * QueryUtil#ALL_POS} will return the full
 	 * result set.
 	 * </p>
 	 *
@@ -1184,20 +1168,21 @@ public class RoleLocalServiceWrapper
 	 * @param start the lower bound of the range of the roles to return
 	 * @param end the upper bound of the range of the roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Override
 	public java.util.List<Role> search(
 		long companyId, String name, String description, Integer[] types,
 		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Role> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Role>
+			orderByComparator) {
 
 		return _roleLocalService.search(
-			companyId, name, description, types, start, end, obc);
+			companyId, name, description, types, start, end, orderByComparator);
 	}
 
 	/**
@@ -1210,7 +1195,7 @@ public class RoleLocalServiceWrapper
 	 * primary keys, they are indexes in the result set. Thus, <code>0</code>
 	 * refers to the first result in the set. Setting both <code>start</code>
 	 * and <code>end</code> to {@link
-	 * com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full
+	 * QueryUtil#ALL_POS} will return the full
 	 * result set.
 	 * </p>
 	 *
@@ -1224,20 +1209,22 @@ public class RoleLocalServiceWrapper
 	 * @param start the lower bound of the range of the roles to return
 	 * @param end the upper bound of the range of the roles to return (not
 	 inclusive)
-	 * @param obc the comparator to order the roles (optionally
+	 * @param orderByComparator the comparator to order the roles (optionally
 	 <code>null</code>)
 	 * @return the ordered range of the matching roles, ordered by
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.RoleFinder
 	 */
 	@Override
 	public java.util.List<Role> search(
 		long companyId, String name, String description, Integer[] types,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Role> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Role>
+			orderByComparator) {
 
 		return _roleLocalService.search(
-			companyId, name, description, types, params, start, end, obc);
+			companyId, name, description, types, params, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -1371,6 +1358,10 @@ public class RoleLocalServiceWrapper
 
 	/**
 	 * Updates the role in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param role the role
 	 * @return the role that was updated

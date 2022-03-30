@@ -45,25 +45,27 @@
 		<%
 		PortletURL portletURL = (PortletURL)request.getAttribute("liferay-item-selector:repository-entry-browser:portletURL");
 
-		PortletURL searchEverywhereURL = PortletURLUtil.clone(portletURL, liferayPortletResponse);
-
-		searchEverywhereURL.setParameter("folderId", String.valueOf(DLFolderConstants.DEFAULT_PARENT_FOLDER_ID));
-		searchEverywhereURL.setParameter("searchFolderId", String.valueOf(folderId));
-		searchEverywhereURL.setParameter("keywords", keywords);
-
-		PortletURL searchFolderURL = PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse);
-
-		searchFolderURL.setParameter("folderId", String.valueOf(folderId));
+		PortletURL searchEverywhereURL = PortletURLBuilder.create(
+			PortletURLUtil.clone(portletURL, liferayPortletResponse)
+		).setKeywords(
+			keywords
+		).setParameter(
+			"folderId", DLFolderConstants.DEFAULT_PARENT_FOLDER_ID
+		).setParameter(
+			"searchFolderId", folderId
+		).buildPortletURL();
 		%>
 
 		<liferay-util:whitespace-remover>
 			<liferay-ui:message key="search" />
 
 			<clay:link
-				buttonStyle="secondary"
-				elementClasses='<%= "btn-sm" + (searchEverywhere ? " active" : "") %>'
+				cssClass='<%= searchEverywhere ? "active" : "" %>'
+				displayType="secondary"
 				href="<%= searchEverywhereURL.toString() %>"
-				label='<%= LanguageUtil.get(resourceBundle, "everywhere") %>'
+				label="everywhere"
+				small="<%= true %>"
+				type="button"
 			/>
 
 			<%
@@ -71,11 +73,18 @@
 			%>
 
 			<clay:link
-				buttonStyle="secondary"
-				elementClasses='<%= "btn-sm" + (!searchEverywhere ? " active" : "") %>'
-				href="<%= searchFolderURL.toString() %>"
+				cssClass='<%= !searchEverywhere ? "active" : "" %>'
+				displayType="secondary"
+				href='<%=
+					PortletURLBuilder.create(
+						PortletURLUtil.clone(searchEverywhereURL, liferayPortletResponse)
+					).setParameter(
+						"folderId", folderId
+					).buildString()
+				%>'
 				icon="folder"
 				label="<%= folder.getName() %>"
+				type="button"
 			/>
 		</liferay-util:whitespace-remover>
 	</c:if>

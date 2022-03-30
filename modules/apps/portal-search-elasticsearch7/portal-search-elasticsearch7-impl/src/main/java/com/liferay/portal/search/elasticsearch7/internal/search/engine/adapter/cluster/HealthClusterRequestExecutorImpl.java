@@ -27,7 +27,7 @@ import org.elasticsearch.client.ClusterClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,7 +46,7 @@ public class HealthClusterRequestExecutorImpl
 		ClusterHealthRequest clusterHealthRequest = createClusterHealthRequest(
 			healthClusterRequest);
 
-		ClusterHealthResponse clusterHealthResponse = getClusterHealthResponse(
+		ClusterHealthResponse clusterHealthResponse = _getClusterHealthResponse(
 			clusterHealthRequest, healthClusterRequest);
 
 		ClusterHealthStatus clusterHealthStatus =
@@ -83,25 +83,6 @@ public class HealthClusterRequestExecutorImpl
 		return clusterHealthRequest;
 	}
 
-	protected ClusterHealthResponse getClusterHealthResponse(
-		ClusterHealthRequest clusterHealthRequest,
-		HealthClusterRequest healthClusterRequest) {
-
-		RestHighLevelClient restHighLevelClient =
-			_elasticsearchClientResolver.getRestHighLevelClient(
-				healthClusterRequest.getConnectionId(), true);
-
-		ClusterClient clusterClient = restHighLevelClient.cluster();
-
-		try {
-			return clusterClient.health(
-				clusterHealthRequest, RequestOptions.DEFAULT);
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-	}
-
 	@Reference(unbind = "-")
 	protected void setClusterHealthStatusTranslator(
 		ClusterHealthStatusTranslator clusterHealthStatusTranslator) {
@@ -114,6 +95,26 @@ public class HealthClusterRequestExecutorImpl
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private ClusterHealthResponse _getClusterHealthResponse(
+		ClusterHealthRequest clusterHealthRequest,
+		HealthClusterRequest healthClusterRequest) {
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchClientResolver.getRestHighLevelClient(
+				healthClusterRequest.getConnectionId(),
+				healthClusterRequest.isPreferLocalCluster());
+
+		ClusterClient clusterClient = restHighLevelClient.cluster();
+
+		try {
+			return clusterClient.health(
+				clusterHealthRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
 	private ClusterHealthStatusTranslator _clusterHealthStatusTranslator;

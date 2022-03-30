@@ -16,11 +16,6 @@ import ImageProcessor from '../../../../src/main/resources/META-INF/resources/pa
 import {openImageSelector} from '../../../../src/main/resources/META-INF/resources/page_editor/core/openImageSelector';
 
 jest.mock(
-	'../../../../src/main/resources/META-INF/resources/page_editor/app/config',
-	() => ({config: {}})
-);
-
-jest.mock(
 	'../../../../src/main/resources/META-INF/resources/page_editor/core/openImageSelector',
 	() => ({
 		openImageSelector: jest.fn(),
@@ -31,24 +26,59 @@ describe('ImageProcessor', () => {
 	describe('createEditor', () => {
 		it('calls changeCallback when an image is selected', () => {
 			openImageSelector.mockImplementation((changeCallback) =>
+				changeCallback({
+					title: 'sample-image.jpg',
+					url: 'sample-image.jpg',
+				})
+			);
+
+			const changeCallback = jest.fn();
+
+			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
+			expect(changeCallback).toHaveBeenCalledWith(
+				{
+					fileEntryId: undefined,
+					url: 'sample-image.jpg',
+				},
+				{imageTitle: 'sample-image.jpg'}
+			);
+		});
+
+		it('calls changeCallback with an empty string if the image title is not found', () => {
+			openImageSelector.mockImplementation((changeCallback) =>
 				changeCallback({url: 'sample-image.jpg'})
 			);
 
 			const changeCallback = jest.fn();
 
 			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
-			expect(changeCallback).toHaveBeenCalledWith('sample-image.jpg');
+			expect(changeCallback).toHaveBeenCalledWith(
+				{
+					fileEntryId: undefined,
+					url: 'sample-image.jpg',
+				},
+				{imageTitle: ''}
+			);
 		});
 
 		it('calls changeCallback with an empty string if the image url is not found', () => {
 			openImageSelector.mockImplementation((changeCallback) =>
-				changeCallback({thisIsNotAnImage: 'victor.profile'})
+				changeCallback({
+					thisIsNotAnImage: 'victor.profile',
+					title: 'victor-profile.jpg',
+				})
 			);
 
 			const changeCallback = jest.fn();
 
 			ImageProcessor.createEditor(null, changeCallback, () => {}, {});
-			expect(changeCallback).toHaveBeenCalledWith('');
+			expect(changeCallback).toHaveBeenCalledWith(
+				{
+					fileEntryId: undefined,
+					url: '',
+				},
+				{imageTitle: 'victor-profile.jpg'}
+			);
 		});
 
 		it('calls destroyCallback if the selector is closed without choosing an image', () => {

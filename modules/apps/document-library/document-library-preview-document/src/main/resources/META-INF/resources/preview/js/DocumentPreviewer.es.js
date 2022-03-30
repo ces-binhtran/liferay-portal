@@ -15,11 +15,13 @@
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {debounce} from 'frontend-js-web';
 import imagePromise from 'image-promise';
 import PropTypes from 'prop-types';
 import React, {useEffect, useRef, useState} from 'react';
+
+import '@liferay/document-library-preview-css';
 
 const KEY_CODE_ENTER = 13;
 
@@ -79,74 +81,33 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 	);
 	const [showPageInput, setShowPageInput] = useState(false);
 
-	const imageContainer = useRef();
-	const pageInput = useRef();
-	const showPageInputButton = useRef();
+	const imageContainerRef = useRef();
+	const pageInputRef = useRef();
+	const showPageInputButtonRef = useRef();
+
+	const isMounted = useIsMounted();
 
 	if (showPageInput) {
 		setTimeout(() => {
 			if (isMounted()) {
-				pageInput.current.focus();
+				pageInputRef.current.focus();
 			}
 		}, 100);
 	}
 
-	const isMounted = useIsMounted();
+	const createImageURL = (page) => {
+		const imageURL = new URL(baseImageURL);
 
-	const goToPage = (page) => {
-		setNextPageDisabled(page === totalPages);
-		setPreviousPageDisabled(page === 1);
+		imageURL.searchParams.set('previewFileIndex', page);
 
-		if (!loadedPages[page] || !loadedPages[page].loaded) {
-			setCurrentPageLoading(true);
-
-			loadCurrentPage(page);
-		}
-
-		imageContainer.current.scrollTop = 0;
-
-		setCurrentPage(page);
-	};
-
-	const handleBlurPageInput = (event) => {
-		processPageInput(event.currentTarget.value);
-
-		hidePageInput(false);
-	};
-
-	const handleKeyDownPageInput = (event) => {
-		const code = event.keyCode || event.charCode;
-
-		if (code === KEY_CODE_ENTER) {
-			processPageInput(event.currentTarget.value);
-
-			hidePageInput();
-		}
-		else if (code === KEY_CODE_ESC) {
-			hidePageInput();
-		}
-		else if (VALID_KEY_CODES.indexOf(code) === -1) {
-			event.preventDefault();
-		}
-	};
-
-	const hidePageInput = (returnFocus = true) => {
-		setShowPageInput(false);
-
-		if (returnFocus) {
-			setTimeout(() => {
-				if (isMounted()) {
-					showPageInputButton.current.focus();
-				}
-			}, 100);
-		}
+		return imageURL.toString();
 	};
 
 	const loadPage = (page) => {
 		let pagePromise = loadedPages[page] && loadedPages[page].pagePromise;
 
 		if (!pagePromise) {
-			pagePromise = imagePromise(`${baseImageURL}${page}`).then(() => {
+			pagePromise = imagePromise(createImageURL(page)).then(() => {
 				loadedPages[page].loaded = true;
 			});
 
@@ -183,6 +144,21 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 			});
 	}, WAIT_BETWEEN_GO_TO_PAGE);
 
+	const goToPage = (page) => {
+		setNextPageDisabled(page === totalPages);
+		setPreviousPageDisabled(page === 1);
+
+		if (!loadedPages[page] || !loadedPages[page].loaded) {
+			setCurrentPageLoading(true);
+
+			loadCurrentPage(page);
+		}
+
+		imageContainerRef.current.scrollTop = 0;
+
+		setCurrentPage(page);
+	};
+
 	const processPageInput = (value) => {
 		let pageNumber = Number.parseInt(value, 10);
 
@@ -191,6 +167,40 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 			: currentPage;
 
 		goToPage(pageNumber);
+	};
+
+	const hidePageInput = (returnFocus = true) => {
+		setShowPageInput(false);
+
+		if (returnFocus) {
+			setTimeout(() => {
+				if (isMounted()) {
+					showPageInputButtonRef.current.focus();
+				}
+			}, 100);
+		}
+	};
+
+	const handleBlurPageInput = (event) => {
+		processPageInput(event.currentTarget.value);
+
+		hidePageInput(false);
+	};
+
+	const handleKeyDownPageInput = (event) => {
+		const code = event.keyCode || event.charCode;
+
+		if (code === KEY_CODE_ENTER) {
+			processPageInput(event.currentTarget.value);
+
+			hidePageInput();
+		}
+		else if (code === KEY_CODE_ESC) {
+			hidePageInput();
+		}
+		else if (VALID_KEY_CODES.indexOf(code) === -1) {
+			event.preventDefault();
+		}
 	};
 
 	useEffect(() => {
@@ -203,7 +213,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 		<div className="preview-file">
 			<div
 				className="preview-file-container preview-file-max-height"
-				ref={imageContainer}
+				ref={imageContainerRef}
 			>
 				{currentPageLoading ? (
 					<ClayLoadingIndicator />
@@ -212,10 +222,11 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 						className={`preview-file-document ${
 							!expanded && 'preview-file-document-fit'
 						}`}
-						src={`${baseImageURL}${currentPage}`}
+						src={createImageURL(currentPage)}
 					/>
 				)}
 			</div>
+
 			<div className="preview-toolbar-container">
 				<ClayButton.Group className="floating-bar">
 					<ClayButton.Group>
@@ -224,7 +235,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 							onClick={() => {
 								setShowPageInput(true);
 							}}
-							ref={showPageInputButton}
+							ref={showPageInputButtonRef}
 							title={
 								totalPages > 1 &&
 								Liferay.Language.get('click-to-jump-to-a-page')
@@ -234,6 +245,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 								'page'
 							)} ${currentPage} / ${totalPages}`}
 						</ClayButton>
+
 						{showPageInput && (
 							<div className="floating-bar-input-wrapper">
 								<input
@@ -245,12 +257,13 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 									placeholder={Liferay.Language.get(
 										'page-...'
 									)}
-									ref={pageInput}
+									ref={pageInputRef}
 									type="number"
 								/>
 							</div>
 						)}
 					</ClayButton.Group>
+
 					<ClayButton
 						className="btn-floating-bar"
 						disabled={previousPageDisabled}
@@ -262,6 +275,7 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 					>
 						<ClayIcon symbol="caret-top" />
 					</ClayButton>
+
 					<ClayButton
 						className="btn-floating-bar"
 						disabled={nextPageDisabled}
@@ -273,7 +287,9 @@ const DocumentPreviewer = ({baseImageURL, initialPage, totalPages}) => {
 					>
 						<ClayIcon symbol="caret-bottom" />
 					</ClayButton>
+
 					<div className="separator-floating-bar"></div>
+
 					<ClayButton
 						className="btn-floating-bar"
 						monospaced

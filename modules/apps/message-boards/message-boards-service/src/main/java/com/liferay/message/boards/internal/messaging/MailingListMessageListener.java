@@ -82,15 +82,15 @@ public class MailingListMessageListener extends BaseMessageListener {
 		Message[] messages = null;
 
 		try {
-			store = getStore(mailingListRequest);
+			store = _getStore(mailingListRequest);
 
 			store.connect();
 
-			folder = getFolder(store);
+			folder = _getFolder(store);
 
 			messages = folder.getMessages();
 
-			processMessages(mailingListRequest, messages);
+			_processMessages(mailingListRequest, messages);
 		}
 		finally {
 			if ((folder != null) && folder.isOpen()) {
@@ -99,12 +99,18 @@ public class MailingListMessageListener extends BaseMessageListener {
 						messages, new Flags(Flags.Flag.DELETED), true);
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
 				}
 
 				try {
 					folder.close(true);
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
 				}
 			}
 
@@ -113,12 +119,15 @@ public class MailingListMessageListener extends BaseMessageListener {
 					store.close();
 				}
 				catch (MessagingException messagingException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(messagingException);
+					}
 				}
 			}
 		}
 	}
 
-	protected Folder getFolder(Store store) throws Exception {
+	private Folder _getFolder(Store store) throws Exception {
 		Folder folder = store.getFolder("INBOX");
 
 		if (!folder.exists()) {
@@ -130,7 +139,7 @@ public class MailingListMessageListener extends BaseMessageListener {
 		return folder;
 	}
 
-	protected Store getStore(MailingListRequest mailingListRequest)
+	private Store _getStore(MailingListRequest mailingListRequest)
 		throws Exception {
 
 		String protocol = mailingListRequest.getInProtocol();
@@ -154,7 +163,7 @@ public class MailingListMessageListener extends BaseMessageListener {
 		return session.getStore(urlName);
 	}
 
-	protected void processMessage(
+	private void _processMessage(
 			MailingListRequest mailingListRequest, Message mailMessage)
 		throws Exception {
 
@@ -180,7 +189,6 @@ public class MailingListMessageListener extends BaseMessageListener {
 		}
 
 		long companyId = mailingListRequest.getCompanyId();
-		long groupId = mailingListRequest.getGroupId();
 
 		long categoryId = mailingListRequest.getCategoryId();
 
@@ -235,6 +243,7 @@ public class MailingListMessageListener extends BaseMessageListener {
 		serviceContext.setAddGroupPermissions(true);
 		serviceContext.setAddGuestPermissions(true);
 
+		long groupId = mailingListRequest.getGroupId();
 		String portletId = PortletProviderUtil.getPortletId(
 			MBMessage.class.getName(), PortletProvider.Action.VIEW);
 
@@ -268,20 +277,20 @@ public class MailingListMessageListener extends BaseMessageListener {
 				}
 				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioException, ioException);
+						_log.warn(ioException);
 					}
 				}
 			}
 		}
 	}
 
-	protected void processMessages(
+	private void _processMessages(
 			MailingListRequest mailingListRequest, Message[] messages)
 		throws Exception {
 
 		for (Message message : messages) {
 			try {
-				processMessage(mailingListRequest, message);
+				_processMessage(mailingListRequest, message);
 			}
 			finally {
 				PermissionCheckerUtil.setThreadValues(null);

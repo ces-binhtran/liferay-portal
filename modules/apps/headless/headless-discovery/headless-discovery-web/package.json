@@ -1,24 +1,15 @@
 {
 	"dependencies": {
-		"@clayui/alert": "3.3.3",
-		"@clayui/badge": "3.1.0",
-		"@clayui/button": "3.3.1",
-		"@clayui/form": "3.8.0",
-		"@clayui/icon": "3.0.5",
-		"@clayui/label": "3.3.0",
-		"@clayui/panel": "3.2.0",
-		"@clayui/tabs": "3.2.0",
-		"frontend-js-react-web": "*",
-		"frontend-js-web": "*",
-		"graphiql": "0.11.10",
-		"graphql": "0.12.0",
-		"react": "16.12.0"
+		"graphiql": "1.3.2",
+		"graphql": "^15.0.0",
+		"swagger-ui-react": "^3.48.0"
 	},
 	"name": "headless-discovery-web",
 	"scripts": {
-		"build": "liferay-npm-scripts build",
+		"build": "liferay-npm-scripts webpack",
 		"checkFormat": "liferay-npm-scripts check",
-		"format": "liferay-npm-scripts fix"
+		"format": "liferay-npm-scripts fix",
+		"start": "liferay-npm-scripts webpack --env=development"
 	},
-	"version": "3.0.5"
+	"version": "4.0.21"
 }

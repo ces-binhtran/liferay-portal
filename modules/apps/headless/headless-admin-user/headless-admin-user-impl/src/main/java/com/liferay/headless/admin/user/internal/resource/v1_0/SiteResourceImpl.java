@@ -17,23 +17,22 @@ package com.liferay.headless.admin.user.internal.resource.v1_0;
 import com.liferay.headless.admin.user.dto.v1_0.Site;
 import com.liferay.headless.admin.user.internal.dto.v1_0.util.CreatorUtil;
 import com.liferay.headless.admin.user.resource.v1_0.SiteResource;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupModel;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.GroupService;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Locale;
+import java.util.Set;
 
 import javax.validation.ValidationException;
 
@@ -51,19 +50,16 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 	@Override
-	public Page<Site> getMyUserAccountSitesPage(Pagination pagination) {
-		List<Group> groups = contextUser.getGroups();
-
-		Stream<Group> stream = groups.stream();
+	public Page<Site> getMyUserAccountSitesPage(Pagination pagination)
+		throws Exception {
 
 		return Page.of(
 			transform(
-				stream.filter(
-					GroupModel::isSite
-				).collect(
-					Collectors.toList()
-				),
-				this::_toSite));
+				_groupService.getUserSitesGroups(
+					contextUser.getUserId(), pagination.getStartPosition(),
+					pagination.getEndPosition()),
+				this::_toSite),
+			pagination, _groupService.getUserSitesGroupsCount());
 	}
 
 	@Override
@@ -81,7 +77,7 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 				"No site exists with friendly URL " + url);
 		}
 
-		GroupPermissionUtil.check(
+		_groupPermission.check(
 			PermissionThreadLocal.getPermissionChecker(), group,
 			ActionKeys.VIEW);
 
@@ -91,8 +87,12 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 	private Site _toSite(Group group) throws Exception {
 		return new Site() {
 			{
+				Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
+					group.getGroupId());
+
 				availableLanguages = LocaleUtil.toW3cLanguageIds(
-					group.getAvailableLanguageIds());
+					availableLocales.toArray(new Locale[0]));
+
 				creator = CreatorUtil.toCreator(
 					_portal,
 					_userLocalService.fetchUser(group.getCreatorUserId()));
@@ -121,6 +121,9 @@ public class SiteResourceImpl extends BaseSiteResourceImpl {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference
 	private GroupService _groupService;

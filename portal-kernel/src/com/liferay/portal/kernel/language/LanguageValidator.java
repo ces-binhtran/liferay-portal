@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.language;
 
+import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -79,11 +80,8 @@ public class LanguageValidator {
 	private static boolean _isValidUserNameFieldNamesValue(String value) {
 		String[] valueParts = StringUtil.split(value);
 
-		if (ArrayUtil.isEmpty(valueParts)) {
-			return false;
-		}
-
-		if (!ArrayUtil.contains(
+		if (ArrayUtil.isEmpty(valueParts) ||
+			!ArrayUtil.contains(
 				valueParts, LanguageConstants.VALUE_FIRST_NAME) ||
 			!ArrayUtil.contains(
 				valueParts, LanguageConstants.VALUE_LAST_NAME)) {

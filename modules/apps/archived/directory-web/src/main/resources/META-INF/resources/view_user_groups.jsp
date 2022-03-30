@@ -26,15 +26,16 @@ UserGroupDisplayTerms searchTerms = (UserGroupDisplayTerms)userGroupSearch.getSe
 LinkedHashMap<String, Object> userGroupParams = new LinkedHashMap<String, Object>();
 
 if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY)) {
-	LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-		"inherit", Boolean.FALSE
-	).put(
-		"site", Boolean.TRUE
-	).put(
-		"usersGroups", user.getUserId()
-	).build();
-
-	List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+	List<Group> groups = GroupLocalServiceUtil.search(
+		user.getCompanyId(),
+		LinkedHashMapBuilder.<String, Object>put(
+			"inherit", Boolean.FALSE
+		).put(
+			"site", Boolean.TRUE
+		).put(
+			"usersGroups", user.getUserId()
+		).build(),
+		QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 	userGroupParams.put(UserGroupFinderConstants.PARAM_KEY_USER_GROUPS_GROUPS, SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 }
@@ -48,15 +49,9 @@ if (Validator.isNotNull(keywords)) {
 	userGroupParams.put("expandoAttributes", keywords);
 }
 
-int userGroupsCount = UserGroupServiceUtil.searchCount(company.getCompanyId(), keywords, userGroupParams);
+long companyId = company.getCompanyId();
 
-userGroupSearch.setTotal(userGroupsCount);
-
-List<UserGroup> userGroups = UserGroupServiceUtil.search(company.getCompanyId(), keywords, userGroupParams, userGroupSearch.getStart(), userGroupSearch.getEnd(), userGroupSearch.getOrderByComparator());
-
-userGroupSearch.setResults(userGroups);
-
-boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
+userGroupSearch.setResultsAndTotal(() -> UserGroupServiceUtil.search(companyId, keywords, userGroupParams, userGroupSearch.getStart(), userGroupSearch.getEnd(), userGroupSearch.getOrderByComparator()), UserGroupServiceUtil.searchCount(companyId, keywords, userGroupParams));
 %>
 
 <aui:input disabled="<%= true %>" name="userGroupsRedirect" type="hidden" value="<%= portletURL.toString() %>" />
@@ -83,7 +78,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			portletURL="<%= portletURL %>"
 		/>
 
-		<c:if test="<%= showSearch %>">
+		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
 			<li>
 				<liferay-ui:input-search
 					markupView="lexicon"
@@ -93,7 +88,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container
 		searchContainer="<%= userGroupSearch %>"
 	>

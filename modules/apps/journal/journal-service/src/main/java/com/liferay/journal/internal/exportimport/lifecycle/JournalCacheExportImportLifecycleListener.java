@@ -19,6 +19,7 @@ import com.liferay.exportimport.kernel.lifecycle.EventAwareExportImportLifecycle
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.journal.constants.JournalPortletKeys;
+import com.liferay.journal.internal.exportimport.content.processor.JournalArticleExportImportProcessorCache;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.portal.kernel.model.StagedModel;
 
@@ -41,6 +42,8 @@ public class JournalCacheExportImportLifecycleListener
 	public void onLayoutExportFailed(
 			PortletDataContext portletDataContext, Throwable throwable)
 		throws Exception {
+
+		_journalArticleExportImportCache.clear();
 	}
 
 	@Override
@@ -51,6 +54,8 @@ public class JournalCacheExportImportLifecycleListener
 	@Override
 	public void onLayoutExportSucceeded(PortletDataContext portletDataContext)
 		throws Exception {
+
+		_journalArticleExportImportCache.clear();
 	}
 
 	@Override
@@ -64,7 +69,7 @@ public class JournalCacheExportImportLifecycleListener
 			PortletDataContext portletDataContext)
 		throws Exception {
 
-		clearCache();
+		_clearCache();
 	}
 
 	@Override
@@ -148,7 +153,7 @@ public class JournalCacheExportImportLifecycleListener
 			return;
 		}
 
-		clearCache();
+		_clearCache();
 	}
 
 	@Override
@@ -218,14 +223,18 @@ public class JournalCacheExportImportLifecycleListener
 		throws Exception {
 	}
 
-	protected void clearCache() {
-		_journalContent.clearCache();
-	}
-
 	@Reference(unbind = "-")
 	protected void setJournalContent(JournalContent journalContent) {
 		_journalContent = journalContent;
 	}
+
+	private void _clearCache() {
+		_journalContent.clearCache();
+	}
+
+	@Reference
+	private JournalArticleExportImportProcessorCache
+		_journalArticleExportImportCache;
 
 	private JournalContent _journalContent;
 

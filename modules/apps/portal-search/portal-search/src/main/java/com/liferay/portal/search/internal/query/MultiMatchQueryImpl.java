@@ -20,9 +20,7 @@ import com.liferay.portal.search.query.MultiMatchQuery;
 import com.liferay.portal.search.query.Operator;
 import com.liferay.portal.search.query.QueryVisitor;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,16 +30,25 @@ import java.util.Set;
 public class MultiMatchQueryImpl
 	extends BaseQueryImpl implements MultiMatchQuery {
 
+	public MultiMatchQueryImpl(Object value, Map<String, Float> fieldsBoosts) {
+		_value = value;
+		_fieldsBoosts = fieldsBoosts;
+	}
+
 	public MultiMatchQueryImpl(Object value, Set<String> fields) {
 		_value = value;
 
-		_fields.addAll(fields);
+		for (String field : fields) {
+			_fieldsBoosts.put(field, null);
+		}
 	}
 
 	public MultiMatchQueryImpl(Object value, String... fields) {
 		_value = value;
 
-		Collections.addAll(_fields, fields);
+		for (String field : fields) {
+			_fieldsBoosts.put(field, null);
+		}
 	}
 
 	@Override
@@ -59,9 +66,14 @@ public class MultiMatchQueryImpl
 		return _cutOffFrequency;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getFieldsBoosts()}
+	 */
+	@Deprecated
 	@Override
 	public Set<String> getFields() {
-		return _fields;
+		return _fieldsBoosts.keySet();
 	}
 
 	@Override
@@ -129,9 +141,14 @@ public class MultiMatchQueryImpl
 		return _fieldsBoosts.isEmpty();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #isFieldBoostsEmpty()}
+	 */
+	@Deprecated
 	@Override
 	public boolean isFieldsEmpty() {
-		return _fields.isEmpty();
+		return _fieldsBoosts.isEmpty();
 	}
 
 	@Override
@@ -219,8 +236,8 @@ public class MultiMatchQueryImpl
 
 		sb.append(", cutOffFrequency=");
 		sb.append(_cutOffFrequency);
-		sb.append(", fields=");
-		sb.append(_fields);
+		sb.append(", _fieldsBoosts=");
+		sb.append(_fieldsBoosts);
 		sb.append(", fuzziness=");
 		sb.append(_fuzziness);
 		sb.append(", lenient=");
@@ -250,8 +267,7 @@ public class MultiMatchQueryImpl
 
 	private String _analyzer;
 	private Float _cutOffFrequency;
-	private final Set<String> _fields = new HashSet<>();
-	private final Map<String, Float> _fieldsBoosts = new HashMap<>();
+	private Map<String, Float> _fieldsBoosts = new HashMap<>();
 	private String _fuzziness;
 	private MatchQuery.RewriteMethod _fuzzyRewriteMethod;
 	private Boolean _lenient;

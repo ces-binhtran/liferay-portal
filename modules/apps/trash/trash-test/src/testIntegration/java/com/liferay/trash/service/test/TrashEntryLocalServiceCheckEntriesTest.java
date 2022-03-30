@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.Sync;
@@ -38,7 +39,6 @@ import com.liferay.portal.kernel.test.util.CompanyTestUtil;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
@@ -51,6 +51,7 @@ import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalServiceUtil;
@@ -81,7 +82,9 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@Before
 	public void setUp() throws Exception {
@@ -189,11 +192,9 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 		Group group = updateTrashEntriesMaxAge(createGroup(companyId), 2);
 		User user = UserTestUtil.getAdminUser(companyId);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group, user.getUserId());
-
 		StagingLocalServiceUtil.enableLocalStaging(
-			user.getUserId(), group, false, false, serviceContext);
+			user.getUserId(), group, false, false,
+			ServiceContextTestUtil.getServiceContext(group, user.getUserId()));
 
 		group = createLayoutGroup(group.getStagingGroup());
 
@@ -207,15 +208,11 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 		Group group = TrashTestUtil.disableTrash(createGroup(companyId));
 		User user = UserTestUtil.getAdminUser(companyId);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group, user.getUserId());
-
 		StagingLocalServiceUtil.enableLocalStaging(
-			user.getUserId(), group, false, false, serviceContext);
+			user.getUserId(), group, false, false,
+			ServiceContextTestUtil.getServiceContext(group, user.getUserId()));
 
-		Group stagingGroup = group.getStagingGroup();
-
-		createFileEntryTrashEntry(stagingGroup, false);
+		createFileEntryTrashEntry(group.getStagingGroup(), false);
 
 		TrashEntryLocalServiceUtil.checkEntries();
 
@@ -242,10 +239,10 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 				group.getGroupId(), user.getUserId());
 
 		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
-			user.getUserId(), group.getGroupId(),
+			null, user.getUserId(), group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 
 		DLTrashLocalServiceUtil.moveFileEntryToTrash(
 			user.getUserId(), fileEntry.getRepositoryId(),
@@ -261,7 +258,7 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 
 			trashEntry.setCreateDate(
 				new Date(
-					createDate.getTime() - maxAge * Time.MINUTE - Time.DAY));
+					createDate.getTime() - (maxAge * Time.MINUTE) - Time.DAY));
 
 			TrashEntryLocalServiceUtil.updateTrashEntry(trashEntry);
 		}
@@ -282,16 +279,15 @@ public class TrashEntryLocalServiceCheckEntriesTest {
 	protected Group createLayoutGroup(Group group) throws Exception {
 		User user = UserTestUtil.getAdminUser(group.getCompanyId());
 
-		Layout layout = LayoutTestUtil.addLayout(group);
-
-		Map<Locale, String> nameMap = HashMapBuilder.put(
-			LocaleUtil.getDefault(), String.valueOf(layout.getPlid())
-		).build();
+		Layout layout = LayoutTestUtil.addTypePortletLayout(group);
 
 		return GroupLocalServiceUtil.addGroup(
 			user.getUserId(), GroupConstants.DEFAULT_PARENT_GROUP_ID,
 			Layout.class.getName(), layout.getPlid(),
-			GroupConstants.DEFAULT_LIVE_GROUP_ID, nameMap,
+			GroupConstants.DEFAULT_LIVE_GROUP_ID,
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), String.valueOf(layout.getPlid())
+			).build(),
 			(Map<Locale, String>)null, 0, true,
 			GroupConstants.DEFAULT_MEMBERSHIP_RESTRICTION, null, false, true,
 			null);

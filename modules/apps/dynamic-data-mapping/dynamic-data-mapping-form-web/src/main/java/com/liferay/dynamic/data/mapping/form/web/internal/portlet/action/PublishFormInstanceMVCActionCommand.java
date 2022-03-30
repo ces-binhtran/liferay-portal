@@ -27,7 +27,6 @@ import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
@@ -54,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING_FORM_ADMIN,
-		"mvc.command.name=publishFormInstance"
+		"mvc.command.name=/dynamic_data_mapping_form/publish_form_instance"
 	},
 	service = MVCActionCommand.class
 )
@@ -73,13 +72,13 @@ public class PublishFormInstanceMVCActionCommand
 
 		boolean published = !_isFormInstancePublished(ddmFormInstance);
 
-		updateFormInstancePermission(
+		_updateFormInstancePermission(
 			actionRequest, ddmFormInstance.getFormInstanceId(), published);
 
 		DDMFormValues settingsDDMFormValues =
 			ddmFormInstance.getSettingsDDMFormValues();
 
-		updatePublishedDDMFormFieldValue(settingsDDMFormValues, published);
+		_updatePublishedDDMFormFieldValue(settingsDDMFormValues, published);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			DDMFormInstance.class.getName(), actionRequest);
@@ -142,9 +141,18 @@ public class PublishFormInstanceMVCActionCommand
 		_roleLocalService = roleLocalService;
 	}
 
-	protected void updateFormInstancePermission(
+	private boolean _isFormInstancePublished(DDMFormInstance formInstance)
+		throws Exception {
+
+		DDMFormInstanceSettings ddmFormInstanceSettings =
+			formInstance.getSettingsModel();
+
+		return ddmFormInstanceSettings.published();
+	}
+
+	private void _updateFormInstancePermission(
 			ActionRequest actionRequest, long formInstanceId, boolean published)
-		throws PortalException {
+		throws Exception {
 
 		Role role = _roleLocalService.getRole(
 			_portal.getCompanyId(actionRequest), RoleConstants.GUEST);
@@ -182,9 +190,9 @@ public class PublishFormInstanceMVCActionCommand
 			resourcePermission);
 	}
 
-	protected void updatePublishedDDMFormFieldValue(
+	private void _updatePublishedDDMFormFieldValue(
 			DDMFormValues ddmFormValues, boolean published)
-		throws PortalException {
+		throws Exception {
 
 		DDMFormValuesQuery ddmFormValuesQuery =
 			_ddmFormValuesQueryFactory.create(ddmFormValues, "/published");
@@ -196,15 +204,6 @@ public class PublishFormInstanceMVCActionCommand
 
 		value.addString(
 			ddmFormValues.getDefaultLocale(), Boolean.toString(published));
-	}
-
-	private boolean _isFormInstancePublished(DDMFormInstance formInstance)
-		throws Exception {
-
-		DDMFormInstanceSettings ddmFormInstanceSettings =
-			formInstance.getSettingsModel();
-
-		return ddmFormInstanceSettings.published();
 	}
 
 	private DDMFormInstanceService _ddmFormInstanceService;

@@ -15,7 +15,9 @@
 package com.liferay.segments.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -30,11 +32,14 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.segments.model.SegmentsExperience;
 
 import java.io.Serializable;
@@ -55,33 +60,49 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see SegmentsExperienceLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface SegmentsExperienceLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<SegmentsExperience>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SegmentsExperienceLocalServiceUtil} to access the segments experience local service. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the segments experience local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SegmentsExperienceLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
-			Map<Locale, String> nameMap, boolean active,
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, int priority,
+			boolean active, UnicodeProperties typeSettingsUnicodeProperties,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience addSegmentsExperience(
+			long userId, long groupId, long segmentsEntryId,
+			String segmentsExperienceKey, long classNameId, long classPK,
 			Map<Locale, String> nameMap, int priority, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
 	 * Adds the segments experience to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was added
@@ -89,6 +110,19 @@ public interface SegmentsExperienceLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public SegmentsExperience addSegmentsExperience(
 		SegmentsExperience segmentsExperience);
+
+	public SegmentsExperience appendSegmentsExperience(
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience appendSegmentsExperience(
+			long userId, long groupId, long segmentsEntryId, long classNameId,
+			long classPK, Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * @throws PortalException
@@ -119,6 +153,10 @@ public interface SegmentsExperienceLocalService
 	/**
 	 * Deletes the segments experience with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param segmentsExperienceId the primary key of the segments experience
 	 * @return the segments experience that was removed
 	 * @throws PortalException if a segments experience with the primary key could not be found
@@ -130,6 +168,10 @@ public interface SegmentsExperienceLocalService
 
 	/**
 	 * Deletes the segments experience from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was removed
@@ -147,6 +189,9 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -224,7 +269,8 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience fetchSegmentsExperience(
-		long groupId, String segmentsExperienceKey);
+		long groupId, String segmentsExperienceKey, long classNameId,
+		long classPK);
 
 	/**
 	 * Returns the segments experience matching the UUID and group.
@@ -275,7 +321,8 @@ public interface SegmentsExperienceLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience getSegmentsExperience(
-			long groupId, String segmentsExperienceKey)
+			long groupId, String segmentsExperienceKey, long classNameId,
+			long classPK)
 		throws PortalException;
 
 	/**
@@ -377,8 +424,18 @@ public interface SegmentsExperienceLocalService
 			Map<Locale, String> nameMap, boolean active)
 		throws PortalException;
 
+	public SegmentsExperience updateSegmentsExperience(
+			long segmentsExperienceId, long segmentsEntryId,
+			Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties)
+		throws PortalException;
+
 	/**
 	 * Updates the segments experience in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was updated
@@ -394,5 +451,20 @@ public interface SegmentsExperienceLocalService
 	public SegmentsExperience updateSegmentsExperiencePriority(
 			long segmentsExperienceId, int newPriority)
 		throws PortalException;
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<SegmentsExperience> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<SegmentsExperience> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<SegmentsExperience>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

@@ -5,7 +5,13 @@
 				"DROP-ZONE-UUID"
 			],
 			"config": {
-				"size": 12
+				"landscapeMobile": {
+				},
+				"portraitMobile": {
+				},
+				"size": 12,
+				"tablet": {
+				}
 			},
 			"itemId": "COLUMN-UUID",
 			"parentId": "ROW-UUID",
@@ -16,12 +22,22 @@
 				"ROW-UUID"
 			],
 			"config": {
-				"backgroundImage": {
+				"landscapeMobile": {
+					"styles": {
+					}
 				},
-				"paddingBottom": 3,
-				"paddingHorizontal": 3,
-				"paddingTop": 3,
-				"type": "fixed"
+				"portraitMobile": {
+					"styles": {
+					}
+				},
+				"styles": {
+				},
+				"tablet": {
+					"styles": {
+					}
+				},
+				"type": "fluid",
+				"widthType": "fluid"
 			},
 			"itemId": "CONTAINER-UUID",
 			"parentId": "MAIN-UUID",
@@ -57,7 +73,21 @@
 			],
 			"config": {
 				"gutters": true,
-				"numberOfColumns": 1
+				"landscapeMobile": {
+					"styles": {
+					}
+				},
+				"numberOfColumns": 1,
+				"portraitMobile": {
+					"styles": {
+					}
+				},
+				"styles": {
+				},
+				"tablet": {
+					"styles": {
+					}
+				}
 			},
 			"itemId": "ROW-UUID",
 			"parentId": "CONTAINER-UUID",

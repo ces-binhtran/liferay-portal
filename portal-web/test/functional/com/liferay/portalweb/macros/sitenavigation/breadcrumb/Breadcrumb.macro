@@ -21,10 +21,10 @@ definition {
 			}
 		}
 
-		if (isSet(selectADTType)) {
+		if (isSet(selectAdtType)) {
 			Select(
 				locator1 = "Select#DISPLAY_TEMPLATE",
-				value1 = "${selectADTType}");
+				value1 = "${selectAdtType}");
 		}
 
 		Pause(locator1 = "3000");
@@ -64,7 +64,7 @@ definition {
 	}
 
 	macro viewADTApplied {
-		var key_breadcrumbADTType = "${breadcrumbADTType}";
+		var key_breadcrumbAdtType = "${breadcrumbAdtType}";
 
 		AssertElementPresent(locator1 = "BreadcrumbPortlet#BREADCRUMB_ADT");
 	}
@@ -95,6 +95,16 @@ definition {
 		SelectFrame(locator1 = "IFrame#CONFIGURATION");
 
 		if (isSet(breadcrumbListVisible)) {
+			if (IsElementPresent(key_infoMessage = "This change will only be shown after you refresh the current page.", locator1 = "Message#INFO_SPECIFIC")) {
+				Refresh();
+
+				Portlet.gotoPortletOptions(
+					portletName = "Breadcrumb",
+					portletOption = "Configuration");
+
+				SelectFrame(locator1 = "IFrame#CONFIGURATION");
+			}
+
 			for (var breadcrumbName : list "${breadcrumbListVisible}") {
 				Breadcrumb.viewEntry(breadcrumbName = "${breadcrumbName}");
 			}

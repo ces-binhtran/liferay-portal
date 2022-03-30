@@ -17,17 +17,19 @@
 <%@ include file="/admin/init.jsp" %>
 
 <%
-PortletURL portletURL = ddmFormAdminDisplayContext.getPortletURL();
-
-portletURL.setParameter("displayStyle", displayStyle);
+PortletURL portletURL = PortletURLBuilder.create(
+	ddmFormAdminDisplayContext.getPortletURL()
+).setParameter(
+	"displayStyle", displayStyle
+).buildPortletURL();
 
 FieldSetPermissionCheckerHelper fieldSetPermissionCheckerHelper = ddmFormAdminDisplayContext.getPermissionCheckerHelper();
 %>
 
 <clay:container-fluid
-	id='<%= renderResponse.getNamespace() + "formContainer" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "formContainer" %>'
 >
-	<aui:form action="<%= portletURL.toString() %>" method="post" name="searchContainerForm">
+	<aui:form action="<%= portletURL %>" method="post" name="searchContainerForm">
 		<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 		<aui:input name="deleteStructureIds" type="hidden" />
 
@@ -39,7 +41,6 @@ FieldSetPermissionCheckerHelper fieldSetPermissionCheckerHelper = ddmFormAdminDi
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.dynamic.data.mapping.model.DDMStructure"
-						cssClass="entry-display-style"
 						keyProperty="structureId"
 						modelVar="structure"
 					>

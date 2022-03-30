@@ -23,6 +23,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
+import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
 import com.liferay.knowledge.base.service.persistence.KBArticleFinder;
 import com.liferay.knowledge.base.service.persistence.KBArticlePersistence;
 import com.liferay.knowledge.base.service.persistence.KBCommentPersistence;
@@ -65,10 +66,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -89,11 +93,15 @@ public abstract class KBArticleLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KBArticleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.knowledge.base.service.KBArticleLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KBArticleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KBArticleLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the kb article to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was added
@@ -121,6 +129,10 @@ public abstract class KBArticleLocalServiceBaseImpl
 	/**
 	 * Deletes the kb article with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kbArticleId the primary key of the kb article
 	 * @return the kb article that was removed
 	 * @throws PortalException if a kb article with the primary key could not be found
@@ -133,6 +145,10 @@ public abstract class KBArticleLocalServiceBaseImpl
 
 	/**
 	 * Deletes the kb article from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was removed
@@ -149,6 +165,13 @@ public abstract class KBArticleLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kbArticlePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -445,6 +468,7 @@ public abstract class KBArticleLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -461,6 +485,7 @@ public abstract class KBArticleLocalServiceBaseImpl
 		return kbArticleLocalService.deleteKBArticle((KBArticle)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<KBArticle> getBasePersistence() {
 		return kbArticlePersistence;
 	}
@@ -560,6 +585,10 @@ public abstract class KBArticleLocalServiceBaseImpl
 	/**
 	 * Updates the kb article in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was updated
 	 */
@@ -567,6 +596,11 @@ public abstract class KBArticleLocalServiceBaseImpl
 	@Override
 	public KBArticle updateKBArticle(KBArticle kbArticle) {
 		return kbArticlePersistence.update(kbArticle);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -580,6 +614,8 @@ public abstract class KBArticleLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kbArticleLocalService = (KBArticleLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kbArticleLocalService);
 	}
 
 	/**
@@ -624,6 +660,22 @@ public abstract class KBArticleLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		KBArticleLocalService kbArticleLocalService) {
+
+		try {
+			Field field = KBArticleLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kbArticleLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected KBArticleLocalService kbArticleLocalService;
 
 	@Reference
@@ -653,39 +705,11 @@ public abstract class KBArticleLocalServiceBaseImpl
 		classNameLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
-
-	@Reference
-	protected com.liferay.social.kernel.service.SocialActivityLocalService
-		socialActivityLocalService;
 
 }

@@ -24,9 +24,9 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.saml.constants.SamlWebKeys;
-import com.liferay.saml.opensaml.integration.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.binding.SamlBinding;
+import com.liferay.saml.opensaml.integration.internal.metadata.MetadataManager;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
-import com.liferay.saml.opensaml.integration.metadata.MetadataManager;
 import com.liferay.saml.persistence.model.SamlSpSession;
 import com.liferay.saml.persistence.service.SamlSpSessionLocalService;
 import com.liferay.saml.runtime.SamlException;
@@ -356,16 +356,16 @@ public abstract class BaseProfile {
 			}
 		}
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		return samlSpSessionLocalService.fetchSamlSpSessionByJSessionId(
-			session.getId());
+			httpSession.getId());
 	}
 
 	public String getSamlSpSessionKey(HttpServletRequest httpServletRequest) {
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
-		String samlSpSessionKey = (String)session.getAttribute(
+		String samlSpSessionKey = (String)httpSession.getAttribute(
 			SamlWebKeys.SAML_SP_SESSION_KEY);
 
 		if (Validator.isNull(samlSpSessionKey)) {
@@ -451,12 +451,15 @@ public abstract class BaseProfile {
 		CookieKeys.addCookie(
 			httpServletRequest, httpServletResponse, rememberMeCookie);
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		try {
-			session.invalidate();
+			httpSession.invalidate();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 	}
 
@@ -494,6 +497,9 @@ public abstract class BaseProfile {
 						endpoint.getBinding()));
 			}
 			catch (MarshallingException marshallingException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(marshallingException);
+				}
 			}
 		}
 

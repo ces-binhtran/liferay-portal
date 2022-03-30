@@ -19,12 +19,14 @@ import com.liferay.data.engine.service.base.DEDataDefinitionFieldLinkLocalServic
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 
 import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -60,16 +62,16 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 		deDataDefinitionFieldLink.setUuid(serviceContext.getUuid());
 		deDataDefinitionFieldLink.setGroupId(groupId);
 
-		Group group = groupLocalService.getGroup(groupId);
+		Group group = _groupLocalService.getGroup(groupId);
 
 		deDataDefinitionFieldLink.setCompanyId(group.getCompanyId());
 
-		Date now = new Date();
+		Date date = new Date();
 
 		deDataDefinitionFieldLink.setCreateDate(
-			serviceContext.getCreateDate(now));
+			serviceContext.getCreateDate(date));
 		deDataDefinitionFieldLink.setModifiedDate(
-			serviceContext.getModifiedDate(now));
+			serviceContext.getModifiedDate(date));
 
 		deDataDefinitionFieldLink.setClassNameId(classNameId);
 		deDataDefinitionFieldLink.setClassPK(classPK);
@@ -95,7 +97,8 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 * DEDataDefinitionFieldLinkLocalServiceImpl#deleteDEDataDefinitionFieldLinks(long, long, String[])}
+	 *             DEDataDefinitionFieldLinkLocalServiceImpl#deleteDEDataDefinitionFieldLinks(
+	 *             long, long, String[])}
 	 */
 	@Deprecated
 	@Override
@@ -117,6 +120,14 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 	}
 
 	@Override
+	public DEDataDefinitionFieldLink fetchDEDataDefinitionFieldLinks(
+		long classNameId, long classPK, long ddmStructureId, String fieldName) {
+
+		return deDataDefinitionFieldLinkPersistence.fetchByC_C_DDMSI_F(
+			classNameId, classPK, ddmStructureId, fieldName);
+	}
+
+	@Override
 	public List<DEDataDefinitionFieldLink> getDEDataDefinitionFieldLinks(
 		long ddmStructureId) {
 
@@ -134,7 +145,8 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 * DEDataDefinitionFieldLinkLocalServiceImpl#getDEDataDefinitionFieldLinks(long, long, String[])}
+	 *             DEDataDefinitionFieldLinkLocalServiceImpl#getDEDataDefinitionFieldLinks(
+	 *             long, long, String[])}
 	 */
 	@Deprecated
 	@Override
@@ -152,5 +164,16 @@ public class DEDataDefinitionFieldLinkLocalServiceImpl
 		return deDataDefinitionFieldLinkPersistence.findByC_DDMSI_F(
 			classNameId, ddmStructureId, fieldNames);
 	}
+
+	@Override
+	public List<DEDataDefinitionFieldLink> getDEDataDefinitionFieldLinks(
+		long ddmStructureId, String[] fieldNames) {
+
+		return deDataDefinitionFieldLinkPersistence.findByDDMSI_F(
+			ddmStructureId, fieldNames);
+	}
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

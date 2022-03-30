@@ -14,55 +14,25 @@
 
 package com.liferay.jenkins.results.parser;
 
-import java.io.File;
-
-import java.util.Collections;
-import java.util.Set;
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public class PortalReleaseJob extends BasePortalReleaseJob {
 
-	public PortalReleaseJob(String jobName, String portalBranchName) {
-		super(jobName, portalBranchName);
+	protected PortalReleaseJob(
+		BuildProfile buildProfile, String jobName,
+		PortalGitWorkingDirectory portalGitWorkingDirectory,
+		String testSuiteName, String upstreamBranchName) {
 
-		GitWorkingDirectory jenkinsGitWorkingDirectory =
-			getJenkinsGitWorkingDirectory();
-
-		jobPropertiesFiles.add(
-			new File(
-				jenkinsGitWorkingDirectory.getWorkingDirectory(),
-				"commands/dependencies/test-portal-release.properties"));
-
-		readJobProperties();
+		super(
+			buildProfile, jobName, portalGitWorkingDirectory, testSuiteName,
+			upstreamBranchName);
 	}
 
-	@Override
-	public Set<String> getBatchNames() {
-		Set<String> testBatchNames = super.getBatchNames();
-
-		testBatchNames.addAll(_getOptionalBatchNames());
-
-		return testBatchNames;
+	protected PortalReleaseJob(JSONObject jsonObject) {
+		super(jsonObject);
 	}
-
-	public void setPortalReleaseRef(String portalReleaseRef) {
-		_portalReleaseRef = portalReleaseRef;
-	}
-
-	private Set<String> _getOptionalBatchNames() {
-		if (_portalReleaseRef == null) {
-			return Collections.emptySet();
-		}
-
-		String testBatchNamesString = JenkinsResultsParserUtil.getProperty(
-			getJobProperties(),
-			"test.batch.names.optional[" + _portalReleaseRef + "]");
-
-		return getSetFromString(testBatchNamesString);
-	}
-
-	private String _portalReleaseRef;
 
 }

@@ -30,23 +30,12 @@ page import="com.liferay.portal.search.web.internal.custom.facet.configuration.C
 page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.custom.facet.display.context.CustomFacetTermDisplayContext" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Map" %>
-
 <portlet:defineObjects />
 
 <%
 CustomFacetDisplayContext customFacetDisplayContext = (CustomFacetDisplayContext)java.util.Objects.requireNonNull(request.getAttribute(WebKeys.PORTLET_DISPLAY_CONTEXT));
 
 CustomFacetPortletInstanceConfiguration customFacetPortletInstanceConfiguration = customFacetDisplayContext.getCustomFacetPortletInstanceConfiguration();
-
-Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"customFacetDisplayContext", customFacetDisplayContext
-).put(
-	"namespace", renderResponse.getNamespace()
-).build();
-
-List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacetDisplayContext.getTermDisplayContexts();
 %>
 
 <c:choose>
@@ -54,27 +43,34 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(customFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= customFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
-		<aui:form method="post" name="fm">
+		<aui:form action="#" method="post" name="fm">
 			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(customFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= customFacetDisplayContext.getParameterValue() %>" />
 			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= customFacetDisplayContext.getParameterName() %>" />
+			<aui:input cssClass="start-parameter-name" name="start-parameter-name" type="hidden" value="<%= customFacetDisplayContext.getPaginationStartParameterName() %>" />
 
 			<liferay-ddm:template-renderer
 				className="<%= CustomFacetTermDisplayContext.class.getName() %>"
-				contextObjects="<%= contextObjects %>"
+				contextObjects='<%=
+					HashMapBuilder.<String, Object>put(
+						"customFacetDisplayContext", customFacetDisplayContext
+					).put(
+						"namespace", liferayPortletResponse.getNamespace()
+					).build()
+				%>'
 				displayStyle="<%= customFacetPortletInstanceConfiguration.displayStyle() %>"
 				displayStyleGroupId="<%= customFacetDisplayContext.getDisplayStyleGroupId() %>"
-				entries="<%= customFacetTermDisplayContexts %>"
+				entries="<%= customFacetDisplayContext.getTermDisplayContexts() %>"
 			>
 				<liferay-ui:panel-container
 					extended="<%= true %>"
-					id='<%= renderResponse.getNamespace() + "facetCustomPanelContainer" %>'
+					id='<%= liferayPortletResponse.getNamespace() + "facetCustomPanelContainer" %>'
 					markupView="lexicon"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
 						cssClass="search-facet"
-						id='<%= renderResponse.getNamespace() + "facetCustomPanel" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "facetCustomPanel" %>'
 						markupView="lexicon"
 						persistState="<%= true %>"
 						title="<%= customFacetDisplayContext.getDisplayCaption() %>"
@@ -92,9 +88,9 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 									<li class="facet-value">
 										<div class="custom-checkbox custom-control">
 											<label class="facet-checkbox-label" for="<portlet:namespace />term_<%= i %>">
-												<input class="custom-control-input facet-term" data-term-id="<%= customFacetTermDisplayContext.getFieldName() %>" disabled id="<portlet:namespace />term_<%= i %>" name="<portlet:namespace />term_<%= i %>" onChange="Liferay.Search.FacetUtil.changeSelection(event);" type="checkbox" <%= customFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %> />
+												<input class="custom-control-input facet-term" data-term-id="<%= HtmlUtil.escapeAttribute(customFacetTermDisplayContext.getFieldName()) %>" disabled id="<portlet:namespace />term_<%= i %>" name="<portlet:namespace />term_<%= i %>" onChange="Liferay.Search.FacetUtil.changeSelection(event);" type="checkbox" <%= customFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %> />
 
-												<span class='custom-control-label term-name <%= customFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>'>
+												<span class="custom-control-label term-name <%= customFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 													<span class="custom-control-label-text"><%= HtmlUtil.escape(customFacetTermDisplayContext.getFieldName()) %></span>
 												</span>
 
@@ -129,7 +125,7 @@ List<CustomFacetTermDisplayContext> customFacetTermDisplayContexts = customFacet
 		'#<portlet:namespace />fm .facet-term'
 	);
 
-	facetTerms.forEach(function (term) {
+	facetTerms.forEach((term) => {
 		Liferay.Util.toggleDisabled(term, false);
 	});
 </aui:script>

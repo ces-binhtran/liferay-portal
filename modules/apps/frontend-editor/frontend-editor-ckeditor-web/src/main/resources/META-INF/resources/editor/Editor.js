@@ -13,15 +13,35 @@
  */
 
 import CKEditor from 'ckeditor4-react';
-import React from 'react';
+import PropTypes from 'prop-types';
+import React, {forwardRef, useEffect} from 'react';
 
 const BASEPATH = '/o/frontend-editor-ckeditor-web/ckeditor/';
 
-const Editor = React.forwardRef((props, ref) => {
-	return <CKEditor ref={ref} {...props} />;
+/**
+ * @deprecated As of Cavanaugh (7.4.x), replaced by ClassicEditor
+ */
+const Editor = forwardRef(({contents = '', name, ...props}, ref) => {
+	useEffect(() => {
+		Liferay.once('beforeScreenFlip', () => {
+			if (
+				window.CKEDITOR &&
+				Object.keys(window.CKEDITOR.instances).length === 0
+			) {
+				delete window.CKEDITOR;
+			}
+		});
+	}, []);
+
+	return <CKEditor contents={contents} name={name} ref={ref} {...props} />;
 });
 
 CKEditor.editorUrl = `${BASEPATH}ckeditor.js`;
 window.CKEDITOR_BASEPATH = BASEPATH;
+
+Editor.propTypes = {
+	contents: PropTypes.string,
+	name: PropTypes.string,
+};
 
 export {Editor};

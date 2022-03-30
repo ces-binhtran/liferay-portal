@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/delete_uad_applications"
+		"mvc.command.name=/user_associated_data/delete_uad_applications"
 	},
 	service = MVCActionCommand.class
 )
@@ -77,8 +77,7 @@ public class DeleteUADApplicationsMVCActionCommand
 					}
 					catch (NoSuchModelException noSuchModelException) {
 						if (_log.isDebugEnabled()) {
-							_log.debug(
-								noSuchModelException, noSuchModelException);
+							_log.debug(noSuchModelException);
 						}
 					}
 				}

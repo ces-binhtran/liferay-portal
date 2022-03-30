@@ -15,98 +15,75 @@
 import {ClayRadio} from '@clayui/form';
 import React, {useMemo} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
 import {setJSONArrayValue} from '../util/setters.es';
 
+import './Radio.scss';
+
 const Radio = ({
-	disabled,
+	editingLanguageId,
 	inline,
 	name,
 	onBlur,
 	onChange,
 	onFocus,
-	options,
-	value,
+	options = [
+		{
+			label: 'Option 1',
+			value: 'option1',
+		},
+		{
+			label: 'Option 2',
+			value: 'option2',
+		},
+	],
+	predefinedValue,
+	readOnly: disabled,
+	value: initialValue,
+	...otherProps
 }) => {
-	const [currentValue, setCurrentValue] = useSyncValue(value);
+	const predefinedValueMemo = useMemo(() => {
+		if (typeof predefinedValue === 'string') {
+			return predefinedValue;
+		}
+
+		const predefinedValueJSONArray =
+			setJSONArrayValue(predefinedValue) || [];
+
+		return predefinedValueJSONArray[0];
+	}, [predefinedValue]);
+
+	const [currentValue, setCurrentValue] = useSyncValue(
+		initialValue ? initialValue : predefinedValueMemo,
+		true,
+		editingLanguageId
+	);
 
 	return (
-		<div className="ddm-radio" onBlur={onBlur} onFocus={onFocus}>
-			{options.map((option) => (
-				<ClayRadio
-					checked={currentValue === option.value}
-					disabled={disabled}
-					inline={inline}
-					key={option.value}
-					label={option.label}
-					name={name}
-					onChange={(event) => {
-						setCurrentValue(option.value);
+		<FieldBase {...otherProps} name={name} readOnly={disabled}>
+			<div className="ddm__radio" onBlur={onBlur} onFocus={onFocus}>
+				{options.map((option, index) => (
+					<ClayRadio
+						checked={currentValue === option.value}
+						disabled={disabled}
+						inline={inline}
+						key={option.value}
+						label={option.label}
+						name={`${name}_${index}`}
+						onChange={(event) => {
+							setCurrentValue(option.value);
 
-						onChange(event);
-					}}
-					value={option.value}
-				/>
-			))}
-		</div>
+							onChange(event);
+						}}
+						value={option.value}
+					/>
+				))}
+			</div>
+
+			<input name={name} type="hidden" value={currentValue} />
+		</FieldBase>
 	);
 };
 
-const RadioProxy = connectStore(
-	({
-		emit,
-		options = [
-			{
-				label: 'Option 1',
-				value: 'option1',
-			},
-			{
-				label: 'Option 2',
-				value: 'option2',
-			},
-		],
-		predefinedValue,
-		value,
-		readOnly,
-		inline,
-		name,
-		...otherProps
-	}) => {
-		const predefinedValueMemo = useMemo(() => {
-			const predefinedValueJSONArray =
-				setJSONArrayValue(predefinedValue) || [];
-
-			return predefinedValueJSONArray[0];
-		}, [predefinedValue]);
-
-		return (
-			<FieldBaseProxy {...otherProps} name={name} readOnly={readOnly}>
-				<Radio
-					disabled={readOnly}
-					inline={inline}
-					name={name}
-					onBlur={(event) =>
-						emit('fieldBlurred', event, event.target.value)
-					}
-					onChange={(event) => emit('fieldFocused', event)}
-					onFocus={(event) =>
-						emit('fieldEdited', event, event.target.value)
-					}
-					options={options}
-					value={value ? value : predefinedValueMemo}
-				/>
-			</FieldBaseProxy>
-		);
-	}
-);
-
-const ReactRadioAdapter = getConnectedReactComponentAdapter(
-	RadioProxy,
-	'radio'
-);
-
-export {ReactRadioAdapter};
-export default ReactRadioAdapter;
+export default Radio;

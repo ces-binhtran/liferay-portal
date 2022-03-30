@@ -28,9 +28,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.reports.engine.console.exception.NoSuchEntryException;
 import com.liferay.portal.reports.engine.console.model.Entry;
@@ -38,10 +41,12 @@ import com.liferay.portal.reports.engine.console.model.EntryTable;
 import com.liferay.portal.reports.engine.console.model.impl.EntryImpl;
 import com.liferay.portal.reports.engine.console.model.impl.EntryModelImpl;
 import com.liferay.portal.reports.engine.console.service.persistence.EntryPersistence;
+import com.liferay.portal.reports.engine.console.service.persistence.EntryUtil;
 import com.liferay.portal.reports.engine.console.service.persistence.impl.constants.ReportsPersistenceConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -66,7 +71,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = EntryPersistence.class)
+@Component(service = {EntryPersistence.class, BasePersistence.class})
 public class EntryPersistenceImpl
 	extends BasePersistenceImpl<Entry> implements EntryPersistence {
 
@@ -104,11 +109,10 @@ public class EntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(Entry entry) {
-		entityCache.putResult(
-			entityCacheEnabled, EntryImpl.class, entry.getPrimaryKey(), entry);
-
-		entry.resetOriginalValues();
+		entityCache.putResult(EntryImpl.class, entry.getPrimaryKey(), entry);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the entries in the entity cache if it is enabled.
@@ -117,15 +121,18 @@ public class EntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<Entry> entries) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (entries.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (Entry entry : entries) {
-			if (entityCache.getResult(
-					entityCacheEnabled, EntryImpl.class,
-					entry.getPrimaryKey()) == null) {
+			if (entityCache.getResult(EntryImpl.class, entry.getPrimaryKey()) ==
+					null) {
 
 				cacheResult(entry);
-			}
-			else {
-				entry.resetOriginalValues();
 			}
 		}
 	}
@@ -141,9 +148,7 @@ public class EntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(EntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(EntryImpl.class);
 	}
 
 	/**
@@ -155,33 +160,22 @@ public class EntryPersistenceImpl
 	 */
 	@Override
 	public void clearCache(Entry entry) {
-		entityCache.removeResult(
-			entityCacheEnabled, EntryImpl.class, entry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(EntryImpl.class, entry);
 	}
 
 	@Override
 	public void clearCache(List<Entry> entries) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (Entry entry : entries) {
-			entityCache.removeResult(
-				entityCacheEnabled, EntryImpl.class, entry.getPrimaryKey());
+			entityCache.removeResult(EntryImpl.class, entry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(EntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, EntryImpl.class, primaryKey);
+			entityCache.removeResult(EntryImpl.class, primaryKey);
 		}
 	}
 
@@ -308,23 +302,23 @@ public class EntryPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (entry.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				entry.setCreateDate(now);
+				entry.setCreateDate(date);
 			}
 			else {
-				entry.setCreateDate(serviceContext.getCreateDate(now));
+				entry.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!entryModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				entry.setModifiedDate(now);
+				entry.setModifiedDate(date);
 			}
 			else {
-				entry.setModifiedDate(serviceContext.getModifiedDate(now));
+				entry.setModifiedDate(serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -333,10 +327,8 @@ public class EntryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (entry.isNew()) {
+			if (isNew) {
 				session.save(entry);
-
-				entry.setNew(false);
 			}
 			else {
 				entry = (Entry)session.merge(entry);
@@ -349,17 +341,11 @@ public class EntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		entityCache.putResult(EntryImpl.class, entry, false, true);
 
 		if (isNew) {
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+			entry.setNew(false);
 		}
-
-		entityCache.putResult(
-			entityCacheEnabled, EntryImpl.class, entry.getPrimaryKey(), entry,
-			false);
 
 		entry.resetOriginalValues();
 
@@ -496,8 +482,7 @@ public class EntryPersistenceImpl
 		List<Entry> list = null;
 
 		if (useFinderCache) {
-			list = (List<Entry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+			list = (List<Entry>)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -538,10 +523,6 @@ public class EntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -571,7 +552,7 @@ public class EntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -587,9 +568,6 @@ public class EntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -625,30 +603,42 @@ public class EntryPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		EntryModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		EntryModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, EntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, EntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
+
+		_setEntryUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setEntryUtilPersistence(null);
+
 		entityCache.removeCache(EntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setEntryUtilPersistence(EntryPersistence entryPersistence) {
+		try {
+			Field field = EntryUtil.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, entryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -657,12 +647,6 @@ public class EntryPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.portal.reports.engine.console.model.Entry"),
-			true);
 	}
 
 	@Override
@@ -682,8 +666,6 @@ public class EntryPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -705,13 +687,12 @@ public class EntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		EntryPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(ReportsPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private EntryModelArgumentsResolver _entryModelArgumentsResolver;
 
 }

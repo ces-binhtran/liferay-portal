@@ -28,10 +28,10 @@ import com.liferay.user.associated.data.web.internal.dao.search.UADHierarchyResu
 import com.liferay.user.associated.data.web.internal.display.UADHierarchyDisplay;
 import com.liferay.user.associated.data.web.internal.display.UADInfoPanelDisplay;
 import com.liferay.user.associated.data.web.internal.display.ViewUADEntitiesDisplay;
+import com.liferay.user.associated.data.web.internal.helper.SelectedUserHelper;
+import com.liferay.user.associated.data.web.internal.helper.UADApplicationSummaryHelper;
 import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 import com.liferay.user.associated.data.web.internal.util.GroupUtil;
-import com.liferay.user.associated.data.web.internal.util.SelectedUserHelper;
-import com.liferay.user.associated.data.web.internal.util.UADApplicationSummaryHelper;
 import com.liferay.user.associated.data.web.internal.util.UADSearchContainerBuilder;
 
 import javax.portlet.PortletException;
@@ -48,7 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/view_uad_hierarchy"
+		"mvc.command.name=/user_associated_data/view_uad_hierarchy"
 	},
 	service = MVCRenderCommand.class
 )
@@ -132,7 +132,7 @@ public class ViewUADHierarchyMVCRenderCommand implements MVCRenderCommand {
 				uadHierarchyDisplay.getUADDisplays()));
 		viewUADEntitiesDisplay.setScope(scope);
 		viewUADEntitiesDisplay.setSearchContainer(
-			_uadSearchContainerBuilder.getSearchContainer(
+			_uadSearchContainerBuilder.getHierarchyUADEntitySearchContainer(
 				_portal.getLiferayPortletResponse(renderResponse),
 				renderRequest, applicationKey,
 				PortletURLUtil.getCurrent(renderRequest, renderResponse),

@@ -38,7 +38,7 @@ public class UnfollowCCRRequestExecutorImpl
 
 	@Override
 	public UnfollowCCRResponse execute(UnfollowCCRRequest unfollowCCRRequest) {
-		UnfollowRequest unfollowRequest = createUnfollowRequest(
+		UnfollowRequest unfollowRequest = _createUnfollowRequest(
 			unfollowCCRRequest);
 
 		AcknowledgedResponse acknowledgedResponse = getAcknowledgedResponse(
@@ -47,19 +47,14 @@ public class UnfollowCCRRequestExecutorImpl
 		return new UnfollowCCRResponse(acknowledgedResponse.isAcknowledged());
 	}
 
-	protected UnfollowRequest createUnfollowRequest(
-		UnfollowCCRRequest unfollowCCRRequest) {
-
-		return new UnfollowRequest(unfollowCCRRequest.getIndexName());
-	}
-
 	protected AcknowledgedResponse getAcknowledgedResponse(
 		UnfollowRequest unfollowRequest,
 		UnfollowCCRRequest unfollowCCRRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				unfollowCCRRequest.getConnectionId(), true);
+				unfollowCCRRequest.getConnectionId(),
+				unfollowCCRRequest.isPreferLocalCluster());
 
 		CcrClient ccrClient = restHighLevelClient.ccr();
 
@@ -76,6 +71,12 @@ public class UnfollowCCRRequestExecutorImpl
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private UnfollowRequest _createUnfollowRequest(
+		UnfollowCCRRequest unfollowCCRRequest) {
+
+		return new UnfollowRequest(unfollowCCRRequest.getIndexName());
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

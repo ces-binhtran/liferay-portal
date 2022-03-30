@@ -14,7 +14,7 @@
 
 import ClayEmptyState from '@clayui/empty-state';
 import {ClayPaginationBarWithBasicItems} from '@clayui/pagination-bar';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 
 import {withLoading} from './Loading.es';
 
@@ -27,14 +27,28 @@ const PaginatedList = ({
 	changePage,
 	children,
 	data,
+	emptyState,
+	hrefConstructor,
 	showEmptyState,
+	totalCount,
 }) => {
 	const deltaValues = [4, 8, 20, 40, 60];
 
 	const deltas = deltaValues.map((label) => ({label}));
 
+	const [totalItems, setTotalItems] = useState(0);
+
+	useEffect(() => {
+		setTotalItems(totalCount ? totalCount : data.totalCount);
+	}, [data.totalCount, totalCount]);
+
+	useEffect(() => {
+		scrollToTop(top);
+	}, [data]);
+
 	return (
 		<>
+			{emptyState && !data.totalCount && {...emptyState}}
 			{showEmptyState && !data.totalCount && (
 				<ClayEmptyState
 					description={Liferay.Language.get('there-are-no-results')}
@@ -45,19 +59,23 @@ const PaginatedList = ({
 				<>
 					{data.items && data.items.map((data) => children(data))}
 
-					{data.totalCount > deltaValues[0] && (
+					{totalItems > deltaValues[0] && (
 						<ClayPaginationBarWithBasicItems
 							activeDelta={activeDelta}
 							activePage={activePage}
-							className="w-100"
+							className="c-mt-4 w-100"
 							deltas={deltas}
 							ellipsisBuffer={3}
+							hrefConstructor={
+								hrefConstructor ? hrefConstructor : false
+							}
 							onDeltaChange={changeDelta}
 							onPageChange={(page) => {
-								changePage(page);
-								scrollToTop(top);
+								if (changePage) {
+									changePage(page);
+								}
 							}}
-							totalItems={data.totalCount}
+							totalItems={totalItems}
 						/>
 					)}
 				</>

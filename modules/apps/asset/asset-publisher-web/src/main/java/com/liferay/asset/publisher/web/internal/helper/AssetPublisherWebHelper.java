@@ -24,6 +24,8 @@ import com.liferay.asset.kernel.service.persistence.AssetEntryQuery;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
 import com.liferay.asset.publisher.util.AssetPublisherHelper;
 import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherPortletInstanceConfiguration;
+import com.liferay.asset.publisher.web.internal.configuration.AssetPublisherSelectionStyleConfigurationUtil;
+import com.liferay.asset.publisher.web.internal.constants.AssetPublisherSelectionStyleConstants;
 import com.liferay.asset.util.AssetEntryQueryProcessor;
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
@@ -47,7 +49,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.service.permission.PortletPermissionUtil;
 import com.liferay.portal.kernel.settings.LocalizedValuesMap;
 import com.liferay.portal.kernel.theme.PortletDisplay;
@@ -128,9 +130,13 @@ public class AssetPublisherWebHelper {
 		}
 
 		String selectionStyle = portletPreferences.getValue(
-			"selectionStyle", "dynamic");
+			"selectionStyle",
+			AssetPublisherSelectionStyleConfigurationUtil.
+				defaultSelectionStyle());
 
-		if (selectionStyle.equals("dynamic")) {
+		if (selectionStyle.equals(
+				AssetPublisherSelectionStyleConstants.TYPE_DYNAMIC)) {
+
 			return;
 		}
 
@@ -194,9 +200,9 @@ public class AssetPublisherWebHelper {
 	}
 
 	public String encodeName(
-		long ddmStructureId, String fieldName, Locale locale) {
+		long ddmStructureId, String fieldReference, Locale locale) {
 
-		return _ddmIndexer.encodeName(ddmStructureId, fieldName, locale);
+		return _ddmIndexer.encodeName(ddmStructureId, fieldReference, locale);
 	}
 
 	public String[] filterAssetTagNames(long groupId, String[] assetTagNames) {
@@ -484,12 +490,12 @@ public class AssetPublisherWebHelper {
 			}
 
 			if (checkPermission) {
-				return GroupPermissionUtil.contains(
+				return _groupPermission.contains(
 					permissionChecker, group, ActionKeys.UPDATE);
 			}
 		}
 		else if ((groupId != companyGroupId) && checkPermission) {
-			return GroupPermissionUtil.contains(
+			return _groupPermission.contains(
 				permissionChecker, groupId, ActionKeys.UPDATE);
 		}
 
@@ -603,7 +609,7 @@ public class AssetPublisherWebHelper {
 		}
 		catch (IOException ioException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(ioException, ioException);
+				_log.warn(ioException);
 			}
 		}
 
@@ -653,7 +659,7 @@ public class AssetPublisherWebHelper {
 	@Reference
 	private AssetPublisherHelper _assetPublisherHelper;
 
-	private AssetPublisherPortletInstanceConfiguration
+	private volatile AssetPublisherPortletInstanceConfiguration
 		_assetPublisherPortletInstanceConfiguration;
 
 	@Reference
@@ -671,6 +677,9 @@ public class AssetPublisherWebHelper {
 
 	@Reference
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

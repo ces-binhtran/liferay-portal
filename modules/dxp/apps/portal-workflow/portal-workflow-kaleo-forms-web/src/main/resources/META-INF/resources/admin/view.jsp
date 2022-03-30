@@ -18,8 +18,6 @@
 
 <%
 String displayStyle = kaleoFormsAdminDisplayContext.getDisplayStyle();
-
-KaleoProcessSearch kaleoProcessSearch = kaleoFormsAdminDisplayContext.getKaleoProcessSearch();
 %>
 
 <liferay-util:include page="/admin/navigation_bar.jsp" servletContext="<%= application %>" />
@@ -27,7 +25,7 @@ KaleoProcessSearch kaleoProcessSearch = kaleoFormsAdminDisplayContext.getKaleoPr
 <liferay-util:include page="/admin/management_bar.jsp" servletContext="<%= application %>" />
 
 <clay:container-fluid
-	id='<%= renderResponse.getNamespace() + "formContainer" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "formContainer" %>'
 >
 	<aui:form action="<%= kaleoFormsAdminDisplayContext.getSearchActionURL() %>" method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= kaleoFormsAdminDisplayContext.getSearchActionURL() %>" />
@@ -36,7 +34,7 @@ KaleoProcessSearch kaleoProcessSearch = kaleoFormsAdminDisplayContext.getKaleoPr
 		<liferay-ui:search-container
 			id="kaleoProcess"
 			rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
-			searchContainer="<%= kaleoProcessSearch %>"
+			searchContainer="<%= kaleoFormsAdminDisplayContext.getKaleoProcessSearch() %>"
 			total="<%= kaleoFormsAdminDisplayContext.getTotalItems() %>"
 		>
 			<liferay-ui:search-container-row
@@ -45,7 +43,7 @@ KaleoProcessSearch kaleoProcessSearch = kaleoFormsAdminDisplayContext.getKaleoPr
 				modelVar="process"
 			>
 				<portlet:renderURL var="rowURL">
-					<portlet:param name="mvcPath" value='<%= "/admin/view_kaleo_process.jsp" %>' />
+					<portlet:param name="mvcPath" value="/admin/view_kaleo_process.jsp" />
 					<portlet:param name="redirect" value="<%= searchContainer.getIteratorURL().toString() %>" />
 					<portlet:param name="kaleoProcessId" value="<%= String.valueOf(process.getKaleoProcessId()) %>" />
 					<portlet:param name="displayStyle" value="<%= displayStyle %>" />

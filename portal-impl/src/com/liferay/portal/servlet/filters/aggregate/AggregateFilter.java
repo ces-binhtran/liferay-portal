@@ -26,7 +26,6 @@ import com.liferay.portal.kernel.configuration.Filter;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.BrowserSniffer;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.BufferCacheServletResponse;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.PortalWebResourceConstants;
@@ -143,13 +142,32 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 						importX + _CSS_IMPORT_BEGIN.length(), importY);
 				}
 
+				String normalizedImportFileName = importFileName;
+
+				if (!importFileName.isEmpty()) {
+					char firstCharacter = importFileName.charAt(0);
+
+					if ((firstCharacter == CharPool.APOSTROPHE) ||
+						(firstCharacter == CharPool.QUOTE)) {
+
+						normalizedImportFileName = importFileName.substring(
+							1, importFileName.length() - 1);
+					}
+				}
+
 				String importContent = null;
 
-				if (Validator.isUrl(importFileName)) {
+				if (Validator.isUrl(normalizedImportFileName)) {
 					ServletPaths downServletPaths = servletPaths.down(
-						importFileName);
+						normalizedImportFileName);
 
 					importContent = downServletPaths.getContent();
+
+					if (importContent == null) {
+						importContent =
+							_CSS_IMPORT_BEGIN + importFileName +
+								_CSS_IMPORT_END;
+					}
 				}
 				else {
 					int queryPos = importFileName.indexOf(CharPool.QUESTION);
@@ -402,7 +420,7 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 		File cacheDataFile = new File(
 			_tempDir, cacheCommonFileName + "_E_DATA");
 
-		if (cacheDataFile.exists() && !_isLegacyIe(httpServletRequest)) {
+		if (cacheDataFile.exists()) {
 			long fileLastModifiedTime = -1;
 
 			try (Reader reader = new FileReader(cacheDataFile);
@@ -423,9 +441,8 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 					fileLastModifiedTime) {
 
 				if (cacheContentTypeFile.exists()) {
-					String contentType = FileUtil.read(cacheContentTypeFile);
-
-					httpServletResponse.setContentType(contentType);
+					httpServletResponse.setContentType(
+						FileUtil.read(cacheContentTypeFile));
 				}
 				else if (resourcePath.endsWith(_CSS_EXTENSION)) {
 					httpServletResponse.setContentType(
@@ -453,10 +470,8 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 
 				httpServletResponse.setContentType(ContentTypes.TEXT_CSS_UTF8);
 
-				if (!_isLegacyIe(httpServletRequest)) {
-					FileUtil.write(
-						cacheContentTypeFile, ContentTypes.TEXT_CSS_UTF8);
-				}
+				FileUtil.write(
+					cacheContentTypeFile, ContentTypes.TEXT_CSS_UTF8);
 			}
 			else if (resourcePath.endsWith(_JAVASCRIPT_EXTENSION)) {
 				if (_log.isInfoEnabled()) {
@@ -627,12 +642,6 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 		String content = _readResource(
 			httpServletRequest, httpServletResponse, resourcePath);
 
-		if (_isLegacyIe(httpServletRequest)) {
-			return getCssContent(
-				httpServletRequest, httpServletResponse, cssServletContext,
-				resourcePath, content);
-		}
-
 		content = aggregateCss(
 			new ServletPaths(cssServletContext, resourcePathRoot), content);
 
@@ -724,16 +733,6 @@ public class AggregateFilter extends IgnoreModuleRequestFilter {
 					httpServletResponse, (String)minifiedContent);
 			}
 		}
-	}
-
-	private boolean _isLegacyIe(HttpServletRequest httpServletRequest) {
-		if (BrowserSnifferUtil.isIe(httpServletRequest) &&
-			(BrowserSnifferUtil.getMajorVersion(httpServletRequest) < 10)) {
-
-			return true;
-		}
-
-		return false;
 	}
 
 	private String _readResource(

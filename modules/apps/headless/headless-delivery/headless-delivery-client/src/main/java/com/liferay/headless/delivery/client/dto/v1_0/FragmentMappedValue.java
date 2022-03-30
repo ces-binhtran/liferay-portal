@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.FragmentMappedValueSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,23 +28,47 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class FragmentMappedValue implements Cloneable {
+public class FragmentMappedValue implements Cloneable, Serializable {
 
 	public static FragmentMappedValue toDTO(String json) {
 		return FragmentMappedValueSerDes.toDTO(json);
 	}
 
-	public FragmentInlineValue getDefaultValue() {
+	public FragmentInlineValue getDefaultFragmentInlineValue() {
+		return defaultFragmentInlineValue;
+	}
+
+	public void setDefaultFragmentInlineValue(
+		FragmentInlineValue defaultFragmentInlineValue) {
+
+		this.defaultFragmentInlineValue = defaultFragmentInlineValue;
+	}
+
+	public void setDefaultFragmentInlineValue(
+		UnsafeSupplier<FragmentInlineValue, Exception>
+			defaultFragmentInlineValueUnsafeSupplier) {
+
+		try {
+			defaultFragmentInlineValue =
+				defaultFragmentInlineValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentInlineValue defaultFragmentInlineValue;
+
+	public DefaultValue getDefaultValue() {
 		return defaultValue;
 	}
 
-	public void setDefaultValue(FragmentInlineValue defaultValue) {
+	public void setDefaultValue(DefaultValue defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 
 	public void setDefaultValue(
-		UnsafeSupplier<FragmentInlineValue, Exception>
-			defaultValueUnsafeSupplier) {
+		UnsafeSupplier<DefaultValue, Exception> defaultValueUnsafeSupplier) {
 
 		try {
 			defaultValue = defaultValueUnsafeSupplier.get();
@@ -52,7 +78,7 @@ public class FragmentMappedValue implements Cloneable {
 		}
 	}
 
-	protected FragmentInlineValue defaultValue;
+	protected DefaultValue defaultValue;
 
 	public Mapping getMapping() {
 		return mapping;

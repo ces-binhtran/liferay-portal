@@ -46,14 +46,9 @@ public class ASMWrapperUtil {
 
 		Package pkg = clazz.getPackage();
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(pkg.getName());
-		sb.append(StringPool.PERIOD);
-		sb.append(interfaceClass.getSimpleName());
-		sb.append("ASMWrapper");
-
-		String asmWrapperClassName = sb.toString();
+		String asmWrapperClassName = StringBundler.concat(
+			pkg.getName(), StringPool.PERIOD, interfaceClass.getSimpleName(),
+			"ASMWrapper");
 
 		Class<?> asmWrapperClass = null;
 
@@ -82,8 +77,8 @@ public class ASMWrapperUtil {
 				return (T)constructor.newInstance(
 					delegateObject, defaultObject);
 			}
-			catch (Throwable t) {
-				throw new RuntimeException(t);
+			catch (Throwable throwable) {
+				throw new RuntimeException(throwable);
 			}
 		}
 	}
@@ -273,8 +268,8 @@ public class ASMWrapperUtil {
 			_toStringMethod = ReflectionUtil.getDeclaredMethod(
 				Object.class, "toString");
 		}
-		catch (Throwable t) {
-			throw new ExceptionInInitializerError(t);
+		catch (Throwable throwable) {
+			throw new ExceptionInInitializerError(throwable);
 		}
 	}
 

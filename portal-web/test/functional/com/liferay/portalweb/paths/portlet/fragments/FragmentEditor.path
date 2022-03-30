@@ -2,15 +2,22 @@
 <head>
 <title>FragmentEditor</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">FragmentEditor</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>AUTOCOMPLETE_FIELD</td>
 	<td>//ul[contains(@class,'CodeMirror-hints')]//li[contains(.,'${autocompleteField}')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>AUTOSAVE_MESSAGE</td>
+	<td>//span[contains(@class,'navbar-text')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -40,7 +47,7 @@
 </tr>
 <tr>
 	<td>FRAGMENTS_TOOLKIT_LINK</td>
-	<td>//a[@title='Fragments Toolkit']</td>
+	<td>//a[normalize-space(text())='Fragments Toolkit']</td>
 	<td></td>
 </tr>
 <tr>
@@ -59,18 +66,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>FRAGMENTS_EDITOR_FLOATING_TOOLBAR_FIELD_SELECT</td>
-	<td>//select[contains(@class,'form-control')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>FRAGMENTS_EDITOR_FLOATING_TOOLBAR_INPUT</td>
-	<td>//div[contains(@class,'floating-toolbar')]//input[contains(@value,'${key_contentName}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>FRAGMENTS_EDITOR_FLOATING_TOOLBAR_PALETTE_SELECT</td>
-	<td>//button[contains(@class,'${colorPalette}')]</td>
+	<td>//div[contains(@role,'tabpanel') and contains(@class,'active')]//button[contains(@class,'${colorPalette}')]</td>
 	<td></td>
 </tr>
 <tr>

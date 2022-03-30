@@ -17,20 +17,19 @@
 <%@ include file="/init.jsp" %>
 
 <liferay-ui:tabs
-	names="Alerts,Badges,Buttons,Cards,Dropdowns,Form Elements,Icons,Labels,Links,Management Toolbars,Navigation Bars,Progress Bars,Stickers,Tables"
+	names="Alerts,Badges,Buttons,Cards,Dropdowns,Form Elements,Icons,Labels,Links,Management Toolbars,Navigation Bars,Pagination Bars,Progress Bars,Stickers"
 	refresh="<%= false %>"
 >
 
 	<%
-	String[] sections = {"alerts", "badges", "buttons", "cards", "dropdowns", "form_elements", "icons", "labels", "links", "management_toolbars", "navigation_bars", "progress_bars", "stickers", "tables"};
+	String[] sections = {"alerts", "badges", "buttons", "cards", "dropdowns", "form_elements", "icons", "labels", "links", "management_toolbars", "navigation_bars", "pagination_bars", "progress_bars", "stickers"};
 
 	for (int i = 0; i < sections.length; i++) {
-		String partial = "/partials/" + sections[i] + ".jsp";
 	%>
 
 		<liferay-ui:section>
 			<clay:container-fluid>
-				<liferay-util:include page="<%= partial %>" servletContext="<%= application %>" />
+				<liferay-util:include page='<%= "/partials/" + sections[i] + ".jsp" %>' servletContext="<%= application %>" />
 			</clay:container-fluid>
 		</liferay-ui:section>
 

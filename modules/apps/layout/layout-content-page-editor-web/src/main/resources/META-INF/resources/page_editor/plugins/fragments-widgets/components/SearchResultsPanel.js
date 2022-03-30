@@ -16,34 +16,25 @@ import ClayAlert from '@clayui/alert';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import TabItem from './TabItem';
+import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
+import TabCollection from './TabCollection';
 
 export default function SearchResultsPanel({filteredTabs}) {
 	return filteredTabs.length ? (
 		filteredTabs.map((tab, index) => (
 			<div key={index}>
-				<div className="page-editor__fragments-widgets__search-results-panel__filter-subtitle">
+				<div className="font-weight-semi-bold page-editor__fragments-widgets__search-results-panel__filter-subtitle py-2">
 					{tab.label}
 				</div>
-				<ul className="list-unstyled">
-					{tab.collections
-						.reduce(
-							(acc, collection) =>
-								acc.concat(
-									collection.children.filter(
-										(item) =>
-											!acc.some(
-												({itemId}) =>
-													itemId === item.itemId
-											)
-									)
-								),
-							[]
-						)
-						.map((item) => (
-							<TabItem item={item} key={item.itemId} />
-						))}
-				</ul>
+
+				{tab.collections.map((collection, index) => (
+					<TabCollection
+						collection={collection}
+						isSearchResult
+						key={index}
+						open
+					/>
+				))}
 			</div>
 		))
 	) : (
@@ -56,5 +47,6 @@ export default function SearchResultsPanel({filteredTabs}) {
 }
 
 SearchResultsPanel.proptypes = {
+	displayStyle: PropTypes.oneOf(Object.values(FRAGMENTS_DISPLAY_STYLES)),
 	filteredTabs: PropTypes.object.isRequired,
 };

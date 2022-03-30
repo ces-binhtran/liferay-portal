@@ -22,9 +22,7 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 
 <c:if test="<%= journalDisplayContext.getAddMenuFavItemsLength() == 0 %>">
 	<clay:stripe
-		destroyOnHide="<%= true %>"
 		message='<%= LanguageUtil.format(resourceBundle, "you-can-add-as-many-as-x-favorites-in-your-quick-menu", journalWebConfiguration.maxAddMenuItems()) %>'
-		title='<%= LanguageUtil.get(resourceBundle, "info") + ":" %>'
 	/>
 </c:if>
 
@@ -32,9 +30,8 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 
 <c:if test="<%= journalDisplayContext.getAddMenuFavItemsLength() >= journalWebConfiguration.maxAddMenuItems() %>">
 	<clay:stripe
-		message='<%= LanguageUtil.get(resourceBundle, "right-now-your-quick-menu-is-full-of-favorites-if-you-want-to-add-another-one-please-remove-at-least-one-of-them") %>'
-		style="warning"
-		title='<%= LanguageUtil.get(resourceBundle, "warning") + ":" %>'
+		displayType="warning"
+		message="right-now-your-quick-menu-is-full-of-favorites-if-you-want-to-add-another-one-please-remove-at-least-one-of-them"
 	/>
 </c:if>
 
@@ -43,33 +40,38 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 />
 
 <clay:management-toolbar
-	displayContext="<%= new JournalViewMoreMenuItemsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalViewMoreMenuItemsDisplayContext) %>"
+	managementToolbarDisplayContext="<%= new JournalViewMoreMenuItemsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, journalViewMoreMenuItemsDisplayContext) %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="addMenuItemFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="addMenuItemFm">
 	<liferay-ui:search-container
 		searchContainer="<%= journalViewMoreMenuItemsDisplayContext.getDDMStructuresSearchContainer() %>"
 	>
 		<liferay-ui:search-container-row
 			className="com.liferay.dynamic.data.mapping.model.DDMStructure"
-			cssClass="selectable"
 			escapedModel="<%= true %>"
 			modelVar="ddmStructure"
 		>
-
-			<%
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"ddmStructureKey", ddmStructure.getStructureKey()
-			).build();
-			%>
-
 			<liferay-ui:search-container-column-text
 				name="menu-item-name"
 			>
-				<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+				<aui:a
+					cssClass="selector-button"
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"ddmStructureKey", ddmStructure.getStructureKey()
+						).build()
+					%>'
+					href="javascript:;"
+				>
 					<%= ddmStructure.getUnambiguousName(journalViewMoreMenuItemsDisplayContext.getDDMStructures(), themeDisplay.getScopeGroupId(), locale) %>
 				</aui:a>
 			</liferay-ui:search-container-column-text>
+
+			<liferay-ui:search-container-column-text
+				name="scope"
+				value="<%= journalViewMoreMenuItemsDisplayContext.getDDMStructureScopeName(ddmStructure, locale) %>"
+			/>
 
 			<liferay-ui:search-container-column-text
 				name="user"
@@ -94,22 +96,3 @@ JournalViewMoreMenuItemsDisplayContext journalViewMoreMenuItemsDisplayContext = 
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script require="metal-dom/src/all/dom as dom">
-	var Util = Liferay.Util;
-
-	var addMenuItemFm = document.getElementById(
-		'<portlet:namespace />addMenuItemFm'
-	);
-
-	dom.delegate(addMenuItemFm, 'click', '.selector-button', function (event) {
-		Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(journalViewMoreMenuItemsDisplayContext.getEventName()) %>',
-			{
-				ddmStructureKey: event.delegateTarget.getAttribute(
-					'data-ddmStructureKey'
-				),
-			}
-		);
-	});
-</aui:script>

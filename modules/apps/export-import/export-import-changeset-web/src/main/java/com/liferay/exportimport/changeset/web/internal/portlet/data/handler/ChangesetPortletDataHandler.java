@@ -32,7 +32,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
-import com.liferay.exportimport.kernel.staging.StagingConstants;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryRegistryUtil;
 import com.liferay.petra.string.StringPool;
@@ -73,7 +73,7 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class ChangesetPortletDataHandler extends BasePortletDataHandler {
 
-	public static final String SCHEMA_VERSION = "1.0.0";
+	public static final String SCHEMA_VERSION = "4.0.0";
 
 	@Override
 	public String exportData(

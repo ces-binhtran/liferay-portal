@@ -30,10 +30,22 @@ public class CreationMenu extends HashMap<String, Object> {
 		put("primaryItems", _primaryDropdownItems);
 	}
 
+	public CreationMenu addDropdownItem(DropdownItem dropdownItem) {
+		return addPrimaryDropdownItem(dropdownItem);
+	}
+
 	public CreationMenu addDropdownItem(
 		UnsafeConsumer<DropdownItem, Exception> unsafeConsumer) {
 
 		addPrimaryDropdownItem(unsafeConsumer);
+
+		return this;
+	}
+
+	public CreationMenu addFavoriteDropdownItem(DropdownItem dropdownItem) {
+		_favoriteDropdownItems.add(dropdownItem);
+
+		put("secondaryItems", _buildSecondaryDropdownItems());
 
 		return this;
 	}
@@ -50,9 +62,11 @@ public class CreationMenu extends HashMap<String, Object> {
 			throw new RuntimeException(exception);
 		}
 
-		_favoriteDropdownItems.add(dropdownItem);
+		return addFavoriteDropdownItem(dropdownItem);
+	}
 
-		put("secondaryItems", _buildSecondaryDropdownItems());
+	public CreationMenu addPrimaryDropdownItem(DropdownItem dropdownItem) {
+		_primaryDropdownItems.add(dropdownItem);
 
 		return this;
 	}
@@ -69,7 +83,13 @@ public class CreationMenu extends HashMap<String, Object> {
 			throw new RuntimeException(exception);
 		}
 
-		_primaryDropdownItems.add(dropdownItem);
+		return addPrimaryDropdownItem(dropdownItem);
+	}
+
+	public CreationMenu addRestDropdownItem(DropdownItem dropdownItem) {
+		_restDropdownItems.add(dropdownItem);
+
+		put("secondaryItems", _buildSecondaryDropdownItems());
 
 		return this;
 	}
@@ -86,11 +106,18 @@ public class CreationMenu extends HashMap<String, Object> {
 			throw new RuntimeException(exception);
 		}
 
-		_restDropdownItems.add(dropdownItem);
+		return addRestDropdownItem(dropdownItem);
+	}
 
-		put("secondaryItems", _buildSecondaryDropdownItems());
+	@Override
+	public boolean isEmpty() {
+		if (_favoriteDropdownItems.isEmpty() &&
+			_primaryDropdownItems.isEmpty() && _restDropdownItems.isEmpty()) {
 
-		return this;
+			return true;
+		}
+
+		return super.isEmpty();
 	}
 
 	public void setCaption(String caption) {

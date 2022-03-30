@@ -17,8 +17,8 @@ package com.liferay.exportimport.web.internal.portlet.action;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.exception.LARFileException;
 import com.liferay.exportimport.kernel.exception.LARFileSizeException;
 import com.liferay.exportimport.kernel.exception.LARTypeException;
@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
@@ -76,7 +77,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.IMPORT,
-		"mvc.command.name=importLayouts"
+		"mvc.command.name=/export_import/import_layouts"
 	},
 	service = {ImportLayoutsMVCActionCommand.class, MVCActionCommand.class}
 )
@@ -89,7 +90,7 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		UploadPortletRequest uploadPortletRequest =
 			_portal.getUploadPortletRequest(actionRequest);
 
-		checkExceededSizeLimit(uploadPortletRequest);
+		_checkExceededSizeLimit(uploadPortletRequest);
 
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
 
@@ -100,10 +101,9 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 
 			String sourceFileName = uploadPortletRequest.getFileName("file");
 
-			String contentType = uploadPortletRequest.getContentType("file");
-
 			_layoutService.addTempFileEntry(
-				groupId, folderName, sourceFileName, inputStream, contentType);
+				groupId, folderName, sourceFileName, inputStream,
+				uploadPortletRequest.getContentType("file"));
 		}
 		catch (Exception exception) {
 			UploadException uploadException =
@@ -111,45 +111,25 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 					WebKeys.UPLOAD_EXCEPTION);
 
 			if (uploadException != null) {
-				Throwable cause = uploadException.getCause();
+				Throwable throwable = uploadException.getCause();
 
-				if (cause instanceof FileUploadBase.IOFileUploadException) {
+				if (throwable instanceof FileUploadBase.IOFileUploadException) {
 					if (_log.isInfoEnabled()) {
 						_log.info("Temporary upload was cancelled");
 					}
 				}
 
 				if (uploadException.isExceededFileSizeLimit()) {
-					throw new FileSizeException(cause);
+					throw new FileSizeException(throwable);
 				}
 
 				if (uploadException.isExceededUploadRequestSizeLimit()) {
-					throw new UploadRequestSizeException(cause);
+					throw new UploadRequestSizeException(throwable);
 				}
 			}
 			else {
 				throw exception;
 			}
-		}
-	}
-
-	protected void checkExceededSizeLimit(HttpServletRequest httpServletRequest)
-		throws PortalException {
-
-		UploadException uploadException =
-			(UploadException)httpServletRequest.getAttribute(
-				WebKeys.UPLOAD_EXCEPTION);
-
-		if (uploadException != null) {
-			Throwable cause = uploadException.getCause();
-
-			if (uploadException.isExceededFileSizeLimit() ||
-				uploadException.isExceededUploadRequestSizeLimit()) {
-
-				throw new LARFileSizeException(cause);
-			}
-
-			throw new PortalException(cause);
 		}
 	}
 
@@ -172,6 +152,10 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 			jsonObject.put("deleted", Boolean.TRUE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			String errorMessage = themeDisplay.translate(
 				"an-unexpected-error-occurred-while-deleting-the-file");
 
@@ -258,7 +242,7 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 						actionRequest, exception.getClass(), exception);
 				}
 				else {
-					_log.error(exception, exception);
+					_log.error(exception);
 
 					SessionErrors.add(
 						actionRequest, LayoutImportException.class.getName());
@@ -395,19 +379,21 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 				return;
 			}
 
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
-
-			if ((weakMissingReferences != null) &&
-				!weakMissingReferences.isEmpty()) {
-
-				jsonObject.put(
-					"warningMessages",
-					_staging.getWarningMessagesJSONArray(
-						themeDisplay.getLocale(), weakMissingReferences));
-			}
-
 			JSONPortletResponseUtil.writeJSON(
-				actionRequest, actionResponse, jsonObject);
+				actionRequest, actionResponse,
+				JSONUtil.put(
+					"warningMessages",
+					() -> {
+						if ((weakMissingReferences != null) &&
+							!weakMissingReferences.isEmpty()) {
+
+							return _staging.getWarningMessagesJSONArray(
+								themeDisplay.getLocale(),
+								weakMissingReferences);
+						}
+
+						return null;
+					}));
 		}
 	}
 
@@ -438,6 +424,26 @@ public class ImportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 
 		return _exportImportService.validateImportLayoutsFile(
 			exportImportConfiguration, inputStream);
+	}
+
+	private void _checkExceededSizeLimit(HttpServletRequest httpServletRequest)
+		throws Exception {
+
+		UploadException uploadException =
+			(UploadException)httpServletRequest.getAttribute(
+				WebKeys.UPLOAD_EXCEPTION);
+
+		if (uploadException != null) {
+			Throwable throwable = uploadException.getCause();
+
+			if (uploadException.isExceededFileSizeLimit() ||
+				uploadException.isExceededUploadRequestSizeLimit()) {
+
+				throw new LARFileSizeException(throwable);
+			}
+
+			throw new PortalException(throwable);
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

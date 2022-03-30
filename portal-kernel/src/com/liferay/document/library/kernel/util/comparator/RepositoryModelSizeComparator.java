@@ -18,6 +18,8 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileShortcut;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalServiceUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
@@ -32,7 +34,7 @@ public class RepositoryModelSizeComparator<T> extends OrderByComparator<T> {
 
 	public static final String ORDER_BY_DESC = "size_ DESC";
 
-	public static final String[] ORDER_BY_FIELDS = {"size"};
+	public static final String[] ORDER_BY_FIELDS = {"size_"};
 
 	public static final String ORDER_BY_MODEL_ASC =
 		"modelFolder DESC, size_ ASC";
@@ -118,16 +120,16 @@ public class RepositoryModelSizeComparator<T> extends OrderByComparator<T> {
 		return _ascending;
 	}
 
-	protected long getFileShortcutSize(Object obj) {
+	protected long getFileShortcutSize(Object object) {
 		long toFileEntryId = 0;
 
-		if (obj instanceof FileShortcut) {
-			FileShortcut fileShortcut = (FileShortcut)obj;
+		if (object instanceof FileShortcut) {
+			FileShortcut fileShortcut = (FileShortcut)object;
 
 			toFileEntryId = fileShortcut.getToFileEntryId();
 		}
 		else {
-			DLFileShortcut dlFileShortcut = (DLFileShortcut)obj;
+			DLFileShortcut dlFileShortcut = (DLFileShortcut)object;
 
 			toFileEntryId = dlFileShortcut.getToFileEntryId();
 		}
@@ -139,28 +141,37 @@ public class RepositoryModelSizeComparator<T> extends OrderByComparator<T> {
 			return dlFileEntry.getSize();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return 0;
 		}
 	}
 
-	protected long getSize(Object obj) {
-		if (obj instanceof DLFileEntry) {
-			DLFileEntry dlFileEntry = (DLFileEntry)obj;
+	protected long getSize(Object object) {
+		if (object instanceof DLFileEntry) {
+			DLFileEntry dlFileEntry = (DLFileEntry)object;
 
 			return dlFileEntry.getSize();
 		}
-		else if (obj instanceof DLFileShortcut || obj instanceof FileShortcut) {
-			return getFileShortcutSize(obj);
+		else if (object instanceof DLFileShortcut ||
+				 object instanceof FileShortcut) {
+
+			return getFileShortcutSize(object);
 		}
-		else if (obj instanceof DLFolder || obj instanceof Folder) {
+		else if (object instanceof DLFolder || object instanceof Folder) {
 			return 0;
 		}
 		else {
-			FileEntry fileEntry = (FileEntry)obj;
+			FileEntry fileEntry = (FileEntry)object;
 
 			return fileEntry.getSize();
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		RepositoryModelSizeComparator.class);
 
 	private final boolean _ascending;
 	private final boolean _orderByModel;

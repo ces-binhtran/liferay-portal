@@ -1,0 +1,71 @@
+definition {
+
+	macro addEntry {
+		Click(locator1 = "Button#PLUS");
+
+		Click(
+			key_menuItem = "${productType}",
+			locator1 = "MenuItem#DROPDOWN_MENU_ITEM",
+			value1 = "${key_menuItem}");
+
+		if (!(isSet(productCatalog))) {
+			var productCatalog = "Master";
+		}
+
+		CommerceEntry.addProductsEntry(
+			productCatalog = "${productCatalog}",
+			productFullDescription = "${productFullDescription}",
+			productName = "${productName}",
+			productShortDescription = "${productShortDescription}");
+	}
+
+	macro deleteEntries {
+		Click.clickNoMouseOverNoWaitForVisible(locator1 = "CommerceNavigation#SELECT_ALL_CHECKBOX");
+
+		if (IsElementPresent(locator1 = "Button#TRASH_ENABLED")) {
+			ClickNoError(locator1 = "Button#TRASH_ENABLED");
+		}
+		else {
+			ClickNoError(locator1 = "Button#DELETE");
+		}
+
+		if (isSet(deleteMessage)) {
+			Confirm(value1 = "${deleteMessage}");
+		}
+	}
+
+	macro deleteProductsEntry {
+		ClickNoError(locator1 = "CommerceEntry#BODY_VERTICAL_ELLIPSIS");
+
+		CommerceEntry.clickNoError(menuItem = "Delete");
+
+		AssertElementPresent(locator1 = "Message#SUCCESS");
+
+		AssertElementNotPresent(locator1 = "Message#ERROR");
+	}
+
+	macro moveCatalogEntriesToRecycleBin {
+		Click(locator1 = "CommerceNavigation#SELECT_ALL_CHECKBOX");
+
+		Click(locator1 = "Button#MOVE_TO_RECYCLE_BIN");
+	}
+
+	macro openProductsAdmin {
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/guest/~/control_panel/manage?p_p_id=com_liferay_commerce_product_definitions_web_internal_portlet_CPDefinitionsPortlet");
+
+		WaitForVisible(locator1 = "Button#PLUS");
+	}
+
+	macro searchProduct {
+		Type(
+			locator1 = "CommerceNavigation#SEARCH_FIELD",
+			value1 = "${search}");
+
+		KeyPress(
+			locator1 = "CommerceNavigation#SEARCH_FIELD",
+			value1 = "\RETURN");
+	}
+
+}

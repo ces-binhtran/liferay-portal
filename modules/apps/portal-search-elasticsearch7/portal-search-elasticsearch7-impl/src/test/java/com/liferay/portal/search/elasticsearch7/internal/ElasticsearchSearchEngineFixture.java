@@ -14,13 +14,15 @@
 
 package com.liferay.portal.search.elasticsearch7.internal;
 
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.search.SearchEngine;
+import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.OperationModeResolver;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
-import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnection;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
-import com.liferay.portal.search.elasticsearch7.internal.connection.OperationMode;
 import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIdIndexNameBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.index.CompanyIndexFactory;
 import com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.ElasticsearchEngineAdapterFixture;
@@ -28,6 +30,7 @@ import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.test.util.search.engine.SearchEngineFixture;
 
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -64,17 +67,18 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 		ElasticsearchConnectionFixture elasticsearchConnectionFixture =
 			Objects.requireNonNull(_elasticsearchConnectionFixture);
 
-		elasticsearchConnectionFixture.createNode();
+		CompanyIdIndexNameBuilder indexNameBuilder = _createIndexNameBuilder();
 
-		CompanyIdIndexNameBuilder indexNameBuilder = createIndexNameBuilder();
 		ElasticsearchConnectionManager elasticsearchConnectionManager =
-			createElasticsearchConnectionManager(
-				elasticsearchConnectionFixture.getElasticsearchConnection());
+			_createElasticsearchConnectionManager(
+				elasticsearchConnectionFixture);
 
 		_elasticsearchConnectionManager = elasticsearchConnectionManager;
-		_elasticsearchSearchEngine = createElasticsearchSearchEngine(
+		_elasticsearchSearchEngine = _createElasticsearchSearchEngine(
 			elasticsearchConnectionFixture, elasticsearchConnectionManager,
-			indexNameBuilder);
+			indexNameBuilder,
+			elasticsearchConnectionFixture.
+				getElasticsearchConfigurationProperties());
 
 		_indexNameBuilder = indexNameBuilder;
 	}
@@ -84,48 +88,72 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 		_elasticsearchConnectionFixture.destroyNode();
 	}
 
-	protected static CompanyIndexFactory createCompanyIndexFactory(
-		IndexNameBuilder indexNameBuilder) {
+	protected static ElasticsearchConfigurationWrapper
+		createElasticsearchConfigurationWrapper(
+			Map<String, Object> properties) {
+
+		return new ElasticsearchConfigurationWrapper() {
+			{
+				setElasticsearchConfiguration(
+					ConfigurableUtil.createConfigurable(
+						ElasticsearchConfiguration.class, properties));
+			}
+		};
+	}
+
+	private CompanyIndexFactory _createCompanyIndexFactory(
+		IndexNameBuilder indexNameBuilder, Map<String, Object> properites) {
 
 		return new CompanyIndexFactory() {
 			{
+				setElasticsearchConfigurationWrapper(
+					createElasticsearchConfigurationWrapper(properites));
 				setIndexNameBuilder(indexNameBuilder);
 				setJsonFactory(new JSONFactoryImpl());
 			}
 		};
 	}
 
-	protected static ElasticsearchConnectionManager
-		createElasticsearchConnectionManager(
-			ElasticsearchConnection elasticsearchConnection) {
+	private ElasticsearchConnectionManager
+		_createElasticsearchConnectionManager(
+			ElasticsearchConnectionFixture elasticsearchConnectionFixture) {
 
 		return new ElasticsearchConnectionManager() {
 			{
-				setEmbeddedElasticsearchConnection(elasticsearchConnection);
+				elasticsearchConfigurationWrapper =
+					createElasticsearchConfigurationWrapper(
+						elasticsearchConnectionFixture.
+							getElasticsearchConfigurationProperties());
 
-				setOperationMode(OperationMode.EMBEDDED);
+				operationModeResolver = _createOperationModeResolver(
+					elasticsearchConfigurationWrapper);
+
+				addElasticsearchConnection(
+					elasticsearchConnectionFixture.
+						createElasticsearchConnection());
 			}
 		};
 	}
 
-	protected static ElasticsearchSearchEngine createElasticsearchSearchEngine(
+	private ElasticsearchSearchEngine _createElasticsearchSearchEngine(
 		ElasticsearchClientResolver elasticsearchClientResolver,
 		ElasticsearchConnectionManager elasticsearchConnectionManager,
-		IndexNameBuilder indexNameBuilder) {
+		IndexNameBuilder indexNameBuilder, Map<String, Object> properites) {
 
 		return new ElasticsearchSearchEngine() {
 			{
 				setElasticsearchConnectionManager(
 					elasticsearchConnectionManager);
-				setIndexFactory(createCompanyIndexFactory(indexNameBuilder));
+				setIndexFactory(
+					_createCompanyIndexFactory(indexNameBuilder, properites));
 				setIndexNameBuilder(String::valueOf);
 				setSearchEngineAdapter(
-					createSearchEngineAdapter(elasticsearchClientResolver));
+					_createSearchEngineAdapter(elasticsearchClientResolver));
 			}
 		};
 	}
 
-	protected static CompanyIdIndexNameBuilder createIndexNameBuilder() {
+	private CompanyIdIndexNameBuilder _createIndexNameBuilder() {
 		return new CompanyIdIndexNameBuilder() {
 			{
 				setIndexNamePrefix(null);
@@ -133,7 +161,18 @@ public class ElasticsearchSearchEngineFixture implements SearchEngineFixture {
 		};
 	}
 
-	protected static SearchEngineAdapter createSearchEngineAdapter(
+	private OperationModeResolver _createOperationModeResolver(
+		ElasticsearchConfigurationWrapper elasticsearchConfigurationWrapper1) {
+
+		return new OperationModeResolver() {
+			{
+				elasticsearchConfigurationWrapper =
+					elasticsearchConfigurationWrapper1;
+			}
+		};
+	}
+
+	private SearchEngineAdapter _createSearchEngineAdapter(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		ElasticsearchEngineAdapterFixture elasticsearchEngineAdapterFixture =

@@ -14,6 +14,7 @@
 
 package com.liferay.portal.util;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.servlet.SharedSessionServletRequest;
@@ -29,27 +30,24 @@ public class SessionLayoutClone implements LayoutClone {
 
 	@Override
 	public String get(HttpServletRequest httpServletRequest, long plid) {
-		HttpSession session = getPortalSession(httpServletRequest);
+		HttpSession httpSession = getPortalSession(httpServletRequest);
 
-		return (String)session.getAttribute(encodeKey(plid));
+		return (String)httpSession.getAttribute(encodeKey(plid));
 	}
 
 	@Override
 	public void update(
 		HttpServletRequest httpServletRequest, long plid, String typeSettings) {
 
-		HttpSession session = getPortalSession(httpServletRequest);
+		HttpSession httpSession = getPortalSession(httpServletRequest);
 
-		session.setAttribute(encodeKey(plid), typeSettings);
+		httpSession.setAttribute(encodeKey(plid), typeSettings);
 	}
 
 	protected String encodeKey(long plid) {
-		return SessionLayoutClone.class.getName(
-		).concat(
-			StringPool.POUND
-		).concat(
-			StringUtil.toHexString(plid)
-		);
+		return StringBundler.concat(
+			SessionLayoutClone.class.getName(), StringPool.POUND,
+			StringUtil.toHexString(plid));
 	}
 
 	protected HttpSession getPortalSession(

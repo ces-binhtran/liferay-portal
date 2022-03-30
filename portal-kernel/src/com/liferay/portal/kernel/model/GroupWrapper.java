@@ -16,6 +16,7 @@ package com.liferay.portal.kernel.model;
 
 import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -47,6 +48,7 @@ public class GroupWrapper
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
 		attributes.put("creatorUserId", getCreatorUserId());
+		attributes.put("modifiedDate", getModifiedDate());
 		attributes.put("classNameId", getClassNameId());
 		attributes.put("classPK", getClassPK());
 		attributes.put("parentGroupId", getParentGroupId());
@@ -104,6 +106,12 @@ public class GroupWrapper
 
 		if (creatorUserId != null) {
 			setCreatorUserId(creatorUserId);
+		}
+
+		Date modifiedDate = (Date)attributes.get("modifiedDate");
+
+		if (modifiedDate != null) {
+			setModifiedDate(modifiedDate);
 		}
 
 		Long classNameId = (Long)attributes.get("classNameId");
@@ -223,6 +231,11 @@ public class GroupWrapper
 		model.clearStagingGroup();
 	}
 
+	@Override
+	public Group cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the active of this group.
 	 *
@@ -251,9 +264,11 @@ public class GroupWrapper
 	@Override
 	public java.util.List<Group> getChildrenWithLayouts(
 		boolean site, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Group> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Group>
+			orderByComparator) {
 
-		return model.getChildrenWithLayouts(site, start, end, obc);
+		return model.getChildrenWithLayouts(
+			site, start, end, orderByComparator);
 	}
 
 	@Override
@@ -456,6 +471,14 @@ public class GroupWrapper
 		return model.getDisplayURL(themeDisplay, privateLayout);
 	}
 
+	@Override
+	public String getDisplayURL(
+		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
+		boolean privateLayout, boolean controlPanel) {
+
+		return model.getDisplayURL(themeDisplay, privateLayout, controlPanel);
+	}
+
 	/**
 	 * Returns the friendly url of this group.
 	 *
@@ -561,6 +584,16 @@ public class GroupWrapper
 	@Override
 	public int getMembershipRestriction() {
 		return model.getMembershipRestriction();
+	}
+
+	/**
+	 * Returns the modified date of this group.
+	 *
+	 * @return the modified date of this group
+	 */
+	@Override
+	public Date getModifiedDate() {
+		return model.getModifiedDate();
 	}
 
 	/**
@@ -744,6 +777,13 @@ public class GroupWrapper
 		return model.getScopeLabel(themeDisplay);
 	}
 
+	@Override
+	public String getScopeSimpleName(
+		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay) {
+
+		return model.getScopeSimpleName(themeDisplay);
+	}
+
 	/**
 	 * Returns the site of this group.
 	 *
@@ -877,6 +917,11 @@ public class GroupWrapper
 	}
 
 	@Override
+	public boolean isDepot() {
+		return model.isDepot();
+	}
+
+	@Override
 	public boolean isGuest() {
 		return model.isGuest();
 	}
@@ -929,6 +974,11 @@ public class GroupWrapper
 	@Override
 	public boolean isOrganization() {
 		return model.isOrganization();
+	}
+
+	@Override
+	public boolean isPrivateLayoutsEnabled() {
+		return model.isPrivateLayoutsEnabled();
 	}
 
 	@Override
@@ -1226,6 +1276,16 @@ public class GroupWrapper
 	@Override
 	public void setMembershipRestriction(int membershipRestriction) {
 		model.setMembershipRestriction(membershipRestriction);
+	}
+
+	/**
+	 * Sets the modified date of this group.
+	 *
+	 * @param modifiedDate the modified date of this group
+	 */
+	@Override
+	public void setModifiedDate(Date modifiedDate) {
+		model.setModifiedDate(modifiedDate);
 	}
 
 	/**

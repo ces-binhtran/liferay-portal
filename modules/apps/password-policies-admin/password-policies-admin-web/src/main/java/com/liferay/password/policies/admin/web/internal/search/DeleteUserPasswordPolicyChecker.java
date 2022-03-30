@@ -38,8 +38,8 @@ public class DeleteUserPasswordPolicyChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		User user = (User)obj;
+	public boolean isDisabled(Object object) {
+		User user = (User)object;
 
 		try {
 			PasswordPolicyRel passwordPolicyRel =
@@ -54,7 +54,7 @@ public class DeleteUserPasswordPolicyChecker extends EmptyOnClickRowChecker {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;

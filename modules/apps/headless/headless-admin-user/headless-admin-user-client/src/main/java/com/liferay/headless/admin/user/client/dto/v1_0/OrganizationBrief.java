@@ -17,6 +17,8 @@ package com.liferay.headless.admin.user.client.dto.v1_0;
 import com.liferay.headless.admin.user.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.user.client.serdes.v1_0.OrganizationBriefSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class OrganizationBrief implements Cloneable {
+public class OrganizationBrief implements Cloneable, Serializable {
 
 	public static OrganizationBrief toDTO(String json) {
 		return OrganizationBriefSerDes.toDTO(json);
@@ -69,6 +71,27 @@ public class OrganizationBrief implements Cloneable {
 	}
 
 	protected String name;
+
+	public RoleBrief[] getRoleBriefs() {
+		return roleBriefs;
+	}
+
+	public void setRoleBriefs(RoleBrief[] roleBriefs) {
+		this.roleBriefs = roleBriefs;
+	}
+
+	public void setRoleBriefs(
+		UnsafeSupplier<RoleBrief[], Exception> roleBriefsUnsafeSupplier) {
+
+		try {
+			roleBriefs = roleBriefsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected RoleBrief[] roleBriefs;
 
 	@Override
 	public OrganizationBrief clone() throws CloneNotSupportedException {

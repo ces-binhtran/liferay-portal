@@ -22,11 +22,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -48,16 +51,25 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Document")
+@GraphQLName(
+	description = "Represents a Document Library file, storing binary and metadata information. Properties follow the [MediaObject](https://schema.org/MediaObject) specification.",
+	value = "Document"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Document")
-public class Document {
+public class Document implements Serializable {
 
 	public static Document toDTO(String json) {
 		return ObjectMapperUtil.readValue(Document.class, json);
 	}
 
-	@Schema
+	public static Document unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Document.class, json);
+	}
+
+	@Schema(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		return actions;
@@ -83,7 +95,9 @@ public class Document {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
@@ -150,6 +164,38 @@ public class Document {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected AggregateRating aggregateRating;
 
+	@Schema(
+		description = "The key of the asset library to which the document is scoped."
+	)
+	public String getAssetLibraryKey() {
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		try {
+			assetLibraryKey = assetLibraryKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The key of the asset library to which the document is scoped."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String assetLibraryKey;
+
 	@Schema(description = "The document's relative URL.")
 	public String getContentUrl() {
 		return contentUrl;
@@ -177,6 +223,38 @@ public class Document {
 	@GraphQLField(description = "The document's relative URL.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String contentUrl;
+
+	@Schema(
+		description = "The optional field with the content of the document in Base64, can be embedded with nestedFields."
+	)
+	public String getContentValue() {
+		return contentValue;
+	}
+
+	public void setContentValue(String contentValue) {
+		this.contentValue = contentValue;
+	}
+
+	@JsonIgnore
+	public void setContentValue(
+		UnsafeSupplier<String, Exception> contentValueUnsafeSupplier) {
+
+		try {
+			contentValue = contentValueUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The optional field with the content of the document in Base64, can be embedded with nestedFields."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String contentValue;
 
 	@Schema(description = "The document's creator.")
 	@Valid
@@ -207,7 +285,9 @@ public class Document {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(
+		description = "A list of the custom fields associated with the document."
+	)
 	@Valid
 	public CustomField[] getCustomFields() {
 		return customFields;
@@ -232,7 +312,9 @@ public class Document {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of the custom fields associated with the document."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected CustomField[] customFields;
 
@@ -351,7 +433,7 @@ public class Document {
 	@GraphQLField(
 		description = "The ID of the `DocumentFolder` where this document is stored."
 	)
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long documentFolderId;
 
 	@Schema
@@ -414,6 +496,34 @@ public class Document {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String encodingFormat;
+
+	@Schema(description = "The document's external reference code.")
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The document's external reference code.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
 
 	@Schema(description = "The document's file extension.")
 	public String getFileExtension() {
@@ -525,7 +635,7 @@ public class Document {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfComments;
 
-	@Schema
+	@Schema(description = "A list of related contents to this document.")
 	@Valid
 	public RelatedContent[] getRelatedContents() {
 		return relatedContents;
@@ -551,9 +661,75 @@ public class Document {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A list of related contents to this document.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected RelatedContent[] relatedContents;
+
+	@Schema(
+		description = "A list of rendered documents, which results from using a display page to process the document and return HTML."
+	)
+	@Valid
+	public RenderedContent[] getRenderedContents() {
+		return renderedContents;
+	}
+
+	public void setRenderedContents(RenderedContent[] renderedContents) {
+		this.renderedContents = renderedContents;
+	}
+
+	@JsonIgnore
+	public void setRenderedContents(
+		UnsafeSupplier<RenderedContent[], Exception>
+			renderedContentsUnsafeSupplier) {
+
+		try {
+			renderedContents = renderedContentsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A list of rendered documents, which results from using a display page to process the document and return HTML."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RenderedContent[] renderedContents;
+
+	@Schema(
+		description = "The ID of the site to which this document is scoped."
+	)
+	public Long getSiteId() {
+		return siteId;
+	}
+
+	public void setSiteId(Long siteId) {
+		this.siteId = siteId;
+	}
+
+	@JsonIgnore
+	public void setSiteId(
+		UnsafeSupplier<Long, Exception> siteIdUnsafeSupplier) {
+
+		try {
+			siteId = siteIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The ID of the site to which this document is scoped."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Long siteId;
 
 	@Schema(description = "The document's size in bytes.")
 	public Long getSizeInBytes() {
@@ -787,6 +963,20 @@ public class Document {
 			sb.append(String.valueOf(aggregateRating));
 		}
 
+		if (assetLibraryKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetLibraryKey));
+
+			sb.append("\"");
+		}
+
 		if (contentUrl != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -797,6 +987,20 @@ public class Document {
 			sb.append("\"");
 
 			sb.append(_escape(contentUrl));
+
+			sb.append("\"");
+		}
+
+		if (contentValue != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentValue\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentValue));
 
 			sb.append("\"");
 		}
@@ -907,6 +1111,20 @@ public class Document {
 			sb.append("\"");
 		}
 
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (fileExtension != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -983,6 +1201,36 @@ public class Document {
 			}
 
 			sb.append("]");
+		}
+
+		if (renderedContents != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"renderedContents\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < renderedContents.length; i++) {
+				sb.append(String.valueOf(renderedContents[i]));
+
+				if ((i + 1) < renderedContents.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (siteId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"siteId\": ");
+
+			sb.append(siteId);
 		}
 
 		if (sizeInBytes != null) {
@@ -1069,6 +1317,7 @@ public class Document {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Document",
 		name = "x-class-name"
 	)
@@ -1081,13 +1330,17 @@ public class Document {
 
 		@JsonCreator
 		public static ViewableBy create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (ViewableBy viewableBy : values()) {
 				if (Objects.equals(viewableBy.getValue(), value)) {
 					return viewableBy;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -1109,9 +1362,19 @@ public class Document {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -1127,14 +1390,12 @@ public class Document {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -1161,7 +1422,7 @@ public class Document {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -1169,7 +1430,7 @@ public class Document {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -1177,5 +1438,10 @@ public class Document {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

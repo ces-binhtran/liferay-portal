@@ -22,17 +22,18 @@ import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.document.library.kernel.util.DLValidatorUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -111,8 +112,7 @@ public class DLDirectoryNameAndFileNameTest {
 			name = blacklistName + ".txt";
 
 			Assert.assertEquals(
-				blacklistName + StringPool.UNDERLINE + ".txt",
-				DLValidatorUtil.fixName(name));
+				blacklistName + "_.txt", DLValidatorUtil.fixName(name));
 
 			name = blacklistName + StringUtil.randomString(10);
 
@@ -156,7 +156,7 @@ public class DLDirectoryNameAndFileNameTest {
 	@Test
 	public void testFixNameRandom() throws Exception {
 		for (String blacklistChar : PropsValues.DL_CHAR_BLACKLIST) {
-			StringBuilder sb = new StringBuilder(4);
+			StringBundler sb = new StringBundler(4);
 
 			sb.append(StringUtil.randomString(10));
 			sb.append(blacklistChar);
@@ -243,7 +243,7 @@ public class DLDirectoryNameAndFileNameTest {
 		}
 
 		for (String blacklistChar : PropsValues.DL_CHAR_BLACKLIST) {
-			StringBuilder sb = new StringBuilder(4);
+			StringBundler sb = new StringBundler(4);
 
 			sb.append(StringUtil.randomString(10));
 			sb.append(blacklistChar);
@@ -273,7 +273,8 @@ public class DLDirectoryNameAndFileNameTest {
 		DLAppServiceUtil.updateFileEntry(
 			fileEntry.getFileEntryId(), name, ContentTypes.TEXT_PLAIN, name,
 			StringPool.BLANK, StringPool.BLANK, DLVersionNumberIncrease.MINOR,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, fileEntry.getExpirationDate(),
+			fileEntry.getReviewDate(), serviceContext);
 	}
 
 	@Test(expected = FolderNameException.class)
@@ -301,10 +302,10 @@ public class DLDirectoryNameAndFileNameTest {
 				_group.getGroupId(), TestPropsValues.getUserId());
 
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, sourceFileName,
-			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY, null,
+			null, serviceContext);
 	}
 
 	private static final String[] _DL_CHAR_LAST_BLACKLIST = {

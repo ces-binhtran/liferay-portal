@@ -15,11 +15,13 @@
 package com.liferay.headless.delivery.internal.dto.v1_0.util;
 
 import com.liferay.headless.delivery.dto.v1_0.Rating;
+import com.liferay.headless.delivery.dto.v1_0.util.CreatorUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.ratings.kernel.model.RatingsEntry;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Javier Gamarra
@@ -27,15 +29,14 @@ import java.util.Map;
 public class RatingUtil {
 
 	public static Rating toRating(
-			Map<String, Map<String, String>> actions, Portal portal,
-			RatingsEntry ratingsEntry, UserLocalService userLocalService)
-		throws Exception {
+		Map<String, Map<String, String>> actions, Portal portal,
+		RatingsEntry ratingsEntry, UserLocalService userLocalService) {
 
 		Rating rating = new Rating() {
 			{
 				bestRating = 1D;
 				creator = CreatorUtil.toCreator(
-					portal,
+					portal, Optional.empty(),
 					userLocalService.fetchUser(ratingsEntry.getUserId()));
 				dateCreated = ratingsEntry.getCreateDate();
 				dateModified = ratingsEntry.getModifiedDate();

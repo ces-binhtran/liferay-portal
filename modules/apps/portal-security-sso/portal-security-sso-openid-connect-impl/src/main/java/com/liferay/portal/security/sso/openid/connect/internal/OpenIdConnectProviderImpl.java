@@ -28,14 +28,20 @@ public class OpenIdConnectProviderImpl
 	implements OpenIdConnectProvider<OIDCClientMetadata, OIDCProviderMetadata> {
 
 	public OpenIdConnectProviderImpl(
-		String name, String clientId, String clientSecret, String scopes,
-		OpenIdConnectMetadataFactory openIdConnectMetadataFactory) {
+		String name, String clientId, String clientSecret,
+		String configurationPid, String scopes,
+		OpenIdConnectMetadataFactory openIdConnectMetadataFactory,
+		int tokenConnectionTimeout) {
+
+		// TODO LPS-139642
 
 		_name = name;
 		_clientId = clientId;
 		_clientSecret = clientSecret;
+		_configurationPid = configurationPid;
 		_scopes = scopes;
 		_openIdConnectMetadataFactory = openIdConnectMetadataFactory;
+		_tokenConnectionTimeout = tokenConnectionTimeout;
 	}
 
 	@Override
@@ -46,6 +52,10 @@ public class OpenIdConnectProviderImpl
 	@Override
 	public String getClientSecret() {
 		return _clientSecret;
+	}
+
+	public String getConfigurationPid() {
+		return _configurationPid;
 	}
 
 	@Override
@@ -70,10 +80,17 @@ public class OpenIdConnectProviderImpl
 		return _scopes;
 	}
 
+	@Override
+	public int getTokenConnectionTimeout() {
+		return _tokenConnectionTimeout;
+	}
+
 	private final String _clientId;
 	private final String _clientSecret;
+	private final String _configurationPid;
 	private final String _name;
 	private final OpenIdConnectMetadataFactory _openIdConnectMetadataFactory;
 	private final String _scopes;
+	private final int _tokenConnectionTimeout;
 
 }

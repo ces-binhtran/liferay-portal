@@ -22,9 +22,6 @@ import com.liferay.portal.kernel.search.Bufferable;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.MethodKey;
-import com.liferay.portal.search.buffer.IndexerRequest;
-import com.liferay.portal.search.buffer.IndexerRequestBuffer;
-import com.liferay.portal.search.buffer.IndexerRequestBufferOverflowHandler;
 import com.liferay.portal.search.configuration.IndexerRegistryConfiguration;
 import com.liferay.portal.search.index.IndexStatusManager;
 
@@ -176,7 +173,7 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 		IndexerRequest indexerRequest = new IndexerRequest(
 			methodKey.getMethod(), classedModel, _indexer);
 
-		doBufferRequest(indexerRequest, indexerRequestBuffer);
+		_bufferRequest(indexerRequest, indexerRequestBuffer);
 	}
 
 	protected void bufferRequest(
@@ -197,10 +194,10 @@ public class BufferedIndexerInvocationHandler implements InvocationHandler {
 		IndexerRequest indexerRequest = new IndexerRequest(
 			methodKey.getMethod(), _indexer, className, classPK);
 
-		doBufferRequest(indexerRequest, indexerRequestBuffer);
+		_bufferRequest(indexerRequest, indexerRequestBuffer);
 	}
 
-	protected void doBufferRequest(
+	private void _bufferRequest(
 			IndexerRequest indexerRequest,
 			IndexerRequestBuffer indexerRequestBuffer)
 		throws Exception {

@@ -12,80 +12,94 @@
  * details.
  */
 
-import React, {useCallback} from 'react';
+import classNames from 'classnames';
+import React, {useEffect, useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
+import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
+import {LAYOUT_DATA_ITEM_TYPES} from '../../config/constants/layoutDataItemTypes';
+import {config} from '../../config/index';
 import {
-	LayoutDataPropTypes,
-	getLayoutDataItemPropTypes,
-} from '../../../prop-types/index';
-import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
-import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
-import {useDispatch, useSelector} from '../../store/index';
-import duplicateItem from '../../thunks/duplicateItem';
-import {useSelectItem} from '../Controls';
-import Topper from '../Topper';
-import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
+	useHoveredItemId,
+	useHoveredItemType,
+} from '../../contexts/ControlsContext';
+import {useSelector} from '../../contexts/StoreContext';
+import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
+import Topper from '../topper/Topper';
 import Collection from './Collection';
+import OldCollection from './OldCollection';
+import isHovered from './isHovered';
 
-const CollectionWithControls = React.forwardRef(
-	({children, item, layoutData}, ref) => {
-		const dispatch = useDispatch();
-		const selectItem = useSelectItem();
-		const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
+const CollectionWithControls = React.forwardRef(({children, item}, ref) => {
+	const [hovered, setHovered] = useState(false);
 
-		const [setRef, itemElement] = useSetRef(ref);
+	const [setRef, itemElement] = useSetRef(ref);
 
-		const buttons = [];
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
-		buttons.push(
-			LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem,
-			LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.collectionConfiguration
-		);
+	const responsiveConfig = getResponsiveConfig(
+		item.config,
+		selectedViewportSize
+	);
 
-		const handleButtonClick = useCallback(
-			(id) => {
-				if (
-					id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id
-				) {
-					dispatch(
-						duplicateItem({
-							itemId: item.itemId,
-							segmentsExperienceId,
-							selectItem,
-						})
-					);
-				}
-			},
-			[dispatch, item.itemId, segmentsExperienceId, selectItem]
-		);
+	const {display} = responsiveConfig.styles;
 
-		return (
+	const CollectionComponent = config.paginationImprovementsEnabled
+		? Collection
+		: OldCollection;
+
+	return (
+		<>
+			<HoverHandler
+				hovered={hovered}
+				item={item}
+				setHovered={setHovered}
+			/>
 			<Topper
+				className={classNames({
+					'page-editor__topper--hovered': hovered,
+				})}
 				item={item}
 				itemElement={itemElement}
-				layoutData={layoutData}
+				style={{display}}
 			>
-				<>
-					<Collection item={item} ref={setRef}>
-						{children}
-					</Collection>
-
-					<FloatingToolbar
-						buttons={buttons}
-						item={item}
-						itemElement={itemElement}
-						onButtonClick={handleButtonClick}
-					/>
-				</>
+				<CollectionComponent item={item} ref={setRef}>
+					{children}
+				</CollectionComponent>
 			</Topper>
-		);
-	}
-);
+		</>
+	);
+});
 
 CollectionWithControls.propTypes = {
 	item: getLayoutDataItemPropTypes().isRequired,
-	layoutData: LayoutDataPropTypes.isRequired,
 };
 
 export default CollectionWithControls;
+
+const HoverHandler = ({hovered, item, setHovered}) => {
+	const hoveredItemType = useHoveredItemType();
+	const hoveredItemId = useHoveredItemId();
+
+	useEffect(() => {
+		const isMapped =
+			item.type === LAYOUT_DATA_ITEM_TYPES.collection &&
+			'collection' in item.config;
+
+		if (isMapped) {
+			const nextHovered = isHovered({
+				editableValue: item.config.collection,
+				hoveredItemId,
+				hoveredItemType,
+			});
+
+			if (hovered !== nextHovered) {
+				setHovered(nextHovered);
+			}
+		}
+	}, [item, hoveredItemId, hoveredItemType, setHovered, hovered]);
+
+	return null;
+};

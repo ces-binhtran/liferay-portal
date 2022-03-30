@@ -61,15 +61,15 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = {})
 public class CalendarUtil {
 
-	public static JSONObject getCalendarRenderingRules(
+	public static JSONObject getCalendarRenderingRulesJSONObject(
 			ThemeDisplay themeDisplay, long[] calendarIds, int[] statuses,
 			long startTime, long endTime, String ruleName, TimeZone timeZone)
 		throws PortalException {
 
 		List<CalendarBooking> calendarBookings = _calendarBookingService.search(
 			themeDisplay.getCompanyId(), null, calendarIds, new long[0], -1,
-			null, startTime, endTime, true, statuses, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS, null);
+			null, startTime, endTime, timeZone, true, statuses,
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		Map<Integer, Map<Integer, List<Integer>>> rulesMap = new HashMap<>();
 
@@ -129,17 +129,15 @@ public class CalendarUtil {
 
 			Set<Integer> months = monthsMap.keySet();
 
-			JSONObject jsonObjectMonth = JSONFactoryUtil.createJSONObject();
+			JSONObject monthJSONObject = JSONFactoryUtil.createJSONObject();
 
-			jsonObject.put(String.valueOf(year), jsonObjectMonth);
+			jsonObject.put(String.valueOf(year), monthJSONObject);
 
 			for (Integer month : months) {
-				List<Integer> days = monthsMap.get(month);
+				JSONObject dayJSONObject = JSONUtil.put(
+					StringUtil.merge(monthsMap.get(month)), ruleName);
 
-				JSONObject jsonObjectDay = JSONUtil.put(
-					StringUtil.merge(days), ruleName);
-
-				jsonObjectMonth.put(String.valueOf(month), jsonObjectDay);
+				monthJSONObject.put(String.valueOf(month), dayJSONObject);
 			}
 		}
 
@@ -293,14 +291,13 @@ public class CalendarUtil {
 			ThemeDisplay themeDisplay, Calendar calendar)
 		throws PortalException {
 
-		JSONObject jsonObject = JSONUtil.put(
-			"calendarId", calendar.getCalendarId());
-
 		CalendarResource calendarResource =
 			_calendarResourceLocalService.fetchCalendarResource(
 				calendar.getCalendarResourceId());
 
-		jsonObject.put(
+		return JSONUtil.put(
+			"calendarId", calendar.getCalendarId()
+		).put(
 			"calendarResourceId", calendarResource.getCalendarResourceId()
 		).put(
 			"calendarResourceName",
@@ -333,8 +330,6 @@ public class CalendarUtil {
 		).put(
 			"userId", calendar.getUserId()
 		);
-
-		return jsonObject;
 	}
 
 	public static JSONObject toCalendarResourceJSONObject(

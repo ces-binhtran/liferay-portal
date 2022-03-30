@@ -19,7 +19,6 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBThread;
 import com.liferay.message.boards.model.MBThreadModel;
-import com.liferay.message.boards.model.MBThreadSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
@@ -37,6 +36,7 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -45,15 +45,15 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -80,23 +80,26 @@ public class MBThreadModelImpl
 	public static final String TABLE_NAME = "MBThread";
 
 	public static final Object[][] TABLE_COLUMNS = {
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"uuid_", Types.VARCHAR}, {"threadId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
 		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
 		{"categoryId", Types.BIGINT}, {"rootMessageId", Types.BIGINT},
 		{"rootMessageUserId", Types.BIGINT}, {"title", Types.VARCHAR},
-		{"messageCount", Types.INTEGER}, {"lastPostByUserId", Types.BIGINT},
-		{"lastPostDate", Types.TIMESTAMP}, {"priority", Types.DOUBLE},
-		{"question", Types.BOOLEAN}, {"lastPublishDate", Types.TIMESTAMP},
-		{"status", Types.INTEGER}, {"statusByUserId", Types.BIGINT},
-		{"statusByUserName", Types.VARCHAR}, {"statusDate", Types.TIMESTAMP}
+		{"lastPostByUserId", Types.BIGINT}, {"lastPostDate", Types.TIMESTAMP},
+		{"priority", Types.DOUBLE}, {"question", Types.BOOLEAN},
+		{"lastPublishDate", Types.TIMESTAMP}, {"status", Types.INTEGER},
+		{"statusByUserId", Types.BIGINT}, {"statusByUserName", Types.VARCHAR},
+		{"statusDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("threadId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -109,7 +112,6 @@ public class MBThreadModelImpl
 		TABLE_COLUMNS_MAP.put("rootMessageId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("rootMessageUserId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("title", Types.VARCHAR);
-		TABLE_COLUMNS_MAP.put("messageCount", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("lastPostByUserId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("lastPostDate", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("priority", Types.DOUBLE);
@@ -122,7 +124,7 @@ public class MBThreadModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table MBThread (uuid_ VARCHAR(75) null,threadId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,categoryId LONG,rootMessageId LONG,rootMessageUserId LONG,title VARCHAR(75) null,messageCount INTEGER,lastPostByUserId LONG,lastPostDate DATE null,priority DOUBLE,question BOOLEAN,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null)";
+		"create table MBThread (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,threadId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,categoryId LONG,rootMessageId LONG,rootMessageUserId LONG,title VARCHAR(75) null,lastPostByUserId LONG,lastPostDate DATE null,priority DOUBLE,question BOOLEAN,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (threadId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table MBThread";
 
@@ -138,87 +140,66 @@ public class MBThreadModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CATEGORYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long LASTPOSTDATE_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long PRIORITY_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ROOTMESSAGEID_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long STATUS_COLUMN_BITMASK = 64L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 128L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static MBThread toModel(MBThreadSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		MBThread model = new MBThreadImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setThreadId(soapModel.getThreadId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setCategoryId(soapModel.getCategoryId());
-		model.setRootMessageId(soapModel.getRootMessageId());
-		model.setRootMessageUserId(soapModel.getRootMessageUserId());
-		model.setTitle(soapModel.getTitle());
-		model.setMessageCount(soapModel.getMessageCount());
-		model.setLastPostByUserId(soapModel.getLastPostByUserId());
-		model.setLastPostDate(soapModel.getLastPostDate());
-		model.setPriority(soapModel.getPriority());
-		model.setQuestion(soapModel.isQuestion());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-		model.setStatus(soapModel.getStatus());
-		model.setStatusByUserId(soapModel.getStatusByUserId());
-		model.setStatusByUserName(soapModel.getStatusByUserName());
-		model.setStatusDate(soapModel.getStatusDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<MBThread> toModels(MBThreadSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<MBThread> models = new ArrayList<MBThread>(soapModels.length);
-
-		for (MBThreadSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public MBThreadModelImpl() {
@@ -271,9 +252,6 @@ public class MBThreadModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((MBThread)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -347,6 +325,15 @@ public class MBThreadModelImpl
 		Map<String, BiConsumer<MBThread, ?>> attributeSetterBiConsumers =
 			new LinkedHashMap<String, BiConsumer<MBThread, ?>>();
 
+		attributeGetterFunctions.put("mvccVersion", MBThread::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<MBThread, Long>)MBThread::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", MBThread::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<MBThread, Long>)MBThread::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", MBThread::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid", (BiConsumer<MBThread, String>)MBThread::setUuid);
@@ -388,10 +375,6 @@ public class MBThreadModelImpl
 		attributeGetterFunctions.put("title", MBThread::getTitle);
 		attributeSetterBiConsumers.put(
 			"title", (BiConsumer<MBThread, String>)MBThread::setTitle);
-		attributeGetterFunctions.put("messageCount", MBThread::getMessageCount);
-		attributeSetterBiConsumers.put(
-			"messageCount",
-			(BiConsumer<MBThread, Integer>)MBThread::setMessageCount);
 		attributeGetterFunctions.put(
 			"lastPostByUserId", MBThread::getLastPostByUserId);
 		attributeSetterBiConsumers.put(
@@ -437,6 +420,36 @@ public class MBThreadModelImpl
 
 	@JSON
 	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
+	}
+
+	@JSON
+	@Override
 	public String getUuid() {
 		if (_uuid == null) {
 			return "";
@@ -448,17 +461,20 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -469,6 +485,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setThreadId(long threadId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_threadId = threadId;
 	}
 
@@ -480,19 +500,20 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -503,19 +524,21 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -526,6 +549,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -558,6 +585,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -569,6 +600,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -586,6 +621,10 @@ public class MBThreadModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -597,19 +636,21 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setCategoryId(long categoryId) {
-		_columnBitmask |= CATEGORYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCategoryId) {
-			_setOriginalCategoryId = true;
-
-			_originalCategoryId = _categoryId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_categoryId = categoryId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCategoryId() {
-		return _originalCategoryId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("categoryId"));
 	}
 
 	@JSON
@@ -620,19 +661,21 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setRootMessageId(long rootMessageId) {
-		_columnBitmask |= ROOTMESSAGEID_COLUMN_BITMASK;
-
-		if (!_setOriginalRootMessageId) {
-			_setOriginalRootMessageId = true;
-
-			_originalRootMessageId = _rootMessageId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_rootMessageId = rootMessageId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalRootMessageId() {
-		return _originalRootMessageId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("rootMessageId"));
 	}
 
 	@JSON
@@ -643,6 +686,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setRootMessageUserId(long rootMessageUserId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_rootMessageUserId = rootMessageUserId;
 	}
 
@@ -676,18 +723,11 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setTitle(String title) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_title = title;
-	}
-
-	@JSON
-	@Override
-	public int getMessageCount() {
-		return _messageCount;
-	}
-
-	@Override
-	public void setMessageCount(int messageCount) {
-		_messageCount = messageCount;
 	}
 
 	@JSON
@@ -698,6 +738,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setLastPostByUserId(long lastPostByUserId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPostByUserId = lastPostByUserId;
 	}
 
@@ -725,17 +769,20 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setLastPostDate(Date lastPostDate) {
-		_columnBitmask = -1L;
-
-		if (_originalLastPostDate == null) {
-			_originalLastPostDate = _lastPostDate;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_lastPostDate = lastPostDate;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public Date getOriginalLastPostDate() {
-		return _originalLastPostDate;
+		return getColumnOriginalValue("lastPostDate");
 	}
 
 	@JSON
@@ -746,19 +793,21 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setPriority(double priority) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalPriority) {
-			_setOriginalPriority = true;
-
-			_originalPriority = _priority;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_priority = priority;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public double getOriginalPriority() {
-		return _originalPriority;
+		return GetterUtil.getDouble(
+			this.<Double>getColumnOriginalValue("priority"));
 	}
 
 	@JSON
@@ -775,6 +824,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setQuestion(boolean question) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_question = question;
 	}
 
@@ -786,6 +839,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -797,19 +854,21 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setStatus(int status) {
-		_columnBitmask |= STATUS_COLUMN_BITMASK;
-
-		if (!_setOriginalStatus) {
-			_setOriginalStatus = true;
-
-			_originalStatus = _status;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_status = status;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public int getOriginalStatus() {
-		return _originalStatus;
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("status"));
 	}
 
 	@JSON
@@ -820,6 +879,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setStatusByUserId(long statusByUserId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusByUserId = statusByUserId;
 	}
 
@@ -852,6 +915,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setStatusByUserName(String statusByUserName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusByUserName = statusByUserName;
 	}
 
@@ -863,6 +930,10 @@ public class MBThreadModelImpl
 
 	@Override
 	public void setStatusDate(Date statusDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusDate = statusDate;
 	}
 
@@ -1123,6 +1194,26 @@ public class MBThreadModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -1158,6 +1249,8 @@ public class MBThreadModelImpl
 	public Object clone() {
 		MBThreadImpl mbThreadImpl = new MBThreadImpl();
 
+		mbThreadImpl.setMvccVersion(getMvccVersion());
+		mbThreadImpl.setCtCollectionId(getCtCollectionId());
 		mbThreadImpl.setUuid(getUuid());
 		mbThreadImpl.setThreadId(getThreadId());
 		mbThreadImpl.setGroupId(getGroupId());
@@ -1170,7 +1263,6 @@ public class MBThreadModelImpl
 		mbThreadImpl.setRootMessageId(getRootMessageId());
 		mbThreadImpl.setRootMessageUserId(getRootMessageUserId());
 		mbThreadImpl.setTitle(getTitle());
-		mbThreadImpl.setMessageCount(getMessageCount());
 		mbThreadImpl.setLastPostByUserId(getLastPostByUserId());
 		mbThreadImpl.setLastPostDate(getLastPostDate());
 		mbThreadImpl.setPriority(getPriority());
@@ -1182,6 +1274,54 @@ public class MBThreadModelImpl
 		mbThreadImpl.setStatusDate(getStatusDate());
 
 		mbThreadImpl.resetOriginalValues();
+
+		return mbThreadImpl;
+	}
+
+	@Override
+	public MBThread cloneWithOriginalValues() {
+		MBThreadImpl mbThreadImpl = new MBThreadImpl();
+
+		mbThreadImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		mbThreadImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		mbThreadImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		mbThreadImpl.setThreadId(this.<Long>getColumnOriginalValue("threadId"));
+		mbThreadImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		mbThreadImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		mbThreadImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		mbThreadImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		mbThreadImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		mbThreadImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		mbThreadImpl.setCategoryId(
+			this.<Long>getColumnOriginalValue("categoryId"));
+		mbThreadImpl.setRootMessageId(
+			this.<Long>getColumnOriginalValue("rootMessageId"));
+		mbThreadImpl.setRootMessageUserId(
+			this.<Long>getColumnOriginalValue("rootMessageUserId"));
+		mbThreadImpl.setTitle(this.<String>getColumnOriginalValue("title"));
+		mbThreadImpl.setLastPostByUserId(
+			this.<Long>getColumnOriginalValue("lastPostByUserId"));
+		mbThreadImpl.setLastPostDate(
+			this.<Date>getColumnOriginalValue("lastPostDate"));
+		mbThreadImpl.setPriority(
+			this.<Double>getColumnOriginalValue("priority"));
+		mbThreadImpl.setQuestion(
+			this.<Boolean>getColumnOriginalValue("question"));
+		mbThreadImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+		mbThreadImpl.setStatus(this.<Integer>getColumnOriginalValue("status"));
+		mbThreadImpl.setStatusByUserId(
+			this.<Long>getColumnOriginalValue("statusByUserId"));
+		mbThreadImpl.setStatusByUserName(
+			this.<String>getColumnOriginalValue("statusByUserName"));
+		mbThreadImpl.setStatusDate(
+			this.<Date>getColumnOriginalValue("statusDate"));
 
 		return mbThreadImpl;
 	}
@@ -1219,16 +1359,16 @@ public class MBThreadModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MBThread)) {
+		if (!(object instanceof MBThread)) {
 			return false;
 		}
 
-		MBThread mbThread = (MBThread)obj;
+		MBThread mbThread = (MBThread)object;
 
 		long primaryKey = mbThread.getPrimaryKey();
 
@@ -1245,58 +1385,40 @@ public class MBThreadModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		MBThreadModelImpl mbThreadModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		mbThreadModelImpl._originalUuid = mbThreadModelImpl._uuid;
+		_setModifiedDate = false;
 
-		mbThreadModelImpl._originalGroupId = mbThreadModelImpl._groupId;
-
-		mbThreadModelImpl._setOriginalGroupId = false;
-
-		mbThreadModelImpl._originalCompanyId = mbThreadModelImpl._companyId;
-
-		mbThreadModelImpl._setOriginalCompanyId = false;
-
-		mbThreadModelImpl._setModifiedDate = false;
-
-		mbThreadModelImpl._originalCategoryId = mbThreadModelImpl._categoryId;
-
-		mbThreadModelImpl._setOriginalCategoryId = false;
-
-		mbThreadModelImpl._originalRootMessageId =
-			mbThreadModelImpl._rootMessageId;
-
-		mbThreadModelImpl._setOriginalRootMessageId = false;
-
-		mbThreadModelImpl._originalLastPostDate =
-			mbThreadModelImpl._lastPostDate;
-
-		mbThreadModelImpl._originalPriority = mbThreadModelImpl._priority;
-
-		mbThreadModelImpl._setOriginalPriority = false;
-
-		mbThreadModelImpl._originalStatus = mbThreadModelImpl._status;
-
-		mbThreadModelImpl._setOriginalStatus = false;
-
-		mbThreadModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
 	public CacheModel<MBThread> toCacheModel() {
 		MBThreadCacheModel mbThreadCacheModel = new MBThreadCacheModel();
+
+		mbThreadCacheModel.mvccVersion = getMvccVersion();
+
+		mbThreadCacheModel.ctCollectionId = getCtCollectionId();
 
 		mbThreadCacheModel.uuid = getUuid();
 
@@ -1354,8 +1476,6 @@ public class MBThreadModelImpl
 			mbThreadCacheModel.title = null;
 		}
 
-		mbThreadCacheModel.messageCount = getMessageCount();
-
 		mbThreadCacheModel.lastPostByUserId = getLastPostByUserId();
 
 		Date lastPostDate = getLastPostDate();
@@ -1410,7 +1530,7 @@ public class MBThreadModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1421,9 +1541,26 @@ public class MBThreadModelImpl
 			Function<MBThread, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((MBThread)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((MBThread)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1442,7 +1579,7 @@ public class MBThreadModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1474,46 +1611,155 @@ public class MBThreadModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _threadId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _categoryId;
-	private long _originalCategoryId;
-	private boolean _setOriginalCategoryId;
 	private long _rootMessageId;
-	private long _originalRootMessageId;
-	private boolean _setOriginalRootMessageId;
 	private long _rootMessageUserId;
 	private String _title;
-	private int _messageCount;
 	private long _lastPostByUserId;
 	private Date _lastPostDate;
-	private Date _originalLastPostDate;
 	private double _priority;
-	private double _originalPriority;
-	private boolean _setOriginalPriority;
 	private boolean _question;
 	private Date _lastPublishDate;
 	private int _status;
-	private int _originalStatus;
-	private boolean _setOriginalStatus;
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<MBThread, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((MBThread)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("threadId", _threadId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("categoryId", _categoryId);
+		_columnOriginalValues.put("rootMessageId", _rootMessageId);
+		_columnOriginalValues.put("rootMessageUserId", _rootMessageUserId);
+		_columnOriginalValues.put("title", _title);
+		_columnOriginalValues.put("lastPostByUserId", _lastPostByUserId);
+		_columnOriginalValues.put("lastPostDate", _lastPostDate);
+		_columnOriginalValues.put("priority", _priority);
+		_columnOriginalValues.put("question", _question);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+		_columnOriginalValues.put("status", _status);
+		_columnOriginalValues.put("statusByUserId", _statusByUserId);
+		_columnOriginalValues.put("statusByUserName", _statusByUserName);
+		_columnOriginalValues.put("statusDate", _statusDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("threadId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("categoryId", 1024L);
+
+		columnBitmasks.put("rootMessageId", 2048L);
+
+		columnBitmasks.put("rootMessageUserId", 4096L);
+
+		columnBitmasks.put("title", 8192L);
+
+		columnBitmasks.put("lastPostByUserId", 16384L);
+
+		columnBitmasks.put("lastPostDate", 32768L);
+
+		columnBitmasks.put("priority", 65536L);
+
+		columnBitmasks.put("question", 131072L);
+
+		columnBitmasks.put("lastPublishDate", 262144L);
+
+		columnBitmasks.put("status", 524288L);
+
+		columnBitmasks.put("statusByUserId", 1048576L);
+
+		columnBitmasks.put("statusByUserName", 2097152L);
+
+		columnBitmasks.put("statusDate", 4194304L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private MBThread _escapedModel;
 

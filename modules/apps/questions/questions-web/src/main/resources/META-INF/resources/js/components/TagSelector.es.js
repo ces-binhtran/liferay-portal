@@ -18,7 +18,7 @@ import React, {useContext, useEffect, useState} from 'react';
 
 import {AppContext} from '../AppContext.es';
 
-export default ({tagsChange, tagsLoaded, tags = []}) => {
+export default function TagSelector({tagsChange, tagsLoaded, tags = []}) {
 	const context = useContext(AppContext);
 
 	const [error, setError] = useState(false);
@@ -52,7 +52,7 @@ export default ({tagsChange, tagsLoaded, tags = []}) => {
 			<ClayForm.Group className="c-mt-4">
 				<div className="questions-tag-selector">
 					<AssetTagsSelector
-						eventName={`_${context.portletNamespace}_selectTag`}
+						eventName={`${context.portletNamespace}selectTag`}
 						groupIds={[context.siteKey]}
 						inputValue={inputValue}
 						onInputValueChange={setInputValue}
@@ -62,6 +62,7 @@ export default ({tagsChange, tagsLoaded, tags = []}) => {
 						showSelectButton={true}
 					/>
 				</div>
+
 				<ClayForm.FeedbackGroup className={error && 'has-error'}>
 					<ClayForm.FeedbackItem>
 						<span className="small text-secondary">
@@ -70,9 +71,11 @@ export default ({tagsChange, tagsLoaded, tags = []}) => {
 							)}
 						</span>
 					</ClayForm.FeedbackItem>
+
 					{error && (
 						<ClayForm.FeedbackItem>
 							<ClayForm.FeedbackIndicator symbol="exclamation-full" />
+
 							{Liferay.Language.get('this-is-an-invalid-tag')}
 						</ClayForm.FeedbackItem>
 					)}
@@ -80,4 +83,4 @@ export default ({tagsChange, tagsLoaded, tags = []}) => {
 			</ClayForm.Group>
 		</>
 	);
-};
+}

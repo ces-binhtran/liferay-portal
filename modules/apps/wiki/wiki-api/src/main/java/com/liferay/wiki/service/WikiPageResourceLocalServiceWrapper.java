@@ -27,6 +27,10 @@ public class WikiPageResourceLocalServiceWrapper
 	implements ServiceWrapper<WikiPageResourceLocalService>,
 			   WikiPageResourceLocalService {
 
+	public WikiPageResourceLocalServiceWrapper() {
+		this(null);
+	}
+
 	public WikiPageResourceLocalServiceWrapper(
 		WikiPageResourceLocalService wikiPageResourceLocalService) {
 
@@ -43,6 +47,10 @@ public class WikiPageResourceLocalServiceWrapper
 
 	/**
 	 * Adds the wiki page resource to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WikiPageResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param wikiPageResource the wiki page resource
 	 * @return the wiki page resource that was added
@@ -103,6 +111,10 @@ public class WikiPageResourceLocalServiceWrapper
 	/**
 	 * Deletes the wiki page resource with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WikiPageResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param resourcePrimKey the primary key of the wiki page resource
 	 * @return the wiki page resource that was removed
 	 * @throws PortalException if a wiki page resource with the primary key could not be found
@@ -119,6 +131,10 @@ public class WikiPageResourceLocalServiceWrapper
 	/**
 	 * Deletes the wiki page resource from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WikiPageResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param wikiPageResource the wiki page resource
 	 * @return the wiki page resource that was removed
 	 */
@@ -133,6 +149,13 @@ public class WikiPageResourceLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _wikiPageResourceLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _wikiPageResourceLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -424,6 +447,10 @@ public class WikiPageResourceLocalServiceWrapper
 
 	/**
 	 * Updates the wiki page resource in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WikiPageResourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param wikiPageResource the wiki page resource
 	 * @return the wiki page resource that was updated

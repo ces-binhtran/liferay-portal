@@ -15,7 +15,6 @@
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.document;
 
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
-import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequestTranslator;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentResponse;
 
@@ -42,9 +41,10 @@ public class UpdateDocumentRequestExecutorImpl
 		UpdateDocumentRequest updateDocumentRequest) {
 
 		UpdateRequest updateRequest =
-			_bulkableDocumentRequestTranslator.translate(updateDocumentRequest);
+			_elasticsearchBulkableDocumentRequestTranslator.translate(
+				updateDocumentRequest);
 
-		UpdateResponse updateResponse = getUpdateResponse(
+		UpdateResponse updateResponse = _getUpdateResponse(
 			updateRequest, updateDocumentRequest);
 
 		RestStatus restStatus = updateResponse.status();
@@ -52,13 +52,30 @@ public class UpdateDocumentRequestExecutorImpl
 		return new UpdateDocumentResponse(restStatus.getStatus());
 	}
 
-	protected UpdateResponse getUpdateResponse(
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setBulkableDocumentRequestTranslator(
+		ElasticsearchBulkableDocumentRequestTranslator
+			elasticsearchBulkableDocumentRequestTranslator) {
+
+		_elasticsearchBulkableDocumentRequestTranslator =
+			elasticsearchBulkableDocumentRequestTranslator;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private UpdateResponse _getUpdateResponse(
 		UpdateRequest updateRequest,
 		UpdateDocumentRequest updateDocumentRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				updateDocumentRequest.getConnectionId(), false);
+				updateDocumentRequest.getConnectionId(),
+				updateDocumentRequest.isPreferLocalCluster());
 
 		try {
 			return restHighLevelClient.update(
@@ -69,22 +86,8 @@ public class UpdateDocumentRequestExecutorImpl
 		}
 	}
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
-	protected void setBulkableDocumentRequestTranslator(
-		BulkableDocumentRequestTranslator bulkableDocumentRequestTranslator) {
-
-		_bulkableDocumentRequestTranslator = bulkableDocumentRequestTranslator;
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
-	}
-
-	private BulkableDocumentRequestTranslator
-		_bulkableDocumentRequestTranslator;
+	private ElasticsearchBulkableDocumentRequestTranslator
+		_elasticsearchBulkableDocumentRequestTranslator;
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

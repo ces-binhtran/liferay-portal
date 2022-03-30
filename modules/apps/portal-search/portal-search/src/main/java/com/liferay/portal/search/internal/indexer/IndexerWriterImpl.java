@@ -136,11 +136,7 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 
 	@Override
 	public void reindex(Collection<T> baseModels) {
-		if (!isEnabled()) {
-			return;
-		}
-
-		if ((baseModels == null) || baseModels.isEmpty()) {
+		if (!isEnabled() || (baseModels == null) || baseModels.isEmpty()) {
 			return;
 		}
 
@@ -151,11 +147,7 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 
 	@Override
 	public void reindex(long classPK) {
-		if (!isEnabled()) {
-			return;
-		}
-
-		if (classPK <= 0) {
+		if (!isEnabled() || (classPK <= 0)) {
 			return;
 		}
 
@@ -168,11 +160,7 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 
 	@Override
 	public void reindex(String[] ids) {
-		if (!isEnabled()) {
-			return;
-		}
-
-		if (ArrayUtil.isEmpty(ids)) {
+		if (!isEnabled() || ArrayUtil.isEmpty(ids)) {
 			return;
 		}
 
@@ -200,14 +188,12 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
-						StringBundler sb = new StringBundler(4);
-
-						sb.append("Error reindexing all ");
-						sb.append(_modelSearchSettings.getClassName());
-						sb.append(" for company: ");
-						sb.append(companyId);
-
-						_log.warn(sb.toString(), exception);
+						_log.warn(
+							StringBundler.concat(
+								"Error reindexing all ",
+								_modelSearchSettings.getClassName(),
+								" for company: ", companyId),
+							exception);
 					}
 				}
 			}
@@ -219,11 +205,7 @@ public class IndexerWriterImpl<T extends BaseModel<?>>
 
 	@Override
 	public void reindex(T baseModel) {
-		if (!isEnabled()) {
-			return;
-		}
-
-		if (baseModel == null) {
+		if (!isEnabled() || (baseModel == null)) {
 			return;
 		}
 

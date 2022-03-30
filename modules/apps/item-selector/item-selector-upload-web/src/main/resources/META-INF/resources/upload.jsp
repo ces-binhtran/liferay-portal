@@ -19,7 +19,7 @@
 <%
 ItemSelectorUploadViewDisplayContext itemSelectorUploadViewDisplayContext = (ItemSelectorUploadViewDisplayContext)request.getAttribute(ItemSelectorUploadView.ITEM_SELECTOR_UPLOAD_VIEW_DISPLAY_CONTEXT);
 
-ItemSelectorReturnTypeResolver itemSelectorReturnTypeResolver = itemSelectorUploadViewDisplayContext.getItemSelectorReturnTypeResolver();
+ItemSelectorReturnTypeResolver<?, ?> itemSelectorReturnTypeResolver = itemSelectorUploadViewDisplayContext.getItemSelectorReturnTypeResolver();
 
 Class<?> itemSelectorReturnTypeClass = itemSelectorReturnTypeResolver.getItemSelectorReturnTypeClass();
 
@@ -30,22 +30,6 @@ String namespace = itemSelectorUploadViewDisplayContext.getNamespace();
 if (Validator.isNotNull(namespace)) {
 	uploadURL = HttpUtil.addParameter(uploadURL, namespace + "returnType", itemSelectorReturnTypeClass.getName());
 }
-
-Map<String, Object> context = HashMapBuilder.<String, Object>put(
-	"closeCaption", itemSelectorUploadViewDisplayContext.getTitle(locale)
-).put(
-	"eventName", itemSelectorUploadViewDisplayContext.getItemSelectedEventName()
-).put(
-	"maxFileSize", itemSelectorUploadViewDisplayContext.getMaxFileSize()
-).put(
-	"rootNode", "#itemSelectorUploadContainer"
-).put(
-	"uploadItemReturnType", HtmlUtil.escapeAttribute(itemSelectorReturnTypeClass.getName())
-).put(
-	"uploadItemURL", uploadURL
-).put(
-	"validExtensions", ArrayUtil.isEmpty(itemSelectorUploadViewDisplayContext.getExtensions()) ? "*" : StringUtil.merge(itemSelectorUploadViewDisplayContext.getExtensions())
-).build();
 %>
 
 <clay:container-fluid
@@ -61,7 +45,7 @@ Map<String, Object> context = HashMapBuilder.<String, Object>put(
 			</c:if>
 
 			<p>
-				<input accept='<%= ArrayUtil.isEmpty(itemSelectorUploadViewDisplayContext.getExtensions()) ? "*" : StringUtil.merge(itemSelectorUploadViewDisplayContext.getExtensions()) %>' class="input-file" id="<portlet:namespace />inputFile" type="file" />
+				<input accept="<%= ArrayUtil.isEmpty(itemSelectorUploadViewDisplayContext.getExtensions()) ? "*" : StringUtil.merge(itemSelectorUploadViewDisplayContext.getExtensions()) %>" class="input-file" id="<portlet:namespace />inputFile" type="file" />
 
 				<label class="btn btn-secondary" for="<portlet:namespace />inputFile"><liferay-ui:message key="select-file" /></label>
 			</p>
@@ -76,6 +60,24 @@ Map<String, Object> context = HashMapBuilder.<String, Object>put(
 </clay:container-fluid>
 
 <liferay-frontend:component
-	context="<%= context %>"
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"closeCaption", itemSelectorUploadViewDisplayContext.getTitle(locale)
+		).put(
+			"editImageURL", uploadURL
+		).put(
+			"eventName", itemSelectorUploadViewDisplayContext.getItemSelectedEventName()
+		).put(
+			"maxFileSize", itemSelectorUploadViewDisplayContext.getMaxFileSize()
+		).put(
+			"rootNode", "#itemSelectorUploadContainer"
+		).put(
+			"uploadItemReturnType", HtmlUtil.escapeAttribute(itemSelectorReturnTypeClass.getName())
+		).put(
+			"uploadItemURL", uploadURL
+		).put(
+			"validExtensions", ArrayUtil.isEmpty(itemSelectorUploadViewDisplayContext.getExtensions()) ? "*" : StringUtil.merge(itemSelectorUploadViewDisplayContext.getExtensions())
+		).build()
+	%>'
 	module="js/index.es"
 />

@@ -71,7 +71,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				>
 					<clay:content-row>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<h3 class="title"><%= HtmlUtil.escape(BlogsEntryUtil.getDisplayTitle(resourceBundle, entry)) %></h3>
 
@@ -89,17 +89,21 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 						>
 							<div class="dropdown dropdown-action">
 								<c:if test="<%= BlogsEntryPermission.contains(permissionChecker, entry, ActionKeys.UPDATE) %>">
-
-									<%
-									PortletURL editEntryURL = PortalUtil.getControlPanelPortletURL(request, themeDisplay.getScopeGroup(), BlogsPortletKeys.BLOGS_ADMIN, 0, themeDisplay.getPlid(), PortletRequest.RENDER_PHASE);
-
-									editEntryURL.setParameter("mvcRenderCommandName", "/blogs/edit_entry");
-									editEntryURL.setParameter("redirect", currentURL);
-									editEntryURL.setParameter("portletResource", portletDisplay.getId());
-									editEntryURL.setParameter("entryId", String.valueOf(entry.getEntryId()));
-									%>
-
-									<a href="<%= editEntryURL.toString() %>">
+									<a
+										href="<%=
+											PortletURLBuilder.create(
+												PortalUtil.getControlPanelPortletURL(request, themeDisplay.getScopeGroup(), BlogsPortletKeys.BLOGS_ADMIN, 0, themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+											).setMVCRenderCommandName(
+												"/blogs/edit_entry"
+											).setRedirect(
+												currentURL
+											).setPortletResource(
+												portletDisplay.getId()
+											).setParameter(
+												"entryId", entry.getEntryId()
+											).buildString()
+										%>"
+									>
 										<span class="hide-accessible"><liferay-ui:message key="edit-entry" /></span>
 
 										<clay:icon
@@ -120,7 +124,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 						String entryUserURL = StringPool.BLANK;
 
-						if ((entryUser != null) && !entryUser.isDefaultUser()) {
+						if ((entryUser != null) && !entryUser.isDefaultUser() && !user.isDefaultUser()) {
 							entryUserURL = entryUser.getDisplayURL(themeDisplay);
 						}
 						%>
@@ -135,11 +139,11 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 						</clay:content-col>
 
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<clay:content-row>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
 									<div class="text-truncate-inline">
 										<a class="text-truncate username" href="<%= entryUserURL %>"><%= HtmlUtil.escape(entry.getUserName()) %></a>
@@ -173,15 +177,16 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 		String coverImageURL = entry.getCoverImageURL(themeDisplay);
 		%>
 
-		<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
-			<div class="aspect-ratio aspect-ratio-bg-cover cover-image" style="background-image: url(<%= coverImageURL %>);"></div>
-		</c:if>
+		<liferay-util:include page="/blogs/entry_cover_image_caption.jsp" servletContext="<%= application %>">
+			<liferay-util:param name="coverImageCaption" value="<%= entry.getCoverImageCaption() %>" />
+			<liferay-util:param name="coverImageURL" value="<%= coverImageURL %>" />
+		</liferay-util:include>
 
 		<!-- text resume -->
 
 		<clay:container-fluid
 			cssClass="widget-mode-detail-header"
-			id="<%= renderResponse.getNamespace() + entry.getEntryId() %>"
+			id="<%= liferayPortletResponse.getNamespace() + entry.getEntryId() %>"
 		>
 			<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
 
@@ -295,7 +300,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 		<%
 		if (searchContainer != null) {
-			searchContainer.setTotal(searchContainer.getTotal() - 1);
+			searchContainer.setResultsAndTotal(searchContainer::getResults, searchContainer.getTotal() - 1);
 		}
 		%>
 

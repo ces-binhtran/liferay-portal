@@ -90,10 +90,10 @@ public class SearchResultUtilMBMessageTest
 	@Test
 	public void testMBMessage() throws Exception {
 		SearchResult searchResult = assertOneSearchResult(
-			SearchTestUtil.createDocument(_MB_MESSAGE_CLASS_NAME));
+			SearchTestUtil.createDocument(_CLASS_NAME_MB_MESSAGE));
 
 		Assert.assertEquals(
-			_MB_MESSAGE_CLASS_NAME, searchResult.getClassName());
+			_CLASS_NAME_MB_MESSAGE, searchResult.getClassName());
 		Assert.assertEquals(
 			SearchTestUtil.ENTRY_CLASS_PK, searchResult.getClassPK());
 
@@ -115,7 +115,7 @@ public class SearchResultUtilMBMessageTest
 	@Test
 	public void testMBMessageAttachment() throws Exception {
 		SearchResult searchResult = assertOneSearchResult(
-			SearchTestUtil.createAttachmentDocument(_MB_MESSAGE_CLASS_NAME));
+			SearchTestUtil.createAttachmentDocument(_CLASS_NAME_MB_MESSAGE));
 
 		Assert.assertEquals(
 			SearchTestUtil.ATTACHMENT_OWNER_CLASS_NAME,
@@ -145,9 +145,9 @@ public class SearchResultUtilMBMessageTest
 	@Test
 	public void testTwoDocumentsWithSameAttachmentOwner() {
 		Document document1 = SearchTestUtil.createAttachmentDocument(
-			_MB_MESSAGE_CLASS_NAME, SearchTestUtil.ENTRY_CLASS_PK);
+			_CLASS_NAME_MB_MESSAGE, SearchTestUtil.ENTRY_CLASS_PK);
 		Document document2 = SearchTestUtil.createAttachmentDocument(
-			_MB_MESSAGE_CLASS_NAME, SearchTestUtil.ENTRY_CLASS_PK + 1);
+			_CLASS_NAME_MB_MESSAGE, SearchTestUtil.ENTRY_CLASS_PK + 1);
 
 		List<SearchResult> searchResults = SearchTestUtil.getSearchResults(
 			searchResultTranslator, document1, document2);
@@ -164,7 +164,18 @@ public class SearchResultUtilMBMessageTest
 			SearchTestUtil.ATTACHMENT_OWNER_CLASS_PK);
 	}
 
-	protected SearchResultContributor createSearchResultContributor() {
+	@Override
+	protected SearchResultTranslator createSearchResultTranslator() {
+		SearchResultTranslatorImpl searchResultTranslatorImpl =
+			new SearchResultTranslatorImpl();
+
+		searchResultTranslatorImpl.setSearchResultManager(
+			_createSearchResultManager());
+
+		return searchResultTranslatorImpl;
+	}
+
+	private SearchResultContributor _createSearchResultContributor() {
 		MBMessageCommentSearchResultContributor
 			mbMessageCommentSearchResultContributor =
 				new MBMessageCommentSearchResultContributor();
@@ -177,30 +188,19 @@ public class SearchResultUtilMBMessageTest
 		return mbMessageCommentSearchResultContributor;
 	}
 
-	protected SearchResultManager createSearchResultManager() {
+	private SearchResultManager _createSearchResultManager() {
 		SearchResultManagerImpl searchResultManagerImpl =
 			new SearchResultManagerImpl();
 
 		searchResultManagerImpl.addSearchResultContributor(
-			createSearchResultContributor());
+			_createSearchResultContributor());
 		searchResultManagerImpl.setClassNameLocalService(classNameLocalService);
-		searchResultManagerImpl.setSummaryFactory(createSummaryFactory());
+		searchResultManagerImpl.setSummaryFactory(_createSummaryFactory());
 
 		return searchResultManagerImpl;
 	}
 
-	@Override
-	protected SearchResultTranslator createSearchResultTranslator() {
-		SearchResultTranslatorImpl searchResultTranslatorImpl =
-			new SearchResultTranslatorImpl();
-
-		searchResultTranslatorImpl.setSearchResultManager(
-			createSearchResultManager());
-
-		return searchResultTranslatorImpl;
-	}
-
-	protected SummaryFactory createSummaryFactory() {
+	private SummaryFactory _createSummaryFactory() {
 		SummaryFactoryImpl summaryFactoryImpl = new SummaryFactoryImpl();
 
 		summaryFactoryImpl.setIndexerRegistry(_indexerRegistry);
@@ -208,7 +208,7 @@ public class SearchResultUtilMBMessageTest
 		return summaryFactoryImpl;
 	}
 
-	private static final String _MB_MESSAGE_CLASS_NAME =
+	private static final String _CLASS_NAME_MB_MESSAGE =
 		MBMessage.class.getName();
 
 	@Mock

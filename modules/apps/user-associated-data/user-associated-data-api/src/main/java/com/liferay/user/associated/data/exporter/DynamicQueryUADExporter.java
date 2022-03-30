@@ -19,6 +19,8 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.petra.xml.XMLUtil;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.util.SystemProperties;
 import com.liferay.portal.kernel.util.Time;
@@ -77,7 +79,7 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 					writeToZip(baseModel, zipWriter);
 				}
 				catch (Exception exception) {
-					throw new PortalException(exception);
+					_log.error(exception);
 				}
 			});
 
@@ -87,13 +89,10 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 	}
 
 	protected File createFolder(long userId) {
-		StringBundler sb = new StringBundler(3);
-
-		sb.append(SystemProperties.get(SystemProperties.TMP_DIR));
-		sb.append("/liferay/uad/");
-		sb.append(userId);
-
-		File file = new File(sb.toString());
+		File file = new File(
+			StringBundler.concat(
+				SystemProperties.get(SystemProperties.TMP_DIR), "/liferay/uad/",
+				userId));
 
 		file.mkdirs();
 
@@ -144,16 +143,11 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 	protected ZipWriter getZipWriter(long userId, String modelClassName) {
 		File file = createFolder(userId);
 
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(file.getAbsolutePath());
-		sb.append(StringPool.SLASH);
-		sb.append(modelClassName);
-		sb.append(StringPool.UNDERLINE);
-		sb.append(Time.getShortTimestamp());
-		sb.append(".zip");
-
-		return ZipWriterFactoryUtil.getZipWriter(new File(sb.toString()));
+		return ZipWriterFactoryUtil.getZipWriter(
+			new File(
+				StringBundler.concat(
+					file.getAbsolutePath(), StringPool.SLASH, modelClassName,
+					StringPool.UNDERLINE, Time.getShortTimestamp(), ".zip")));
 	}
 
 	/**
@@ -182,5 +176,8 @@ public abstract class DynamicQueryUADExporter<T extends BaseModel>
 
 		zipWriter.addEntry(baseModel.getPrimaryKeyObj() + ".xml", data);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DynamicQueryUADExporter.class);
 
 }

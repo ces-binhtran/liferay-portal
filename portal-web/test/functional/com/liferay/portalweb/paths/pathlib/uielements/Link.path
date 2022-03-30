@@ -2,11 +2,13 @@
 <head>
 <title>Link</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">Link</td></tr>
 </thead>
+
 <tbody>
 <tr>
 	<td>ADD_CHILD_PAGE</td>
@@ -16,6 +18,11 @@
 <tr>
 	<td>ATTACHMENTS</td>
 	<td>//a[contains(.,'Attachments')]</td>
+	<td></td>
+</tr>
+<tr>
+	<td>ANY</td>
+	<td>//a[contains(.,'${key_text}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -49,13 +56,8 @@
 	<td></td>
 </tr>
 <tr>
-	<td>DOCUMENT_IN_FTP</td>
-	<td>//a[contains(.,'${key_dmDocumentName}')]</td>
-	<td></td>
-</tr>
-<tr>
 	<td>DOWNLOAD</td>
-	<td>//div[contains(@class,'btn-group-item')]/a[contains(@class,'btn-primary') and contains(.,'Download')]</td>
+	<td>//a[contains(.,'Download')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -65,7 +67,7 @@
 </tr>
 <tr>
 	<td>FACEBOOK</td>
-	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Facebook')]</td>
+	<td>//a//span[contains(@class,'taglib-text') and contains(.,'Facebook')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -145,7 +147,7 @@
 </tr>
 <tr>
 	<td>SUBSCRIBE</td>
-	<td>//a/span[contains(@class,'taglib-text') and contains(.,'Subscribe')]</td>
+	<td>//a//span[contains(@class,'taglib-text') and contains(.,'Subscribe')]</td>
 	<td></td>
 </tr>
 <tr>

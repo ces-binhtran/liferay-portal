@@ -674,16 +674,15 @@ AUI.add(
 
 						if (instance._exportLAR) {
 							redirectParameters.mvcRenderCommandName =
-								'editExportConfiguration';
+								'/export_import/edit_export_configuration';
 							redirectParameters.tabs2 = 'new-export-process';
 							redirectParameters.exportConfigurationButtons =
 								'custom';
 						}
 						else {
 							redirectParameters.mvcRenderCommandName =
-								'editPublishConfiguration';
-							redirectParameters.tabs2 =
-								'new-publication-process';
+								'/staging_processes/edit_publish_configuration';
+							redirectParameters.tabs2 = 'new-publish-process';
 							redirectParameters.publishConfigurationButtons =
 								'custom';
 						}
@@ -774,19 +773,13 @@ AUI.add(
 								instance._scheduleRenderProcess();
 							})
 							.catch(() => {
-								new Liferay.Notice({
-									closeText: false,
-									content:
-										Liferay.Language.get(
-											'your-request-failed-to-complete'
-										) +
-										'<button type="button" class="close">&times;</button>',
-									noticeClass: 'hide',
-									timeout: FAILURE_TIMEOUT,
-									toggleText: false,
+								Liferay.Util.openToast({
+									message: Liferay.Language.get(
+										'your-request-failed-to-complete'
+									),
+									toastProps: {autoClose: FAILURE_TIMEOUT},
 									type: 'warning',
-									useAnimation: true,
-								}).show();
+								});
 							});
 					}
 				},
@@ -1141,32 +1134,16 @@ AUI.add(
 				showNotification(dateChecker) {
 					var instance = this;
 
-					if (instance._notice) {
-						instance._notice.remove();
-					}
-
 					var message = instance._getNotificationMessage(dateChecker);
 
-					instance._notice = new Liferay.Notice({
-						animationConfig: {
-							duration: 2,
-							left: '0px',
-							top: '0px',
+					Liferay.Util.openToast({
+						message,
+						toastProps: {
+							autoClose: 10000,
+							style: {left: 0, top: 0},
+							type: 'warning',
 						},
-						closeText: false,
-						content:
-							message +
-							'<button aria-label="' +
-							Liferay.Language.get('close') +
-							'" type="button" class="close">&times;</button>',
-						noticeClass: 'hide',
-						timeout: 10000,
-						toggleText: false,
-						type: 'warning',
-						useAnimation: true,
 					});
-
-					instance._notice.show();
 				},
 			},
 		});
@@ -1182,7 +1159,6 @@ AUI.add(
 			'aui-parse-content',
 			'aui-toggler',
 			'aui-tree-view',
-			'liferay-notice',
 			'liferay-portlet-base',
 			'liferay-util-window',
 		],

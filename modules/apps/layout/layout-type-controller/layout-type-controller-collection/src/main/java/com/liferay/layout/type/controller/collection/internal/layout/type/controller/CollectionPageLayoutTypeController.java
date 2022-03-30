@@ -14,8 +14,7 @@
 
 package com.liferay.layout.type.controller.collection.internal.layout.type.controller;
 
-import com.liferay.fragment.constants.FragmentActionKeys;
-import com.liferay.fragment.renderer.FragmentRendererController;
+import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.type.controller.BaseLayoutTypeControllerImpl;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
@@ -30,13 +29,15 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.servlet.PipingServletResponse;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
@@ -86,9 +87,13 @@ public class CollectionPageLayoutTypeController
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (layout.getClassNameId() == _portal.getClassNameId(Layout.class)) {
+		if (layout.isDraftLayout()) {
 			Layout curLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
+
+			if (curLayout.isPending()) {
+				curLayout = layout;
+			}
 
 			if (!_hasUpdatePermissions(
 					themeDisplay.getPermissionChecker(), curLayout)) {
@@ -108,10 +113,6 @@ public class CollectionPageLayoutTypeController
 
 			layoutMode = Constants.VIEW;
 		}
-
-		httpServletRequest.setAttribute(
-			FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER,
-			_fragmentRendererController);
 
 		String page = getViewPage();
 
@@ -134,9 +135,38 @@ public class CollectionPageLayoutTypeController
 			RequestDispatcher.INCLUDE_SERVLET_PATH);
 
 		try {
+			httpServletRequest.setAttribute(
+				ContentPageEditorWebKeys.CLASS_NAME, Layout.class.getName());
+			httpServletRequest.setAttribute(
+				ContentPageEditorWebKeys.CLASS_PK, layout.getPlid());
+
 			addAttributes(httpServletRequest);
 
-			requestDispatcher.include(httpServletRequest, servletResponse);
+			Layout draftLayout = _layoutLocalService.fetchLayout(
+				_portal.getClassNameId(Layout.class), layout.getPlid());
+
+			if (layoutMode.equals(Constants.EDIT) && (draftLayout != null)) {
+				String layoutFullURL = _portal.getLayoutFullURL(
+					draftLayout, themeDisplay);
+
+				HttpServletRequest originalHttpServletRequest =
+					_portal.getOriginalServletRequest(httpServletRequest);
+
+				String backURL = originalHttpServletRequest.getParameter(
+					"p_l_back_url");
+
+				if (Validator.isNotNull(backURL)) {
+					layoutFullURL = _http.addParameter(
+						layoutFullURL, "p_l_back_url", backURL);
+				}
+
+				httpServletResponse.sendRedirect(
+					_http.addParameter(
+						layoutFullURL, "p_l_mode", Constants.EDIT));
+			}
+			else {
+				requestDispatcher.include(httpServletRequest, servletResponse);
+			}
 		}
 		finally {
 			removeAttributes(httpServletRequest);
@@ -162,7 +192,7 @@ public class CollectionPageLayoutTypeController
 
 	@Override
 	public boolean isFullPageDisplayable() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -188,21 +218,6 @@ public class CollectionPageLayoutTypeController
 	@Override
 	public boolean isURLFriendliable() {
 		return true;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *			 #createServletResponse(HttpServletResponse, UnsyncStringWriter)}
-	 */
-	@Deprecated
-	@Override
-	protected ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter) {
-
-		return new PipingServletResponse(
-			httpServletResponse, unsyncStringWriter);
 	}
 
 	@Override
@@ -247,7 +262,7 @@ public class CollectionPageLayoutTypeController
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -266,7 +281,7 @@ public class CollectionPageLayoutTypeController
 		CollectionPageLayoutTypeController.class);
 
 	@Reference
-	private FragmentRendererController _fragmentRendererController;
+	private Http _http;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

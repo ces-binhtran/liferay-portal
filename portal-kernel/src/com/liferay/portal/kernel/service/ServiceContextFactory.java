@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.service;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.internal.service.permission.ModelPermissionsImpl;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
@@ -81,14 +82,22 @@ public class ServiceContextFactory {
 
 		ServiceContext serviceContext = _getInstance(httpServletRequest);
 
+		if ((className == null) || (httpServletRequest == null)) {
+			return serviceContext;
+		}
+
 		// Permissions
 
 		if (serviceContext.getModelPermissions() == null) {
 			serviceContext.setModelPermissions(
 				ModelPermissionsFactory.create(httpServletRequest, className));
 		}
+		else {
+			ModelPermissions modelPermissions =
+				serviceContext.getModelPermissions();
 
-		_ensureValidModelPermissions(serviceContext);
+			modelPermissions.setResourceName(className);
+		}
 
 		// Expando
 
@@ -109,14 +118,22 @@ public class ServiceContextFactory {
 
 		ServiceContext serviceContext = _getInstance(portletRequest);
 
+		if (className == null) {
+			return serviceContext;
+		}
+
 		// Permissions
 
 		if (serviceContext.getModelPermissions() == null) {
 			serviceContext.setModelPermissions(
 				ModelPermissionsFactory.create(portletRequest, className));
 		}
+		else {
+			ModelPermissions modelPermissions =
+				serviceContext.getModelPermissions();
 
-		_ensureValidModelPermissions(serviceContext);
+			modelPermissions.setResourceName(className);
+		}
 
 		// Expando
 
@@ -142,7 +159,9 @@ public class ServiceContextFactory {
 		ServiceContext serviceContext) {
 
 		if (serviceContext.getModelPermissions() == null) {
-			serviceContext.setModelPermissions(new ModelPermissions());
+			serviceContext.setModelPermissions(
+				ModelPermissionsFactory.create(
+					ModelPermissionsImpl.RESOURCE_NAME_UNINITIALIZED));
 		}
 	}
 
@@ -151,6 +170,10 @@ public class ServiceContextFactory {
 		throws PortalException {
 
 		ServiceContext serviceContext = new ServiceContext();
+
+		if (httpServletRequest == null) {
+			return serviceContext;
+		}
 
 		// Theme display
 
@@ -204,7 +227,7 @@ public class ServiceContextFactory {
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchUserException, noSuchUserException);
+					_log.debug(noSuchUserException);
 				}
 			}
 
@@ -217,15 +240,15 @@ public class ServiceContextFactory {
 			}
 		}
 
-		serviceContext.setPortalURL(
-			PortalUtil.getPortalURL(httpServletRequest));
-		serviceContext.setPathMain(PortalUtil.getPathMain());
 		serviceContext.setPathFriendlyURLPrivateGroup(
 			PortalUtil.getPathFriendlyURLPrivateGroup());
 		serviceContext.setPathFriendlyURLPrivateUser(
 			PortalUtil.getPathFriendlyURLPrivateUser());
 		serviceContext.setPathFriendlyURLPublic(
 			PortalUtil.getPathFriendlyURLPublic());
+		serviceContext.setPathMain(PortalUtil.getPathMain());
+		serviceContext.setPortalURL(
+			PortalUtil.getPortalURL(httpServletRequest));
 
 		// Attributes
 
@@ -234,10 +257,11 @@ public class ServiceContextFactory {
 		Map<String, String[]> parameters = httpServletRequest.getParameterMap();
 
 		for (Map.Entry<String, String[]> entry : parameters.entrySet()) {
-			String name = entry.getKey();
 			String[] values = entry.getValue();
 
 			if (ArrayUtil.isNotEmpty(values)) {
+				String name = entry.getKey();
+
 				if (values.length == 1) {
 					attributes.put(name, values[0]);
 				}
@@ -396,10 +420,11 @@ public class ServiceContextFactory {
 		Map<String, String[]> parameters = portletRequest.getParameterMap();
 
 		for (Map.Entry<String, String[]> entry : parameters.entrySet()) {
-			String name = entry.getKey();
 			String[] values = entry.getValue();
 
 			if (ArrayUtil.isNotEmpty(values)) {
+				String name = entry.getKey();
+
 				if (values.length == 1) {
 					attributes.put(name, values[0]);
 				}

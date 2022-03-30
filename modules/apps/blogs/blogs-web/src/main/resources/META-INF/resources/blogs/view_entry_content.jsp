@@ -45,7 +45,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				cssClass="widget-topbar"
 			>
 				<clay:content-col
-					expand="true"
+					expand="<%= true %>"
 				>
 					<h3 class="title">
 						<aui:a cssClass="title-link" href="<%= viewEntryURL %>"><%= HtmlUtil.escape(BlogsEntryUtil.getDisplayTitle(resourceBundle, entry)) %></aui:a>
@@ -55,17 +55,26 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 					String subtitle = entry.getSubtitle();
 					%>
 
-					<c:if test="<%= blogsPortletInstanceConfiguration.displayStyle().equals(BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) && Validator.isNotNull(subtitle) %>">
+					<c:if test="<%= Objects.equals(blogsPortletInstanceConfiguration.displayStyle(), BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) && Validator.isNotNull(subtitle) %>">
 						<h4 class="sub-title"><%= HtmlUtil.escape(subtitle) %></h4>
 					</c:if>
 				</clay:content-col>
 
-				<clay:content-col
-					cssClass="visible-interaction"
-				>
-					<div class="dropdown dropdown-action">
-						<liferay-util:include page="/blogs/entry_action.jsp" servletContext="<%= application %>" />
-					</div>
+				<clay:content-col>
+
+					<%
+					BlogsEntryActionDropdownItemsProvider blogsEntryActionDropdownItemsProvider = new BlogsEntryActionDropdownItemsProvider(renderRequest, renderResponse, permissionChecker, resourceBundle, trashHelper);
+					%>
+
+					<clay:dropdown-actions
+						additionalProps='<%=
+							HashMapBuilder.<String, Object>put(
+								"trashEnabled", trashHelper.isTrashEnabled(themeDisplay.getScopeGroupId())
+							).build()
+						%>'
+						dropdownItems="<%= blogsEntryActionDropdownItemsProvider.getActionDropdownItems(entry) %>"
+						propsTransformer="blogs_admin/js/ElementsPropsTransformer"
+					/>
 				</clay:content-col>
 			</clay:content-row>
 
@@ -78,7 +87,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 				String entryUserURL = StringPool.BLANK;
 
-				if ((entryUser != null) && !entryUser.isDefaultUser()) {
+				if ((entryUser != null) && !entryUser.isDefaultUser() && !user.isDefaultUser()) {
 					entryUserURL = entryUser.getDisplayURL(themeDisplay);
 				}
 				%>
@@ -92,11 +101,11 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				</clay:content-col>
 
 				<clay:content-col
-					expand="true"
+					expand="<%= true %>"
 				>
 					<clay:content-row>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<div class="text-truncate-inline">
 								<a class="text-truncate username" href="<%= entryUserURL %>"><%= HtmlUtil.escape(entry.getUserName()) %></a>
@@ -129,14 +138,19 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				String coverImageURL = entry.getCoverImageURL(themeDisplay);
 				%>
 
-				<c:if test="<%= Validator.isNotNull(coverImageURL) %>">
-					<a href="<%= viewEntryURL.toString() %>">
-						<div class="aspect-ratio aspect-ratio-8-to-3 aspect-ratio-bg-cover cover-image" style="background-image: url(<%= coverImageURL %>);"></div>
-					</a>
-				</c:if>
+				<liferay-util:include page="/blogs/entry_cover_image_caption.jsp" servletContext="<%= application %>">
+					<liferay-util:param name="coverImageCaption" value="<%= entry.getCoverImageCaption() %>" />
+					<liferay-util:param name="coverImageURL" value="<%= entry.getCoverImageURL(themeDisplay) %>" />
+					<liferay-util:param name="viewEntryURL" value="<%= viewEntryURL %>" />
+				</liferay-util:include>
 
 				<c:choose>
 					<c:when test="<%= blogsPortletInstanceConfiguration.displayStyle().equals(BlogsUtil.DISPLAY_STYLE_ABSTRACT) %>">
+						<c:if test="<%= entry.isSmallImage() && Validator.isNull(coverImageURL) %>">
+							<div class="asset-small-image">
+								<img alt="" class="asset-small-image img-thumbnail" src="<%= HtmlUtil.escape(entry.getSmallImageURL(themeDisplay)) %>" width="150" />
+							</div>
+						</c:if>
 
 						<%
 						String summary = entry.getDescription();
@@ -162,7 +176,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 				<liferay-util:include page="/blogs/entry_toolbar.jsp" servletContext="<%= application %>" />
 			</div>
 
-			<c:if test="<%= blogsPortletInstanceConfiguration.displayStyle().equals(BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) %>">
+			<c:if test="<%= Objects.equals(blogsPortletInstanceConfiguration.displayStyle(), BlogsUtil.DISPLAY_STYLE_FULL_CONTENT) %>">
 				<liferay-asset:asset-tags-available
 					className="<%= BlogsEntry.class.getName() %>"
 					classPK="<%= entry.getEntryId() %>"
@@ -210,7 +224,7 @@ BlogsPortletInstanceConfiguration blogsPortletInstanceConfiguration = BlogsPortl
 
 		<%
 		if (searchContainer != null) {
-			searchContainer.setTotal(searchContainer.getTotal() - 1);
+			searchContainer.setResultsAndTotal(searchContainer::getResults, searchContainer.getTotal() - 1);
 		}
 		%>
 

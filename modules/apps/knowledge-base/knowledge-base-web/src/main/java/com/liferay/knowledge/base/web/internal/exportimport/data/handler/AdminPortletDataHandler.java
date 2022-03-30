@@ -28,6 +28,7 @@ import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.knowledge.base.model.KBArticle;
 import com.liferay.knowledge.base.model.KBComment;
+import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.model.KBTemplate;
 import com.liferay.knowledge.base.service.KBArticleLocalService;
 import com.liferay.knowledge.base.service.KBCommentLocalService;
@@ -65,7 +66,7 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 
 	public static final String NAMESPACE = "knowledge_base";
 
-	public static final String SCHEMA_VERSION = "2.0.0";
+	public static final String SCHEMA_VERSION = "4.0.0";
 
 	public AdminPortletDataHandler() {
 		setDataLevel(DataLevel.SITE);
@@ -74,6 +75,9 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(KBComment.class),
 			new StagedModelType(KBTemplate.class));
 		setExportControls(
+			new PortletDataHandlerBoolean(
+				NAMESPACE, "kb-folders", true, false, null,
+				KBFolder.class.getName()),
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "kb-articles", true, false,
 				new PortletDataHandlerControl[] {
@@ -144,9 +148,17 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 		rootElement.addAttribute(
 			"group-id", String.valueOf(portletDataContext.getScopeGroupId()));
 
+		if (portletDataContext.getBooleanParameter(NAMESPACE, "kb-folders")) {
+			ActionableDynamicQuery kbFoldersActionableDynamicQuery =
+				_kbFolderLocalService.getExportActionableDynamicQuery(
+					portletDataContext);
+
+			kbFoldersActionableDynamicQuery.performActions();
+		}
+
 		if (portletDataContext.getBooleanParameter(NAMESPACE, "kb-articles")) {
 			ActionableDynamicQuery kbArticleActionableDynamicQuery =
-				getKBArticleActionableDynamicQuery(portletDataContext);
+				_getKBArticleActionableDynamicQuery(portletDataContext);
 
 			kbArticleActionableDynamicQuery.performActions();
 		}
@@ -161,7 +173,7 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 
 		if (portletDataContext.getBooleanParameter(NAMESPACE, "kb-comments")) {
 			ActionableDynamicQuery kbCommentActionableDynamicQuery =
-				getKBCommentActionableDynamicQuery(portletDataContext);
+				_getKBCommentActionableDynamicQuery(portletDataContext);
 
 			kbCommentActionableDynamicQuery.performActions();
 		}
@@ -177,6 +189,18 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 
 		portletDataContext.importPortletPermissions(
 			KBConstants.RESOURCE_NAME_ADMIN);
+
+		if (portletDataContext.getBooleanParameter(NAMESPACE, "kb-folders")) {
+			Element kbFoldersElement =
+				portletDataContext.getImportDataGroupElement(KBFolder.class);
+
+			List<Element> kbFolderElements = kbFoldersElement.elements();
+
+			for (Element kbFolderElement : kbFolderElements) {
+				StagedModelDataHandlerUtil.importStagedModel(
+					portletDataContext, kbFolderElement);
+			}
+		}
 
 		if (portletDataContext.getBooleanParameter(NAMESPACE, "kb-articles")) {
 			Element kbArticlesElement =
@@ -231,11 +255,18 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 				new StagedModelType[] {
 					new StagedModelType(KBArticle.class.getName()),
 					new StagedModelType(KBComment.class.getName()),
+					new StagedModelType(KBFolder.class.getName()),
 					new StagedModelType(KBTemplate.class.getName())
 				});
 
 			return;
 		}
+
+		ActionableDynamicQuery kbFolderActionableDynamicQuery =
+			_kbFolderLocalService.getExportActionableDynamicQuery(
+				portletDataContext);
+
+		kbFolderActionableDynamicQuery.performCount();
 
 		ActionableDynamicQuery kbArticleActionableDynamicQuery =
 			_kbArticleLocalService.getExportActionableDynamicQuery(
@@ -250,55 +281,9 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 		kbTemplateActionableDynamicQuery.performCount();
 
 		ActionableDynamicQuery kbCommentActionableDynamicQuery =
-			getKBCommentActionableDynamicQuery(portletDataContext);
+			_getKBCommentActionableDynamicQuery(portletDataContext);
 
 		kbCommentActionableDynamicQuery.performCount();
-	}
-
-	protected ActionableDynamicQuery getKBArticleActionableDynamicQuery(
-			final PortletDataContext portletDataContext)
-		throws Exception {
-
-		ExportActionableDynamicQuery exportActionableDynamicQuery =
-			_kbArticleLocalService.getExportActionableDynamicQuery(
-				portletDataContext);
-
-		final ActionableDynamicQuery.AddOrderCriteriaMethod
-			addOrderCriteriaMethod =
-				exportActionableDynamicQuery.getAddOrderCriteriaMethod();
-
-		exportActionableDynamicQuery.setAddOrderCriteriaMethod(
-			new ActionableDynamicQuery.AddOrderCriteriaMethod() {
-
-				@Override
-				public void addOrderCriteria(DynamicQuery dynamicQuery) {
-					if (addOrderCriteriaMethod != null) {
-						addOrderCriteriaMethod.addOrderCriteria(dynamicQuery);
-					}
-
-					OrderFactoryUtil.addOrderByComparator(
-						dynamicQuery, new KBArticleVersionComparator(true));
-				}
-
-			});
-
-		return exportActionableDynamicQuery;
-	}
-
-	protected ActionableDynamicQuery getKBCommentActionableDynamicQuery(
-			PortletDataContext portletDataContext)
-		throws Exception {
-
-		ExportActionableDynamicQuery exportActionableDynamicQuery =
-			_kbCommentLocalService.getExportActionableDynamicQuery(
-				portletDataContext);
-
-		exportActionableDynamicQuery.setStagedModelType(
-			new StagedModelType(
-				_portal.getClassNameId(KBComment.class),
-				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
-
-		return exportActionableDynamicQuery;
 	}
 
 	@Reference(unbind = "-")
@@ -332,6 +317,52 @@ public class AdminPortletDataHandler extends BasePortletDataHandler {
 	@Reference(unbind = "-")
 	protected void setPortal(Portal portal) {
 		_portal = portal;
+	}
+
+	private ActionableDynamicQuery _getKBArticleActionableDynamicQuery(
+			PortletDataContext portletDataContext)
+		throws Exception {
+
+		ExportActionableDynamicQuery exportActionableDynamicQuery =
+			_kbArticleLocalService.getExportActionableDynamicQuery(
+				portletDataContext);
+
+		final ActionableDynamicQuery.AddOrderCriteriaMethod
+			addOrderCriteriaMethod =
+				exportActionableDynamicQuery.getAddOrderCriteriaMethod();
+
+		exportActionableDynamicQuery.setAddOrderCriteriaMethod(
+			new ActionableDynamicQuery.AddOrderCriteriaMethod() {
+
+				@Override
+				public void addOrderCriteria(DynamicQuery dynamicQuery) {
+					if (addOrderCriteriaMethod != null) {
+						addOrderCriteriaMethod.addOrderCriteria(dynamicQuery);
+					}
+
+					OrderFactoryUtil.addOrderByComparator(
+						dynamicQuery, new KBArticleVersionComparator(true));
+				}
+
+			});
+
+		return exportActionableDynamicQuery;
+	}
+
+	private ActionableDynamicQuery _getKBCommentActionableDynamicQuery(
+			PortletDataContext portletDataContext)
+		throws Exception {
+
+		ExportActionableDynamicQuery exportActionableDynamicQuery =
+			_kbCommentLocalService.getExportActionableDynamicQuery(
+				portletDataContext);
+
+		exportActionableDynamicQuery.setStagedModelType(
+			new StagedModelType(
+				_portal.getClassNameId(KBComment.class),
+				StagedModelType.REFERRER_CLASS_NAME_ID_ALL));
+
+		return exportActionableDynamicQuery;
 	}
 
 	private KBArticleLocalService _kbArticleLocalService;

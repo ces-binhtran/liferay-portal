@@ -12,8 +12,6 @@
  * details.
  */
 
-'use strict';
-
 import {
 	getSessionValue,
 	setSessionValue,
@@ -46,6 +44,16 @@ describe('Session API', () => {
 				});
 			});
 		});
+
+		it('propagates `useHttpSession` to server when `true`', () => {
+			getSessionValue('key', {useHttpSession: true});
+
+			expect(fetch).toHaveBeenCalledTimes(1);
+
+			expect(fetch.mock.calls[0][1].body.get('useHttpSession')).toBe(
+				'true'
+			);
+		});
 	});
 
 	describe('setSessionValue', () => {
@@ -75,6 +83,16 @@ describe('Session API', () => {
 
 			expect(fetch.mock.calls[0][1].body.get('key')).toBe(
 				'serialize://{"key1":"value1","key2":"value2"}'
+			);
+		});
+
+		it('propagates `useHttpSession` to server when `true`', () => {
+			setSessionValue('key', 'value', {useHttpSession: true});
+
+			expect(fetch).toHaveBeenCalledTimes(1);
+
+			expect(fetch.mock.calls[0][1].body.get('useHttpSession')).toBe(
+				'true'
 			);
 		});
 	});

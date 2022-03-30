@@ -17,15 +17,18 @@ package com.liferay.asset.categories.admin.web.internal.portlet;
 import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.asset.categories.admin.web.internal.configuration.AssetCategoriesAdminWebConfiguration;
 import com.liferay.asset.categories.admin.web.internal.constants.AssetCategoriesAdminWebKeys;
+import com.liferay.asset.category.property.exception.CategoryPropertyKeyException;
+import com.liferay.asset.category.property.exception.CategoryPropertyValueException;
+import com.liferay.asset.category.property.exception.DuplicateCategoryPropertyException;
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
 import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalService;
+import com.liferay.asset.display.page.portlet.AssetDisplayPageEntryFormProcessor;
+import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.NoSuchClassTypeException;
+import com.liferay.asset.kernel.exception.AssetCategoryLimitException;
 import com.liferay.asset.kernel.exception.AssetCategoryNameException;
-import com.liferay.asset.kernel.exception.CategoryPropertyKeyException;
-import com.liferay.asset.kernel.exception.CategoryPropertyValueException;
 import com.liferay.asset.kernel.exception.DuplicateCategoryException;
-import com.liferay.asset.kernel.exception.DuplicateCategoryPropertyException;
 import com.liferay.asset.kernel.exception.DuplicateVocabularyException;
 import com.liferay.asset.kernel.exception.InvalidAssetCategoryException;
 import com.liferay.asset.kernel.exception.NoSuchCategoryException;
@@ -36,22 +39,28 @@ import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.model.AssetVocabulary;
+import com.liferay.asset.kernel.model.AssetVocabularyConstants;
 import com.liferay.asset.kernel.model.ClassTypeReader;
+import com.liferay.asset.kernel.service.AssetCategoryLocalService;
 import com.liferay.asset.kernel.service.AssetCategoryService;
 import com.liferay.asset.kernel.service.AssetVocabularyService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.NoSuchModelException;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -59,6 +68,7 @@ import com.liferay.portlet.asset.util.AssetVocabularySettingsHelper;
 
 import java.io.IOException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -159,13 +169,34 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			AssetCategory.class.getName(), actionRequest);
 
+		hideDefaultSuccessMessage(actionRequest);
+
+		MultiSessionMessages.add(
+			actionRequest, actionResponse.getNamespace() + "requestProcessed");
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		AssetCategory category = null;
+
 		if (categoryId <= 0) {
 
 			// Add category
 
-			_assetCategoryService.addCategory(
-				serviceContext.getScopeGroupId(), parentCategoryId, titleMap,
-				descriptionMap, vocabularyId, null, serviceContext);
+			long groupId = ParamUtil.getLong(actionRequest, "groupId");
+
+			category = _assetCategoryService.addCategory(
+				groupId, parentCategoryId, titleMap, descriptionMap,
+				vocabularyId, null, serviceContext);
+
+			MultiSessionMessages.add(
+				actionRequest, "categoryAdded",
+				LanguageUtil.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-was-created-successfully",
+					new Object[] {
+						HtmlUtil.escape(titleMap.get(themeDisplay.getLocale()))
+					}));
 		}
 		else {
 
@@ -175,13 +206,30 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 				_assetCategoryPropertyLocalService.getCategoryProperties(
 					categoryId);
 
-			String[] categoryPropertiesArray = getCategoryProperties(
+			String[] categoryPropertiesArray = _getCategoryProperties(
 				categoryProperties);
 
-			_assetCategoryService.updateCategory(
+			category = _assetCategoryService.updateCategory(
 				categoryId, parentCategoryId, titleMap, descriptionMap,
 				vocabularyId, categoryPropertiesArray, serviceContext);
+
+			MultiSessionMessages.add(
+				actionRequest, "categoryUpdated",
+				LanguageUtil.format(
+					_portal.getHttpServletRequest(actionRequest),
+					"x-was-updated-successfully",
+					new Object[] {
+						HtmlUtil.escape(titleMap.get(themeDisplay.getLocale()))
+					}));
 		}
+
+		// Asset display page
+
+		_assetDisplayPageEntryFormProcessor.process(
+			AssetCategory.class.getName(), category.getCategoryId(),
+			actionRequest);
+
+		sendRedirect(actionRequest, actionResponse);
 	}
 
 	public void editProperties(
@@ -193,7 +241,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		AssetCategory category = _assetCategoryService.fetchCategory(
 			categoryId);
 
-		String[] categoryProperties = getCategoryProperties(actionRequest);
+		String[] categoryProperties = _getCategoryProperties(actionRequest);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			AssetCategory.class.getName(), actionRequest);
@@ -215,6 +263,8 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		Map<Locale, String> descriptionMap =
 			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 
+		AssetVocabulary vocabulary = null;
+
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			AssetVocabulary.class.getName(), actionRequest);
 
@@ -222,25 +272,31 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 			// Add vocabulary
 
-			_assetVocabularyService.addVocabulary(
+			int visibilityType = ParamUtil.getInteger(
+				actionRequest, "visibilityType",
+				AssetVocabularyConstants.VISIBILITY_TYPE_PUBLIC);
+
+			vocabulary = _assetVocabularyService.addVocabulary(
 				serviceContext.getScopeGroupId(), StringPool.BLANK, titleMap,
-				descriptionMap, getSettings(actionRequest), serviceContext);
+				descriptionMap, _getSettings(actionRequest), visibilityType,
+				serviceContext);
 		}
 		else {
 
 			// Update vocabulary
 
-			_assetVocabularyService.updateVocabulary(
+			vocabulary = _assetVocabularyService.updateVocabulary(
 				vocabularyId, StringPool.BLANK, titleMap, descriptionMap,
-				getSettings(actionRequest), serviceContext);
+				_getSettings(actionRequest), serviceContext);
 		}
+
+		actionRequest.setAttribute(
+			WebKeys.REDIRECT, _getRedirectURL(actionResponse, vocabulary));
 	}
 
 	public void moveCategory(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
-
-		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 
 		long parentCategoryId = ParamUtil.getLong(
 			actionRequest, "parentCategoryId");
@@ -249,6 +305,8 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		if ((vocabularyId <= 0) && (parentCategoryId <= 0)) {
 			throw new NoSuchVocabularyException();
 		}
+
+		long categoryId = ParamUtil.getLong(actionRequest, "categoryId");
 
 		if (vocabularyId <= 0) {
 			AssetCategory parentCategory = _assetCategoryService.fetchCategory(
@@ -262,6 +320,31 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 
 		_assetCategoryService.moveCategory(
 			categoryId, parentCategoryId, vocabularyId, serviceContext);
+	}
+
+	public void setCategoryDisplayPageTemplate(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		long[] categoryIds = ParamUtil.getLongValues(
+			actionRequest, "categoryIds");
+
+		for (long categoryId : categoryIds) {
+			AssetCategory category = _assetCategoryLocalService.getCategory(
+				categoryId);
+
+			_assetDisplayPageEntryFormProcessor.process(
+				AssetCategory.class.getName(), category.getCategoryId(),
+				actionRequest);
+
+			category.setModifiedDate(new Date());
+
+			_assetCategoryLocalService.updateAssetCategory(category);
+		}
+
+		String redirect = ParamUtil.getString(actionRequest, "redirect");
+
+		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
 
 	@Activate
@@ -292,11 +375,38 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		renderRequest.setAttribute(
 			AssetCategoriesAdminWebKeys.ASSET_CATEGORIES_ADMIN_CONFIGURATION,
 			_assetCategoriesAdminWebConfiguration);
+		renderRequest.setAttribute(
+			AssetCategoriesAdminWebKeys.
+				ASSET_DISPLAY_PAGE_FRIENDLY_URL_PROVIDER,
+			_assetDisplayPageFriendlyURLProvider);
 
 		super.doDispatch(renderRequest, renderResponse);
 	}
 
-	protected String[] getCategoryProperties(ActionRequest actionRequest) {
+	@Override
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof AssetCategoryLimitException ||
+			throwable instanceof AssetCategoryNameException ||
+			throwable instanceof CategoryPropertyKeyException ||
+			throwable instanceof CategoryPropertyValueException ||
+			throwable instanceof DuplicateCategoryException ||
+			throwable instanceof DuplicateCategoryPropertyException ||
+			throwable instanceof DuplicateVocabularyException ||
+			throwable instanceof InvalidAssetCategoryException ||
+			throwable instanceof NoSuchCategoryException ||
+			throwable instanceof NoSuchClassTypeException ||
+			throwable instanceof NoSuchEntryException ||
+			throwable instanceof NoSuchVocabularyException ||
+			throwable instanceof PrincipalException ||
+			throwable instanceof VocabularyNameException) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private String[] _getCategoryProperties(ActionRequest actionRequest) {
 		int[] categoryPropertiesIndexes = StringUtil.split(
 			ParamUtil.getString(actionRequest, "categoryPropertiesIndexes"), 0);
 
@@ -324,7 +434,7 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		return categoryProperties;
 	}
 
-	protected String[] getCategoryProperties(
+	private String[] _getCategoryProperties(
 		List<AssetCategoryProperty> categoryProperties) {
 
 		String[] categoryPropertiesArray =
@@ -342,14 +452,21 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		return categoryPropertiesArray;
 	}
 
-	protected String getSettings(ActionRequest actionRequest)
-		throws PortalException {
+	private String _getRedirectURL(
+		ActionResponse actionResponse, AssetVocabulary vocabulary) {
 
+		return PortletURLBuilder.createRenderURL(
+			_portal.getLiferayPortletResponse(actionResponse)
+		).setMVCPath(
+			"/view.jsp"
+		).setParameter(
+			"vocabularyId", vocabulary.getVocabularyId()
+		).buildString();
+	}
+
+	private String _getSettings(ActionRequest actionRequest) throws Exception {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
-
-		AssetVocabularySettingsHelper vocabularySettingsHelper =
-			new AssetVocabularySettingsHelper();
 
 		int[] indexes = StringUtil.split(
 			ParamUtil.getString(actionRequest, "indexes"), 0);
@@ -391,6 +508,9 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 				actionRequest, "required" + index);
 		}
 
+		AssetVocabularySettingsHelper vocabularySettingsHelper =
+			new AssetVocabularySettingsHelper();
+
 		vocabularySettingsHelper.setClassNameIdsAndClassTypePKs(
 			classNameIds, classTypePKs, requireds);
 
@@ -402,30 +522,11 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 		return vocabularySettingsHelper.toString();
 	}
 
-	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof AssetCategoryNameException ||
-			cause instanceof CategoryPropertyKeyException ||
-			cause instanceof CategoryPropertyValueException ||
-			cause instanceof DuplicateCategoryException ||
-			cause instanceof DuplicateCategoryPropertyException ||
-			cause instanceof DuplicateVocabularyException ||
-			cause instanceof InvalidAssetCategoryException ||
-			cause instanceof NoSuchCategoryException ||
-			cause instanceof NoSuchClassTypeException ||
-			cause instanceof NoSuchEntryException ||
-			cause instanceof NoSuchVocabularyException ||
-			cause instanceof PrincipalException ||
-			cause instanceof VocabularyNameException) {
-
-			return true;
-		}
-
-		return false;
-	}
-
-	private AssetCategoriesAdminWebConfiguration
+	private volatile AssetCategoriesAdminWebConfiguration
 		_assetCategoriesAdminWebConfiguration;
+
+	@Reference
+	private AssetCategoryLocalService _assetCategoryLocalService;
 
 	@Reference
 	private AssetCategoryPropertyLocalService
@@ -435,6 +536,17 @@ public class AssetCategoryAdminPortlet extends MVCPortlet {
 	private AssetCategoryService _assetCategoryService;
 
 	@Reference
+	private AssetDisplayPageEntryFormProcessor
+		_assetDisplayPageEntryFormProcessor;
+
+	@Reference
+	private AssetDisplayPageFriendlyURLProvider
+		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
 	private AssetVocabularyService _assetVocabularyService;
+
+	@Reference
+	private Portal _portal;
 
 }

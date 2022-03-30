@@ -37,15 +37,19 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 </c:if>
 
 <aui:button-row>
-
-	<%
-	PortletURL addServerURL = renderResponse.createRenderURL();
-
-	addServerURL.setParameter("mvcRenderCommandName", "/portal_settings/edit_ldap_server");
-	addServerURL.setParameter("redirect", authenticationURL);
-	%>
-
-	<aui:button href="<%= addServerURL.toString() %>" name="addButton" value="add" />
+	<aui:button
+		href='<%=
+			PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/portal_settings_authentication_ldap/edit_ldap_server"
+			).setRedirect(
+				authenticationURL
+			).buildString()
+		%>'
+		name="addButton"
+		value="add"
+	/>
 </aui:button-row>
 
 <aui:fieldset>
@@ -93,19 +97,19 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 											icon="order-arrow-up"
 											markupView="lexicon"
 											message="up"
-											url='<%= "javascript:" + renderResponse.getNamespace() + "raiseLDAPServerPriority(" + ldapServerId + ");" %>'
+											url='<%= "javascript:" + liferayPortletResponse.getNamespace() + "raiseLDAPServerPriority(" + ldapServerId + ");" %>'
 										/>
 
 										<liferay-ui:icon
 											icon="order-arrow-down"
 											markupView="lexicon"
 											message="down"
-											url='<%= "javascript:" + renderResponse.getNamespace() + "lowerLDAPServerPriority(" + ldapServerId + ");" %>'
+											url='<%= "javascript:" + liferayPortletResponse.getNamespace() + "lowerLDAPServerPriority(" + ldapServerId + ");" %>'
 										/>
 									</c:if>
 
 									<portlet:renderURL var="editURL">
-										<portlet:param name="mvcRenderCommandName" value="/portal_settings/edit_ldap_server" />
+										<portlet:param name="mvcRenderCommandName" value="/portal_settings_authentication_ldap/edit_ldap_server" />
 										<portlet:param name="redirect" value="<%= authenticationURL %>" />
 										<portlet:param name="ldapServerId" value="<%= String.valueOf(ldapServerId) %>" />
 									</portlet:renderURL>
@@ -117,7 +121,7 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 										url="<%= editURL %>"
 									/>
 
-									<portlet:actionURL name="/portal_settings/edit_ldap_server" var="deleteURL">
+									<portlet:actionURL name="/portal_settings_authentication_ldap/edit_ldap_server" var="deleteURL">
 										<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DELETE %>" />
 										<portlet:param name="redirect" value="<%= authenticationURL %>" />
 										<portlet:param name="ldapServerId" value="<%= String.valueOf(ldapServerId) %>" />
@@ -182,11 +186,12 @@ boolean ldapAuthEnabled = ldapAuthConfiguration.enabled();
 			'.ldap-servers .table-data tr'
 		);
 
-		var ldapServerIds = Array.prototype.map.call(ldapServerIdsNodes, function (
-			ldapServerIdsNode
-		) {
-			return ldapServerIdsNode.dataset.ldapserverid;
-		});
+		var ldapServerIds = Array.prototype.map.call(
+			ldapServerIdsNodes,
+			(ldapServerIdsNode) => {
+				return ldapServerIdsNode.dataset.ldapserverid;
+			}
+		);
 
 		Liferay.Util.setFormValues(document.<portlet:namespace />fm, {
 			'ldap--<%= LDAPConstants.AUTH_SERVER_PRIORITY %>--': ldapServerIds.join(

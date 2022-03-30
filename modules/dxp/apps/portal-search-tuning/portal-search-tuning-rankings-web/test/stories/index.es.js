@@ -14,12 +14,13 @@ import {
 	StorybookAddonActions,
 	StorybookAddonKnobs,
 	StorybookReact,
-} from 'liferay-npm-scripts/src/storybook';
+} from '@liferay/npm-scripts/src/storybook';
 import React from 'react';
 
 import '../../src/main/resources/META-INF/resources/css/main.scss';
 
 import {ClayIconSpriteContext} from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 
 import ThemeContext from '../../src/main/resources/META-INF/resources/js/ThemeContext.es';
 import PageToolbar from '../../src/main/resources/META-INF/resources/js/components/PageToolbar.es';
@@ -64,9 +65,7 @@ addDecorator((storyFn) => {
 });
 
 const withSheet = (storyFn) => (
-	<div className="sheet sheet-lg" style={{marginTop: '24px'}}>
-		{storyFn()}
-	</div>
+	<ClayLayout.Sheet style={{marginTop: '24px'}}>{storyFn()}</ClayLayout.Sheet>
 );
 
 storiesOf('Pages|ResultRankingsForm', module).add('default', () => (

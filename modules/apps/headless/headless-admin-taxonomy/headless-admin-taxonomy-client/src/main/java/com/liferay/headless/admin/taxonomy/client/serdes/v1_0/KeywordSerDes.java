@@ -57,7 +57,7 @@ public class KeywordSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (keyword.getActions() != null) {
 			if (sb.length() > 1) {
@@ -67,6 +67,20 @@ public class KeywordSerDes {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(keyword.getActions()));
+		}
+
+		if (keyword.getAssetLibraryKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(keyword.getAssetLibraryKey()));
+
+			sb.append("\"");
 		}
 
 		if (keyword.getCreator() != null) {
@@ -152,6 +166,16 @@ public class KeywordSerDes {
 			sb.append(keyword.getSiteId());
 		}
 
+		if (keyword.getSubscribed() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"subscribed\": ");
+
+			sb.append(keyword.getSubscribed());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -171,13 +195,22 @@ public class KeywordSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (keyword.getActions() == null) {
 			map.put("actions", null);
 		}
 		else {
 			map.put("actions", String.valueOf(keyword.getActions()));
+		}
+
+		if (keyword.getAssetLibraryKey() == null) {
+			map.put("assetLibraryKey", null);
+		}
+		else {
+			map.put(
+				"assetLibraryKey",
+				String.valueOf(keyword.getAssetLibraryKey()));
 		}
 
 		if (keyword.getCreator() == null) {
@@ -235,6 +268,13 @@ public class KeywordSerDes {
 			map.put("siteId", String.valueOf(keyword.getSiteId()));
 		}
 
+		if (keyword.getSubscribed() == null) {
+			map.put("subscribed", null);
+		}
+		else {
+			map.put("subscribed", String.valueOf(keyword.getSubscribed()));
+		}
+
 		return map;
 	}
 
@@ -259,6 +299,11 @@ public class KeywordSerDes {
 				if (jsonParserFieldValue != null) {
 					keyword.setActions(
 						(Map)KeywordSerDes.toMap((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
+				if (jsonParserFieldValue != null) {
+					keyword.setAssetLibraryKey((String)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "creator")) {
@@ -301,9 +346,10 @@ public class KeywordSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (Objects.equals(jsonParserFieldName, "subscribed")) {
+				if (jsonParserFieldValue != null) {
+					keyword.setSubscribed((Boolean)jsonParserFieldValue);
+				}
 			}
 		}
 
@@ -333,7 +379,7 @@ public class KeywordSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -369,7 +415,7 @@ public class KeywordSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

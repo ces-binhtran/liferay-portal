@@ -161,10 +161,8 @@ public class ListServiceTrackerMapTest {
 		ServiceRegistration<TrackedOne> serviceRegistration1 = registerService(
 			trackedOne1);
 
-		TrackedOne trackedOne2 = new TrackedOne();
-
 		ServiceRegistration<TrackedOne> serviceRegistration2 = registerService(
-			trackedOne2);
+			new TrackedOne());
 
 		TrackedOne trackedOne3 = new TrackedOne();
 
@@ -544,8 +542,8 @@ public class ListServiceTrackerMapTest {
 							Assert.assertEquals(
 								contentTrackedOnes, Arrays.asList(trackedOne));
 						}
-						catch (Throwable t) {
-							throwables.add(t);
+						catch (Throwable throwable) {
+							throwables.add(throwable);
 						}
 					}
 

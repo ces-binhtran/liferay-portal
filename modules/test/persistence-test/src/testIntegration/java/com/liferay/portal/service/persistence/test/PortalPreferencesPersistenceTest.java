@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchPreferencesException;
 import com.liferay.portal.kernel.model.PortalPreferences;
 import com.liferay.portal.kernel.service.PortalPreferencesLocalServiceUtil;
@@ -124,11 +125,11 @@ public class PortalPreferencesPersistenceTest {
 
 		newPortalPreferences.setMvccVersion(RandomTestUtil.nextLong());
 
+		newPortalPreferences.setCompanyId(RandomTestUtil.nextLong());
+
 		newPortalPreferences.setOwnerId(RandomTestUtil.nextLong());
 
 		newPortalPreferences.setOwnerType(RandomTestUtil.nextInt());
-
-		newPortalPreferences.setPreferences(RandomTestUtil.randomString());
 
 		_portalPreferenceses.add(_persistence.update(newPortalPreferences));
 
@@ -142,14 +143,14 @@ public class PortalPreferencesPersistenceTest {
 			existingPortalPreferences.getPortalPreferencesId(),
 			newPortalPreferences.getPortalPreferencesId());
 		Assert.assertEquals(
+			existingPortalPreferences.getCompanyId(),
+			newPortalPreferences.getCompanyId());
+		Assert.assertEquals(
 			existingPortalPreferences.getOwnerId(),
 			newPortalPreferences.getOwnerId());
 		Assert.assertEquals(
 			existingPortalPreferences.getOwnerType(),
 			newPortalPreferences.getOwnerType());
-		Assert.assertEquals(
-			existingPortalPreferences.getPreferences(),
-			newPortalPreferences.getPreferences());
 	}
 
 	@Test
@@ -186,7 +187,7 @@ public class PortalPreferencesPersistenceTest {
 	protected OrderByComparator<PortalPreferences> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
 			"PortalPreferences", "mvccVersion", true, "portalPreferencesId",
-			true, "ownerId", true, "ownerType", true);
+			true, "companyId", true, "ownerId", true, "ownerType", true);
 	}
 
 	@Test
@@ -415,19 +416,63 @@ public class PortalPreferencesPersistenceTest {
 
 		_persistence.clearCache();
 
-		PortalPreferences existingPortalPreferences =
-			_persistence.findByPrimaryKey(newPortalPreferences.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(
+				newPortalPreferences.getPrimaryKey()));
+	}
 
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		PortalPreferences newPortalPreferences = addPortalPreferences();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			PortalPreferences.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"portalPreferencesId",
+				newPortalPreferences.getPortalPreferencesId()));
+
+		List<PortalPreferences> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(PortalPreferences portalPreferences) {
 		Assert.assertEquals(
-			Long.valueOf(existingPortalPreferences.getOwnerId()),
+			Long.valueOf(portalPreferences.getOwnerId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingPortalPreferences, "getOriginalOwnerId",
-				new Class<?>[0]));
+				portalPreferences, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "ownerId"));
 		Assert.assertEquals(
-			Integer.valueOf(existingPortalPreferences.getOwnerType()),
+			Integer.valueOf(portalPreferences.getOwnerType()),
 			ReflectionTestUtil.<Integer>invoke(
-				existingPortalPreferences, "getOriginalOwnerType",
-				new Class<?>[0]));
+				portalPreferences, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "ownerType"));
 	}
 
 	protected PortalPreferences addPortalPreferences() throws Exception {
@@ -437,11 +482,11 @@ public class PortalPreferencesPersistenceTest {
 
 		portalPreferences.setMvccVersion(RandomTestUtil.nextLong());
 
+		portalPreferences.setCompanyId(RandomTestUtil.nextLong());
+
 		portalPreferences.setOwnerId(RandomTestUtil.nextLong());
 
 		portalPreferences.setOwnerType(RandomTestUtil.nextInt());
-
-		portalPreferences.setPreferences(RandomTestUtil.randomString());
 
 		_portalPreferenceses.add(_persistence.update(portalPreferences));
 

@@ -34,23 +34,27 @@ List<Tuple> assetLinkEntries = (List<Tuple>)request.getAttribute("liferay-asset:
 	%>
 
 		<li class="list-group-item list-group-item-flex">
-			<div class="autofit-col">
+			<clay:content-col>
 				<clay:sticker
 					displayType="secondary"
 					icon="<%= assetRenderer.getIconCssClass() %>"
-					inline="true"
+					inline="<%= true %>"
 				/>
-			</div>
+			</clay:content-col>
 
-			<div class="autofit-col autofit-col-expand">
-				<section class="autofit-section">
+			<clay:content-col
+				expand="<%= true %>"
+			>
+				<clay:content-section
+					containerElement="section"
+				>
 					<div class="list-group-title text-truncate-inline">
 						<c:choose>
 							<c:when test="<%= assetRenderer.getStatus() == WorkflowConstants.STATUS_SCHEDULED %>">
 								<%= HtmlUtil.escape(assetLinkEntry.getTitle(locale)) %>
 								<clay:label
 									cssClass="ml-2"
-									displayType="%= WorkflowConstants.getStatusStyle(assetRenderer.getStatus()) %>"
+									displayType="<%= WorkflowConstants.getStatusStyle(assetRenderer.getStatus()) %>"
 									label="<%= WorkflowConstants.getStatusLabel(assetRenderer.getStatus()) %>"
 								/>
 							</c:when>
@@ -61,8 +65,8 @@ List<Tuple> assetLinkEntries = (List<Tuple>)request.getAttribute("liferay-asset:
 							</c:otherwise>
 						</c:choose>
 					</div>
-				</section>
-			</div>
+				</clay:content-section>
+			</clay:content-col>
 		</li>
 
 	<%

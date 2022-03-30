@@ -19,6 +19,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -34,7 +35,6 @@ import com.liferay.site.navigation.model.SiteNavigationMenu;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -65,7 +65,8 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 				dropdownItem.putData(
 					"action", "deleteSelectedSiteNavigationMenus");
 				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -74,8 +75,9 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 	public String getAvailableActions(SiteNavigationMenu siteNavigationMenu)
 		throws PortalException {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (SiteNavigationMenuPermission.contains(
 				themeDisplay.getPermissionChecker(), siteNavigationMenu,
@@ -89,48 +91,37 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
-	}
-
-	@Override
-	public String getComponentId() {
-		return "siteNavigationMenuWebManagementToolbar";
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
 	public CreationMenu getCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		PortletURL addSiteNavigationMenuURL =
-			liferayPortletResponse.createActionURL();
-
-		addSiteNavigationMenuURL.setParameter(
-			ActionRequest.ACTION_NAME,
-			"/navigation_menu/add_site_navigation_menu");
-		addSiteNavigationMenuURL.setParameter(
-			"mvcPath", "/edit_site_navigation_menu.jsp");
-		addSiteNavigationMenuURL.setParameter(
-			"redirect", themeDisplay.getURLCurrent());
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return CreationMenuBuilder.addDropdownItem(
 			dropdownItem -> {
 				dropdownItem.putData("action", "addSiteNavigationMenu");
 				dropdownItem.putData(
 					"addSiteNavigationMenuURL",
-					addSiteNavigationMenuURL.toString());
-				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/site_navigation_admin/add_site_navigation_menu"
+					).setMVCPath(
+						"/edit_site_navigation_menu.jsp"
+					).setRedirect(
+						themeDisplay.getURLCurrent()
+					).buildString());
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "siteNavigationAdminManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -151,8 +142,9 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 			return false;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (SiteNavigationPermission.contains(
 				themeDisplay.getPermissionChecker(),
@@ -163,6 +155,11 @@ public class SiteNavigationAdminManagementToolbarDisplayContext
 		}
 
 		return false;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _siteNavigationAdminDisplayContext.getDisplayStyle();
 	}
 
 	@Override

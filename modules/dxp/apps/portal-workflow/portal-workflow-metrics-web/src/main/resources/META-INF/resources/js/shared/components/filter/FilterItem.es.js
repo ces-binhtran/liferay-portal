@@ -9,82 +9,97 @@
  * distribution rights of the Software.
  */
 
-import getClassName from 'classnames';
-import React, {useEffect, useMemo, useState} from 'react';
+import ClayDropDown from '@clayui/drop-down';
+import {ClayCheckbox, ClayRadio, ClayRadioGroup} from '@clayui/form';
+import React, {useEffect, useState} from 'react';
 
-const FilterItem = (properties) => {
+const FilterItem = ({
+	active = false,
+	description,
+	dividerAfter,
+	hideControl,
+	labelPropertyName = 'name',
+	multiple,
+	name,
+	onClick,
+	...otherProps
+}) => {
 	const [checked, setChecked] = useState(active);
-
-	const {
-		active = false,
-		description,
-		dividerAfter,
-		hideControl,
-		itemKey,
-		labelPropertyName = 'name',
-		multiple,
-		name,
-		onChange,
-		onClick,
-	} = properties;
-
-	const classes = useMemo(
-		() => ({
-			control: getClassName(
-				'custom-control',
-				multiple ? 'custom-checkbox' : 'custom-radio'
-			),
-			dropdown: getClassName(
-				'dropdown-item',
-				active && 'active',
-				description && 'with-description',
-				hideControl && 'control-hidden'
-			),
-		}),
-		[active, description, hideControl, multiple]
-	);
-
-	const handleChange = (event) => {
-		setChecked(event.target.checked);
-		onChange(event);
-	};
+	const [selectedValue, setSelectedValue] = useState();
+	const itemLabel = otherProps[labelPropertyName] || name;
 
 	useEffect(() => {
-		setChecked(active);
-	}, [active]);
+		if (!hideControl && !multiple && active) {
+			setSelectedValue(itemLabel);
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
+	useEffect(() => {
+		if (!multiple && !hideControl && !active) {
+			setSelectedValue();
+		}
+		else if (multiple) {
+			setChecked(active);
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [active, selectedValue]);
+
+	const onClickDescription = () => {
+		onClick();
+
+		if (multiple) {
+			setChecked(!checked);
+		}
+		else {
+			if (!hideControl && !active) {
+				setSelectedValue(itemLabel);
+			}
+		}
+	};
 
 	return (
 		<>
-			<li className={classes.dropdown} data-testid="filterItem">
-				<label className={classes.control}>
-					<input
+			<ClayDropDown.Item
+				active={active}
+				className={hideControl && 'control-hidden'}
+			>
+				{multiple ? (
+					<ClayCheckbox
 						checked={checked}
-						className="custom-control-input"
-						data-key={itemKey}
-						data-testid="filterItemInput"
-						onChange={handleChange}
-						onClick={onClick}
-						type={multiple ? 'checkbox' : 'radio'}
+						label={itemLabel}
+						onChange={() => {
+							onClick();
+							setChecked(!checked);
+						}}
 					/>
+				) : hideControl ? (
+					<div onClick={onClick}>{itemLabel}</div>
+				) : (
+					<ClayRadioGroup
+						onSelectedValueChange={(newValue) => {
+							onClick();
+							setSelectedValue(newValue);
+						}}
+						selectedValue={selectedValue}
+					>
+						<ClayRadio label={itemLabel} value={itemLabel} />
+					</ClayRadioGroup>
+				)}
 
-					<span className="custom-control-label">
-						<span
-							className="custom-control-label-text"
-							data-testid="filterItemName"
-						>
-							{properties[labelPropertyName] || name}
-						</span>
+				{description && (
+					<div
+						className="filter-dropdown-item-description"
+						onClick={onClickDescription}
+					>
+						{description}
+					</div>
+				)}
+			</ClayDropDown.Item>
 
-						{description && (
-							<span className="custom-control-label-text dropdown-item-description">
-								{description}
-							</span>
-						)}
-					</span>
-				</label>
-			</li>
-
-			{dividerAfter && <li className="dropdown-divider" />}
+			{dividerAfter && <div className="dropdown-divider" />}
 		</>
 	);
 };

@@ -18,6 +18,7 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFileVersion;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -35,6 +36,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +52,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -61,14 +64,15 @@ public interface DLFileEntryService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DLFileEntryServiceUtil} to access the document library file entry remote service. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the document library file entry remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DLFileEntryServiceUtil} if injection and service tracking are not available.
 	 */
 	public DLFileEntry addFileEntry(
-			long groupId, long repositoryId, long folderId,
-			String sourceFileName, String mimeType, String title,
-			String description, String changeLog, long fileEntryTypeId,
-			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream is, long size, ServiceContext serviceContext)
+			String externalReferenceCode, long groupId, long repositoryId,
+			long folderId, String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog,
+			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
+			File file, InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DLFileVersion cancelCheckOut(long fileEntryId)
@@ -121,31 +125,32 @@ public interface DLFileEntryService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, int status, int start, int end,
-			OrderByComparator<DLFileEntry> obc)
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, int start, int end,
-			OrderByComparator<DLFileEntry> obc)
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, long fileEntryTypeId, int start,
-			int end, OrderByComparator<DLFileEntry> obc)
+			int end, OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, String[] mimeTypes, int status,
-			int start, int end, OrderByComparator<DLFileEntry> obc)
+			int start, int end,
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 			long groupId, long folderId, String[] mimeTypes, int start, int end,
-			OrderByComparator<DLFileEntry> obc)
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -174,6 +179,16 @@ public interface DLFileEntryService extends BaseService {
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry getFileEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry getFileEntryByFileName(
+			long groupId, long folderId, String fileName)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntry getFileEntryByUuidAndGroupId(String uuid, long groupId)
 		throws PortalException;
 
@@ -187,20 +202,21 @@ public interface DLFileEntryService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 			long groupId, long userId, long rootFolderId, int start, int end,
-			OrderByComparator<DLFileEntry> obc)
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 			long groupId, long userId, long repositoryId, long rootFolderId,
 			String[] mimeTypes, int status, int start, int end,
-			OrderByComparator<DLFileEntry> obc)
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 			long groupId, long userId, long rootFolderId, String[] mimeTypes,
-			int status, int start, int end, OrderByComparator<DLFileEntry> obc)
+			int status, int start, int end,
+			OrderByComparator<DLFileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -259,10 +275,11 @@ public interface DLFileEntryService extends BaseService {
 
 	public DLFileEntry updateFileEntry(
 			long fileEntryId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog,
+			String title, String urlTitle, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease,
 			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
-			File file, InputStream is, long size, ServiceContext serviceContext)
+			File file, InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DLFileEntry updateStatus(

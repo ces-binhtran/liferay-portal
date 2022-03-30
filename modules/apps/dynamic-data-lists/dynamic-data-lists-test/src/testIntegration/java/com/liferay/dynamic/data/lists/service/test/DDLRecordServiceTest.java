@@ -15,12 +15,12 @@
 package com.liferay.dynamic.data.lists.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.lists.constants.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.exception.RecordGroupIdException;
 import com.liferay.dynamic.data.lists.helper.DDLRecordSetTestHelper;
 import com.liferay.dynamic.data.lists.helper.DDLRecordTestHelper;
 import com.liferay.dynamic.data.lists.helper.DDLRecordTestUtil;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
-import com.liferay.dynamic.data.lists.model.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalServiceUtil;
@@ -44,16 +44,12 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.util.HashSet;
 import java.util.List;
@@ -70,6 +66,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+
 /**
  * @author Marcellus Tavares
  */
@@ -85,10 +86,12 @@ public class DDLRecordServiceTest {
 	public static void setUpClass() throws Exception {
 		_group = GroupTestUtil.addGroup();
 
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(DDLRecordServiceTest.class);
 
-		_serviceRegistration = registry.registerService(
-			StorageAdapter.class, new FailStorageAdapter());
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_serviceRegistration = bundleContext.registerService(
+			StorageAdapter.class, new FailStorageAdapter(), null);
 	}
 
 	@AfterClass
@@ -98,7 +101,6 @@ public class DDLRecordServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_defaultLocale = LocaleUtil.US;
 		_ddmStructureTestHelper = new DDMStructureTestHelper(
 			PortalUtil.getClassNameId(DDLRecordSet.class), _group);
 		_recordSetTestHelper = new DDLRecordSetTestHelper(_group);
@@ -182,14 +184,12 @@ public class DDLRecordServiceTest {
 	public void testAddRecordWithDifferentGroupIdFromRecordSet()
 		throws Exception {
 
-		long groupId = RandomTestUtil.nextLong();
-
 		DDMForm ddmForm = DDMFormTestUtil.createDDMForm("Field");
 
 		DDLRecordSet ddlRecordSet = addRecordSet(ddmForm);
 
 		DDLRecordTestHelper ddlRecordTestHelper = new DDLRecordTestHelper(
-			GroupTestUtil.addGroup(groupId), ddlRecordSet);
+			GroupTestUtil.addGroup(), ddlRecordSet);
 
 		ddlRecordTestHelper.addRecord();
 	}
@@ -459,7 +459,7 @@ public class DDLRecordServiceTest {
 	}
 
 	protected DDLRecordSet addRecordSet(DDMForm ddmForm) throws Exception {
-		return addRecordSet(ddmForm, StorageType.JSON.toString());
+		return addRecordSet(ddmForm, StorageType.DEFAULT.toString());
 	}
 
 	protected DDLRecordSet addRecordSet(DDMForm ddmForm, String storageType)
@@ -598,7 +598,7 @@ public class DDLRecordServiceTest {
 	private static ServiceRegistration<StorageAdapter> _serviceRegistration;
 
 	private DDMStructureTestHelper _ddmStructureTestHelper;
-	private Locale _defaultLocale;
+	private final Locale _defaultLocale = LocaleUtil.US;
 	private DDLRecordSetTestHelper _recordSetTestHelper;
 
 }

@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -74,8 +75,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
-import javax.ccpp.Profile;
 
 import javax.portlet.PortalContext;
 import javax.portlet.PortletConfig;
@@ -178,9 +177,10 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 		return _httpServletRequest.getAuthType();
 	}
 
-	public Profile getCCPPProfile() {
+	public Object getCCPPProfile() {
 		if (_profile == null) {
-			_profile = PortalProfileFactory.getCCPPProfile(_httpServletRequest);
+			_profile = _portalProfileFactory.getCCPPProfile(
+				_httpServletRequest);
 		}
 
 		return _profile;
@@ -532,13 +532,13 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			return _portletSessionImpl.getId();
 		}
 
-		HttpSession session = _httpServletRequest.getSession(false);
+		HttpSession httpSession = _httpServletRequest.getSession(false);
 
-		if (session == null) {
+		if (httpSession == null) {
 			return StringPool.BLANK;
 		}
 
-		return session.getId();
+		return httpSession.getId();
 	}
 
 	@Override
@@ -583,11 +583,8 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 	@Override
 	public String getWindowID() {
-		return _portletName.concat(
-			LiferayPortletSession.LAYOUT_SEPARATOR
-		).concat(
-			String.valueOf(_plid)
-		);
+		return StringBundler.concat(
+			_portletName, LiferayPortletSession.LAYOUT_SEPARATOR, _plid);
 	}
 
 	@Override
@@ -631,6 +628,9 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 						themeDisplay.getCompanyId(), portletResource);
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
 				}
 
 				if (resourcePortlet != null) {
@@ -845,8 +845,6 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			_httpServletRequest.getSession(), _portletContext, _portletName,
 			plid);
 
-		String remoteUser = httpServletRequest.getRemoteUser();
-
 		String userPrincipalStrategy = portlet.getUserPrincipalStrategy();
 
 		if (userPrincipalStrategy.equals(
@@ -866,6 +864,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 			}
 		}
 		else {
+			String remoteUser = httpServletRequest.getRemoteUser();
 			long userId = PortalUtil.getUserId(httpServletRequest);
 
 			if ((userId > 0) && (remoteUser == null)) {
@@ -1093,16 +1092,16 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 	}
 
 	@Override
-	public void setAttribute(String name, Object obj) {
+	public void setAttribute(String name, Object object) {
 		if (name == null) {
 			throw new IllegalArgumentException();
 		}
 
-		if (obj == null) {
+		if (object == null) {
 			_httpServletRequest.removeAttribute(name);
 		}
 		else {
-			_httpServletRequest.setAttribute(name, obj);
+			_httpServletRequest.setAttribute(name, object);
 		}
 	}
 
@@ -1265,6 +1264,11 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 	private static final Log _log = LogFactoryUtil.getLog(
 		PortletRequestImpl.class);
 
+	private static volatile PortalProfileFactory _portalProfileFactory =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			PortalProfileFactory.class, PortletRequestImpl.class,
+			"_portalProfileFactory", false);
+
 	private HttpServletRequest _httpServletRequest;
 	private boolean _invalidSession;
 	private Locale _locale;
@@ -1279,7 +1283,7 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 	private PortletSessionImpl _portletSessionImpl;
 	private int _portletSpecMajorVersion;
 	private PortletPreferences _preferences;
-	private Profile _profile;
+	private Object _profile;
 	private String _remoteUser;
 	private long _remoteUserId;
 	private RenderParameters _renderParameters;
@@ -1410,7 +1414,10 @@ public abstract class PortletRequestImpl implements LiferayPortletRequest {
 
 			if ((values != null) && (portletSpecMajorVersion >= 3)) {
 				for (int i = 0; i < values.length; i++) {
-					if ((values[i] != null) && values[i].isEmpty()) {
+					if (Objects.equals(
+							values[i],
+							LiferayMutablePortletParameters.NULL_PARAM_VALUE)) {
+
 						values[i] = null;
 					}
 				}

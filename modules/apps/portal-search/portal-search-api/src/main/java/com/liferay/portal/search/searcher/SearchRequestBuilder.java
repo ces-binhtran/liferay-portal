@@ -19,6 +19,7 @@ import com.liferay.portal.search.aggregation.Aggregation;
 import com.liferay.portal.search.aggregation.pipeline.PipelineAggregation;
 import com.liferay.portal.search.filter.ComplexQueryPart;
 import com.liferay.portal.search.groupby.GroupByRequest;
+import com.liferay.portal.search.highlight.Highlight;
 import com.liferay.portal.search.query.Query;
 import com.liferay.portal.search.rescore.Rescore;
 import com.liferay.portal.search.sort.Sort;
@@ -52,6 +53,11 @@ public interface SearchRequestBuilder {
 	public SearchRequestBuilder addPipelineAggregation(
 		PipelineAggregation pipelineAggregation);
 
+	public SearchRequestBuilder addPostFilterQueryPart(
+		ComplexQueryPart complexQueryPart);
+
+	public SearchRequestBuilder addRescore(Rescore rescore);
+
 	/**
 	 * Adds fields to include in the search results as a map of keys and values.
 	 *
@@ -60,6 +66,8 @@ public interface SearchRequestBuilder {
 	 */
 	public SearchRequestBuilder addSelectedFieldNames(
 		String... selectedFieldNames);
+
+	public SearchRequestBuilder addSort(Sort sort);
 
 	public SearchRequestBuilder basicFacetSelection(
 		boolean basicFacetSelection);
@@ -118,6 +126,8 @@ public interface SearchRequestBuilder {
 
 	public SearchRequestBuilder groupIds(long... groupIds);
 
+	public SearchRequestBuilder highlight(Highlight highlight);
+
 	public SearchRequestBuilder highlightEnabled(boolean highlightEnabled);
 
 	public SearchRequestBuilder highlightFields(String... highlightFields);
@@ -139,6 +149,8 @@ public interface SearchRequestBuilder {
 	public SearchRequestBuilder locale(Locale locale);
 
 	public SearchRequestBuilder modelIndexerClasses(Class<?>... classes);
+
+	public SearchRequestBuilder modelIndexerClassNames(String... classNames);
 
 	public SearchRequestBuilder ownerUserId(Long userId);
 

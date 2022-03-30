@@ -46,7 +46,6 @@ import com.liferay.portal.kernel.util.MethodKey;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see BlogsEntryServiceSoap
  * @generated
  */
 public class BlogsEntryServiceHttp {
@@ -146,12 +145,12 @@ public class BlogsEntryServiceHttp {
 	}
 
 	public static com.liferay.blogs.model.BlogsEntry addEntry(
-			HttpPrincipal httpPrincipal, String title, String subtitle,
-			String urlTitle, String description, String content,
-			int displayDateMonth, int displayDateDay, int displayDateYear,
-			int displayDateHour, int displayDateMinute, boolean allowPingbacks,
-			boolean allowTrackbacks, String[] trackbacks,
-			String coverImageCaption,
+			HttpPrincipal httpPrincipal, String externalReferenceCode,
+			String title, String subtitle, String urlTitle, String description,
+			String content, int displayDateMonth, int displayDateDay,
+			int displayDateYear, int displayDateHour, int displayDateMinute,
+			boolean allowPingbacks, boolean allowTrackbacks,
+			String[] trackbacks, String coverImageCaption,
 			com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector
 				coverImageImageSelector,
 			com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector
@@ -165,10 +164,10 @@ public class BlogsEntryServiceHttp {
 				_addEntryParameterTypes2);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, title, subtitle, urlTitle, description, content,
-				displayDateMonth, displayDateDay, displayDateYear,
-				displayDateHour, displayDateMinute, allowPingbacks,
-				allowTrackbacks, trackbacks, coverImageCaption,
+				methodKey, externalReferenceCode, title, subtitle, urlTitle,
+				description, content, displayDateMonth, displayDateDay,
+				displayDateYear, displayDateHour, displayDateMinute,
+				allowPingbacks, allowTrackbacks, trackbacks, coverImageCaption,
 				coverImageImageSelector, smallImageImageSelector,
 				serviceContext);
 
@@ -584,7 +583,7 @@ public class BlogsEntryServiceHttp {
 			HttpPrincipal httpPrincipal, long groupId, int status, int start,
 			int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.blogs.model.BlogsEntry> obc) {
+				<com.liferay.blogs.model.BlogsEntry> orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -592,7 +591,7 @@ public class BlogsEntryServiceHttp {
 				_getGroupEntriesParameterTypes13);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, status, start, end, obc);
+				methodKey, groupId, status, start, end, orderByComparator);
 
 			Object returnObj = null;
 
@@ -774,7 +773,7 @@ public class BlogsEntryServiceHttp {
 			HttpPrincipal httpPrincipal, long groupId, long userId, int status,
 			int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.blogs.model.BlogsEntry> obc) {
+				<com.liferay.blogs.model.BlogsEntry> orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -782,7 +781,8 @@ public class BlogsEntryServiceHttp {
 				_getGroupUserEntriesParameterTypes18);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, userId, status, start, end, obc);
+				methodKey, groupId, userId, status, start, end,
+				orderByComparator);
 
 			Object returnObj = null;
 
@@ -811,7 +811,7 @@ public class BlogsEntryServiceHttp {
 			HttpPrincipal httpPrincipal, long groupId, long userId,
 			int[] statuses, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.blogs.model.BlogsEntry> obc) {
+				<com.liferay.blogs.model.BlogsEntry> orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -819,7 +819,8 @@ public class BlogsEntryServiceHttp {
 				_getGroupUserEntriesParameterTypes19);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, userId, statuses, start, end, obc);
+				methodKey, groupId, userId, statuses, start, end,
+				orderByComparator);
 
 			Object returnObj = null;
 
@@ -1263,8 +1264,8 @@ public class BlogsEntryServiceHttp {
 	};
 	private static final Class<?>[] _addEntryParameterTypes2 = new Class[] {
 		String.class, String.class, String.class, String.class, String.class,
-		int.class, int.class, int.class, int.class, int.class, boolean.class,
-		boolean.class, String[].class, String.class,
+		String.class, int.class, int.class, int.class, int.class, int.class,
+		boolean.class, boolean.class, String[].class, String.class,
 		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector.class,
 		com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector.class,
 		com.liferay.portal.kernel.service.ServiceContext.class

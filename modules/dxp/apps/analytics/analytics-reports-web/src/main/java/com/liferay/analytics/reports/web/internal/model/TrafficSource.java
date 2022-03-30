@@ -21,9 +21,11 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Stream;
 
@@ -36,29 +38,42 @@ public class TrafficSource {
 	}
 
 	public TrafficSource(
-		String name, List<SearchKeyword> searchKeywords, int trafficAmount,
-		double trafficShare) {
+		List<CountrySearchKeywords> countrySearchKeywordsList, String name,
+		long trafficAmount, double trafficShare) {
 
+		_countrySearchKeywordsList = countrySearchKeywordsList;
 		_name = name;
-		_searchKeywords = searchKeywords;
 		_trafficAmount = trafficAmount;
 		_trafficShare = trafficShare;
+
+		_error = false;
+	}
+
+	public TrafficSource(String name) {
+		_name = name;
+
+		_countrySearchKeywordsList = Collections.emptyList();
+		_error = true;
+		_trafficAmount = 0;
+		_trafficShare = 0;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof TrafficSource)) {
+		if (!(object instanceof TrafficSource)) {
 			return false;
 		}
 
-		TrafficSource trafficSource = (TrafficSource)obj;
+		TrafficSource trafficSource = (TrafficSource)object;
 
-		if (Objects.equals(_name, trafficSource._name) &&
-			Objects.equals(_searchKeywords, trafficSource._searchKeywords) &&
+		if (Objects.equals(
+				_countrySearchKeywordsList,
+				trafficSource._countrySearchKeywordsList) &&
+			Objects.equals(_name, trafficSource._name) &&
 			Objects.equals(_trafficAmount, trafficSource._trafficAmount) &&
 			Objects.equals(_trafficShare, trafficSource._trafficShare)) {
 
@@ -68,16 +83,16 @@ public class TrafficSource {
 		return false;
 	}
 
+	@JsonProperty("countryKeywords")
+	public List<CountrySearchKeywords> getCountrySearchKeywordsList() {
+		return _countrySearchKeywordsList;
+	}
+
 	public String getName() {
 		return _name;
 	}
 
-	@JsonProperty("keywords")
-	public List<SearchKeyword> getSearchKeywords() {
-		return _searchKeywords;
-	}
-
-	public int getTrafficAmount() {
+	public long getTrafficAmount() {
 		return _trafficAmount;
 	}
 
@@ -88,18 +103,20 @@ public class TrafficSource {
 	@Override
 	public int hashCode() {
 		return Objects.hash(
-			_name, _searchKeywords, _trafficAmount, _trafficShare);
+			_countrySearchKeywordsList, _name, _trafficAmount, _trafficShare);
+	}
+
+	public void setCountrySearchKeywordsList(
+		List<CountrySearchKeywords> countrySearchKeywordsList) {
+
+		_countrySearchKeywordsList = countrySearchKeywordsList;
 	}
 
 	public void setName(String name) {
 		_name = name;
 	}
 
-	public void setSearchKeywords(List<SearchKeyword> searchKeywords) {
-		_searchKeywords = searchKeywords;
-	}
-
-	public void setTrafficAmount(int trafficAmount) {
+	public void setTrafficAmount(long trafficAmount) {
 		_trafficAmount = trafficAmount;
 	}
 
@@ -107,48 +124,62 @@ public class TrafficSource {
 		_trafficShare = trafficShare;
 	}
 
-	public JSONObject toJSONObject(String helpMessage, String title) {
-		return JSONUtil.put(
-			"helpMessage", helpMessage
-		).put(
-			"keywords", _getSearchKeywordsJSONArray()
-		).put(
-			"name", getName()
-		).put(
-			"share", getTrafficShare()
-		).put(
-			"title", title
-		).put(
-			"value", getTrafficAmount()
-		);
-	}
+	public JSONObject toJSONObject(
+		String helpMessage, Locale locale, String title) {
 
-	private JSONArray _getSearchKeywordsJSONArray() {
-		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
+		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
-		if (ListUtil.isEmpty(_searchKeywords)) {
-			return jsonArray;
+		if (!ListUtil.isEmpty(_countrySearchKeywordsList)) {
+			jsonObject.put(
+				"countryKeywords", _getCountryKeywordsJSONArray(locale));
 		}
 
-		Stream<SearchKeyword> stream = _searchKeywords.stream();
-
-		Comparator<SearchKeyword> comparator = Comparator.comparingInt(
-			SearchKeyword::getTraffic);
-
-		stream.sorted(
-			comparator.reversed()
-		).limit(
-			5
-		).forEachOrdered(
-			searchKeyword -> jsonArray.put(searchKeyword.toJSONObject())
+		jsonObject.put(
+			"helpMessage", helpMessage
+		).put(
+			"name", getName()
 		);
 
-		return jsonArray;
+		if (!_error) {
+			jsonObject.put("share", String.format("%.1f", _trafficShare));
+		}
+
+		jsonObject.put("title", title);
+
+		if (!_error) {
+			jsonObject.put("value", Math.toIntExact(_trafficAmount));
+		}
+
+		return jsonObject;
 	}
 
+	@Override
+	public String toString() {
+		JSONObject jsonObject = toJSONObject(
+			null, LocaleUtil.getDefault(), _name);
+
+		return jsonObject.toJSONString();
+	}
+
+	private JSONArray _getCountryKeywordsJSONArray(Locale locale) {
+		if (ListUtil.isEmpty(_countrySearchKeywordsList)) {
+			return JSONFactoryUtil.createJSONArray();
+		}
+
+		Stream<CountrySearchKeywords> stream =
+			_countrySearchKeywordsList.stream();
+
+		return JSONUtil.putAll(
+			stream.map(
+				countrySearchKeywords -> countrySearchKeywords.toJSONObject(
+					locale)
+			).toArray());
+	}
+
+	private List<CountrySearchKeywords> _countrySearchKeywordsList;
+	private boolean _error;
 	private String _name;
-	private List<SearchKeyword> _searchKeywords;
-	private int _trafficAmount;
+	private long _trafficAmount;
 	private double _trafficShare;
 
 }

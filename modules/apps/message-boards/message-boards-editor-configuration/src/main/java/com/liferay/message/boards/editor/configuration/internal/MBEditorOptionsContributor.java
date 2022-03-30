@@ -15,6 +15,7 @@
 package com.liferay.message.boards.editor.configuration.internal;
 
 import com.liferay.message.boards.constants.MBPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.editor.configuration.EditorOptions;
 import com.liferay.portal.kernel.editor.configuration.EditorOptionsContributor;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
@@ -24,9 +25,6 @@ import com.liferay.portal.kernel.util.PortletKeys;
 
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
-
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -35,6 +33,7 @@ import org.osgi.service.component.annotations.Component;
 @Component(
 	property = {
 		"editor.name=ckeditor", "editor.name=ckeditor_bbcode",
+		"editor.name=ckeditor_classic",
 		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS,
 		"javax.portlet.name=" + MBPortletKeys.MESSAGE_BOARDS_ADMIN
 	},
@@ -49,26 +48,29 @@ public class MBEditorOptionsContributor implements EditorOptionsContributor {
 		ThemeDisplay themeDisplay,
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory) {
 
-		PortletURL portletURL = requestBackedPortletURLFactory.createActionURL(
-			PortletKeys.MESSAGE_BOARDS);
+		editorOptions.setUploadURL(
+			PortletURLBuilder.create(
+				requestBackedPortletURLFactory.createActionURL(
+					PortletKeys.MESSAGE_BOARDS)
+			).setActionName(
+				"/message_boards/upload_temp_image"
+			).setParameter(
+				"categoryId",
+				() -> {
+					Map<String, String> fileBrowserParamsMap =
+						(Map<String, String>)inputEditorTaglibAttributes.get(
+							"liferay-ui:input-editor:fileBrowserParams");
 
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "/message_boards/upload_temp_image");
+					long categoryId = 0;
 
-		Map<String, String> fileBrowserParamsMap =
-			(Map<String, String>)inputEditorTaglibAttributes.get(
-				"liferay-ui:input-editor:fileBrowserParams");
+					if (fileBrowserParamsMap != null) {
+						categoryId = GetterUtil.getLong(
+							fileBrowserParamsMap.get("categoryId"));
+					}
 
-		long categoryId = 0;
-
-		if (fileBrowserParamsMap != null) {
-			categoryId = GetterUtil.getLong(
-				fileBrowserParamsMap.get("categoryId"));
-		}
-
-		portletURL.setParameter("categoryId", String.valueOf(categoryId));
-
-		editorOptions.setUploadURL(portletURL.toString());
+					return categoryId;
+				}
+			).buildString());
 	}
 
 }

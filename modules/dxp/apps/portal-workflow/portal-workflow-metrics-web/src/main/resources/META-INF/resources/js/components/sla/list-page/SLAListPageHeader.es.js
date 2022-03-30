@@ -11,36 +11,28 @@
 
 import ClayIcon from '@clayui/icon';
 import ClayManagementToolbar from '@clayui/management-toolbar';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import React from 'react';
 
 import ChildLink from '../../../shared/components/router/ChildLink.es';
 
-const Header = ({processId}) => {
+export default function Header({processId}) {
 	return (
-		<ClayManagementToolbar className="autofit-row">
-			<ClayManagementToolbar.Item className="autofit-col-expand autofit-float-end">
-				<ClayTooltipProvider>
-					<span>
-						<span
-							className="workflow-tooltip"
-							data-testid="newSLA"
-							data-tooltip-align={'bottom'}
-							title={Liferay.Language.get('new-sla')}
+		<ClayManagementToolbar>
+			<ClayManagementToolbar.ItemList expand>
+				<ClayManagementToolbar.Item className="autofit-col-expand autofit-float-end">
+					<span
+						data-tooltip-align="bottom"
+						title={Liferay.Language.get('new-sla')}
+					>
+						<ChildLink
+							className="btn btn-primary nav-btn nav-btn-monospaced"
+							to={`/sla/${processId}/new`}
 						>
-							<ChildLink
-								className="btn btn-primary nav-btn nav-btn-monospaced"
-								data-testid="newSLALink"
-								to={`/sla/${processId}/new`}
-							>
-								<ClayIcon symbol="plus" />
-							</ChildLink>
-						</span>
+							<ClayIcon symbol="plus" />
+						</ChildLink>
 					</span>
-				</ClayTooltipProvider>
-			</ClayManagementToolbar.Item>
+				</ClayManagementToolbar.Item>
+			</ClayManagementToolbar.ItemList>
 		</ClayManagementToolbar>
 	);
-};
-
-export {Header};
+}

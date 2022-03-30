@@ -20,27 +20,31 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.web.internal.constants.JournalWebConstants;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
 import com.liferay.journal.web.internal.servlet.taglib.util.JournalArticleActionDropdownItemsProvider;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.taglib.util.LexiconUtil;
 import com.liferay.trash.TrashHelper;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 
@@ -82,14 +86,12 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 			return articleActionDropdownItemsProvider.getActionDropdownItems();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return JournalWebConstants.JOURNAL_ELEMENTS_DEFAULT_EVENT_HANDLER;
 	}
 
 	@Override
@@ -102,27 +104,30 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 				return StringPool.BLANK;
 			}
 
-			String referringPortletResource = ParamUtil.getString(
-				_httpServletRequest, "referringPortletResource");
-
-			PortletURL editArticleURL = _renderResponse.createRenderURL();
-
-			editArticleURL.setParameter("mvcPath", "/edit_article.jsp");
-			editArticleURL.setParameter(
-				"redirect", themeDisplay.getURLCurrent());
-			editArticleURL.setParameter(
-				"referringPortletResource", referringPortletResource);
-			editArticleURL.setParameter(
-				"groupId", String.valueOf(_article.getGroupId()));
-			editArticleURL.setParameter(
-				"folderId", String.valueOf(_article.getFolderId()));
-			editArticleURL.setParameter("articleId", _article.getArticleId());
-			editArticleURL.setParameter(
-				"version", String.valueOf(_article.getVersion()));
-
-			return editArticleURL.toString();
+			return PortletURLBuilder.createRenderURL(
+				_renderResponse
+			).setMVCPath(
+				"/edit_article.jsp"
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).setParameter(
+				"articleId", _article.getArticleId()
+			).setParameter(
+				"folderId", _article.getFolderId()
+			).setParameter(
+				"groupId", _article.getGroupId()
+			).setParameter(
+				"referringPortletResource",
+				ParamUtil.getString(
+					_httpServletRequest, "referringPortletResource")
+			).setParameter(
+				"version", _article.getVersion()
+			).buildString();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return null;
@@ -159,6 +164,56 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 	}
 
 	@Override
+	public String getStickerCssClass() {
+		User user = UserLocalServiceUtil.fetchUser(_article.getUserId());
+
+		if (user == null) {
+			return StringPool.BLANK;
+		}
+
+		return "sticker-user-icon " + LexiconUtil.getUserColorCssClass(user);
+	}
+
+	@Override
+	public String getStickerIcon() {
+		User user = UserLocalServiceUtil.fetchUser(_article.getUserId());
+
+		if (user == null) {
+			return StringPool.BLANK;
+		}
+
+		if (user.getPortraitId() == 0) {
+			return "user";
+		}
+
+		return StringPool.BLANK;
+	}
+
+	@Override
+	public String getStickerImageSrc() {
+		try {
+			User user = UserLocalServiceUtil.fetchUser(_article.getUserId());
+
+			if (user == null) {
+				return StringPool.BLANK;
+			}
+
+			if (user.getPortraitId() <= 0) {
+				return null;
+			}
+
+			return user.getPortraitURL(themeDisplay);
+		}
+		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
+			return StringPool.BLANK;
+		}
+	}
+
+	@Override
 	public String getSubtitle() {
 		Date createDate = _article.getModifiedDate();
 
@@ -167,7 +222,11 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 			System.currentTimeMillis() - createDate.getTime(), true);
 
 		return LanguageUtil.format(
-			_httpServletRequest, "modified-x-ago", modifiedDateDescription);
+			_httpServletRequest, "modified-x-ago-by-x",
+			new String[] {
+				modifiedDateDescription,
+				HtmlUtil.escape(_article.getStatusByUserName())
+			});
 	}
 
 	@Override
@@ -183,6 +242,9 @@ public class JournalArticleVerticalCard extends BaseVerticalCard {
 
 		return HtmlUtil.escape(_article.getTitle(defaultLanguage));
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleVerticalCard.class);
 
 	private final JournalArticle _article;
 	private final AssetDisplayPageFriendlyURLProvider

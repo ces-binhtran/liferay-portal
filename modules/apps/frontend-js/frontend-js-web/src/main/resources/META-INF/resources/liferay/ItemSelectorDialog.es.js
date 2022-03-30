@@ -19,6 +19,7 @@ import toggleDisabled from './util/toggle_disabled';
 
 /**
  * Shows a dialog and handles the selected item.
+ * @deprecated As of Cavanaugh (7.4.x), replaced by `openSelectionModal`
  */
 class ItemSelectorDialog extends Component {
 
@@ -84,7 +85,7 @@ class ItemSelectorDialog extends Component {
 		if (!this.singleSelect) {
 			const dialogFooter = [
 				{
-					cssClass: 'btn-link close-modal',
+					cssClass: 'btn-secondary close-modal',
 					id: 'cancelButton',
 					label: this.buttonCancelLabel,
 					on: {

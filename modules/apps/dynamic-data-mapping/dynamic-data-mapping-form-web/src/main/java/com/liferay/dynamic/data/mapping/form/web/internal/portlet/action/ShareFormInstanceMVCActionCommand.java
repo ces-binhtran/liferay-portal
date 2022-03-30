@@ -19,6 +19,8 @@ import com.liferay.dynamic.data.mapping.service.DDMFormInstanceService;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
@@ -61,12 +63,16 @@ public class ShareFormInstanceMVCActionCommand extends BaseMVCActionCommand {
 				"successMessage",
 				LanguageUtil.get(
 					_portal.getHttpServletRequest(actionRequest),
-					"your-request-completed-successfully"));
+					"form-was-shared-via-email"));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
 
@@ -82,6 +88,9 @@ public class ShareFormInstanceMVCActionCommand extends BaseMVCActionCommand {
 				actionRequest, actionResponse, jsonObject);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ShareFormInstanceMVCActionCommand.class);
 
 	@Reference
 	private DDMFormInstanceService _ddmFormInstanceService;

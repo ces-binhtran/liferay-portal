@@ -35,10 +35,10 @@ import com.liferay.user.associated.data.web.internal.display.UADEntity;
 import com.liferay.user.associated.data.web.internal.display.UADHierarchyDisplay;
 import com.liferay.user.associated.data.web.internal.display.UADInfoPanelDisplay;
 import com.liferay.user.associated.data.web.internal.display.ViewUADEntitiesDisplay;
+import com.liferay.user.associated.data.web.internal.helper.SelectedUserHelper;
+import com.liferay.user.associated.data.web.internal.helper.UADApplicationSummaryHelper;
 import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
 import com.liferay.user.associated.data.web.internal.util.GroupUtil;
-import com.liferay.user.associated.data.web.internal.util.SelectedUserHelper;
-import com.liferay.user.associated.data.web.internal.util.UADApplicationSummaryHelper;
 import com.liferay.user.associated.data.web.internal.util.UADSearchContainerBuilder;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/review_uad_data"
+		"mvc.command.name=/user_associated_data/review_uad_data"
 	},
 	service = MVCRenderCommand.class
 )
@@ -107,8 +107,8 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 			String uadRegistryKey = _getUADRegistryKey(
 				applicationKey, renderRequest);
 
-			UADDisplay<Object> uadDisplay =
-				(UADDisplay<Object>)_uadRegistry.getUADDisplay(uadRegistryKey);
+			UADDisplay<?> uadDisplay = _uadRegistry.getUADDisplay(
+				uadRegistryKey);
 
 			renderRequest.setAttribute(
 				UADWebKeys.UAD_INFO_PANEL_DISPLAY,
@@ -195,10 +195,10 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 		return scopeDisplays;
 	}
 
-	private SearchContainer<UADEntity> _getSearchContainer(
+	private SearchContainer<UADEntity<?>> _getSearchContainer(
 			String applicationKey, RenderRequest renderRequest,
 			RenderResponse renderResponse, ScopeDisplay scopeDisplay,
-			UADDisplay<UADEntity> uadDisplay,
+			UADDisplay<Object> uadDisplay,
 			UADHierarchyDisplay uadHierarchyDisplay, User user)
 		throws Exception {
 
@@ -208,20 +208,22 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 			renderRequest, renderResponse);
 
 		if (applicationKey.equals(UADConstants.ALL_APPLICATIONS)) {
-			return _uadSearchContainerBuilder.getSearchContainer(
-				liferayPortletResponse, renderRequest, currentURL,
-				scopeDisplay.getUADApplicationSummaryDisplays());
+			return _uadSearchContainerBuilder.
+				getApplicationSummaryUADEntitySearchContainer(
+					liferayPortletResponse, renderRequest, currentURL,
+					scopeDisplay.getUADApplicationSummaryDisplays());
 		}
 
 		if (uadHierarchyDisplay != null) {
-			return _uadSearchContainerBuilder.getSearchContainer(
-				liferayPortletResponse, renderRequest, applicationKey,
-				currentURL, scopeDisplay.getGroupIds(),
-				uadHierarchyDisplay.getFirstContainerTypeClass(), 0L, user,
-				uadHierarchyDisplay);
+			return _uadSearchContainerBuilder.
+				getHierarchyUADEntitySearchContainer(
+					liferayPortletResponse, renderRequest, applicationKey,
+					currentURL, scopeDisplay.getGroupIds(),
+					uadHierarchyDisplay.getFirstContainerTypeClass(), 0L, user,
+					uadHierarchyDisplay);
 		}
 
-		return _uadSearchContainerBuilder.getSearchContainer(
+		return _uadSearchContainerBuilder.getUADEntitySearchContainer(
 			liferayPortletResponse, renderRequest, currentURL,
 			scopeDisplay.getGroupIds(), user, uadDisplay);
 	}
@@ -232,8 +234,7 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 	}
 
 	private UADInfoPanelDisplay _getUADInfoPanelDisplay(
-		UADDisplay<Object> uadDisplay,
-		UADHierarchyDisplay uadHierarchyDisplay) {
+		UADDisplay<?> uadDisplay, UADHierarchyDisplay uadHierarchyDisplay) {
 
 		UADInfoPanelDisplay uadInfoPanelDisplay = new UADInfoPanelDisplay();
 
@@ -243,7 +244,7 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 				(UADDisplay<Object>)uadHierarchyDisplay.getUADDisplays()[0]);
 		}
 		else {
-			uadInfoPanelDisplay.setUADDisplay(uadDisplay);
+			uadInfoPanelDisplay.setUADDisplay((UADDisplay<Object>)uadDisplay);
 		}
 
 		return uadInfoPanelDisplay;
@@ -280,7 +281,7 @@ public class ReviewUADDataMVCRenderCommand implements MVCRenderCommand {
 		viewUADEntitiesDisplay.setSearchContainer(
 			_getSearchContainer(
 				applicationKey, renderRequest, renderResponse, scopeDisplay,
-				(UADDisplay<UADEntity>)uadDisplay, uadHierarchyDisplay, user));
+				(UADDisplay<Object>)uadDisplay, uadHierarchyDisplay, user));
 
 		if (uadHierarchyDisplay != null) {
 			viewUADEntitiesDisplay.setHierarchy(true);

@@ -34,21 +34,16 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.LockOptions;
+import org.hibernate.engine.EntityKey;
+import org.hibernate.engine.PersistenceContext;
+import org.hibernate.engine.SessionFactoryImplementor;
+import org.hibernate.event.EventSource;
 
 /**
  * @author Brian Wing Shun Chan
  * @author Shuyang Zhou
  */
 public class SessionImpl implements Session {
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #SessionImpl(org.hibernate.Session, ClassLoader)}
-	 */
-	@Deprecated
-	public SessionImpl(org.hibernate.Session session) {
-		this(session, null);
-	}
 
 	public SessionImpl(
 		org.hibernate.Session session, ClassLoader sessionFactoryClassLoader) {
@@ -218,6 +213,35 @@ public class SessionImpl implements Session {
 	}
 
 	@Override
+	public void evict(Class<?> clazz, Serializable id) throws ORMException {
+		try {
+			EventSource eventSource = (EventSource)_session;
+
+			PersistenceContext persistenceContext =
+				eventSource.getPersistenceContext();
+
+			SessionFactoryImplementor sessionFactoryImplementor =
+				eventSource.getFactory();
+
+			Object object = persistenceContext.getEntity(
+				new EntityKey(
+					id,
+					sessionFactoryImplementor.getEntityPersister(
+						clazz.getName()),
+					eventSource.getEntityMode()));
+
+			if (object == null) {
+				return;
+			}
+
+			eventSource.evict(object);
+		}
+		catch (Exception exception) {
+			throw ExceptionTranslator.translate(exception);
+		}
+	}
+
+	@Override
 	public void evict(Object object) throws ORMException {
 		try {
 			_session.evict(object);
@@ -319,13 +343,7 @@ public class SessionImpl implements Session {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(3);
-
-		sb.append("{_session=");
-		sb.append(String.valueOf(_session));
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat("{_session=", _session, "}");
 	}
 
 	private Query _createQuery(String queryString, boolean strictName)

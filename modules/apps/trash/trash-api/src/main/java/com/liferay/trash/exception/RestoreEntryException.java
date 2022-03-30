@@ -29,6 +29,8 @@ public class RestoreEntryException extends PortalException {
 
 	public static final int INVALID_STATUS = 4;
 
+	public static final int NOT_RESTORABLE = 5;
+
 	public RestoreEntryException() {
 	}
 
@@ -36,8 +38,8 @@ public class RestoreEntryException extends PortalException {
 		_type = type;
 	}
 
-	public RestoreEntryException(int type, Throwable cause) {
-		super(cause);
+	public RestoreEntryException(int type, Throwable throwable) {
+		super(throwable);
 
 		_type = type;
 	}
@@ -46,12 +48,12 @@ public class RestoreEntryException extends PortalException {
 		super(msg);
 	}
 
-	public RestoreEntryException(String msg, Throwable cause) {
-		super(msg, cause);
+	public RestoreEntryException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public RestoreEntryException(Throwable cause) {
-		super(cause);
+	public RestoreEntryException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public long getDuplicateEntryId() {

@@ -12,6 +12,9 @@
  * details.
  */
 
+/**
+ * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+ */
 AUI.add(
 	'liferay-image-selector',
 	(A) => {
@@ -231,37 +234,20 @@ AUI.add(
 				_onBrowseClick() {
 					var instance = this;
 
-					Liferay.Loader.require(
-						'frontend-js-web/liferay/ItemSelectorDialog.es',
-						(ItemSelectorDialog) => {
-							var itemSelectorDialog = new ItemSelectorDialog.default(
-								{
-									eventName: instance.get(
-										'itemSelectorEventName'
-									),
-									singleSelect: true,
-									url: instance.get('itemSelectorURL'),
-								}
-							);
+					Liferay.Util.openSelectionModal({
+						onSelect: (selectedItem) => {
+							if (selectedItem) {
+								instance._updateImageData(
+									JSON.parse(selectedItem.value)
+								);
 
-							itemSelectorDialog.open();
-
-							itemSelectorDialog.on(
-								'selectedItemChange',
-								(event) => {
-									var selectedItem = event.selectedItem;
-
-									if (selectedItem) {
-										instance._updateImageData(
-											JSON.parse(selectedItem.value)
-										);
-
-										Liferay.fire(STR_IMAGE_SELECTED);
-									}
-								}
-							);
-						}
-					);
+								Liferay.fire(STR_IMAGE_SELECTED);
+							}
+						},
+						selectEventName: instance.get('itemSelectorEventName'),
+						title: Liferay.Language.get('select-file'),
+						url: instance.get('itemSelectorURL'),
+					});
 
 					instance._cancelTimer();
 				},

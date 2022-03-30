@@ -22,7 +22,7 @@ import com.liferay.calendar.service.CalendarLocalService;
 import com.liferay.calendar.service.CalendarService;
 import com.liferay.calendar.service.base.CalendarBookingServiceBaseImpl;
 import com.liferay.calendar.util.JCalendarUtil;
-import com.liferay.calendar.workflow.CalendarBookingWorkflowConstants;
+import com.liferay.calendar.workflow.constants.CalendarBookingWorkflowConstants;
 import com.liferay.petra.content.ContentUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
@@ -58,6 +58,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -313,15 +314,14 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 
 		Calendar calendar = _calendarService.getCalendar(calendarId);
 
-		int[] statuses = {
-			WorkflowConstants.STATUS_APPROVED,
-			CalendarBookingWorkflowConstants.STATUS_MAYBE
-		};
-
 		List<CalendarBooking> calendarBookings = search(
 			themeDisplay.getCompanyId(), new long[0], new long[] {calendarId},
-			new long[0], -1, null, startTime, endTime, true, statuses, 0, max,
-			null);
+			new long[0], -1, null, startTime, endTime, null, true,
+			new int[] {
+				WorkflowConstants.STATUS_APPROVED,
+				CalendarBookingWorkflowConstants.STATUS_MAYBE
+			},
+			0, max, null);
 
 		return exportToRSS(
 			calendar.getName(themeDisplay.getLocale()),
@@ -339,11 +339,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			calendarBookingLocalService.getChildCalendarBookings(
 				parentCalendarBookingId);
 
-		for (CalendarBooking calendarBooking : calendarBookings) {
-			filterCalendarBooking(calendarBooking);
-		}
-
-		return calendarBookings;
+		return _filterCalendarBookings(calendarBookings);
 	}
 
 	@Override
@@ -369,7 +365,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 				}
 				catch (PortalException portalException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(portalException, portalException);
+						_log.warn(portalException);
 					}
 
 					return true;
@@ -388,11 +384,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			calendarBookingLocalService.getChildCalendarBookings(
 				parentCalendarBookingId, status);
 
-		for (CalendarBooking calendarBooking : calendarBookings) {
-			filterCalendarBooking(calendarBooking);
-		}
-
-		return calendarBookings;
+		return _filterCalendarBookings(calendarBookings);
 	}
 
 	@Override
@@ -511,8 +503,9 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 	public List<CalendarBooking> search(
 			long companyId, long[] groupIds, long[] calendarIds,
 			long[] calendarResourceIds, long parentCalendarBookingId,
-			String keywords, long startTime, long endTime, boolean recurring,
-			int[] statuses, int start, int end,
+			String keywords, long startTime, long endTime,
+			TimeZone displayTimeZone, boolean recurring, int[] statuses,
+			int start, int end,
 			OrderByComparator<CalendarBooking> orderByComparator)
 		throws PortalException {
 
@@ -520,7 +513,8 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 			calendarBookingLocalService.search(
 				companyId, groupIds, calendarIds, calendarResourceIds,
 				parentCalendarBookingId, keywords, startTime, endTime,
-				recurring, statuses, start, end, orderByComparator);
+				displayTimeZone, recurring, statuses, start, end,
+				orderByComparator);
 
 		return filterCalendarBookings(calendarBookings, ActionKeys.VIEW);
 	}
@@ -556,8 +550,8 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 
 		List<CalendarBooking> calendarBookings = search(
 			companyId, groupIds, calendarIds, calendarResourceIds,
-			parentCalendarBookingId, keywords, startTime, endTime, recurring,
-			statuses, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+			parentCalendarBookingId, keywords, startTime, endTime, null,
+			recurring, statuses, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
 
 		return calendarBookings.size();
 	}
@@ -824,9 +818,7 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		for (CalendarBooking calendarBooking : calendarBookings) {
 			SyndEntry syndEntry = _syndModelFactory.createSyndEntry();
 
-			String author = _portal.getUserName(calendarBooking);
-
-			syndEntry.setAuthor(author);
+			syndEntry.setAuthor(_portal.getUserName(calendarBooking));
 
 			SyndContent syndContent = _syndModelFactory.createSyndContent();
 
@@ -941,7 +933,32 @@ public class CalendarBookingServiceImpl extends CalendarBookingServiceBaseImpl {
 		return false;
 	}
 
-	private static String _getContent(
+	private List<CalendarBooking> _filterCalendarBookings(
+		List<CalendarBooking> calendarBookings) {
+
+		Stream<CalendarBooking> stream = calendarBookings.stream();
+
+		return stream.map(
+			calendarBooking -> {
+				try {
+					return filterCalendarBooking(calendarBooking);
+				}
+				catch (PortalException portalException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(portalException);
+					}
+
+					return null;
+				}
+			}
+		).filter(
+			Objects::nonNull
+		).collect(
+			Collectors.toList()
+		);
+	}
+
+	private String _getContent(
 		CalendarBooking calendarBooking, String displayStyle,
 		ThemeDisplay themeDisplay) {
 

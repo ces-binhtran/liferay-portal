@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.base.JournalFolderServiceBaseImpl;
+import com.liferay.journal.service.persistence.JournalArticleFinder;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.orm.QueryDefinition;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -109,6 +110,17 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	}
 
 	@Override
+	public List<DDMStructure> getDDMStructures(
+			long[] groupIds, long folderId, int restrictionType,
+			OrderByComparator<DDMStructure> orderByComparator)
+		throws PortalException {
+
+		return filterStructures(
+			journalFolderLocalService.getDDMStructures(
+				groupIds, folderId, restrictionType, orderByComparator));
+	}
+
+	@Override
 	public JournalFolder getFolder(long folderId) throws PortalException {
 		JournalFolder folder = journalFolderLocalService.getFolder(folderId);
 
@@ -172,28 +184,30 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	@Override
 	public List<Object> getFoldersAndArticles(
 		long groupId, long folderId, int status, int start, int end,
-		OrderByComparator<?> obc) {
+		OrderByComparator<?> orderByComparator) {
 
 		return getFoldersAndArticles(
-			groupId, 0, folderId, status, start, end, obc);
+			groupId, 0, folderId, status, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<Object> getFoldersAndArticles(
 		long groupId, long folderId, int start, int end,
-		OrderByComparator<?> obc) {
+		OrderByComparator<?> orderByComparator) {
 
 		return getFoldersAndArticles(
-			groupId, folderId, WorkflowConstants.STATUS_ANY, start, end, obc);
+			groupId, folderId, WorkflowConstants.STATUS_ANY, start, end,
+			orderByComparator);
 	}
 
 	@Override
 	public List<Object> getFoldersAndArticles(
 		long groupId, long userId, long folderId, int status, int start,
-		int end, OrderByComparator<?> obc) {
+		int end, OrderByComparator<?> orderByComparator) {
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
-			status, userId, true, start, end, (OrderByComparator<Object>)obc);
+			status, userId, true, start, end,
+			(OrderByComparator<Object>)orderByComparator);
 
 		return journalFolderFinder.filterFindF_A_ByG_F(
 			groupId, folderId, queryDefinition);
@@ -202,10 +216,11 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	@Override
 	public List<Object> getFoldersAndArticles(
 		long groupId, long userId, long folderId, int status, Locale locale,
-		int start, int end, OrderByComparator<?> obc) {
+		int start, int end, OrderByComparator<?> orderByComparator) {
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
-			status, userId, true, start, end, (OrderByComparator<Object>)obc);
+			status, userId, true, start, end,
+			(OrderByComparator<Object>)orderByComparator);
 
 		return journalFolderFinder.filterFindF_A_ByG_F_L(
 			groupId, folderId, locale, queryDefinition);
@@ -219,14 +234,14 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 			status);
 
 		if (folderIds.size() <= PropsValues.SQL_DATA_MAX_PARAMETERS) {
-			return journalArticleFinder.filterCountByG_F(
+			return _journalArticleFinder.filterCountByG_F(
 				groupId, folderIds, queryDefinition);
 		}
 
 		int start = 0;
 		int end = PropsValues.SQL_DATA_MAX_PARAMETERS;
 
-		int articlesCount = journalArticleFinder.filterCountByG_F(
+		int articlesCount = _journalArticleFinder.filterCountByG_F(
 			groupId, folderIds.subList(start, end), queryDefinition);
 
 		List<Long> sublist = folderIds.subList(start, end);
@@ -360,13 +375,13 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	public List<DDMStructure> searchDDMStructures(
 			long companyId, long[] groupIds, long folderId, int restrictionType,
 			String keywords, int start, int end,
-			OrderByComparator<DDMStructure> obc)
+			OrderByComparator<DDMStructure> orderByComparator)
 		throws PortalException {
 
 		return filterStructures(
 			journalFolderLocalService.searchDDMStructures(
 				companyId, groupIds, folderId, restrictionType, keywords, start,
-				end, obc));
+				end, orderByComparator));
 	}
 
 	@Override
@@ -450,6 +465,9 @@ public class JournalFolderServiceImpl extends JournalFolderServiceBaseImpl {
 	)
 	private ModelResourcePermission<DDMStructure>
 		_ddmStructureModelResourcePermission;
+
+	@Reference
+	private JournalArticleFinder _journalArticleFinder;
 
 	@Reference(
 		target = "(model.class.name=com.liferay.journal.model.JournalFolder)"

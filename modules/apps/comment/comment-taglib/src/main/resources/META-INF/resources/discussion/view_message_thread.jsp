@@ -33,15 +33,13 @@ DiscussionComment rootDiscussionComment = discussion.getRootDiscussionComment();
 
 DiscussionRequestHelper discussionRequestHelper = new DiscussionRequestHelper(request);
 
-DiscussionPermission discussionPermission = CommentManagerUtil.getDiscussionPermission(discussionRequestHelper.getPermissionChecker());
-
-CommentTreeDisplayContext commentTreeDisplayContext = CommentDisplayContextProviderUtil.getCommentTreeDisplayContext(request, response, discussionPermission, discussionComment);
+CommentTreeDisplayContext commentTreeDisplayContext = CommentDisplayContextProviderUtil.getCommentTreeDisplayContext(request, response, CommentManagerUtil.getDiscussionPermission(discussionRequestHelper.getPermissionChecker()), discussionComment);
 
 Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZone);
 %>
 
 <c:if test="<%= commentTreeDisplayContext.isDiscussionVisible() %>">
-	<article class='lfr-discussion <%= (rootDiscussionComment.getCommentId() == discussionComment.getParentCommentId()) ? "lfr-discussion-container" : "" %>'>
+	<article class="lfr-discussion <%= (rootDiscussionComment.getCommentId() == discussionComment.getParentCommentId()) ? "lfr-discussion-container" : "" %>">
 		<div class="comment-container">
 			<clay:content-row
 				cssClass="widget-metadata"
@@ -60,11 +58,11 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 				%>
 
 				<clay:content-col
-					expand="true"
+					expand="<%= true %>"
 				>
 					<clay:content-row>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<div class="text-truncate">
 								<liferay-util:whitespace-remover>
@@ -90,65 +88,46 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 
 									<%
 									DiscussionComment parentDiscussionComment = discussionComment.getParentComment();
+
+									Date parentDiscussionCreateDate = parentDiscussionComment.getCreateDate();
+									User parentMessageUser = parentDiscussionComment.getUser();
 									%>
 
-									<liferay-util:buffer
-										var="parentCommentUserBuffer"
-									>
+									<span>
+										<clay:link
+											aria-label='<%= LanguageUtil.format(request, "in-reply-to-x", HtmlUtil.escape(parentDiscussionComment.getUserName()), false) %>'
+											cssClass="lfr-discussion-parent-link"
+											href='<%= "#" + randomNamespace + "message_" + parentDiscussionComment.getCommentId() %>'
+											icon="redo"
+											label="<%= HtmlUtil.escape(parentDiscussionComment.getUserName()) %>"
+										/>
 
-										<%
-										User parentMessageUser = parentDiscussionComment.getUser();
-										%>
-
-										<clay:content-row
-											noGutters="x"
-										>
-											<clay:content-col>
-												<liferay-ui:user-portrait
-													cssClass="sticker-lg"
-													user="<%= parentMessageUser %>"
-												/>
-											</clay:content-col>
-
-											<clay:content-col
-												expand="true"
-											>
-												<div class="username">
-													<%= HtmlUtil.escape(parentDiscussionComment.getUserName()) %>
-												</div>
-
-												<%
-												Date parentDiscussionCreateDate = parentDiscussionComment.getCreateDate();
-												%>
-
-												<div class="text-secondary">
-													<liferay-ui:message arguments="<%= LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - parentDiscussionCreateDate.getTime(), true) %>" key="x-ago" translateArguments="<%= false %>" />
-												</div>
-											</clay:content-col>
-										</clay:content-row>
-									</liferay-util:buffer>
-
-									<%
-									Map<String, String> dataInReply = HashMapBuilder.put(
-										"inreply-content", parentDiscussionComment.getBody()
-									).put(
-										"inreply-title", parentCommentUserBuffer
-									).build();
-									%>
-
-									<clay:link
-										ariaLabel='<%= LanguageUtil.format(request, "in-reply-to-x", HtmlUtil.escape(parentDiscussionComment.getUserName()), false) %>'
-										data="<%= dataInReply %>"
-										elementClasses="lfr-discussion-parent-link"
-										href='<%= "#" + randomNamespace + "message_" + parentDiscussionComment.getCommentId() %>'
-										icon="redo"
-										label="<%= HtmlUtil.escape(parentDiscussionComment.getUserName()) %>"
-									/>
+										<react:component
+											module="discussion/js/components/ReplyPopover"
+											props='<%=
+												HashMapBuilder.<String, Object>put(
+													"ariaLabel", LanguageUtil.format(request, "in-reply-to-x", parentDiscussionComment.getUserName(), false)
+												).put(
+													"contentHTML", parentDiscussionComment.getBody()
+												).put(
+													"href", "#" + randomNamespace + "message_" + parentDiscussionComment.getCommentId()
+												).put(
+													"portraitURL", parentMessageUser.getPortraitURL(themeDisplay)
+												).put(
+													"time", LanguageUtil.format(request, "x-ago", LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - parentDiscussionCreateDate.getTime(), true), false)
+												).put(
+													"userId", parentDiscussionComment.getUserId()
+												).put(
+													"username", parentDiscussionComment.getUserName()
+												).build()
+											%>'
+										/>
+									</span>
 								</c:if>
 							</div>
 
 							<div class="text-secondary">
-								<span title="<%= dateFormatDateTime.format(createDate) %>"><liferay-ui:message arguments="<%= createDateDescription %>" key="x-ago" translateArguments="<%= false %>" /></span>
+								<span class="lfr-portal-tooltip" title="<%= dateFormatDateTime.format(createDate) %>"><liferay-ui:message arguments="<%= createDateDescription %>" key="x-ago" translateArguments="<%= false %>" /></span>
 
 								<%
 								Date modifiedDate = discussionComment.getModifiedDate();
@@ -156,7 +135,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 
 								<c:if test="<%= createDate.before(modifiedDate) %>">
 									-
-									<strong title="<%= dateFormatDateTime.format(modifiedDate) %>">
+									<strong class="lfr-portal-tooltip" title="<%= dateFormatDateTime.format(modifiedDate) %>">
 										<liferay-ui:message key="edited" />
 									</strong>
 								</c:if>
@@ -185,6 +164,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 							markupView="lexicon"
 							message="actions"
 							showWhenSingleIcon="<%= true %>"
+							triggerCssClass="lfr-portal-tooltip"
 						>
 							<c:if test="<%= commentTreeDisplayContext.isEditActionControlVisible() %>">
 								<liferay-ui:icon
@@ -213,7 +193,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 				</div>
 
 				<div class="lfr-discussion-message">
-					<div class="lfr-discussion-message-body" id='<%= namespace + "discussionMessage" + index %>'>
+					<div class="lfr-discussion-message-body" id="<%= namespace + "discussionMessage" + index %>">
 						<%= discussionComment.getTranslatedBody(themeDisplay.getPathThemeImages()) %>
 					</div>
 
@@ -228,17 +208,8 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 								String taglibCancel = randomNamespace + "showEl('" + namespace + "discussionMessage" + index + "');" + randomNamespace + "hideEditor('" + randomNamespace + "editReplyBody" + index + "', '" + namespace + "editForm" + index + "');";
 								%>
 
-								<aui:button cssClass="btn-comment btn-primary btn-sm" onClick="<%= taglibCancel %>" type="cancel" />
+								<aui:button cssClass="btn-comment btn-secondary btn-sm" onClick="<%= taglibCancel %>" type="cancel" />
 							</aui:button-row>
-
-							<aui:script>
-								window['<%= namespace + index %>EditOnChange'] = function (html) {
-									Liferay.Util.toggleDisabled(
-										'#<%= namespace %>editReplyButton<%= index %>',
-										html.trim() === ''
-									);
-								};
-							</aui:script>
 						</div>
 					</c:if>
 				</div>
@@ -251,7 +222,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 							<c:if test="<%= !discussion.isMaxCommentsLimitExceeded() %>">
 								<c:choose>
 									<c:when test="<%= commentTreeDisplayContext.isReplyButtonVisible() %>">
-										<button class="btn btn-outline-borderless btn-outline-secondary btn-sm" onclick='<%= randomNamespace + "showPostReplyEditor(" + index + ");" %>' type="button">
+										<button class="btn btn-outline-borderless btn-outline-secondary btn-sm" onclick="<%= randomNamespace + "showPostReplyEditor(" + index + ");" %>" type="button">
 											<liferay-ui:message key="reply" />
 										</button>
 									</c:when>
@@ -280,7 +251,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 			</div>
 		</div>
 
-		<div class="lfr-discussion lfr-discussion-form-reply" id='<%= namespace + "postReplyForm" + index %>' style="display: none;">
+		<div class="lfr-discussion lfr-discussion-form-reply" id="<%= namespace + "postReplyForm" + index %>" style="display: none;">
 			<div class="lfr-discussion-reply-container">
 				<clay:content-row
 					noGutters="true"
@@ -295,7 +266,7 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 					</clay:content-col>
 
 					<clay:content-col
-						expand="true"
+						expand="<%= true %>"
 					>
 						<div class="editor-wrapper"></div>
 
@@ -310,12 +281,6 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 						</aui:button-row>
 
 						<aui:script>
-							window['<%= namespace + index %>ReplyOnChange'] = function (html) {
-								Liferay.Util.toggleDisabled(
-									'#<%= namespace %>postReplyButton<%= index %>',
-									html.trim() === ''
-								);
-							};
 						</aui:script>
 					</clay:content-col>
 				</clay:content-row>
@@ -335,4 +300,17 @@ Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(locale, timeZo
 		%>
 
 	</article>
+
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"index", index
+			).put(
+				"namespace", namespace
+			).put(
+				"randomNamespace", randomNamespace
+			).build()
+		%>'
+		module="discussion/js/ViewMessageThread"
+	/>
 </c:if>

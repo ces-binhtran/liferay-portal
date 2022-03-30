@@ -12,28 +12,30 @@
  * details.
  */
 
-import {fetch} from 'frontend-js-web';
+import {fetch, openToast} from 'frontend-js-web';
 import React, {useEffect, useRef, useState} from 'react';
 
 import Breadcrumbs from '../breadcrumbs/Breadcrumbs';
 import MillerColumns from '../miller_columns/MillerColumns';
-import actionHandlers from './actionHandlers';
 
 const Layout = ({
 	getItemChildrenURL,
 	initialBreadcrumbEntries,
 	initialLayoutColumns,
+	isPrivateLayoutsEnabled,
+	languageId,
 	moveItemURL,
 	namespace,
 	searchContainerId,
 }) => {
 	const layoutRef = useRef();
-	const searchContainer = useRef();
+	const searchContainerRef = useRef();
 
 	const [breadcrumbEntries, setBreadcrumbEntries] = useState(
 		initialBreadcrumbEntries
 	);
 	const [layoutColumns, setLayoutColumns] = useState(initialLayoutColumns);
+	const [searchContainerElement, setSearchContainerElement] = useState();
 
 	useEffect(() => {
 		const A = new AUI();
@@ -51,15 +53,17 @@ const Layout = ({
 					},
 				];
 
-				if (searchContainer.current) {
-					searchContainer.current.destroy();
+				if (searchContainerRef.current) {
+					searchContainerRef.current.destroy();
 				}
 
-				searchContainer.current = new Liferay.SearchContainer({
+				searchContainerRef.current = new Liferay.SearchContainer({
 					contentBox: layoutRef.current,
 					id: `${namespace}${searchContainerId}`,
 					plugins,
 				});
+
+				setSearchContainerElement(searchContainerRef.current);
 			}
 		);
 	}, [namespace, searchContainerId]);
@@ -79,54 +83,71 @@ const Layout = ({
 
 				for (let i = 0; i < layoutColumns.length; i++) {
 					const column = layoutColumns[i];
-					const newColumn = [];
 
-					let parent;
-
-					for (let j = 0; j < column.length; j++) {
-						const newItem = {...column[j]};
-
-						if (!parent && newItem.id === parentId) {
-							parent = newItem;
-						}
-
-						newColumn.push(newItem);
+					if (!column.some((item) => item.id === parentId)) {
+						newLayoutColumns.push(column);
 					}
+					else {
+						const newColumn = [];
 
-					newLayoutColumns.push(newColumn);
+						column.forEach((item) => {
+							if (item.active) {
+								newColumn.push({...item, active: false});
+							}
+							else if (item.id === parentId) {
+								newColumn.push({...item, active: true});
+							}
+							else {
+								newColumn.push({...item});
+							}
+						});
 
-					if (parent) {
-						const oldParent = newColumn.find((item) => item.active);
+						newLayoutColumns.push(newColumn);
 
-						if (oldParent) {
-							oldParent.active = false;
-						}
-
-						parent.active = true;
-						newLayoutColumns.push(children);
 						break;
 					}
 				}
+
+				newLayoutColumns.push(children);
 
 				setLayoutColumns(newLayoutColumns);
 			})
 			.catch();
 	};
 
-	const saveData = (sourceItemId, parentItemId, position) => {
+	const saveData = (movedItems, parentItemId) => {
 		const formData = new FormData();
 
-		formData.append(`${namespace}plid`, sourceItemId);
+		const activeItems = layoutColumns.reduce(
+			(acc, column) => [...acc, ...column.filter((item) => item.active)],
+			[]
+		);
+
+		const activeItem = activeItems[activeItems.length - 1];
+
+		formData.append(`${namespace}plids`, JSON.stringify(movedItems));
 		formData.append(`${namespace}parentPlid`, parentItemId);
 
-		if (Number.isInteger(position)) {
-			formData.append(`${namespace}priority`, position);
+		if (activeItem) {
+			formData.append(`${namespace}selPlid`, activeItem.id);
 		}
 
 		fetch(moveItemURL, {
 			body: formData,
 			method: 'POST',
-		});
+		})
+			.then((response) => response.json())
+			.then(({errorMessage, layoutColumns: updatedLayoutColumns}) => {
+				if (errorMessage) {
+					openToast({
+						message: errorMessage,
+						type: 'danger',
+					});
+				}
+				if (updatedLayoutColumns) {
+					setLayoutColumns(updatedLayoutColumns);
+				}
+			});
 	};
 
 	const updateBreadcrumbs = (columns) => {
@@ -149,13 +170,16 @@ const Layout = ({
 	return (
 		<div ref={layoutRef}>
 			<Breadcrumbs entries={breadcrumbEntries} />
+
 			<MillerColumns
-				actionHandlers={actionHandlers}
 				initialColumns={layoutColumns}
+				isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
 				namespace={namespace}
 				onColumnsChange={updateBreadcrumbs}
 				onItemMove={saveData}
 				onItemStayHover={getItemChildren}
+				rtl={Liferay.Language.direction[languageId] === 'rtl'}
+				searchContainer={searchContainerElement}
 			/>
 		</div>
 	);
@@ -166,6 +190,8 @@ export default function ({
 	props: {
 		breadcrumbEntries,
 		getItemChildrenURL,
+		isPrivateLayoutsEnabled,
+		languageId,
 		layoutColumns,
 		moveItemURL,
 		searchContainerId,
@@ -176,6 +202,8 @@ export default function ({
 			getItemChildrenURL={getItemChildrenURL}
 			initialBreadcrumbEntries={breadcrumbEntries}
 			initialLayoutColumns={layoutColumns}
+			isPrivateLayoutsEnabled={isPrivateLayoutsEnabled}
+			languageId={languageId}
 			moveItemURL={moveItemURL}
 			namespace={namespace}
 			searchContainerId={searchContainerId}

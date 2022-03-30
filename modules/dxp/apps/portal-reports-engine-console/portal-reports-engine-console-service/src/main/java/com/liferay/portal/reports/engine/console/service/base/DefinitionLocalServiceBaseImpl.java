@@ -46,6 +46,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.reports.engine.console.model.Definition;
 import com.liferay.portal.reports.engine.console.service.DefinitionLocalService;
+import com.liferay.portal.reports.engine.console.service.DefinitionLocalServiceUtil;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionFinder;
 import com.liferay.portal.reports.engine.console.service.persistence.DefinitionPersistence;
 import com.liferay.portal.reports.engine.console.service.persistence.EntryFinder;
@@ -55,10 +56,13 @@ import com.liferay.portal.reports.engine.console.service.persistence.SourcePersi
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -79,11 +83,15 @@ public abstract class DefinitionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DefinitionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.reports.engine.console.service.DefinitionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DefinitionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DefinitionLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the definition to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param definition the definition
 	 * @return the definition that was added
@@ -111,6 +119,10 @@ public abstract class DefinitionLocalServiceBaseImpl
 	/**
 	 * Deletes the definition with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param definitionId the primary key of the definition
 	 * @return the definition that was removed
 	 * @throws PortalException if a definition with the primary key could not be found
@@ -125,6 +137,10 @@ public abstract class DefinitionLocalServiceBaseImpl
 
 	/**
 	 * Deletes the definition from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param definition the definition
 	 * @return the definition that was removed
@@ -141,6 +157,13 @@ public abstract class DefinitionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return definitionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -375,6 +398,7 @@ public abstract class DefinitionLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -392,6 +416,7 @@ public abstract class DefinitionLocalServiceBaseImpl
 			(Definition)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<Definition> getBasePersistence() {
 		return definitionPersistence;
 	}
@@ -483,6 +508,10 @@ public abstract class DefinitionLocalServiceBaseImpl
 	/**
 	 * Updates the definition in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param definition the definition
 	 * @return the definition that was updated
 	 */
@@ -490,6 +519,11 @@ public abstract class DefinitionLocalServiceBaseImpl
 	@Override
 	public Definition updateDefinition(Definition definition) {
 		return definitionPersistence.update(definition);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -503,6 +537,8 @@ public abstract class DefinitionLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		definitionLocalService = (DefinitionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(definitionLocalService);
 	}
 
 	/**
@@ -544,6 +580,22 @@ public abstract class DefinitionLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		DefinitionLocalService definitionLocalService) {
+
+		try {
+			Field field = DefinitionLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, definitionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

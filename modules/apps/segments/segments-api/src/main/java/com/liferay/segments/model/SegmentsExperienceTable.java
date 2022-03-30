@@ -37,6 +37,9 @@ public class SegmentsExperienceTable
 	public final Column<SegmentsExperienceTable, Long> mvccVersion =
 		createColumn(
 			"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<SegmentsExperienceTable, Long> ctCollectionId =
+		createColumn(
+			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<SegmentsExperienceTable, String> uuid = createColumn(
 		"uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<SegmentsExperienceTable, Long> segmentsExperienceId =
@@ -77,6 +80,9 @@ public class SegmentsExperienceTable
 			"priority", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<SegmentsExperienceTable, Boolean> active = createColumn(
 		"active_", Boolean.class, Types.BOOLEAN, Column.FLAG_DEFAULT);
+	public final Column<SegmentsExperienceTable, String> typeSettings =
+		createColumn(
+			"typeSettings", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<SegmentsExperienceTable, Date> lastPublishDate =
 		createColumn(
 			"lastPublishDate", Date.class, Types.TIMESTAMP,

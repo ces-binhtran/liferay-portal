@@ -14,8 +14,9 @@
 
 package com.liferay.frontend.taglib.aui.form.extension.sample.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
+import com.liferay.portal.kernel.bean.BeanProperties;
 import com.liferay.portal.kernel.servlet.taglib.TagDynamicIdFactory;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
@@ -46,18 +47,17 @@ public class SampleFormTagDynamicIdFactory implements TagDynamicIdFactory {
 			return null;
 		}
 
-		String name = BeanPropertiesUtil.getStringSilent(tag, "name");
+		String name = _beanProperties.getStringSilent(tag, "name");
 
 		if (Validator.isNull(name)) {
 			return null;
 		}
 
-		return portletId.concat(
-			StringPool.DASH
-		).concat(
-			name
-		);
+		return StringBundler.concat(portletId, StringPool.DASH, name);
 	}
+
+	@Reference
+	private BeanProperties _beanProperties;
 
 	@Reference
 	private Portal _portal;

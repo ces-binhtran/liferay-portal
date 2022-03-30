@@ -26,20 +26,21 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 %>
 
 <clay:content-row
-	verticaAlign="center"
+	floatElements=""
+	verticalAlign="center"
 >
 	<clay:content-col
 		cssClass="inline-item-before"
 	>
 		<aui:input id="displayStyleGroupId" name="preferences--displayStyleGroupId--" type="hidden" value="<%= String.valueOf(displayStyleGroupId) %>" />
 
-		<aui:select id="displayStyle" inlineField="<%= true %>" label="<%= HtmlUtil.escape(label) %>" name="preferences--displayStyle--">
+		<aui:select id="displayStyle" label="<%= HtmlUtil.escape(label) %>" name="preferences--displayStyle--" wrapperCssClass="c-mb-4">
 			<c:if test="<%= showEmptyOption %>">
 				<aui:option label="default" selected="<%= Validator.isNull(displayStyle) %>" />
 			</c:if>
 
 			<c:if test="<%= (displayStyles != null) && !displayStyles.isEmpty() %>">
-				<optgroup label='<liferay-ui:message key="default" />'>
+				<optgroup label="<liferay-ui:message key="default" />">
 
 					<%
 					for (String curDisplayStyle : displayStyles) {
@@ -59,13 +60,18 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 				if (!DDMTemplatePermission.contains(permissionChecker, curDDMTemplate.getTemplateId(), ActionKeys.VIEW) || !DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY.equals(curDDMTemplate.getType())) {
 					continue;
 				}
-
-						Map<String, Object> data = HashMapBuilder.<String, Object>put(
-							"displaystylegroupid", curDDMTemplate.getGroupId()
-						).build();
 			%>
 
-				<aui:option data="<%= data %>" label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>" selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>" value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>" />
+				<aui:option
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"displaystylegroupid", curDDMTemplate.getGroupId()
+						).build()
+					%>'
+					label="<%= HtmlUtil.escape(curDDMTemplate.getName(locale)) %>"
+					selected="<%= (portletDisplayDDMTemplate != null) && (curDDMTemplate.getTemplateId() == portletDisplayDDMTemplate.getTemplateId()) %>"
+					value="<%= PortletDisplayTemplate.DISPLAY_STYLE_PREFIX + HtmlUtil.escape(curDDMTemplate.getTemplateKey()) %>"
+				/>
 
 			<%
 			}
@@ -88,42 +94,47 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 	</c:if>
 </clay:content-row>
 
-<liferay-portlet:renderURL plid="<%= themeDisplay.getPlid() %>" portletName="<%= PortletProviderUtil.getPortletId(DDMTemplate.class.getName(), PortletProvider.Action.VIEW) %>" var="basePortletURL">
-	<portlet:param name="showHeader" value="<%= Boolean.FALSE.toString() %>" />
-</liferay-portlet:renderURL>
-
 <aui:script sandbox="<%= true %>">
-	var selectDDMTemplateLink = document.getElementById(
+	const manageDDMTemplatesLink = document.getElementById(
 		'<portlet:namespace />selectDDMTemplate'
 	);
 
-	if (selectDDMTemplateLink) {
-		selectDDMTemplateLink.addEventListener('click', function (event) {
-			Liferay.Util.openDDMPortlet(
-				{
-					basePortletURL: '<%= basePortletURL %>',
-					classNameId: '<%= classNameId %>',
-					dialog: {
-						width: 1024,
-					},
-					eventName: '<portlet:namespace />saveTemplate',
-					groupId: <%= ddmTemplateGroupId %>,
-					mvcPath: '/view_template.jsp',
-					navigationStartsOn: '<%= DDMNavigationHelper.VIEW_TEMPLATES %>',
-					refererPortletName:
-						'<%= PortletKeys.PORTLET_DISPLAY_TEMPLATE %>',
-					title:
-						'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
-				},
-				function (event) {
-					if (!event.newVal) {
-						submitForm(
-							document.<portlet:namespace />fm,
-							'<%= HtmlUtil.escapeJS(refreshURL) %>'
-						);
+	if (manageDDMTemplatesLink) {
+		manageDDMTemplatesLink.addEventListener('click', (event) => {
+			const openerWindow = Liferay.Util.getOpener();
+
+			openerWindow.Liferay.Util.openModal({
+				iframeBodyCssClass: '',
+				onClose: () => {
+					const form = document.getElementById('<portlet:namespace />fm');
+
+					if (form) {
+						submitForm(form, '<%= HtmlUtil.escapeJS(refreshURL) %>');
 					}
-				}
-			);
+				},
+				title:
+					'<%= UnicodeLanguageUtil.get(request, "widget-templates") %>',
+				url:
+					'<%=
+						PortletURLBuilder.create(
+							PortletURLFactoryUtil.create(request, PortletProviderUtil.getPortletId(DDMTemplate.class.getName(), PortletProvider.Action.VIEW), themeDisplay.getPlid(), PortletRequest.RENDER_PHASE)
+						).setMVCPath(
+							"/view_template.jsp"
+						).setParameter(
+							"classNameId", classNameId
+						).setParameter(
+							"groupId", ddmTemplateGroupId
+						).setParameter(
+							"navigationStartsOn", DDMNavigationHelper.VIEW_TEMPLATES
+						).setParameter(
+							"refererPortletName", PortletKeys.PORTLET_DISPLAY_TEMPLATE
+						).setParameter(
+							"showHeader", false
+						).setWindowState(
+							LiferayWindowState.POP_UP
+						).buildString()
+				%>',
+			});
 		});
 	}
 
@@ -133,7 +144,7 @@ Group ddmTemplateGroup = GroupLocalServiceUtil.getGroup(ddmTemplateGroupId);
 	);
 
 	if (displayStyle && displayStyleGroupIdInput) {
-		displayStyle.addEventListener('change', function (event) {
+		displayStyle.addEventListener('change', (event) => {
 			var selectedDisplayStyle = displayStyle.querySelector('option:checked');
 
 			if (selectedDisplayStyle) {

@@ -13,16 +13,22 @@
  */
 
 import ClayTabs from '@clayui/tabs';
-import React, {useState} from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
+import {FRAGMENTS_DISPLAY_STYLES} from '../../../app/config/constants/fragmentsDisplayStyles';
 import {useId} from '../../../app/utils/useId';
-import Collapse from '../../../common/components/Collapse';
-import TabItem from './TabItem';
+import {COLLECTION_IDS} from './FragmentsSidebar';
+import TabCollection from './TabCollection';
 
 const INITIAL_EXPANDED_ITEM_COLLECTIONS = 3;
 
-export default function TabsPanel({tabs}) {
-	const [activeTabId, setActiveTabId] = useState(0);
+export default function TabsPanel({
+	activeTabId,
+	displayStyle,
+	setActiveTabId,
+	tabs,
+}) {
 	const tabIdNamespace = useId();
 
 	const getTabId = (tabId) => `${tabIdNamespace}tab${tabId}`;
@@ -31,18 +37,18 @@ export default function TabsPanel({tabs}) {
 	return (
 		<>
 			<ClayTabs
-				className="page-editor__sidebar__fragments-widgets-panel__tabs"
+				className="mb-4 page-editor__sidebar__fragments-widgets-panel__tabs"
 				modern
 			>
 				{tabs.map((tab, index) => (
 					<ClayTabs.Item
-						active={activeTabId === index}
+						active={tab.id === activeTabId}
 						innerProps={{
 							'aria-controls': getTabPanelId(index),
-							id: getTabId(index),
+							'id': getTabId(index),
 						}}
 						key={index}
-						onClick={() => setActiveTabId(index)}
+						onClick={() => setActiveTabId(tab.id)}
 					>
 						{tab.label}
 					</ClayTabs.Item>
@@ -50,7 +56,7 @@ export default function TabsPanel({tabs}) {
 			</ClayTabs>
 
 			<ClayTabs.Content
-				activeIndex={activeTabId}
+				activeIndex={tabs.findIndex((tab) => tab.id === activeTabId)}
 				className="page-editor__sidebar__fragments-widgets-panel__tab-content"
 				fade
 			>
@@ -62,23 +68,19 @@ export default function TabsPanel({tabs}) {
 					>
 						<ul className="list-unstyled">
 							{tab.collections.map((collection, index) => (
-								<Collapse
-									key={collection.collectionId}
-									label={collection.label}
+								<TabCollection
+									collection={collection}
+									displayStyle={
+										tab.id === COLLECTION_IDS.widgets
+											? FRAGMENTS_DISPLAY_STYLES.LIST
+											: displayStyle
+									}
+									key={index}
 									open={
 										index <
 										INITIAL_EXPANDED_ITEM_COLLECTIONS
 									}
-								>
-									<ul className="list-unstyled">
-										{collection.children.map((item) => (
-											<TabItem
-												item={item}
-												key={item.itemId}
-											/>
-										))}
-									</ul>
-								</Collapse>
+								/>
 							))}
 						</ul>
 					</ClayTabs.TabPane>
@@ -87,3 +89,14 @@ export default function TabsPanel({tabs}) {
 		</>
 	);
 }
+
+TabsPanel.propTypes = {
+	displayStyle: PropTypes.oneOf(Object.values(FRAGMENTS_DISPLAY_STYLES)),
+	tabs: PropTypes.arrayOf(
+		PropTypes.shape({
+			collections: PropTypes.arrayOf(PropTypes.shape({})),
+			id: PropTypes.string,
+			label: PropTypes.string,
+		})
+	),
+};

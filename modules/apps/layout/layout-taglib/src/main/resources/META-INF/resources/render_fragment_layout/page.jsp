@@ -19,32 +19,43 @@
 <%
 LayoutStructure layoutStructure = (LayoutStructure)request.getAttribute("liferay-layout:render-fragment-layout:layoutStructure");
 String mainItemId = (String)request.getAttribute("liferay-layout:render-fragment-layout:mainItemId");
-
-RenderFragmentLayoutDisplayContext renderFragmentLayoutDisplayContext = (RenderFragmentLayoutDisplayContext)request.getAttribute("liferay-layout:render-fragment-layout:renderFragmentLayoutDisplayContext");
+String mode = (String)request.getAttribute("liferay-layout:render-fragment-layout:mode");
+boolean showPreview = GetterUtil.getBoolean(request.getAttribute("liferay-layout:render-fragment-layout:showPreview"));
 %>
 
-<liferay-util:html-top>
-	<%= renderFragmentLayoutDisplayContext.getPortletHeaderPaths() %>
-</liferay-util:html-top>
+<liferay-util:dynamic-include key="com.liferay.layout,taglib#/render_fragment_layout/page.jsp#pre" />
 
-<%
-try {
-	request.setAttribute(WebKeys.SHOW_PORTLET_TOPPER, Boolean.TRUE);
+<c:if test="<%= layoutStructure != null %>">
 
-	LayoutStructureItem layoutStructureItem = layoutStructure.getLayoutStructureItem(mainItemId);
+	<%
+	try {
+		request.setAttribute(WebKeys.SHOW_PORTLET_TOPPER, Boolean.TRUE);
+	%>
 
-	request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
-%>
+		<liferay-util:buffer
+			var="content"
+		>
+			<liferay-layout:render-layout-structure
+				layoutStructure="<%= layoutStructure %>"
+				mainItemId="<%= mainItemId %>"
+				mode="<%= mode %>"
+				showPreview="<%= showPreview %>"
+			/>
+		</liferay-util:buffer>
 
-	<liferay-util:include page="/render_fragment_layout/render_layout_structure.jsp" servletContext="<%= application %>" />
+		<%
+		LayoutAdaptiveMediaProcessor layoutAdaptiveMediaProcessor = ServletContextUtil.getLayoutAdaptiveMediaProcessor();
+		%>
 
-<%
-}
-finally {
-	request.removeAttribute(WebKeys.SHOW_PORTLET_TOPPER);
-}
-%>
+		<%= layoutAdaptiveMediaProcessor.processAdaptiveMediaContent(content) %>
 
-<liferay-util:html-bottom>
-	<%= renderFragmentLayoutDisplayContext.getPortletFooterPaths() %>
-</liferay-util:html-bottom>
+	<%
+	}
+	finally {
+		request.removeAttribute(WebKeys.SHOW_PORTLET_TOPPER);
+	}
+	%>
+
+</c:if>
+
+<liferay-util:dynamic-include key="com.liferay.layout,taglib#/render_fragment_layout/page.jsp#post" />

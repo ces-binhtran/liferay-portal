@@ -14,9 +14,11 @@
 
 package com.liferay.frontend.taglib.servlet.taglib;
 
+import com.liferay.diff.DiffVersion;
+import com.liferay.diff.DiffVersionsInfo;
 import com.liferay.frontend.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.portal.kernel.diff.DiffVersion;
-import com.liferay.portal.kernel.diff.DiffVersionsInfo;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
@@ -57,29 +59,11 @@ public class DiffVersionComparatorTag extends IncludeTag {
 			DiffVersion diffVersion, PortletURL sourceURL, PortletURL targetURL)
 		throws PortalException {
 
-		Date modifiedDate = diffVersion.getModifiedDate();
-
-		String timeDescription = LanguageUtil.getTimeDescription(
-			request, System.currentTimeMillis() - modifiedDate.getTime(), true);
-
-		JSONObject diffVersionJSONObject = JSONUtil.put(
-			"displayDate",
-			LanguageUtil.format(request, "x-ago", timeDescription, false)
-		).put(
-			"inRange",
-			(diffVersion.getVersion() > _sourceVersion) &&
-			(diffVersion.getVersion() <= _targetVersion)
-		);
+		HttpServletRequest httpServletRequest = getRequest();
 
 		String diffVersionString = String.valueOf(diffVersion.getVersion());
 
-		diffVersionJSONObject.put(
-			"label",
-			LanguageUtil.format(request, "version-x", diffVersionString));
-
 		sourceURL.setParameter("sourceVersion", diffVersionString);
-
-		diffVersionJSONObject.put("sourceURL", sourceURL.toString());
 
 		if (Validator.isNotNull(_languageId)) {
 			targetURL.setParameter("languageId", _languageId);
@@ -87,19 +71,40 @@ public class DiffVersionComparatorTag extends IncludeTag {
 
 		targetURL.setParameter("targetVersion", diffVersionString);
 
-		diffVersionJSONObject.put("targetURL", targetURL.toString());
+		User user = UserLocalServiceUtil.fetchUser(diffVersion.getUserId());
 
-		User user = UserLocalServiceUtil.getUser(diffVersion.getUserId());
+		return JSONUtil.put(
+			"displayDate",
+			() -> {
+				Date modifiedDate = diffVersion.getModifiedDate();
 
-		diffVersionJSONObject.put(
-			"userInitials", user.getInitials()
+				String timeDescription = LanguageUtil.getTimeDescription(
+					httpServletRequest,
+					System.currentTimeMillis() - modifiedDate.getTime(), true);
+
+				return LanguageUtil.format(
+					httpServletRequest, "x-ago", timeDescription, false);
+			}
 		).put(
-			"userName", user.getFullName()
+			"inRange",
+			(diffVersion.getVersion() > _sourceVersion) &&
+			(diffVersion.getVersion() <= _targetVersion)
+		).put(
+			"label",
+			LanguageUtil.format(
+				httpServletRequest, "version-x", diffVersionString)
+		).put(
+			"sourceURL", sourceURL.toString()
+		).put(
+			"targetURL", targetURL.toString()
+		).put(
+			"userInitials",
+			(user != null) ? user.getInitials() : StringPool.BLANK
+		).put(
+			"userName", (user != null) ? user.getFullName() : StringPool.BLANK
 		).put(
 			"version", diffVersionString
 		);
-
-		return diffVersionJSONObject;
 	}
 
 	public Set<Locale> getAvailableLocales() {
@@ -154,7 +159,7 @@ public class DiffVersionComparatorTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setPortletURL(PortletURL portletURL) {
@@ -200,23 +205,27 @@ public class DiffVersionComparatorTag extends IncludeTag {
 
 		Map<String, Object> data = new HashMap<>();
 
+		HttpServletRequest parentHttpServletRequest = getRequest();
+
 		try {
 			if (_availableLocales != null) {
-				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-					WebKeys.THEME_DISPLAY);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)parentHttpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
 				JSONArray availableLocalesJSONArray =
 					JSONFactoryUtil.createJSONArray();
 
 				for (Locale availableLocale : _availableLocales) {
-					JSONObject availableLocaleJSONObject = JSONUtil.put(
-						"displayName",
-						availableLocale.getDisplayName(themeDisplay.getLocale())
-					).put(
-						"languageId", LocaleUtil.toLanguageId(availableLocale)
-					);
-
-					availableLocalesJSONArray.put(availableLocaleJSONObject);
+					availableLocalesJSONArray.put(
+						JSONUtil.put(
+							"displayName",
+							availableLocale.getDisplayName(
+								themeDisplay.getLocale())
+						).put(
+							"languageId",
+							LocaleUtil.toLanguageId(availableLocale)
+						));
 				}
 
 				data.put("availableLocales", availableLocalesJSONArray);
@@ -225,20 +234,20 @@ public class DiffVersionComparatorTag extends IncludeTag {
 			data.put("diffHtmlResults", _diffHtmlResults);
 
 			RenderResponse renderResponse =
-				(RenderResponse)request.getAttribute(
+				(RenderResponse)parentHttpServletRequest.getAttribute(
 					JavaConstants.JAVAX_PORTLET_RESPONSE);
 
-			PortletURL sourceURL = PortletURLUtil.clone(
-				_portletURL, renderResponse);
+			PortletURL sourceURL = PortletURLBuilder.create(
+				PortletURLUtil.clone(_portletURL, renderResponse)
+			).setParameter(
+				"targetVersion", _targetVersion
+			).buildPortletURL();
 
-			sourceURL.setParameter(
-				"targetVersion", String.valueOf(_targetVersion));
-
-			PortletURL targetURL = PortletURLUtil.clone(
-				_portletURL, renderResponse);
-
-			targetURL.setParameter(
-				"sourceVersion", String.valueOf(_sourceVersion));
+			PortletURL targetURL = PortletURLBuilder.create(
+				PortletURLUtil.clone(_portletURL, renderResponse)
+			).setParameter(
+				"sourceVersion", _sourceVersion
+			).buildPortletURL();
 
 			JSONArray diffVersionsJSONArray = JSONFactoryUtil.createJSONArray();
 
@@ -274,7 +283,7 @@ public class DiffVersionComparatorTag extends IncludeTag {
 		}
 		catch (PortalException | PortletException exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 

@@ -63,11 +63,15 @@ public interface LayoutSetPrototypeLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutSetPrototypeLocalServiceUtil} to access the layout set prototype local service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetPrototypeLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutSetPrototypeLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout set prototype local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutSetPrototypeLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the layout set prototype to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetPrototypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSetPrototype the layout set prototype
 	 * @return the layout set prototype that was added
@@ -75,6 +79,13 @@ public interface LayoutSetPrototypeLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public LayoutSetPrototype addLayoutSetPrototype(
 		LayoutSetPrototype layoutSetPrototype);
+
+	public LayoutSetPrototype addLayoutSetPrototype(
+			long userId, long companyId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active,
+			boolean layoutsUpdateable, boolean readyForPropagation,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	public LayoutSetPrototype addLayoutSetPrototype(
 			long userId, long companyId, Map<Locale, String> nameMap,
@@ -101,6 +112,10 @@ public interface LayoutSetPrototypeLocalService
 	/**
 	 * Deletes the layout set prototype from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetPrototypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSetPrototype the layout set prototype
 	 * @return the layout set prototype that was removed
 	 * @throws PortalException
@@ -116,6 +131,10 @@ public interface LayoutSetPrototypeLocalService
 
 	/**
 	 * Deletes the layout set prototype with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetPrototypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSetPrototypeId the primary key of the layout set prototype
 	 * @return the layout set prototype that was removed
@@ -140,6 +159,9 @@ public interface LayoutSetPrototypeLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -299,7 +321,7 @@ public interface LayoutSetPrototypeLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<LayoutSetPrototype> search(
 		long companyId, Boolean active, int start, int end,
-		OrderByComparator<LayoutSetPrototype> obc);
+		OrderByComparator<LayoutSetPrototype> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int searchCount(long companyId, Boolean active);
@@ -307,12 +329,23 @@ public interface LayoutSetPrototypeLocalService
 	/**
 	 * Updates the layout set prototype in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetPrototypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSetPrototype the layout set prototype
 	 * @return the layout set prototype that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public LayoutSetPrototype updateLayoutSetPrototype(
 		LayoutSetPrototype layoutSetPrototype);
+
+	public LayoutSetPrototype updateLayoutSetPrototype(
+			long layoutSetPrototypeId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, boolean active,
+			boolean layoutsUpdateable, boolean readyForPropagation,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	public LayoutSetPrototype updateLayoutSetPrototype(
 			long layoutSetPrototypeId, Map<Locale, String> nameMap,

@@ -16,10 +16,10 @@ definition {
 
 		if ("${pageTemplateType}" == "Content Page Template") {
 			if (isSet(masterLayoutName)) {
-				PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "${masterLayoutName}");
+				LexiconCard.clickCard(card = "${masterLayoutName}");
 			}
 			else {
-				PageTemplatesAdmin.gotoPageTemplate(pageTemplateName = "Blank");
+				LexiconCard.clickCard(card = "Blank");
 			}
 		}
 
@@ -31,7 +31,7 @@ definition {
 
 		Button.clickSave();
 
-		if (("${pageTemplateType}" == "Content Page Template") && (!(isSet(duplicatePageTemplate)))) {
+		if (("${pageTemplateType}" == "Content Page Template") && !(isSet(duplicatePageTemplate))) {
 			PageEditor.assertFragmentSidebarLoaded();
 		}
 	}
@@ -91,8 +91,8 @@ definition {
 		Click.pauseClickAt(locator1 = "ControlMenu#EDIT_COG");
 
 		Click(
-			key_columnName = "${columnName}",
-			locator1 = "SitePagesEditPage#LAYOUT_CARD");
+			key_card = "${columnName}",
+			locator1 = "Card#CARD");
 
 		PortletEntry.save();
 	}
@@ -102,7 +102,7 @@ definition {
 	}
 
 	macro gotoPageTemplate {
-		LexiconCard.clickCardTitle(card = "${pageTemplateName}");
+		LexiconCard.clickCardTitleLink(card = "${pageTemplateName}");
 	}
 
 	macro gotoPageTemplateEllipsisItem {
@@ -124,7 +124,7 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${pageTemplateZipFileName}");
 
-		Click(locator1 = "Button#IMPORT");
+		Button.clickImport();
 
 		Alert.viewSuccessMessage();
 
@@ -154,7 +154,7 @@ definition {
 
 		Check.checkNotVisible(
 			key_card = "${pageTemplateName}",
-			locator1 = "LexiconCard#CARD_CHECKBOX");
+			locator1 = "Card#CARD_CHECKBOX");
 	}
 
 	macro viewEntryWorkflowStatus {

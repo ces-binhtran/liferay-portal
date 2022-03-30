@@ -16,10 +16,6 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-String redirect = ParamUtil.getString(request, "redirect");
-%>
-
 <liferay-ui:error exception="<%= NoSuchArticleException.class %>" message="the-web-content-could-not-be-found" />
 
 <liferay-portlet:actionURL portletConfiguration="<%= true %>" var="configurationActionURL" />
@@ -40,7 +36,7 @@ String redirect = ParamUtil.getString(request, "redirect");
 			<liferay-frontend:fieldset>
 				<div id="<portlet:namespace />articlePreview">
 					<liferay-util:include page="/journal_resources.jsp" servletContext="<%= application %>">
-						<liferay-util:param name="refererPortletName" value="<%= renderResponse.getNamespace() %>" />
+						<liferay-util:param name="refererPortletName" value="<%= liferayPortletResponse.getNamespace() %>" />
 					</liferay-util:include>
 				</div>
 			</liferay-frontend:fieldset>
@@ -50,11 +46,11 @@ String redirect = ParamUtil.getString(request, "redirect");
 	<liferay-frontend:edit-form-footer>
 		<aui:button name="saveButton" type="submit" />
 
-		<aui:button href="<%= redirect %>" type="cancel" />
+		<aui:button href='<%= ParamUtil.getString(request, "redirect") %>' type="cancel" />
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/all/dom as dom, frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var articlePreview = document.getElementById(
 		'<portlet:namespace />articlePreview'
 	);
@@ -62,31 +58,24 @@ String redirect = ParamUtil.getString(request, "redirect");
 		'<portlet:namespace />assetEntryId'
 	);
 
-	var itemSelectorDialog = new ItemSelectorDialog.default({
-		eventName: '<portlet:namespace />selectedItem',
-		singleSelect: true,
-		title: '<liferay-ui:message key="select-web-content" />',
-		url: '<%= journalContentDisplayContext.getItemSelectorURL() %>',
-	});
+	var delegate = delegateModule.default;
 
-	itemSelectorDialog.on('selectedItemChange', function (event) {
-		var selectedItem = event.selectedItem;
-
-		if (!selectedItem) {
-			return;
-		}
-
-		retrieveWebContent(selectedItem.assetclasspk);
-	});
-
-	dom.delegate(articlePreview, 'click', '.web-content-selector', function (
-		event
-	) {
+	delegate(articlePreview, 'click', '.web-content-selector', (event) => {
 		event.preventDefault();
-		itemSelectorDialog.open();
+
+		Liferay.Util.openSelectionModal({
+			onSelect: function (selectedItem) {
+				if (selectedItem) {
+					retrieveWebContent(selectedItem.assetclasspk);
+				}
+			},
+			selectEventName: '<portlet:namespace />selectedItem',
+			title: '<liferay-ui:message key="select-web-content" />',
+			url: '<%= journalContentDisplayContext.getItemSelectorURL() %>',
+		});
 	});
 
-	dom.delegate(articlePreview, 'click', '.selector-button', function (event) {
+	delegate(articlePreview, 'click', '.selector-button', (event) => {
 		event.preventDefault();
 		retrieveWebContent(-1);
 	});

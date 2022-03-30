@@ -35,7 +35,6 @@ import {
 } from '../state/context.es';
 import {reducer} from '../state/reducer.es';
 import {
-	SegmentsExperienceType,
 	SegmentsExperimentGoal,
 	SegmentsExperimentType,
 	SegmentsVariantType,
@@ -50,11 +49,9 @@ import UnsupportedSegmentsExperiments from './UnsupportedSegmentsExperiments.es'
 function SegmentsExperimentsSidebar({
 	initialExperimentHistory,
 	initialGoals,
-	initialSegmentsExperiences,
 	initialSegmentsExperiment,
 	initialSegmentsVariants,
 	initialSelectedSegmentsExperienceId = '0',
-	viewSegmentsExperimentDetailsURL,
 	winnerSegmentsVariantId,
 }) {
 	const {APIService, page} = useContext(SegmentsExperimentsContext);
@@ -65,7 +62,6 @@ function SegmentsExperimentsSidebar({
 			initialSegmentsExperiment,
 			initialSegmentsVariants,
 			initialSelectedSegmentsExperienceId,
-			viewSegmentsExperimentDetailsURL,
 			winnerSegmentsVariantId,
 		},
 		getInitialState
@@ -89,7 +85,7 @@ function SegmentsExperimentsSidebar({
 	return page.type === 'content' ? (
 		<DispatchContext.Provider value={dispatch}>
 			<StateContext.Provider value={state}>
-				<div className="p-3">
+				<div className="pb-3 px-3">
 					<SegmentsExperiments
 						onCreateSegmentsExperiment={
 							_handleCreateSegmentsExperiment
@@ -101,12 +97,9 @@ function SegmentsExperimentsSidebar({
 						onEditSegmentsExperimentStatus={
 							_handleEditSegmentExperimentStatus
 						}
-						onSelectSegmentsExperienceChange={
-							_handleSelectSegmentsExperience
-						}
 						onTargetChange={_handleTargetChange}
-						segmentsExperiences={initialSegmentsExperiences}
 					/>
+
 					{createExperimentModal.active && (
 						<ClayModal observer={creationModalObserver} size="lg">
 							<SegmentsExperimentsModal
@@ -123,6 +116,7 @@ function SegmentsExperimentsSidebar({
 							/>
 						</ClayModal>
 					)}
+
 					{editExperimentModal.active && (
 						<ClayModal observer={editionModalObserver} size="lg">
 							<SegmentsExperimentsModal
@@ -207,6 +201,7 @@ function SegmentsExperimentsSidebar({
 				const {
 					confidenceLevel,
 					description,
+					detailsURL,
 					editable,
 					goal,
 					name,
@@ -226,6 +221,7 @@ function SegmentsExperimentsSidebar({
 					addSegmentsExperiment({
 						confidenceLevel,
 						description,
+						detailsURL,
 						editable,
 						goal,
 						name,
@@ -282,7 +278,6 @@ function SegmentsExperimentsSidebar({
 					message: Liferay.Language.get(
 						'an-unexpected-error-occurred'
 					),
-					title: Liferay.Language.get('error'),
 					type: 'danger',
 				});
 			});
@@ -357,15 +352,11 @@ function SegmentsExperimentsSidebar({
 			});
 	}
 
-	function _handleSelectSegmentsExperience(segmentsExperienceId) {
-		navigateToExperience(segmentsExperienceId);
-	}
-
 	function _handleTargetChange(selector) {
 		const body = {
 			description: experiment.description,
 			goal: experiment.goal.value,
-			goalTarget: selector,
+			goalTarget: selector && `#${selector}`,
 			name: experiment.name,
 			segmentsExperimentId: experiment.segmentsExperimentId,
 		};
@@ -391,7 +382,6 @@ SegmentsExperimentsSidebar.propTypes = {
 	initialExperimentHistory: PropTypes.arrayOf(SegmentsExperimentType)
 		.isRequired,
 	initialGoals: PropTypes.arrayOf(SegmentsExperimentGoal),
-	initialSegmentsExperiences: PropTypes.arrayOf(SegmentsExperienceType),
 	initialSegmentsExperiment: SegmentsExperimentType,
 	initialSegmentsVariants: PropTypes.arrayOf(SegmentsVariantType).isRequired,
 	initialSelectedSegmentsExperienceId: PropTypes.string,

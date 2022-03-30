@@ -99,9 +99,9 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 		throws IOException, PortletException {
 
 		try {
-			setWorkflowTaskDisplayContextRenderRequestAttribute(
+			_setWorkflowTaskDisplayContextRenderRequestAttribute(
 				renderRequest, renderResponse);
-			setWorkflowTaskRenderRequestAttribute(renderRequest);
+			_setWorkflowTaskRenderRequestAttribute(renderRequest);
 		}
 		catch (Exception exception) {
 			if (isSessionErrorException(exception)) {
@@ -124,27 +124,6 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 			WorkflowTaskWebConfiguration.class, properties);
 	}
 
-	protected void checkWorkflowTaskViewPermission(
-			WorkflowTask workflowTask, ThemeDisplay themeDisplay)
-		throws PortalException {
-
-		long groupId = MapUtil.getLong(
-			workflowTask.getOptionalAttributes(), "groupId",
-			themeDisplay.getSiteGroupId());
-
-		if ((workflowTask.isCompleted() &&
-			 (workflowTask.getAssigneeUserId() != themeDisplay.getUserId())) ||
-			!_workflowTaskPermissionChecker.hasPermission(
-				groupId, workflowTask, themeDisplay.getPermissionChecker())) {
-
-			throw new PrincipalException(
-				String.format(
-					"User %d does not have permission to view task %d",
-					themeDisplay.getUserId(),
-					workflowTask.getWorkflowTaskId()));
-		}
-	}
-
 	@Override
 	protected void doDispatch(
 			RenderRequest renderRequest, RenderResponse renderResponse)
@@ -165,9 +144,9 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 	}
 
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof PrincipalException ||
-			cause instanceof WorkflowException) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof PrincipalException ||
+			throwable instanceof WorkflowException) {
 
 			return true;
 		}
@@ -175,7 +154,19 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 		return false;
 	}
 
-	protected void setWorkflowTaskDisplayContextRenderRequestAttribute(
+	private void _checkWorkflowTaskViewPermission(
+			WorkflowTask workflowTask, ThemeDisplay themeDisplay)
+		throws PortalException {
+
+		long groupId = MapUtil.getLong(
+			workflowTask.getOptionalAttributes(), "groupId",
+			themeDisplay.getSiteGroupId());
+
+		_workflowTaskPermissionChecker.check(
+			groupId, workflowTask, themeDisplay.getPermissionChecker());
+	}
+
+	private void _setWorkflowTaskDisplayContextRenderRequestAttribute(
 			RenderRequest renderRequest, RenderResponse renderResponse)
 		throws PortalException {
 
@@ -186,7 +177,7 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 				_portal.getLiferayPortletResponse(renderResponse)));
 	}
 
-	protected void setWorkflowTaskRenderRequestAttribute(
+	private void _setWorkflowTaskRenderRequestAttribute(
 			RenderRequest renderRequest)
 		throws PortalException {
 
@@ -200,7 +191,7 @@ public class MyWorkflowTaskPortlet extends MVCPortlet {
 			WorkflowTask workflowTask = WorkflowTaskManagerUtil.getWorkflowTask(
 				themeDisplay.getCompanyId(), workflowTaskId);
 
-			checkWorkflowTaskViewPermission(workflowTask, themeDisplay);
+			_checkWorkflowTaskViewPermission(workflowTask, themeDisplay);
 
 			renderRequest.setAttribute(WebKeys.WORKFLOW_TASK, workflowTask);
 		}

@@ -38,8 +38,8 @@ public class UnsetUserUserGroupChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		User user = (User)obj;
+	public boolean isDisabled(Object object) {
+		User user = (User)object;
 
 		try {
 			if (UserGroupMembershipPolicyUtil.isMembershipRequired(
@@ -49,10 +49,10 @@ public class UnsetUserUserGroupChecker extends EmptyOnClickRowChecker {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
-		return super.isDisabled(obj);
+		return super.isDisabled(object);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

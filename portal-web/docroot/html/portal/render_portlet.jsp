@@ -46,9 +46,7 @@ boolean modePrint = layoutTypePortlet.hasModePrintPortletId(portletId);
 boolean columnDisabled = layoutTypePortlet.isColumnDisabled(columnId);
 boolean customizable = layoutTypePortlet.isCustomizable();
 
-PortletPreferencesIds portletPreferencesIds = PortletPreferencesFactoryUtil.getPortletPreferencesIds(request, portletId);
-
-PortletPreferences portletPreferences = PortletPreferencesLocalServiceUtil.getStrictPreferences(portletPreferencesIds);
+PortletPreferences portletPreferences = PortletPreferencesLocalServiceUtil.getStrictPreferences(PortletPreferencesFactoryUtil.getPortletPreferencesIds(request, portletId));
 
 PortletPreferences portletSetup = themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
 
@@ -138,10 +136,10 @@ try {
 	ue.printStackTrace();
 }*/
 catch (PortletException pe) {
-	_log.error(pe, pe);
+	_log.error(pe);
 }
 catch (RuntimeException re) {
-	_log.error(re, re);
+	_log.error(re);
 }
 
 LiferayRenderRequest liferayRenderRequest = RenderRequestFactory.create(request, portlet, invokerPortlet, portletCtx, windowState, portletMode, portletPreferences, plid);
@@ -483,7 +481,8 @@ if (urlConfiguration != null) {
 	StringBundler urlConfigurationJSSB = new StringBundler(PropsValues.PORTLET_CONFIG_SHOW_PORTLET_ID ? 14 : 12);
 
 	urlConfigurationJSSB.append("Liferay.Portlet.openModal({");
-	urlConfigurationJSSB.append("namespace: '");
+	urlConfigurationJSSB.append("iframeBodyCssClass: '");
+	urlConfigurationJSSB.append("', namespace: '");
 	urlConfigurationJSSB.append(portletDisplay.getNamespace());
 	urlConfigurationJSSB.append("', portletSelector: '#p_p_id_");
 	urlConfigurationJSSB.append(portletDisplay.getId());
@@ -579,7 +578,7 @@ LiferayPortletURL urlExportImport = PortletURLFactoryUtil.create(request, Portle
 
 urlExportImport.setWindowState(LiferayWindowState.POP_UP);
 
-urlExportImport.setParameter("mvcRenderCommandName", "exportImport");
+urlExportImport.setParameter("mvcRenderCommandName", "/export_import/export_import");
 urlExportImport.setParameter("redirect", currentURL);
 urlExportImport.setParameter("returnToFullPageURL", currentURL);
 urlExportImport.setParameter("portletResource", portletDisplay.getId());
@@ -753,7 +752,7 @@ LiferayPortletURL urlStaging = PortletURLFactoryUtil.create(request, PortletKeys
 
 urlStaging.setWindowState(LiferayWindowState.POP_UP);
 
-urlStaging.setParameter("mvcRenderCommandName", "publishPortlet");
+urlStaging.setParameter("mvcRenderCommandName", "/export_import/publish_portlet");
 urlStaging.setParameter("cmd", Constants.PUBLISH_TO_LIVE);
 urlStaging.setParameter("redirect", currentURL);
 urlStaging.setParameter("returnToFullPageURL", currentURL);
@@ -851,7 +850,7 @@ if (portlet.isActive() && portlet.isInclude() && portlet.isReady() && supportsMi
 
 String portalProductMenuApplicationTypePortletId = PortletProviderUtil.getPortletId(PortalProductMenuApplicationType.ProductMenu.CLASS_NAME, PortletProvider.Action.VIEW);
 
-if ((layout.isTypePanel() || layout.isTypeControlPanel()) && !portletDisplay.getId().equals(portalProductMenuApplicationTypePortletId) && !portlet.isStatic()) {
+if ((layout.isTypePanel() || layout.isTypeControlPanel()) && !Objects.equals(portletDisplay.getId(), portalProductMenuApplicationTypePortletId) && !portlet.isStatic()) {
 	PortalUtil.setPageTitle(portletDisplay.getTitle(), request);
 }
 
@@ -906,7 +905,7 @@ Boolean renderPortletBoundary = GetterUtil.getBoolean(request.getAttribute(WebKe
 	}
 	%>
 
-	<div class="<%= cssClasses %>" id="p_p_id<%= HtmlUtil.escapeAttribute(liferayRenderResponse.getNamespace()) %>">
+	<div class="<%= cssClasses %>" id="p_p_id<%= HtmlUtil.escapeAttribute((PortalUtil.getLiferayPortletResponse(liferayRenderResponse)).getNamespace()) %>">
 		<span id="p_<%= HtmlUtil.escapeAttribute(portletId) %>"></span>
 </c:if>
 
@@ -919,21 +918,17 @@ Boolean renderPortletBoundary = GetterUtil.getBoolean(request.getAttribute(WebKe
 
 	liferayRenderRequest.setAttribute(WebKeys.PORTLET_CONTENT, bufferCacheServletResponse.getString());
 
-	String portletContentJSP = StringPool.BLANK;
-
 	if (!portlet.isReady()) {
-		portletContentJSP = "/portal/portlet_not_ready.jsp";
+		request.setAttribute(WebKeys.PORTLET_CONTENT_JSP, "/portal/portlet_not_ready.jsp");
 	}
 
 	if (portletException) {
-		portletContentJSP = "/portal/portlet_error.jsp";
+		request.setAttribute(WebKeys.PORTLET_CONTENT_JSP, "/portal/portlet_error.jsp");
 	}
 
 	if (addNotAjaxablePortlet) {
-		portletContentJSP = "/portal/portlet_not_ajaxable.jsp";
+		request.setAttribute(WebKeys.PORTLET_CONTENT_JSP, "/portal/portlet_not_ajaxable.jsp");
 	}
-
-	request.setAttribute(WebKeys.PORTLET_CONTENT_JSP, portletContentJSP);
 	%>
 
 	<c:choose>
@@ -979,7 +974,7 @@ else {
 			canEditTitle: <%= canEditTitle %>,
 			columnPos: <%= columnPos %>,
 			isStatic: '<%= staticVar %>',
-			namespacedId: 'p_p_id<%= HtmlUtil.escapeJS(liferayRenderResponse.getNamespace()) %>',
+			namespacedId: 'p_p_id<%= HtmlUtil.escapeJS((PortalUtil.getLiferayPortletResponse(liferayRenderResponse)).getNamespace()) %>',
 			portletId: '<%= HtmlUtil.escapeJS(portletDisplay.getId()) %>',
 			refreshURL: '<%= HtmlUtil.escapeJS(PortletURLUtil.getRefreshURL(request, themeDisplay, false)) %>',
 			refreshURLData: <%= JSONFactoryUtil.looseSerializeDeep(PortletURLUtil.getRefreshURLParameters(request)) %>
@@ -991,17 +986,21 @@ else {
 	</div>
 </c:if>
 
-<%
-if (themeDisplay.isStatePopUp()) {
-	String refreshPortletId = null;
+<c:if test="<%= themeDisplay.isStatePopUp() %>">
 
-	if ((refreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET)) != null) {
+	<%
+	String refreshPortletId = null;
+	%>
+
+	<c:if test="<%= (refreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET)) != null %>">
+
+		<%
 		if (Validator.isNull(refreshPortletId) && (portletResourcePortlet != null)) {
 			refreshPortletId = portletResourcePortlet.getPortletId();
 		}
 
 		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
-%>
+		%>
 
 		<aui:script position="inline" use="aui-base">
 			if (window.parent) {
@@ -1026,58 +1025,60 @@ if (themeDisplay.isStatePopUp()) {
 				Liferay.Util.getOpener().Liferay.Portlet.refresh('#p_p_id_<%= HtmlUtil.escapeJS(refreshPortletId) %>_', data);
 			}
 		</aui:script>
+	</c:if>
 
 	<%
-	}
-
 	String closeRedirect = null;
-
-	if ((closeRedirect = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REDIRECT)) != null) {
 	%>
 
+	<c:if test="<%= (closeRedirect = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REDIRECT)) != null %>">
 		<aui:script use="aui-base">
 			var dialog = Liferay.Util.getWindow();
 
-			var hideDialogSignature = '<portlet:namespace />hideRefreshDialog|*';
+			if (dialog) {
+				var hideDialogSignature = '<portlet:namespace />hideRefreshDialog|*';
 
-			dialog.detach(hideDialogSignature);
+				dialog.detach(hideDialogSignature);
 
-			dialog.on(
-				'<portlet:namespace />hideRefreshDialog|visibleChange',
-				function(event) {
-					if (!event.newVal && event.src !== 'hideLink') {
-						var refreshWindow = dialog._refreshWindow || Liferay.Util.getTop();
+				dialog.on(
+					'<portlet:namespace />hideRefreshDialog|visibleChange',
+					function(event) {
+						if (!event.newVal && event.src !== 'hideLink') {
+							var refreshWindow = dialog._refreshWindow || Liferay.Util.getTop();
 
-						var topA = refreshWindow.AUI();
+							var topA = refreshWindow.AUI();
 
-						topA.use(
-							'aui-loading-mask-deprecated',
-							function(A) {
-								new A.LoadingMask(
-									{
-										target: A.getBody()
-									}
-								).show();
-							}
-						);
+							topA.use(
+								'aui-loading-mask-deprecated',
+								function(A) {
+									new A.LoadingMask(
+										{
+											target: A.getBody()
+										}
+									).show();
+								}
+							);
 
-						refreshWindow.location.href = '<%= HtmlUtil.escapeJS(closeRedirect) %>';
+							refreshWindow.location.href = '<%= HtmlUtil.escapeJS(closeRedirect) %>';
+						}
+						else {
+							dialog.detach(hideDialogSignature);
+						}
 					}
-					else {
-						dialog.detach(hideDialogSignature);
-					}
-				}
-			);
+				);
+			}
 		</aui:script>
+	</c:if>
 
 	<%
-	}
-
 	String closeRefreshPortletId = null;
-
-	if ((closeRefreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REFRESH_PORTLET)) != null) {
-		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
 	%>
+
+	<c:if test="<%= (closeRefreshPortletId = (String)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_CLOSE_REFRESH_PORTLET)) != null %>">
+
+		<%
+		Map<String, String> refreshPortletData = (Map<String, String>)SessionMessages.get(liferayRenderRequest, portletId + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
+		%>
 
 		<aui:script use="aui-base">
 			var dialog = Liferay.Util.getWindow();
@@ -1120,11 +1121,10 @@ if (themeDisplay.isStatePopUp()) {
 				}
 			);
 		</aui:script>
+	</c:if>
+</c:if>
 
 <%
-	}
-}
-
 if (showPortletCssIcon) {
 	themeDisplay.setIncludePortletCssJs(true);
 }
@@ -1136,5 +1136,5 @@ liferayRenderRequest.cleanUp();
 %>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.render_portlet_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.render_portlet_jsp");
 %>

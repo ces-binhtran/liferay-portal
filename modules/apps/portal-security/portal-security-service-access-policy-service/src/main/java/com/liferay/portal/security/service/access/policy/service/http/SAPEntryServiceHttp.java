@@ -46,7 +46,6 @@ import com.liferay.portal.security.service.access.policy.service.SAPEntryService
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see SAPEntryServiceSoap
  * @generated
  */
 public class SAPEntryServiceHttp {
@@ -273,7 +272,7 @@ public class SAPEntryServiceHttp {
 				HttpPrincipal httpPrincipal, long companyId, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
 					<com.liferay.portal.security.service.access.policy.model.
-						SAPEntry> obc) {
+						SAPEntry> orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -281,7 +280,7 @@ public class SAPEntryServiceHttp {
 				_getCompanySAPEntriesParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, start, end, obc);
+				methodKey, companyId, start, end, orderByComparator);
 
 			Object returnObj = null;
 

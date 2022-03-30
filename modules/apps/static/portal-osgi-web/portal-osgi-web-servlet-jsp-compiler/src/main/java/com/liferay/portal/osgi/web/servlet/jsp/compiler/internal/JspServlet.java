@@ -16,6 +16,8 @@ package com.liferay.portal.osgi.web.servlet.jsp.compiler.internal;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.util.PropsValues;
@@ -49,13 +51,9 @@ import javax.servlet.RequestDispatcher;
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
-import javax.servlet.ServletContextAttributeListener;
-import javax.servlet.ServletContextListener;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration;
 import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestAttributeListener;
-import javax.servlet.ServletRequestListener;
 import javax.servlet.ServletResponse;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
@@ -63,8 +61,6 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSessionAttributeListener;
-import javax.servlet.http.HttpSessionListener;
 import javax.servlet.jsp.JspFactory;
 
 import org.apache.jasper.runtime.JspFactoryImpl;
@@ -101,8 +97,8 @@ public class JspServlet extends HttpServlet {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return _jspServlet.equals(obj);
+	public boolean equals(Object object) {
+		return _jspServlet.equals(object);
 	}
 
 	@Override
@@ -184,22 +180,18 @@ public class JspServlet extends HttpServlet {
 
 		bundles.add(_utilTaglibBundle);
 
-		collectTaglibProviderBundles(bundles);
+		_collectTaglibProviderBundles(bundles);
 
 		_allParticipatingBundles = bundles.toArray(new Bundle[0]);
 
 		_jspBundleClassloader = new JspBundleClassloader(
 			_allParticipatingBundles);
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(_WORK_DIR);
-		sb.append(_bundle.getSymbolicName());
-		sb.append(StringPool.DASH);
-		sb.append(_bundle.getVersion());
-
 		final Map<String, String> defaults = HashMapBuilder.put(
-			_INIT_PARAMETER_NAME_SCRATCH_DIR, sb.toString()
+			_INIT_PARAMETER_NAME_SCRATCH_DIR,
+			StringBundler.concat(
+				_WORK_DIR, _bundle.getSymbolicName(), StringPool.DASH,
+				_bundle.getVersion())
 		).put(
 			"compilerClassName",
 			"com.liferay.portal.osgi.web.servlet.jsp.compiler.internal." +
@@ -325,8 +317,8 @@ public class JspServlet extends HttpServlet {
 	}
 
 	@Override
-	public void log(String message, Throwable t) {
-		_jspServlet.log(message, t);
+	public void log(String message, Throwable throwable) {
+		_jspServlet.log(message, throwable);
 	}
 
 	@Override
@@ -391,7 +383,7 @@ public class JspServlet extends HttpServlet {
 		return _jspServlet.toString();
 	}
 
-	protected void collectTaglibProviderBundles(List<Bundle> bundles) {
+	private void _collectTaglibProviderBundles(List<Bundle> bundles) {
 		BundleWiring bundleWiring = _bundle.adapt(BundleWiring.class);
 
 		for (BundleWire bundleWire :
@@ -415,48 +407,14 @@ public class JspServlet extends HttpServlet {
 		}
 	}
 
-	protected String[] getListenerClassNames(Class<?> clazz) {
-		List<String> classNames = new ArrayList<>();
-
-		if (ServletContextListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletContextListener.class.getName());
-		}
-
-		if (ServletContextAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletContextAttributeListener.class.getName());
-		}
-
-		if (ServletRequestListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletRequestListener.class.getName());
-		}
-
-		if (ServletRequestAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(ServletRequestAttributeListener.class.getName());
-		}
-
-		if (HttpSessionListener.class.isAssignableFrom(clazz)) {
-			classNames.add(HttpSessionListener.class.getName());
-		}
-
-		if (HttpSessionAttributeListener.class.isAssignableFrom(clazz)) {
-			classNames.add(HttpSessionAttributeListener.class.getName());
-		}
-
-		if (classNames.isEmpty()) {
-			throw new IllegalArgumentException(
-				clazz.getName() + " does not implement one of the supported " +
-					"servlet listener interfaces");
-		}
-
-		return classNames.toArray(new String[0]);
-	}
-
 	private static final String _DIR_NAME_RESOURCES = "/META-INF/resources";
 
 	private static final String _INIT_PARAMETER_NAME_SCRATCH_DIR = "scratchdir";
 
 	private static final String _WORK_DIR = StringBundler.concat(
 		PropsValues.LIFERAY_HOME, File.separator, "work", File.separator);
+
+	private static final Log _log = LogFactoryUtil.getLog(JspServlet.class);
 
 	private static final Properties _initParams = PropsUtil.getProperties(
 		"jsp.servlet.init.param.", true);
@@ -562,16 +520,16 @@ public class JspServlet extends HttpServlet {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			if (!(obj instanceof ServletContext)) {
+		public boolean equals(Object object) {
+			if (!(object instanceof ServletContext)) {
 				return false;
 			}
 
-			ServletContext servletContext = (ServletContext)obj;
+			ServletContext servletContext = (ServletContext)object;
 
-			if (obj instanceof ServletContextWrapper) {
+			if (object instanceof ServletContextWrapper) {
 				ServletContextWrapper servletContextWrapper =
-					(ServletContextWrapper)obj;
+					(ServletContextWrapper)object;
 
 				servletContext = servletContextWrapper._servletContext;
 			}
@@ -732,6 +690,9 @@ public class JspServlet extends HttpServlet {
 				return _jspBundle.getResource(path);
 			}
 			catch (MalformedURLException malformedURLException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(malformedURLException);
+				}
 			}
 
 			return null;
@@ -749,6 +710,10 @@ public class JspServlet extends HttpServlet {
 				return url.openStream();
 			}
 			catch (IOException ioException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(ioException);
+				}
+
 				return null;
 			}
 		}

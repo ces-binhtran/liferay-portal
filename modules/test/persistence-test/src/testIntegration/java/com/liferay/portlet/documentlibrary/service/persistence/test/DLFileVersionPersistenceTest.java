@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -171,6 +171,10 @@ public class DLFileVersionPersistenceTest {
 
 		newDLFileVersion.setChecksum(RandomTestUtil.randomString());
 
+		newDLFileVersion.setExpirationDate(RandomTestUtil.nextDate());
+
+		newDLFileVersion.setReviewDate(RandomTestUtil.nextDate());
+
 		newDLFileVersion.setLastPublishDate(RandomTestUtil.nextDate());
 
 		newDLFileVersion.setStatus(RandomTestUtil.nextInt());
@@ -255,6 +259,12 @@ public class DLFileVersionPersistenceTest {
 		Assert.assertEquals(
 			existingDLFileVersion.getChecksum(),
 			newDLFileVersion.getChecksum());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingDLFileVersion.getExpirationDate()),
+			Time.getShortTimestamp(newDLFileVersion.getExpirationDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingDLFileVersion.getReviewDate()),
+			Time.getShortTimestamp(newDLFileVersion.getReviewDate()));
 		Assert.assertEquals(
 			Time.getShortTimestamp(existingDLFileVersion.getLastPublishDate()),
 			Time.getShortTimestamp(newDLFileVersion.getLastPublishDate()));
@@ -397,9 +407,10 @@ public class DLFileVersionPersistenceTest {
 			"fileEntryId", true, "treePath", true, "fileName", true,
 			"extension", true, "mimeType", true, "title", true, "description",
 			true, "changeLog", true, "fileEntryTypeId", true, "version", true,
-			"size", true, "checksum", true, "lastPublishDate", true, "status",
-			true, "statusByUserId", true, "statusByUserName", true,
-			"statusDate", true);
+			"size", true, "checksum", true, "expirationDate", true,
+			"reviewDate", true, "lastPublishDate", true, "status", true,
+			"statusByUserId", true, "statusByUserName", true, "statusDate",
+			true);
 	}
 
 	@Test
@@ -621,31 +632,72 @@ public class DLFileVersionPersistenceTest {
 
 		_persistence.clearCache();
 
-		DLFileVersion existingDLFileVersion = _persistence.findByPrimaryKey(
-			newDLFileVersion.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newDLFileVersion.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingDLFileVersion.getUuid(),
-				ReflectionTestUtil.invoke(
-					existingDLFileVersion, "getOriginalUuid",
-					new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		DLFileVersion newDLFileVersion = addDLFileVersion();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DLFileVersion.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"fileVersionId", newDLFileVersion.getFileVersionId()));
+
+		List<DLFileVersion> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(DLFileVersion dlFileVersion) {
 		Assert.assertEquals(
-			Long.valueOf(existingDLFileVersion.getGroupId()),
+			dlFileVersion.getUuid(),
+			ReflectionTestUtil.invoke(
+				dlFileVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "uuid_"));
+		Assert.assertEquals(
+			Long.valueOf(dlFileVersion.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingDLFileVersion, "getOriginalGroupId", new Class<?>[0]));
+				dlFileVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 
 		Assert.assertEquals(
-			Long.valueOf(existingDLFileVersion.getFileEntryId()),
+			Long.valueOf(dlFileVersion.getFileEntryId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingDLFileVersion, "getOriginalFileEntryId",
-				new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingDLFileVersion.getVersion(),
-				ReflectionTestUtil.invoke(
-					existingDLFileVersion, "getOriginalVersion",
-					new Class<?>[0])));
+				dlFileVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "fileEntryId"));
+		Assert.assertEquals(
+			dlFileVersion.getVersion(),
+			ReflectionTestUtil.invoke(
+				dlFileVersion, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "version"));
 	}
 
 	protected DLFileVersion addDLFileVersion() throws Exception {
@@ -700,6 +752,10 @@ public class DLFileVersionPersistenceTest {
 		dlFileVersion.setSize(RandomTestUtil.nextLong());
 
 		dlFileVersion.setChecksum(RandomTestUtil.randomString());
+
+		dlFileVersion.setExpirationDate(RandomTestUtil.nextDate());
+
+		dlFileVersion.setReviewDate(RandomTestUtil.nextDate());
 
 		dlFileVersion.setLastPublishDate(RandomTestUtil.nextDate());
 

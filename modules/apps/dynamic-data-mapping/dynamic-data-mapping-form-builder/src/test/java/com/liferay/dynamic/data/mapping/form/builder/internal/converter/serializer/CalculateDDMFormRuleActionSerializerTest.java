@@ -18,6 +18,7 @@ import com.liferay.dynamic.data.mapping.form.builder.internal.converter.model.ac
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.spi.converter.serializer.SPIDDMFormRuleSerializerContext;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 
@@ -45,7 +46,7 @@ public class CalculateDDMFormRuleActionSerializerTest extends PowerMockito {
 
 	@Before
 	public void setUp() {
-		setUpServiceContextThreadLocal();
+		_setUpServiceContextThreadLocal();
 	}
 
 	@Test
@@ -203,7 +204,26 @@ public class CalculateDDMFormRuleActionSerializerTest extends PowerMockito {
 			result);
 	}
 
-	protected void setUpServiceContextThreadLocal() {
+	@Test
+	public void testSerializeWithEmptyTarget() {
+		when(
+			_calculateDDMFormRuleAction.getTarget()
+		).thenReturn(
+			StringPool.BLANK
+		);
+
+		CalculateDDMFormRuleActionSerializer
+			calculateDDMFormRuleActionSerializer =
+				new CalculateDDMFormRuleActionSerializer(
+					_calculateDDMFormRuleAction);
+
+		String result = calculateDDMFormRuleActionSerializer.serialize(
+			_spiDDMFormRuleSerializerContext);
+
+		Assert.assertNull(result);
+	}
+
+	private void _setUpServiceContextThreadLocal() {
 		mockStatic(ServiceContextThreadLocal.class);
 
 		when(

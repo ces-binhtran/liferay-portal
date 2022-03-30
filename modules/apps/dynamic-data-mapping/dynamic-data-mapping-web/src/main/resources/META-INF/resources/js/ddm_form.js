@@ -17,7 +17,7 @@ AUI.add(
 	(A) => {
 		var AArray = A.Array;
 
-		var AObject = A.Object;
+		var AQueue = A.Queue;
 
 		var DateMath = A.DataType.DateMath;
 
@@ -35,8 +35,8 @@ AUI.add(
 		var TPL_ICON_CARET =
 			'<span class="collapse-icon-closed"><span class="icon-caret-right"></span></span>';
 
-		var TPL_LAYOUTS_NAVBAR =
-			'<nav class="navbar navbar-default">' +
+		var TPL_PUBLIC_PRIVATE_LAYOUTS_NAVBAR =
+			'<nav class="navbar navbar-collapse-absolute navbar-expand-md navbar-underline navigation-bar navigation-bar-light">' +
 			'<div class="collapse navbar-collapse">' +
 			'<ul class="nav navbar-nav">' +
 			'<li class="public {publicLayoutClass}"><a href="javascript:;">' +
@@ -44,6 +44,17 @@ AUI.add(
 			'</a></li>' +
 			'<li class="private {privateLayoutClass}"><a href="javascript:;">' +
 			Liferay.Language.get('private-pages') +
+			'</a></li>' +
+			'</ul>' +
+			'</div>' +
+			'</nav>';
+
+		var TPL_LAYOUTS_NAVBAR =
+			'<nav class="navbar navbar-collapse-absolute navbar-expand-md navbar-underline navigation-bar navigation-bar-light">' +
+			'<div class="collapse navbar-collapse">' +
+			'<ul class="nav navbar-nav">' +
+			'<li class="public active"><a href="javascript:;">' +
+			Liferay.Language.get('pages') +
 			'</a></li>' +
 			'</ul>' +
 			'</div>' +
@@ -110,6 +121,11 @@ AUI.add(
 
 			fieldsNamespace: {},
 
+			isPrivateLayoutsEnabled: {
+				validator: Lang.isBoolean,
+				value: true,
+			},
+
 			p_l_id: {},
 
 			portletNamespace: {},
@@ -159,23 +175,17 @@ AUI.add(
 
 				var FieldClass = getFieldClass(fieldDefinition.type);
 
-				var field = new FieldClass(
-					A.merge(
-						instance.getAttrs(
-							AObject.keys(DDMPortletSupport.ATTRS)
-						),
-						{
-							container: fieldNode,
-							dataType: fieldDefinition.dataType,
-							definition,
-							displayLocale,
-							instanceId: fieldInstanceId,
-							name: fieldName,
-							parent: instance,
-							values: instance.get('values'),
-						}
-					)
-				);
+				var field = new FieldClass({
+					...instance.getAttrs(Object.keys(DDMPortletSupport.ATTRS)),
+					container: fieldNode,
+					dataType: fieldDefinition.dataType,
+					definition,
+					displayLocale,
+					instanceId: fieldInstanceId,
+					name: fieldName,
+					parent: instance,
+					values: instance.get('values'),
+				});
 
 				var form = instance.getForm();
 
@@ -214,6 +224,8 @@ AUI.add(
 
 				var container = instance.get('container');
 
+				var dataType = instance.get('dataType');
+
 				var templateResourceParameters = {
 					doAsGroupId: instance.get('doAsGroupId'),
 					fieldName: instance.get('name'),
@@ -223,18 +235,59 @@ AUI.add(
 					p_p_auth: container.getData('ddmAuthToken'),
 					p_p_id: Liferay.PortletKeys.DYNAMIC_DATA_MAPPING,
 					p_p_isolated: true,
-					p_p_resource_id: 'renderStructureField',
+					p_p_resource_id:
+						'/dynamic_data_mapping/render_structure_field',
 					p_p_state: 'pop_up',
 					portletNamespace: instance.get('portletNamespace'),
 					readOnly: instance.get('readOnly'),
 				};
 
+				if (dataType && dataType === 'html') {
+					delete templateResourceParameters.doAsGroupId;
+				}
+
+				var fields = instance._valueFields();
+
+				if (fields && fields.length) {
+					instance._removeDoAsGroupIdParam(
+						fields,
+						templateResourceParameters
+					);
+				}
+
 				var templateResourceURL = Liferay.Util.PortletURL.createResourceURL(
-					themeDisplay.getURLControlPanel(),
+					themeDisplay.getLayoutURL(),
 					templateResourceParameters
 				);
 
 				return templateResourceURL.toString();
+			},
+
+			_removeDoAsGroupIdParam(fields, templateResourceParameters) {
+				var instance = this;
+
+				fields.forEach((field) => {
+					if (!templateResourceParameters.doAsGroupId) {
+						return;
+					}
+
+					var dataType = field.get('dataType');
+
+					if (dataType && dataType === 'html') {
+						delete templateResourceParameters.doAsGroupId;
+
+						return;
+					}
+
+					var nestedFields = field.get('fields');
+
+					if (nestedFields && nestedFields.length) {
+						instance._removeDoAsGroupIdParam(
+							nestedFields,
+							templateResourceParameters
+						);
+					}
+				});
 			},
 
 			_valueDisplayLocale() {
@@ -300,7 +353,7 @@ AUI.add(
 			},
 
 			getFieldInfo(tree, key, value) {
-				var queue = new A.Queue(tree);
+				var queue = new AQueue(tree);
 
 				var addToQueue = function (item) {
 					if (queue._q.indexOf(item) === -1) {
@@ -357,6 +410,17 @@ AUI.add(
 
 				if (instance.get('readOnly')) {
 					retVal = true;
+				}
+				else {
+					var form = instance.getForm();
+
+					if (
+						!instance.get('localizable') &&
+						form.getDefaultLocale() !==
+							instance.get('displayLocale')
+					) {
+						retVal = true;
+					}
 				}
 
 				return retVal;
@@ -643,6 +707,39 @@ AUI.add(
 					}
 				},
 
+				convertNumberLocale(number, sourceLocale, targetLocale) {
+					if (sourceLocale !== targetLocale) {
+						var test = 1.1;
+						var sourceDecimalSeparator = test
+							.toLocaleString(sourceLocale.replace('_', '-'))
+							.charAt(1);
+						var targetDecimalSeparator = test
+							.toLocaleString(targetLocale.replace('_', '-'))
+							.charAt(1);
+
+						if (sourceDecimalSeparator !== targetDecimalSeparator) {
+							if (
+								['.', ','].includes(sourceDecimalSeparator) &&
+								['.', ','].includes(targetDecimalSeparator)
+							) {
+								number = number.replace(
+									/[,.]/g,
+									(separator) => {
+										if (targetDecimalSeparator === '.') {
+											return separator === '.' ? '' : '.';
+										}
+										else {
+											return separator === '.' ? ',' : '';
+										}
+									}
+								);
+							}
+						}
+					}
+
+					return number;
+				},
+
 				createField(fieldTemplate) {
 					var instance = this;
 
@@ -696,6 +793,27 @@ AUI.add(
 						var defaultLocale = instance.getDefaultLocale();
 
 						if (defaultLocale && localizationMap[defaultLocale]) {
+							var name = instance.get('name');
+
+							var field = instance.getFieldByNameInFieldDefinition(
+								name
+							);
+
+							if (field) {
+								var type = field.type;
+
+								if (
+									type === 'ddm-number' ||
+									type === 'ddm-decimal'
+								) {
+									return instance.convertNumberLocale(
+										localizationMap[defaultLocale],
+										defaultLocale,
+										locale
+									);
+								}
+							}
+
 							return localizationMap[defaultLocale];
 						}
 
@@ -713,7 +831,14 @@ AUI.add(
 					var fields = [];
 
 					if (definition && definition.fields) {
-						fields = definition.fields;
+						definition.fields.forEach((field) => {
+							fields.push(field);
+							if (field.nestedFields) {
+								field.nestedFields.forEach((nestedField) => {
+									fields.push(nestedField);
+								});
+							}
+						});
 					}
 
 					return AArray.find(fields, (item) => {
@@ -793,7 +918,14 @@ AUI.add(
 							predefinedValue = field.predefinedValue[locale];
 						}
 
-						if (type === 'select' && predefinedValue === '[""]') {
+						var localizationMap = instance.get('localizationMap');
+
+						if (
+							type === 'select' &&
+							(predefinedValue === '[""]' ||
+								// eslint-disable-next-line @liferay/aui/no-object
+								!A.Object.isEmpty(localizationMap))
+						) {
 							predefinedValue = '';
 						}
 					}
@@ -831,7 +963,7 @@ AUI.add(
 					var value = '';
 
 					if (inputNode) {
-						value = Lang.String.unescapeHTML(inputNode.val());
+						value = Liferay.Util.unescapeHTML(inputNode.val());
 					}
 
 					return value;
@@ -880,7 +1012,12 @@ AUI.add(
 
 					var fieldDefinition = instance.getFieldDefinition();
 
-					if (fieldDefinition && fieldDefinition.dataType == 'html') {
+					if (
+						fieldDefinition &&
+						(fieldDefinition.dataType === 'html' ||
+							fieldDefinition.type === 'ddm-geolocation' ||
+							fieldDefinition.type === 'ddm-separator')
+					) {
 						container._node.insertAdjacentHTML(
 							'afterbegin',
 							TPL_REPEATABLE_ICON
@@ -927,12 +1064,6 @@ AUI.add(
 
 				repeat() {
 					var instance = this;
-
-					var field = instance.getFieldDefinition();
-
-					if (field.type === 'select') {
-						field.options.shift();
-					}
 
 					instance._getTemplate((fieldTemplate) => {
 						var field = instance.createField(fieldTemplate);
@@ -1029,24 +1160,28 @@ AUI.add(
 							selectorInput.attr('disabled', readOnly);
 						}
 
-						var checkboxInput = container.one(
-							'input[type="checkbox"]'
-						);
+						if (instance.getFieldDefinition().type === 'checkbox') {
+							var checkboxInput = container.one(
+								'input[type="checkbox"][name*="' +
+									instance.getFieldDefinition().name +
+									'"]'
+							);
 
-						if (checkboxInput) {
-							checkboxInput.attr('disabled', readOnly);
-						}
+							if (checkboxInput) {
+								checkboxInput.attr('disabled', readOnly);
+							}
 
-						var disableCheckboxInput = container.one(
-							'input[type="checkbox"][name$="disable"]'
-						);
+							var disableCheckboxInput = container.one(
+								'input[type="checkbox"][name$="disable"]'
+							);
 
-						if (
-							inputNode &&
-							disableCheckboxInput &&
-							disableCheckboxInput.get('checked')
-						) {
-							inputNode.attr('disabled', true);
+							if (
+								inputNode &&
+								disableCheckboxInput &&
+								disableCheckboxInput.get('checked')
+							) {
+								inputNode.attr('disabled', true);
+							}
 						}
 					}
 				},
@@ -1058,9 +1193,17 @@ AUI.add(
 
 					var siblings = instance.getRepeatedSiblings();
 
+					var parentField = siblings[0];
+
 					container
 						.one('.lfr-ddm-repeatable-delete-button')
-						.toggle(siblings.length > 1);
+						.toggle(
+							siblings.length > 1 &&
+								siblings.includes(instance) &&
+								!parentField
+									.get('container')
+									.compareTo(container)
+						);
 				},
 
 				syncValueUI() {
@@ -1074,21 +1217,35 @@ AUI.add(
 						var value;
 
 						if (instance.get('localizable')) {
+							// eslint-disable-next-line @liferay/aui/no-object
 							if (!A.Object.isEmpty(localizationMap)) {
 								value =
 									localizationMap[
 										instance.get('displayLocale')
 									];
 							}
-						}
 
-						if (Lang.isUndefined(value)) {
-							value = instance.getDefaultLocalization(
-								instance.get('displayLocale')
-							);
-						}
+							if (Lang.isUndefined(value)) {
+								value = instance.getDefaultLocalization(
+									instance.get('displayLocale')
+								);
+							}
 
-						instance.setValue(value);
+							instance.setValue(value);
+						}
+						else {
+							if (
+								(dataType === 'double' ||
+									dataType === 'number') &&
+								// eslint-disable-next-line @liferay/aui/no-object
+								!A.Object.isEmpty(localizationMap)
+							) {
+								instance.setValue(localizationMap);
+							}
+							else {
+								instance.setValue(instance.getValue());
+							}
+						}
 					}
 				},
 
@@ -1105,17 +1262,13 @@ AUI.add(
 					var fields = instance.get('fields');
 
 					if (dataType || fields.length) {
-						instance.updateLocalizationMap(
-							instance.get('displayLocale')
-						);
-
 						fieldJSON.value = instance.get('localizationMap');
 
 						if (instance.get('localizable')) {
 							var form = instance.getForm();
 
 							form.addAvailableLanguageIds(
-								AObject.keys(fieldJSON.value)
+								Object.keys(fieldJSON.value)
 							);
 						}
 					}
@@ -1138,12 +1291,10 @@ AUI.add(
 					var value = instance.getValue();
 
 					if (instance.get('localizable')) {
-						var defaultLocale = instance.getDefaultLocale();
-
 						if (
-							locale === defaultLocale ||
-							value !== localizationMap[defaultLocale] ||
-							localizationMap[locale]
+							!(locale in localizationMap) ||
+							(localizationMap[locale] !== undefined &&
+								value !== localizationMap[locale])
 						) {
 							localizationMap[locale] = value;
 						}
@@ -1428,43 +1579,25 @@ AUI.add(
 
 					var portletNamespace = instance.get('portletNamespace');
 
-					Liferay.Loader.require(
-						'frontend-js-web/liferay/ItemSelectorDialog.es',
-						(ItemSelectorDialog) => {
-							var itemSelectorDialog = new ItemSelectorDialog.default(
-								{
-									eventName:
-										portletNamespace +
-										'selectDocumentLibrary',
-									singleSelect: true,
-									url: instance.getDocumentLibrarySelectorURL(),
-								}
-							);
+					Liferay.Util.openSelectionModal({
+						onSelect: (selectedItem) => {
+							if (selectedItem) {
+								var itemValue = JSON.parse(selectedItem.value);
 
-							itemSelectorDialog.on(
-								'selectedItemChange',
-								(event) => {
-									var selectedItem = event.selectedItem;
-
-									if (selectedItem) {
-										var itemValue = JSON.parse(
-											selectedItem.value
-										);
-
-										instance.setValue({
-											classPK: itemValue.fileEntryId,
-											groupId: itemValue.groupId,
-											title: itemValue.title,
-											type: itemValue.type,
-											uuid: itemValue.uuid,
-										});
-									}
-								}
-							);
-
-							itemSelectorDialog.open();
-						}
-					);
+								instance.setValue({
+									classPK: itemValue.fileEntryId,
+									groupId: itemValue.groupId,
+									title: itemValue.title,
+									type: itemValue.type,
+									uuid: itemValue.uuid,
+								});
+							}
+						},
+						selectEventName:
+							portletNamespace + 'selectDocumentLibrary',
+						title: Liferay.Language.get('select-file'),
+						url: instance.getDocumentLibrarySelectorURL(),
+					});
 				},
 
 				_validateField(fieldNode) {
@@ -1524,12 +1657,12 @@ AUI.add(
 						'1_json': JSON.stringify(criterionJSON),
 						'2_json': JSON.stringify(uploadCriterionJSON),
 						criteria,
-						itemSelectedEventName:
+						'itemSelectedEventName':
 							portletNamespace + 'selectDocumentLibrary',
-						p_p_auth: container.getData('itemSelectorAuthToken'),
-						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-						p_p_mode: 'view',
-						p_p_state: 'pop_up',
+						'p_p_auth': container.getData('itemSelectorAuthToken'),
+						'p_p_id': Liferay.PortletKeys.ITEM_SELECTOR,
+						'p_p_mode': 'view',
+						'p_p_state': 'pop_up',
 					};
 
 					var documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
@@ -1563,11 +1696,11 @@ AUI.add(
 
 				getUploadURL() {
 					var uploadParameters = {
-						cmd: 'add_temp',
+						'cmd': 'add_temp',
 						'javax.portlet.action':
 							'/document_library/upload_file_entry',
-						p_auth: Liferay.authToken,
-						p_p_id: Liferay.PortletKeys.DOCUMENT_LIBRARY,
+						'p_auth': Liferay.authToken,
+						'p_p_id': Liferay.PortletKeys.DOCUMENT_LIBRARY,
 					};
 
 					var uploadURL = Liferay.Util.PortletURL.createActionURL(
@@ -1631,7 +1764,7 @@ AUI.add(
 					clearButtonNode.attr('disabled', readOnly);
 
 					var altNode = container.one(
-						'#' + instance.getInputName() + 'Alt'
+						'input[name=' + instance.getInputName() + 'Alt]'
 					);
 
 					if (altNode) {
@@ -1647,7 +1780,7 @@ AUI.add(
 					);
 
 					var titleNode = A.one(
-						'#' + instance.getInputName() + 'Title'
+						'input[name=' + instance.getInputName() + 'Title]'
 					);
 
 					titleNode.val(parsedValue.title || '');
@@ -1664,287 +1797,6 @@ AUI.add(
 		});
 
 		FieldTypes['ddm-documentlibrary'] = DocumentLibraryField;
-
-		var JournalArticleField = A.Component.create({
-			EXTENDS: Field,
-
-			prototype: {
-				_getWebContentSelectorURL() {
-					var instance = this;
-
-					var form = instance.getForm();
-
-					var webContentSelectorURL = form.get(
-						'webContentSelectorURL'
-					);
-
-					return webContentSelectorURL
-						? webContentSelectorURL
-						: instance._getWebContentURL(
-								'com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion'
-						  );
-				},
-
-				_getWebContentURL(criteria) {
-					var instance = this;
-
-					var container = instance.get('container');
-
-					var portletNamespace = instance.get('portletNamespace');
-
-					var criterionJSON = {
-						desiredItemSelectorReturnTypes:
-							'com.liferay.item.selector.criteria.JournalArticleItemSelectorReturnType',
-					};
-
-					var webContentParameters = {
-						'0_json': JSON.stringify(criterionJSON),
-						criteria,
-						itemSelectedEventName:
-							portletNamespace + 'selectWebContent',
-						p_p_auth: container.getData('itemSelectorAuthToken'),
-						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-						p_p_mode: 'view',
-						p_p_state: 'pop_up',
-					};
-
-					var webContentURL = Liferay.Util.PortletURL.createPortletURL(
-						themeDisplay.getLayoutRelativeControlPanelURL(),
-						webContentParameters
-					);
-
-					return webContentURL.toString();
-				},
-
-				_handleButtonsClick(event) {
-					var instance = this;
-
-					if (!instance.get('readOnly')) {
-						var currentTarget = event.currentTarget;
-
-						if (currentTarget.test('.select-button')) {
-							instance._handleSelectButtonClick(event);
-						}
-						else if (currentTarget.test('.clear-button')) {
-							instance._handleClearButtonClick(event);
-						}
-					}
-				},
-
-				_handleClearButtonClick() {
-					var instance = this;
-
-					instance.setValue('');
-
-					instance._hideMessage();
-				},
-
-				_handleSelectButtonClick() {
-					var instance = this;
-
-					var portletNamespace = instance.get('portletNamespace');
-
-					Liferay.Loader.require(
-						'frontend-js-web/liferay/ItemSelectorDialog.es',
-						(ItemSelectorDialog) => {
-							var itemSelectorDialog = new ItemSelectorDialog.default(
-								{
-									eventName:
-										portletNamespace + 'selectWebContent',
-									singleSelect: true,
-									title: Liferay.Language.get(
-										'journal-article'
-									),
-									url: instance._getWebContentSelectorURL(),
-								}
-							);
-
-							itemSelectorDialog.on(
-								'selectedItemChange',
-								(event) => {
-									var selectedItem = event.selectedItem;
-
-									if (selectedItem) {
-										var itemValue = JSON.parse(
-											selectedItem.value
-										);
-
-										instance.setValue({
-											className: itemValue.className,
-											classPK: itemValue.classPK,
-											title: itemValue.title || '',
-										});
-
-										instance._hideMessage();
-									}
-								}
-							);
-
-							itemSelectorDialog.open();
-						}
-					);
-				},
-
-				_hideMessage() {
-					var instance = this;
-
-					var container = instance.get('container');
-
-					var message = container.one(
-						'#' + instance.getInputName() + 'Message'
-					);
-
-					if (message) {
-						message.addClass('hide');
-					}
-
-					var formGroup = container.one(
-						'#' + instance.getInputName() + 'FormGroup'
-					);
-
-					formGroup.removeClass('has-warning');
-				},
-
-				_validateField(fieldNode) {
-					var instance = this;
-
-					var liferayForm = instance.get('liferayForm');
-
-					if (liferayForm) {
-						var formValidator = liferayForm.formValidator;
-
-						if (formValidator) {
-							formValidator.validateField(fieldNode);
-						}
-					}
-				},
-
-				getParsedValue(value) {
-					if (Lang.isString(value)) {
-						if (value !== '') {
-							value = JSON.parse(value);
-						}
-						else {
-							value = {};
-						}
-					}
-
-					return value;
-				},
-
-				getRuleInputName() {
-					var instance = this;
-
-					var inputName = instance.getInputName();
-
-					return inputName + 'Title';
-				},
-
-				initializer() {
-					var instance = this;
-
-					var container = instance.get('container');
-
-					container.delegate(
-						'click',
-						instance._handleButtonsClick,
-						'> .form-group .btn',
-						instance
-					);
-				},
-
-				setValue(value) {
-					var instance = this;
-
-					var parsedValue = instance.getParsedValue(value);
-
-					if (!parsedValue.className && !parsedValue.classPK) {
-						value = '';
-					}
-					else {
-						value = JSON.stringify(parsedValue);
-					}
-
-					JournalArticleField.superclass.setValue.call(
-						instance,
-						value
-					);
-
-					instance.syncUI();
-				},
-
-				showNotice(message) {
-					var instance = this;
-
-					if (!instance.notice) {
-						instance.notice = new Liferay.Notice({
-							toggleText: false,
-							type: 'warning',
-						}).hide();
-					}
-
-					instance.notice.html(message);
-					instance.notice.show();
-				},
-
-				syncReadOnlyUI() {
-					var instance = this;
-
-					var readOnly = instance.getReadOnly();
-
-					var container = instance.get('container');
-
-					var selectButtonNode = container.one(
-						'#' + instance.getInputName() + 'SelectButton'
-					);
-
-					selectButtonNode.attr('disabled', readOnly);
-
-					var clearButtonNode = container.one(
-						'#' + instance.getInputName() + 'ClearButton'
-					);
-
-					clearButtonNode.attr('disabled', readOnly);
-				},
-
-				syncUI() {
-					var instance = this;
-
-					var parsedValue = instance.getParsedValue(
-						instance.getValue()
-					);
-
-					var titleNode = A.one(
-						'#' + instance.getInputName() + 'Title'
-					);
-
-					var parsedTitleMap = instance.getParsedValue(
-						parsedValue.titleMap
-					);
-
-					if (parsedTitleMap) {
-						var journalTitle =
-							parsedTitleMap[instance.get('displayLocale')];
-
-						if (journalTitle) {
-							parsedValue.title = journalTitle;
-						}
-					}
-
-					titleNode.val(parsedValue.title || '');
-
-					instance._validateField(titleNode);
-
-					var clearButtonNode = A.one(
-						'#' + instance.getInputName() + 'ClearButton'
-					);
-
-					clearButtonNode.toggle(!!parsedValue.classPK);
-				},
-			},
-		});
-
-		FieldTypes['ddm-journal-article'] = JournalArticleField;
 
 		var LinkToPageField = A.Component.create({
 			ATTRS: {
@@ -1982,14 +1834,7 @@ AUI.add(
 							layoutValue && layoutValue.privateLayout
 						);
 
-						var groupIdNode = A.one(
-							'#' + this.get('portletNamespace') + 'groupId'
-						);
-
-						var groupId =
-							(groupIdNode &&
-								groupIdNode.getAttribute('value')) ||
-							themeDisplay.getScopeGroupId();
+						var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
 
 						var layoutsRoot = {
 							groupId,
@@ -2375,13 +2220,7 @@ AUI.add(
 
 					var delta = instance.get('delta');
 
-					var groupIdNode = A.one(
-						'#' + this.get('portletNamespace') + 'groupId'
-					);
-
-					var groupId =
-						(groupIdNode && groupIdNode.getAttribute('value')) ||
-						themeDisplay.getScopeGroupId();
+					var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
 
 					var parentLayoutId = instance._currentParentLayoutId;
 
@@ -2436,7 +2275,7 @@ AUI.add(
 
 							if (
 								start <= cache.total &&
-								start != cache.oldStart
+								start !== cache.oldStart
 							) {
 								cache.oldStart = start;
 
@@ -2598,9 +2437,9 @@ AUI.add(
 
 					breadcrumbContainer.empty();
 
-					var layoutsPathLenght = layoutsPath.length;
+					var layoutsPathLength = layoutsPath.length;
 
-					for (var index = 0; index < layoutsPathLenght; index++) {
+					for (var index = 0; index < layoutsPathLength; index++) {
 						var layoutPath = layoutsPath[index];
 
 						instance._addBreadcrumbElement(
@@ -2609,6 +2448,18 @@ AUI.add(
 							layoutPath.groupId,
 							layoutPath.privateLayout
 						);
+
+						if (index < layoutsPathLength - 1) {
+							if (instance._modal && instance._modal.bodyNode) {
+								var breadcrumbNode = instance._modal.bodyNode.one(
+									'.lfr-ddm-breadcrumb'
+								);
+
+								if (breadcrumbNode) {
+									breadcrumbNode.append('&nbsp;&gt;&nbsp;');
+								}
+							}
+						}
 					}
 				},
 
@@ -2694,13 +2545,7 @@ AUI.add(
 
 					var selectedLayout = instance.get('selectedLayout');
 
-					var groupIdNode = A.one(
-						'#' + this.get('portletNamespace') + 'groupId'
-					);
-
-					var groupId =
-						(groupIdNode && groupIdNode.getAttribute('value')) ||
-						themeDisplay.getScopeGroupId();
+					var groupId = themeDisplay.getScopeGroupIdOrLiveGroupId();
 
 					if (selectedLayout && selectedLayout.layoutId) {
 						instance._requestSiblingLayouts(
@@ -2751,16 +2596,25 @@ AUI.add(
 					var navbar = instance._navbar;
 
 					if (!navbar) {
-						navbar = A.Node.create(
-							Lang.sub(TPL_LAYOUTS_NAVBAR, {
-								privateLayoutClass: privateLayout
-									? 'active'
-									: '',
-								publicLayoutClass: privateLayout
-									? ''
-									: 'active',
-							})
+						var isPrivateLayoutsEnabled = instance.get(
+							'isPrivateLayoutsEnabled'
 						);
+
+						if (isPrivateLayoutsEnabled) {
+							navbar = A.Node.create(
+								Lang.sub(TPL_PUBLIC_PRIVATE_LAYOUTS_NAVBAR, {
+									privateLayoutClass: privateLayout
+										? 'active'
+										: '',
+									publicLayoutClass: privateLayout
+										? ''
+										: 'active',
+								})
+							);
+						}
+						else {
+							navbar = A.Node.create(TPL_LAYOUTS_NAVBAR);
+						}
 
 						navbar.delegate(
 							'click',
@@ -3136,7 +2990,7 @@ AUI.add(
 					var inputName = instance.getInputName();
 
 					var layoutNameNode = container.one(
-						'#' + inputName + 'LayoutName'
+						'input[name=' + inputName + 'LayoutName]'
 					);
 
 					var parsedValue = instance.getParsedValue(value);
@@ -3344,6 +3198,14 @@ AUI.add(
 					}
 				},
 
+				getAltRuleInputName() {
+					var instance = this;
+
+					var inputName = instance.getInputName();
+
+					return inputName + 'Alt';
+				},
+
 				getDocumentLibrarySelectorURL() {
 					var instance = this;
 
@@ -3391,12 +3253,12 @@ AUI.add(
 						'0_json': JSON.stringify(journalCriterionJSON),
 						'1_json': JSON.stringify(imageCriterionJSON),
 						criteria,
-						itemSelectedEventName:
+						'itemSelectedEventName':
 							portletNamespace + 'selectDocumentLibrary',
-						p_p_auth: container.getData('itemSelectorAuthToken'),
-						p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-						p_p_mode: 'view',
-						p_p_state: 'pop_up',
+						'p_p_auth': container.getData('itemSelectorAuthToken'),
+						'p_p_id': Liferay.PortletKeys.ITEM_SELECTOR,
+						'p_p_mode': 'view',
+						'p_p_state': 'pop_up',
 					};
 
 					var documentLibraryURL = Liferay.Util.PortletURL.createPortletURL(
@@ -3421,7 +3283,7 @@ AUI.add(
 
 					if (instance.isNotEmpty(parsedValue)) {
 						var altNode = A.one(
-							'#' + instance.getInputName() + 'Alt'
+							'input[name=' + instance.getInputName() + 'Alt]'
 						);
 
 						parsedValue.alt = altNode.val();
@@ -3464,7 +3326,7 @@ AUI.add(
 						}
 
 						var altNode = A.one(
-							'#' + instance.getInputName() + 'Alt'
+							'input[name=' + instance.getInputName() + 'Alt]'
 						);
 
 						altNode.val(parsedValue.alt);
@@ -3492,12 +3354,14 @@ AUI.add(
 
 					var notEmpty = instance.isNotEmpty(parsedValue);
 
-					var altNode = A.one('#' + instance.getInputName() + 'Alt');
+					var altNode = A.one(
+						'input[name=' + instance.getInputName() + 'Alt]'
+					);
 
 					altNode.attr('disabled', !notEmpty);
 
 					var titleNode = A.one(
-						'#' + instance.getInputName() + 'Title'
+						'input[name=' + instance.getInputName() + 'Title]'
 					);
 
 					if (notEmpty) {
@@ -3561,7 +3425,7 @@ AUI.add(
 						})
 					);
 
-					var locationNode = A.one('#' + inputName + 'Location');
+					var locationNode = A.one(`#${inputName}Location`);
 
 					locationNode.html(event.newVal.address);
 				},
@@ -3577,10 +3441,7 @@ AUI.add(
 				_afterRenderTextHTMLField() {
 					var instance = this;
 
-					var container = instance.get('container');
-
-					container.placeAfter(instance.readOnlyText);
-					container.placeAfter(instance.readOnlyLabel);
+					instance.editorContainer.placeAfter(instance.readOnlyText);
 				},
 
 				getEditor() {
@@ -3602,15 +3463,20 @@ AUI.add(
 				initializer() {
 					var instance = this;
 
-					instance.readOnlyLabel = A.Node.create(
-						'<label class="control-label hide"></label>'
+					var editorComponentName =
+						instance.getInputName() + 'Editor';
+
+					instance.editorContainer = A.one(
+						'#' + editorComponentName + 'Container'
 					);
+
 					instance.readOnlyText = A.Node.create(
-						'<div class="hide"></div>'
+						'<div class="cke_editable hide"></div>'
 					);
 
 					instance.after({
-						render: instance._afterRenderTextHTMLField,
+						'liferay-ddm-field:render':
+							instance._afterRenderTextHTMLField,
 					});
 				},
 
@@ -3636,6 +3502,11 @@ AUI.add(
 
 							if (
 								value ===
+									instance.getFieldDefinition()
+										.predefinedValue[
+										instance.get('displayLocale')
+									] ||
+								value ===
 									localizationMap[
 										instance.get('displayLocale')
 									] ||
@@ -3656,19 +3527,13 @@ AUI.add(
 				syncReadOnlyUI() {
 					var instance = this;
 
-					instance.readOnlyLabel.html(
-						instance.getLabelNode().getHTML()
-					);
-					instance.readOnlyText.html(
-						'<p>' + instance.getValue() + '</p>'
-					);
+					instance.readOnlyText.html(instance.getValue());
 
 					var readOnly = instance.getReadOnly();
 
-					instance.readOnlyLabel.toggle(readOnly);
 					instance.readOnlyText.toggle(readOnly);
 
-					instance.get('container').toggle(!readOnly);
+					instance.editorContainer.toggle(!readOnly);
 				},
 			},
 		});
@@ -3781,16 +3646,10 @@ AUI.add(
 					var fieldOptions = fieldDefinition.options;
 
 					if (fieldOptions && fieldOptions[0]) {
-						if (fieldOptions[0].value === '') {
-							var displayLocale = instance.get('displayLocale');
-
-							fieldOptions[0].label[displayLocale] = '';
-						}
-						else {
-							fieldOptions.unshift(
-								instance._getPlaceholderOption()
-							);
-						}
+						fieldOptions = fieldOptions.filter(
+							(fieldOption) => fieldOption.value !== ''
+						);
+						fieldOptions.unshift(instance._getPlaceholderOption());
 					}
 
 					return fieldOptions;
@@ -4024,9 +3883,26 @@ AUI.add(
 									field.getRuleInputName()
 								] = originalFieldRules;
 							}
+
+							if (field.get('dataType') === 'image') {
+								var originalAltRuleInputName = originalField.getAltRuleInputName();
+
+								originalFieldRules =
+									validatorRules[originalAltRuleInputName];
+
+								if (originalFieldRules) {
+									validatorRules[
+										field.getAltRuleInputName()
+									] = originalFieldRules;
+								}
+							}
 						}
 						else if (event.type === 'liferay-ddm-field:remove') {
 							delete validatorRules[field.getRuleInputName()];
+
+							delete liferayForm.formValidator.errors[
+								field.getRuleInputName()
+							];
 
 							var inputNode = field.getInputNode();
 
@@ -4071,6 +3947,22 @@ AUI.add(
 					instance.updateDDMFormInputValue();
 				},
 
+				_updateNestedLocalizationMaps(fields) {
+					var instance = this;
+
+					fields.forEach((field) => {
+						var nestedFields = field.get('fields');
+
+						field.updateLocalizationMap(field.get('displayLocale'));
+
+						if (nestedFields.length) {
+							instance._updateNestedLocalizationMaps(
+								nestedFields
+							);
+						}
+					});
+				},
+
 				_valueFormNode() {
 					var instance = this;
 
@@ -4101,7 +3993,7 @@ AUI.add(
 					);
 
 					availableLanguageIds.forEach((item) => {
-						if (currentAvailableLanguageIds.indexOf(item) == -1) {
+						if (currentAvailableLanguageIds.indexOf(item) === -1) {
 							currentAvailableLanguageIds.push(item);
 						}
 					});
@@ -4132,7 +4024,7 @@ AUI.add(
 								instance._afterFormRegistered,
 								instance
 							),
-							Liferay.after(
+							Liferay.on(
 								'inputLocalized:defaultLocaleChanged',
 								A.bind('_onDefaultLocaleChanged', instance)
 							)
@@ -4173,15 +4065,11 @@ AUI.add(
 				},
 
 				fillEmptyLocales(instance, fields, availableLanguageIds) {
-					var defaultLocale = instance.getDefaultLocale();
-
-					if (availableLanguageIds.indexOf(defaultLocale) === -1) {
-						availableLanguageIds.push(defaultLocale);
-					}
-
 					fields.forEach((field) => {
 						if (field.get('localizable')) {
 							var localizationMap = field.get('localizationMap');
+
+							var defaultLocale = field.getDefaultLocale();
 
 							availableLanguageIds.forEach((locale) => {
 								if (!localizationMap[locale]) {
@@ -4357,7 +4245,7 @@ AUI.add(
 
 						var nestedFields = field.get('fields');
 
-						if (!nestedFields || nestedFields.length == 0) {
+						if (!nestedFields || nestedFields.length === 0) {
 							return;
 						}
 
@@ -4481,6 +4369,7 @@ AUI.add(
 
 					drag.addInvalid('.alloy-editor');
 					drag.addInvalid('.cke');
+					drag.addInvalid('.lfr-map');
 					drag.addInvalid('.lfr-source-editor');
 				},
 
@@ -4519,6 +4408,10 @@ AUI.add(
 					var instance = this;
 
 					instance.toJSON();
+
+					var fields = instance.get('fields');
+
+					instance._updateNestedLocalizationMaps(fields);
 
 					instance.fillEmptyLocales(
 						instance,
@@ -4584,7 +4477,6 @@ AUI.add(
 			'liferay-layouts-tree-radio',
 			'liferay-layouts-tree-selectable',
 			'liferay-map-base',
-			'liferay-notice',
 			'liferay-translation-manager',
 		],
 	}

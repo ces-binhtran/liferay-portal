@@ -16,6 +16,7 @@ package com.liferay.invitation.invite.members.service.base;
 
 import com.liferay.invitation.invite.members.model.MemberRequest;
 import com.liferay.invitation.invite.members.service.MemberRequestLocalService;
+import com.liferay.invitation.invite.members.service.MemberRequestLocalServiceUtil;
 import com.liferay.invitation.invite.members.service.persistence.MemberRequestPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -44,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,11 +72,15 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MemberRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.invitation.invite.members.service.MemberRequestLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MemberRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MemberRequestLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the member request to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MemberRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param memberRequest the member request
 	 * @return the member request that was added
@@ -100,6 +108,10 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	/**
 	 * Deletes the member request with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MemberRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param memberRequestId the primary key of the member request
 	 * @return the member request that was removed
 	 * @throws PortalException if a member request with the primary key could not be found
@@ -115,6 +127,10 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	/**
 	 * Deletes the member request from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MemberRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param memberRequest the member request
 	 * @return the member request that was removed
 	 */
@@ -127,6 +143,13 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return memberRequestPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -280,6 +303,7 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -298,6 +322,7 @@ public abstract class MemberRequestLocalServiceBaseImpl
 			(MemberRequest)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<MemberRequest> getBasePersistence() {
 		return memberRequestPersistence;
 	}
@@ -341,6 +366,10 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	/**
 	 * Updates the member request in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MemberRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param memberRequest the member request
 	 * @return the member request that was updated
 	 */
@@ -348,6 +377,11 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	@Override
 	public MemberRequest updateMemberRequest(MemberRequest memberRequest) {
 		return memberRequestPersistence.update(memberRequest);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -361,6 +395,8 @@ public abstract class MemberRequestLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		memberRequestLocalService = (MemberRequestLocalService)aopProxy;
+
+		_setLocalServiceUtilService(memberRequestLocalService);
 	}
 
 	/**
@@ -405,6 +441,22 @@ public abstract class MemberRequestLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MemberRequestLocalService memberRequestLocalService) {
+
+		try {
+			Field field = MemberRequestLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, memberRequestLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MemberRequestLocalService memberRequestLocalService;
 
 	@Reference
@@ -419,19 +471,11 @@ public abstract class MemberRequestLocalServiceBaseImpl
 		classNameLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserGroupRoleLocalService
-		userGroupRoleLocalService;
 
 }

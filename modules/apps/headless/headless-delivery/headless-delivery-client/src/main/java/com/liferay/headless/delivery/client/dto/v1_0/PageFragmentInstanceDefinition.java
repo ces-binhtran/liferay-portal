@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.PageFragmentInstanceDefinitionSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PageFragmentInstanceDefinition implements Cloneable {
+public class PageFragmentInstanceDefinition implements Cloneable, Serializable {
 
 	public static PageFragmentInstanceDefinition toDTO(String json) {
 		return PageFragmentInstanceDefinitionSerDes.toDTO(json);
@@ -97,6 +99,49 @@ public class PageFragmentInstanceDefinition implements Cloneable {
 	}
 
 	protected FragmentField[] fragmentFields;
+
+	public FragmentStyle getFragmentStyle() {
+		return fragmentStyle;
+	}
+
+	public void setFragmentStyle(FragmentStyle fragmentStyle) {
+		this.fragmentStyle = fragmentStyle;
+	}
+
+	public void setFragmentStyle(
+		UnsafeSupplier<FragmentStyle, Exception> fragmentStyleUnsafeSupplier) {
+
+		try {
+			fragmentStyle = fragmentStyleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentStyle fragmentStyle;
+
+	public FragmentViewport[] getFragmentViewports() {
+		return fragmentViewports;
+	}
+
+	public void setFragmentViewports(FragmentViewport[] fragmentViewports) {
+		this.fragmentViewports = fragmentViewports;
+	}
+
+	public void setFragmentViewports(
+		UnsafeSupplier<FragmentViewport[], Exception>
+			fragmentViewportsUnsafeSupplier) {
+
+		try {
+			fragmentViewports = fragmentViewportsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentViewport[] fragmentViewports;
 
 	public WidgetInstance[] getWidgetInstances() {
 		return widgetInstances;

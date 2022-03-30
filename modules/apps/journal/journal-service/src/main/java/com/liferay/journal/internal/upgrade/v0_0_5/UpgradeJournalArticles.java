@@ -27,17 +27,18 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
-import com.liferay.portal.kernel.upgrade.BaseUpgradePortletId;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
+import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
+import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portlet.PortletPreferencesImpl;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import java.util.List;
 
@@ -46,21 +47,134 @@ import javax.portlet.PortletPreferences;
 /**
  * @author Eudaldo Alonso
  */
-public class UpgradeJournalArticles extends BaseUpgradePortletId {
+public class UpgradeJournalArticles extends BasePortletIdUpgradeProcess {
 
 	public UpgradeJournalArticles(
 		AssetCategoryLocalService assetCategoryLocalService,
 		DDMStructureLocalService ddmStructureLocalService,
 		GroupLocalService groupLocalService,
-		LayoutLocalService layoutLocalService) {
+		LayoutLocalService layoutLocalService,
+		PortletPreferenceValueLocalService portletPreferenceValueLocalService,
+		PortletPreferencesLocalService portletPreferencesLocalService) {
 
 		_assetCategoryLocalService = assetCategoryLocalService;
 		_ddmStructureLocalService = ddmStructureLocalService;
 		_groupLocalService = groupLocalService;
 		_layoutLocalService = layoutLocalService;
+		_portletPreferenceValueLocalService =
+			portletPreferenceValueLocalService;
+		_portletPreferencesLocalService = portletPreferencesLocalService;
 	}
 
-	protected long getCategoryId(long companyId, String type) throws Exception {
+	@Override
+	protected String[][] getRenamePortletIdsArray() {
+		return new String[][] {
+			{_PORTLET_ID_JOURNAL_CONTENT_LIST, _PORTLET_ID_ASSET_PUBLISHER}
+		};
+	}
+
+	protected long getStructureId(
+			long companyId, long groupId, String ddmStructureKey)
+		throws Exception {
+
+		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
+			groupId, PortalUtil.getClassNameId(JournalArticle.class.getName()),
+			ddmStructureKey);
+
+		if (ddmStructure == null) {
+			Group companyGroup = _groupLocalService.getCompanyGroup(companyId);
+
+			_ddmStructureLocalService.fetchStructure(
+				companyGroup.getGroupId(),
+				PortalUtil.getClassNameId(JournalArticle.class.getName()),
+				ddmStructureKey);
+		}
+
+		if (ddmStructure != null) {
+			return ddmStructure.getStructureId();
+		}
+
+		return 0;
+	}
+
+	@Override
+	protected void updateInstanceablePortletPreferences(
+			String oldRootPortletId, String newRootPortletId)
+		throws Exception {
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				StringBundler.concat(
+					"select distinct PortletPreferences.portletPreferencesId ",
+					"from PortletPreferences inner join ",
+					"PortletPreferenceValue on ",
+					"PortletPreferenceValue.portletPreferencesId = ",
+					"PortletPreferences.portletPreferencesId where portletId ",
+					"= '", oldRootPortletId, "' OR portletId like '",
+					oldRootPortletId, "_INSTANCE_%' OR portletId like '",
+					oldRootPortletId, "_USER_%_INSTANCE_%'"));
+			ResultSet resultSet = preparedStatement.executeQuery()) {
+
+			while (resultSet.next()) {
+				long portletPreferencesId = resultSet.getLong(
+					"portletPreferencesId");
+
+				com.liferay.portal.kernel.model.PortletPreferences
+					portletPreferences =
+						_portletPreferencesLocalService.getPortletPreferences(
+							portletPreferencesId);
+
+				long plid = portletPreferences.getPlid();
+
+				String portletId = portletPreferences.getPortletId();
+
+				long userId = PortletIdCodec.decodeUserId(portletId);
+				String instanceId = PortletIdCodec.decodeInstanceId(portletId);
+
+				String newPortletId = PortletIdCodec.encode(
+					_PORTLET_ID_ASSET_PUBLISHER, userId, instanceId);
+
+				portletPreferences.setPortletId(newPortletId);
+
+				portletPreferences =
+					_portletPreferencesLocalService.updatePortletPreferences(
+						portletPreferences);
+
+				PortletPreferences oldPortletPreferences =
+					_portletPreferenceValueLocalService.getPreferences(
+						portletPreferences);
+
+				PortletPreferences newPreferences = _getNewPreferences(
+					oldPortletPreferences, plid, oldRootPortletId,
+					newRootPortletId);
+
+				_portletPreferencesLocalService.updatePreferences(
+					portletPreferences.getOwnerId(),
+					portletPreferences.getOwnerType(),
+					portletPreferences.getPlid(),
+					portletPreferences.getPortletId(), newPreferences);
+			}
+		}
+	}
+
+	@Override
+	protected void updatePortlet(
+			String oldRootPortletId, String newRootPortletId)
+		throws Exception {
+
+		try {
+			updateResourcePermission(oldRootPortletId, newRootPortletId, true);
+
+			updateInstanceablePortletPreferences(
+				oldRootPortletId, newRootPortletId);
+		}
+		catch (Exception exception) {
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception);
+			}
+		}
+	}
+
+	private long _getCategoryId(long companyId, String type) throws Exception {
 		List<AssetCategory> assetCategories = _assetCategoryLocalService.search(
 			companyId, type, new String[0], QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS);
@@ -74,11 +188,10 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 		return 0;
 	}
 
-	protected String getNewPreferences(long plid, String preferences)
+	private PortletPreferences _getNewPreferences(
+			PortletPreferences oldPortletPreferences, long plid,
+			String oldRootPortletId, String newRootPortletId)
 		throws Exception {
-
-		PortletPreferences oldPortletPreferences =
-			PortletPreferencesFactoryUtil.fromDefaultXML(preferences);
 
 		String ddmStructureKey = oldPortletPreferences.getValue(
 			"ddmStructureKey", StringPool.BLANK);
@@ -92,6 +205,8 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 			oldPortletPreferences.getValue("pageDelta", StringPool.BLANK));
 		String pageUrl = oldPortletPreferences.getValue(
 			"pageUrl", StringPool.BLANK);
+		String portletSetupCss = oldPortletPreferences.getValue(
+			"portletSetupCss", StringPool.BLANK);
 		String type = oldPortletPreferences.getValue("type", StringPool.BLANK);
 
 		PortletPreferences newPortletPreferences = new PortletPreferencesImpl();
@@ -132,7 +247,18 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 		newPortletPreferences.setValue("orderByType1", orderByType);
 		newPortletPreferences.setValue("paginationType", "none");
 
-		long categoryId = getCategoryId(layout.getCompanyId(), type);
+		portletSetupCss = StringUtil.replace(
+			portletSetupCss,
+			new String[] {
+				"#p_p_id_" + oldRootPortletId, "#portlet_" + oldRootPortletId
+			},
+			new String[] {
+				"#p_p_id_" + newRootPortletId, "#portlet_" + newRootPortletId
+			});
+
+		newPortletPreferences.setValue("portletSetupCss", portletSetupCss);
+
+		long categoryId = _getCategoryId(layout.getCompanyId(), type);
 
 		if (categoryId > 0) {
 			newPortletPreferences.setValue(
@@ -155,121 +281,7 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 
 		newPortletPreferences.setValue("scopeIds", "Group_" + groupName);
 
-		return PortletPreferencesFactoryUtil.toXML(newPortletPreferences);
-	}
-
-	@Override
-	protected String[][] getRenamePortletIdsArray() {
-		return new String[][] {
-			{_PORTLET_ID_JOURNAL_CONTENT_LIST, _PORTLET_ID_ASSET_PUBLISHER}
-		};
-	}
-
-	protected long getStructureId(
-			long companyId, long groupId, String ddmStructureKey)
-		throws Exception {
-
-		DDMStructure ddmStructure = _ddmStructureLocalService.fetchStructure(
-			groupId, PortalUtil.getClassNameId(JournalArticle.class.getName()),
-			ddmStructureKey);
-
-		if (ddmStructure == null) {
-			Group companyGroup = _groupLocalService.getCompanyGroup(companyId);
-
-			_ddmStructureLocalService.fetchStructure(
-				companyGroup.getGroupId(),
-				PortalUtil.getClassNameId(JournalArticle.class.getName()),
-				ddmStructureKey);
-		}
-
-		if (ddmStructure != null) {
-			return ddmStructure.getStructureId();
-		}
-
-		return 0;
-	}
-
-	@Override
-	protected void updateInstanceablePortletPreferences(
-			String oldRootPortletId, String newRootPortletId)
-		throws Exception {
-
-		StringBundler sb = new StringBundler(8);
-
-		sb.append("select portletPreferencesId, plid, portletId, preferences ");
-		sb.append("from PortletPreferences where portletId = '");
-		sb.append(oldRootPortletId);
-		sb.append("' OR portletId like '");
-		sb.append(oldRootPortletId);
-		sb.append("_INSTANCE_%' OR portletId like '");
-		sb.append(oldRootPortletId);
-		sb.append("_USER_%_INSTANCE_%'");
-
-		try (PreparedStatement ps = connection.prepareStatement(sb.toString());
-			ResultSet rs = ps.executeQuery()) {
-
-			while (rs.next()) {
-				String preferences = rs.getString("preferences");
-
-				if (preferences.equals("<portlet-preferences />")) {
-					continue;
-				}
-
-				long portletPreferencesId = rs.getLong("portletPreferencesId");
-				long plid = rs.getLong("plid");
-				String portletId = rs.getString("portletId");
-
-				String newPreferences = getNewPreferences(plid, preferences);
-
-				long userId = PortletIdCodec.decodeUserId(portletId);
-				String instanceId = PortletIdCodec.decodeInstanceId(portletId);
-
-				String newPortletId = PortletIdCodec.encode(
-					_PORTLET_ID_ASSET_PUBLISHER, userId, instanceId);
-
-				updatePortletPreference(
-					portletPreferencesId, newPortletId, newPreferences);
-			}
-		}
-	}
-
-	@Override
-	protected void updatePortlet(
-			String oldRootPortletId, String newRootPortletId)
-		throws Exception {
-
-		try {
-			updateResourcePermission(oldRootPortletId, newRootPortletId, true);
-
-			updateInstanceablePortletPreferences(
-				oldRootPortletId, newRootPortletId);
-		}
-		catch (Exception exception) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
-			}
-		}
-	}
-
-	protected void updatePortletPreference(
-			long portletPreferencesId, String newPortletId,
-			String newPreferences)
-		throws Exception {
-
-		try (PreparedStatement ps = connection.prepareStatement(
-				"update PortletPreferences set preferences = ?, portletId = " +
-					"? where portletPreferencesId = " + portletPreferencesId)) {
-
-			ps.setString(1, newPreferences);
-			ps.setString(2, newPortletId);
-
-			ps.executeUpdate();
-		}
-		catch (SQLException sqlException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(sqlException, sqlException);
-			}
-		}
+		return newPortletPreferences;
 	}
 
 	private static final String _PORTLET_ID_ASSET_PUBLISHER =
@@ -284,5 +296,9 @@ public class UpgradeJournalArticles extends BaseUpgradePortletId {
 	private final DDMStructureLocalService _ddmStructureLocalService;
 	private final GroupLocalService _groupLocalService;
 	private final LayoutLocalService _layoutLocalService;
+	private final PortletPreferencesLocalService
+		_portletPreferencesLocalService;
+	private final PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 }

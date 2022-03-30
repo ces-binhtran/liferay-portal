@@ -14,20 +14,24 @@
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
+import com.liferay.dynamic.data.mapping.constants.DDMConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.headless.delivery.dto.v1_0.ContentStructure;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.ContentStructureUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.ContentStructureUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.ContentStructureEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.ContentStructureResource;
+import com.liferay.journal.model.JournalArticle;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
@@ -52,6 +56,16 @@ public class ContentStructureResourceImpl
 	extends BaseContentStructureResourceImpl implements EntityModelResource {
 
 	@Override
+	public Page<ContentStructure> getAssetLibraryContentStructuresPage(
+			Long assetLibraryId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
+		throws Exception {
+
+		return getSiteContentStructuresPage(
+			assetLibraryId, search, aggregation, filter, pagination, sorts);
+	}
+
+	@Override
 	public ContentStructure getContentStructure(Long contentStructureId)
 		throws Exception {
 
@@ -66,18 +80,19 @@ public class ContentStructureResourceImpl
 
 	@Override
 	public Page<ContentStructure> getSiteContentStructuresPage(
-			Long siteId, String search, Filter filter, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
 			Collections.emptyMap(),
 			booleanQuery -> {
 			},
-			filter, DDMStructure.class, search, pagination,
+			filter, DDMStructure.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute(
 					"searchPermissionContext", StringPool.BLANK);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
@@ -89,11 +104,29 @@ public class ContentStructureResourceImpl
 					GetterUtil.getLong(document.get(Field.ENTRY_CLASS_PK)))));
 	}
 
-	private ContentStructure _toContentStructure(DDMStructure ddmStructure)
+	@Override
+	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
+		DDMStructure ddmStructure = _ddmStructureService.getStructure((Long)id);
+
+		return ddmStructure.getGroupId();
+	}
+
+	@Override
+	protected String getPermissionCheckerPortletName(Object id) {
+		return DDMConstants.RESOURCE_NAME;
+	}
+
+	@Override
+	protected String getPermissionCheckerResourceName(Object id)
 		throws Exception {
 
+		return ResourceActionsUtil.getCompositeModelName(
+			DDMStructure.class.getName(), JournalArticle.class.getName());
+	}
+
+	private ContentStructure _toContentStructure(DDMStructure ddmStructure) {
 		return ContentStructureUtil.toContentStructure(
-			contextAcceptLanguage.isAcceptAllLanguages(),
+			contextAcceptLanguage.isAcceptAllLanguages(), groupLocalService,
 			contextAcceptLanguage.getPreferredLocale(), _portal,
 			_userLocalService, ddmStructure);
 	}

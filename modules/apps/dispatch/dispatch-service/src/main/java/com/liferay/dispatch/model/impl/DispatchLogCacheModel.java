@@ -30,24 +30,24 @@ import java.util.Date;
 /**
  * The cache model class for representing DispatchLog in entity cache.
  *
- * @author Alessio Antonio Rendina
+ * @author Matija Petanjek
  * @generated
  */
 public class DispatchLogCacheModel
 	implements CacheModel<DispatchLog>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DispatchLogCacheModel)) {
+		if (!(object instanceof DispatchLogCacheModel)) {
 			return false;
 		}
 
 		DispatchLogCacheModel dispatchLogCacheModel =
-			(DispatchLogCacheModel)obj;
+			(DispatchLogCacheModel)object;
 
 		if ((dispatchLogId == dispatchLogCacheModel.dispatchLogId) &&
 			(mvccVersion == dispatchLogCacheModel.mvccVersion)) {
@@ -149,19 +149,8 @@ public class DispatchLogCacheModel
 			dispatchLogImpl.setEndDate(new Date(endDate));
 		}
 
-		if (error == null) {
-			dispatchLogImpl.setError("");
-		}
-		else {
-			dispatchLogImpl.setError(error);
-		}
-
-		if (output == null) {
-			dispatchLogImpl.setOutput("");
-		}
-		else {
-			dispatchLogImpl.setOutput(output);
-		}
+		dispatchLogImpl.setError(error);
+		dispatchLogImpl.setOutput(output);
 
 		if (startDate == Long.MIN_VALUE) {
 			dispatchLogImpl.setStartDate(null);

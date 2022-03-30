@@ -15,6 +15,7 @@
 package com.liferay.gradle.plugins.defaults.tasks;
 
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
+import com.liferay.gradle.util.GUtil;
 
 import groovy.lang.Closure;
 
@@ -42,7 +43,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -97,7 +97,6 @@ public class ReplaceRegexTask extends DefaultTask {
 		return pre(Arrays.asList(preClosures));
 	}
 
-	@SuppressWarnings("unchecked")
 	public ReplaceRegexTask pre(Iterable<Closure<String>> preClosures) {
 		GUtil.addToCollection(_preClosures, preClosures);
 
@@ -105,13 +104,12 @@ public class ReplaceRegexTask extends DefaultTask {
 	}
 
 	public ReplaceRegexTask replaceOnlyIf(
-		@SuppressWarnings("unchecked")
-			Closure<Boolean>... replaceOnlyIfClosures) {
+		@SuppressWarnings("unchecked") Closure<Boolean>...
+			replaceOnlyIfClosures) {
 
 		return replaceOnlyIf(Arrays.asList(replaceOnlyIfClosures));
 	}
 
-	@SuppressWarnings("unchecked")
 	public ReplaceRegexTask replaceOnlyIf(
 		Iterable<Closure<Boolean>> replaceOnlyIfClosures) {
 
@@ -124,14 +122,14 @@ public class ReplaceRegexTask extends DefaultTask {
 	public void replaceRegex() throws IOException {
 		Map<String, FileCollection> matches = getMatches();
 
-		Object replacementObj = _getReplacementObj();
+		Object replacementObject = _getReplacementObject();
 
 		for (Map.Entry<String, FileCollection> entry : matches.entrySet()) {
 			Pattern pattern = Pattern.compile(entry.getKey());
 			FileCollection fileCollection = entry.getValue();
 
 			for (File file : fileCollection) {
-				_replaceRegex(file, pattern, replacementObj);
+				_replaceRegex(file, pattern, replacementObject);
 			}
 		}
 	}
@@ -159,8 +157,8 @@ public class ReplaceRegexTask extends DefaultTask {
 	}
 
 	public void setReplaceOnlyIf(
-		@SuppressWarnings("unchecked")
-			Closure<Boolean>... replaceOnlyIfClosures) {
+		@SuppressWarnings("unchecked") Closure<Boolean>...
+			replaceOnlyIfClosures) {
 
 		setReplaceOnlyIf(Arrays.asList(replaceOnlyIfClosures));
 	}
@@ -173,21 +171,21 @@ public class ReplaceRegexTask extends DefaultTask {
 		replaceOnlyIf(replaceOnlyIfClosures);
 	}
 
-	private Object _getReplacementObj() {
-		Object replacementObj = getReplacement();
+	private Object _getReplacementObject() {
+		Object replacementObject = getReplacement();
 
-		if ((replacementObj instanceof Callable<?>) &&
-			!(replacementObj instanceof Closure<?>)) {
+		if ((replacementObject instanceof Callable<?>) &&
+			!(replacementObject instanceof Closure<?>)) {
 
-			replacementObj = GradleUtil.toString(replacementObj);
+			replacementObject = GradleUtil.toString(replacementObject);
 		}
 
-		return replacementObj;
+		return replacementObject;
 	}
 
 	@SuppressWarnings("unchecked")
 	private void _replaceRegex(
-			File file, Pattern pattern, Object replacementObj)
+			File file, Pattern pattern, Object replacementObject)
 		throws IOException {
 
 		Logger logger = getLogger();
@@ -214,14 +212,14 @@ public class ReplaceRegexTask extends DefaultTask {
 
 			String replacement;
 
-			if (replacementObj instanceof Closure<?>) {
+			if (replacementObject instanceof Closure<?>) {
 				Closure<String> replacementClosure =
-					(Closure<String>)replacementObj;
+					(Closure<String>)replacementObject;
 
 				replacement = replacementClosure.call(group);
 			}
 			else {
-				replacement = GradleUtil.toString(replacementObj);
+				replacement = GradleUtil.toString(replacementObject);
 			}
 
 			for (Closure<Boolean> closure : getReplaceOnlyIf()) {

@@ -16,16 +16,14 @@ import React from 'react';
 
 const IconItem = ({icon, onClick}) => {
 	return (
-		<>
-			<button
-				className="component-action quick-action-item"
-				data-testid="iconItemButton"
-				onClick={onClick}
-				role="button"
-			>
-				<ClayIcon symbol={icon} />
-			</button>
-		</>
+		<ClayButton
+			className="component-action quick-action-item"
+			displayType="unstyled"
+			onClick={onClick}
+			role="button"
+		>
+			<ClayIcon symbol={icon} />
+		</ClayButton>
 	);
 };
 
@@ -42,7 +40,6 @@ const QuickActionKebab = ({
 
 	dropDownItems = dropDownItems.map((item) => ({
 		...item,
-		['data-testid']: 'kebabDropItems',
 	}));
 
 	return (
@@ -69,7 +66,6 @@ const KebabDropDown = ({disabled, items}) => {
 			trigger={
 				<ClayButton
 					className="component-action"
-					data-testid="kebab"
 					disabled={disabled}
 					displayType="unstyled"
 					monospaced

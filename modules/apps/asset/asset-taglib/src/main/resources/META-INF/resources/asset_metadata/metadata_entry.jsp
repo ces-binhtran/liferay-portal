@@ -20,10 +20,12 @@
 AssetEntry assetEntry = (AssetEntry)request.getAttribute("liferay-asset:asset-metadata:assetEntry");
 AssetRenderer<?> assetRenderer = (AssetRenderer<?>)request.getAttribute("liferay-asset:asset-metadata:assetRenderer");
 boolean filterByMetadata = GetterUtil.getBoolean(request.getAttribute("liferay-asset:asset-metadata:filterByMetadata"));
+
 String metadataField = (String)request.getAttribute("liferay-asset:asset-metadata:metadataField");
 
 String label = LanguageUtil.get(resourceBundle, metadataField);
 String metadataFieldCssClass = "metadata-" + metadataField;
+
 boolean showLabel = true;
 String value = null;
 
@@ -90,10 +92,14 @@ else if (metadataField.equals("view-count")) {
 		String displayDate = StringPool.BLANK;
 
 		if (assetEntry.getPublishDate() != null) {
-			displayDate = LanguageUtil.format(request, "x-ago", LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - assetEntry.getPublishDate().getTime(), true), false);
+			Date publishDate = assetEntry.getPublishDate();
+
+			displayDate = LanguageUtil.format(request, "x-ago", LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - publishDate.getTime(), true), false);
 		}
 		else if (assetEntry.getModifiedDate() != null) {
-			displayDate = LanguageUtil.format(request, "x-ago", LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - assetEntry.getModifiedDate().getTime(), true), false);
+			Date modifiedDate = assetEntry.getModifiedDate();
+
+			displayDate = LanguageUtil.format(request, "x-ago", LanguageUtil.getTimeDescription(request, System.currentTimeMillis() - modifiedDate.getTime(), true), false);
 		}
 		%>
 
@@ -118,7 +124,7 @@ else if (metadataField.equals("view-count")) {
 			size="6"
 			sm="4"
 		>
-			<dt class='metadata-entry-label <%= showLabel ? StringPool.BLANK : "hide" %>'><%= label %></dt>
+			<dt class="metadata-entry-label <%= showLabel ? StringPool.BLANK : "hide" %>"><%= label %></dt>
 
 			<dd class="metadata-entry <%= metadataFieldCssClass %>">
 				<c:choose>

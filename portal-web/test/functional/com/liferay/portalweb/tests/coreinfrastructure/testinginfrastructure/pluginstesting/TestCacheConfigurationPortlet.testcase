@@ -3,15 +3,15 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Test Plugins";
 	property portlet.plugins.includes = "test-cache-configuration-portlet";
+	property testray.main.component.name = "Test Plugins";
 
 	setUp {
 		User.firstLoginPG();
 	}
 
 	tearDown {
-		Page.tearDownCP();
+		PagesAdmin.tearDownCP();
 	}
 
 	@ignore = "true"
@@ -19,10 +19,9 @@ definition {
 	test ViewCacheConfiguration {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Cache Configuration Page");
+		PagesAdmin.addPublicPage(pageName = "Test Cache Configuration Page");
 
 		Navigator.gotoPage(pageName = "Test Cache Configuration Page");
 

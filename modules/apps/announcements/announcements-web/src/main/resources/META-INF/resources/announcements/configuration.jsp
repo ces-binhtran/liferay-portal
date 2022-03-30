@@ -51,7 +51,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 	action="<%= configurationActionURL %>"
 	method="post"
 	name="fm"
-	onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfigurations();" %>'
+	onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveConfigurations();" %>'
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
@@ -85,7 +85,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			>
 				<aui:input cssClass="customize-announcements-displayed" id="customizeAnnouncementsDisplayed" name="preferences--customizeAnnouncementsDisplayed--" title="customize-announcements-displayed" type="checkbox" value="<%= announcementsDisplayContext.isCustomizeAnnouncementsDisplayed() %>" />
 
-				<div class='<%= announcementsDisplayContext.isCustomizeAnnouncementsDisplayed() ? "" : "hide" %>' id="<portlet:namespace />announcementsDisplayed">
+				<div class="<%= announcementsDisplayContext.isCustomizeAnnouncementsDisplayed() ? "" : "hide" %>" id="<portlet:namespace />announcementsDisplayed">
 					<div class="alert alert-info">
 						<liferay-ui:message key="general-annnouncements-will-always-be-shown-select-any-other-distribution-scopes-you-would-like-to-display" />
 					</div>
@@ -100,20 +100,22 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 
 								<%
 								List<KeyValuePair> leftList = new ArrayList<KeyValuePair>();
-
-								for (Group curGroup : groups) {
-									if (announcementsDisplayContext.isScopeGroupSelected(curGroup)) {
-										leftList.add(new KeyValuePair(String.valueOf(curGroup.getGroupId()), curGroup.getDescriptiveName(locale)));
-									}
-								}
-
 								List<KeyValuePair> rightList = new ArrayList<KeyValuePair>();
 
 								for (Group curGroup : groups) {
-									KeyValuePair tempKeyValuePair = new KeyValuePair(String.valueOf(curGroup.getGroupId()), curGroup.getDescriptiveName(locale));
+									if (!curGroup.isSite()) {
+										continue;
+									}
 
-									if (!leftList.contains(tempKeyValuePair)) {
-										rightList.add(tempKeyValuePair);
+									String descriptiveName = curGroup.isOrganization() ? String.format("%s (%s)", curGroup.getDescriptiveName(locale), LanguageUtil.get(request, OrganizationConstants.TYPE_ORGANIZATION)) : curGroup.getDescriptiveName(locale);
+
+									KeyValuePair keyValuePair = new KeyValuePair(String.valueOf(curGroup.getGroupId()), descriptiveName);
+
+									if (announcementsDisplayContext.isScopeGroupSelected(curGroup)) {
+										leftList.add(keyValuePair);
+									}
+									else {
+										rightList.add(keyValuePair);
 									}
 								}
 								%>
@@ -263,9 +265,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 	</liferay-frontend:edit-form-footer>
 </liferay-frontend:edit-form>
 
-<aui:script require="metal-dom/src/dom">
-	var dom = metalDomSrcDom.default;
-
+<aui:script sandbox="<%= true %>">
 	var form = document.getElementById('<portlet:namespace />fm');
 
 	if (form) {
@@ -279,8 +279,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 					'.panel-heading .sheet-subtitle'
 				);
 
-				dom.append(
-					displayTitle,
+				displayTitle.append(
 					'<span class="modified-notice"> (<liferay-ui:message key="modified" />) </span>'
 				);
 			}
@@ -293,7 +292,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 		if (customizeAnnouncementsDisplayedCheckbox) {
 			customizeAnnouncementsDisplayedCheckbox.addEventListener(
 				'change',
-				function () {
+				() => {
 					<portlet:namespace />modified(
 						document.getElementById(
 							'<portlet:namespace />announcementsDisplayedPanel'
@@ -305,7 +304,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 					);
 
 					if (announcementsDisplayed) {
-						dom.toggleClasses(announcementsDisplayed, 'hide');
+						announcementsDisplayed.classList.toggle('hide');
 					}
 				}
 			);
@@ -327,7 +326,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			selectedHTML = selectedHTML.concat(selected[i].innerHTML);
 		}
 
-		Liferay.on('inputmoveboxes:moveItem', function (event) {
+		Liferay.on('inputmoveboxes:moveItem', (event) => {
 			var currSelectedHTML = '';
 
 			for (var i = selected.length - 1; i >= 0; --i) {
@@ -350,7 +349,7 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 		);
 
 		if (pageDeltaInput) {
-			pageDeltaInput.addEventListener('change', function (event) {
+			pageDeltaInput.addEventListener('change', (event) => {
 				var displaySettingsPanel = document.getElementById(
 					'<portlet:namespace />displaySettingsPanel'
 				);
@@ -405,10 +404,10 @@ announcementsPortletInstanceConfiguration = ParameterMapUtil.setParameterMap(Ann
 			}
 
 			var currentScopeUserGroupIds = <portlet:namespace />form.querySelector(
-				'#<portlet:namespace />selectedScopeUserGroupIds'
+				'#<portlet:namespace />currentScopeUserGroupIds'
 			);
 			var selectedScopeUserGroupIds = <portlet:namespace />form.querySelector(
-				'#<portlet:namespace />currentScopeUserGroupIds'
+				'#<portlet:namespace />selectedScopeUserGroupIds'
 			);
 
 			if (currentScopeUserGroupIds && selectedScopeUserGroupIds) {

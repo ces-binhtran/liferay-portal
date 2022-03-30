@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialActivity;
@@ -29,8 +28,6 @@ import com.liferay.social.kernel.model.SocialActivityInterpreter;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Zsolt Berentey
@@ -55,11 +52,6 @@ public class BookmarksFolderActivityInterpreter
 		SocialActivity activity, ServiceContext serviceContext) {
 
 		return "/bookmarks/find_folder?folderId=" + activity.getClassPK();
-	}
-
-	@Override
-	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
 	}
 
 	@Override
@@ -108,12 +100,5 @@ public class BookmarksFolderActivityInterpreter
 	)
 	private ModelResourcePermission<BookmarksFolder>
 		_bookmarksFolderModelResourcePermission;
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.bookmarks.web)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

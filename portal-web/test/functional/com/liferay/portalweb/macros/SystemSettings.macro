@@ -1,22 +1,35 @@
 definition {
 
-	macro configureCrossClusterReplication {
-		FormFields.enableCheckbox(fieldName = "ccrEnabled");
+	macro assertPortalBuildNumber {
+		var portalURL = PropsUtil.get("portal.url");
 
-		FormFields.editTextMultiline(
-			fieldName = "ccrLocalClusterConnectionConfigurations",
-			fieldValue = "localhost:8080=${ccrLocalClusterConnectionID}");
+		var buildNumberCurl = '''
+				${portalURL}/api/jsonws/portal/get-build-number -H 'Authorization: Bearer ${accessToken}'
+			''';
+		var buildNumberOutput = JSONCurlUtil.post("${buildNumberCurl}");
 
-		SystemSettings.saveConfiguration();
+		if (!(contains("${buildNumberOutput}", "${portalBuild}"))) {
+			fail("JSON-WS call failed to return build number");
+		}
+	}
+
+	macro assertPortalVersion {
+		var portalURL = PropsUtil.get("portal.url");
+
+		var portalVersionCurl = '''
+			${portalURL}/api/jsonws/portal/get-version -H 'Authorization: Bearer ${accessToken}'
+		''';
+		var portalVersionOutput = JSONCurlUtil.post("${portalVersionCurl}");
+
+		if (!(contains("${portalVersionOutput}", "${portalVersion}"))) {
+			fail("JSON-WS call failed to return Portal version");
+		}
 	}
 
 	macro configureDisplayStyle {
 		Click(locator1 = "Dropdown#TRIGGER");
 
-		AssertClick(
-			key_option = "${displayStyle}",
-			locator1 = "Dropdown#RESULT",
-			value1 = "${displayStyle}");
+		DropdownMenuItem.click(menuItem = "${displayStyle}");
 
 		AssertTextEquals(
 			locator1 = "Dropdown#SELECTED_VALUE",
@@ -39,6 +52,12 @@ definition {
 		if ("${enableSetting}" == "true") {
 			Check.toggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
 
+			if (isSet(settingValue)) {
+				SystemSettings.editTextAreaSetting(
+					settingName = "${settingName}",
+					settingValue = "${settingValue}");
+			}
+
 			SystemSettings.saveConfiguration();
 
 			AssertChecked.assertCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
@@ -47,6 +66,29 @@ definition {
 			Uncheck.uncheckToggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
 
 			SystemSettings.saveConfiguration();
+
+			AssertNotChecked.assertNotCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+		}
+	}
+
+	macro configureSystemSettingWithRefresh {
+		var key_settingFieldName = "${settingFieldName}";
+
+		if ("${enableSetting}" == "true") {
+			Check.toggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+
+			SystemSettings.saveConfiguration();
+
+			Refresh();
+
+			AssertChecked.assertCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+		}
+		else if ("${enableSetting}" == "false") {
+			Uncheck.uncheckToggleSwitch(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
+
+			SystemSettings.saveConfiguration();
+
+			Refresh();
 
 			AssertNotChecked.assertNotCheckedNotVisible(locator1 = "SystemSettings#SETTING_FIELD_NAME_CHECKBOX");
 		}
@@ -83,6 +125,20 @@ definition {
 			value1 = "${settingValue}");
 	}
 
+	macro editTextAreaSettingMultiLines {
+		for (var settingValue : list "${settingValues}") {
+			Type.sendKeys(
+				key_label = "${settingName}",
+				locator1 = "TextArea#ANY_LABELED",
+				value1 = "${settingValue}");
+
+			KeyPress(
+				key_label = "${settingName}",
+				locator1 = "TextArea#ANY_LABELED",
+				value1 = "\RETURN");
+		}
+	}
+
 	macro editTextSetting {
 		Type(
 			key_fieldLabel = "${settingName}",
@@ -102,14 +158,56 @@ definition {
 		DownloadTempFile();
 	}
 
-	macro gotoAddEntry {
-		AssertClick(
-			locator1 = "Button#ADD",
-			value1 = "Add");
+	macro getConfigFileContent {
+		var liferayHome = PropsUtil.get("liferay.home.dir.name");
+		var fileContent = FileUtil.read("${liferayHome}/osgi/configs/${configFileName}");
 
-		AssertElementPresent(
-			key_title = "Add",
-			locator1 = "Header#H2_TITLE");
+		return "${fileContent}";
+	}
+
+	macro getCurrentUserEmailResquestDenied {
+		var output = JSONCurlUtil.post("${curl}");
+
+		if (contains("${output}", "Access denied to com.liferay.portal.kernel.service.UserService#getCurrentUser")) {
+			echo("Access denied to com.liferay.portal.kernel.service.UserService#getCurrentUser");
+		}
+		else {
+			fail("FAIL! Cannot find the warning message.");
+		}
+	}
+
+	macro getUserEmailAddressRequestDenied {
+		var output = JSONCurlUtil.post("${curl}");
+
+		if (contains("${output}", "Access denied to com.liferay.portal.kernel.service.UserService#getUserByEmailAddress")) {
+			echo("Access denied to com.liferay.portal.kernel.service.UserService#getUserByEmailAddress");
+		}
+		else {
+			fail("FAIL! Cannot find the warning message.");
+		}
+	}
+
+	macro getUserEmailSuccessfully {
+		Variables.assertDefined(parameterList = "${curl},${companyId}");
+
+		var output = JSONCurlUtil.post("${curl}");
+
+		if (contains("${output}", ""agreedToTermsOfUse":true") && contains("${output}", ""companyId":"${companyId}"")) {
+			echo("Get current user successful.");
+		}
+		else {
+			fail("FAIL! Cannot find the current user.");
+		}
+	}
+
+	macro getViewUserEmailPermissionDenied {
+		Variables.assertDefined(parameterList = "${curl},${userId}");
+
+		var output = JSONCurlUtil.post("${curl}");
+
+		if (!(contains("${output}", "must have VIEW permission for com.liferay.portal.kernel.model.User ${userId}"))) {
+			fail("FAIL! Cannot find the current user.");
+		}
 	}
 
 	macro gotoConfiguration {
@@ -120,7 +218,7 @@ definition {
 		var browserType = PropsUtil.get("browser.type");
 
 		if ("${browserType}" == "chrome") {
-			Pause(locator1 = "5000");
+			Pause(locator1 = "3000");
 		}
 
 		Click(
@@ -140,7 +238,23 @@ definition {
 	}
 
 	macro openSystemSettingsAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet");
+		Navigator.openWithAppendToBaseURL(
+			baseURL = "${baseURL}",
+			urlAppend = "group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet");
+	}
+
+	macro openToConfigInSystemSettings {
+		var baseURL = "${baseURL}";
+
+		if (!(isSet(baseURL))) {
+			var baseURL = PropsUtil.get("portal.url");
+		}
+
+		if ("${portlet}" == "Applications Menu") {
+			var portletId = "com.liferay.product.navigation.applications.menu.configuration.ApplicationsMenuInstanceConfiguration";
+		}
+
+		Open(locator1 = "${baseURL}/group/control_panel/manage?p_p_id=com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_factoryPid=${portletId}&_com_liferay_configuration_admin_web_portlet_SystemSettingsPortlet_mvcRenderCommandName=%2Fconfiguration_admin%2Fedit_configuration");
 	}
 
 	macro resetConfiguration {
@@ -172,6 +286,27 @@ definition {
 			locator1 = "SystemSettings#DROPDOWN_MENU_OPTION");
 	}
 
+	macro viewConfigurationNotAvailable {
+		AssertElementNotPresent(
+			key_configurationName = "${configurationName}",
+			key_configurationScope = "${configurationScope}",
+			locator1 = "SystemSettings#SCOPED_CONFIGURATION_NAME");
+	}
+
+	macro viewSettingsText {
+		AssertTextEquals.assertPartialText(
+			key_settingsText = "${settingsText}",
+			locator1 = "SystemSettings#SETTINGS_TEXT",
+			value1 = "${settingsText}");
+	}
+
+	macro viewTextareaPartialText {
+		AssertTextEquals.assertPartialText(
+			key_label = "${settingName}",
+			locator1 = "TextArea#ANY_LABELED",
+			value1 = "${settingValue}");
+	}
+
 	macro viewTextareaValue {
 		if (isSet(repeatableFieldNumber)) {
 			AssertTextEquals.assertValue(
@@ -186,6 +321,17 @@ definition {
 				locator1 = "FormFields#TEXT_MULTILINE_FIELD",
 				value1 = "${fieldValue}");
 		}
+	}
+
+	macro viewTextLabel {
+		AssertTextEquals.assertText(
+			key_fieldLabel = "${fieldLabel}",
+			locator1 = "SystemSettings#LABEL",
+			value1 = "${fieldLabel}");
+	}
+
+	macro viewUserAvatarImage {
+		AssertElementPresent(locator1 = "UserBar#USER_AVATAR_IMAGE");
 	}
 
 }

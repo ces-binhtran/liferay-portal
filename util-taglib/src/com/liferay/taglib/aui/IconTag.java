@@ -72,10 +72,15 @@ public class IconTag extends BaseIconTag {
 
 			String cssClass = GetterUtil.getString(getCssClass());
 
+			jspWriter.write("class=\"");
+
 			if (Validator.isNotNull(cssClass)) {
-				jspWriter.write("class=\"");
 				jspWriter.write(cssClass);
 				jspWriter.write("\" ");
+			}
+			else {
+				jspWriter.write("c-inner");
+				jspWriter.write("\" tabindex=\"-1\" ");
 			}
 
 			jspWriter.write(AUIUtil.buildData(getData()));
@@ -90,6 +95,7 @@ public class IconTag extends BaseIconTag {
 		else {
 			ATag aTag = new ATag();
 
+			aTag.setAriaLabel(getAriaLabel());
 			aTag.setCssClass(getCssClass());
 			aTag.setData(getData());
 			aTag.setHref(getUrl());
@@ -123,26 +129,25 @@ public class IconTag extends BaseIconTag {
 
 		try {
 			if (Objects.equals(getMarkupView(), "lexicon")) {
-				jspWriter.write("<svg class=\"lexicon-icon lexicon-icon-");
+				jspWriter.write("<svg aria-hidden=\"true\" ");
+				jspWriter.write("class=\"lexicon-icon lexicon-icon-");
 				jspWriter.write(GetterUtil.getString(getImage()));
-				jspWriter.write("\" focusable=\"false\" role=\"presentation\"");
+				jspWriter.write("\" focusable=\"false\" ");
 				jspWriter.write(
 					InlineUtil.buildDynamicAttributes(getDynamicAttributes()));
-				jspWriter.write("><use data-href=\"");
+				jspWriter.write("><use href=\"");
 
 				String src = getSrc();
 
-				HttpServletRequest httpServletRequest =
-					(HttpServletRequest)pageContext.getRequest();
-
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)httpServletRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
 				if (src == null) {
-					src =
-						themeDisplay.getPathThemeImages() +
-							"/lexicon/icons.svg";
+					HttpServletRequest httpServletRequest =
+						(HttpServletRequest)pageContext.getRequest();
+
+					ThemeDisplay themeDisplay =
+						(ThemeDisplay)httpServletRequest.getAttribute(
+							WebKeys.THEME_DISPLAY);
+
+					src = themeDisplay.getPathThemeImages() + "/clay/icons.svg";
 				}
 
 				jspWriter.write(src);

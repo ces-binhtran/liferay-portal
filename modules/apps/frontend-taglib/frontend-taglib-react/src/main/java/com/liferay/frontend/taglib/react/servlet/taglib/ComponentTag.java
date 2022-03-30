@@ -15,7 +15,9 @@
 package com.liferay.frontend.taglib.react.servlet.taglib;
 
 import com.liferay.frontend.js.loader.modules.extender.npm.NPMResolvedPackageNameUtil;
-import com.liferay.frontend.taglib.react.internal.util.ReactRendererProvider;
+import com.liferay.frontend.js.module.launcher.JSModuleResolver;
+import com.liferay.frontend.taglib.react.internal.util.ServicesProvider;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.theme.PortletDisplay;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -29,6 +31,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 
@@ -41,19 +44,18 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 	public int doEndTag() throws JspException {
 		JspWriter jspWriter = pageContext.getOut();
 
-		Map<String, Object> data = getData();
+		Map<String, Object> props = getProps();
 
 		try {
-			prepareData(data);
+			prepareProps(props);
 
 			ComponentDescriptor componentDescriptor = new ComponentDescriptor(
 				getModule(), getComponentId(), null, isPositionInLine());
 
-			ReactRenderer reactRenderer =
-				ReactRendererProvider.getReactRenderer();
+			ReactRenderer reactRenderer = ServicesProvider.getReactRenderer();
 
 			reactRenderer.renderReact(
-				componentDescriptor, data, request, jspWriter);
+				componentDescriptor, props, getRequest(), jspWriter);
 		}
 		catch (Exception exception) {
 			throw new JspException(exception);
@@ -75,24 +77,7 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 	}
 
 	public String getModule() {
-		if (_setServletContext) {
-			String namespace = NPMResolvedPackageNameUtil.get(servletContext);
-
-			return namespace.concat(
-				"/"
-			).concat(
-				_module
-			);
-		}
-
-		String namespace = NPMResolvedPackageNameUtil.get(
-			pageContext.getServletContext());
-
-		return namespace.concat(
-			"/"
-		).concat(
-			_module
-		);
+		return StringBundler.concat(getNamespace(), "/", _module);
 	}
 
 	@Override
@@ -106,12 +91,20 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 		_componentId = componentId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #setProps(Map)}
+	 */
+	@Deprecated
 	public void setData(Map<String, Object> data) {
-		_data = data;
+		setProps(data);
 	}
 
 	public void setModule(String module) {
 		_module = module;
+	}
+
+	public void setProps(Map<String, Object> props) {
+		_props = props;
 	}
 
 	@Override
@@ -123,24 +116,53 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 
 	protected void cleanUp() {
 		_componentId = null;
-		_data = Collections.emptyMap();
 		_module = null;
+		_props = Collections.emptyMap();
 		_setServletContext = false;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getProps()}
+	 */
+	@Deprecated
 	protected Map<String, Object> getData() {
-		return _data;
+		return getProps();
+	}
+
+	protected String getNamespace() {
+		ServletContext servletContext = pageContext.getServletContext();
+
+		if (_setServletContext) {
+			servletContext = getServletContext();
+		}
+
+		try {
+			return NPMResolvedPackageNameUtil.get(servletContext);
+		}
+		catch (UnsupportedOperationException unsupportedOperationException) {
+			JSModuleResolver jsModuleResolver =
+				ServicesProvider.getJSModuleResolver();
+
+			return jsModuleResolver.resolveModule(servletContext, null);
+		}
+	}
+
+	protected Map<String, Object> getProps() {
+		return _props;
 	}
 
 	protected boolean isPositionInLine() {
-		String fragmentId = ParamUtil.getString(request, "p_f_id");
+		HttpServletRequest httpServletRequest = getRequest();
+
+		String fragmentId = ParamUtil.getString(httpServletRequest, "p_f_id");
 
 		if (Validator.isNotNull(fragmentId)) {
 			return true;
 		}
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isIsolated() || themeDisplay.isLifecycleResource() ||
 			themeDisplay.isStateExclusive()) {
@@ -163,12 +185,21 @@ public class ComponentTag extends ParamAndPropertyAncestorTagImpl {
 		return false;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #prepareData(Map)}
+	 */
+	@Deprecated
 	protected void prepareData(Map<String, Object> data) {
+		prepareProps(data);
+	}
+
+	protected void prepareProps(Map<String, Object> props) {
 	}
 
 	private String _componentId;
-	private Map<String, Object> _data = Collections.emptyMap();
 	private String _module;
+	private Map<String, Object> _props = Collections.emptyMap();
 	private boolean _setServletContext;
 
 }

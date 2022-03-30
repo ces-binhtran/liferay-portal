@@ -21,7 +21,7 @@ import com.liferay.blogs.service.BlogsEntryLocalServiceUtil;
 import com.liferay.blogs.test.util.BlogsTestUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.editor.EditorConstants;
+import com.liferay.portal.kernel.editor.constants.EditorConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepository;
@@ -222,19 +222,13 @@ public class BlogsEntryAttachmentFileEntryHelperTest {
 	}
 
 	protected String getModifiedTempFileEntryImgTag(FileEntry tempFileEntry) {
-		StringBundler sb = new StringBundler(7);
-
-		sb.append("<img ");
-		sb.append(EditorConstants.ATTRIBUTE_DATA_IMAGE_ID);
-		sb.append("=\"");
-		sb.append(tempFileEntry.getFileEntryId());
-		sb.append("\" class=\"test-class\" id=\"test-id\" src=\"");
-		sb.append(
+		return StringBundler.concat(
+			"<img ", EditorConstants.ATTRIBUTE_DATA_IMAGE_ID, "=\"",
+			tempFileEntry.getFileEntryId(),
+			"\" class=\"test-class\" id=\"test-id\" src=\"",
 			PortletFileRepositoryUtil.getPortletFileEntryURL(
-				null, tempFileEntry, StringPool.BLANK));
-		sb.append("\" title=\"test-title\" />");
-
-		return sb.toString();
+				null, tempFileEntry, StringPool.BLANK),
+			"\" title=\"test-title\" />");
 	}
 
 	private List<BlogsEntryAttachmentFileEntryReference>
@@ -264,15 +258,15 @@ public class BlogsEntryAttachmentFileEntryHelperTest {
 
 	private FileEntry _addBlogsEntryAttachmentFileEntry(
 			long groupId, long userId, long blogsEntryId, long folderId,
-			String fileName, String mimeType, InputStream is)
+			String fileName, String mimeType, InputStream inputStream)
 		throws Exception {
 
 		String uniqueFileName = _getUniqueFileName(groupId, fileName, folderId);
 
 		return PortletFileRepositoryUtil.addPortletFileEntry(
 			groupId, userId, BlogsEntry.class.getName(), blogsEntryId,
-			BlogsConstants.SERVICE_NAME, folderId, is, uniqueFileName, mimeType,
-			true);
+			BlogsConstants.SERVICE_NAME, folderId, inputStream, uniqueFileName,
+			mimeType, true);
 	}
 
 	private List<FileEntry> _getTempBlogsEntryAttachmentFileEntries(

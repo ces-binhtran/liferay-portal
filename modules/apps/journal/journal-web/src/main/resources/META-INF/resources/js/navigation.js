@@ -69,14 +69,14 @@ AUI.add(
 					instance._processAction(action, url);
 				},
 
-				_moveToFolder(obj) {
+				_moveToFolder(object) {
 					var instance = this;
 
 					var namespace = instance.NS;
 
-					var dropTarget = obj.targetItem;
+					var dropTarget = object.targetItem;
 
-					var selectedItems = obj.selectedItems;
+					var selectedItems = object.selectedItems;
 
 					var folderId = dropTarget.attr('data-folder-id');
 
@@ -103,7 +103,7 @@ AUI.add(
 					var instance = this;
 
 					instance._processAction(
-						'/journal/move_entries_to_trash',
+						'/journal/move_articles_and_folders_to_trash',
 						instance.get('editEntryUrl')
 					);
 				},

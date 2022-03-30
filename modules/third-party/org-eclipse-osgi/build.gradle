@@ -8,11 +8,7 @@ sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 
 dependencies {
-	compileOnly group: "org.eclipse.platform", name: "org.eclipse.osgi", version: "3.13.0"
-}
-
-liferay {
-	deployDir = file("${liferayHome}/osgi/core")
+	compileOnly group: "org.eclipse.platform", name: "org.eclipse.osgi", transitive: false, version: "3.13.0"
 }
 
 patch {
@@ -28,6 +24,7 @@ patch {
 	fileNames "org/eclipse/osgi/internal/framework/FilterImpl.java"
 	fileNames "org/eclipse/osgi/internal/loader/ModuleClassLoader.java"
 	fileNames "org/eclipse/osgi/internal/loader/classpath/ClasspathManager.java"
+	fileNames "org/eclipse/osgi/internal/loader/sources/PackageSource.java"
 	fileNames "org/eclipse/osgi/internal/log/LoggerContextTargetMap.java"
 	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceRegistrationImpl.java"
 	fileNames "org/eclipse/osgi/internal/serviceregistry/ServiceRegistry.java"

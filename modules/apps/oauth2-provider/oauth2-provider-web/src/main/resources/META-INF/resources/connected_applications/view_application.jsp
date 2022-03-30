@@ -37,7 +37,7 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 	<aui:form action="<%= revokeOAuth2AuthorizationURL %>" method="post" name="fm">
 		<aui:input name="backURL" type="hidden" value="<%= redirect %>" />
-		<aui:input name="mvcRenderCommandName" type="hidden" value="/connected_applications/view" />
+		<aui:input name="mvcRenderCommandName" type="hidden" value="/oauth2_provider/view_connected_applications" />
 		<aui:input name="oAuth2AuthorizationIds" type="hidden" value='<%= ParamUtil.getString(request, "oAuth2AuthorizationId") %>' />
 
 		<aui:fieldset-group markupView="lexicon">
@@ -81,7 +81,6 @@ renderResponse.setTitle(oAuth2Application.getName());
 
 					<%
 					for (String applicationName : assignableScopes.getApplicationNames()) {
-						String applicationScopeDescription = StringUtil.merge(assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName), ", ");
 					%>
 
 						<li class="list-group-item list-group-item-flex">
@@ -92,11 +91,11 @@ renderResponse.setTitle(oAuth2Application.getName());
 							</clay:content-col>
 
 							<clay:content-col
-								expand="true"
+								expand="<%= true %>"
 							>
 								<h4 class="list-group-title text-truncate"><%= HtmlUtil.escape(assignableScopes.getApplicationDescription(applicationName)) %></h4>
 
-								<p class="list-group-subtitle text-truncate"><%= applicationScopeDescription %></p>
+								<p class="list-group-subtitle text-truncate"><%= StringUtil.merge(assignableScopes.getApplicationScopeDescription(themeDisplay.getCompanyId(), applicationName), ", ") %></p>
 							</clay:content-col>
 						</li>
 
@@ -153,13 +152,13 @@ renderResponse.setTitle(oAuth2Application.getName());
 	);
 
 	if (removeAccessButton) {
-		removeAccessButton.addEventListener('click', function () {
+		removeAccessButton.addEventListener('click', () => {
 			if (
 				confirm(
 					'<%= UnicodeLanguageUtil.format(request, "x-will-no-longer-have-access-to-your-account-removed-access-cannot-be-recovered", new String[] {oAuth2Application.getName()}) %>'
 				)
 			) {
-				submitForm(document.<portlet:namespace/>fm);
+				submitForm(document.<portlet:namespace />fm);
 			}
 		});
 	}

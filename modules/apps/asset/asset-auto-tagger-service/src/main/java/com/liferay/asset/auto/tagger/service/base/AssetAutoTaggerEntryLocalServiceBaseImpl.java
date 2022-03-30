@@ -16,6 +16,7 @@ package com.liferay.asset.auto.tagger.service.base;
 
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalService;
+import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUtil;
 import com.liferay.asset.auto.tagger.service.persistence.AssetAutoTaggerEntryPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -47,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +76,15 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetAutoTaggerEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetAutoTaggerEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetAutoTaggerEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the asset auto tagger entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetAutoTaggerEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetAutoTaggerEntry the asset auto tagger entry
 	 * @return the asset auto tagger entry that was added
@@ -108,6 +116,10 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the asset auto tagger entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetAutoTaggerEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetAutoTaggerEntryId the primary key of the asset auto tagger entry
 	 * @return the asset auto tagger entry that was removed
 	 * @throws PortalException if a asset auto tagger entry with the primary key could not be found
@@ -124,6 +136,10 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the asset auto tagger entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetAutoTaggerEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetAutoTaggerEntry the asset auto tagger entry
 	 * @return the asset auto tagger entry that was removed
 	 */
@@ -138,6 +154,13 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetAutoTaggerEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -303,6 +326,7 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -321,6 +345,7 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 			(AssetAutoTaggerEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AssetAutoTaggerEntry> getBasePersistence() {
 		return assetAutoTaggerEntryPersistence;
 	}
@@ -366,6 +391,10 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	/**
 	 * Updates the asset auto tagger entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetAutoTaggerEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetAutoTaggerEntry the asset auto tagger entry
 	 * @return the asset auto tagger entry that was updated
 	 */
@@ -375,6 +404,11 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 		AssetAutoTaggerEntry assetAutoTaggerEntry) {
 
 		return assetAutoTaggerEntryPersistence.update(assetAutoTaggerEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -390,6 +424,8 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		assetAutoTaggerEntryLocalService =
 			(AssetAutoTaggerEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(assetAutoTaggerEntryLocalService);
 	}
 
 	/**
@@ -447,6 +483,23 @@ public abstract class AssetAutoTaggerEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		AssetAutoTaggerEntryLocalService assetAutoTaggerEntryLocalService) {
+
+		try {
+			Field field =
+				AssetAutoTaggerEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetAutoTaggerEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

@@ -15,8 +15,8 @@
 package com.liferay.journal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
@@ -185,9 +185,7 @@ public class JournalFolderIndexerLocalizedTest {
 
 	private Document _search(String searchTerm, Locale locale) {
 		try {
-			SearchContext searchContext = _getSearchContext(searchTerm, locale);
-
-			Hits hits = _indexer.search(searchContext);
+			Hits hits = _indexer.search(_getSearchContext(searchTerm, locale));
 
 			return _getSingleDocument(searchTerm, hits);
 		}

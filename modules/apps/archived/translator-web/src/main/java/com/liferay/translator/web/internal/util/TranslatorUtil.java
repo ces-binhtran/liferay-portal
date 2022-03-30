@@ -17,6 +17,7 @@ package com.liferay.translator.web.internal.util;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.util.TreeMapBuilder;
 import com.liferay.portal.kernel.webcache.WebCacheException;
 import com.liferay.portal.kernel.webcache.WebCacheItem;
 import com.liferay.translator.web.internal.configuration.TranslatorConfiguration;
@@ -26,7 +27,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * @author Brian Wing Shun Chan
@@ -79,22 +79,21 @@ public class TranslatorUtil {
 				languageId, LanguageUtil.get(locale, "language." + languageId));
 		}
 
-		Map<String, String> sortedLanguageIdsMap = new TreeMap<>(
-			new ValueComparator(languageIdsMap));
-
-		sortedLanguageIdsMap.putAll(languageIdsMap);
-
-		return sortedLanguageIdsMap;
+		return TreeMapBuilder.<String, String>create(
+			new ValueComparator(languageIdsMap)
+		).putAll(
+			languageIdsMap
+		).build();
 	}
 
 	public static Translation getTranslation(
 			String fromLanguageId, String toLanguageId, String fromText)
 		throws WebCacheException {
 
-		WebCacheItem wci = new TranslatorWebCacheItem(
+		WebCacheItem webCacheItem = new TranslatorWebCacheItem(
 			fromLanguageId, toLanguageId, fromText);
 
-		return (Translation)wci.convert("");
+		return (Translation)webCacheItem.convert("");
 	}
 
 	private static class ValueComparator implements Comparator<Object> {
@@ -104,9 +103,9 @@ public class TranslatorUtil {
 		}
 
 		@Override
-		public int compare(Object obj1, Object obj2) {
-			String value1 = _map.get(obj1);
-			String value2 = _map.get(obj2);
+		public int compare(Object object1, Object object2) {
+			String value1 = _map.get(object1);
+			String value2 = _map.get(object2);
 
 			return value1.compareTo(value2);
 		}

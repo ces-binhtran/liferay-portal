@@ -30,6 +30,10 @@ public class ExpandoTableLocalServiceWrapper
 	implements ExpandoTableLocalService,
 			   ServiceWrapper<ExpandoTableLocalService> {
 
+	public ExpandoTableLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ExpandoTableLocalServiceWrapper(
 		ExpandoTableLocalService expandoTableLocalService) {
 
@@ -53,6 +57,10 @@ public class ExpandoTableLocalServiceWrapper
 
 	/**
 	 * Adds the expando table to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was added
@@ -101,16 +109,27 @@ public class ExpandoTableLocalServiceWrapper
 	/**
 	 * Deletes the expando table from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was removed
+	 * @throws PortalException
 	 */
 	@Override
-	public ExpandoTable deleteExpandoTable(ExpandoTable expandoTable) {
+	public ExpandoTable deleteExpandoTable(ExpandoTable expandoTable)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		return _expandoTableLocalService.deleteExpandoTable(expandoTable);
 	}
 
 	/**
 	 * Deletes the expando table with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param tableId the primary key of the expando table
 	 * @return the expando table that was removed
@@ -135,7 +154,9 @@ public class ExpandoTableLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteTable(ExpandoTable table) {
+	public void deleteTable(ExpandoTable table)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoTableLocalService.deleteTable(table);
 	}
 
@@ -161,18 +182,29 @@ public class ExpandoTableLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteTables(long companyId, long classNameId) {
+	public void deleteTables(long companyId, long classNameId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoTableLocalService.deleteTables(companyId, classNameId);
 	}
 
 	@Override
-	public void deleteTables(long companyId, String className) {
+	public void deleteTables(long companyId, String className)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoTableLocalService.deleteTables(companyId, className);
 	}
 
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _expandoTableLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _expandoTableLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -417,6 +449,10 @@ public class ExpandoTableLocalServiceWrapper
 
 	/**
 	 * Updates the expando table in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was updated

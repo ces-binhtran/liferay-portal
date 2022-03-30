@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.internal.util;
 
+import com.liferay.dynamic.data.mapping.configuration.DDMIndexerConfiguration;
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldTypeServicesTracker;
 import com.liferay.dynamic.data.mapping.internal.io.DDMFormJSONSerializer;
 import com.liferay.dynamic.data.mapping.internal.test.util.DDMFixture;
@@ -32,11 +33,14 @@ import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.search.Document;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
+import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
@@ -74,10 +78,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 )
 @RunWith(PowerMockRunner.class)
 @SuppressStaticInitializationFor(
-	{
-		"com.liferay.dynamic.data.mapping.model.impl.DDMStructureModelImpl",
-		"com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil"
-	}
+	"com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil"
 )
 public class DDMIndexerImplTest {
 
@@ -85,7 +86,10 @@ public class DDMIndexerImplTest {
 	public void setUp() throws Exception {
 		ddmFixture.setUp();
 		documentFixture.setUp();
-		setUpPortalUtil();
+		_setUpPortalUtil();
+		_setUpPropsUtil();
+
+		ddmIndexer = _createDDMIndexer();
 	}
 
 	@After
@@ -108,7 +112,7 @@ public class DDMIndexerImplTest {
 		String fieldName = "text1";
 		String indexType = "text";
 
-		ddmForm.addDDMFormField(createDDMFormField(fieldName, indexType));
+		ddmForm.addDDMFormField(_createDDMFormField(fieldName, indexType));
 
 		String fieldValue = "新規作成";
 
@@ -117,7 +121,7 @@ public class DDMIndexerImplTest {
 
 		Document document = createDocument();
 
-		DDMStructure ddmStructure = createDDMStructure(ddmForm);
+		DDMStructure ddmStructure = _createDDMStructure(ddmForm);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(
 			ddmForm, ddmFormFieldValue);
@@ -126,12 +130,10 @@ public class DDMIndexerImplTest {
 
 		Map<String, String> map = _withSortableValues(
 			Collections.singletonMap(
-				"ddm__text__NNNNN__text1_ja_JP", fieldValue));
+				"ddmFieldArray.ddmFieldValueText_ja_JP", fieldValue));
 
 		FieldValuesAssert.assertFieldValues(
-			_replaceKeys(
-				"NNNNN", String.valueOf(ddmStructure.getStructureId()), map),
-			"ddm__text", document, fieldValue);
+			map, "ddmFieldArray.ddmFieldValueText", document, fieldValue);
 	}
 
 	@Test
@@ -148,7 +150,7 @@ public class DDMIndexerImplTest {
 		String fieldName = "text1";
 		String indexType = "text";
 
-		ddmForm.addDDMFormField(createDDMFormField(fieldName, indexType));
+		ddmForm.addDDMFormField(_createDDMFormField(fieldName, indexType));
 
 		String fieldValue = "新規作成";
 
@@ -157,7 +159,7 @@ public class DDMIndexerImplTest {
 
 		Document document = createDocument();
 
-		DDMStructure ddmStructure = createDDMStructure(ddmForm);
+		DDMStructure ddmStructure = _createDDMStructure(ddmForm);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(
 			ddmForm, ddmFormFieldValue);
@@ -166,12 +168,10 @@ public class DDMIndexerImplTest {
 
 		Map<String, String> map = _withSortableValues(
 			Collections.singletonMap(
-				"ddm__text__NNNNN__text1_ja_JP", fieldValue));
+				"ddmFieldArray.ddmFieldValueText_ja_JP", fieldValue));
 
 		FieldValuesAssert.assertFieldValues(
-			_replaceKeys(
-				"NNNNN", String.valueOf(ddmStructure.getStructureId()), map),
-			"ddm__text", document, fieldValue);
+			map, "ddmFieldArray.ddmFieldValueText", document, fieldValue);
 	}
 
 	@Test
@@ -188,7 +188,7 @@ public class DDMIndexerImplTest {
 		String fieldName = "text1";
 		String indexType = "text";
 
-		DDMFormField ddmFormField = createDDMFormField(fieldName, indexType);
+		DDMFormField ddmFormField = _createDDMFormField(fieldName, indexType);
 
 		ddmForm.addDDMFormField(ddmFormField);
 
@@ -203,7 +203,7 @@ public class DDMIndexerImplTest {
 
 		Document document = createDocument();
 
-		DDMStructure ddmStructure = createDDMStructure(ddmForm);
+		DDMStructure ddmStructure = _createDDMStructure(ddmForm);
 
 		DDMFormValues ddmFormValues = createDDMFormValues(
 			ddmForm, ddmFormFieldValueJP, ddmFormFieldValueUS);
@@ -212,26 +212,13 @@ public class DDMIndexerImplTest {
 
 		Map<String, String> map = _withSortableValues(
 			HashMapBuilder.put(
-				"ddm__text__NNNNN__text1_en_US", fieldValueUS
+				"ddmFieldArray.ddmFieldValueText_en_US", fieldValueUS
 			).put(
-				"ddm__text__NNNNN__text1_ja_JP", fieldValueJP
+				"ddmFieldArray.ddmFieldValueText_ja_JP", fieldValueJP
 			).build());
 
 		FieldValuesAssert.assertFieldValues(
-			_replaceKeys(
-				"NNNNN", String.valueOf(ddmStructure.getStructureId()), map),
-			"ddm__text", document, fieldValueJP);
-	}
-
-	protected DDMFormField createDDMFormField(
-		String fieldName, String indexType) {
-
-		DDMFormField ddmFormField = DDMFormTestUtil.createTextDDMFormField(
-			fieldName, true, false, true);
-
-		ddmFormField.setIndexType(indexType);
-
-		return ddmFormField;
+			map, "ddmFieldArray.ddmFieldValueText", document, fieldValueJP);
 	}
 
 	protected DDMFormFieldValue createDDMFormFieldValue(
@@ -245,17 +232,6 @@ public class DDMIndexerImplTest {
 			name, localizedValue);
 	}
 
-	protected DDMFormJSONSerializer createDDMFormJSONSerializer() {
-		return new DDMFormJSONSerializer() {
-			{
-				setDDMFormFieldTypeServicesTracker(
-					Mockito.mock(DDMFormFieldTypeServicesTracker.class));
-
-				setJSONFactory(new JSONFactoryImpl());
-			}
-		};
-	}
-
 	protected DDMFormValues createDDMFormValues(
 		DDMForm ddmForm, DDMFormFieldValue... ddmFormFieldValues) {
 
@@ -267,30 +243,6 @@ public class DDMIndexerImplTest {
 		}
 
 		return ddmFormValues;
-	}
-
-	protected DDMIndexer createDDMIndexer() {
-		return new DDMIndexerImpl() {
-			{
-				setDDMFormValuesToFieldsConverter(
-					new DDMFormValuesToFieldsConverterImpl());
-			}
-		};
-	}
-
-	protected DDMStructure createDDMStructure(DDMForm ddmForm) {
-		DDMStructure ddmStructure = new DDMStructureImpl();
-
-		ddmStructure.setDefinition(serialize(ddmForm));
-
-		ddmStructure.setDDMForm(ddmForm);
-
-		ddmStructure.setStructureId(RandomTestUtil.randomLong());
-		ddmStructure.setName(RandomTestUtil.randomString());
-
-		ddmFixture.whenDDMStructureLocalServiceFetchStructure(ddmStructure);
-
-		return ddmStructure;
 	}
 
 	protected Document createDocument() {
@@ -309,7 +261,71 @@ public class DDMIndexerImplTest {
 		return ddmFormSerializerSerializeResponse.getContent();
 	}
 
-	protected void setUpPortalUtil() {
+	protected final DDMFixture ddmFixture = new DDMFixture();
+	protected final DDMFormJSONSerializer ddmFormJSONSerializer =
+		_createDDMFormJSONSerializer();
+	protected DDMIndexer ddmIndexer;
+	protected final DocumentFixture documentFixture = new DocumentFixture();
+
+	private DDMFormField _createDDMFormField(
+		String fieldName, String indexType) {
+
+		DDMFormField ddmFormField = DDMFormTestUtil.createTextDDMFormField(
+			fieldName, true, false, true);
+
+		ddmFormField.setIndexType(indexType);
+
+		return ddmFormField;
+	}
+
+	private DDMFormJSONSerializer _createDDMFormJSONSerializer() {
+		return new DDMFormJSONSerializer() {
+			{
+				setDDMFormFieldTypeServicesTracker(
+					Mockito.mock(DDMFormFieldTypeServicesTracker.class));
+
+				setJSONFactory(new JSONFactoryImpl());
+			}
+		};
+	}
+
+	private DDMIndexer _createDDMIndexer() {
+		return new DDMIndexerImpl() {
+			{
+				DDMIndexerConfiguration ddmIndexerConfiguration =
+					new DDMIndexerConfiguration() {
+
+						public boolean enableLegacyDDMIndexFields() {
+							return false;
+						}
+
+					};
+
+				ReflectionTestUtil.setFieldValue(
+					this, "_ddmIndexerConfiguration", ddmIndexerConfiguration);
+
+				setDDMFormValuesToFieldsConverter(
+					new DDMFormValuesToFieldsConverterImpl());
+			}
+		};
+	}
+
+	private DDMStructure _createDDMStructure(DDMForm ddmForm) {
+		DDMStructure ddmStructure = new DDMStructureImpl();
+
+		ddmStructure.setDefinition(serialize(ddmForm));
+
+		ddmStructure.setDDMForm(ddmForm);
+
+		ddmStructure.setStructureId(RandomTestUtil.randomLong());
+		ddmStructure.setName(RandomTestUtil.randomString());
+
+		ddmFixture.whenDDMStructureLocalServiceFetchStructure(ddmStructure);
+
+		return ddmStructure;
+	}
+
+	private void _setUpPortalUtil() {
 		PortalUtil portalUtil = new PortalUtil();
 
 		Portal portal = PowerMockito.mock(Portal.class);
@@ -325,28 +341,12 @@ public class DDMIndexerImplTest {
 		portalUtil.setPortal(portal);
 	}
 
-	protected final DDMFixture ddmFixture = new DDMFixture();
-	protected final DDMFormJSONSerializer ddmFormJSONSerializer =
-		createDDMFormJSONSerializer();
-	protected final DDMIndexer ddmIndexer = createDDMIndexer();
-	protected final DocumentFixture documentFixture = new DocumentFixture();
-
-	private static Map<String, String> _replaceKeys(
-		String oldSub, String newSub, Map<String, String> map) {
-
-		Set<Map.Entry<String, String>> entrySet = map.entrySet();
-
-		Stream<Map.Entry<String, String>> entries = entrySet.stream();
-
-		return entries.collect(
-			Collectors.toMap(
-				entry -> StringUtil.replace(entry.getKey(), oldSub, newSub),
-				Map.Entry::getValue));
+	private void _setUpPropsUtil() {
+		PropsTestUtil.setProps(
+			PropsKeys.INDEX_SORTABLE_TEXT_FIELDS_TRUNCATED_LENGTH, "255");
 	}
 
-	private static Map<String, String> _withSortableValues(
-		Map<String, String> map) {
-
+	private Map<String, String> _withSortableValues(Map<String, String> map) {
 		Set<Map.Entry<String, String>> entrySet = map.entrySet();
 
 		Stream<Map.Entry<String, String>> entries = entrySet.stream();

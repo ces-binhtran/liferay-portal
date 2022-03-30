@@ -27,20 +27,20 @@ KaleoDefinitionVersion kaleoDefinitionVersion = (KaleoDefinitionVersion)row.getO
 %>
 
 <portlet:renderURL var="viewURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-	<portlet:param name="mvcPath" value="/designer/edit_kaleo_definition_version.jsp" />
+	<portlet:param name="mvcPath" value="<%= KaleoDesignerUtil.getEditJspPath() %>" />
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 	<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 	<portlet:param name="draftVersion" value="<%= kaleoDefinitionVersion.getVersion() %>" />
 	<portlet:param name="<%= WorkflowWebKeys.WORKFLOW_JSP_STATE %>" value="<%= WorkflowWebKeys.WORKFLOW_PREVIEW_BEFORE_RESTORE_STATE %>" />
 </portlet:renderURL>
 
-<liferay-portlet:actionURL name="revertKaleoDefinitionVersion" var="revertURL">
+<liferay-portlet:actionURL name="/kaleo_designer/revert_kaleo_definition_version" var="revertURL">
 	<portlet:param name="redirect" value="<%= redirect %>" />
 	<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 	<portlet:param name="draftVersion" value="<%= kaleoDefinitionVersion.getVersion() %>" />
 </liferay-portlet:actionURL>
 
-<c:if test="<%= !kaleoDefinitionVersion.getVersion().equals(currentKaleoDefinitionVersion.getVersion()) %>">
+<c:if test="<%= !Objects.equals(kaleoDefinitionVersion.getVersion(), currentKaleoDefinitionVersion.getVersion()) %>">
 	<liferay-ui:icon-menu
 		direction="left-side"
 		icon="<%= StringPool.BLANK %>"

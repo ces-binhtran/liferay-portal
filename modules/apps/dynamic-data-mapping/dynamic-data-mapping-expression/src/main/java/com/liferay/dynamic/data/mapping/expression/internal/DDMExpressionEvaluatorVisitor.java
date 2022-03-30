@@ -60,13 +60,11 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -135,6 +133,13 @@ public class DDMExpressionEvaluatorVisitor
 		Object object1 = visitChild(context, 0);
 		Object object2 = visitChild(context, 2);
 
+		if ((object1 instanceof Number) && (object2 instanceof Number)) {
+			BigDecimal bigDecimal1 = (BigDecimal)object1;
+			BigDecimal bigDecimal2 = (BigDecimal)object2;
+
+			return bigDecimal1.compareTo(bigDecimal2) == 0;
+		}
+
 		return Objects.equals(object1, object2);
 	}
 
@@ -159,10 +164,9 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitFunctionCallExpression(
 		@NotNull FunctionCallExpressionContext context) {
 
-		String functionName = getFunctionName(context.functionName);
-
 		DDMExpressionFunctionFactory ddmExpressionFunctionFactory =
-			_ddmExpressionFunctionFactories.get(functionName);
+			_ddmExpressionFunctionFactories.get(
+				getFunctionName(context.functionName));
 
 		DDMExpressionFunction ddmExpressionFunction =
 			ddmExpressionFunctionFactory.create();
@@ -203,22 +207,27 @@ public class DDMExpressionEvaluatorVisitor
 				_ddmExpressionFieldAccessor);
 		}
 
-		Optional<Method> methodOptional = _getApplyMethodOptional(
-			ddmExpressionFunction);
+		Method method = null;
 
-		if (!methodOptional.isPresent()) {
+		Object[] functionParameters = getFunctionParameters(
+			context.functionParameters());
+
+		try {
+			method = _getApplyMethod(
+				ddmExpressionFunction.getClass(), functionParameters.length);
+		}
+		catch (NoSuchMethodException noSuchMethodException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchMethodException);
+			}
+
 			return null;
 		}
-
-		Method method = methodOptional.get();
 
 		method.setAccessible(true);
 
 		try {
 			Class<?>[] parameterTypes = method.getParameterTypes();
-
-			Object[] functionParameters = getFunctionParameters(
-				context.functionParameters());
 
 			if ((parameterTypes.length == 1) &&
 				(parameterTypes[0] == new Object[0].getClass())) {
@@ -240,7 +249,7 @@ public class DDMExpressionEvaluatorVisitor
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 
 			return null;
@@ -251,8 +260,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitGreaterThanExpression(
 		@NotNull GreaterThanExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.compareTo(bigDecimal2) == 1;
 	}
@@ -261,8 +270,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitGreaterThanOrEqualsExpression(
 		@NotNull GreaterThanOrEqualsExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.compareTo(bigDecimal2) >= 0;
 	}
@@ -278,8 +287,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitLessThanExpression(
 		@NotNull LessThanExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.compareTo(bigDecimal2) == -1;
 	}
@@ -288,8 +297,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitLessThanOrEqualsExpression(
 		@NotNull LessThanOrEqualsExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.compareTo(bigDecimal2) <= 0;
 	}
@@ -344,7 +353,7 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitMinusExpression(
 		@NotNull MinusExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 1));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 1));
 
 		return bigDecimal1.multiply(new BigDecimal(-1));
 	}
@@ -353,8 +362,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitMultiplicationExpression(
 		@NotNull MultiplicationExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.multiply(bigDecimal2);
 	}
@@ -365,6 +374,13 @@ public class DDMExpressionEvaluatorVisitor
 
 		Object object1 = visitChild(context, 0);
 		Object object2 = visitChild(context, 2);
+
+		if ((object1 instanceof Number) && (object2 instanceof Number)) {
+			BigDecimal bigDecimal1 = (BigDecimal)object1;
+			BigDecimal bigDecimal2 = (BigDecimal)object2;
+
+			return bigDecimal1.compareTo(bigDecimal2) != 0;
+		}
 
 		return !Objects.equals(object1, object2);
 	}
@@ -439,8 +455,8 @@ public class DDMExpressionEvaluatorVisitor
 	public Object visitSubtractionExpression(
 		@NotNull SubtractionExpressionContext context) {
 
-		BigDecimal bigDecimal1 = getBigDecimal(visitChild(context, 0));
-		BigDecimal bigDecimal2 = getBigDecimal(visitChild(context, 2));
+		BigDecimal bigDecimal1 = _getBigDecimal(visitChild(context, 0));
+		BigDecimal bigDecimal2 = _getBigDecimal(visitChild(context, 2));
 
 		return bigDecimal1.subtract(bigDecimal2);
 	}
@@ -510,14 +526,6 @@ public class DDMExpressionEvaluatorVisitor
 		_ddmExpressionParameterAccessor = ddmExpressionParameterAccessor;
 	}
 
-	protected BigDecimal getBigDecimal(Comparable<?> comparable) {
-		if (comparable instanceof BigDecimal) {
-			return (BigDecimal)comparable;
-		}
-
-		return new BigDecimal(comparable.toString());
-	}
-
 	protected String getFunctionName(Token functionNameToken) {
 		return functionNameToken.getText();
 	}
@@ -548,49 +556,70 @@ public class DDMExpressionEvaluatorVisitor
 		return (T)parseTree.accept(this);
 	}
 
-	private Optional<Method> _getApplyMethodOptional(
-		DDMExpressionFunction ddmExpressionFunction) {
+	private Method _getApplyMethod(
+			Class<?> ddmExpressionFunctionClass, int parametersTotal)
+		throws NoSuchMethodException {
 
-		List<Method> methods = Stream.of(
-			_getHierarchicalMethods(ddmExpressionFunction.getClass())
+		Class<?>[] classes = _getInterfaces(ddmExpressionFunctionClass);
+
+		Optional<Class<?>> classOptional = Stream.of(
+			classes
 		).filter(
-			method -> StringUtil.equals("apply", method.getName())
-		).collect(
-			Collectors.toList()
-		);
+			clazz -> _isDDMExpressionFunctionNestedFunction(
+				clazz, parametersTotal)
+		).findFirst();
 
-		Iterator<Method> iterator = methods.iterator();
+		if (classOptional.isPresent()) {
+			Class<?> clazz = classOptional.get();
 
-		Method method = iterator.next();
-
-		Class<?>[] parameterTypes = method.getParameterTypes();
-
-		Object object = new Object();
-
-		if ((parameterTypes.length == 1) &&
-			(parameterTypes[0] == object.getClass()) && iterator.hasNext()) {
-
-			return Optional.ofNullable(iterator.next());
+			return clazz.getDeclaredMethods()[0];
 		}
 
-		return Optional.ofNullable(method);
+		return ddmExpressionFunctionClass.getMethod("apply", Object[].class);
 	}
 
-	private Method[] _getHierarchicalMethods(Class<?> clazz) {
-		Set<Method> methods = new HashSet<>();
+	private BigDecimal _getBigDecimal(Comparable<?> comparable) {
+		if (comparable == null) {
+			return BigDecimal.ZERO;
+		}
+
+		if (comparable instanceof BigDecimal) {
+			return (BigDecimal)comparable;
+		}
+
+		return new BigDecimal(comparable.toString());
+	}
+
+	private Class<?>[] _getInterfaces(Class<?> clazz) {
+		Set<Class<?>> classes = new HashSet<>();
 
 		if (clazz.getSuperclass() != null) {
-			Collections.addAll(
-				methods, _getHierarchicalMethods(clazz.getSuperclass()));
+			Collections.addAll(classes, _getInterfaces(clazz.getSuperclass()));
 		}
 
-		Collections.addAll(methods, clazz.getDeclaredMethods());
-		Collections.addAll(methods, clazz.getMethods());
+		Collections.addAll(classes, clazz.getInterfaces());
 
-		return methods.toArray(new Method[0]);
+		return classes.toArray(new Class<?>[0]);
 	}
 
-	private static Log _log = LogFactoryUtil.getLog(
+	private boolean _isDDMExpressionFunctionNestedFunction(
+		Class<?> clazz, int parametersTotal) {
+
+		Class<?>[] classes = clazz.getInterfaces();
+
+		if (clazz.isMemberClass() &&
+			Objects.equals(
+				clazz.getSimpleName(), "Function" + parametersTotal) &&
+			(classes.length == 1) &&
+			(classes[0] == DDMExpressionFunction.class)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
 		DDMExpressionEvaluatorVisitor.class);
 
 	private final DDMExpressionActionHandler _ddmExpressionActionHandler;

@@ -11,10 +11,11 @@
  */
 
 import ClayIcon from '@clayui/icon';
-import {ClayTooltipProvider} from '@clayui/tooltip';
+import ClayLayout from '@clayui/layout';
+import ClayList from '@clayui/list';
+import ClayPanel from '@clayui/panel';
 import React, {useMemo} from 'react';
 
-import Panel from '../../../shared/components/Panel.es';
 import ContentView from '../../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../../shared/components/list/ReloadButton.es';
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
@@ -27,24 +28,28 @@ const ProcessItemsCard = ({
 	completed,
 	description,
 	processId,
-	timeRange,
+	timeRange = {},
 	title,
 }) => {
-	const timeRangeParams = timeRange || {};
-
 	const {data, fetchData} = useFetch({
 		params: {
 			completed,
-			...timeRangeParams,
+			...timeRange,
 		},
 		url: `/processes/${processId}/metrics`,
 	});
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(() => {
+		if (!completed || (timeRange.dateEnd && timeRange.dateStart)) {
+			return [fetchData()];
+		}
+
+		return [new Promise((_, reject) => reject())];
+	}, [completed, timeRange.dateEnd, timeRange.dateStart]);
 
 	return (
 		<PromisesResolver promises={promises}>
-			<Panel>
+			<ClayPanel className="mt-4">
 				<ProcessItemsCard.Header
 					data={data}
 					description={description}
@@ -59,7 +64,7 @@ const ProcessItemsCard = ({
 					processId={processId}
 					timeRange={timeRange}
 				/>
-			</Panel>
+			</ClayPanel>
 		</PromisesResolver>
 	);
 };
@@ -79,7 +84,7 @@ const Body = ({completed = false, data, processId, timeRange}) => {
 	};
 
 	return (
-		<Panel.Body>
+		<ClayPanel.Body>
 			<ContentView {...statesProps}>
 				{data ? (
 					<div className="d-flex pb-3">
@@ -102,38 +107,32 @@ const Body = ({completed = false, data, processId, timeRange}) => {
 					<></>
 				)}
 			</ContentView>
-		</Panel.Body>
+		</ClayPanel.Body>
 	);
 };
 
 const Header = ({children, data, description, title}) => (
-	<Panel.Header
-		elementClasses={['dashboard-panel-header', children && 'pb-0']}
-	>
-		<div className="autofit-row">
-			<div className="autofit-col autofit-col-expand flex-row">
+	<ClayPanel.Header className={['tabs-panel-header', children && 'pb-0']}>
+		<ClayLayout.ContentRow>
+			<ClayLayout.ContentCol className="flex-row" expand>
 				<span className="mr-2">{title}</span>
 
-				<ClayTooltipProvider>
-					<span>
-						<span
-							className="workflow-tooltip"
-							data-tooltip-align={'right'}
-							title={description}
-						>
-							<ClayIcon symbol="question-circle-full" />
-						</span>
-					</span>
-				</ClayTooltipProvider>
-			</div>
+				<span
+					className="workflow-tooltip"
+					data-tooltip-align="right"
+					title={description}
+				>
+					<ClayIcon symbol="question-circle-full" />
+				</span>
+			</ClayLayout.ContentCol>
 
 			{children && data && (
-				<div className="autofit-col m-0 management-bar management-bar-light navbar">
-					<ul className="navbar-nav">{children}</ul>
-				</div>
+				<ClayLayout.ContentCol className="m-0 management-bar management-bar-light navbar">
+					<ClayList className="navbar-nav">{children}</ClayList>
+				</ClayLayout.ContentCol>
 			)}
-		</div>
-	</Panel.Header>
+		</ClayLayout.ContentRow>
+	</ClayPanel.Header>
 );
 
 ProcessItemsCard.Body = Body;

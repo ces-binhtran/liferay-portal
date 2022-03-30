@@ -12,196 +12,387 @@
  * details.
  */
 
+import ClayButton from '@clayui/button';
+import ClayIcon from '@clayui/icon';
+import ClayLabel from '@clayui/label';
+import ClayPopover from '@clayui/popover';
+import classNames from 'classnames';
+import {
+	EVENT_TYPES as CORE_EVENT_TYPES,
+	Layout,
+	getRepeatedIndex,
+	useForm,
+	useFormState,
+} from 'data-engine-js-components-web';
+import moment from 'moment/min/moment-with-locales';
+import React, {useMemo, useState} from 'react';
+
 import './FieldBase.scss';
 
-import ClayButton from '@clayui/button';
-import ClayIcon, {ClayIconSpriteContext} from '@clayui/icon';
-import {ClayTooltipProvider} from '@clayui/tooltip';
-import classNames from 'classnames';
-import {getRepeatedIndex} from 'dynamic-data-mapping-form-renderer';
-import React, {useMemo} from 'react';
+function normalizeInputValue(fieldType, locale, value) {
+	if (!value) {
+		return '';
+	}
+	if (fieldType === 'date') {
+		const momentLocale = moment().locale(locale);
 
-import {PageRendererAdapter} from './PageRendererAdapter.es';
+		const date = moment(value, [
+			momentLocale.localeData().longDateFormat('L'),
+			'YYYY-MM-DD',
+		]).toDate();
 
-const getDefaultRows = (nestedFields) => {
-	return nestedFields.map((nestedField) => {
-		return {
-			columns: [
-				{
-					fields: [nestedField],
-					size: 12,
-				},
-			],
-		};
-	});
+		if (moment(date).isValid()) {
+			return moment(date).format('YYYY-MM-DD');
+		}
+	}
+	else if (
+		fieldType === 'document_library' ||
+		fieldType === 'geolocation' ||
+		fieldType === 'grid' ||
+		fieldType === 'image'
+	) {
+		return Object.keys(value).length === 0 ? '' : JSON.stringify(value);
+	}
+
+	return value;
+}
+
+const getFieldDetails = ({errorMessage, hasError, required, text, tip}) => {
+	let fieldDetails = '';
+
+	if (tip) {
+		fieldDetails += Liferay.Util.escape(tip) + '<br>';
+	}
+
+	if (text) {
+		fieldDetails += Liferay.Util.escape(text) + '<br>';
+	}
+
+	if (hasError) {
+		fieldDetails += Liferay.Util.escape(errorMessage);
+	}
+	else if (required) {
+		fieldDetails += Liferay.Language.get('required');
+	}
+
+	return fieldDetails;
 };
 
-function FieldBase({
+const HideFieldProperty = () => {
+	return (
+		<ClayLabel className="ml-1" displayType="secondary">
+			{Liferay.Language.get('hidden')}
+		</ClayLabel>
+	);
+};
+
+const LabelProperty = ({hideField, label}) => {
+	return hideField ? <span className="text-secondary">{label}</span> : label;
+};
+
+const RequiredProperty = () => {
+	return (
+		<span className="ddm-label-required reference-mark">
+			<ClayIcon symbol="asterisk" />
+		</span>
+	);
+};
+
+const TooltipProperty = ({showPopover, tooltip}) => {
+	return showPopover ? (
+		<Popover tooltip={tooltip} />
+	) : (
+		<span className="ddm-tooltip" title={tooltip}>
+			<ClayIcon symbol="question-circle-full" />
+		</span>
+	);
+};
+
+const Popover = ({tooltip}) => {
+	const [isPopoverVisible, setPopoverVisible] = useState(false);
+
+	const POPOVER_IMAGE_HEIGHT = 170;
+	const POPOVER_IMAGE_WIDTH = 232;
+	const POPOVER_MAX_WIDTH = 256;
+
+	return (
+		<ClayPopover
+			alignPosition="right-bottom"
+			data-testid="clayPopover"
+			disableScroll
+			header={Liferay.Language.get('input-mask-format')}
+			show={isPopoverVisible}
+			style={{maxWidth: POPOVER_MAX_WIDTH}}
+			trigger={
+				<span
+					className="ddm-tooltip"
+					onMouseOut={() => setPopoverVisible(false)}
+					onMouseOver={() => setPopoverVisible(true)}
+				>
+					<ClayIcon symbol="question-circle-full" />
+				</span>
+			}
+		>
+			<p>{tooltip}</p>
+
+			<img
+				alt={Liferay.Language.get('input-mask-format')}
+				height={POPOVER_IMAGE_HEIGHT}
+				src={`${themeDisplay.getPathThemeImages()}/forms/input_mask_format.png`}
+				width={POPOVER_IMAGE_WIDTH}
+			/>
+		</ClayPopover>
+	);
+};
+
+export function FieldBase({
+	accessible = true,
 	children,
-	context,
 	displayErrors,
-	editable,
-	editingLanguageId,
 	errorMessage,
+	fieldName,
+	hideField,
+	hideEditedFlag,
+	id,
 	label,
 	localizedValue = {},
 	name,
 	nestedFields,
 	onClick,
-	onRemoveButton,
-	onRepeatButton,
+	overMaximumRepetitionsLimit = false,
 	readOnly,
 	repeatable,
 	required,
 	showLabel = true,
-	spritemap,
+	style,
+	text,
 	tip,
 	tooltip,
+	type,
 	valid,
 	visible,
 }) {
-	const localizedValueArray = useMemo(() => {
-		const languageValues = [];
+	const {editingLanguageId} = useFormState();
+	const dispatch = useForm();
 
-		Object.keys(localizedValue).forEach((key) => {
-			if (key !== editingLanguageId && localizedValue[key] !== '') {
-				languageValues.push({
-					name: name.replace(editingLanguageId, key),
-					value: localizedValue[key],
-				});
+	const hasError = displayErrors && errorMessage && !valid;
+
+	const fieldDetails = getFieldDetails({
+		errorMessage,
+		hasError,
+		required,
+		text,
+		tip,
+	});
+
+	let fieldDetailsId = id ?? name;
+
+	fieldDetailsId = fieldDetailsId + '_fieldDetails';
+
+	const accessibleProps =
+		accessible && fieldDetails ? {'aria-labelledby': fieldDetailsId} : null;
+
+	const hiddenTranslations = useMemo(() => {
+		if (!localizedValue) {
+			return;
+		}
+
+		return Object.entries(localizedValue).map(([locale, value]) => {
+			if (locale === editingLanguageId) {
+				return null;
 			}
-		});
 
-		return languageValues;
-	}, [localizedValue, editingLanguageId, name]);
+			return (
+				<input
+					key={locale}
+					name={name.replace(editingLanguageId, locale)}
+					type="hidden"
+					value={normalizeInputValue(type, locale, value)}
+				/>
+			);
+		});
+	}, [localizedValue, editingLanguageId, name, type]);
+
+	const renderLabel =
+		(label && showLabel) || hideField || repeatable || required || tooltip;
 	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
+	const showLegend =
+		type === 'checkbox_multiple' ||
+		type === 'grid' ||
+		type === 'paragraph' ||
+		type === 'radio';
+	const showPopover = fieldName === 'inputMaskFormat';
+
+	const defaultRows = nestedFields?.map((field) => ({
+		columns: [{fields: [field], size: 12}],
+	}));
 
 	return (
-		<ClayIconSpriteContext.Provider value={spritemap}>
-			<ClayTooltipProvider>
-				<div
-					className={classNames('form-group', {
-						'has-error': displayErrors && errorMessage && !valid,
-						hide: !visible,
-					})}
-					data-field-name={name}
-					onClick={onClick}
-				>
-					{repeatable && (
-						<div className="lfr-ddm-form-field-repeatable-toolbar">
-							{repeatable && repeatedIndex > 0 && (
-								<ClayButton
-									className="ddm-form-field-repeatable-delete-button lfr-portal-tooltip p-0"
-									disabled={readOnly}
-									onClick={onRemoveButton}
-									small
-									title={Liferay.Language.get('remove')}
-									type="button"
-								>
-									<ClayIcon
-										spritemap={spritemap}
-										symbol="hr"
-									/>
-								</ClayButton>
+		<div
+			aria-labelledby={!renderLabel ? fieldDetailsId : null}
+			className={classNames('form-group', {
+				'has-error': hasError,
+				'hide': !visible,
+			})}
+			data-field-name={name}
+			onClick={onClick}
+			style={style}
+			tabIndex={!renderLabel ? 0 : undefined}
+		>
+			{repeatable && (
+				<div className="lfr-ddm-form-field-repeatable-toolbar">
+					{repeatedIndex > 0 && (
+						<ClayButton
+							aria-label={Liferay.Util.sub(
+								Liferay.Language.get('remove-duplicate-field'),
+								label ? label : type
 							)}
-
-							<ClayButton
-								className="ddm-form-field-repeatable-add-button lfr-portal-tooltip p-0"
-								disabled={readOnly}
-								onClick={onRepeatButton}
-								small
-								title={Liferay.Language.get('duplicate')}
-								type="button"
-							>
-								<ClayIcon spritemap={spritemap} symbol="plus" />
-							</ClayButton>
-						</div>
-					)}
-
-					{((label && showLabel) ||
-						required ||
-						tooltip ||
-						repeatable) && (
-						<p
-							className={classNames({
-								'ddm-empty': !showLabel && !required,
-								'ddm-label': showLabel,
-							})}
+							className="ddm-form-field-repeatable-delete-button p-0"
+							disabled={readOnly}
+							onClick={() =>
+								dispatch({
+									payload: name,
+									type: CORE_EVENT_TYPES.FIELD.REMOVED,
+								})
+							}
+							small
+							title={Liferay.Language.get('remove')}
+							type="button"
 						>
-							{label && showLabel && label}
-
-							{required && spritemap && (
-								<span className="reference-mark">
-									<ClayIcon
-										spritemap={spritemap}
-										symbol="asterisk"
-									/>
-								</span>
-							)}
-
-							{tooltip && (
-								<div className="ddm-tooltip">
-									<ClayIcon
-										data-tooltip-align="right"
-										spritemap={spritemap}
-										symbol="question-circle-full"
-										title={tooltip}
-									/>
-								</div>
-							)}
-						</p>
+							<ClayIcon symbol="hr" />
+						</ClayButton>
 					)}
 
-					{children}
-
-					{nestedFields && (
-						<div className="ddm-field-types-base__nested">
-							<PageRendererAdapter
-								context={context}
-								editable={editable}
-								rows={getDefaultRows(nestedFields)}
-								spritemap={spritemap}
-							/>
-						</div>
-					)}
-
-					{localizedValueArray.length > 0 &&
-						localizedValueArray.map((language) => (
-							<input
-								key={language.name}
-								name={language.name}
-								type="hidden"
-								value={language.value}
-							/>
-						))}
-
-					{tip && <span className="form-text">{tip}</span>}
-
-					{displayErrors && errorMessage && !valid && (
-						<span className="form-feedback-group">
-							<div className="form-feedback-item">
-								{errorMessage}
-							</div>
-						</span>
-					)}
+					<ClayButton
+						aria-label={Liferay.Util.sub(
+							Liferay.Language.get('add-duplicate-field'),
+							label ? label : type
+						)}
+						className={classNames(
+							'ddm-form-field-repeatable-add-button p-0',
+							{
+								hide: overMaximumRepetitionsLimit,
+							}
+						)}
+						disabled={readOnly}
+						onClick={() =>
+							dispatch({
+								payload: name,
+								type: CORE_EVENT_TYPES.FIELD.REPEATED,
+							})
+						}
+						small
+						title={Liferay.Language.get('duplicate')}
+						type="button"
+					>
+						<ClayIcon symbol="plus" />
+					</ClayButton>
 				</div>
-			</ClayTooltipProvider>
-		</ClayIconSpriteContext.Provider>
+			)}
+
+			{renderLabel && (
+				<>
+					{showLegend ? (
+						<fieldset>
+							<legend
+								{...accessibleProps}
+								className="lfr-ddm-legend"
+								tabIndex={0}
+							>
+								{showLabel && label}
+
+								{required && <RequiredProperty />}
+
+								{tooltip && (
+									<TooltipProperty
+										showPopover={showPopover}
+										tooltip={tooltip}
+									/>
+								)}
+							</legend>
+
+							{children}
+						</fieldset>
+					) : (
+						<>
+							<label
+								{...accessibleProps}
+								className={classNames({
+									'ddm-empty': !showLabel && !required,
+									'ddm-label': showLabel || required,
+								})}
+								htmlFor={id ?? name}
+								tabIndex={0}
+							>
+								{showLabel && label && (
+									<LabelProperty
+										hideField={hideField}
+										label={label}
+									/>
+								)}
+
+								{required && <RequiredProperty />}
+
+								{hideField && <HideFieldProperty />}
+
+								{showLabel && tooltip && (
+									<TooltipProperty
+										showPopover={showPopover}
+										tooltip={tooltip}
+									/>
+								)}
+							</label>
+
+							{children}
+
+							{!showLabel && tooltip && (
+								<TooltipProperty
+									showPopover={showPopover}
+									tooltip={tooltip}
+								/>
+							)}
+						</>
+					)}
+				</>
+			)}
+
+			{!renderLabel && children}
+
+			{hiddenTranslations}
+
+			{!hideEditedFlag && (
+				<input
+					name={`${name}_edited`}
+					type="hidden"
+					value={localizedValue[editingLanguageId] !== undefined}
+				/>
+			)}
+
+			{typeof tip === 'string' && (
+				<span aria-hidden="true" className="form-text">
+					{tip}
+				</span>
+			)}
+
+			{hasError && (
+				<span className="form-feedback-group">
+					<div aria-hidden="true" className="form-feedback-item">
+						{errorMessage}
+					</div>
+				</span>
+			)}
+
+			{accessible && fieldDetails && (
+				<span
+					className="sr-only"
+					dangerouslySetInnerHTML={{
+						__html: fieldDetails,
+					}}
+					id={fieldDetailsId}
+				/>
+			)}
+
+			{defaultRows && <Layout rows={defaultRows} />}
+		</div>
 	);
 }
-
-/**
- * This Proxy connects to the store to send the changes directly to the store. This
- * should be replaced when we have a communication with a Store/Provider in React.
- */
-const FieldBaseProxy = ({dispatch, name, store, ...otherProps}) => (
-	<FieldBase
-		{...otherProps}
-		editingLanguageId={store.editingLanguageId}
-		name={name}
-		onRemoveButton={() => dispatch('fieldRemoved', name)}
-		onRepeatButton={() => dispatch('fieldRepeated', name)}
-	/>
-);
-
-export {FieldBase, FieldBaseProxy};

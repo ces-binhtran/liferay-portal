@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.OrganizationService;
@@ -39,6 +38,8 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.test.util.ExpandoTableSearchFixture;
@@ -104,7 +105,7 @@ public class OrganizationIndexerIndexedFieldsTest {
 		_groups = groupSearchFixture.getGroups();
 
 		_indexedFieldsFixture = new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
+			resourcePermissionLocalService, uidFactory, documentBuilderFactory);
 
 		_organizationFixture = organizationFixture;
 		_organizations = organizationFixture.getOrganizations();
@@ -129,15 +130,13 @@ public class OrganizationIndexerIndexedFieldsTest {
 			Organization.class, ExpandoColumnConstants.INDEX_TYPE_KEYWORD,
 			expandoColumnObs, expandoColumnName);
 
-		Map<String, Serializable> expandoValues =
+		Organization organization = _organizationFixture.createOrganization(
+			"My Organization",
 			HashMapBuilder.<String, Serializable>put(
 				expandoColumnName, "Software Developer"
 			).put(
 				expandoColumnObs, "Software Engineer"
-			).build();
-
-		Organization organization = _organizationFixture.createOrganization(
-			"My Organization", expandoValues);
+			).build());
 
 		String searchTerm = "Developer";
 
@@ -171,6 +170,9 @@ public class OrganizationIndexerIndexedFieldsTest {
 	protected CountryService countryService;
 
 	@Inject
+	protected DocumentBuilderFactory documentBuilderFactory;
+
+	@Inject
 	protected ExpandoColumnLocalService expandoColumnLocalService;
 
 	@Inject
@@ -194,13 +196,13 @@ public class OrganizationIndexerIndexedFieldsTest {
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 
 	@Inject
-	protected SearchEngineHelper searchEngineHelper;
-
-	@Inject
 	protected Searcher searcher;
 
 	@Inject
 	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+
+	@Inject
+	protected UIDFactory uidFactory;
 
 	@Inject
 	protected UserLocalService userLocalService;
@@ -210,9 +212,7 @@ public class OrganizationIndexerIndexedFieldsTest {
 
 		Map<String, String> map = new HashMap<>();
 
-		_indexedFieldsFixture.populateUID(
-			Organization.class.getName(), organization.getOrganizationId(),
-			map);
+		_indexedFieldsFixture.populateUID(organization, map);
 
 		_populateDates(organization, map);
 		_populateRoles(organization, map);
@@ -241,8 +241,6 @@ public class OrganizationIndexerIndexedFieldsTest {
 		).put(
 			Field.USER_ID, String.valueOf(organization.getUserId())
 		).put(
-			Field.USER_NAME, StringUtil.toLowerCase(organization.getUserName())
-		).put(
 			"country", _organizationFixture.getCountryNames(organization)
 		).put(
 			"nameTreePath", organization.getName()
@@ -260,6 +258,16 @@ public class OrganizationIndexerIndexedFieldsTest {
 
 				return StringUtil.toLowerCase(region.getName());
 			}
+		).put(
+			Field.getSortableFieldName("region"),
+			() -> {
+				Region region = regionService.getRegion(
+					organization.getRegionId());
+
+				return StringUtil.toLowerCase(region.getName());
+			}
+		).put(
+			Field.getSortableFieldName("type_String"), organization.getType()
 		).build();
 	}
 

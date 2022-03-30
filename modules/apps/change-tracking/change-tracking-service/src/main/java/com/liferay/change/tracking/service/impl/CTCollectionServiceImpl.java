@@ -14,6 +14,8 @@
 
 package com.liferay.change.tracking.service.impl;
 
+import com.liferay.change.tracking.closure.CTClosure;
+import com.liferay.change.tracking.closure.CTClosureFactory;
 import com.liferay.change.tracking.constants.CTActionKeys;
 import com.liferay.change.tracking.constants.CTConstants;
 import com.liferay.change.tracking.exception.CTEnclosureException;
@@ -23,11 +25,10 @@ import com.liferay.change.tracking.model.CTAutoResolutionInfo;
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.model.CTCollectionTable;
 import com.liferay.change.tracking.model.CTEntry;
-import com.liferay.change.tracking.reference.closure.CTClosure;
-import com.liferay.change.tracking.reference.closure.CTClosureFactory;
 import com.liferay.change.tracking.service.CTProcessLocalService;
 import com.liferay.change.tracking.service.base.CTCollectionServiceBaseImpl;
 import com.liferay.change.tracking.service.persistence.CTAutoResolutionInfoPersistence;
+import com.liferay.change.tracking.service.persistence.CTEntryPersistence;
 import com.liferay.petra.sql.dsl.DSLFunctionFactoryUtil;
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.sql.dsl.expression.Predicate;
@@ -36,24 +37,34 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.dao.orm.custom.sql.CustomSQL;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
-import com.liferay.portal.kernel.dao.jdbc.CurrentConnectionUtil;
+import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
 import com.liferay.portal.kernel.dao.orm.WildcardMode;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.model.GroupTable;
+import com.liferay.portal.kernel.model.UserGroupRoleTable;
+import com.liferay.portal.kernel.search.IndexWriterHelper;
+import com.liferay.portal.kernel.search.Indexer;
+import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelper;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.search.model.uid.UIDFactory;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -117,6 +128,42 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 	}
 
 	@Override
+	public void discardCTEntries(
+			long ctCollectionId, long modelClassNameId, long modelClassPK)
+		throws PortalException {
+
+		CTCollection ctCollection = ctCollectionPersistence.findByPrimaryKey(
+			ctCollectionId);
+
+		_ctCollectionModelResourcePermission.check(
+			getPermissionChecker(), ctCollection, ActionKeys.UPDATE);
+
+		if ((ctCollection.getStatus() != WorkflowConstants.STATUS_DRAFT) &&
+			(ctCollection.getStatus() != WorkflowConstants.STATUS_PENDING)) {
+
+			throw new PortalException(
+				"Change tracking collection " + ctCollection + " is read only");
+		}
+
+		List<CTEntry> discardCTEntries =
+			ctCollectionLocalService.getDiscardCTEntries(
+				ctCollectionId, modelClassNameId, modelClassPK);
+
+		Map<Long, List<CTEntry>> ctEntryMap = new HashMap<>();
+
+		for (CTEntry ctEntry : discardCTEntries) {
+			List<CTEntry> ctEntries = ctEntryMap.computeIfAbsent(
+				ctEntry.getModelClassNameId(), key -> new ArrayList<>());
+
+			ctEntries.add(ctEntry);
+		}
+
+		for (Map.Entry<Long, List<CTEntry>> entry : ctEntryMap.entrySet()) {
+			_discardCTEntries(ctCollection, entry.getKey(), entry.getValue());
+		}
+	}
+
+	@Override
 	public void discardCTEntry(
 			long ctCollectionId, long modelClassNameId, long modelClassPK)
 		throws PortalException {
@@ -147,7 +194,7 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 			long classNameId = parentEntry.getKey();
 			long classPK = parentEntry.getValue();
 
-			int count = ctEntryPersistence.countByC_MCNI_MCPK(
+			int count = _ctEntryPersistence.countByC_MCNI_MCPK(
 				ctCollectionId, classNameId, classPK);
 
 			if (count > 0) {
@@ -168,7 +215,7 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 			List<CTEntry> ctEntries = new ArrayList<>(classPKs.size());
 
 			for (long classPK : classPKs) {
-				CTEntry ctEntry = ctEntryPersistence.fetchByC_MCNI_MCPK(
+				CTEntry ctEntry = _ctEntryPersistence.fetchByC_MCNI_MCPK(
 					ctCollectionId, classNameId, classPK);
 
 				if (ctEntry != null) {
@@ -180,119 +227,37 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 				continue;
 			}
 
-			CTService<?> ctService = _ctServiceRegistry.getCTService(
-				classNameId);
-
-			ctService.updateWithUnsafeFunction(
-				ctPersistence -> {
-					Set<String> primaryKeyNames =
-						ctPersistence.getCTColumnNames(
-							CTColumnResolutionType.PK);
-
-					if (primaryKeyNames.size() != 1) {
-						throw new IllegalArgumentException(
-							StringBundler.concat(
-								"{primaryKeyNames=", primaryKeyNames,
-								", tableName=", ctPersistence.getTableName(),
-								"}"));
-					}
-
-					Iterator<String> iterator = primaryKeyNames.iterator();
-
-					String primaryKeyName = iterator.next();
-
-					StringBundler sb = new StringBundler(
-						2 * ctEntries.size() + 7);
-
-					sb.append("delete from ");
-					sb.append(ctPersistence.getTableName());
-					sb.append(" where ctCollectionId = ");
-					sb.append(ctCollection.getCtCollectionId());
-					sb.append(" and ");
-					sb.append(primaryKeyName);
-					sb.append(" in (");
-
-					for (CTEntry ctEntry : ctEntries) {
-						sb.append(ctEntry.getModelClassPK());
-						sb.append(", ");
-					}
-
-					sb.setStringAt(")", sb.index() - 1);
-
-					Connection connection = CurrentConnectionUtil.getConnection(
-						ctPersistence.getDataSource());
-
-					try (PreparedStatement preparedStatement =
-							connection.prepareStatement(sb.toString())) {
-
-						preparedStatement.executeUpdate();
-					}
-					catch (Exception exception) {
-						throw new SystemException(exception);
-					}
-
-					for (String mappingTableName :
-							ctPersistence.getMappingTableNames()) {
-
-						sb.setStringAt(mappingTableName, 1);
-
-						try (PreparedStatement preparedStatement =
-								connection.prepareStatement(sb.toString())) {
-
-							preparedStatement.executeUpdate();
-						}
-						catch (Exception exception) {
-							throw new SystemException(exception);
-						}
-					}
-
-					return null;
-				});
-
-			List<Long> sourceModelClassPKs = new ArrayList<>(ctEntries.size());
-
-			for (CTEntry ctEntry : ctEntries) {
-				sourceModelClassPKs.add(ctEntry.getModelClassPK());
-
-				ctEntryPersistence.remove(ctEntry);
-			}
-
-			for (CTAutoResolutionInfo ctAutoResolutionInfo :
-					_ctAutoResolutionInfoPersistence.findByC_MCNI_SMCPK(
-						ctCollection.getCtCollectionId(), classNameId,
-						ArrayUtil.toLongArray(sourceModelClassPKs))) {
-
-				_ctAutoResolutionInfoPersistence.remove(ctAutoResolutionInfo);
-			}
+			_discardCTEntries(ctCollection, classNameId, ctEntries);
 		}
 	}
 
 	@Override
 	public List<CTCollection> getCTCollections(
-		long companyId, int status, int start, int end,
+		long companyId, int[] statuses, int start, int end,
 		OrderByComparator<CTCollection> orderByComparator) {
 
-		if (status == WorkflowConstants.STATUS_ANY) {
+		if (statuses == null) {
 			return ctCollectionPersistence.filterFindByCompanyId(
 				companyId, start, end, orderByComparator);
 		}
 
 		return ctCollectionPersistence.filterFindByC_S(
-			companyId, status, start, end, orderByComparator);
+			companyId, statuses, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<CTCollection> getCTCollections(
-		long companyId, int status, String keywords, int start, int end,
-		OrderByComparator<CTCollection> obc) {
+		long companyId, int[] statuses, String keywords, int start, int end,
+		OrderByComparator<CTCollection> orderByComparator) {
 
 		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			CTCollectionTable.INSTANCE
 		).from(
 			CTCollectionTable.INSTANCE
 		).where(
-			_getPredicate(companyId, status, keywords)
+			_getPredicate(companyId, statuses, keywords)
 		).orderBy(
-			CTCollectionTable.INSTANCE, obc
+			CTCollectionTable.INSTANCE, orderByComparator
 		).limit(
 			start, end
 		);
@@ -302,18 +267,16 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 
 	@Override
 	public int getCTCollectionsCount(
-		long companyId, int status, String keywords) {
+		long companyId, int[] statuses, String keywords) {
 
 		DSLQuery dslQuery = DSLQueryFactoryUtil.count(
 		).from(
 			CTCollectionTable.INSTANCE
 		).where(
-			_getPredicate(companyId, status, keywords)
+			_getPredicate(companyId, statuses, keywords)
 		);
 
-		Long count = ctCollectionPersistence.dslQuery(dslQuery);
-
-		return count.intValue();
+		return ctCollectionPersistence.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -355,54 +318,191 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 			userId, ctCollectionId, name, description);
 	}
 
+	private void _discardCTEntries(
+		CTCollection ctCollection, long classNameId, List<CTEntry> ctEntries) {
+
+		CTService<?> ctService = _ctServiceRegistry.getCTService(classNameId);
+
+		ctService.updateWithUnsafeFunction(
+			ctPersistence -> {
+				Set<String> primaryKeyNames = ctPersistence.getCTColumnNames(
+					CTColumnResolutionType.PK);
+
+				if (primaryKeyNames.size() != 1) {
+					throw new IllegalArgumentException(
+						StringBundler.concat(
+							"{primaryKeyNames=", primaryKeyNames,
+							", tableName=", ctPersistence.getTableName(), "}"));
+				}
+
+				Iterator<String> iterator = primaryKeyNames.iterator();
+
+				String primaryKeyName = iterator.next();
+
+				StringBundler sb = new StringBundler(
+					(2 * ctEntries.size()) + 7);
+
+				sb.append("delete from ");
+				sb.append(ctPersistence.getTableName());
+				sb.append(" where ctCollectionId = ");
+				sb.append(ctCollection.getCtCollectionId());
+				sb.append(" and ");
+				sb.append(primaryKeyName);
+				sb.append(" in (");
+
+				for (CTEntry ctEntry : ctEntries) {
+					sb.append(ctEntry.getModelClassPK());
+					sb.append(", ");
+				}
+
+				sb.setStringAt(")", sb.index() - 1);
+
+				Connection connection = _currentConnection.getConnection(
+					ctPersistence.getDataSource());
+
+				try (PreparedStatement preparedStatement =
+						connection.prepareStatement(sb.toString())) {
+
+					preparedStatement.executeUpdate();
+				}
+				catch (Exception exception) {
+					throw new SystemException(exception);
+				}
+
+				for (String mappingTableName :
+						ctPersistence.getMappingTableNames()) {
+
+					sb.setStringAt(mappingTableName, 1);
+
+					try (PreparedStatement preparedStatement =
+							connection.prepareStatement(sb.toString())) {
+
+						preparedStatement.executeUpdate();
+					}
+					catch (Exception exception) {
+						throw new SystemException(exception);
+					}
+				}
+
+				return null;
+			});
+
+		List<Long> modelClassPKs = new ArrayList<>(ctEntries.size());
+
+		for (CTEntry ctEntry : ctEntries) {
+			modelClassPKs.add(ctEntry.getModelClassPK());
+
+			_ctEntryPersistence.remove(ctEntry);
+		}
+
+		for (CTAutoResolutionInfo ctAutoResolutionInfo :
+				_ctAutoResolutionInfoPersistence.findByC_MCNI_SMCPK(
+					ctCollection.getCtCollectionId(), classNameId,
+					ArrayUtil.toLongArray(modelClassPKs))) {
+
+			_ctAutoResolutionInfoPersistence.remove(ctAutoResolutionInfo);
+		}
+
+		Indexer<?> indexer = _indexerRegistry.getIndexer(
+			ctService.getModelClass());
+
+		if (indexer != null) {
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					List<String> uids = new ArrayList<>(ctEntries.size());
+
+					for (CTEntry ctEntry : ctEntries) {
+						if (ctEntry.getChangeType() !=
+								CTConstants.CT_CHANGE_TYPE_DELETION) {
+
+							uids.add(
+								_uidFactory.getUID(
+									indexer.getClassName(),
+									ctEntry.getModelClassPK(),
+									ctEntry.getCtCollectionId()));
+						}
+					}
+
+					_indexWriterHelper.deleteDocuments(
+						indexer.getSearchEngineId(),
+						ctCollection.getCompanyId(), uids,
+						indexer.isCommitImmediately());
+
+					return null;
+				});
+		}
+	}
+
 	private Predicate _getPredicate(
-		long companyId, int status, String keywords) {
+		long companyId, int[] statuses, String keywords) {
 
 		Predicate predicate = CTCollectionTable.INSTANCE.companyId.eq(
-			companyId);
+			companyId
+		).and(
+			() -> {
+				if (!ArrayUtil.isEmpty(statuses)) {
+					return CTCollectionTable.INSTANCE.status.in(
+						ArrayUtil.toArray(statuses));
+				}
 
-		if (status != WorkflowConstants.STATUS_ANY) {
-			predicate = predicate.and(
-				CTCollectionTable.INSTANCE.status.eq(status));
+				return null;
+			}
+		);
+
+		String[] keywordsArray = _customSQL.keywords(
+			keywords, true, WildcardMode.SURROUND);
+
+		predicate = predicate.and(
+			Predicate.withParentheses(
+				Predicate.or(
+					_customSQL.getKeywordsPredicate(
+						DSLFunctionFactoryUtil.lower(
+							CTCollectionTable.INSTANCE.name),
+						keywordsArray),
+					_customSQL.getKeywordsPredicate(
+						DSLFunctionFactoryUtil.lower(
+							CTCollectionTable.INSTANCE.description),
+						keywordsArray))));
+
+		Predicate permissionWherePredicate =
+			_inlineSQLHelper.getPermissionWherePredicate(
+				CTCollection.class, CTCollectionTable.INSTANCE.ctCollectionId);
+
+		if (permissionWherePredicate == null) {
+			return predicate;
 		}
 
-		Predicate keywordsPredicate = null;
-
-		for (String keyword :
-				_customSQL.keywords(keywords, true, WildcardMode.SURROUND)) {
-
-			if (keyword == null) {
-				continue;
-			}
-
-			Predicate keywordPredicate = DSLFunctionFactoryUtil.lower(
-				CTCollectionTable.INSTANCE.name
-			).like(
-				keyword
-			).or(
-				DSLFunctionFactoryUtil.lower(
-					CTCollectionTable.INSTANCE.description
-				).like(
-					keyword
-				)
-			);
-
-			if (keywordsPredicate == null) {
-				keywordsPredicate = keywordPredicate;
-			}
-			else {
-				keywordsPredicate = keywordsPredicate.or(keywordPredicate);
-			}
-		}
-
-		if (keywordsPredicate != null) {
-			predicate = predicate.and(keywordsPredicate.withParentheses());
-		}
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
 
 		return predicate.and(
-			_inlineSQLHelper.getPermissionWherePredicate(
-				CTCollection.class, CTCollectionTable.INSTANCE.ctCollectionId));
+			permissionWherePredicate.or(
+				CTCollectionTable.INSTANCE.ctCollectionId.in(
+					DSLQueryFactoryUtil.selectDistinct(
+						GroupTable.INSTANCE.classPK
+					).from(
+						GroupTable.INSTANCE
+					).innerJoinON(
+						UserGroupRoleTable.INSTANCE,
+						UserGroupRoleTable.INSTANCE.groupId.eq(
+							GroupTable.INSTANCE.groupId)
+					).where(
+						GroupTable.INSTANCE.companyId.eq(
+							permissionChecker.getCompanyId()
+						).and(
+							GroupTable.INSTANCE.classNameId.eq(
+								_classNameLocalService.getClassNameId(
+									CTCollection.class.getName()))
+						).and(
+							UserGroupRoleTable.INSTANCE.userId.eq(
+								permissionChecker.getUserId())
+						)
+					))
+			).withParentheses());
 	}
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private CTAutoResolutionInfoPersistence _ctAutoResolutionInfoPersistence;
@@ -417,18 +517,33 @@ public class CTCollectionServiceImpl extends CTCollectionServiceBaseImpl {
 		_ctCollectionModelResourcePermission;
 
 	@Reference
+	private CTEntryPersistence _ctEntryPersistence;
+
+	@Reference
 	private CTProcessLocalService _ctProcessLocalService;
 
 	@Reference
 	private CTServiceRegistry _ctServiceRegistry;
 
 	@Reference
+	private CurrentConnection _currentConnection;
+
+	@Reference
 	private CustomSQL _customSQL;
+
+	@Reference
+	private IndexerRegistry _indexerRegistry;
+
+	@Reference
+	private IndexWriterHelper _indexWriterHelper;
 
 	@Reference
 	private InlineSQLHelper _inlineSQLHelper;
 
 	@Reference(target = "(resource.name=" + CTConstants.RESOURCE_NAME + ")")
 	private PortletResourcePermission _portletResourcePermission;
+
+	@Reference
+	private UIDFactory _uidFactory;
 
 }

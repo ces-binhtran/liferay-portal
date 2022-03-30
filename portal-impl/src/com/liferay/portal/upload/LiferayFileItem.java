@@ -71,6 +71,10 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 				getInputStream(), getFileName());
 		}
 		catch (IOException ioException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(ioException);
+			}
+
 			return ContentTypes.APPLICATION_OCTET_STREAM;
 		}
 	}
@@ -148,40 +152,6 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		return headers;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), with no direct replacement
-	 */
-	@Deprecated
-	public long getItemSize() {
-		long size = getSize();
-
-		String contentType = getContentType();
-
-		if (contentType != null) {
-			byte[] bytes = contentType.getBytes();
-
-			size += bytes.length;
-		}
-
-		String fieldName = getFieldName();
-
-		if (fieldName != null) {
-			byte[] bytes = fieldName.getBytes();
-
-			size += bytes.length;
-		}
-
-		String fileName = getFileName();
-
-		if (fileName != null) {
-			byte[] bytes = fileName.getBytes();
-
-			size += bytes.length;
-		}
-
-		return size;
-	}
-
 	@Override
 	public int getSizeThreshold() {
 		return _sizeThreshold;
@@ -194,13 +164,13 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		}
 
 		try {
-			DeferredFileOutputStream dfos =
+			DeferredFileOutputStream deferredFileOutputStream =
 				(DeferredFileOutputStream)getOutputStream();
 
-			return dfos.getFile();
+			return deferredFileOutputStream.getFile();
 		}
 		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+			_log.error(ioException);
 
 			return null;
 		}
@@ -228,8 +198,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 			_encodedString = getString(encode);
 		}
 		catch (UnsupportedEncodingException unsupportedEncodingException) {
-			_log.error(
-				unsupportedEncodingException, unsupportedEncodingException);
+			_log.error(unsupportedEncodingException);
 		}
 	}
 
@@ -252,7 +221,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		return tempFile;
 	}
 
-	private static String _getUniqueId() {
+	private String _getUniqueId() {
 		int current = 0;
 
 		synchronized (LiferayFileItem.class) {
@@ -262,7 +231,7 @@ public class LiferayFileItem extends DiskFileItem implements FileItem {
 		String id = String.valueOf(current);
 
 		if (current < 100000000) {
-			id = ("00000000" + id).substring(id.length());
+			return "00000000".substring(id.length()) + id;
 		}
 
 		return id;

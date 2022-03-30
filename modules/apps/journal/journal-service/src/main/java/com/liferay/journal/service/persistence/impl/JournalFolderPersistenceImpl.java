@@ -20,6 +20,7 @@ import com.liferay.journal.model.JournalFolderTable;
 import com.liferay.journal.model.impl.JournalFolderImpl;
 import com.liferay.journal.model.impl.JournalFolderModelImpl;
 import com.liferay.journal.service.persistence.JournalFolderPersistence;
+import com.liferay.journal.service.persistence.JournalFolderUtil;
 import com.liferay.journal.service.persistence.impl.constants.JournalPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
@@ -39,10 +40,13 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -51,6 +55,7 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.ArrayList;
@@ -82,7 +87,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = JournalFolderPersistence.class)
+@Component(service = {JournalFolderPersistence.class, BasePersistence.class})
 public class JournalFolderPersistenceImpl
 	extends BasePersistenceImpl<JournalFolder>
 	implements JournalFolderPersistence {
@@ -202,7 +207,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -272,10 +277,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -597,7 +598,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {uuid};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -638,10 +639,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -737,7 +734,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof JournalFolder) {
@@ -802,11 +799,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(
-						_finderPathFetchByUUID_G, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -862,7 +854,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {uuid, groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -907,10 +899,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1038,7 +1026,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -1114,10 +1102,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1467,7 +1451,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {uuid, companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -1512,10 +1496,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1632,7 +1612,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -1691,10 +1671,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2335,7 +2311,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2365,10 +2341,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2531,7 +2503,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -2590,10 +2562,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2903,7 +2871,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {companyId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -2933,10 +2901,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3057,7 +3021,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -3122,10 +3086,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3810,7 +3770,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId, parentFolderId};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -3844,10 +3804,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3995,8 +3951,7 @@ public class JournalFolderPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_N, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_N, finderArgs);
 		}
 
 		if (result instanceof JournalFolder) {
@@ -4076,10 +4031,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(_finderPathFetchByG_N, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4135,7 +4086,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId, name};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4180,10 +4131,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4298,7 +4245,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -4363,10 +4310,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4701,7 +4644,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {companyId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -4735,10 +4678,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4844,8 +4783,7 @@ public class JournalFolderPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache && productionMode) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_P_N, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_P_N, finderArgs);
 		}
 
 		if (result instanceof JournalFolder) {
@@ -4915,11 +4853,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(
-						_finderPathFetchByG_P_N, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4979,7 +4912,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId, parentFolderId, name};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5028,10 +4961,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5168,7 +5097,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -5238,10 +5167,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5957,7 +5882,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId, parentFolderId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -5995,10 +5920,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6182,7 +6103,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -6252,10 +6173,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6973,7 +6890,7 @@ public class JournalFolderPersistenceImpl
 
 			finderArgs = new Object[] {groupId, parentFolderId, status};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -7011,10 +6928,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7094,8 +7007,8 @@ public class JournalFolderPersistenceImpl
 	private static final String _FINDER_COLUMN_G_P_NOTS_STATUS_2 =
 		"journalFolder.status != ?";
 
-	private FinderPath _finderPathWithPaginationFindByF_C_P_NotS;
-	private FinderPath _finderPathWithPaginationCountByF_C_P_NotS;
+	private FinderPath _finderPathWithPaginationFindByGtF_C_P_NotS;
+	private FinderPath _finderPathWithPaginationCountByGtF_C_P_NotS;
 
 	/**
 	 * Returns all the journal folders where folderId &gt; &#63; and companyId = &#63; and parentFolderId = &#63; and status &ne; &#63;.
@@ -7107,10 +7020,10 @@ public class JournalFolderPersistenceImpl
 	 * @return the matching journal folders
 	 */
 	@Override
-	public List<JournalFolder> findByF_C_P_NotS(
+	public List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status) {
 
-		return findByF_C_P_NotS(
+		return findByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status, QueryUtil.ALL_POS,
 			QueryUtil.ALL_POS, null);
 	}
@@ -7131,11 +7044,11 @@ public class JournalFolderPersistenceImpl
 	 * @return the range of matching journal folders
 	 */
 	@Override
-	public List<JournalFolder> findByF_C_P_NotS(
+	public List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end) {
 
-		return findByF_C_P_NotS(
+		return findByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status, start, end, null);
 	}
 
@@ -7156,12 +7069,12 @@ public class JournalFolderPersistenceImpl
 	 * @return the ordered range of matching journal folders
 	 */
 	@Override
-	public List<JournalFolder> findByF_C_P_NotS(
+	public List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end,
 		OrderByComparator<JournalFolder> orderByComparator) {
 
-		return findByF_C_P_NotS(
+		return findByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status, start, end,
 			orderByComparator, true);
 	}
@@ -7184,7 +7097,7 @@ public class JournalFolderPersistenceImpl
 	 * @return the ordered range of matching journal folders
 	 */
 	@Override
-	public List<JournalFolder> findByF_C_P_NotS(
+	public List<JournalFolder> findByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status,
 		int start, int end, OrderByComparator<JournalFolder> orderByComparator,
 		boolean useFinderCache) {
@@ -7195,7 +7108,7 @@ public class JournalFolderPersistenceImpl
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
-		finderPath = _finderPathWithPaginationFindByF_C_P_NotS;
+		finderPath = _finderPathWithPaginationFindByGtF_C_P_NotS;
 		finderArgs = new Object[] {
 			folderId, companyId, parentFolderId, status, start, end,
 			orderByComparator
@@ -7205,7 +7118,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (JournalFolder journalFolder : list) {
@@ -7235,13 +7148,13 @@ public class JournalFolderPersistenceImpl
 
 			sb.append(_SQL_SELECT_JOURNALFOLDER_WHERE);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_FOLDERID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_FOLDERID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_PARENTFOLDERID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_PARENTFOLDERID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_STATUS_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_STATUS_2);
 
 			if (orderByComparator != null) {
 				appendOrderByComparator(
@@ -7280,10 +7193,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7306,12 +7215,12 @@ public class JournalFolderPersistenceImpl
 	 * @throws NoSuchFolderException if a matching journal folder could not be found
 	 */
 	@Override
-	public JournalFolder findByF_C_P_NotS_First(
+	public JournalFolder findByGtF_C_P_NotS_First(
 			long folderId, long companyId, long parentFolderId, int status,
 			OrderByComparator<JournalFolder> orderByComparator)
 		throws NoSuchFolderException {
 
-		JournalFolder journalFolder = fetchByF_C_P_NotS_First(
+		JournalFolder journalFolder = fetchByGtF_C_P_NotS_First(
 			folderId, companyId, parentFolderId, status, orderByComparator);
 
 		if (journalFolder != null) {
@@ -7350,11 +7259,11 @@ public class JournalFolderPersistenceImpl
 	 * @return the first matching journal folder, or <code>null</code> if a matching journal folder could not be found
 	 */
 	@Override
-	public JournalFolder fetchByF_C_P_NotS_First(
+	public JournalFolder fetchByGtF_C_P_NotS_First(
 		long folderId, long companyId, long parentFolderId, int status,
 		OrderByComparator<JournalFolder> orderByComparator) {
 
-		List<JournalFolder> list = findByF_C_P_NotS(
+		List<JournalFolder> list = findByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status, 0, 1,
 			orderByComparator);
 
@@ -7377,12 +7286,12 @@ public class JournalFolderPersistenceImpl
 	 * @throws NoSuchFolderException if a matching journal folder could not be found
 	 */
 	@Override
-	public JournalFolder findByF_C_P_NotS_Last(
+	public JournalFolder findByGtF_C_P_NotS_Last(
 			long folderId, long companyId, long parentFolderId, int status,
 			OrderByComparator<JournalFolder> orderByComparator)
 		throws NoSuchFolderException {
 
-		JournalFolder journalFolder = fetchByF_C_P_NotS_Last(
+		JournalFolder journalFolder = fetchByGtF_C_P_NotS_Last(
 			folderId, companyId, parentFolderId, status, orderByComparator);
 
 		if (journalFolder != null) {
@@ -7421,18 +7330,18 @@ public class JournalFolderPersistenceImpl
 	 * @return the last matching journal folder, or <code>null</code> if a matching journal folder could not be found
 	 */
 	@Override
-	public JournalFolder fetchByF_C_P_NotS_Last(
+	public JournalFolder fetchByGtF_C_P_NotS_Last(
 		long folderId, long companyId, long parentFolderId, int status,
 		OrderByComparator<JournalFolder> orderByComparator) {
 
-		int count = countByF_C_P_NotS(
+		int count = countByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status);
 
 		if (count == 0) {
 			return null;
 		}
 
-		List<JournalFolder> list = findByF_C_P_NotS(
+		List<JournalFolder> list = findByGtF_C_P_NotS(
 			folderId, companyId, parentFolderId, status, count - 1, count,
 			orderByComparator);
 
@@ -7452,11 +7361,11 @@ public class JournalFolderPersistenceImpl
 	 * @param status the status
 	 */
 	@Override
-	public void removeByF_C_P_NotS(
+	public void removeByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status) {
 
 		for (JournalFolder journalFolder :
-				findByF_C_P_NotS(
+				findByGtF_C_P_NotS(
 					folderId, companyId, parentFolderId, status,
 					QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 
@@ -7474,7 +7383,7 @@ public class JournalFolderPersistenceImpl
 	 * @return the number of matching journal folders
 	 */
 	@Override
-	public int countByF_C_P_NotS(
+	public int countByGtF_C_P_NotS(
 		long folderId, long companyId, long parentFolderId, int status) {
 
 		boolean productionMode = ctPersistenceHelper.isProductionMode(
@@ -7486,13 +7395,13 @@ public class JournalFolderPersistenceImpl
 		Long count = null;
 
 		if (productionMode) {
-			finderPath = _finderPathWithPaginationCountByF_C_P_NotS;
+			finderPath = _finderPathWithPaginationCountByGtF_C_P_NotS;
 
 			finderArgs = new Object[] {
 				folderId, companyId, parentFolderId, status
 			};
 
-			count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
 		}
 
 		if (count == null) {
@@ -7500,13 +7409,13 @@ public class JournalFolderPersistenceImpl
 
 			sb.append(_SQL_COUNT_JOURNALFOLDER_WHERE);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_FOLDERID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_FOLDERID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_COMPANYID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_COMPANYID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_PARENTFOLDERID_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_PARENTFOLDERID_2);
 
-			sb.append(_FINDER_COLUMN_F_C_P_NOTS_STATUS_2);
+			sb.append(_FINDER_COLUMN_GTF_C_P_NOTS_STATUS_2);
 
 			String sql = sb.toString();
 
@@ -7534,10 +7443,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7548,16 +7453,16 @@ public class JournalFolderPersistenceImpl
 		return count.intValue();
 	}
 
-	private static final String _FINDER_COLUMN_F_C_P_NOTS_FOLDERID_2 =
+	private static final String _FINDER_COLUMN_GTF_C_P_NOTS_FOLDERID_2 =
 		"journalFolder.folderId > ? AND ";
 
-	private static final String _FINDER_COLUMN_F_C_P_NOTS_COMPANYID_2 =
+	private static final String _FINDER_COLUMN_GTF_C_P_NOTS_COMPANYID_2 =
 		"journalFolder.companyId = ? AND ";
 
-	private static final String _FINDER_COLUMN_F_C_P_NOTS_PARENTFOLDERID_2 =
+	private static final String _FINDER_COLUMN_GTF_C_P_NOTS_PARENTFOLDERID_2 =
 		"journalFolder.parentFolderId = ? AND ";
 
-	private static final String _FINDER_COLUMN_F_C_P_NOTS_STATUS_2 =
+	private static final String _FINDER_COLUMN_GTF_C_P_NOTS_STATUS_2 =
 		"journalFolder.status != ?";
 
 	public JournalFolderPersistenceImpl() {
@@ -7583,14 +7488,12 @@ public class JournalFolderPersistenceImpl
 	@Override
 	public void cacheResult(JournalFolder journalFolder) {
 		if (journalFolder.getCtCollectionId() != 0) {
-			journalFolder.resetOriginalValues();
-
 			return;
 		}
 
 		entityCache.putResult(
-			entityCacheEnabled, JournalFolderImpl.class,
-			journalFolder.getPrimaryKey(), journalFolder);
+			JournalFolderImpl.class, journalFolder.getPrimaryKey(),
+			journalFolder);
 
 		finderCache.putResult(
 			_finderPathFetchByUUID_G,
@@ -7609,9 +7512,9 @@ public class JournalFolderPersistenceImpl
 				journalFolder.getName()
 			},
 			journalFolder);
-
-		journalFolder.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the journal folders in the entity cache if it is enabled.
@@ -7620,21 +7523,23 @@ public class JournalFolderPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<JournalFolder> journalFolders) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (journalFolders.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (JournalFolder journalFolder : journalFolders) {
 			if (journalFolder.getCtCollectionId() != 0) {
-				journalFolder.resetOriginalValues();
-
 				continue;
 			}
 
 			if (entityCache.getResult(
-					entityCacheEnabled, JournalFolderImpl.class,
-					journalFolder.getPrimaryKey()) == null) {
+					JournalFolderImpl.class, journalFolder.getPrimaryKey()) ==
+						null) {
 
 				cacheResult(journalFolder);
-			}
-			else {
-				journalFolder.resetOriginalValues();
 			}
 		}
 	}
@@ -7650,9 +7555,7 @@ public class JournalFolderPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(JournalFolderImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(JournalFolderImpl.class);
 	}
 
 	/**
@@ -7664,40 +7567,22 @@ public class JournalFolderPersistenceImpl
 	 */
 	@Override
 	public void clearCache(JournalFolder journalFolder) {
-		entityCache.removeResult(
-			entityCacheEnabled, JournalFolderImpl.class,
-			journalFolder.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((JournalFolderModelImpl)journalFolder, true);
+		entityCache.removeResult(JournalFolderImpl.class, journalFolder);
 	}
 
 	@Override
 	public void clearCache(List<JournalFolder> journalFolders) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (JournalFolder journalFolder : journalFolders) {
-			entityCache.removeResult(
-				entityCacheEnabled, JournalFolderImpl.class,
-				journalFolder.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(JournalFolderModelImpl)journalFolder, true);
+			entityCache.removeResult(JournalFolderImpl.class, journalFolder);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(JournalFolderImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, JournalFolderImpl.class, primaryKey);
+			entityCache.removeResult(JournalFolderImpl.class, primaryKey);
 		}
 	}
 
@@ -7709,20 +7594,18 @@ public class JournalFolderPersistenceImpl
 			journalFolderModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, journalFolderModelImpl, false);
+			_finderPathFetchByUUID_G, args, journalFolderModelImpl);
 
 		args = new Object[] {
 			journalFolderModelImpl.getGroupId(),
 			journalFolderModelImpl.getName()
 		};
 
+		finderCache.putResult(_finderPathCountByG_N, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_N, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_N, args, journalFolderModelImpl, false);
+			_finderPathFetchByG_N, args, journalFolderModelImpl);
 
 		args = new Object[] {
 			journalFolderModelImpl.getGroupId(),
@@ -7730,82 +7613,9 @@ public class JournalFolderPersistenceImpl
 			journalFolderModelImpl.getName()
 		};
 
+		finderCache.putResult(_finderPathCountByG_P_N, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_P_N, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_P_N, args, journalFolderModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		JournalFolderModelImpl journalFolderModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getUuid(),
-				journalFolderModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if ((journalFolderModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getOriginalUuid(),
-				journalFolderModelImpl.getOriginalGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getGroupId(),
-				journalFolderModelImpl.getName()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_N, args);
-			finderCache.removeResult(_finderPathFetchByG_N, args);
-		}
-
-		if ((journalFolderModelImpl.getColumnBitmask() &
-			 _finderPathFetchByG_N.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getOriginalGroupId(),
-				journalFolderModelImpl.getOriginalName()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_N, args);
-			finderCache.removeResult(_finderPathFetchByG_N, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getGroupId(),
-				journalFolderModelImpl.getParentFolderId(),
-				journalFolderModelImpl.getName()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_P_N, args);
-			finderCache.removeResult(_finderPathFetchByG_P_N, args);
-		}
-
-		if ((journalFolderModelImpl.getColumnBitmask() &
-			 _finderPathFetchByG_P_N.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				journalFolderModelImpl.getOriginalGroupId(),
-				journalFolderModelImpl.getOriginalParentFolderId(),
-				journalFolderModelImpl.getOriginalName()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_P_N, args);
-			finderCache.removeResult(_finderPathFetchByG_P_N, args);
-		}
+			_finderPathFetchByG_P_N, args, journalFolderModelImpl);
 	}
 
 	/**
@@ -7885,10 +7695,6 @@ public class JournalFolderPersistenceImpl
 
 	@Override
 	protected JournalFolder removeImpl(JournalFolder journalFolder) {
-		if (!ctPersistenceHelper.isRemove(journalFolder)) {
-			return journalFolder;
-		}
-
 		Session session = null;
 
 		try {
@@ -7899,7 +7705,9 @@ public class JournalFolderPersistenceImpl
 					JournalFolderImpl.class, journalFolder.getPrimaryKeyObj());
 			}
 
-			if (journalFolder != null) {
+			if ((journalFolder != null) &&
+				ctPersistenceHelper.isRemove(journalFolder)) {
+
 				session.delete(journalFolder);
 			}
 		}
@@ -7950,24 +7758,24 @@ public class JournalFolderPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (journalFolder.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				journalFolder.setCreateDate(now);
+				journalFolder.setCreateDate(date);
 			}
 			else {
-				journalFolder.setCreateDate(serviceContext.getCreateDate(now));
+				journalFolder.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!journalFolderModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				journalFolder.setModifiedDate(now);
+				journalFolder.setModifiedDate(date);
 			}
 			else {
 				journalFolder.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -7978,18 +7786,12 @@ public class JournalFolderPersistenceImpl
 
 			if (ctPersistenceHelper.isInsert(journalFolder)) {
 				if (!isNew) {
-					JournalFolder oldJournalFolder = (JournalFolder)session.get(
+					session.evict(
 						JournalFolderImpl.class,
 						journalFolder.getPrimaryKeyObj());
-
-					if (oldJournalFolder != null) {
-						session.evict(oldJournalFolder);
-					}
 				}
 
 				session.save(journalFolder);
-
-				journalFolder.setNew(false);
 			}
 			else {
 				journalFolder = (JournalFolder)session.merge(journalFolder);
@@ -8003,203 +7805,23 @@ public class JournalFolderPersistenceImpl
 		}
 
 		if (journalFolder.getCtCollectionId() != 0) {
+			if (isNew) {
+				journalFolder.setNew(false);
+			}
+
 			journalFolder.resetOriginalValues();
 
 			return journalFolder;
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {journalFolderModelImpl.getUuid()};
-
-			finderCache.removeResult(_finderPathCountByUuid, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				journalFolderModelImpl.getUuid(),
-				journalFolderModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {journalFolderModelImpl.getGroupId()};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {journalFolderModelImpl.getCompanyId()};
-
-			finderCache.removeResult(_finderPathCountByCompanyId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {
-				journalFolderModelImpl.getGroupId(),
-				journalFolderModelImpl.getParentFolderId()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_P, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_P, args);
-
-			args = new Object[] {
-				journalFolderModelImpl.getGroupId(),
-				journalFolderModelImpl.getParentFolderId(),
-				journalFolderModelImpl.getStatus()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_P_S, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_P_S, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {journalFolderModelImpl.getUuid()};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-			}
-
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalUuid(),
-					journalFolderModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					journalFolderModelImpl.getUuid(),
-					journalFolderModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {journalFolderModelImpl.getGroupId()};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {journalFolderModelImpl.getCompanyId()};
-
-				finderCache.removeResult(_finderPathCountByCompanyId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_P.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalGroupId(),
-					journalFolderModelImpl.getOriginalParentFolderId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_P, args);
-
-				args = new Object[] {
-					journalFolderModelImpl.getGroupId(),
-					journalFolderModelImpl.getParentFolderId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_P, args);
-			}
-
-			if ((journalFolderModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_P_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					journalFolderModelImpl.getOriginalGroupId(),
-					journalFolderModelImpl.getOriginalParentFolderId(),
-					journalFolderModelImpl.getOriginalStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_P_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_P_S, args);
-
-				args = new Object[] {
-					journalFolderModelImpl.getGroupId(),
-					journalFolderModelImpl.getParentFolderId(),
-					journalFolderModelImpl.getStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_P_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_P_S, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, JournalFolderImpl.class,
-			journalFolder.getPrimaryKey(), journalFolder, false);
+			JournalFolderImpl.class, journalFolderModelImpl, false, true);
 
-		clearUniqueFindersCache(journalFolderModelImpl, false);
 		cacheUniqueFindersCache(journalFolderModelImpl);
+
+		if (isNew) {
+			journalFolder.setNew(false);
+		}
 
 		journalFolder.resetOriginalValues();
 
@@ -8321,7 +7943,27 @@ public class JournalFolderPersistenceImpl
 			return map;
 		}
 
-		StringBundler sb = new StringBundler(primaryKeys.size() * 2 + 1);
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler((primaryKeys.size() * 2) + 1);
 
 		sb.append(getSelectSQL());
 		sb.append(" WHERE ");
@@ -8452,7 +8094,7 @@ public class JournalFolderPersistenceImpl
 
 		if (useFinderCache && productionMode) {
 			list = (List<JournalFolder>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -8493,10 +8135,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache && productionMode) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -8532,7 +8170,7 @@ public class JournalFolderPersistenceImpl
 
 		if (productionMode) {
 			count = (Long)finderCache.getResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
 		}
 
 		if (count == null) {
@@ -8551,11 +8189,6 @@ public class JournalFolderPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (productionMode) {
-					finderCache.removeResult(
-						_finderPathCountAll, FINDER_ARGS_EMPTY);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -8590,7 +8223,8 @@ public class JournalFolderPersistenceImpl
 	public Set<String> getCTColumnNames(
 		CTColumnResolutionType ctColumnResolutionType) {
 
-		return _ctColumnNamesMap.get(ctColumnResolutionType);
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
 	}
 
 	@Override
@@ -8624,7 +8258,6 @@ public class JournalFolderPersistenceImpl
 	static {
 		Set<String> ctControlColumnNames = new HashSet<String>();
 		Set<String> ctIgnoreColumnNames = new HashSet<String>();
-		Set<String> ctMergeColumnNames = new HashSet<String>();
 		Set<String> ctStrictColumnNames = new HashSet<String>();
 
 		ctControlColumnNames.add("mvccVersion");
@@ -8651,7 +8284,6 @@ public class JournalFolderPersistenceImpl
 			CTColumnResolutionType.CONTROL, ctControlColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
-		_ctColumnNamesMap.put(CTColumnResolutionType.MERGE, ctMergeColumnNames);
 		_ctColumnNamesMap.put(
 			CTColumnResolutionType.PK, Collections.singleton("folderId"));
 		_ctColumnNamesMap.put(
@@ -8668,259 +8300,249 @@ public class JournalFolderPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		JournalFolderModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		JournalFolderModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			JournalFolderModelImpl.UUID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
 		_finderPathCountByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
 		_finderPathFetchByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			JournalFolderModelImpl.UUID_COLUMN_BITMASK |
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
 		_finderPathCountByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			JournalFolderModelImpl.UUID_COLUMN_BITMASK |
-			JournalFolderModelImpl.COMPANYID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathCountByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
 		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
 		_finderPathCountByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
 		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			JournalFolderModelImpl.COMPANYID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
 		_finderPathCountByCompanyId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
 		_finderPathWithPaginationFindByG_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId"}, true);
 
 		_finderPathWithoutPaginationFindByG_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {"groupId", "parentFolderId"}, true);
 
 		_finderPathCountByG_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "parentFolderId"}, false);
 
 		_finderPathFetchByG_N = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_N",
 			new String[] {Long.class.getName(), String.class.getName()},
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {"groupId", "name"}, true);
 
 		_finderPathCountByG_N = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_N",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "name"}, false);
 
 		_finderPathWithPaginationFindByC_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_NotS",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "status"}, true);
 
 		_finderPathWithPaginationCountByC_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByC_NotS",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"companyId", "status"}, false);
 
 		_finderPathFetchByG_P_N = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByG_P_N",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName()
 			},
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {"groupId", "parentFolderId", "name"}, true);
 
 		_finderPathCountByG_P_N = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_N",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				String.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId", "name"}, false);
 
 		_finderPathWithPaginationFindByG_P_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByG_P_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			JournalFolderModelImpl.GROUPID_COLUMN_BITMASK |
-			JournalFolderModelImpl.PARENTFOLDERID_COLUMN_BITMASK |
-			JournalFolderModelImpl.STATUS_COLUMN_BITMASK |
-			JournalFolderModelImpl.NAME_COLUMN_BITMASK);
+			new String[] {"groupId", "parentFolderId", "status"}, true);
 
 		_finderPathCountByG_P_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_P_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId", "status"}, false);
 
 		_finderPathWithPaginationFindByG_P_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_P_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId", "status"}, true);
 
 		_finderPathWithPaginationCountByG_P_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_P_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "parentFolderId", "status"}, false);
 
-		_finderPathWithPaginationFindByF_C_P_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, JournalFolderImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByF_C_P_NotS",
+		_finderPathWithPaginationFindByGtF_C_P_NotS = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGtF_C_P_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"folderId", "companyId", "parentFolderId", "status"},
+			true);
 
-		_finderPathWithPaginationCountByF_C_P_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByF_C_P_NotS",
+		_finderPathWithPaginationCountByGtF_C_P_NotS = new FinderPath(
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByGtF_C_P_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName()
-			});
+			},
+			new String[] {"folderId", "companyId", "parentFolderId", "status"},
+			false);
+
+		_setJournalFolderUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setJournalFolderUtilPersistence(null);
+
 		entityCache.removeCache(JournalFolderImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setJournalFolderUtilPersistence(
+		JournalFolderPersistence journalFolderPersistence) {
+
+		try {
+			Field field = JournalFolderUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, journalFolderPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -8929,12 +8551,6 @@ public class JournalFolderPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.journal.model.JournalFolder"),
-			true);
 	}
 
 	@Override
@@ -8954,8 +8570,6 @@ public class JournalFolderPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected CTPersistenceHelper ctPersistenceHelper;
@@ -9015,13 +8629,13 @@ public class JournalFolderPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
 
-	static {
-		try {
-			Class.forName(JournalPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private JournalFolderModelArgumentsResolver
+		_journalFolderModelArgumentsResolver;
 
 }

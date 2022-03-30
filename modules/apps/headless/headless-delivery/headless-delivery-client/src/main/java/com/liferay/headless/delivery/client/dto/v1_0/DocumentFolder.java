@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.DocumentFolderSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DocumentFolder implements Cloneable {
+public class DocumentFolder implements Cloneable, Serializable {
 
 	public static DocumentFolder toDTO(String json) {
 		return DocumentFolderSerDes.toDTO(json);
@@ -55,6 +57,27 @@ public class DocumentFolder implements Cloneable {
 	}
 
 	protected Map<String, Map<String, String>> actions;
+
+	public String getAssetLibraryKey() {
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		try {
+			assetLibraryKey = assetLibraryKeyUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String assetLibraryKey;
 
 	public Creator getCreator() {
 		return creator;
@@ -372,7 +395,9 @@ public class DocumentFolder implements Cloneable {
 
 		public static ViewableBy create(String value) {
 			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
+				if (Objects.equals(viewableBy.getValue(), value) ||
+					Objects.equals(viewableBy.name(), value)) {
+
 					return viewableBy;
 				}
 			}

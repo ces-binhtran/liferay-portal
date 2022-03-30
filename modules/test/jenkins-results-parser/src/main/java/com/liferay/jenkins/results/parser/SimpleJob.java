@@ -14,8 +14,10 @@
 
 package com.liferay.jenkins.results.parser;
 
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Set;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -23,17 +25,21 @@ import java.util.Set;
 public class SimpleJob extends BaseJob {
 
 	@Override
-	public Set<String> getBatchNames() {
-		return new HashSet<>();
+	public Set<String> getDistTypes() {
+		return Collections.emptySet();
+	}
+
+	protected SimpleJob(BuildProfile buildProfile, String jobName) {
+		super(buildProfile, jobName);
+	}
+
+	protected SimpleJob(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
 	@Override
-	public Set<String> getDistTypes() {
-		return new HashSet<>();
-	}
-
-	protected SimpleJob(String jobName) {
-		super(jobName);
+	protected Set<String> getRawBatchNames() {
+		return Collections.emptySet();
 	}
 
 }

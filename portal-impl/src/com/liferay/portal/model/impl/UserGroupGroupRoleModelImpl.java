@@ -23,25 +23,26 @@ import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.UserGroupGroupRole;
 import com.liferay.portal.kernel.model.UserGroupGroupRoleModel;
-import com.liferay.portal.kernel.model.UserGroupGroupRoleSoap;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -105,75 +106,48 @@ public class UserGroupGroupRoleModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.UserGroupGroupRole"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.UserGroupGroupRole"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.UserGroupGroupRole"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ROLEID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long USERGROUPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long USERGROUPGROUPROLEID_COLUMN_BITMASK = 8L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static UserGroupGroupRole toModel(UserGroupGroupRoleSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		UserGroupGroupRole model = new UserGroupGroupRoleImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setCtCollectionId(soapModel.getCtCollectionId());
-		model.setUserGroupGroupRoleId(soapModel.getUserGroupGroupRoleId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserGroupId(soapModel.getUserGroupId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setRoleId(soapModel.getRoleId());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<UserGroupGroupRole> toModels(
-		UserGroupGroupRoleSoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<UserGroupGroupRole> models = new ArrayList<UserGroupGroupRole>(
-			soapModels.length);
-
-		for (UserGroupGroupRoleSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -230,9 +204,6 @@ public class UserGroupGroupRoleModelImpl
 				attributeName,
 				attributeGetterFunction.apply((UserGroupGroupRole)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -365,6 +336,10 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -376,6 +351,10 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_ctCollectionId = ctCollectionId;
 	}
 
@@ -387,6 +366,10 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setUserGroupGroupRoleId(long userGroupGroupRoleId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userGroupGroupRoleId = userGroupGroupRoleId;
 	}
 
@@ -398,6 +381,10 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -409,19 +396,21 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setUserGroupId(long userGroupId) {
-		_columnBitmask |= USERGROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalUserGroupId) {
-			_setOriginalUserGroupId = true;
-
-			_originalUserGroupId = _userGroupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_userGroupId = userGroupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalUserGroupId() {
-		return _originalUserGroupId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("userGroupId"));
 	}
 
 	@JSON
@@ -432,19 +421,20 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -455,22 +445,43 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void setRoleId(long roleId) {
-		_columnBitmask |= ROLEID_COLUMN_BITMASK;
-
-		if (!_setOriginalRoleId) {
-			_setOriginalRoleId = true;
-
-			_originalRoleId = _roleId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_roleId = roleId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalRoleId() {
-		return _originalRoleId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("roleId"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -523,6 +534,29 @@ public class UserGroupGroupRoleModelImpl
 	}
 
 	@Override
+	public UserGroupGroupRole cloneWithOriginalValues() {
+		UserGroupGroupRoleImpl userGroupGroupRoleImpl =
+			new UserGroupGroupRoleImpl();
+
+		userGroupGroupRoleImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		userGroupGroupRoleImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		userGroupGroupRoleImpl.setUserGroupGroupRoleId(
+			this.<Long>getColumnOriginalValue("userGroupGroupRoleId"));
+		userGroupGroupRoleImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		userGroupGroupRoleImpl.setUserGroupId(
+			this.<Long>getColumnOriginalValue("userGroupId"));
+		userGroupGroupRoleImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		userGroupGroupRoleImpl.setRoleId(
+			this.<Long>getColumnOriginalValue("roleId"));
+
+		return userGroupGroupRoleImpl;
+	}
+
+	@Override
 	public int compareTo(UserGroupGroupRole userGroupGroupRole) {
 		long primaryKey = userGroupGroupRole.getPrimaryKey();
 
@@ -538,16 +572,16 @@ public class UserGroupGroupRoleModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof UserGroupGroupRole)) {
+		if (!(object instanceof UserGroupGroupRole)) {
 			return false;
 		}
 
-		UserGroupGroupRole userGroupGroupRole = (UserGroupGroupRole)obj;
+		UserGroupGroupRole userGroupGroupRole = (UserGroupGroupRole)object;
 
 		long primaryKey = userGroupGroupRole.getPrimaryKey();
 
@@ -564,11 +598,19 @@ public class UserGroupGroupRoleModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -576,24 +618,9 @@ public class UserGroupGroupRoleModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		UserGroupGroupRoleModelImpl userGroupGroupRoleModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		userGroupGroupRoleModelImpl._originalUserGroupId =
-			userGroupGroupRoleModelImpl._userGroupId;
-
-		userGroupGroupRoleModelImpl._setOriginalUserGroupId = false;
-
-		userGroupGroupRoleModelImpl._originalGroupId =
-			userGroupGroupRoleModelImpl._groupId;
-
-		userGroupGroupRoleModelImpl._setOriginalGroupId = false;
-
-		userGroupGroupRoleModelImpl._originalRoleId =
-			userGroupGroupRoleModelImpl._roleId;
-
-		userGroupGroupRoleModelImpl._setOriginalRoleId = false;
-
-		userGroupGroupRoleModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -625,7 +652,7 @@ public class UserGroupGroupRoleModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -636,9 +663,27 @@ public class UserGroupGroupRoleModelImpl
 			Function<UserGroupGroupRole, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((UserGroupGroupRole)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(UserGroupGroupRole)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -657,7 +702,7 @@ public class UserGroupGroupRoleModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -694,14 +739,74 @@ public class UserGroupGroupRoleModelImpl
 	private long _userGroupGroupRoleId;
 	private long _companyId;
 	private long _userGroupId;
-	private long _originalUserGroupId;
-	private boolean _setOriginalUserGroupId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _roleId;
-	private long _originalRoleId;
-	private boolean _setOriginalRoleId;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<UserGroupGroupRole, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((UserGroupGroupRole)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put(
+			"userGroupGroupRoleId", _userGroupGroupRoleId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userGroupId", _userGroupId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("roleId", _roleId);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("userGroupGroupRoleId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userGroupId", 16L);
+
+		columnBitmasks.put("groupId", 32L);
+
+		columnBitmasks.put("roleId", 64L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private UserGroupGroupRole _escapedModel;
 

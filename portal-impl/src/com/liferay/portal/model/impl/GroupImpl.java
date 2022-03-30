@@ -15,8 +15,9 @@
 package com.liferay.portal.model.impl;
 
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
-import com.liferay.exportimport.kernel.staging.StagingConstants;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.exportimport.kernel.staging.constants.StagingConstants;
+import com.liferay.layout.admin.kernel.visibility.LayoutVisibilityManager;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -24,7 +25,6 @@ import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Account;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.GroupConstants;
@@ -61,6 +61,7 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -112,12 +113,9 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public List<Group> getAncestors() {
-		Group group = null;
+		Group group = getLiveGroup();
 
-		if (isStagingGroup()) {
-			group = getLiveGroup();
-		}
-		else {
+		if (group == null) {
 			group = this;
 		}
 
@@ -148,10 +146,11 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public List<Group> getChildrenWithLayouts(
-		boolean site, int start, int end, OrderByComparator<Group> obc) {
+		boolean site, int start, int end,
+		OrderByComparator<Group> orderByComparator) {
 
 		return GroupLocalServiceUtil.getLayoutsGroups(
-			getCompanyId(), getGroupId(), site, start, end, obc);
+			getCompanyId(), getGroupId(), site, start, end, orderByComparator);
 	}
 
 	@Override
@@ -205,9 +204,7 @@ public class GroupImpl extends GroupBaseImpl {
 			Company company = CompanyLocalServiceUtil.getCompany(
 				getCompanyId());
 
-			Account account = company.getAccount();
-
-			name = account.getName();
+			name = company.getName();
 		}
 		else if (isLayout()) {
 			Layout layout = LayoutLocalServiceUtil.getLayout(getClassPK());
@@ -276,6 +273,14 @@ public class GroupImpl extends GroupBaseImpl {
 	public String getDisplayURL(
 		ThemeDisplay themeDisplay, boolean privateLayout) {
 
+		return getDisplayURL(themeDisplay, privateLayout, false);
+	}
+
+	@Override
+	public String getDisplayURL(
+		ThemeDisplay themeDisplay, boolean privateLayout,
+		boolean controlPanel) {
+
 		try {
 			LayoutSet layoutSet = LayoutSetLocalServiceUtil.getLayoutSet(
 				getGroupId(), privateLayout);
@@ -286,7 +291,7 @@ public class GroupImpl extends GroupBaseImpl {
 					 0))) {
 
 				String groupFriendlyURL = PortalUtil.getGroupFriendlyURL(
-					layoutSet, themeDisplay);
+					layoutSet, themeDisplay, false, controlPanel);
 
 				if (isUser()) {
 					return PortalUtil.addPreservedParameters(
@@ -298,7 +303,7 @@ public class GroupImpl extends GroupBaseImpl {
 			}
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return StringPool.BLANK;
@@ -320,7 +325,7 @@ public class GroupImpl extends GroupBaseImpl {
 		else if (isUser()) {
 			iconCss = "user";
 		}
-		else if (getType() == GroupConstants.TYPE_DEPOT) {
+		else if (isDepot()) {
 			iconCss = "books";
 		}
 
@@ -352,25 +357,24 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public String getLayoutRootNodeName(boolean privateLayout, Locale locale) {
-		String pagesName = null;
+		String pagesName = "pages";
 
-		if (isLayoutPrototype() || isLayoutSetPrototype()) {
-			pagesName = "pages";
-		}
-		else if (privateLayout) {
-			if (isUser() || isUserGroup()) {
-				pagesName = "my-dashboard";
+		if (!isLayoutPrototype() && !isLayoutSetPrototype()) {
+			if (privateLayout) {
+				if (isUser() || isUserGroup()) {
+					pagesName = "my-dashboard";
+				}
+				else if (isPrivateLayoutsEnabled()) {
+					pagesName = "private-pages";
+				}
 			}
 			else {
-				pagesName = "private-pages";
-			}
-		}
-		else {
-			if (isUser() || isUserGroup()) {
-				pagesName = "my-profile";
-			}
-			else {
-				pagesName = "public-pages";
+				if (isUser() || isUserGroup()) {
+					pagesName = "my-profile";
+				}
+				else if (isPrivateLayoutsEnabled()) {
+					pagesName = "public-pages";
+				}
 			}
 		}
 
@@ -435,15 +439,28 @@ public class GroupImpl extends GroupBaseImpl {
 			}
 		}
 
-		if ((logoId == 0) && !useDefault) {
+		if ((logoId == 0) && !useDefault &&
+			(!isCompany() || isCompanyStagingGroup()) && !isControlPanel() &&
+			!isGuest()) {
+
 			return null;
+		}
+
+		if (logoId > 0) {
+			return StringBundler.concat(
+				themeDisplay.getPathImage(), "/layout_set_logo?img_id=", logoId,
+				"&t=", WebServerServletTokenUtil.getToken(logoId));
 		}
 
 		StringBundler sb = new StringBundler(5);
 
 		sb.append(themeDisplay.getPathImage());
-		sb.append("/layout_set_logo?img_id=");
-		sb.append(logoId);
+		sb.append("/company_logo?img_id=");
+
+		Company company = themeDisplay.getCompany();
+
+		sb.append(company.getLogoId());
+
 		sb.append("&t=");
 		sb.append(WebServerServletTokenUtil.getToken(logoId));
 
@@ -493,6 +510,9 @@ public class GroupImpl extends GroupBaseImpl {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return getTypeSettingsProperties();
@@ -522,7 +542,7 @@ public class GroupImpl extends GroupBaseImpl {
 				getGroupId(), true);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return layoutSet;
@@ -534,7 +554,7 @@ public class GroupImpl extends GroupBaseImpl {
 			return LayoutLocalServiceUtil.getLayoutsCount(this, true);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return 0;
@@ -549,7 +569,7 @@ public class GroupImpl extends GroupBaseImpl {
 				getGroupId(), false);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return layoutSet;
@@ -561,7 +581,7 @@ public class GroupImpl extends GroupBaseImpl {
 			return LayoutLocalServiceUtil.getLayoutsCount(this, false);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return 0;
@@ -581,7 +601,7 @@ public class GroupImpl extends GroupBaseImpl {
 		throws PortalException {
 
 		if (getGroupId() == themeDisplay.getScopeGroupId()) {
-			if (getType() == GroupConstants.TYPE_DEPOT) {
+			if (isDepot()) {
 				return StringUtil.appendParentheticalSuffix(
 					themeDisplay.translate("current-asset-library"),
 					HtmlUtil.escape(
@@ -606,7 +626,7 @@ public class GroupImpl extends GroupBaseImpl {
 
 	@Override
 	public String getScopeLabel(ThemeDisplay themeDisplay) {
-		if (getType() == GroupConstants.TYPE_DEPOT) {
+		if (isDepot()) {
 			if (getGroupId() == themeDisplay.getScopeGroupId()) {
 				return "current-asset-library";
 			}
@@ -637,6 +657,23 @@ public class GroupImpl extends GroupBaseImpl {
 		}
 
 		return "site";
+	}
+
+	@Override
+	public String getScopeSimpleName(ThemeDisplay themeDisplay) {
+		if (isDepot()) {
+			return themeDisplay.translate("asset-library-group");
+		}
+
+		if (getGroupId() == themeDisplay.getCompanyGroupId()) {
+			return themeDisplay.translate("global");
+		}
+
+		if (isLayout()) {
+			return themeDisplay.translate("page");
+		}
+
+		return themeDisplay.translate("site");
 	}
 
 	@Override
@@ -705,7 +742,7 @@ public class GroupImpl extends GroupBaseImpl {
 				_typeSettingsUnicodeProperties.load(super.getTypeSettings());
 			}
 			catch (IOException ioException) {
-				_log.error(ioException, ioException);
+				_log.error(ioException);
 			}
 		}
 
@@ -727,18 +764,19 @@ public class GroupImpl extends GroupBaseImpl {
 				name, getDescriptiveName(locale));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return name;
 		}
 	}
 
 	@Override
 	public boolean hasAncestor(long groupId) {
-		Group group = null;
+		Group group = getLiveGroup();
 
-		if (isStagingGroup()) {
-			group = getLiveGroup();
-		}
-		else {
+		if (group == null) {
 			group = this;
 		}
 
@@ -847,6 +885,15 @@ public class GroupImpl extends GroupBaseImpl {
 	}
 
 	@Override
+	public boolean isDepot() {
+		if (getType() == GroupConstants.TYPE_DEPOT) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public boolean isGuest() {
 		String groupKey = getGroupKey();
 
@@ -916,6 +963,11 @@ public class GroupImpl extends GroupBaseImpl {
 		}
 
 		return false;
+	}
+
+	@Override
+	public boolean isPrivateLayoutsEnabled() {
+		return _layoutVisibilityManager.isPrivateLayoutsEnabled(getGroupId());
 	}
 
 	@Override
@@ -1090,7 +1142,7 @@ public class GroupImpl extends GroupBaseImpl {
 		}
 		catch (Exception exception) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(exception, exception);
+				_log.debug(exception);
 			}
 		}
 
@@ -1169,7 +1221,7 @@ public class GroupImpl extends GroupBaseImpl {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception.getMessage());
+				_log.warn(exception);
 			}
 		}
 
@@ -1179,6 +1231,11 @@ public class GroupImpl extends GroupBaseImpl {
 	private static final Group _NULL_STAGING_GROUP = new GroupImpl();
 
 	private static final Log _log = LogFactoryUtil.getLog(GroupImpl.class);
+
+	private static volatile LayoutVisibilityManager _layoutVisibilityManager =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			LayoutVisibilityManager.class, GroupImpl.class,
+			"_layoutVisibilityManager", false, true);
 
 	private Group _liveGroup;
 	private Group _stagingGroup;

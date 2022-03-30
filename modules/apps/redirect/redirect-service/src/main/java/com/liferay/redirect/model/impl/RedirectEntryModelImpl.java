@@ -30,24 +30,24 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.redirect.model.RedirectEntry;
 import com.liferay.redirect.model.RedirectEntryModel;
-import com.liferay.redirect.model.RedirectEntrySoap;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -121,76 +121,55 @@ public class RedirectEntryModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DESTINATIONURL_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long SOURCEURL_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long REDIRECTENTRYID_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static RedirectEntry toModel(RedirectEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		RedirectEntry model = new RedirectEntryImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setRedirectEntryId(soapModel.getRedirectEntryId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setDestinationURL(soapModel.getDestinationURL());
-		model.setExpirationDate(soapModel.getExpirationDate());
-		model.setLastOccurrenceDate(soapModel.getLastOccurrenceDate());
-		model.setPermanent(soapModel.isPermanent());
-		model.setSourceURL(soapModel.getSourceURL());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<RedirectEntry> toModels(RedirectEntrySoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<RedirectEntry> models = new ArrayList<RedirectEntry>(
-			soapModels.length);
-
-		for (RedirectEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public RedirectEntryModelImpl() {
@@ -244,9 +223,6 @@ public class RedirectEntryModelImpl
 				attributeName,
 				attributeGetterFunction.apply((RedirectEntry)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -399,6 +375,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -415,17 +395,20 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -436,6 +419,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setRedirectEntryId(long redirectEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_redirectEntryId = redirectEntryId;
 	}
 
@@ -447,19 +434,20 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -470,19 +458,21 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -493,6 +483,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -525,6 +519,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -536,6 +534,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -553,6 +555,10 @@ public class RedirectEntryModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -569,17 +575,20 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setDestinationURL(String destinationURL) {
-		_columnBitmask |= DESTINATIONURL_COLUMN_BITMASK;
-
-		if (_originalDestinationURL == null) {
-			_originalDestinationURL = _destinationURL;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_destinationURL = destinationURL;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalDestinationURL() {
-		return GetterUtil.getString(_originalDestinationURL);
+		return getColumnOriginalValue("destinationURL");
 	}
 
 	@JSON
@@ -590,6 +599,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setExpirationDate(Date expirationDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_expirationDate = expirationDate;
 	}
 
@@ -601,6 +614,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setLastOccurrenceDate(Date lastOccurrenceDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastOccurrenceDate = lastOccurrenceDate;
 	}
 
@@ -618,6 +635,10 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setPermanent(boolean permanent) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_permanent = permanent;
 	}
 
@@ -634,17 +655,20 @@ public class RedirectEntryModelImpl
 
 	@Override
 	public void setSourceURL(String sourceURL) {
-		_columnBitmask |= SOURCEURL_COLUMN_BITMASK;
-
-		if (_originalSourceURL == null) {
-			_originalSourceURL = _sourceURL;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_sourceURL = sourceURL;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalSourceURL() {
-		return GetterUtil.getString(_originalSourceURL);
+		return getColumnOriginalValue("sourceURL");
 	}
 
 	@Override
@@ -654,6 +678,26 @@ public class RedirectEntryModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -710,6 +754,41 @@ public class RedirectEntryModelImpl
 	}
 
 	@Override
+	public RedirectEntry cloneWithOriginalValues() {
+		RedirectEntryImpl redirectEntryImpl = new RedirectEntryImpl();
+
+		redirectEntryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		redirectEntryImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		redirectEntryImpl.setRedirectEntryId(
+			this.<Long>getColumnOriginalValue("redirectEntryId"));
+		redirectEntryImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		redirectEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		redirectEntryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		redirectEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		redirectEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		redirectEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		redirectEntryImpl.setDestinationURL(
+			this.<String>getColumnOriginalValue("destinationURL"));
+		redirectEntryImpl.setExpirationDate(
+			this.<Date>getColumnOriginalValue("expirationDate"));
+		redirectEntryImpl.setLastOccurrenceDate(
+			this.<Date>getColumnOriginalValue("lastOccurrenceDate"));
+		redirectEntryImpl.setPermanent(
+			this.<Boolean>getColumnOriginalValue("permanent_"));
+		redirectEntryImpl.setSourceURL(
+			this.<String>getColumnOriginalValue("sourceURL"));
+
+		return redirectEntryImpl;
+	}
+
+	@Override
 	public int compareTo(RedirectEntry redirectEntry) {
 		long primaryKey = redirectEntry.getPrimaryKey();
 
@@ -725,16 +804,16 @@ public class RedirectEntryModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof RedirectEntry)) {
+		if (!(object instanceof RedirectEntry)) {
 			return false;
 		}
 
-		RedirectEntry redirectEntry = (RedirectEntry)obj;
+		RedirectEntry redirectEntry = (RedirectEntry)object;
 
 		long primaryKey = redirectEntry.getPrimaryKey();
 
@@ -751,41 +830,31 @@ public class RedirectEntryModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		RedirectEntryModelImpl redirectEntryModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		redirectEntryModelImpl._originalUuid = redirectEntryModelImpl._uuid;
+		_setModifiedDate = false;
 
-		redirectEntryModelImpl._originalGroupId =
-			redirectEntryModelImpl._groupId;
-
-		redirectEntryModelImpl._setOriginalGroupId = false;
-
-		redirectEntryModelImpl._originalCompanyId =
-			redirectEntryModelImpl._companyId;
-
-		redirectEntryModelImpl._setOriginalCompanyId = false;
-
-		redirectEntryModelImpl._setModifiedDate = false;
-
-		redirectEntryModelImpl._originalDestinationURL =
-			redirectEntryModelImpl._destinationURL;
-
-		redirectEntryModelImpl._originalSourceURL =
-			redirectEntryModelImpl._sourceURL;
-
-		redirectEntryModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -883,7 +952,7 @@ public class RedirectEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -894,9 +963,26 @@ public class RedirectEntryModelImpl
 			Function<RedirectEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((RedirectEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((RedirectEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -915,7 +1001,7 @@ public class RedirectEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -947,31 +1033,120 @@ public class RedirectEntryModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private String _uuid;
-	private String _originalUuid;
 	private long _redirectEntryId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private String _destinationURL;
-	private String _originalDestinationURL;
 	private Date _expirationDate;
 	private Date _lastOccurrenceDate;
 	private boolean _permanent;
 	private String _sourceURL;
-	private String _originalSourceURL;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<RedirectEntry, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((RedirectEntry)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("redirectEntryId", _redirectEntryId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("destinationURL", _destinationURL);
+		_columnOriginalValues.put("expirationDate", _expirationDate);
+		_columnOriginalValues.put("lastOccurrenceDate", _lastOccurrenceDate);
+		_columnOriginalValues.put("permanent_", _permanent);
+		_columnOriginalValues.put("sourceURL", _sourceURL);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+		attributeNames.put("permanent_", "permanent");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("uuid_", 2L);
+
+		columnBitmasks.put("redirectEntryId", 4L);
+
+		columnBitmasks.put("groupId", 8L);
+
+		columnBitmasks.put("companyId", 16L);
+
+		columnBitmasks.put("userId", 32L);
+
+		columnBitmasks.put("userName", 64L);
+
+		columnBitmasks.put("createDate", 128L);
+
+		columnBitmasks.put("modifiedDate", 256L);
+
+		columnBitmasks.put("destinationURL", 512L);
+
+		columnBitmasks.put("expirationDate", 1024L);
+
+		columnBitmasks.put("lastOccurrenceDate", 2048L);
+
+		columnBitmasks.put("permanent_", 4096L);
+
+		columnBitmasks.put("sourceURL", 8192L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private RedirectEntry _escapedModel;
 

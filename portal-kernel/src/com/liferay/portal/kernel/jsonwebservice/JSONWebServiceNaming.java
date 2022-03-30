@@ -78,8 +78,12 @@ public class JSONWebServiceNaming {
 	public String convertServiceClassToSimpleName(Class<?> clazz) {
 		String className = clazz.getSimpleName();
 
-		className = StringUtil.removeSubstring(className, "Impl");
-		className = StringUtil.removeSubstring(className, "Service");
+		if (className.endsWith("ServiceImpl")) {
+			className = className.substring(0, className.length() - 11);
+		}
+		else if (className.endsWith("Service")) {
+			className = className.substring(0, className.length() - 7);
+		}
 
 		return className;
 	}
@@ -224,7 +228,6 @@ public class JSONWebServiceNaming {
 		PropsKeys.JSONWS_WEB_SERVICE_PATHS_INCLUDES);
 	protected Set<String> invalidHttpMethods = SetUtil.fromArray(
 		PropsUtil.getArray(PropsKeys.JSONWS_WEB_SERVICE_INVALID_HTTP_METHODS));
-	protected Set<String> prefixes = SetUtil.fromArray(
-		new String[] {"get", "has", "is"});
+	protected Set<String> prefixes = SetUtil.fromArray("get", "has", "is");
 
 }

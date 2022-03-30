@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2000-present Liferay, Inc. All rights reserved.
+ * Copyright (c) 2000-2021 Liferay, Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or modify it under
  * the terms of the GNU Lesser General Public License as published by the Free
@@ -15,7 +15,7 @@
 package com.liferay.mule.internal.metadata.key;
 
 import com.liferay.mule.internal.metadata.MetadataKeysBuilder;
-import com.liferay.mule.internal.oas.OASConstants;
+import com.liferay.mule.internal.oas.constants.OASConstants;
 
 import java.util.Set;
 
@@ -39,7 +39,7 @@ public class GetEndpointTypeKeysResolver implements TypeKeysResolver {
 	public Set<MetadataKey> getKeys(MetadataContext metadataContext)
 		throws ConnectionException, MetadataResolvingException {
 
-		return metadataKeysBuilder.buildMetadataKeys(
+		return metadataKeysBuilder.buildEndpointMetadataKeys(
 			metadataContext, OASConstants.OPERATION_GET);
 	}
 

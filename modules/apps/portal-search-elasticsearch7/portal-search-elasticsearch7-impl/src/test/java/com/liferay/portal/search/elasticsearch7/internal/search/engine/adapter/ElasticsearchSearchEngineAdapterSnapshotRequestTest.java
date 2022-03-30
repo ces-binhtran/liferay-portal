@@ -33,6 +33,7 @@ import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRepositoryDetai
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotRequestExecutor;
 import com.liferay.portal.search.engine.adapter.snapshot.SnapshotState;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.io.IOException;
 
@@ -51,7 +52,7 @@ import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.SnapshotClient;
-import org.elasticsearch.cluster.metadata.RepositoryMetaData;
+import org.elasticsearch.cluster.metadata.RepositoryMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.fs.FsRepository;
 import org.elasticsearch.snapshots.SnapshotInfo;
@@ -61,12 +62,17 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Michael C. Han
  */
 public class ElasticsearchSearchEngineAdapterSnapshotRequestTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -159,19 +165,19 @@ public class ElasticsearchSearchEngineAdapterSnapshotRequestTest {
 			_getGetRepositoriesResponse(
 				new String[] {"testCreateSnapshotRepository"});
 
-		List<RepositoryMetaData> repositoryMetaDatas =
+		List<RepositoryMetadata> repositoryMetadatas =
 			getRepositoriesResponse.repositories();
 
 		Assert.assertEquals(
-			"Expected 1 RepositoryMetaData", 1, repositoryMetaDatas.size());
+			"Expected 1 RepositoryMetadata", 1, repositoryMetadatas.size());
 
-		RepositoryMetaData repositoryMetaData = repositoryMetaDatas.get(0);
+		RepositoryMetadata repositoryMetadata = repositoryMetadatas.get(0);
 
 		Assert.assertEquals(
-			"testCreateSnapshotRepository", repositoryMetaData.name());
+			"testCreateSnapshotRepository", repositoryMetadata.name());
 		Assert.assertEquals(
 			SnapshotRepositoryDetails.FS_REPOSITORY_TYPE,
-			repositoryMetaData.type());
+			repositoryMetadata.type());
 
 		_deleteRepository("testCreateSnapshotRepository");
 	}
@@ -288,12 +294,13 @@ public class ElasticsearchSearchEngineAdapterSnapshotRequestTest {
 		return new ElasticsearchSearchEngineAdapterImpl() {
 			{
 				setSnapshotRequestExecutor(
-					createSnapshotRequestExecutor(elasticsearchClientResolver));
+					_createSnapshotRequestExecutor(
+						elasticsearchClientResolver));
 			}
 		};
 	}
 
-	protected static SnapshotRequestExecutor createSnapshotRequestExecutor(
+	private static SnapshotRequestExecutor _createSnapshotRequestExecutor(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		SnapshotRequestExecutorFixture snapshotRequestExecutorFixture =

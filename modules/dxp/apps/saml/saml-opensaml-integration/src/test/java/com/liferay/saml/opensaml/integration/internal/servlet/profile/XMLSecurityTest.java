@@ -15,6 +15,7 @@
 package com.liferay.saml.opensaml.integration.internal.servlet.profile;
 
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.saml.constants.SamlWebKeys;
 import com.liferay.saml.opensaml.integration.internal.BaseSamlTestCase;
 import com.liferay.saml.opensaml.integration.internal.util.OpenSamlUtil;
@@ -36,6 +37,8 @@ import java.util.zip.DeflaterOutputStream;
 import org.apache.xml.security.algorithms.JCEMapper;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -54,6 +57,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
  * @author Mika Koivisto
  */
 public class XMLSecurityTest extends BaseSamlTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -102,11 +110,10 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 	@Test(expected = MessageDecodingException.class)
 	public void testXMLBombBillionLaughs() throws Exception {
-		String redirectURL = getAuthnRequestRedirectURL();
+		String redirectURL = _getAuthnRequestRedirectURL();
 
-		AuthnRequest authnRequest = getAuthnRequest(redirectURL);
-
-		String authnRequestXML = OpenSamlUtil.marshall(authnRequest);
+		String authnRequestXML = OpenSamlUtil.marshall(
+			getAuthnRequest(redirectURL));
 
 		String samlMessageXML = authnRequestXML.substring(38);
 
@@ -121,8 +128,8 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 				lol += "&lol" + (i - 1) + ";";
 			}
 
-			authnRequestXML =
-				authnRequestXML + " <!ENTITY lol" + i + " \"" + lol + "\">\n";
+			authnRequestXML = StringBundler.concat(
+				authnRequestXML, " <!ENTITY lol", i, " \"", lol, "\">\n");
 		}
 
 		authnRequestXML += "]>" + samlMessageXML;
@@ -136,11 +143,10 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 	@Test(expected = MessageDecodingException.class)
 	public void testXMLBombQuadraticBlowup() throws Exception {
-		String redirectURL = getAuthnRequestRedirectURL();
+		String redirectURL = _getAuthnRequestRedirectURL();
 
-		AuthnRequest authnRequest = getAuthnRequest(redirectURL);
-
-		String authnRequestXML = OpenSamlUtil.marshall(authnRequest);
+		String authnRequestXML = OpenSamlUtil.marshall(
+			getAuthnRequest(redirectURL));
 
 		String samlMessageXML = authnRequestXML.substring(38);
 
@@ -171,20 +177,16 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 	@Test(expected = MessageDecodingException.class)
 	public void testXXEGeneralEntities1() throws Exception {
-		String redirectURL = getAuthnRequestRedirectURL();
+		String redirectURL = _getAuthnRequestRedirectURL();
 
-		AuthnRequest authnRequest = getAuthnRequest(redirectURL);
+		String authnRequestXML = OpenSamlUtil.marshall(
+			getAuthnRequest(redirectURL));
 
-		String authnRequestXML = OpenSamlUtil.marshall(authnRequest);
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ");
-		sb.append("saml2p:AuthnRequest [\n<!ENTITY xxe SYSTEM ");
-		sb.append("\"http://localhost/saml-request\">\n]>");
-		sb.append(authnRequestXML.substring(38));
-
-		authnRequestXML = sb.toString();
+		authnRequestXML = StringBundler.concat(
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ",
+			"saml2p:AuthnRequest [\n<!ENTITY xxe SYSTEM ",
+			"\"http://localhost/saml-request\">\n]>",
+			authnRequestXML.substring(38));
 
 		authnRequestXML =
 			authnRequestXML.substring(0, authnRequestXML.length() - 22) +
@@ -195,21 +197,16 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 	@Test(expected = MessageDecodingException.class)
 	public void testXXEGeneralEntities2() throws Exception {
-		String redirectURL = getAuthnRequestRedirectURL();
+		String redirectURL = _getAuthnRequestRedirectURL();
 
-		AuthnRequest authnRequest = getAuthnRequest(redirectURL);
+		String authnRequestXML = OpenSamlUtil.marshall(
+			getAuthnRequest(redirectURL));
 
-		String authnRequestXML = OpenSamlUtil.marshall(authnRequest);
-
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ");
-		sb.append("saml2p:AuthnRequest [\n<!ENTITY xxe PUBLIC ");
-		sb.append("\"SOME//PUBLIC//ID\" ");
-		sb.append("\"http://localhost/saml-request\">\n]>");
-		sb.append(authnRequestXML.substring(38));
-
-		authnRequestXML = sb.toString();
+		authnRequestXML = StringBundler.concat(
+			"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ",
+			"saml2p:AuthnRequest [\n<!ENTITY xxe PUBLIC \"SOME//PUBLIC//ID\" ",
+			"\"http://localhost/saml-request\">\n]>",
+			authnRequestXML.substring(38));
 
 		authnRequestXML =
 			authnRequestXML.substring(0, authnRequestXML.length() - 22) +
@@ -220,21 +217,18 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 	@Test(expected = MessageDecodingException.class)
 	public void testXXEParameterEntities() throws Exception {
-		String redirectURL = getAuthnRequestRedirectURL();
+		String redirectURL = _getAuthnRequestRedirectURL();
 
-		AuthnRequest authnRequest = getAuthnRequest(redirectURL);
+		String authnRequestXML = OpenSamlUtil.marshall(
+			getAuthnRequest(redirectURL));
 
-		String authnRequestXML = OpenSamlUtil.marshall(authnRequest);
-
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ");
-		sb.append("saml2p:AuthnRequest [\n<!ENTITY % remote SYSTEM ");
-		sb.append("\"http://localhost/saml-request\">\n%remote;\n]>");
-
-		sb.append(authnRequestXML.substring(38));
-
-		decodeAuthnRequest(sb.toString(), redirectURL);
+		decodeAuthnRequest(
+			StringBundler.concat(
+				"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE ",
+				"saml2p:AuthnRequest [\n<!ENTITY % remote SYSTEM ",
+				"\"http://localhost/saml-request\">\n%remote;\n]>",
+				authnRequestXML.substring(38)),
+			redirectURL);
 	}
 
 	protected void decodeAuthnRequest(
@@ -243,7 +237,7 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 		Credential credential = metadataManagerImpl.getSigningCredential();
 
-		String encodedAuthnRequest = encodeRequest(authnRequestXML);
+		String encodedAuthnRequest = _encodeRequest(authnRequestXML);
 
 		MockHttpServletRequest mockHttpServletRequest =
 			getMockHttpServletRequest(redirectURL);
@@ -253,20 +247,37 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 
 		mockHttpServletRequest.setParameter("SAMLRequest", encodedAuthnRequest);
 
-		String signature = generateSignature(
+		String signature = _generateSignature(
 			credential, mockHttpServletRequest.getParameter("SigAlg"),
 			mockHttpServletRequest.getQueryString());
 
 		mockHttpServletRequest.setParameter("Signature", signature);
 
-		MockHttpServletResponse mockHttpServletResponse =
-			new MockHttpServletResponse();
-
 		_webSsoProfileImpl.decodeAuthnRequest(
-			mockHttpServletRequest, mockHttpServletResponse);
+			mockHttpServletRequest, new MockHttpServletResponse());
 	}
 
-	protected String encodeRequest(String requestXML) throws Exception {
+	protected AuthnRequest getAuthnRequest(String redirectURL)
+		throws Exception {
+
+		SamlSsoRequestContext samlSsoRequestContext =
+			_webSsoProfileImpl.decodeAuthnRequest(
+				getMockHttpServletRequest(redirectURL),
+				new MockHttpServletResponse());
+
+		MessageContext<?> samlMessageContext =
+			samlSsoRequestContext.getSAMLMessageContext();
+
+		InOutOperationContext<AuthnRequest, ?> inOutOperationContext =
+			samlMessageContext.getSubcontext(InOutOperationContext.class);
+
+		MessageContext<AuthnRequest> inboundMessageContext =
+			inOutOperationContext.getInboundMessageContext();
+
+		return inboundMessageContext.getMessage();
+	}
+
+	private String _encodeRequest(String requestXML) throws Exception {
 		Base64.Encoder encoder = _getEncoder();
 
 		ByteArrayOutputStream byteArrayOutputStream =
@@ -284,7 +295,7 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 		return encoder.encodeToString(byteArrayOutputStream.toByteArray());
 	}
 
-	protected String generateSignature(
+	private String _generateSignature(
 			Credential signingCredential, String algorithmURI,
 			String queryString)
 		throws Exception {
@@ -298,32 +309,7 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 		return encoder.encodeToString(signatureBytes);
 	}
 
-	protected AuthnRequest getAuthnRequest(String redirectURL)
-		throws Exception {
-
-		MockHttpServletRequest mockHttpServletRequest =
-			getMockHttpServletRequest(redirectURL);
-
-		MockHttpServletResponse mockHttpServletResponse =
-			new MockHttpServletResponse();
-
-		SamlSsoRequestContext samlSsoRequestContext =
-			_webSsoProfileImpl.decodeAuthnRequest(
-				mockHttpServletRequest, mockHttpServletResponse);
-
-		MessageContext<?> samlMessageContext =
-			samlSsoRequestContext.getSAMLMessageContext();
-
-		InOutOperationContext<AuthnRequest, ?> inOutOperationContext =
-			samlMessageContext.getSubcontext(InOutOperationContext.class);
-
-		MessageContext<AuthnRequest> inboundMessageContext =
-			inOutOperationContext.getInboundMessageContext();
-
-		return inboundMessageContext.getMessage();
-	}
-
-	protected String getAuthnRequestRedirectURL() throws Exception {
+	private String _getAuthnRequestRedirectURL() throws Exception {
 		SamlSpIdpConnectionLocalService samlSpIdpConnectionLocalService =
 			getMockPortletService(
 				SamlSpIdpConnectionLocalServiceUtil.class,
@@ -355,7 +341,7 @@ public class XMLSecurityTest extends BaseSamlTestCase {
 		return mockHttpServletResponse.getRedirectedUrl();
 	}
 
-	private static Base64.Encoder _getEncoder() {
+	private Base64.Encoder _getEncoder() {
 		Base64.Encoder encoder = Base64.getEncoder();
 
 		return encoder.withoutPadding();

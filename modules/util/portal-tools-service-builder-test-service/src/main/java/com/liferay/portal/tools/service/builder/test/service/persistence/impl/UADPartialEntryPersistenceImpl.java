@@ -24,7 +24,10 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchUADPartialEntryException;
 import com.liferay.portal.tools.service.builder.test.model.UADPartialEntry;
@@ -32,8 +35,11 @@ import com.liferay.portal.tools.service.builder.test.model.UADPartialEntryTable;
 import com.liferay.portal.tools.service.builder.test.model.impl.UADPartialEntryImpl;
 import com.liferay.portal.tools.service.builder.test.model.impl.UADPartialEntryModelImpl;
 import com.liferay.portal.tools.service.builder.test.service.persistence.UADPartialEntryPersistence;
+import com.liferay.portal.tools.service.builder.test.service.persistence.UADPartialEntryUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 import java.util.Map;
@@ -76,7 +82,6 @@ public class UADPartialEntryPersistenceImpl
 
 		setModelImplClass(UADPartialEntryImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(UADPartialEntryTable.INSTANCE);
 	}
@@ -89,12 +94,11 @@ public class UADPartialEntryPersistenceImpl
 	@Override
 	public void cacheResult(UADPartialEntry uadPartialEntry) {
 		entityCache.putResult(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
 			UADPartialEntryImpl.class, uadPartialEntry.getPrimaryKey(),
 			uadPartialEntry);
-
-		uadPartialEntry.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the uad partial entries in the entity cache if it is enabled.
@@ -103,16 +107,20 @@ public class UADPartialEntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<UADPartialEntry> uadPartialEntries) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (uadPartialEntries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (UADPartialEntry uadPartialEntry : uadPartialEntries) {
 			if (entityCache.getResult(
-					UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
 					UADPartialEntryImpl.class,
 					uadPartialEntry.getPrimaryKey()) == null) {
 
 				cacheResult(uadPartialEntry);
-			}
-			else {
-				uadPartialEntry.resetOriginalValues();
 			}
 		}
 	}
@@ -128,9 +136,7 @@ public class UADPartialEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(UADPartialEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(UADPartialEntryImpl.class);
 	}
 
 	/**
@@ -142,36 +148,23 @@ public class UADPartialEntryPersistenceImpl
 	 */
 	@Override
 	public void clearCache(UADPartialEntry uadPartialEntry) {
-		entityCache.removeResult(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-			UADPartialEntryImpl.class, uadPartialEntry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(UADPartialEntryImpl.class, uadPartialEntry);
 	}
 
 	@Override
 	public void clearCache(List<UADPartialEntry> uadPartialEntries) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (UADPartialEntry uadPartialEntry : uadPartialEntries) {
 			entityCache.removeResult(
-				UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-				UADPartialEntryImpl.class, uadPartialEntry.getPrimaryKey());
+				UADPartialEntryImpl.class, uadPartialEntry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(UADPartialEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-				UADPartialEntryImpl.class, primaryKey);
+			entityCache.removeResult(UADPartialEntryImpl.class, primaryKey);
 		}
 	}
 
@@ -286,10 +279,8 @@ public class UADPartialEntryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (uadPartialEntry.isNew()) {
+			if (isNew) {
 				session.save(uadPartialEntry);
-
-				uadPartialEntry.setNew(false);
 			}
 			else {
 				uadPartialEntry = (UADPartialEntry)session.merge(
@@ -303,18 +294,12 @@ public class UADPartialEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		entityCache.putResult(
+			UADPartialEntryImpl.class, uadPartialEntry, false, true);
 
 		if (isNew) {
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+			uadPartialEntry.setNew(false);
 		}
-
-		entityCache.putResult(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-			UADPartialEntryImpl.class, uadPartialEntry.getPrimaryKey(),
-			uadPartialEntry, false);
 
 		uadPartialEntry.resetOriginalValues();
 
@@ -456,7 +441,7 @@ public class UADPartialEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<UADPartialEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -497,10 +482,6 @@ public class UADPartialEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -530,7 +511,7 @@ public class UADPartialEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -546,9 +527,6 @@ public class UADPartialEntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -583,31 +561,44 @@ public class UADPartialEntryPersistenceImpl
 	 * Initializes the uad partial entry persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-			UADPartialEntryModelImpl.FINDER_CACHE_ENABLED,
-			UADPartialEntryImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-			UADPartialEntryModelImpl.FINDER_CACHE_ENABLED,
-			UADPartialEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			UADPartialEntryModelImpl.ENTITY_CACHE_ENABLED,
-			UADPartialEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
+
+		_setUADPartialEntryUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setUADPartialEntryUtilPersistence(null);
+
 		entityCache.removeCache(UADPartialEntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setUADPartialEntryUtilPersistence(
+		UADPartialEntryPersistence uadPartialEntryPersistence) {
+
+		try {
+			Field field = UADPartialEntryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, uadPartialEntryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@ServiceReference(type = EntityCache.class)
@@ -629,5 +620,10 @@ public class UADPartialEntryPersistenceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		UADPartialEntryPersistenceImpl.class);
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
+	}
 
 }

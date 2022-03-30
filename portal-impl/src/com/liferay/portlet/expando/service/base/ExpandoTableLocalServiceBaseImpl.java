@@ -16,6 +16,7 @@ package com.liferay.portlet.expando.service.base;
 
 import com.liferay.expando.kernel.model.ExpandoTable;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
+import com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil;
 import com.liferay.expando.kernel.service.persistence.ExpandoColumnPersistence;
 import com.liferay.expando.kernel.service.persistence.ExpandoRowPersistence;
 import com.liferay.expando.kernel.service.persistence.ExpandoTablePersistence;
@@ -52,6 +53,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -74,11 +77,15 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ExpandoTableLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.expando.kernel.service.ExpandoTableLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ExpandoTableLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ExpandoTableLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the expando table to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was added
@@ -106,6 +113,10 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 	/**
 	 * Deletes the expando table with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param tableId the primary key of the expando table
 	 * @return the expando table that was removed
 	 * @throws PortalException if a expando table with the primary key could not be found
@@ -121,18 +132,32 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 	/**
 	 * Deletes the expando table from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
-	public ExpandoTable deleteExpandoTable(ExpandoTable expandoTable) {
+	public ExpandoTable deleteExpandoTable(ExpandoTable expandoTable)
+		throws PortalException {
+
 		return expandoTablePersistence.remove(expandoTable);
 	}
 
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return expandoTablePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -283,6 +308,7 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -301,6 +327,7 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 			(ExpandoTable)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<ExpandoTable> getBasePersistence() {
 		return expandoTablePersistence;
 	}
@@ -343,6 +370,10 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 
 	/**
 	 * Updates the expando table in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoTableLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoTable the expando table
 	 * @return the expando table that was updated
@@ -673,11 +704,15 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.expando.kernel.model.ExpandoTable",
 			expandoTableLocalService);
+
+		_setLocalServiceUtilService(expandoTableLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.expando.kernel.model.ExpandoTable");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -734,6 +769,22 @@ public abstract class ExpandoTableLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		ExpandoTableLocalService expandoTableLocalService) {
+
+		try {
+			Field field = ExpandoTableLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, expandoTableLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

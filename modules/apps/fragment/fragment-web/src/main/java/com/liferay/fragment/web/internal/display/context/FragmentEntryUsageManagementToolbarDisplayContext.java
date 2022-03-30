@@ -50,8 +50,9 @@ public class FragmentEntryUsageManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return DropdownItemListBuilder.add(
 			() -> FragmentPermission.contains(
@@ -61,7 +62,8 @@ public class FragmentEntryUsageManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "propagate");
 				dropdownItem.setIcon("propagation");
-				dropdownItem.setLabel(LanguageUtil.get(request, "propagate"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "propagate"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
@@ -70,11 +72,6 @@ public class FragmentEntryUsageManagementToolbarDisplayContext
 	@Override
 	public String getComponentId() {
 		return "fragmentEntryUsageManagementToolbar";
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "FRAGMENT_ENTRY_USAGE_MANAGEMENT_TOOLBAR_DEFAULT_EVENT_HANDLER";
 	}
 
 	@Override

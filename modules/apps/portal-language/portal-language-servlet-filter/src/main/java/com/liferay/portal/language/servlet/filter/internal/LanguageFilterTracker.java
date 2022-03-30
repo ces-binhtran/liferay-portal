@@ -16,10 +16,10 @@ package com.liferay.portal.language.servlet.filter.internal;
 
 import com.liferay.osgi.util.ServiceTrackerFactory;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 
 import java.util.ArrayList;
 import java.util.Dictionary;
@@ -51,7 +51,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class LanguageFilterTracker {
 
 	@Activate
-	protected void activate(final BundleContext bundleContext) {
+	protected void activate(BundleContext bundleContext) {
 		_serviceTracker = new ServiceTracker<>(
 			bundleContext, ServletContextHelper.class,
 			new ServletContextHelperServiceTrackerCustomizer(bundleContext));
@@ -156,16 +156,15 @@ public class LanguageFilterTracker {
 				filterSB.append(")");
 			}
 
-			Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-				"service.ranking", Integer.MIN_VALUE
-			).put(
-				"servlet.context.name", contextName
-			).build();
-
 			return ServiceTrackerFactory.open(
 				bundle.getBundleContext(), filterSB.toString(),
 				new ResourceBundleLoaderServiceTrackerCustomizer(
-					properties, filterSB.toString(), contextName));
+					HashMapBuilder.<String, Object>put(
+						"service.ranking", Integer.MIN_VALUE
+					).put(
+						"servlet.context.name", contextName
+					).build(),
+					filterSB.toString(), contextName));
 		}
 
 		@Override

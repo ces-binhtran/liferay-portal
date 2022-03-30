@@ -34,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -128,17 +127,16 @@ public class LiveUsers {
 	public static void joinGroup(long companyId, long groupId, long userId) {
 		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
 
-		Set<Long> groupUsers = _getGroupUsers(liveUsers, groupId);
-
 		if (_getUserTrackers(companyId, userId) != null) {
+			Set<Long> groupUsers = _getGroupUsers(liveUsers, groupId);
+
 			groupUsers.add(userId);
 		}
 	}
 
 	public static void joinGroup(long companyId, long groupId, long[] userIds) {
-		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
-
-		Set<Long> groupUsers = _getGroupUsers(liveUsers, groupId);
+		Set<Long> groupUsers = _getGroupUsers(
+			_getLiveUsers(companyId), groupId);
 
 		for (long userId : userIds) {
 			if (_getUserTrackers(companyId, userId) != null) {
@@ -148,9 +146,8 @@ public class LiveUsers {
 	}
 
 	public static void leaveGroup(long companyId, long groupId, long userId) {
-		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
-
-		Set<Long> groupUsers = _getGroupUsers(liveUsers, groupId);
+		Set<Long> groupUsers = _getGroupUsers(
+			_getLiveUsers(companyId), groupId);
 
 		groupUsers.remove(userId);
 	}
@@ -158,9 +155,8 @@ public class LiveUsers {
 	public static void leaveGroup(
 		long companyId, long groupId, long[] userIds) {
 
-		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
-
-		Set<Long> groupUsers = _getGroupUsers(liveUsers, groupId);
+		Set<Long> groupUsers = _getGroupUsers(
+			_getLiveUsers(companyId), groupId);
 
 		for (long userId : userIds) {
 			groupUsers.remove(userId);
@@ -258,18 +254,21 @@ public class LiveUsers {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception.getMessage());
+				_log.warn(exception);
 			}
 		}
 
 		try {
-			HttpSession session = PortalSessionContext.get(sessionId);
+			HttpSession httpSession = PortalSessionContext.get(sessionId);
 
-			if (session != null) {
-				session.invalidate();
+			if (httpSession != null) {
+				httpSession.invalidate();
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		_removeUserTracker(companyId, userId, userTracker);
@@ -443,14 +442,12 @@ public class LiveUsers {
 
 		Map<Long, Set<Long>> liveUsers = _getLiveUsers(companyId);
 
-		LinkedHashMap<String, Object> groupParams =
+		List<Group> groups = GroupLocalServiceUtil.search(
+			companyId, null, null,
 			LinkedHashMapBuilder.<String, Object>put(
 				"usersGroups", userId
-			).build();
-
-		List<Group> groups = GroupLocalServiceUtil.search(
-			companyId, null, null, groupParams, QueryUtil.ALL_POS,
-			QueryUtil.ALL_POS);
+			).build(),
+			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		for (Group group : groups) {
 			Set<Long> groupUsers = _getGroupUsers(

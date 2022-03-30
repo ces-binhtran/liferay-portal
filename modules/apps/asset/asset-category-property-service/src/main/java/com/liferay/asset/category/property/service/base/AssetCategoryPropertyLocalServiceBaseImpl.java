@@ -16,6 +16,7 @@ package com.liferay.asset.category.property.service.base;
 
 import com.liferay.asset.category.property.model.AssetCategoryProperty;
 import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalService;
+import com.liferay.asset.category.property.service.AssetCategoryPropertyLocalServiceUtil;
 import com.liferay.asset.category.property.service.persistence.AssetCategoryPropertyFinder;
 import com.liferay.asset.category.property.service.persistence.AssetCategoryPropertyPersistence;
 import com.liferay.petra.function.UnsafeFunction;
@@ -48,10 +49,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -73,11 +77,15 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetCategoryPropertyLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.category.property.service.AssetCategoryPropertyLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetCategoryPropertyLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetCategoryPropertyLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the asset category property to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryPropertyLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetCategoryProperty the asset category property
 	 * @return the asset category property that was added
@@ -109,6 +117,10 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	/**
 	 * Deletes the asset category property with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryPropertyLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param categoryPropertyId the primary key of the asset category property
 	 * @return the asset category property that was removed
 	 * @throws PortalException if a asset category property with the primary key could not be found
@@ -125,6 +137,10 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	/**
 	 * Deletes the asset category property from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryPropertyLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetCategoryProperty the asset category property
 	 * @return the asset category property that was removed
 	 */
@@ -139,6 +155,13 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetCategoryPropertyPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -302,6 +325,7 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -320,6 +344,7 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 			(AssetCategoryProperty)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AssetCategoryProperty> getBasePersistence() {
 		return assetCategoryPropertyPersistence;
 	}
@@ -365,6 +390,10 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	/**
 	 * Updates the asset category property in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryPropertyLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetCategoryProperty the asset category property
 	 * @return the asset category property that was updated
 	 */
@@ -374,6 +403,11 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 		AssetCategoryProperty assetCategoryProperty) {
 
 		return assetCategoryPropertyPersistence.update(assetCategoryProperty);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -389,6 +423,8 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		assetCategoryPropertyLocalService =
 			(AssetCategoryPropertyLocalService)aopProxy;
+
+		_setLocalServiceUtilService(assetCategoryPropertyLocalService);
 	}
 
 	/**
@@ -449,6 +485,23 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AssetCategoryPropertyLocalService assetCategoryPropertyLocalService) {
+
+		try {
+			Field field =
+				AssetCategoryPropertyLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetCategoryPropertyLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AssetCategoryPropertyLocalService
 		assetCategoryPropertyLocalService;
 
@@ -461,9 +514,5 @@ public abstract class AssetCategoryPropertyLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
 
 }

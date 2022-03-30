@@ -40,6 +40,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.model.KaleoTaskAssignment;
 import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalService;
+import com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoActionPersistence;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoConditionPersistence;
 import com.liferay.portal.workflow.kaleo.service.persistence.KaleoDefinitionPersistence;
@@ -63,10 +64,13 @@ import com.liferay.portal.workflow.kaleo.service.persistence.KaleoTransitionPers
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -88,11 +92,15 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoTaskAssignmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.service.KaleoTaskAssignmentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoTaskAssignmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoTaskAssignmentLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the kaleo task assignment to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskAssignmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskAssignment the kaleo task assignment
 	 * @return the kaleo task assignment that was added
@@ -124,6 +132,10 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	/**
 	 * Deletes the kaleo task assignment with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskAssignmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTaskAssignmentId the primary key of the kaleo task assignment
 	 * @return the kaleo task assignment that was removed
 	 * @throws PortalException if a kaleo task assignment with the primary key could not be found
@@ -140,6 +152,10 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	/**
 	 * Deletes the kaleo task assignment from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskAssignmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTaskAssignment the kaleo task assignment
 	 * @return the kaleo task assignment that was removed
 	 */
@@ -154,6 +170,13 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kaleoTaskAssignmentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -319,6 +342,7 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -337,6 +361,7 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 			(KaleoTaskAssignment)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<KaleoTaskAssignment> getBasePersistence() {
 		return kaleoTaskAssignmentPersistence;
 	}
@@ -382,6 +407,10 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	/**
 	 * Updates the kaleo task assignment in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskAssignmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTaskAssignment the kaleo task assignment
 	 * @return the kaleo task assignment that was updated
 	 */
@@ -391,6 +420,11 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 		KaleoTaskAssignment kaleoTaskAssignment) {
 
 		return kaleoTaskAssignmentPersistence.update(kaleoTaskAssignment);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -405,6 +439,8 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		kaleoTaskAssignmentLocalService =
 			(KaleoTaskAssignmentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kaleoTaskAssignmentLocalService);
 	}
 
 	/**
@@ -447,6 +483,23 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		KaleoTaskAssignmentLocalService kaleoTaskAssignmentLocalService) {
+
+		try {
+			Field field =
+				KaleoTaskAssignmentLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kaleoTaskAssignmentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 
@@ -528,10 +581,6 @@ public abstract class KaleoTaskAssignmentLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.RoleLocalService
-		roleLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService

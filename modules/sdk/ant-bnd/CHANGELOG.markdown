@@ -1,5 +1,68 @@
 # Liferay Ant BND Change Log
 
+## 3.2.8 - 2021-10-19
+
+### Commits
+- [LPS-140947] Inline (a70097214a)
+- [LPS-140947] avoid downloading external dtds when parsing xml (90305c75d9)
+- [LPS-105380] Remove final from parameters (a4e6ca0985)
+- [LPS-105380] Revert "LPS-105380 Remove final from parameters" (b2f9eed2c2)
+- [LPS-105380] Remove final from parameters (f615ff77ff)
+
+### Dependencies
+- [LPS-137126] Update the ant dependency to version 1.10.11.
+
+## 3.2.7 - 2021-06-11
+
+### Commits
+- [LPS-133987] JspAnalyzerPlugin does not know how to parse JSPX syntax for
+taglibs (58aaed5e1d)
+- [LPS-119446] Move assign statement inside else-statement (d720867ee7)
+- [LPS-105380] Inline (49fe57aa62)
+- [LPS-105380] Rename vars, match type (1ef3ed7b76)
+- [LPS-105380] Add DTD references (022b424c0c)
+- [LPS-105380] Methods don't need to be static (c42da838cc)
+- [LPS-108380] SF, use String.valueOf (613edb7e63)
+- [LPS-105380] Rename variables (27bff1bf7d)
+- [LPS-105380] Inline (e2d8267c26)
+- [LPS-105380] SF, inline (4b7f2fddfe)
+
+### Dependencies
+- [LPS-129842] Update the ant dependency to version 1.10.9.
+
+## 3.2.6 - 2020-07-09
+
+### Commits
+- [LPS-116282] HeaderReader does not have anything ever collected into its
+"toBeClosed", or loading any plugins/classes from foreign jars, it does not need
+to be closed explicitly. Leave it out to make code coverage complete.
+(6e05087277)
+- [LPS-116282] Add unit test (3bdca492df)
+- [LPS-116282] Add bnd plugin to generate module portal profile component.
+(413e7e4d2a)
+- [LPS-115364] Update ant to 1.9.15 (2c4390c048)
+
+### Dependencies
+- [LPS-115364] Update the ant dependency to version 1.9.15.
+
+## 3.2.5 - 2020-04-06
+
+### Commits
+- [LPS-110835] Backward compatibility (a8c32425b9)
+
+## 3.2.4 - 2020-04-03
+
+### Commits
+- [LPS-110835] Apply everywhere (9dde521bbe)
+- [LPS-110835] Match JSP compiler resource path (e022603f38)
+- [LPS-110426] Use try-with-resources instead of manually closing resources in
+finally statement (4ffbcd4200)
+- [LPS-108328] Remove version number or SNAPSHOT check (08b8cd11ea)
+- [LPS-106938] Add optional test qualifier (3129783c8a)
+- [LPS-105380] Rename exception variables (b3173da81b)
+- [LPS-102700] Fix bnd error (qualifiers) (688a81ff8b)
+- [LPS-102700] Fix bnd error (include literal dot) (d65985bae3)
+
 ## 3.2.3 - 2019-10-03
 
 ### Commits
@@ -832,5 +895,18 @@ when baseline.jar.report.level=persist (78c3140369)
 [LPS-101450]: https://issues.liferay.com/browse/LPS-101450
 [LPS-101947]: https://issues.liferay.com/browse/LPS-101947
 [LPS-102700]: https://issues.liferay.com/browse/LPS-102700
+[LPS-105380]: https://issues.liferay.com/browse/LPS-105380
+[LPS-106938]: https://issues.liferay.com/browse/LPS-106938
+[LPS-108328]: https://issues.liferay.com/browse/LPS-108328
+[LPS-108380]: https://issues.liferay.com/browse/LPS-108380
+[LPS-110426]: https://issues.liferay.com/browse/LPS-110426
+[LPS-110835]: https://issues.liferay.com/browse/LPS-110835
+[LPS-115364]: https://issues.liferay.com/browse/LPS-115364
+[LPS-116282]: https://issues.liferay.com/browse/LPS-116282
+[LPS-119446]: https://issues.liferay.com/browse/LPS-119446
+[LPS-129842]: https://issues.liferay.com/browse/LPS-129842
+[LPS-133987]: https://issues.liferay.com/browse/LPS-133987
+[LPS-137126]: https://issues.liferay.com/browse/LPS-137126
+[LPS-140947]: https://issues.liferay.com/browse/LPS-140947
 [LRQA-25824]: https://issues.liferay.com/browse/LRQA-25824
 [LRQA-28693]: https://issues.liferay.com/browse/LRQA-28693

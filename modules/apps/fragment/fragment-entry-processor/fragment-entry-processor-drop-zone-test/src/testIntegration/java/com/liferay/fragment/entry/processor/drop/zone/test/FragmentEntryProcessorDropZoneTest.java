@@ -26,27 +26,26 @@ import com.liferay.fragment.service.FragmentCollectionService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
-import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -79,12 +78,7 @@ public class FragmentEntryProcessorDropZoneTest {
 		_serviceContext = ServiceContextTestUtil.getServiceContext(
 			TestPropsValues.getGroupId(), TestPropsValues.getUserId());
 
-		_layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-			StringPool.BLANK, _serviceContext);
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 	}
 
 	@Test
@@ -96,24 +90,26 @@ public class FragmentEntryProcessorDropZoneTest {
 		LayoutStructureItem rootLayoutStructureItem =
 			layoutStructure.addRootLayoutStructureItem();
 
-		LayoutStructureItem containerLayoutStructureItem =
-			layoutStructure.addContainerLayoutStructureItem(
+		LayoutStructureItem containerStyledLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				rootLayoutStructureItem.getItemId(), 0);
 
 		FragmentEntryLink fragmentEntryLink = _addFragmentEntryLink();
 
-		LayoutStructureItem fragmentLayoutStructureItem =
-			layoutStructure.addFragmentLayoutStructureItem(
+		LayoutStructureItem fragmentStyledLayoutStructureItem =
+			layoutStructure.addFragmentStyledLayoutStructureItem(
 				fragmentEntryLink.getFragmentEntryLinkId(),
-				containerLayoutStructureItem.getItemId(), 0);
+				containerStyledLayoutStructureItem.getItemId(), 0);
 
 		LayoutStructureItem fragmentDropZoneLayoutStructureItem =
 			layoutStructure.addFragmentDropZoneLayoutStructureItem(
-				fragmentLayoutStructureItem.getItemId(), 0);
+				fragmentStyledLayoutStructureItem.getItemId(), 0);
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group.getGroupId(), _layout.getPlid(),
-			layoutStructure.toString(), _serviceContext);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group.getGroupId(), _layout.getPlid(),
+				SegmentsExperienceConstants.ID_DEFAULT,
+				layoutStructure.toString());
 
 		String processedHTML = _getProcessedHTML(
 			"processed_edit_mode_fragment_entry.html");
@@ -142,30 +138,21 @@ public class FragmentEntryProcessorDropZoneTest {
 				TestPropsValues.getUserId(), _group.getGroupId(),
 				fragmentCollection.getFragmentCollectionId(), "fragment-entry",
 				"Fragment Entry", null,
-				_getFileAsString("drop_zone_fragment_entry.html"), null, null,
-				0, FragmentConstants.TYPE_SECTION,
+				_readFileToString("drop_zone_fragment_entry.html"), null, false,
+				null, null, 0, FragmentConstants.TYPE_SECTION,
 				WorkflowConstants.STATUS_APPROVED, _serviceContext);
 
 		return _fragmentEntryLinkLocalService.addFragmentEntryLink(
 			TestPropsValues.getUserId(), _group.getGroupId(), 0,
-			fragmentEntry.getFragmentEntryId(), 0,
-			_portal.getClassNameId(Layout.class), _layout.getPlid(),
+			fragmentEntry.getFragmentEntryId(), 0, _layout.getPlid(),
 			fragmentEntry.getCss(), fragmentEntry.getHtml(),
 			fragmentEntry.getJs(), fragmentEntry.getConfiguration(),
 			StringPool.BLANK, StringPool.BLANK, 0, null, _serviceContext);
 	}
 
-	private String _getFileAsString(String fileName) throws Exception {
-		Class<?> clazz = getClass();
-
-		return StringUtil.read(
-			clazz.getClassLoader(),
-			"com/liferay/fragment/entry/processor/drop/zone/test/dependencies" +
-				"/" + fileName);
-	}
-
 	private String _getProcessedHTML(String fileName) throws Exception {
-		Document document = Jsoup.parseBodyFragment(_getFileAsString(fileName));
+		Document document = Jsoup.parseBodyFragment(
+			_readFileToString(fileName));
 
 		document.outputSettings(
 			new Document.OutputSettings() {
@@ -177,6 +164,15 @@ public class FragmentEntryProcessorDropZoneTest {
 		Element bodyElement = document.body();
 
 		return bodyElement.html();
+	}
+
+	private String _readFileToString(String fileName) throws Exception {
+		Class<?> clazz = getClass();
+
+		return StringUtil.read(
+			clazz.getClassLoader(),
+			"com/liferay/fragment/entry/processor/drop/zone/test/dependencies" +
+				"/" + fileName);
 	}
 
 	@Inject
@@ -202,9 +198,6 @@ public class FragmentEntryProcessorDropZoneTest {
 	@Inject
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
-
-	@Inject
-	private Portal _portal;
 
 	private ServiceContext _serviceContext;
 

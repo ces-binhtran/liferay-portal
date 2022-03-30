@@ -22,11 +22,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -49,20 +52,30 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("MessageBoardSection")
+@GraphQLName(
+	description = "Represents a section/folder on a message board, used to organize messages.",
+	value = "MessageBoardSection"
+)
 @JsonFilter("Liferay.Vulcan")
 @Schema(
-	requiredProperties = {"title"},
-	description = "Represents a section/folder on a message board, used to organize messages."
+	description = "Represents a section/folder on a message board, used to organize messages.",
+	requiredProperties = {"title"}
 )
 @XmlRootElement(name = "MessageBoardSection")
-public class MessageBoardSection {
+public class MessageBoardSection implements Serializable {
 
 	public static MessageBoardSection toDTO(String json) {
 		return ObjectMapperUtil.readValue(MessageBoardSection.class, json);
 	}
 
-	@Schema
+	public static MessageBoardSection unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			MessageBoardSection.class, json);
+	}
+
+	@Schema(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		return actions;
@@ -88,7 +101,9 @@ public class MessageBoardSection {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
@@ -121,7 +136,9 @@ public class MessageBoardSection {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(
+		description = "A list of the custom fields associated with the section."
+	)
 	@Valid
 	public CustomField[] getCustomFields() {
 		return customFields;
@@ -146,7 +163,9 @@ public class MessageBoardSection {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A list of the custom fields associated with the section."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected CustomField[] customFields;
 
@@ -328,7 +347,7 @@ public class MessageBoardSection {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfMessageBoardThreads;
 
-	@Schema
+	@Schema(description = "The ID of the section parent's, if it exists.")
 	public Long getParentMessageBoardSectionId() {
 		return parentMessageBoardSectionId;
 	}
@@ -356,7 +375,7 @@ public class MessageBoardSection {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The ID of the section parent's, if it exists.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long parentMessageBoardSectionId;
 
@@ -390,7 +409,9 @@ public class MessageBoardSection {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long siteId;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the user making the requests is subscribed to this section."
+	)
 	public Boolean getSubscribed() {
 		return subscribed;
 	}
@@ -414,7 +435,9 @@ public class MessageBoardSection {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the user making the requests is subscribed to this section."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Boolean subscribed;
 
@@ -695,6 +718,7 @@ public class MessageBoardSection {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.MessageBoardSection",
 		name = "x-class-name"
 	)
@@ -707,13 +731,17 @@ public class MessageBoardSection {
 
 		@JsonCreator
 		public static ViewableBy create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (ViewableBy viewableBy : values()) {
 				if (Objects.equals(viewableBy.getValue(), value)) {
 					return viewableBy;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -735,9 +763,19 @@ public class MessageBoardSection {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -753,14 +791,12 @@ public class MessageBoardSection {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -787,7 +823,7 @@ public class MessageBoardSection {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -795,7 +831,7 @@ public class MessageBoardSection {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -803,5 +839,10 @@ public class MessageBoardSection {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

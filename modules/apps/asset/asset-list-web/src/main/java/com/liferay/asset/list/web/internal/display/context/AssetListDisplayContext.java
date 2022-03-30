@@ -14,13 +14,12 @@
 
 package com.liferay.asset.list.web.internal.display.context;
 
-import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.list.asset.entry.provider.AssetListAssetEntryProvider;
+import com.liferay.asset.kernel.model.ClassType;
+import com.liferay.asset.kernel.model.ClassTypeReader;
 import com.liferay.asset.list.constants.AssetListActionKeys;
 import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
 import com.liferay.asset.list.constants.AssetListPortletKeys;
-import com.liferay.asset.list.constants.AssetListWebKeys;
 import com.liferay.asset.list.model.AssetListEntry;
 import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.asset.list.service.AssetListEntryServiceUtil;
@@ -29,24 +28,32 @@ import com.liferay.asset.list.web.internal.security.permission.resource.AssetLis
 import com.liferay.asset.util.AssetRendererFactoryClassProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
+import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItemListBuilder;
 import com.liferay.petra.function.UnsafeConsumer;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.PortalPreferences;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
+import com.liferay.portal.kernel.portlet.SearchOrderByUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsEntryConstants;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.staging.StagingGroupHelperUtil;
 
 import java.util.List;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
@@ -68,9 +75,6 @@ public class AssetListDisplayContext {
 
 		_httpServletRequest = PortalUtil.getHttpServletRequest(renderRequest);
 
-		_assetListAssetEntryProvider =
-			(AssetListAssetEntryProvider)_httpServletRequest.getAttribute(
-				AssetListWebKeys.ASSET_LIST_ASSET_ENTRY_PROVIDER);
 		_portalPreferences = PortletPreferencesFactoryUtil.getPortalPreferences(
 			_httpServletRequest);
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
@@ -81,38 +85,12 @@ public class AssetListDisplayContext {
 		return DropdownItemListBuilder.add(
 			_getAddAssetListEntryDropdownItemUnsafeConsumer(
 				AssetListEntryTypeConstants.TYPE_MANUAL_LABEL,
-				"manual-selection", AssetListEntryTypeConstants.TYPE_MANUAL)
+				"manual-collection", AssetListEntryTypeConstants.TYPE_MANUAL)
 		).add(
 			_getAddAssetListEntryDropdownItemUnsafeConsumer(
 				AssetListEntryTypeConstants.TYPE_DYNAMIC_LABEL,
-				"dynamic-selection", AssetListEntryTypeConstants.TYPE_DYNAMIC)
+				"dynamic-collection", AssetListEntryTypeConstants.TYPE_DYNAMIC)
 		).build();
-	}
-
-	public SearchContainer<AssetEntry> getAssetListContentSearchContainer() {
-		if (_assetListContentSearchContainer != null) {
-			return _assetListContentSearchContainer;
-		}
-
-		SearchContainer<AssetEntry> searchContainer = new SearchContainer(
-			_renderRequest, _getAssetListContentURL(), null,
-			"there-are-no-asset-entries");
-
-		List<AssetEntry> assetEntries =
-			_assetListAssetEntryProvider.getAssetEntries(
-				getAssetListEntry(), getSegmentsEntryId(),
-				searchContainer.getStart(), searchContainer.getEnd());
-
-		searchContainer.setResults(assetEntries);
-
-		int totalCount = _assetListAssetEntryProvider.getAssetEntriesCount(
-			getAssetListEntry(), getSegmentsEntryId());
-
-		searchContainer.setTotal(totalCount);
-
-		_assetListContentSearchContainer = searchContainer;
-
-		return _assetListContentSearchContainer;
 	}
 
 	public int getAssetListEntriesCount() {
@@ -139,43 +117,34 @@ public class AssetListDisplayContext {
 				_renderRequest, _renderResponse.createRenderURL(), null,
 				"there-are-no-collections");
 
-		assetListEntriesSearchContainer.setRowChecker(
-			new EmptyOnClickRowChecker(_renderResponse));
-
-		OrderByComparator<AssetListEntry> orderByComparator =
-			AssetListPortletUtil.getAssetListEntryOrderByComparator(
-				_getOrderByCol(), getOrderByType());
-
 		assetListEntriesSearchContainer.setOrderByCol(_getOrderByCol());
-		assetListEntriesSearchContainer.setOrderByComparator(orderByComparator);
+		assetListEntriesSearchContainer.setOrderByComparator(
+			AssetListPortletUtil.getAssetListEntryOrderByComparator(
+				_getOrderByCol(), getOrderByType()));
 		assetListEntriesSearchContainer.setOrderByType(getOrderByType());
 
-		List<AssetListEntry> assetListEntries = null;
-
-		int assetListEntriesCount = 0;
-
 		if (_isSearch()) {
-			assetListEntries = AssetListEntryServiceUtil.getAssetListEntries(
-				_themeDisplay.getScopeGroupId(), _getKeywords(),
-				assetListEntriesSearchContainer.getStart(),
-				assetListEntriesSearchContainer.getEnd(), orderByComparator);
-
-			assetListEntriesCount =
+			assetListEntriesSearchContainer.setResultsAndTotal(
+				() -> AssetListEntryServiceUtil.getAssetListEntries(
+					_themeDisplay.getScopeGroupId(), _getKeywords(),
+					assetListEntriesSearchContainer.getStart(),
+					assetListEntriesSearchContainer.getEnd(),
+					assetListEntriesSearchContainer.getOrderByComparator()),
 				AssetListEntryServiceUtil.getAssetListEntriesCount(
-					_themeDisplay.getScopeGroupId(), _getKeywords());
+					_themeDisplay.getScopeGroupId(), _getKeywords()));
 		}
 		else {
-			assetListEntries = AssetListEntryServiceUtil.getAssetListEntries(
-				_themeDisplay.getScopeGroupId(),
-				assetListEntriesSearchContainer.getStart(),
-				assetListEntriesSearchContainer.getEnd(), orderByComparator);
-
-			assetListEntriesCount = getAssetListEntriesCount();
+			assetListEntriesSearchContainer.setResultsAndTotal(
+				() -> AssetListEntryServiceUtil.getAssetListEntries(
+					_themeDisplay.getScopeGroupId(),
+					assetListEntriesSearchContainer.getStart(),
+					assetListEntriesSearchContainer.getEnd(),
+					assetListEntriesSearchContainer.getOrderByComparator()),
+				getAssetListEntriesCount());
 		}
 
-		assetListEntriesSearchContainer.setResults(assetListEntries);
-
-		assetListEntriesSearchContainer.setTotal(assetListEntriesCount);
+		assetListEntriesSearchContainer.setRowChecker(
+			new EmptyOnClickRowChecker(_renderResponse));
 
 		_assetListEntriesSearchContainer = assetListEntriesSearchContainer;
 
@@ -252,9 +221,24 @@ public class AssetListDisplayContext {
 
 		String className = clazz.getName();
 
-		int pos = className.lastIndexOf(StringPool.PERIOD);
+		return className.substring(
+			className.lastIndexOf(StringPool.PERIOD) + 1);
+	}
 
-		return className.substring(pos + 1);
+	public ClassType getClassType(
+		ClassTypeReader classTypeReader, long classTypeId) {
+
+		try {
+			return classTypeReader.getClassType(
+				classTypeId, _themeDisplay.getLocale());
+		}
+		catch (PortalException portalException) {
+			if (_log.isWarnEnabled()) {
+				_log.warn("Unable to get class type", portalException);
+			}
+		}
+
+		return null;
 	}
 
 	public String getEmptyResultMessageDescription() {
@@ -267,52 +251,39 @@ public class AssetListDisplayContext {
 		return StringPool.BLANK;
 	}
 
-	public String getOrderByCol() {
-		if (_orderByCol != null) {
-			return _orderByCol;
-		}
-
-		_orderByCol = ParamUtil.getString(_httpServletRequest, "orderByCol");
-
-		if (Validator.isNull(_orderByCol)) {
-			_orderByCol = _portalPreferences.getValue(
-				AssetListPortletKeys.ASSET_LIST, "order-by-col", "create-date");
-		}
-		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(
-				_httpServletRequest, "saveOrderBy");
-
-			if (saveOrderBy) {
-				_portalPreferences.setValue(
-					AssetListPortletKeys.ASSET_LIST, "order-by-col",
-					_orderByCol);
+	public List<NavigationItem> getNavigationItems(String currentItem) {
+		return NavigationItemListBuilder.add(
+			navigationItem -> {
+				navigationItem.setActive(currentItem.equals("collections"));
+				navigationItem.setHref(_renderResponse.createRenderURL());
+				navigationItem.setLabel(
+					LanguageUtil.get(_httpServletRequest, "collections"));
 			}
-		}
+		).add(
+			navigationItem -> {
+				navigationItem.setActive(
+					currentItem.equals("collection-providers"));
+				navigationItem.setHref(
+					_renderResponse.createRenderURL(), "mvcPath",
+					"/view_info_collection_providers.jsp");
+				navigationItem.setLabel(
+					LanguageUtil.get(
+						_httpServletRequest, "collection-providers"));
+			}
+		).build();
+	}
 
-		return _orderByCol;
+	public String getOrderByCol() {
+		return _getOrderByCol();
 	}
 
 	public String getOrderByType() {
-		if (_orderByType != null) {
+		if (Validator.isNotNull(_orderByType)) {
 			return _orderByType;
 		}
 
-		_orderByType = ParamUtil.getString(_httpServletRequest, "orderByType");
-
-		if (Validator.isNull(_orderByType)) {
-			_orderByType = _portalPreferences.getValue(
-				AssetListPortletKeys.ASSET_LIST, "order-by-type", "asc");
-		}
-		else {
-			boolean saveOrderBy = ParamUtil.getBoolean(
-				_httpServletRequest, "saveOrderBy");
-
-			if (saveOrderBy) {
-				_portalPreferences.setValue(
-					AssetListPortletKeys.ASSET_LIST, "order-by-type",
-					_orderByType);
-			}
-		}
+		_orderByType = SearchOrderByUtil.getOrderByType(
+			_httpServletRequest, AssetListPortletKeys.ASSET_LIST, "asc");
 
 		return _orderByType;
 	}
@@ -354,6 +325,22 @@ public class AssetListDisplayContext {
 	}
 
 	public boolean isShowAddAssetListEntryAction() {
+		Group group = _themeDisplay.getScopeGroup();
+
+		if (group.isLayout()) {
+			group = group.getParentGroup();
+		}
+
+		StagingGroupHelper stagingGroupHelper =
+			StagingGroupHelperUtil.getStagingGroupHelper();
+
+		if (stagingGroupHelper.isLiveGroup(group) &&
+			stagingGroupHelper.isStagedPortlet(
+				group, AssetListPortletKeys.ASSET_LIST)) {
+
+			return false;
+		}
+
 		return AssetListPermission.contains(
 			_themeDisplay.getPermissionChecker(),
 			_themeDisplay.getScopeGroupId(),
@@ -369,36 +356,23 @@ public class AssetListDisplayContext {
 			dropdownItem.putData(
 				"addAssetListEntryURL", _getAddAssetListEntryURL(type));
 			dropdownItem.putData("title", _getAddAssetListTitle(title));
-			dropdownItem.setHref("#");
 			dropdownItem.setLabel(LanguageUtil.get(_httpServletRequest, label));
 		};
 	}
 
 	private String _getAddAssetListEntryURL(int type) {
-		PortletURL addAssetListEntryURL = _renderResponse.createActionURL();
-
-		addAssetListEntryURL.setParameter(
-			ActionRequest.ACTION_NAME, "/asset_list/add_asset_list_entry");
-		addAssetListEntryURL.setParameter("type", String.valueOf(type));
-
-		return addAssetListEntryURL.toString();
+		return PortletURLBuilder.createActionURL(
+			_renderResponse
+		).setActionName(
+			"/asset_list/add_asset_list_entry"
+		).setParameter(
+			"type", type
+		).buildString();
 	}
 
 	private String _getAddAssetListTitle(String title) {
 		return LanguageUtil.format(
 			_httpServletRequest, "add-x-collection", title, true);
-	}
-
-	private PortletURL _getAssetListContentURL() {
-		PortletURL portletURL = _renderResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view_content.jsp");
-		portletURL.setParameter(
-			"assetListEntryId", String.valueOf(getAssetListEntryId()));
-		portletURL.setParameter(
-			"segmentsEntryId", String.valueOf(getSegmentsEntryId()));
-
-		return portletURL;
 	}
 
 	private String _getKeywords() {
@@ -416,8 +390,9 @@ public class AssetListDisplayContext {
 			return _orderByCol;
 		}
 
-		_orderByCol = ParamUtil.getString(
-			_httpServletRequest, "orderByCol", "create-date");
+		_orderByCol = SearchOrderByUtil.getOrderByCol(
+			_httpServletRequest, AssetListPortletKeys.ASSET_LIST,
+			"create-date");
 
 		return _orderByCol;
 	}
@@ -430,8 +405,9 @@ public class AssetListDisplayContext {
 		return false;
 	}
 
-	private final AssetListAssetEntryProvider _assetListAssetEntryProvider;
-	private SearchContainer<AssetEntry> _assetListContentSearchContainer;
+	private static final Log _log = LogFactoryUtil.getLog(
+		AssetListDisplayContext.class);
+
 	private Integer _assetListEntriesCount;
 	private SearchContainer<AssetListEntry> _assetListEntriesSearchContainer;
 	private AssetListEntry _assetListEntry;

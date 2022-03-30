@@ -14,9 +14,9 @@
 
 package com.liferay.dynamic.data.lists.internal.exportimport.staged.model.repository;
 
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordVersion;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
 import com.liferay.dynamic.data.lists.service.DDLRecordVersionLocalService;
@@ -26,6 +26,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelModifiedDateComparator;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.exportimport.staged.model.repository.StagedModelRepositoryHelper;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
@@ -83,7 +84,7 @@ public class DDLRecordStagedModelRepository
 			userId, ddlRecord.getGroupId(), ddlRecord.getRecordSetId(),
 			ddlRecord.getDisplayIndex(), ddmFormValues, serviceContext);
 
-		updateVersions(importedRecord, ddlRecord.getVersion());
+		_updateVersions(importedRecord, ddlRecord.getVersion());
 
 		return importedRecord;
 	}
@@ -108,6 +109,12 @@ public class DDLRecordStagedModelRepository
 	@Override
 	public void deleteStagedModels(PortletDataContext portletDataContext)
 		throws PortalException {
+	}
+
+	@Override
+	public DDLRecord fetchMissingReference(String uuid, long groupId) {
+		return _stagedModelRepositoryHelper.fetchMissingReference(
+			uuid, groupId, this);
 	}
 
 	@Override
@@ -136,13 +143,13 @@ public class DDLRecordStagedModelRepository
 	}
 
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
-		PortletDataContext portletDataContext, final int scope) {
+		PortletDataContext portletDataContext, int scope) {
 
 		ExportActionableDynamicQuery exportActionableDynamicQuery =
 			_ddlRecordLocalService.getExportActionableDynamicQuery(
 				portletDataContext);
 
-		final ActionableDynamicQuery.AddCriteriaMethod addCriteriaMethod =
+		ActionableDynamicQuery.AddCriteriaMethod addCriteriaMethod =
 			exportActionableDynamicQuery.getAddCriteriaMethod();
 
 		exportActionableDynamicQuery.setAddCriteriaMethod(
@@ -153,13 +160,13 @@ public class DDLRecordStagedModelRepository
 					"recordId");
 
 				dynamicQuery.add(
-					recordIdProperty.in(getRecordVersionDynamicQuery()));
+					recordIdProperty.in(_getRecordVersionDynamicQuery()));
 
 				Property recordSetIdProperty = PropertyFactoryUtil.forName(
 					"recordSetId");
 
 				dynamicQuery.add(
-					recordSetIdProperty.in(getRecordSetDynamicQuery(scope)));
+					recordSetIdProperty.in(_getRecordSetDynamicQuery(scope)));
 			});
 
 		return exportActionableDynamicQuery;
@@ -199,12 +206,12 @@ public class DDLRecordStagedModelRepository
 			userId, ddlRecord.getRecordId(), false, ddlRecord.getDisplayIndex(),
 			ddmFormValues, serviceContext);
 
-		updateVersions(importedRecord, ddlRecord.getVersion());
+		_updateVersions(importedRecord, ddlRecord.getVersion());
 
 		return importedRecord;
 	}
 
-	protected DynamicQuery getRecordSetDynamicQuery(int scope) {
+	private DynamicQuery _getRecordSetDynamicQuery(int scope) {
 		StagedModelDataHandler<?> stagedModelDataHandler =
 			StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
 				DDLRecord.class.getName());
@@ -228,7 +235,7 @@ public class DDLRecordStagedModelRepository
 		return recordSetDynamicQuery;
 	}
 
-	protected DynamicQuery getRecordVersionDynamicQuery() {
+	private DynamicQuery _getRecordVersionDynamicQuery() {
 		StagedModelDataHandler<?> stagedModelDataHandler =
 			StagedModelDataHandlerRegistryUtil.getStagedModelDataHandler(
 				DDLRecord.class.getName());
@@ -258,7 +265,7 @@ public class DDLRecordStagedModelRepository
 		return recordVersionDynamicQuery;
 	}
 
-	protected void updateVersions(DDLRecord importedRecord, String version)
+	private void _updateVersions(DDLRecord importedRecord, String version)
 		throws PortalException {
 
 		if (Objects.equals(importedRecord.getVersion(), version)) {
@@ -283,5 +290,8 @@ public class DDLRecordStagedModelRepository
 
 	@Reference
 	private DDLRecordVersionLocalService _ddlRecordVersionLocalService;
+
+	@Reference
+	private StagedModelRepositoryHelper _stagedModelRepositoryHelper;
 
 }

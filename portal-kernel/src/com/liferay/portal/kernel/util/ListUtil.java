@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.ToLongFunction;
@@ -109,9 +110,9 @@ public class ListUtil {
 		Iterator<? extends E> iterator = list.iterator();
 
 		while (iterator.hasNext()) {
-			E obj = iterator.next();
+			E object = iterator.next();
 
-			if (!set.add(obj)) {
+			if (!set.add(object)) {
 				iterator.remove();
 			}
 		}
@@ -289,9 +290,9 @@ public class ListUtil {
 		List<E> list = new ArrayList<>();
 
 		while (enumeration.hasMoreElements()) {
-			E obj = enumeration.nextElement();
+			E object = enumeration.nextElement();
 
-			list.add(obj);
+			list.add(object);
 		}
 
 		return list;
@@ -355,6 +356,14 @@ public class ListUtil {
 
 	public static boolean isNotEmpty(List<?> list) {
 		return !isEmpty(list);
+	}
+
+	public static <E> void isNotEmptyForEach(
+		List<? extends E> list, Consumer<? super E> consumer) {
+
+		if (!isEmpty(list)) {
+			list.forEach(consumer);
+		}
 	}
 
 	public static boolean isNotNull(List<?> list) {
@@ -592,7 +601,7 @@ public class ListUtil {
 	}
 
 	public static <T, R> List<R> toList(List<T> list, Function<T, R> function) {
-		final List<R> result = new ArrayList<>(list.size());
+		List<R> result = new ArrayList<>(list.size());
 
 		for (T t : list) {
 			result.add(function.apply(t));
@@ -698,7 +707,7 @@ public class ListUtil {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(2 * list.size() - 1);
+		StringBundler sb = new StringBundler((2 * list.size()) - 1);
 
 		for (int i = 0; i < list.size(); i++) {
 			T bean = list.get(i);
@@ -734,7 +743,7 @@ public class ListUtil {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(2 * list.size() - 1);
+		StringBundler sb = new StringBundler((2 * list.size()) - 1);
 
 		for (int i = 0; i < list.size(); i++) {
 			Object bean = list.get(i);

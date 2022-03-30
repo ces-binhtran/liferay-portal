@@ -27,7 +27,7 @@ FileShortcut fileShortcut = null;
 if (result instanceof AssetEntry) {
 	AssetEntry assetEntry = (AssetEntry)result;
 
-	if (assetEntry.getClassName().equals(DLFileEntryConstants.getClassName())) {
+	if (Objects.equals(assetEntry.getClassName(), DLFileEntryConstants.getClassName())) {
 		fileEntry = DLAppLocalServiceUtil.getFileEntry(assetEntry.getClassPK());
 	}
 	else {
@@ -69,16 +69,22 @@ if (fileShortcut == null) {
 else {
 	dlViewFileVersionDisplayContext = dlDisplayContextProvider.getDLViewFileVersionDisplayContext(request, response, fileShortcut);
 }
-
-PortletURL rowURL = liferayPortletResponse.createRenderURL();
-
-rowURL.setParameter("mvcRenderCommandName", "/document_library/view_file_entry");
-rowURL.setParameter("redirect", HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax"));
-rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 %>
 
 <h2 class="h5">
-	<aui:a href="<%= rowURL.toString() %>">
+	<aui:a
+		href='<%=
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/document_library/view_file_entry"
+			).setRedirect(
+				HttpUtil.removeParameter(currentURL, liferayPortletResponse.getNamespace() + "ajax")
+			).setParameter(
+				"fileEntryId", fileEntry.getFileEntryId()
+			).buildString()
+		%>'
+	>
 		<%= latestFileVersion.getTitle() %>
 	</aui:a>
 </h2>
@@ -120,7 +126,7 @@ rowURL.setParameter("fileEntryId", String.valueOf(fileEntry.getFileEntryId()));
 	</c:choose>
 
 	<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-		<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title='<%= LanguageUtil.get(request, "shared") %>'>
+		<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
 			<aui:icon image="users" markupView="lexicon" message="shared" />
 		</span>
 	</c:if>

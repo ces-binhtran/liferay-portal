@@ -15,7 +15,9 @@
 package com.liferay.change.tracking.service;
 
 import com.liferay.change.tracking.conflict.ConflictInfo;
+import com.liferay.change.tracking.mapping.CTMappingTableInfo;
 import com.liferay.change.tracking.model.CTCollection;
+import com.liferay.change.tracking.model.CTEntry;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
@@ -61,11 +63,15 @@ public interface CTCollectionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link CTCollectionLocalServiceUtil} to access the ct collection local service. Add custom service methods to <code>com.liferay.change.tracking.service.impl.CTCollectionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.change.tracking.service.impl.CTCollectionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ct collection local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CTCollectionLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the ct collection to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was added
@@ -104,6 +110,10 @@ public interface CTCollectionLocalService
 	/**
 	 * Deletes the ct collection from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was removed
 	 * @throws PortalException
@@ -114,6 +124,10 @@ public interface CTCollectionLocalService
 
 	/**
 	 * Deletes the ct collection with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollectionId the primary key of the ct collection
 	 * @return the ct collection that was removed
@@ -132,6 +146,9 @@ public interface CTCollectionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -244,6 +261,13 @@ public interface CTCollectionLocalService
 	public int getCTCollectionsCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CTMappingTableInfo> getCTMappingTableInfos(long ctCollectionId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<CTEntry> getDiscardCTEntries(
+		long ctCollectionId, long modelClassNameId, long modelClassPK);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
 	/**
@@ -271,6 +295,10 @@ public interface CTCollectionLocalService
 
 	/**
 	 * Updates the ct collection in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was updated

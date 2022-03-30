@@ -51,6 +51,7 @@ create table KaleoDefinition (
 	title STRING null,
 	description STRING null,
 	content TEXT null,
+	scope VARCHAR(75) null,
 	version INTEGER,
 	active_ BOOLEAN
 );
@@ -91,6 +92,7 @@ create table KaleoInstance (
 	kaleoDefinitionName VARCHAR(200) null,
 	kaleoDefinitionVersion INTEGER,
 	rootKaleoInstanceTokenId LONG,
+	active_ BOOLEAN,
 	className VARCHAR(200) null,
 	classPK LONG,
 	completed BOOLEAN,
@@ -166,6 +168,7 @@ create table KaleoNode (
 	kaleoDefinitionId LONG,
 	kaleoDefinitionVersionId LONG,
 	name VARCHAR(200) null,
+	label STRING null,
 	metadata STRING null,
 	description STRING null,
 	type_ VARCHAR(20) null,
@@ -408,6 +411,7 @@ create table KaleoTransition (
 	kaleoDefinitionVersionId LONG,
 	kaleoNodeId LONG,
 	name VARCHAR(200) null,
+	label STRING null,
 	description STRING null,
 	sourceKaleoNodeId LONG,
 	sourceKaleoNodeName VARCHAR(200) null,

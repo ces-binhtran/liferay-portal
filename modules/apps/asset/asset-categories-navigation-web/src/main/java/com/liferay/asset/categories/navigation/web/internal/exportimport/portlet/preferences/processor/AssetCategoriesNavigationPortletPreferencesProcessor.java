@@ -71,7 +71,7 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		throws PortletDataException {
 
 		try {
-			return updateExportPortletPreferences(
+			return _updateExportPortletPreferences(
 				portletDataContext, portletPreferences,
 				portletDataContext.getPortletId());
 		}
@@ -90,7 +90,7 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		throws PortletDataException {
 
 		try {
-			return updateImportPortletPreferences(
+			return _updateImportPortletPreferences(
 				portletDataContext, portletPreferences);
 		}
 		catch (Exception exception) {
@@ -151,8 +151,6 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		String[] oldValues = StringUtil.split(
 			portletPreferencesOldValue, StringPool.POUND);
 
-		String uuid = oldValues[0];
-
 		long groupId = portletDataContext.getScopeGroupId();
 
 		if (oldValues.length > 1) {
@@ -165,6 +163,8 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		}
 
 		if (className.equals(AssetVocabulary.class.getName())) {
+			String uuid = oldValues[0];
+
 			AssetVocabulary assetVocabulary =
 				_assetVocabularyLocalService.
 					fetchAssetVocabularyByUuidAndGroupId(uuid, groupId);
@@ -177,7 +177,7 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		return null;
 	}
 
-	protected PortletPreferences updateExportPortletPreferences(
+	private PortletPreferences _updateExportPortletPreferences(
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences, String portletId)
 		throws Exception {
@@ -200,7 +200,7 @@ public class AssetCategoriesNavigationPortletPreferencesProcessor
 		return portletPreferences;
 	}
 
-	protected PortletPreferences updateImportPortletPreferences(
+	private PortletPreferences _updateImportPortletPreferences(
 			PortletDataContext portletDataContext,
 			PortletPreferences portletPreferences)
 		throws Exception {

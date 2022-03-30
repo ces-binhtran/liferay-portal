@@ -30,13 +30,13 @@ public class AuditMessageFactoryUtil {
 	}
 
 	public AuditMessage getAuditMessage(String message) throws JSONException {
-		return getAuditMessageFactory().getAuditMessage(message);
+		return _auditMessageFactory.getAuditMessage(message);
 	}
 
 	public AuditMessage getAuditMessage(
 		String eventType, long companyId, long userId, String userName) {
 
-		return getAuditMessageFactory().getAuditMessage(
+		return _auditMessageFactory.getAuditMessage(
 			eventType, companyId, userId, userName);
 	}
 
@@ -44,7 +44,7 @@ public class AuditMessageFactoryUtil {
 		String eventType, long companyId, long userId, String userName,
 		String className, String classPK) {
 
-		return getAuditMessageFactory().getAuditMessage(
+		return _auditMessageFactory.getAuditMessage(
 			eventType, companyId, userId, userName, className, classPK);
 	}
 
@@ -52,7 +52,7 @@ public class AuditMessageFactoryUtil {
 		String eventType, long companyId, long userId, String userName,
 		String className, String classPK, String message) {
 
-		return getAuditMessageFactory().getAuditMessage(
+		return _auditMessageFactory.getAuditMessage(
 			eventType, companyId, userId, userName, className, classPK,
 			message);
 	}
@@ -60,21 +60,21 @@ public class AuditMessageFactoryUtil {
 	public AuditMessage getAuditMessage(
 		String eventType, long companyId, long userId, String userName,
 		String className, String classPK, String message, Date timestamp,
-		JSONObject additionalInfo) {
+		JSONObject additionalInfoJSONObject) {
 
-		return getAuditMessageFactory().getAuditMessage(
+		return _auditMessageFactory.getAuditMessage(
 			eventType, companyId, userId, userName, className, classPK, message,
-			timestamp, additionalInfo);
+			timestamp, additionalInfoJSONObject);
 	}
 
 	public AuditMessage getAuditMessage(
 		String eventType, long companyId, long userId, String userName,
 		String className, String classPK, String message,
-		JSONObject additionalInfo) {
+		JSONObject additionalInfoJSONObject) {
 
-		return getAuditMessageFactory().getAuditMessage(
+		return _auditMessageFactory.getAuditMessage(
 			eventType, companyId, userId, userName, className, classPK, message,
-			additionalInfo);
+			additionalInfoJSONObject);
 	}
 
 	private static volatile AuditMessageFactory _auditMessageFactory =

@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.Arrays;
 
@@ -38,7 +37,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/mark_item_for_deletion"
+		"mvc.command.name=/layout_content_page_editor/mark_item_for_deletion"
 	},
 	service = MVCActionCommand.class
 )
@@ -54,8 +53,7 @@ public class MarkItemForDeletionMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 		String itemId = ParamUtil.getString(actionRequest, "itemId");
 		String[] portletIds = ParamUtil.getStringValues(
 			actionRequest, "portletIds");

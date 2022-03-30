@@ -16,8 +16,9 @@ package com.liferay.configuration.admin.web.internal.display;
 
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 
 import java.util.Locale;
 import java.util.Objects;
@@ -43,8 +44,8 @@ public class ConfigurationModelConfigurationEntry
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		ConfigurationEntry configurationEntry = (ConfigurationEntry)obj;
+	public boolean equals(Object object) {
+		ConfigurationEntry configurationEntry = (ConfigurationEntry)object;
 
 		return Objects.equals(getKey(), configurationEntry.getKey());
 	}
@@ -62,18 +63,21 @@ public class ConfigurationModelConfigurationEntry
 	public String getEditURL(
 		RenderRequest renderRequest, RenderResponse renderResponse) {
 
-		PortletURL portletURL = renderResponse.createRenderURL();
-
-		portletURL.setParameter(
-			"factoryPid", _configurationModel.getFactoryPid());
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setParameter(
+			"factoryPid", _configurationModel.getFactoryPid()
+		).buildPortletURL();
 
 		if (_configurationModel.isFactory()) {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "/view_factory_instances");
+				"mvcRenderCommandName",
+				"/configuration_admin/view_factory_instances");
 		}
 		else {
 			portletURL.setParameter(
-				"mvcRenderCommandName", "/edit_configuration");
+				"mvcRenderCommandName",
+				"/configuration_admin/edit_configuration");
 			portletURL.setParameter("pid", _configurationModel.getID());
 		}
 

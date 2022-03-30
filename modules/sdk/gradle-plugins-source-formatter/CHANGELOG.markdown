@@ -1,5 +1,1415 @@
 # Liferay Gradle Plugins Source Formatter Change Log
 
+## 5.1.92 - 2022-01-25
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1194.
+
+## 5.1.91 - 2022-01-21
+
+### Dependencies
+- [LPS-143628] Update the com.liferay.source.formatter dependency to version
+1.0.1193.
+
+## 5.1.90 - 2022-01-14
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1192.
+
+## 5.1.89 - 2022-01-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1191.
+
+## 5.1.88 - 2022-01-13
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1190.
+
+## 5.1.87 - 2022-01-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1189.
+
+## 5.1.86 - 2022-01-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1188.
+
+## 5.1.85 - 2022-01-11
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1187.
+
+## 5.1.84 - 2022-01-09
+
+### Dependencies
+- [LPS-144888] Update the com.liferay.source.formatter dependency to version
+1.0.1186.
+
+## 5.1.83 - 2022-01-09
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1185.
+
+## 5.1.82 - 2022-01-05
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1184.
+
+## 5.1.81 - 2022-01-04
+
+### Commits
+- [LPS-105380] prep nex (14d262d642)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1183.
+
+## 5.1.80 - 2022-01-04
+
+### Dependencies
+- [LPS-141109] Update the com.liferay.source.formatter dependency to version
+1.0.1182.
+
+## 5.1.79 - 2021-12-30
+
+### Dependencies
+- [LRCI-2605] Update the com.liferay.source.formatter dependency to version
+1.0.1181.
+- [LRCI-2670] Update the com.liferay.gradle.util dependency to version 1.0.46.
+
+## 5.1.78 - 2021-12-29
+
+### Commits
+- [LPS-105380] Remove argument 'show.documentation' (924225240e)
+- [LPS-105380] Remove argument 'show.status.updates' (4c9a0de5f3)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1180.
+
+## 5.1.77 - 2021-12-27
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1179.
+
+## 5.1.76 - 2021-12-22
+
+### Dependencies
+- [POSHI-83] Update the com.liferay.source.formatter dependency to version
+1.0.1178.
+
+## 5.1.75 - 2021-12-17
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1177.
+
+## 5.1.74 - 2021-12-10
+
+### Dependencies
+- [LPS-143547] Update the com.liferay.source.formatter dependency to version
+1.0.1176.
+
+## 5.1.73 - 2021-12-09
+
+### Dependencies
+- [LPS-143547] Update the com.liferay.source.formatter dependency to version
+1.0.1175.
+
+## 5.1.72 - 2021-12-08
+
+### Dependencies
+- [LPS-143547] Update the com.liferay.source.formatter dependency to version
+1.0.1174.
+
+## 5.1.71 - 2021-12-08
+
+### Dependencies
+- [LPS-141109] Update the com.liferay.source.formatter dependency to version
+1.0.1173.
+
+## 5.1.70 - 2021-12-07
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1172.
+
+## 5.1.69 - 2021-12-03
+
+### Dependencies
+- [LPS-143349] Update the com.liferay.source.formatter dependency to version
+1.0.1171.
+- [LPS-143280] Update the com.liferay.gradle.util dependency to version 1.0.45.
+
+## 5.1.68 - 2021-12-01
+
+### Dependencies
+- [LPS-141109] Update the com.liferay.source.formatter dependency to version
+1.0.1170.
+
+## 5.1.67 - 2021-11-30
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1169.
+
+## 5.1.66 - 2021-11-17
+
+### Dependencies
+- [LPS-141109] Update the com.liferay.source.formatter dependency to version
+1.0.1168.
+
+## 5.1.65 - 2021-11-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1167.
+
+## 5.1.64 - 2021-11-09
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1166.
+
+## 5.1.63 - 2021-11-09
+
+### Dependencies
+- [LPS-142231] Update the com.liferay.source.formatter dependency to version
+1.0.1165.
+
+## 5.1.62 - 2021-11-08
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1164.
+
+## 5.1.61 - 2021-11-04
+
+### Dependencies
+- [LPS-123151] Update the com.liferay.source.formatter dependency to version
+1.0.1163.
+
+## 5.1.60 - 2021-11-01
+
+### Dependencies
+- [LPS-141887] Update the com.liferay.source.formatter dependency to version
+1.0.1162.
+
+## 5.1.59 - 2021-11-01
+
+### Dependencies
+- [LPS-141904] Update the com.liferay.source.formatter dependency to version
+1.0.1161.
+
+## 5.1.58 - 2021-11-01
+
+### Dependencies
+- [LPS-141244] Update the com.liferay.source.formatter dependency to version
+1.0.1160.
+- [LPS-135504] Update the com.liferay.source.formatter dependency to version
+1.0.1159.
+
+## 5.1.57 - 2021-10-27
+
+### Dependencies
+- [LPS-137358] Update the com.liferay.source.formatter dependency to version
+1.0.1158.
+
+## 5.1.56 - 2021-10-26
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1157.
+
+## 5.1.55 - 2021-10-20
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1156.
+
+## 5.1.54 - 2021-10-14
+
+### Dependencies
+- [LPS-139732] Update the com.liferay.source.formatter dependency to version
+1.0.1155.
+
+## 5.1.53 - 2021-10-12
+
+### Dependencies
+- [LPS-138929] Update the com.liferay.source.formatter dependency to version
+1.0.1154.
+
+## 5.1.52 - 2021-10-11
+
+### Dependencies
+- [LPS-136723] Update the com.liferay.source.formatter dependency to version
+1.0.1153.
+
+## 5.1.51 - 2021-10-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1152.
+
+## 5.1.50 - 2021-09-30
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1151.
+
+## 5.1.49 - 2021-09-29
+
+### Dependencies
+- [LPS-138673] Update the com.liferay.source.formatter dependency to version
+1.0.1150.
+
+## 5.1.48 - 2021-09-17
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1149.
+
+## 5.1.47 - 2021-09-15
+
+### Dependencies
+- [LPS-105380 LPS-139310] Update the com.liferay.source.formatter dependency to
+version 1.0.1148.
+
+## 5.1.46 - 2021-09-03
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1147.
+
+## 5.1.45 - 2021-09-01
+
+### Dependencies
+- [LPS-137720] Update the com.liferay.source.formatter dependency to version
+1.0.1146.
+
+## 5.1.44 - 2021-09-01
+
+### Dependencies
+- [LPS-137720] Update the com.liferay.source.formatter dependency to version
+1.0.1145.
+
+## 5.1.43 - 2021-08-31
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1144.
+
+## 5.1.42 - 2021-08-25
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1143.
+
+## 5.1.41 - 2021-08-24
+
+### Dependencies
+- [LPS-130748] Update the com.liferay.source.formatter dependency to version
+1.0.1142.
+
+## 5.1.40 - 2021-08-24
+
+### Dependencies
+- [LPS-130748] Update the com.liferay.source.formatter dependency to version
+1.0.1141.
+
+## 5.1.39 - 2021-08-24
+
+### Dependencies
+- [LPS-136445] Update the com.liferay.source.formatter dependency to version
+1.0.1140.
+
+## 5.1.38 - 2021-08-23
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1139.
+
+## 5.1.37 - 2021-08-23
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1138.
+
+## 5.1.36 - 2021-08-23
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1137.
+
+## 5.1.35 - 2021-08-23
+
+### Dependencies
+- [LPS-137707] Update the com.liferay.source.formatter dependency to version
+1.0.1136.
+
+## 5.1.34 - 2021-08-16
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1135.
+
+## 5.1.33 - 2021-08-10
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1134.
+
+## 5.1.32 - 2021-08-09
+
+### Dependencies
+- [LPS-136864] Update the com.liferay.source.formatter dependency to version
+1.0.1133.
+
+## 5.1.31 - 2021-08-02
+
+### Dependencies
+- [LPS-136308] Update the com.liferay.source.formatter dependency to version
+1.0.1132.
+
+## 5.1.30 - 2021-07-23
+
+### Dependencies
+- [LPS-136078] Update the com.liferay.source.formatter dependency to version
+1.0.1131.
+
+## 5.1.29 - 2021-07-19
+
+### Dependencies
+- [LPS-135818] Update the com.liferay.source.formatter dependency to version
+1.0.1130.
+
+## 5.1.28 - 2021-07-14
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1129.
+
+## 5.1.27 - 2021-07-12
+
+### Dependencies
+- [LPS-135081] Update the com.liferay.source.formatter dependency to version
+1.0.1128.
+
+## 5.1.26 - 2021-07-05
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1127.
+
+## 5.1.25 - 2021-07-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1126.
+
+## 5.1.24 - 2021-06-28
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1125.
+
+## 5.1.23 - 2021-06-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1124.
+
+## 5.1.22 - 2021-06-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1123.
+
+## 5.1.21 - 2021-06-17
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1122.
+
+## 5.1.20 - 2021-06-10
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1121.
+
+## 5.1.19 - 2021-06-04
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1120.
+
+## 5.1.18 - 2021-06-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1119.
+
+## 5.1.17 - 2021-05-26
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1118.
+
+## 5.1.16 - 2021-05-25
+
+### Dependencies
+- [LPS-129532] Update the com.liferay.source.formatter dependency to version
+1.0.1117.
+
+## 5.1.15 - 2021-05-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1116.
+
+## 5.1.14 - 2021-05-18
+
+### Dependencies
+- [LPS-131887] Update the com.liferay.source.formatter dependency to version
+1.0.1115.
+
+## 5.1.13 - 2021-05-12
+
+### Dependencies
+- [LPS-129260] Update the com.liferay.source.formatter dependency to version
+1.0.1114.
+
+## 5.1.12 - 2021-05-12
+
+### Dependencies
+- [LPS-105380 LPS-119446] Update the com.liferay.source.formatter dependency to
+version 1.0.1113.
+
+## 5.1.11 - 2021-05-06
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1112.
+
+## 5.1.9 - 2021-05-04
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1111.
+
+## 5.1.8 - 2021-04-29
+
+### Dependencies
+- [LPS-131175] Update the com.liferay.source.formatter dependency to version
+1.0.1110.
+
+## 5.1.7 - 2021-04-28
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1109.
+
+## 5.1.6 - 2021-04-26
+
+### Commits
+- [LPS-130505] reverted, republish (465fa2545b)
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (0cdafd184b)
+
+### Dependencies
+- [LPS-130505] Update the com.liferay.source.formatter dependency to version
+1.0.1108.
+
+## 5.1.5 - 2021-04-23
+
+### Dependencies
+- [LPS-130920] Update the com.liferay.source.formatter dependency to version
+1.0.1107.
+
+## 5.1.4 - 2021-04-22
+
+### Commits
+- [LPS-130505] SF, no need to call methods (b9055a7fc9)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1106.
+
+## 5.1.3 - 2021-04-19
+
+### Dependencies
+- [LPS-119446] Update the com.liferay.source.formatter dependency to version
+1.0.1105.
+
+## 5.1.2 - 2021-04-19
+
+### Dependencies
+- [LPS-119446] Update the com.liferay.source.formatter dependency to version
+1.0.1104.
+
+## 5.1.1 - 2021-04-16
+
+### Dependencies
+- [LPS-130744] Update the com.liferay.source.formatter dependency to version
+1.0.1103.
+
+## 5.1.0 - 2021-04-15
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1102.
+
+## 5.0.30 - 2021-04-15
+
+### Commits
+- [LPS-105380] baseline (1989e1455a)
+- [LPS-105380] Update readme (3ed2b77a28)
+- [LPS-105380] Sync ant and gradle options for sourceFormatter (a450061682)
+
+## 5.0.29 - 2021-04-07
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1101.
+- [LPS-130119] Update the com.liferay.source.formatter dependency to version
+1.0.1100.
+- [LPS-129842] Update the com.liferay.source.formatter dependency to version
+1.0.1099.
+
+## 5.0.28 - 2021-03-31
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1098.
+
+## 5.0.27 - 2021-03-31
+
+### Commits
+- [LPS-129940] Sort alphabetically (b530f1a414)
+- [LPS-129940] Partial revert of a26f272958a01e9899c918fd5cad8384ee348206
+(d91215dbe0)
+- [LPS-129940] Support SF task for a particular sub-directory (61bde95ed4)
+
+### Dependencies
+- [LPS-105380 LPS-129940] Update the com.liferay.source.formatter dependency to
+version 1.0.1097.
+
+## 5.0.26 - 2021-03-30
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1096.
+
+## 5.0.25 - 2021-03-28
+
+### Dependencies
+- [LPS-129341] Update the com.liferay.source.formatter dependency to version
+1.0.1095.
+
+## 5.0.24 - 2021-03-22
+
+### Dependencies
+- [LPS-129351] Update the com.liferay.source.formatter dependency to version
+1.0.1094.
+
+## 5.0.23 - 2021-03-18
+
+### Dependencies
+- [LPS-120745] Update the com.liferay.source.formatter dependency to version
+1.0.1093.
+
+## 5.0.22 - 2021-03-16
+
+### Dependencies
+- [LPS-127081] Update the com.liferay.source.formatter dependency to version
+1.0.1092.
+
+## 5.0.21 - 2021-03-11
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1091.
+
+## 5.0.20 - 2021-03-08
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1090.
+
+## 5.0.19 - 2021-03-02
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1089.
+
+## 5.0.18 - 2021-02-18
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1088.
+
+## 5.0.17 - 2021-02-17
+
+### Dependencies
+- [LPS-122094] Update the com.liferay.source.formatter dependency to version
+1.0.1087.
+
+## 5.0.16 - 2021-02-04
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1086.
+
+## 5.0.15 - 2021-01-26
+
+### Dependencies
+- [LPS-105380 LPS-121804] Update the com.liferay.source.formatter dependency to
+version 1.0.1085.
+
+## 5.0.14 - 2021-01-21
+
+### Dependencies
+- [LPS-125966] Update the com.liferay.source.formatter dependency to version
+1.0.1084.
+
+## 5.0.13 - 2021-01-19
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1083.
+
+## 5.0.12 - 2021-01-19
+
+### Dependencies
+- [LPS-125980] Update the com.liferay.source.formatter dependency to version
+1.0.1082.
+
+## 5.0.11 - 2021-01-18
+
+### Dependencies
+- [LPS-121804] Update the com.liferay.source.formatter dependency to version
+1.0.1081.
+
+## 5.0.10 - 2021-01-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1080.
+
+## 5.0.9 - 2021-01-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1079.
+
+## 5.0.8 - 2021-01-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1078.
+
+## 5.0.7 - 2021-01-11
+
+### Dependencies
+- [LPS-121804] Update the com.liferay.source.formatter dependency to version
+1.0.1077.
+
+## 5.0.6 - 2021-01-05
+
+### Dependencies
+- [LPS-115709] Update the com.liferay.source.formatter dependency to version
+1.0.1076.
+
+## 5.0.5 - 2020-12-24
+
+### Dependencies
+- [LPS-121804] Update the com.liferay.source.formatter dependency to version
+1.0.1075.
+
+## 5.0.4 - 2020-12-21
+
+### Dependencies
+- [LPS-124961] Update the com.liferay.source.formatter dependency to version
+1.0.1074.
+
+## 5.0.3 - 2020-12-15
+
+### Dependencies
+- [LPS-115709] Update the com.liferay.source.formatter dependency to version
+1.0.1073.
+
+## 5.0.2 - 2020-12-14
+
+### Dependencies
+- [LPS-123309] Update the com.liferay.source.formatter dependency to version
+1.0.1072.
+
+## 5.0.1 - 2020-12-07
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1071.
+
+## 4.1.1 - 2020-12-05
+
+### Commits
+- [LPS-121804] Simplify (351282045b)
+
+## 4.0.54 - 2020-12-03
+
+### Commits
+- [LPS-121804] Move logic (f4f92003fd)
+- [LPS-121804] Update com.liferay.source.formatter.defaults (c4dd3e4b54)
+- [LPS-121804] Add pythonBlackTask (2855ca3420)
+
+### Dependencies
+- [LPS-121804] Update the python-gradle-plugin dependency to version 1.2.1.
+- [LPS-121804] Update the python-gradle-plugin dependency to version 1.2.1.
+
+## 4.0.53 - 2020-12-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1070.
+
+## 4.0.52 - 2020-11-09
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1069.
+
+## 4.0.51 - 2020-11-03
+
+### Dependencies
+- [LPS-103580] Update the com.liferay.source.formatter dependency to version
+1.0.1068.
+
+## 4.0.50 - 2020-11-02
+
+### Commits
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+
+## 4.0.49 - 2020-10-29
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1067.
+
+## 4.0.48 - 2020-10-28
+
+### Commits
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.source.formatter dependency to version
+1.0.1066.
+
+## 4.0.47 - 2020-10-27
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1065.
+
+## 4.0.46 - 2020-10-23
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1064.
+
+## 4.0.45 - 2020-10-21
+
+### Dependencies
+- [LPS-122403] Update the com.liferay.source.formatter dependency to version
+1.0.1063.
+
+## 4.0.44 - 2020-10-19
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1062.
+
+## 4.0.43 - 2020-10-15
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1061.
+
+## 4.0.42 - 2020-10-13
+
+### Dependencies
+- [LPS-121824] Update the com.liferay.source.formatter dependency to version
+1.0.1060.
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1059.
+
+## 4.0.41 - 2020-10-07
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1058.
+
+## 4.0.40 - 2020-10-02
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1057.
+
+## 4.0.39 - 2020-10-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1056.
+
+## 4.0.38 - 2020-09-30
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1055.
+
+## 4.0.37 - 2020-09-29
+
+### Dependencies
+- [LPS-120746 LPS-105380] Update the com.liferay.source.formatter dependency to
+version 1.0.1054.
+
+## 4.0.36 - 2020-09-29
+
+### Dependencies
+- [LPS-121386] Update the com.liferay.source.formatter dependency to version
+1.0.1053.
+
+## 4.0.35 - 2020-09-25
+
+### Dependencies
+- [LPS-121386 LPS-105380] Update the com.liferay.source.formatter dependency to
+version 1.0.1052.
+
+## 4.0.34 - 2020-09-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1051.
+
+## 4.0.33 - 2020-09-18
+
+### Commits
+- [LPS-105380] Add property validate.commit.messages (default value is false)
+(fadc7ae02d)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1050.
+
+## 4.0.32 - 2020-09-15
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1049.
+
+## 4.0.31 - 2020-09-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1048.
+
+## 4.0.30 - 2020-09-10
+
+### Dependencies
+- [LPS-102001] Update the com.liferay.source.formatter dependency to version
+1.0.1047.
+
+## 4.0.29 - 2020-09-08
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1046.
+
+## 4.0.28 - 2020-09-04
+
+### Dependencies
+- [LPS-115714] Update the com.liferay.source.formatter dependency to version
+1.0.1045.
+
+## 4.0.27 - 2020-09-01
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1044.
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1043.
+
+## 4.0.26 - 2020-08-29
+
+### Dependencies
+- [LPS-118225] Update the com.liferay.source.formatter dependency to version
+1.0.1042.
+
+## 4.0.25 - 2020-08-26
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1041.
+
+## 4.0.24 - 2020-08-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1040.
+
+## 4.0.23 - 2020-08-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1039.
+
+## 4.0.22 - 2020-08-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1038.
+
+## 4.0.21 - 2020-08-20
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1037.
+
+## 4.0.20 - 2020-08-17
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1036.
+
+## 4.0.19 - 2020-08-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1035.
+
+## 4.0.18 - 2020-08-11
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1034.
+
+## 4.0.17 - 2020-08-07
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1033.
+
+## 4.0.16 - 2020-08-03
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1032.
+
+## 4.0.15 - 2020-08-02
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1031.
+
+## 4.0.14 - 2020-07-27
+
+### Dependencies
+- [LPS-113863] Update the com.liferay.source.formatter dependency to version
+1.0.1030.
+
+## 4.0.13 - 2020-07-24
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1029.
+
+## 4.0.12 - 2020-07-23
+
+### Dependencies
+- [LPS-116863] Update the com.liferay.source.formatter dependency to version
+1.0.1028.
+
+## 4.0.11 - 2020-07-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1027.
+
+## 4.0.10 - 2020-07-16
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1026.
+
+## 4.0.9 - 2020-07-14
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1025.
+
+## 4.0.8 - 2020-07-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1024.
+
+## 4.0.7 - 2020-07-12
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1023.
+
+## 4.0.6 - 2020-07-09
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1022.
+
+## 4.0.5 - 2020-07-09
+
+### Dependencies
+- [LPS-116604] Update the com.liferay.source.formatter dependency to version
+1.0.1021.
+
+## 4.0.4 - 2020-07-07
+
+### Dependencies
+- [LPS-116604] Update the com.liferay.source.formatter dependency to version
+1.0.1020.
+
+## 4.0.3 - 2020-07-06
+
+### Dependencies
+- [LPS-116530] Update the com.liferay.source.formatter dependency to version
+1.0.1019.
+
+## 4.0.2 - 2020-06-30
+
+### Dependencies
+- [LPS-113863] Update the com.liferay.source.formatter dependency to version
+1.0.1018.
+
+## 4.0.1 - 2020-06-24
+
+### Dependencies
+- [LPS-116041] Update the com.liferay.source.formatter dependency to version
+1.0.1017.
+
+## 4.0.0 - 2020-06-22
+
+### Dependencies
+- [LPS-115771 LPS-115922] Update the com.liferay.source.formatter dependency to
+version 1.0.1016.
+
+## 3.0.46 - 2020-06-22
+
+### Commits
+- [LPS-115922] Use JavaExec (a26f272958)
+
+## 3.0.45 - 2020-06-21
+
+### Dependencies
+- [LPS-115714] Update the com.liferay.source.formatter dependency to version
+1.0.1015.
+
+## 3.0.44 - 2020-06-16
+
+### Dependencies
+- [LPS-115447 LPS-105380] Update the com.liferay.source.formatter dependency to
+version 1.0.1014.
+
+## 3.0.43 - 2020-06-15
+
+### Commits
+- [LPS-115443] Split up 'throw.exception' into 'fail.on.has.warning' and
+'fail.on.auto.fix' (92ed955594)
+
+### Dependencies
+- [LPS-115443] Update the com.liferay.source.formatter dependency to version
+1.0.1013.
+
+## 3.0.42 - 2020-06-11
+
+### Dependencies
+- [LPS-114565 LPS-105380] Update the com.liferay.source.formatter dependency to
+version 1.0.1012.
+
+## 3.0.41 - 2020-06-10
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1011.
+
+## 3.0.40 - 2020-06-08
+
+### Dependencies
+- [LPS-115020] Update the com.liferay.source.formatter dependency to version
+1.0.1010.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+
+## 3.0.39 - 2020-06-07
+
+### Dependencies
+- [LPS-114165] Update the com.liferay.source.formatter dependency to version
+1.0.1009.
+
+## 3.0.38 - 2020-06-05
+
+### Dependencies
+- [LPS-114570] Update the com.liferay.source.formatter dependency to version
+1.0.1008.
+
+## 3.0.37 - 2020-06-03
+
+### Dependencies
+- [LPS-114565] Update the com.liferay.source.formatter dependency to version
+1.0.1007.
+
+## 3.0.36 - 2020-06-01
+
+### Dependencies
+- [LPS-105380 LPS-113715] Update the com.liferay.source.formatter dependency to
+version 1.0.1006.
+
+## 3.0.35 - 2020-05-29
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1005.
+
+## 3.0.34 - 2020-05-28
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1004.
+
+## 3.0.33 - 2020-05-27
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1003.
+
+## 3.0.32 - 2020-05-26
+
+### Dependencies
+- [LPS-105380 LPS-112372] Update the com.liferay.source.formatter dependency to
+version 1.0.1002.
+
+## 3.0.31 - 2020-05-26
+
+### Dependencies
+- [LPS-113715] Update the com.liferay.source.formatter dependency to version
+1.0.1001.
+
+## 3.0.30 - 2020-05-21
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.1000.
+
+## 3.0.29 - 2020-05-20
+
+### Dependencies
+- [LPS-113044] Update the com.liferay.source.formatter dependency to version
+1.0.999.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+
+## 3.0.28 - 2020-05-17
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.998.
+
+## 3.0.27 - 2020-05-15
+
+### Dependencies
+- [LPS-113044] Update the com.liferay.source.formatter dependency to version
+1.0.997.
+
+## 3.0.26 - 2020-05-13
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.996.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+
+## 3.0.25 - 2020-05-12
+
+### Commits
+- [LPS-74544] Checkstyle is not thread safe (01631db88a)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.995.
+
+## 3.0.24 - 2020-05-10
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.994.
+
+## 3.0.23 - 2020-05-08
+
+### Commits
+- [LPS-105380] revert (c22fc8b3e7)
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.993.
+
+## 3.0.22 - 2020-05-07
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.992.
+
+## 3.0.21 - 2020-05-07
+
+### Dependencies
+- [LPS-104679] Update the com.liferay.source.formatter dependency to version
+1.0.991.
+
+## 3.0.20 - 2020-04-29
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.990.
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+
+## 3.0.19 - 2020-04-27
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.989.
+
+## 3.0.18 - 2020-04-27
+
+### Dependencies
+- [LPS-104679] Update the com.liferay.source.formatter dependency to version
+1.0.988.
+
+## 3.0.17 - 2020-04-27
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.987.
+
+## 3.0.16 - 2020-04-27
+
+### Dependencies
+- [LPS-84119 LPS-105380] Update the com.liferay.source.formatter dependency to
+version 1.0.986.
+
+## 3.0.15 - 2020-04-27
+
+### Dependencies
+- [LPS-112568] Update the com.liferay.source.formatter dependency to version
+1.0.985.
+
+## 3.0.14 - 2020-04-22
+
+### Dependencies
+- [LPS-109953] Update the com.liferay.source.formatter dependency to version
+1.0.984.
+
+## 3.0.13 - 2020-04-17
+
+### Dependencies
+- [LPS-109953] Update the com.liferay.source.formatter dependency to version
+1.0.983.
+
+## 3.0.12 - 2020-04-15
+
+### Dependencies
+- [LPS-111934] Update the com.liferay.source.formatter dependency to version
+1.0.982.
+
+## 3.0.11 - 2020-04-15
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.981.
+
+## 3.0.10 - 2020-04-14
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.980.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+
+## 3.0.9 - 2020-04-13
+
+### Dependencies
+- [LPS-111837] Update the com.liferay.source.formatter dependency to version
+1.0.979.
+
+## 3.0.8 - 2020-04-09
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.978.
+
+## 3.0.7 - 2020-04-08
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.977.
+
+## 3.0.6 - 2020-04-03
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.976.
+
+## 3.0.5 - 2020-03-29
+
+### Dependencies
+- [LPS-110426] Update the com.liferay.source.formatter dependency to version
+1.0.975.
+
+## 3.0.4 - 2020-03-29
+
+### Dependencies
+- [LPS-108394] Update the com.liferay.source.formatter dependency to version
+1.0.974.
+- [LPS-109946] Update the com.liferay.source.formatter dependency to version
+1.0.973.
+
+## 3.0.3 - 2020-03-25
+
+### Dependencies
+- [LPS-84181] Update the com.liferay.source.formatter dependency to version
+1.0.972.
+
+## 3.0.2 - 2020-03-23
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.source.formatter dependency to version
+1.0.971.
+
+## 3.0.1 - 2020-03-22
+
+### Dependencies
+- [LPS-108394] Update the com.liferay.source.formatter dependency to version
+1.0.970.
+
 ## 3.0.0 - 2020-03-12
 
 ### Dependencies
@@ -2038,9 +3448,6 @@ https://github.com/brianchandotcom/liferay-portal/pull/61854 (68c7d50e6c)
 1.0.643.
 
 ## 2.3.169 - 2018-05-23
-
-### Commits
-- [LPS-74544] prep enxt (d95903e968)
 
 ### Dependencies
 - [LPS-74544] Update the com.liferay.source.formatter dependency to version
@@ -4889,6 +6296,7 @@ version 2.4.
 [LPS-84039]: https://issues.liferay.com/browse/LPS-84039
 [LPS-84094]: https://issues.liferay.com/browse/LPS-84094
 [LPS-84119]: https://issues.liferay.com/browse/LPS-84119
+[LPS-84181]: https://issues.liferay.com/browse/LPS-84181
 [LPS-84213]: https://issues.liferay.com/browse/LPS-84213
 [LPS-84307]: https://issues.liferay.com/browse/LPS-84307
 [LPS-84756]: https://issues.liferay.com/browse/LPS-84756
@@ -4914,6 +6322,7 @@ version 2.4.
 [LPS-88171]: https://issues.liferay.com/browse/LPS-88171
 [LPS-88186]: https://issues.liferay.com/browse/LPS-88186
 [LPS-88223]: https://issues.liferay.com/browse/LPS-88223
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-88911]: https://issues.liferay.com/browse/LPS-88911
 [LPS-89415]: https://issues.liferay.com/browse/LPS-89415
 [LPS-89637]: https://issues.liferay.com/browse/LPS-89637
@@ -4967,12 +6376,14 @@ version 2.4.
 [LPS-101089]: https://issues.liferay.com/browse/LPS-101089
 [LPS-101108]: https://issues.liferay.com/browse/LPS-101108
 [LPS-101549]: https://issues.liferay.com/browse/LPS-101549
+[LPS-102001]: https://issues.liferay.com/browse/LPS-102001
 [LPS-102481]: https://issues.liferay.com/browse/LPS-102481
 [LPS-102700]: https://issues.liferay.com/browse/LPS-102700
 [LPS-103170]: https://issues.liferay.com/browse/LPS-103170
 [LPS-103252]: https://issues.liferay.com/browse/LPS-103252
 [LPS-103461]: https://issues.liferay.com/browse/LPS-103461
 [LPS-103466]: https://issues.liferay.com/browse/LPS-103466
+[LPS-103580]: https://issues.liferay.com/browse/LPS-103580
 [LPS-103843]: https://issues.liferay.com/browse/LPS-103843
 [LPS-103872]: https://issues.liferay.com/browse/LPS-103872
 [LPS-104435]: https://issues.liferay.com/browse/LPS-104435
@@ -4987,9 +6398,94 @@ version 2.4.
 [LPS-107321]: https://issues.liferay.com/browse/LPS-107321
 [LPS-107918]: https://issues.liferay.com/browse/LPS-107918
 [LPS-108328]: https://issues.liferay.com/browse/LPS-108328
+[LPS-108394]: https://issues.liferay.com/browse/LPS-108394
 [LPS-109066]: https://issues.liferay.com/browse/LPS-109066
 [LPS-109921]: https://issues.liferay.com/browse/LPS-109921
+[LPS-109946]: https://issues.liferay.com/browse/LPS-109946
+[LPS-109953]: https://issues.liferay.com/browse/LPS-109953
 [LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-110426]: https://issues.liferay.com/browse/LPS-110426
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111837]: https://issues.liferay.com/browse/LPS-111837
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-111934]: https://issues.liferay.com/browse/LPS-111934
+[LPS-112372]: https://issues.liferay.com/browse/LPS-112372
+[LPS-112568]: https://issues.liferay.com/browse/LPS-112568
+[LPS-113044]: https://issues.liferay.com/browse/LPS-113044
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-113715]: https://issues.liferay.com/browse/LPS-113715
+[LPS-113863]: https://issues.liferay.com/browse/LPS-113863
+[LPS-114165]: https://issues.liferay.com/browse/LPS-114165
+[LPS-114565]: https://issues.liferay.com/browse/LPS-114565
+[LPS-114570]: https://issues.liferay.com/browse/LPS-114570
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020
+[LPS-115443]: https://issues.liferay.com/browse/LPS-115443
+[LPS-115447]: https://issues.liferay.com/browse/LPS-115447
+[LPS-115709]: https://issues.liferay.com/browse/LPS-115709
+[LPS-115714]: https://issues.liferay.com/browse/LPS-115714
+[LPS-115771]: https://issues.liferay.com/browse/LPS-115771
+[LPS-115922]: https://issues.liferay.com/browse/LPS-115922
+[LPS-116041]: https://issues.liferay.com/browse/LPS-116041
+[LPS-116530]: https://issues.liferay.com/browse/LPS-116530
+[LPS-116604]: https://issues.liferay.com/browse/LPS-116604
+[LPS-116863]: https://issues.liferay.com/browse/LPS-116863
+[LPS-118225]: https://issues.liferay.com/browse/LPS-118225
+[LPS-119446]: https://issues.liferay.com/browse/LPS-119446
+[LPS-120745]: https://issues.liferay.com/browse/LPS-120745
+[LPS-120746]: https://issues.liferay.com/browse/LPS-120746
+[LPS-121386]: https://issues.liferay.com/browse/LPS-121386
+[LPS-121804]: https://issues.liferay.com/browse/LPS-121804
+[LPS-121824]: https://issues.liferay.com/browse/LPS-121824
+[LPS-122094]: https://issues.liferay.com/browse/LPS-122094
+[LPS-122403]: https://issues.liferay.com/browse/LPS-122403
+[LPS-123151]: https://issues.liferay.com/browse/LPS-123151
+[LPS-123309]: https://issues.liferay.com/browse/LPS-123309
+[LPS-124961]: https://issues.liferay.com/browse/LPS-124961
+[LPS-125966]: https://issues.liferay.com/browse/LPS-125966
+[LPS-125980]: https://issues.liferay.com/browse/LPS-125980
+[LPS-127081]: https://issues.liferay.com/browse/LPS-127081
+[LPS-129260]: https://issues.liferay.com/browse/LPS-129260
+[LPS-129341]: https://issues.liferay.com/browse/LPS-129341
+[LPS-129351]: https://issues.liferay.com/browse/LPS-129351
+[LPS-129532]: https://issues.liferay.com/browse/LPS-129532
+[LPS-129842]: https://issues.liferay.com/browse/LPS-129842
+[LPS-129940]: https://issues.liferay.com/browse/LPS-129940
+[LPS-130119]: https://issues.liferay.com/browse/LPS-130119
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-130744]: https://issues.liferay.com/browse/LPS-130744
+[LPS-130748]: https://issues.liferay.com/browse/LPS-130748
+[LPS-130920]: https://issues.liferay.com/browse/LPS-130920
+[LPS-131175]: https://issues.liferay.com/browse/LPS-131175
+[LPS-131887]: https://issues.liferay.com/browse/LPS-131887
+[LPS-135081]: https://issues.liferay.com/browse/LPS-135081
+[LPS-135504]: https://issues.liferay.com/browse/LPS-135504
+[LPS-135818]: https://issues.liferay.com/browse/LPS-135818
+[LPS-136078]: https://issues.liferay.com/browse/LPS-136078
+[LPS-136308]: https://issues.liferay.com/browse/LPS-136308
+[LPS-136445]: https://issues.liferay.com/browse/LPS-136445
+[LPS-136723]: https://issues.liferay.com/browse/LPS-136723
+[LPS-136864]: https://issues.liferay.com/browse/LPS-136864
+[LPS-137358]: https://issues.liferay.com/browse/LPS-137358
+[LPS-137707]: https://issues.liferay.com/browse/LPS-137707
+[LPS-137720]: https://issues.liferay.com/browse/LPS-137720
+[LPS-138673]: https://issues.liferay.com/browse/LPS-138673
+[LPS-138929]: https://issues.liferay.com/browse/LPS-138929
+[LPS-139310]: https://issues.liferay.com/browse/LPS-139310
+[LPS-139732]: https://issues.liferay.com/browse/LPS-139732
+[LPS-141109]: https://issues.liferay.com/browse/LPS-141109
+[LPS-141244]: https://issues.liferay.com/browse/LPS-141244
+[LPS-141887]: https://issues.liferay.com/browse/LPS-141887
+[LPS-141904]: https://issues.liferay.com/browse/LPS-141904
+[LPS-142231]: https://issues.liferay.com/browse/LPS-142231
+[LPS-143280]: https://issues.liferay.com/browse/LPS-143280
+[LPS-143349]: https://issues.liferay.com/browse/LPS-143349
+[LPS-143547]: https://issues.liferay.com/browse/LPS-143547
+[LPS-143628]: https://issues.liferay.com/browse/LPS-143628
+[LPS-144888]: https://issues.liferay.com/browse/LPS-144888
 [LRCI-642]: https://issues.liferay.com/browse/LRCI-642
+[LRCI-2605]: https://issues.liferay.com/browse/LRCI-2605
+[LRCI-2670]: https://issues.liferay.com/browse/LRCI-2670
 [LRDOCS-2647]: https://issues.liferay.com/browse/LRDOCS-2647
+[POSHI-83]: https://issues.liferay.com/browse/POSHI-83
 [RELEASE-1607]: https://issues.liferay.com/browse/RELEASE-1607

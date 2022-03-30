@@ -16,7 +16,6 @@ package com.liferay.analytics.settings.web.internal.search;
 
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Objects;
 import java.util.Set;
@@ -42,14 +41,8 @@ public class GroupChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isChecked(Object obj) {
-		Group group = (Group)obj;
-
-		if (StringUtil.equalsIgnoreCase(
-				_mvcRenderCommandName, "/analytics/edit_synced_sites")) {
-
-			return _ids.contains(String.valueOf(group.getGroupId()));
-		}
+	public boolean isChecked(Object object) {
+		Group group = (Group)object;
 
 		return Objects.equals(
 			group.getTypeSettingsProperty("analyticsChannelId"), _channelId);
@@ -60,14 +53,6 @@ public class GroupChecker extends EmptyOnClickRowChecker {
 		HttpServletRequest httpServletRequest, boolean checked,
 		boolean disabled, String name, String value, String checkBoxRowIds,
 		String checkBoxAllRowIds, String checkBoxPostOnClick) {
-
-		if (StringUtil.equalsIgnoreCase(
-				_mvcRenderCommandName, "/analytics/edit_synced_sites")) {
-
-			return super.getRowCheckBox(
-				httpServletRequest, checked, disabled, name, value,
-				checkBoxRowIds, checkBoxAllRowIds, checkBoxPostOnClick);
-		}
 
 		if (!checked && _ids.contains(value)) {
 			disabled = true;

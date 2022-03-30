@@ -24,14 +24,18 @@ import com.liferay.exportimport.kernel.lar.PortletDataException;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.staged.model.repository.StagedModelRepository;
+import com.liferay.layout.configuration.LayoutExportImportConfiguration;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutPrototype;
+import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -44,13 +48,17 @@ import com.liferay.portal.kernel.xml.Element;
 import java.util.List;
 import java.util.Map;
 
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Pavel Savinov
  */
-@Component(immediate = true, service = StagedModelDataHandler.class)
+@Component(
+	configurationPid = "com.liferay.layout.configuration.LayoutExportImportConfiguration",
+	immediate = true, service = StagedModelDataHandler.class
+)
 public class LayoutPageTemplateEntryStagedModelDataHandler
 	extends BaseStagedModelDataHandler<LayoutPageTemplateEntry> {
 
@@ -68,6 +76,12 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		LayoutPageTemplateEntry layoutPageTemplateEntry) {
 
 		return layoutPageTemplateEntry.getName();
+	}
+
+	@Activate
+	protected void activate(Map<String, Object> properties) {
+		_layoutExportImportConfiguration = ConfigurableUtil.createConfigurable(
+			LayoutExportImportConfiguration.class, properties);
 	}
 
 	@Override
@@ -106,6 +120,15 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
 				portletDataContext, layoutPageTemplateEntry, layoutPrototype,
 				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+		}
+
+		if (layoutPageTemplateEntry.getPreviewFileEntryId() > 0) {
+			FileEntry fileEntry = PortletFileRepositoryUtil.getPortletFileEntry(
+				layoutPageTemplateEntry.getPreviewFileEntryId());
+
+			StagedModelDataHandlerUtil.exportReferenceStagedModel(
+				portletDataContext, layoutPageTemplateEntry, fileEntry,
+				PortletDataContext.REFERENCE_TYPE_WEAK);
 		}
 
 		_exportReferenceLayout(layoutPageTemplateEntry, portletDataContext);
@@ -163,7 +186,7 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				uuid, groupId);
 		}
 		else {
-			existingLayoutPageTemplateEntry = fetchExistingTemplate(
+			existingLayoutPageTemplateEntry = _fetchExistingTemplate(
 				uuid, groupId, name, type, 0L, preloaded);
 		}
 
@@ -295,7 +318,7 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				element.attributeValue("preloaded"));
 
 			LayoutPageTemplateEntry existingLayoutPageTemplateEntry =
-				fetchExistingTemplate(
+				_fetchExistingTemplate(
 					layoutPageTemplateEntry.getUuid(),
 					portletDataContext.getScopeGroupId(),
 					layoutPageTemplateEntry.getName(),
@@ -326,34 +349,25 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				portletDataContext, importedLayoutPageTemplateEntry);
 		}
 
+		if (layoutPageTemplateEntry.getPreviewFileEntryId() > 0) {
+			Map<Long, Long> fileEntryIds =
+				(Map<Long, Long>)portletDataContext.getNewPrimaryKeysMap(
+					FileEntry.class);
+
+			long previewFileEntryId = MapUtil.getLong(
+				fileEntryIds, layoutPageTemplateEntry.getPreviewFileEntryId(),
+				0);
+
+			importedLayoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					updateLayoutPageTemplateEntry(
+						importedLayoutPageTemplateEntry.
+							getLayoutPageTemplateEntryId(),
+						previewFileEntryId);
+		}
+
 		portletDataContext.importClassedModel(
 			layoutPageTemplateEntry, importedLayoutPageTemplateEntry);
-	}
-
-	protected LayoutPageTemplateEntry fetchExistingTemplate(
-		String uuid, long groupId, String name, int type, long plid,
-		boolean preloaded) {
-
-		LayoutPageTemplateEntry existingTemplate = null;
-
-		if (!preloaded) {
-			existingTemplate =
-				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
-					uuid, groupId);
-		}
-		else if (plid > 0) {
-			existingTemplate =
-				_layoutPageTemplateEntryLocalService.
-					fetchLayoutPageTemplateEntryByPlid(plid);
-		}
-
-		if ((existingTemplate == null) && preloaded) {
-			existingTemplate =
-				_layoutPageTemplateEntryLocalService.
-					fetchLayoutPageTemplateEntry(groupId, name, type);
-		}
-
-		return existingTemplate;
 	}
 
 	@Override
@@ -412,10 +426,11 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 			return;
 		}
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
-		if (draftLayout != null) {
+		if (_layoutExportImportConfiguration.exportDraftLayout() &&
+			(draftLayout != null)) {
+
 			StagedModelDataHandlerUtil.exportReferenceStagedModel(
 				portletDataContext, layoutPageTemplateEntry, draftLayout,
 				PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
@@ -424,6 +439,32 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 		StagedModelDataHandlerUtil.exportReferenceStagedModel(
 			portletDataContext, layoutPageTemplateEntry, layout,
 			PortletDataContext.REFERENCE_TYPE_DEPENDENCY);
+	}
+
+	private LayoutPageTemplateEntry _fetchExistingTemplate(
+		String uuid, long groupId, String name, int type, long plid,
+		boolean preloaded) {
+
+		LayoutPageTemplateEntry existingTemplate = null;
+
+		if (!preloaded) {
+			existingTemplate =
+				_stagedModelRepository.fetchStagedModelByUuidAndGroupId(
+					uuid, groupId);
+		}
+		else if (plid > 0) {
+			existingTemplate =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntryByPlid(plid);
+		}
+
+		if ((existingTemplate == null) && preloaded) {
+			existingTemplate =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntry(groupId, name, type);
+		}
+
+		return existingTemplate;
 	}
 
 	private void _validateLayoutPrototype(
@@ -465,25 +506,22 @@ public class LayoutPageTemplateEntryStagedModelDataHandler
 				(existingLayoutPageTemplateEntry.getCompanyId() ==
 					importedLayoutPageTemplateEntry.getCompanyId())) {
 
-				StringBundler sb = new StringBundler(8);
-
-				sb.append("Layout page template ");
-				sb.append(
-					layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
-				sb.append(" cannot be imported because a layout prototype ");
-				sb.append("with UUID ");
-				sb.append(layoutPrototype.getUuid());
-				sb.append(" and company ID ");
-				sb.append(portletDataContext.getCompanyId());
-				sb.append(" already exists");
-
-				throw new UnsupportedOperationException(sb.toString());
+				throw new UnsupportedOperationException(
+					StringBundler.concat(
+						"Layout page template ",
+						layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+						" cannot be imported because a layout prototype with ",
+						"UUID ", layoutPrototype.getUuid(), " and company ID ",
+						portletDataContext.getCompanyId(), " already exists"));
 			}
 		}
 	}
 
 	@Reference
 	private DDMStructureLocalService _ddmStructureLocalService;
+
+	private volatile LayoutExportImportConfiguration
+		_layoutExportImportConfiguration;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;

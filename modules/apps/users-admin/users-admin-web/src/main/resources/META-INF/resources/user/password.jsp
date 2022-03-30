@@ -110,16 +110,18 @@ else {
 </liferay-ui:error>
 
 <liferay-ui:error exception="<%= UserPasswordException.MustMatch.class %>" message="the-passwords-you-entered-do-not-match" />
-<liferay-ui:error exception="<%= UserPasswordException.MustMatchCurrentPassword.class %>" message="the-password-you-entered-for-the-current-password-does-not-match-your-current-password" />
+<liferay-ui:error exception="<%= UserPasswordException.MustMatchCurrentPassword.class %>" message="the-password-you-entered-for-the-current-password-does-not-match-your-current-password.-please-try-again" />
 <liferay-ui:error exception="<%= UserPasswordException.MustNotBeChanged.class %>" message="passwords-may-not-be-changed-under-the-current-password-policy" />
 
 <liferay-ui:error exception="<%= UserPasswordException.MustNotBeChangedYet.class %>">
 
 	<%
 	UserPasswordException.MustNotBeChangedYet upe = (UserPasswordException.MustNotBeChangedYet)errorException;
+
+	Format dateFormat = FastDateFormatFactoryUtil.getDateTime(FastDateFormatConstants.SHORT, FastDateFormatConstants.LONG, locale, TimeZone.getTimeZone(upe.timeZoneId));
 	%>
 
-	<liferay-ui:message arguments="<%= String.valueOf(upe.changeableDate) %>" key="you-cannot-change-your-password-yet" translateArguments="<%= false %>" />
+	<liferay-ui:message arguments="<%= dateFormat.format(upe.changeableDate) %>" key="you-cannot-change-your-password-yet" translateArguments="<%= false %>" />
 </liferay-ui:error>
 
 <liferay-ui:error exception="<%= UserPasswordException.MustNotBeEqualToCurrent.class %>" message="your-new-password-cannot-be-the-same-as-your-old-password-please-enter-a-different-password" />
@@ -131,12 +133,13 @@ else {
 <clay:sheet-section>
 	<h3 class="sheet-subtitle"><liferay-ui:message key="password" /></h3>
 
-	<!-- Begin LPS-38289 and LPS-55993 and LPS-61876 -->
+	<!-- Begin LPS-38289, LPS-55993, and LPS-61876 -->
 
 	<input class="hide" type="password" />
+
 	<input class="hide" type="password" />
 
-	<!-- End LPS-38289 and LPS-55993 and LPS-61876 -->
+	<!-- End LPS-38289, LPS-55993, and LPS-61876 -->
 
 	<c:if test="<%= portletName.equals(myAccountPortletId) %>">
 		<aui:input autocomplete="off" label="current-password" name="password0" required="<%= true %>" size="30" type="password" />
@@ -155,7 +158,7 @@ else {
 	</c:if>
 </clay:sheet-section>
 
-<c:if test="<%= PropsValues.USERS_REMINDER_QUERIES_ENABLED && portletName.equals(myAccountPortletId) %>">
+<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_ENABLED, PropsValues.USERS_REMINDER_QUERIES_ENABLED) && portletName.equals(myAccountPortletId) %>">
 	<clay:sheet-section>
 		<h3 class="sheet-subtitle"><liferay-ui:message key="reminder" /></h3>
 
@@ -165,13 +168,21 @@ else {
 
 		<%@ include file="/user/password_reminder_query_questions.jspf" %>
 
-		<c:if test="<%= PropsValues.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED %>">
-			<div class='<%= hasCustomQuestion ? "" : "hide" %>' id="<portlet:namespace />customQuestionDiv">
+		<c:if test="<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED, PropsValues.USERS_REMINDER_QUERIES_CUSTOM_QUESTION_ENABLED) %>">
+			<div class="<%= hasCustomQuestion ? "" : "hide" %>" id="<portlet:namespace />customQuestionDiv">
 				<aui:input autocomplete='<%= PropsValues.COMPANY_SECURITY_PASSWORD_REMINDER_QUERY_FORM_AUTOCOMPLETE ? "on" : "off" %>' fieldParam="reminderQueryCustomQuestion" label="custom-question" name="reminderQueryQuestion" />
 			</div>
 		</c:if>
 
-		<aui:input autocomplete='<%= PropsValues.COMPANY_SECURITY_PASSWORD_REMINDER_QUERY_FORM_AUTOCOMPLETE ? "on" : "off" %>' label="answer" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name="reminderQueryAnswer" size="50" value="<%= selUser.getReminderQueryAnswer() %>" />
+		<%
+		String answer = selUser.getReminderQueryAnswer();
+
+		if (!PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT, PropsValues.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT) && Validator.isNotNull(answer)) {
+			answer = Portal.TEMP_OBFUSCATION_VALUE;
+		}
+		%>
+
+		<aui:input autocomplete='<%= PropsValues.COMPANY_SECURITY_PASSWORD_REMINDER_QUERY_FORM_AUTOCOMPLETE ? "on" : "off" %>' label="answer" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" name="reminderQueryAnswer" size="50" type='<%= PrefsPropsUtil.getBoolean(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT, PropsValues.USERS_REMINDER_QUERIES_DISPLAY_IN_PLAIN_TEXT) ? "text" : "password" %>' value="<%= answer %>" />
 	</clay:sheet-section>
 
 	<aui:script sandbox="<%= true %>">
@@ -180,7 +191,7 @@ else {
 		);
 
 		if (reminderQueryQuestionSelect) {
-			reminderQueryQuestionSelect.addEventListener('change', function (event) {
+			reminderQueryQuestionSelect.addEventListener('change', (event) => {
 				var customQuestion =
 					event.currentTarget.value === '<%= UsersAdmin.CUSTOM_QUESTION %>';
 
@@ -194,7 +205,7 @@ else {
 					if (reminderQueryCustomQuestionInput) {
 
 						<%
-						for (String question : PropsValues.USERS_REMINDER_QUERIES_QUESTIONS) {
+						for (String question : PrefsPropsUtil.getStringArray(company.getCompanyId(), PropsKeys.USERS_REMINDER_QUERIES_QUESTIONS, StringPool.COMMA)) {
 						%>
 
 							if (

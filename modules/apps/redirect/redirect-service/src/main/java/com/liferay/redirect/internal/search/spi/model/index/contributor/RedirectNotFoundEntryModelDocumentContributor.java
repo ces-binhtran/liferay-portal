@@ -17,6 +17,7 @@ package com.liferay.redirect.internal.search.spi.model.index.contributor;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.search.spi.model.index.contributor.ModelDocumentContributor;
+import com.liferay.redirect.internal.util.URLUtil;
 import com.liferay.redirect.model.RedirectNotFoundEntry;
 
 import org.osgi.service.component.annotations.Component;
@@ -37,8 +38,11 @@ public class RedirectNotFoundEntryModelDocumentContributor
 		Document document, RedirectNotFoundEntry redirectNotFoundEntry) {
 
 		document.addText(Field.URL, redirectNotFoundEntry.getUrl());
-		document.addNumber("hits", redirectNotFoundEntry.getHits());
 		document.addKeyword("ignored", redirectNotFoundEntry.isIgnored());
+		document.addNumber(
+			"requestCount", redirectNotFoundEntry.getRequestCount());
+		document.addText(
+			"urlParts", URLUtil.splitURL(redirectNotFoundEntry.getUrl()));
 	}
 
 }

@@ -35,21 +35,23 @@ public class LoadBalancerUtil {
 
 	public static List<JenkinsMaster> getAvailableJenkinsMasters(
 		String masterPrefix, String blacklistString, int minimumRAM,
-		Properties properties) {
+		int maximumSlavesPerHost, Properties properties) {
 
 		return getAvailableJenkinsMasters(
-			masterPrefix, blacklistString, minimumRAM, properties, true);
+			masterPrefix, blacklistString, minimumRAM, maximumSlavesPerHost,
+			properties, true);
 	}
 
 	public static List<JenkinsMaster> getAvailableJenkinsMasters(
 		String masterPrefix, String blacklistString, int minimumRAM,
-		Properties properties, boolean verbose) {
+		int maximumSlavesPerHost, Properties properties, boolean verbose) {
 
 		List<JenkinsMaster> allJenkinsMasters = null;
 
 		if (!_jenkinsMasters.containsKey(masterPrefix)) {
 			allJenkinsMasters = JenkinsResultsParserUtil.getJenkinsMasters(
-				properties, JenkinsMaster.SLAVE_RAM_DEFAULT, masterPrefix);
+				properties, JenkinsMaster.getSlaveRAMMinimumDefault(),
+				JenkinsMaster.getSlavesPerHostDefault(), masterPrefix);
 
 			_jenkinsMasters.put(masterPrefix, allJenkinsMasters);
 		}
@@ -73,11 +75,10 @@ public class LoadBalancerUtil {
 			allJenkinsMasters.size());
 
 		for (JenkinsMaster jenkinsMaster : allJenkinsMasters) {
-			if (blacklist.contains(jenkinsMaster.getName())) {
-				continue;
-			}
+			if (blacklist.contains(jenkinsMaster.getName()) ||
+				(jenkinsMaster.getSlaveRAM() < minimumRAM) ||
+				(jenkinsMaster.getSlavesPerHost() > maximumSlavesPerHost)) {
 
-			if (jenkinsMaster.getSlaveRAM() < minimumRAM) {
 				continue;
 			}
 
@@ -102,7 +103,7 @@ public class LoadBalancerUtil {
 	public static String getMostAvailableMasterURL(
 		Properties properties, boolean verbose) {
 
-		long start = System.currentTimeMillis();
+		long start = JenkinsResultsParserUtil.getCurrentTimeMillis();
 
 		int retries = 0;
 
@@ -119,7 +120,7 @@ public class LoadBalancerUtil {
 
 				String blacklistString = properties.getProperty("blacklist");
 
-				Integer minimumRAM = JenkinsMaster.SLAVE_RAM_DEFAULT;
+				Integer minimumRAM = JenkinsMaster.getSlaveRAMMinimumDefault();
 
 				String minimumRAMString = properties.getProperty("minimum.ram");
 
@@ -129,19 +130,35 @@ public class LoadBalancerUtil {
 					minimumRAM = Integer.valueOf(minimumRAMString);
 				}
 
+				Integer maximumSlavesPerHost =
+					JenkinsMaster.getSlavesPerHostDefault();
+
+				String maximumSlavesPerHostString = properties.getProperty(
+					"maximum.slaves.per.host");
+
+				if ((maximumSlavesPerHostString != null) &&
+					maximumSlavesPerHostString.matches("\\d+")) {
+
+					maximumSlavesPerHost = Integer.valueOf(
+						maximumSlavesPerHost);
+				}
+
 				List<JenkinsMaster> jenkinsMasters = getAvailableJenkinsMasters(
-					masterPrefix, blacklistString, minimumRAM, properties,
-					verbose);
+					masterPrefix, blacklistString, minimumRAM,
+					maximumSlavesPerHost, properties, verbose);
 
 				long nextUpdateTimestamp = _getNextUpdateTimestamp(
 					masterPrefix);
 
-				if (nextUpdateTimestamp < System.currentTimeMillis()) {
+				if (nextUpdateTimestamp <
+						JenkinsResultsParserUtil.getCurrentTimeMillis()) {
+
 					_updateJenkinsMasters(jenkinsMasters);
 
 					_setNextUpdateTimestamp(
 						masterPrefix,
-						System.currentTimeMillis() + _updateInterval);
+						JenkinsResultsParserUtil.getCurrentTimeMillis() +
+							_updateInterval);
 				}
 
 				Collections.sort(jenkinsMasters);
@@ -202,7 +219,8 @@ public class LoadBalancerUtil {
 				if (verbose) {
 					String durationString =
 						JenkinsResultsParserUtil.toDurationString(
-							System.currentTimeMillis() - start);
+							JenkinsResultsParserUtil.getCurrentTimeMillis() -
+								start);
 
 					System.out.println(
 						"Got most available master URL in " + durationString);
@@ -239,7 +257,8 @@ public class LoadBalancerUtil {
 		else {
 			properties = new Properties();
 			String propertiesString = JenkinsResultsParserUtil.toString(
-				JenkinsResultsParserUtil.getLocalURL(propertiesURL), false);
+				JenkinsResultsParserUtil.getLocalURL(propertiesURL), false,
+				true);
 
 			properties.load(new StringReader(propertiesString));
 		}
@@ -249,13 +268,13 @@ public class LoadBalancerUtil {
 			((overridePropertiesArray.length % 2) == 0)) {
 
 			for (int i = 0; i < overridePropertiesArray.length; i += 2) {
-				String overridePropertyName = overridePropertiesArray[i];
-
 				String overridePropertyValue = overridePropertiesArray[i + 1];
 
 				if (overridePropertyValue == null) {
 					continue;
 				}
+
+				String overridePropertyName = overridePropertiesArray[i];
 
 				properties.setProperty(
 					overridePropertyName, overridePropertyValue);

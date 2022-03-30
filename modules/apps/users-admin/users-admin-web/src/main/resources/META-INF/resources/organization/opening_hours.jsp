@@ -30,28 +30,30 @@ List<OrgLabor> orgLabors = OrgLaborServiceUtil.getOrgLabors(organizationId);
 		cssClass="sheet-title"
 	>
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 			<span class="heading-text"><%= organizationScreenNavigationDisplayContext.getFormLabel() %></span>
 		</clay:content-col>
 
 		<clay:content-col>
 			<span class="heading-end">
-
-				<%
-				PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-				editURL.setParameter("mvcPath", "/organization/edit_opening_hours.jsp");
-				editURL.setParameter("redirect", currentURL);
-				editURL.setParameter("className", Organization.class.getName());
-				editURL.setParameter("classPK", String.valueOf(organizationId));
-				%>
-
 				<liferay-ui:icon
 					label="<%= true %>"
 					linkCssClass="add-opening-hours-link btn btn-secondary btn-sm"
 					message="add"
-					url="<%= editURL.toString() %>"
+					url='<%=
+						PortletURLBuilder.createRenderURL(
+							liferayPortletResponse
+						).setMVCPath(
+							"/organization/edit_opening_hours.jsp"
+						).setRedirect(
+							currentURL
+						).setParameter(
+							"className", Organization.class.getName()
+						).setParameter(
+							"classPK", organizationId
+						).buildString()
+					%>'
 				/>
 			</span>
 		</clay:content-col>
@@ -67,13 +69,13 @@ List<OrgLabor> orgLabors = OrgLaborServiceUtil.getOrgLabors(organizationId);
 </c:if>
 
 <div
-	class='<%=
-		CSSClassNames.builder(
+	class="<%=
+		CSSClasses.builder(
 			"opening-hours-wrapper"
 		).add(
 			"hide", orgLabors.isEmpty()
 		).build()
-	%>'
+	%>"
 >
 
 	<%

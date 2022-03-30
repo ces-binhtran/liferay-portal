@@ -15,6 +15,7 @@
 package com.liferay.gradle.plugins.patcher;
 
 import com.liferay.gradle.util.FileUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.GradleUtil;
 import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
@@ -22,6 +23,7 @@ import com.liferay.gradle.util.copy.ReplaceLeadingPathAction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +44,7 @@ import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.UncheckedIOException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.Dependency;
@@ -66,7 +69,6 @@ import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.process.ExecResult;
 import org.gradle.process.ExecSpec;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -254,7 +256,7 @@ public class PatchTask extends DefaultTask {
 
 	@TaskAction
 	public void patch() throws Exception {
-		final Project project = getProject();
+		Project project = getProject();
 
 		File patchesTemporaryDir = fixPatchFiles();
 		final File srcTemporaryDir = fixSrcFiles();
@@ -398,7 +400,7 @@ public class PatchTask extends DefaultTask {
 	}
 
 	protected File fixPatchFiles() {
-		final Project project = getProject();
+		Project project = getProject();
 
 		final File temporaryDir = new File(getTemporaryDir(), "patches");
 
@@ -454,6 +456,15 @@ public class PatchTask extends DefaultTask {
 				}
 
 			});
+
+		if (!temporaryDir.exists()) {
+			try {
+				Files.createDirectories(temporaryDir.toPath());
+			}
+			catch (IOException ioException) {
+				throw new UncheckedIOException(ioException);
+			}
+		}
 
 		return temporaryDir;
 	}

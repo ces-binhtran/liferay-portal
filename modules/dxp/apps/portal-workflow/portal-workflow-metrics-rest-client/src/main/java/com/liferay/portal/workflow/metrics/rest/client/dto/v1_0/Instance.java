@@ -17,6 +17,8 @@ package com.liferay.portal.workflow.metrics.rest.client.dto.v1_0;
 import com.liferay.portal.workflow.metrics.rest.client.function.UnsafeSupplier;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.InstanceSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,11 +30,32 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Instance implements Cloneable {
+public class Instance implements Cloneable, Serializable {
 
 	public static Instance toDTO(String json) {
 		return InstanceSerDes.toDTO(json);
 	}
+
+	public Boolean getActive() {
+		return active;
+	}
+
+	public void setActive(Boolean active) {
+		this.active = active;
+	}
+
+	public void setActive(
+		UnsafeSupplier<Boolean, Exception> activeUnsafeSupplier) {
+
+		try {
+			active = activeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean active;
 
 	public String getAssetTitle() {
 		return assetTitle;
@@ -499,7 +522,9 @@ public class Instance implements Cloneable {
 
 		public static SLAStatus create(String value) {
 			for (SLAStatus slaStatus : values()) {
-				if (Objects.equals(slaStatus.getValue(), value)) {
+				if (Objects.equals(slaStatus.getValue(), value) ||
+					Objects.equals(slaStatus.name(), value)) {
+
 					return slaStatus;
 				}
 			}

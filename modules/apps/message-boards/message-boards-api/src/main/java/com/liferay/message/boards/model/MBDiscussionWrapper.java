@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -43,6 +45,8 @@ public class MBDiscussionWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
 		attributes.put("discussionId", getDiscussionId());
 		attributes.put("groupId", getGroupId());
@@ -61,6 +65,18 @@ public class MBDiscussionWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
@@ -134,6 +150,11 @@ public class MBDiscussionWrapper
 		}
 	}
 
+	@Override
+	public MBDiscussion cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the fully qualified class name of this message boards discussion.
 	 *
@@ -185,6 +206,16 @@ public class MBDiscussionWrapper
 	}
 
 	/**
+	 * Returns the ct collection ID of this message boards discussion.
+	 *
+	 * @return the ct collection ID of this message boards discussion
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
+	/**
 	 * Returns the discussion ID of this message boards discussion.
 	 *
 	 * @return the discussion ID of this message boards discussion
@@ -222,6 +253,16 @@ public class MBDiscussionWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this message boards discussion.
+	 *
+	 * @return the mvcc version of this message boards discussion
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -335,6 +376,16 @@ public class MBDiscussionWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this message boards discussion.
+	 *
+	 * @param ctCollectionId the ct collection ID of this message boards discussion
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
 	 * Sets the discussion ID of this message boards discussion.
 	 *
 	 * @param discussionId the discussion ID of this message boards discussion
@@ -372,6 +423,16 @@ public class MBDiscussionWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this message boards discussion.
+	 *
+	 * @param mvccVersion the mvcc version of this message boards discussion
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
@@ -432,6 +493,20 @@ public class MBDiscussionWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	@Override
+	public Map<String, Function<MBDiscussion, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<MBDiscussion, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

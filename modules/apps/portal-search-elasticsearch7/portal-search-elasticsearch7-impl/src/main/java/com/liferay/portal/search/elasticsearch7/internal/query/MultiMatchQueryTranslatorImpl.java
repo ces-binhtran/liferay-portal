@@ -18,14 +18,13 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.query.MultiMatchQuery;
 
 import java.util.Map;
-import java.util.Set;
 
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.search.MatchQuery;
+import org.elasticsearch.index.query.ZeroTermsQueryOption;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -38,11 +37,8 @@ public class MultiMatchQueryTranslatorImpl
 
 	@Override
 	public QueryBuilder translate(MultiMatchQuery multiMatchQuery) {
-		Set<String> fields = multiMatchQuery.getFields();
-
 		MultiMatchQueryBuilder multiMatchQueryBuilder =
-			QueryBuilders.multiMatchQuery(
-				multiMatchQuery.getValue(), fields.toArray(new String[0]));
+			QueryBuilders.multiMatchQuery(multiMatchQuery.getValue());
 
 		if (Validator.isNotNull(multiMatchQuery.getAnalyzer())) {
 			multiMatchQueryBuilder.analyzer(multiMatchQuery.getAnalyzer());
@@ -55,7 +51,17 @@ public class MultiMatchQueryTranslatorImpl
 
 		Map<String, Float> fieldsBoosts = multiMatchQuery.getFieldsBoosts();
 
-		fieldsBoosts.forEach(multiMatchQueryBuilder::field);
+		for (Map.Entry<String, Float> entry : fieldsBoosts.entrySet()) {
+			Float boost = entry.getValue();
+			String field = entry.getKey();
+
+			if (boost == null) {
+				multiMatchQueryBuilder.field(field);
+			}
+			else {
+				multiMatchQueryBuilder.field(field, boost);
+			}
+		}
 
 		if (multiMatchQuery.getFuzziness() != null) {
 			multiMatchQueryBuilder.fuzziness(
@@ -104,11 +110,10 @@ public class MultiMatchQueryTranslatorImpl
 		}
 
 		if (multiMatchQuery.getZeroTermsQuery() != null) {
-			MatchQuery.ZeroTermsQuery multiMatchQueryBuilderZeroTermsQuery =
-				translate(multiMatchQuery.getZeroTermsQuery());
+			ZeroTermsQueryOption zeroTermsQueryOption = translate(
+				multiMatchQuery.getZeroTermsQuery());
 
-			multiMatchQueryBuilder.zeroTermsQuery(
-				multiMatchQueryBuilderZeroTermsQuery);
+			multiMatchQueryBuilder.zeroTermsQuery(zeroTermsQueryOption);
 		}
 
 		if (multiMatchQuery.isLenient() != null) {
@@ -123,6 +128,9 @@ public class MultiMatchQueryTranslatorImpl
 
 		if (multiMatchQueryType == MultiMatchQuery.Type.BEST_FIELDS) {
 			return MultiMatchQueryBuilder.Type.BEST_FIELDS;
+		}
+		else if (multiMatchQueryType == MultiMatchQuery.Type.BOOL_PREFIX) {
+			return MultiMatchQueryBuilder.Type.BOOL_PREFIX;
 		}
 		else if (multiMatchQueryType == MultiMatchQuery.Type.CROSS_FIELDS) {
 			return MultiMatchQueryBuilder.Type.CROSS_FIELDS;

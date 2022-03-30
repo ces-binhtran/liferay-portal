@@ -27,6 +27,10 @@ public class KaleoActionLocalServiceWrapper
 	implements KaleoActionLocalService,
 			   ServiceWrapper<KaleoActionLocalService> {
 
+	public KaleoActionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public KaleoActionLocalServiceWrapper(
 		KaleoActionLocalService kaleoActionLocalService) {
 
@@ -35,6 +39,10 @@ public class KaleoActionLocalServiceWrapper
 
 	/**
 	 * Adds the kaleo action to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoAction the kaleo action
 	 * @return the kaleo action that was added
@@ -91,6 +99,10 @@ public class KaleoActionLocalServiceWrapper
 	/**
 	 * Deletes the kaleo action from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoAction the kaleo action
 	 * @return the kaleo action that was removed
 	 */
@@ -104,6 +116,10 @@ public class KaleoActionLocalServiceWrapper
 
 	/**
 	 * Deletes the kaleo action with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoActionId the primary key of the kaleo action
 	 * @return the kaleo action that was removed
@@ -139,6 +155,13 @@ public class KaleoActionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kaleoActionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kaleoActionLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -305,33 +328,6 @@ public class KaleoActionLocalServiceWrapper
 	}
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoActions(long, String, long)}
-	 */
-	@Deprecated
-	@Override
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoAction>
-		getKaleoActions(String kaleoClassName, long kaleoClassPK) {
-
-		return _kaleoActionLocalService.getKaleoActions(
-			kaleoClassName, kaleoClassPK);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoActions(long, String, long, String)}
-	 */
-	@Deprecated
-	@Override
-	public java.util.List<com.liferay.portal.workflow.kaleo.model.KaleoAction>
-		getKaleoActions(
-			String kaleoClassName, long kaleoClassPK, String executionType) {
-
-		return _kaleoActionLocalService.getKaleoActions(
-			kaleoClassName, kaleoClassPK, executionType);
-	}
-
-	/**
 	 * Returns the number of kaleo actions.
 	 *
 	 * @return the number of kaleo actions
@@ -364,6 +360,10 @@ public class KaleoActionLocalServiceWrapper
 
 	/**
 	 * Updates the kaleo action in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoActionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoAction the kaleo action
 	 * @return the kaleo action that was updated

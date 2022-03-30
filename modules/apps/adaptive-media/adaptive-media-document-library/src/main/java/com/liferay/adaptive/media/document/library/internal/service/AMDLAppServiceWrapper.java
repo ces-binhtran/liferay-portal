@@ -35,14 +35,6 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = ServiceWrapper.class)
 public class AMDLAppServiceWrapper extends DLAppServiceWrapper {
 
-	public AMDLAppServiceWrapper() {
-		super(null);
-	}
-
-	public AMDLAppServiceWrapper(DLAppService dlAppService) {
-		super(dlAppService);
-	}
-
 	@Override
 	public FileEntry updateFileEntryAndCheckIn(
 			long fileEntryId, String sourceFileName, String mimeType,
@@ -61,14 +53,15 @@ public class AMDLAppServiceWrapper extends DLAppServiceWrapper {
 	public FileEntry updateFileEntryAndCheckIn(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, InputStream is,
-			long size, ServiceContext serviceContext)
+			DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, ServiceContext serviceContext)
 		throws PortalException {
 
 		return AMCleanUpOnUpdateAndCheckInThreadLocal.enable(
 			() -> super.updateFileEntryAndCheckIn(
 				fileEntryId, sourceFileName, mimeType, title, description,
-				changeLog, dlVersionNumberIncrease, is, size, serviceContext));
+				changeLog, dlVersionNumberIncrease, inputStream, size,
+				serviceContext));
 	}
 
 	@Reference

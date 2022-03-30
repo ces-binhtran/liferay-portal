@@ -15,7 +15,6 @@
 package com.liferay.portal.search.elasticsearch.cross.cluster.replication.internal.configuration;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
-import com.liferay.portal.search.configuration.CrossClusterReplicationConfigurationWrapper;
 
 import java.util.Map;
 
@@ -28,7 +27,7 @@ import org.osgi.service.component.annotations.Modified;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.elasticsearch.cross.cluster.replication.internal.configuration.CrossClusterReplicationConfiguration",
-	immediate = true,
+	enabled = false, immediate = true,
 	service = CrossClusterReplicationConfigurationWrapper.class
 )
 public class CrossClusterReplicationConfigurationWrapperImpl
@@ -38,16 +37,6 @@ public class CrossClusterReplicationConfigurationWrapperImpl
 	public String[] getCCRLocalClusterConnectionConfigurations() {
 		return crossClusterReplicationConfiguration.
 			ccrLocalClusterConnectionConfigurations();
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getCCRLocalClusterConnectionConfigurations()}
-	 */
-	@Deprecated
-	@Override
-	public String getCCRLocalClusterConnectionId() {
-		return null;
 	}
 
 	@Override

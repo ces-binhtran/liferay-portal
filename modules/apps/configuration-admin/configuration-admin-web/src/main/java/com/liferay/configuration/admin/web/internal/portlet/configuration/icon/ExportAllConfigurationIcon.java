@@ -21,10 +21,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigura
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -35,11 +32,7 @@ import org.osgi.service.component.annotations.Reference;
 /**
  * @author Jorge Ferrer
  */
-@Component(
-	immediate = true,
-	property = "javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
-	service = PortletConfigurationIcon.class
-)
+@Component(immediate = true, service = PortletConfigurationIcon.class)
 public class ExportAllConfigurationIcon extends BasePortletConfigurationIcon {
 
 	@Override
@@ -47,10 +40,8 @@ public class ExportAllConfigurationIcon extends BasePortletConfigurationIcon {
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			themeDisplay.getLocale(), ExportAllConfigurationIcon.class);
-
-		return LanguageUtil.get(resourceBundle, "export-all-settings");
+		return LanguageUtil.get(
+			themeDisplay.getLocale(), "export-all-settings");
 	}
 
 	@Override
@@ -64,10 +55,11 @@ public class ExportAllConfigurationIcon extends BasePortletConfigurationIcon {
 
 		LiferayPortletURL liferayPortletURL =
 			(LiferayPortletURL)_portal.getControlPanelPortletURL(
-				portletRequest, ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
+				portletRequest, _portal.getPortletId(portletRequest),
 				PortletRequest.RESOURCE_PHASE);
 
-		liferayPortletURL.setResourceID("export");
+		liferayPortletURL.setResourceID(
+			"/configuration_admin/export_configuration");
 
 		return liferayPortletURL.toString();
 	}
@@ -79,7 +71,15 @@ public class ExportAllConfigurationIcon extends BasePortletConfigurationIcon {
 
 	@Override
 	public boolean isShow(PortletRequest portletRequest) {
-		return true;
+		String portletId = _portal.getPortletId(portletRequest);
+
+		if (portletId.equals(ConfigurationAdminPortletKeys.INSTANCE_SETTINGS) ||
+			portletId.equals(ConfigurationAdminPortletKeys.SYSTEM_SETTINGS)) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	@Reference

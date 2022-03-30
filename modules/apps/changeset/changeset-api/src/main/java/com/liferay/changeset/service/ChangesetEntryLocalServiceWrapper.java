@@ -27,6 +27,10 @@ public class ChangesetEntryLocalServiceWrapper
 	implements ChangesetEntryLocalService,
 			   ServiceWrapper<ChangesetEntryLocalService> {
 
+	public ChangesetEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ChangesetEntryLocalServiceWrapper(
 		ChangesetEntryLocalService changesetEntryLocalService) {
 
@@ -35,6 +39,10 @@ public class ChangesetEntryLocalServiceWrapper
 
 	/**
 	 * Adds the changeset entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was added
@@ -82,22 +90,22 @@ public class ChangesetEntryLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteChangesetEntries(long changesetCollectionId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public void deleteChangesetEntries(long changesetCollectionId) {
 		_changesetEntryLocalService.deleteChangesetEntries(
 			changesetCollectionId);
 	}
 
 	@Override
-	public void deleteChangesetEntries(java.util.Set<Long> changesetEntryIds)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public void deleteChangesetEntries(java.util.Set<Long> changesetEntryIds) {
 		_changesetEntryLocalService.deleteChangesetEntries(changesetEntryIds);
 	}
 
 	/**
 	 * Deletes the changeset entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was removed
@@ -111,6 +119,10 @@ public class ChangesetEntryLocalServiceWrapper
 
 	/**
 	 * Deletes the changeset entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntryId the primary key of the changeset entry
 	 * @return the changeset entry that was removed
@@ -145,6 +157,13 @@ public class ChangesetEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _changesetEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _changesetEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -383,6 +402,10 @@ public class ChangesetEntryLocalServiceWrapper
 
 	/**
 	 * Updates the changeset entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ChangesetEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param changesetEntry the changeset entry
 	 * @return the changeset entry that was updated

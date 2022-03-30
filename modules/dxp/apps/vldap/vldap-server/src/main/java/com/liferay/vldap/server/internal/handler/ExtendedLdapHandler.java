@@ -15,15 +15,12 @@
 package com.liferay.vldap.server.internal.handler;
 
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.vldap.server.internal.constants.OIDConstants;
+import com.liferay.vldap.server.internal.constants.VLDAPConstants;
 import com.liferay.vldap.server.internal.handler.util.LdapHandlerContext;
 import com.liferay.vldap.server.internal.handler.util.LdapSslContextFactory;
-import com.liferay.vldap.server.internal.util.OIDConstants;
-import com.liferay.vldap.server.internal.util.VLDAPConstants;
 
 import java.util.List;
-import java.util.Map;
-
-import javax.net.ssl.SSLContext;
 
 import org.apache.directory.api.ldap.model.message.ExtendedRequest;
 import org.apache.directory.api.ldap.model.message.ExtendedResponse;
@@ -49,18 +46,17 @@ public class ExtendedLdapHandler extends BaseLdapHandler {
 		String oid = extendedRequest.getRequestName();
 
 		if (oid.equals(OIDConstants.START_TLS)) {
-			return handleStartTLS(extendedRequest, ioSession);
+			return _handleStartTLS(extendedRequest, ioSession);
 		}
 
 		return null;
 	}
 
-	protected List<Response> handleStartTLS(
+	private List<Response> _handleStartTLS(
 		ExtendedRequest extendedRequest, IoSession ioSession) {
 
-		SSLContext sslContext = LdapSslContextFactory.getSSLContext(true);
-
-		SslFilter sslFilter = new SslFilter(sslContext);
+		SslFilter sslFilter = new SslFilter(
+			LdapSslContextFactory.getSSLContext(true));
 
 		IoFilterChain ioFilterChain = ioSession.getFilterChain();
 
@@ -71,13 +67,11 @@ public class ExtendedLdapHandler extends BaseLdapHandler {
 
 		extendedResponse.setResponseName(OIDConstants.START_TLS);
 
-		Map<Object, Object> sessionAttributes =
+		extendedResponse.put(
+			VLDAPConstants.SESSION_ATTRIBUTES,
 			HashMapBuilder.<Object, Object>put(
 				SslFilter.DISABLE_ENCRYPTION_ONCE, true
-			).build();
-
-		extendedResponse.put(
-			VLDAPConstants.SESSION_ATTRIBUTES, sessionAttributes);
+			).build());
 
 		return toList(extendedResponse);
 	}

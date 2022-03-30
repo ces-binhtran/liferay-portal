@@ -27,7 +27,7 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletJSONUtil;
 import com.liferay.portal.kernel.service.PortletLocalService;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -106,9 +105,10 @@ public class PortletRegistryImpl implements PortletRegistry {
 				fragmentEntryLink.getEditableValues());
 
 			String portletId = jsonObject.getString("portletId");
-			String instanceId = jsonObject.getString("instanceId");
 
 			if (Validator.isNotNull(portletId)) {
+				String instanceId = jsonObject.getString("instanceId");
+
 				portletIds.add(PortletIdCodec.encode(portletId, instanceId));
 			}
 		}
@@ -148,6 +148,16 @@ public class PortletRegistryImpl implements PortletRegistry {
 		List<Portlet> portlets = stream.map(
 			fragmentEntryLinkPortletId -> _portletLocalService.getPortletById(
 				fragmentEntryLinkPortletId)
+		).filter(
+			portlet -> {
+				if ((portlet == null) || !portlet.isActive() ||
+					portlet.isUndeployedPortlet()) {
+
+					return false;
+				}
+
+				return true;
+			}
 		).distinct(
 		).collect(
 			Collectors.toList()
@@ -193,17 +203,13 @@ public class PortletRegistryImpl implements PortletRegistry {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		Dictionary<String, Object> aliasRegistrationProperties =
-			new HashMapDictionary<>();
-
-		aliasRegistrationProperties.put(
-			"com.liferay.fragment.entry.processor.portlet.alias", alias);
-
 		bundleContext.registerService(
 			PortletAliasRegistration.class,
 			new PortletAliasRegistration() {
 			},
-			aliasRegistrationProperties);
+			HashMapDictionaryBuilder.<String, Object>put(
+				"com.liferay.fragment.entry.processor.portlet.alias", alias
+			).build());
 	}
 
 	protected void unsetPortlet(

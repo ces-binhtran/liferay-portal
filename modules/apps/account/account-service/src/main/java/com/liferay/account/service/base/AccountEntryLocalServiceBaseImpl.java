@@ -16,6 +16,7 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountEntry;
 import com.liferay.account.service.AccountEntryLocalService;
+import com.liferay.account.service.AccountEntryLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -44,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,11 +72,15 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the account entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntry the account entry
 	 * @return the account entry that was added
@@ -100,6 +108,10 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the account entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntryId the primary key of the account entry
 	 * @return the account entry that was removed
 	 * @throws PortalException if a account entry with the primary key could not be found
@@ -114,6 +126,10 @@ public abstract class AccountEntryLocalServiceBaseImpl
 
 	/**
 	 * Deletes the account entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntry the account entry
 	 * @return the account entry that was removed
@@ -130,6 +146,13 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -232,10 +255,39 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	 * @return the matching account entry, or <code>null</code> if a matching account entry could not be found
 	 */
 	@Override
-	public AccountEntry fetchAccountEntryByReferenceCode(
+	public AccountEntry fetchAccountEntryByExternalReferenceCode(
 		long companyId, String externalReferenceCode) {
 
 		return accountEntryPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAccountEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public AccountEntry fetchAccountEntryByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchAccountEntryByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the account entry with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the account entry's external reference code
+	 * @return the matching account entry
+	 * @throws PortalException if a matching account entry could not be found
+	 */
+	@Override
+	public AccountEntry getAccountEntryByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return accountEntryPersistence.findByC_ERC(
 			companyId, externalReferenceCode);
 	}
 
@@ -298,6 +350,7 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -316,6 +369,7 @@ public abstract class AccountEntryLocalServiceBaseImpl
 			(AccountEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AccountEntry> getBasePersistence() {
 		return accountEntryPersistence;
 	}
@@ -359,6 +413,10 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	/**
 	 * Updates the account entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntry the account entry
 	 * @return the account entry that was updated
 	 */
@@ -366,6 +424,11 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Override
 	public AccountEntry updateAccountEntry(AccountEntry accountEntry) {
 		return accountEntryPersistence.update(accountEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -379,6 +442,8 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		accountEntryLocalService = (AccountEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountEntryLocalService);
 	}
 
 	/**
@@ -423,6 +488,22 @@ public abstract class AccountEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountEntryLocalService accountEntryLocalService) {
+
+		try {
+			Field field = AccountEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountEntryLocalService accountEntryLocalService;
 
 	@Reference
@@ -431,21 +512,5 @@ public abstract class AccountEntryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
 
 }

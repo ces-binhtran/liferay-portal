@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -42,6 +43,7 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -50,6 +52,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -77,6 +80,7 @@ public class DEDataListViewModelImpl
 	public static final String TABLE_NAME = "DEDataListView";
 
 	public static final Object[][] TABLE_COLUMNS = {
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
 		{"uuid_", Types.VARCHAR}, {"deDataListViewId", Types.BIGINT},
 		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
@@ -90,6 +94,8 @@ public class DEDataListViewModelImpl
 		new HashMap<String, Integer>();
 
 	static {
+		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("deDataListViewId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -106,7 +112,7 @@ public class DEDataListViewModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table DEDataListView (uuid_ VARCHAR(75) null,deDataListViewId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,appliedFilters TEXT null,ddmStructureId LONG,fieldNames TEXT null,name STRING null,sortField VARCHAR(75) null)";
+		"create table DEDataListView (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,deDataListViewId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,appliedFilters TEXT null,ddmStructureId LONG,fieldNames TEXT null,name STRING null,sortField VARCHAR(75) null,primary key (deDataListViewId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table DEDataListView";
 
@@ -122,22 +128,49 @@ public class DEDataListViewModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DDMSTRUCTUREID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEDATALISTVIEWID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public DEDataListViewModelImpl() {
@@ -191,9 +224,6 @@ public class DEDataListViewModelImpl
 				attributeName,
 				attributeGetterFunction.apply((DEDataListView)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -267,6 +297,17 @@ public class DEDataListViewModelImpl
 		Map<String, BiConsumer<DEDataListView, ?>> attributeSetterBiConsumers =
 			new LinkedHashMap<String, BiConsumer<DEDataListView, ?>>();
 
+		attributeGetterFunctions.put(
+			"mvccVersion", DEDataListView::getMvccVersion);
+		attributeSetterBiConsumers.put(
+			"mvccVersion",
+			(BiConsumer<DEDataListView, Long>)DEDataListView::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", DEDataListView::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<DEDataListView, Long>)
+				DEDataListView::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", DEDataListView::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid",
@@ -336,6 +377,34 @@ public class DEDataListViewModelImpl
 	}
 
 	@Override
+	public long getMvccVersion() {
+		return _mvccVersion;
+	}
+
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_mvccVersion = mvccVersion;
+	}
+
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
+	}
+
+	@Override
 	public String getUuid() {
 		if (_uuid == null) {
 			return "";
@@ -347,17 +416,20 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@Override
@@ -367,6 +439,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setDeDataListViewId(long deDataListViewId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_deDataListViewId = deDataListViewId;
 	}
 
@@ -377,19 +453,20 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -399,19 +476,21 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -421,6 +500,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -452,6 +535,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -462,6 +549,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -478,6 +569,10 @@ public class DEDataListViewModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -493,6 +588,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setAppliedFilters(String appliedFilters) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_appliedFilters = appliedFilters;
 	}
 
@@ -503,19 +602,21 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setDdmStructureId(long ddmStructureId) {
-		_columnBitmask |= DDMSTRUCTUREID_COLUMN_BITMASK;
-
-		if (!_setOriginalDdmStructureId) {
-			_setOriginalDdmStructureId = true;
-
-			_originalDdmStructureId = _ddmStructureId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_ddmStructureId = ddmStructureId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalDdmStructureId() {
-		return _originalDdmStructureId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("ddmStructureId"));
 	}
 
 	@Override
@@ -530,6 +631,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setFieldNames(String fieldNames) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_fieldNames = fieldNames;
 	}
 
@@ -588,6 +693,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setName(String name) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_name = name;
 	}
 
@@ -647,6 +756,10 @@ public class DEDataListViewModelImpl
 
 	@Override
 	public void setSortField(String sortField) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sortField = sortField;
 	}
 
@@ -657,6 +770,26 @@ public class DEDataListViewModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -758,6 +891,8 @@ public class DEDataListViewModelImpl
 	public Object clone() {
 		DEDataListViewImpl deDataListViewImpl = new DEDataListViewImpl();
 
+		deDataListViewImpl.setMvccVersion(getMvccVersion());
+		deDataListViewImpl.setCtCollectionId(getCtCollectionId());
 		deDataListViewImpl.setUuid(getUuid());
 		deDataListViewImpl.setDeDataListViewId(getDeDataListViewId());
 		deDataListViewImpl.setGroupId(getGroupId());
@@ -778,6 +913,43 @@ public class DEDataListViewModelImpl
 	}
 
 	@Override
+	public DEDataListView cloneWithOriginalValues() {
+		DEDataListViewImpl deDataListViewImpl = new DEDataListViewImpl();
+
+		deDataListViewImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		deDataListViewImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		deDataListViewImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		deDataListViewImpl.setDeDataListViewId(
+			this.<Long>getColumnOriginalValue("deDataListViewId"));
+		deDataListViewImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		deDataListViewImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		deDataListViewImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		deDataListViewImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		deDataListViewImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		deDataListViewImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		deDataListViewImpl.setAppliedFilters(
+			this.<String>getColumnOriginalValue("appliedFilters"));
+		deDataListViewImpl.setDdmStructureId(
+			this.<Long>getColumnOriginalValue("ddmStructureId"));
+		deDataListViewImpl.setFieldNames(
+			this.<String>getColumnOriginalValue("fieldNames"));
+		deDataListViewImpl.setName(this.<String>getColumnOriginalValue("name"));
+		deDataListViewImpl.setSortField(
+			this.<String>getColumnOriginalValue("sortField"));
+
+		return deDataListViewImpl;
+	}
+
+	@Override
 	public int compareTo(DEDataListView deDataListView) {
 		long primaryKey = deDataListView.getPrimaryKey();
 
@@ -793,16 +965,16 @@ public class DEDataListViewModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof DEDataListView)) {
+		if (!(object instanceof DEDataListView)) {
 			return false;
 		}
 
-		DEDataListView deDataListView = (DEDataListView)obj;
+		DEDataListView deDataListView = (DEDataListView)object;
 
 		long primaryKey = deDataListView.getPrimaryKey();
 
@@ -819,46 +991,41 @@ public class DEDataListViewModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		DEDataListViewModelImpl deDataListViewModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		deDataListViewModelImpl._originalUuid = deDataListViewModelImpl._uuid;
+		_setModifiedDate = false;
 
-		deDataListViewModelImpl._originalGroupId =
-			deDataListViewModelImpl._groupId;
-
-		deDataListViewModelImpl._setOriginalGroupId = false;
-
-		deDataListViewModelImpl._originalCompanyId =
-			deDataListViewModelImpl._companyId;
-
-		deDataListViewModelImpl._setOriginalCompanyId = false;
-
-		deDataListViewModelImpl._setModifiedDate = false;
-
-		deDataListViewModelImpl._originalDdmStructureId =
-			deDataListViewModelImpl._ddmStructureId;
-
-		deDataListViewModelImpl._setOriginalDdmStructureId = false;
-
-		deDataListViewModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
 	public CacheModel<DEDataListView> toCacheModel() {
 		DEDataListViewCacheModel deDataListViewCacheModel =
 			new DEDataListViewCacheModel();
+
+		deDataListViewCacheModel.mvccVersion = getMvccVersion();
+
+		deDataListViewCacheModel.ctCollectionId = getCtCollectionId();
 
 		deDataListViewCacheModel.uuid = getUuid();
 
@@ -945,7 +1112,7 @@ public class DEDataListViewModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -956,9 +1123,26 @@ public class DEDataListViewModelImpl
 			Function<DEDataListView, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((DEDataListView)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((DEDataListView)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -977,7 +1161,7 @@ public class DEDataListViewModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1009,18 +1193,12 @@ public class DEDataListViewModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
+	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _deDataListViewId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
@@ -1028,12 +1206,111 @@ public class DEDataListViewModelImpl
 	private boolean _setModifiedDate;
 	private String _appliedFilters;
 	private long _ddmStructureId;
-	private long _originalDdmStructureId;
-	private boolean _setOriginalDdmStructureId;
 	private String _fieldNames;
 	private String _name;
 	private String _nameCurrentLanguageId;
 	private String _sortField;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<DEDataListView, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((DEDataListView)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("deDataListViewId", _deDataListViewId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("appliedFilters", _appliedFilters);
+		_columnOriginalValues.put("ddmStructureId", _ddmStructureId);
+		_columnOriginalValues.put("fieldNames", _fieldNames);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("sortField", _sortField);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("deDataListViewId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("appliedFilters", 1024L);
+
+		columnBitmasks.put("ddmStructureId", 2048L);
+
+		columnBitmasks.put("fieldNames", 4096L);
+
+		columnBitmasks.put("name", 8192L);
+
+		columnBitmasks.put("sortField", 16384L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private DEDataListView _escapedModel;
 

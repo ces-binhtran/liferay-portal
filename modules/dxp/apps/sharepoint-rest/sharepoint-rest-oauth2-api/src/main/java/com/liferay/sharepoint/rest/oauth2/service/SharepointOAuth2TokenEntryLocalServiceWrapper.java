@@ -27,6 +27,10 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 	implements ServiceWrapper<SharepointOAuth2TokenEntryLocalService>,
 			   SharepointOAuth2TokenEntryLocalService {
 
+	public SharepointOAuth2TokenEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SharepointOAuth2TokenEntryLocalServiceWrapper(
 		SharepointOAuth2TokenEntryLocalService
 			sharepointOAuth2TokenEntryLocalService) {
@@ -50,6 +54,10 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 
 	/**
 	 * Adds the sharepoint o auth2 token entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was added
@@ -105,6 +113,10 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 	/**
 	 * Deletes the sharepoint o auth2 token entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharepointOAuth2TokenEntryId the primary key of the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was removed
 	 * @throws PortalException if a sharepoint o auth2 token entry with the primary key could not be found
@@ -130,6 +142,10 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 	/**
 	 * Deletes the sharepoint o auth2 token entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was removed
 	 */
@@ -152,6 +168,13 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _sharepointOAuth2TokenEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _sharepointOAuth2TokenEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -366,6 +389,10 @@ public class SharepointOAuth2TokenEntryLocalServiceWrapper
 
 	/**
 	 * Updates the sharepoint o auth2 token entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was updated

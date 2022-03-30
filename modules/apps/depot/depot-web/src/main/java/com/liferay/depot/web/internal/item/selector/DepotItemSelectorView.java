@@ -14,7 +14,6 @@
 
 package com.liferay.depot.web.internal.item.selector;
 
-import com.liferay.depot.configuration.DepotConfiguration;
 import com.liferay.depot.web.internal.application.controller.DepotApplicationController;
 import com.liferay.depot.web.internal.application.list.DepotPanelAppController;
 import com.liferay.depot.web.internal.util.DepotAdminGroupSearchProvider;
@@ -91,10 +90,6 @@ public class DepotItemSelectorView
 		GroupItemSelectorCriterion groupItemSelectorCriterion,
 		ThemeDisplay themeDisplay) {
 
-		if (!_depotConfiguration.isEnabled()) {
-			return false;
-		}
-
 		if (groupItemSelectorCriterion == null) {
 			return true;
 		}
@@ -116,13 +111,13 @@ public class DepotItemSelectorView
 		throws IOException, ServletException {
 
 		SitesItemSelectorViewDisplayContext
-			depotSiteItemSelectorViewDisplayContext =
-				new DepotSiteItemSelectorViewDisplayContext(
+			depotSitesItemSelectorViewDisplayContext =
+				new DepotSitesItemSelectorViewDisplayContext(
 					(HttpServletRequest)servletRequest, itemSelectedEventName,
 					portletURL, groupItemSelectorCriterion);
 
 		_siteItemSelectorViewRenderer.renderHTML(
-			depotSiteItemSelectorViewDisplayContext);
+			depotSitesItemSelectorViewDisplayContext);
 	}
 
 	private static final List<ItemSelectorReturnType>
@@ -139,9 +134,6 @@ public class DepotItemSelectorView
 	private DepotApplicationController _depotApplicationController;
 
 	@Reference
-	private DepotConfiguration _depotConfiguration;
-
-	@Reference
 	private DepotPanelAppController _depotPanelAppController;
 
 	@Reference
@@ -150,10 +142,10 @@ public class DepotItemSelectorView
 	@Reference
 	private SiteItemSelectorViewRenderer _siteItemSelectorViewRenderer;
 
-	private class DepotSiteItemSelectorViewDisplayContext
+	private class DepotSitesItemSelectorViewDisplayContext
 		implements SitesItemSelectorViewDisplayContext {
 
-		public DepotSiteItemSelectorViewDisplayContext(
+		public DepotSitesItemSelectorViewDisplayContext(
 			HttpServletRequest httpServletRequest, String itemSelectedEventName,
 			PortletURL portletURL,
 			GroupItemSelectorCriterion groupItemSelectorCriterion) {

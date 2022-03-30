@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class RedirectEntryServiceWrapper
 	implements RedirectEntryService, ServiceWrapper<RedirectEntryService> {
 
+	public RedirectEntryServiceWrapper() {
+		this(null);
+	}
+
 	public RedirectEntryServiceWrapper(
 		RedirectEntryService redirectEntryService) {
 
@@ -88,11 +92,12 @@ public class RedirectEntryServiceWrapper
 			getRedirectEntries(
 				long groupId, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.redirect.model.RedirectEntry> obc)
+					<com.liferay.redirect.model.RedirectEntry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _redirectEntryService.getRedirectEntries(
-			groupId, start, end, obc);
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override

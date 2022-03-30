@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.CollectionConfigSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class CollectionConfig implements Cloneable {
+public class CollectionConfig implements Cloneable, Serializable {
 
 	public static CollectionConfig toDTO(String json) {
 		return CollectionConfigSerDes.toDTO(json);
@@ -120,7 +122,9 @@ public class CollectionConfig implements Cloneable {
 
 		public static CollectionType create(String value) {
 			for (CollectionType collectionType : values()) {
-				if (Objects.equals(collectionType.getValue(), value)) {
+				if (Objects.equals(collectionType.getValue(), value) ||
+					Objects.equals(collectionType.name(), value)) {
+
 					return collectionType;
 				}
 			}

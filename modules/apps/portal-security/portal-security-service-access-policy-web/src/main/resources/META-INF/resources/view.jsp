@@ -32,33 +32,30 @@ OrderByComparator<SAPEntry> orderByComparator = new SAPEntryNameComparator(order
 int sapEntriesCount = SAPEntryServiceUtil.getCompanySAPEntriesCount(company.getCompanyId());
 
 PortletURL portletURL = renderResponse.createRenderURL();
-
-PortletURL sortingURL = renderResponse.createRenderURL();
-
-sortingURL.setParameter("displayStyle", displayStyle);
-sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 %>
 
 <clay:management-toolbar
 	creationMenu='<%=
 		new JSPCreationMenu(pageContext) {
 			{
-					addPrimaryDropdownItem(
-						dropdownItem -> dropdownItem.setHref(
-							renderResponse.createRenderURL(),
-							"mvcPath", "/edit_entry.jsp", "redirect",
-							PortalUtil.getCurrentURL(request))
-					);
+				addPrimaryDropdownItem(dropdownItem -> dropdownItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/edit_entry.jsp", "redirect", PortalUtil.getCurrentURL(httpServletRequest)));
 			}
 		}
 	%>'
 	disabled="<%= sapEntriesCount == 0 %>"
-	namespace="<%= renderResponse.getNamespace() %>"
 	selectable="<%= false %>"
 	showCreationMenu="<%= SAPPermission.contains(permissionChecker, SAPActionKeys.ACTION_ADD_SAP_ENTRY) %>"
 	showSearch="<%= false %>"
 	sortingOrder="<%= orderByType %>"
-	sortingURL="<%= sortingURL.toString() %>"
+	sortingURL='<%=
+		PortletURLBuilder.createRenderURL(
+			renderResponse
+		).setParameter(
+			"displayStyle", displayStyle
+		).setParameter(
+			"orderByType", orderByAsc ? "desc" : "asc"
+		).buildString()
+	%>'
 />
 
 <clay:container-fluid>
@@ -84,7 +81,7 @@ sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 			</portlet:renderURL>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				href="<%= rowURL %>"
 				name="name"
 			>
@@ -92,7 +89,7 @@ sortingURL.setParameter("orderByType", orderByAsc ? "desc" : "asc");
 			</liferay-ui:search-container-column-text>
 
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="description"
 				value="<%= sapEntry.getTitle(locale) %>"
 			/>

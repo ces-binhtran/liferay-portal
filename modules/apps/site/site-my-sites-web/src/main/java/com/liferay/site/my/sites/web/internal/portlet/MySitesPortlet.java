@@ -116,12 +116,12 @@ public class MySitesPortlet extends MVCPortlet {
 		long[] addUserIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "addUserIds"), 0L);
 
-		addUserIds = filterAddUserIds(groupId, addUserIds);
+		addUserIds = _filterAddUserIds(groupId, addUserIds);
 
 		long[] removeUserIds = StringUtil.split(
 			ParamUtil.getString(actionRequest, "removeUserIds"), 0L);
 
-		removeUserIds = filterRemoveUserIds(groupId, removeUserIds);
+		removeUserIds = _filterRemoveUserIds(groupId, removeUserIds);
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
@@ -134,39 +134,11 @@ public class MySitesPortlet extends MVCPortlet {
 			themeDisplay.getCompanyId(), groupId, removeUserIds);
 	}
 
-	protected long[] filterAddUserIds(long groupId, long[] userIds)
-		throws Exception {
-
-		Set<Long> filteredUserIds = new HashSet<>();
-
-		for (long userId : userIds) {
-			if (!_userLocalService.hasGroupUser(groupId, userId)) {
-				filteredUserIds.add(userId);
-			}
-		}
-
-		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
-	}
-
-	protected long[] filterRemoveUserIds(long groupId, long[] userIds)
-		throws Exception {
-
-		Set<Long> filteredUserIds = new HashSet<>();
-
-		for (long userId : userIds) {
-			if (_userLocalService.hasGroupUser(groupId, userId)) {
-				filteredUserIds.add(userId);
-			}
-		}
-
-		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
-	}
-
 	@Override
-	protected boolean isSessionErrorException(Throwable cause) {
-		if (cause instanceof MembershipRequestCommentsException ||
-			cause instanceof PrincipalException ||
-			super.isSessionErrorException(cause)) {
+	protected boolean isSessionErrorException(Throwable throwable) {
+		if (throwable instanceof MembershipRequestCommentsException ||
+			throwable instanceof PrincipalException ||
+			super.isSessionErrorException(throwable)) {
 
 			return true;
 		}
@@ -196,6 +168,34 @@ public class MySitesPortlet extends MVCPortlet {
 	@Reference(unbind = "-")
 	protected void setUserService(UserService userService) {
 		_userService = userService;
+	}
+
+	private long[] _filterAddUserIds(long groupId, long[] userIds)
+		throws Exception {
+
+		Set<Long> filteredUserIds = new HashSet<>();
+
+		for (long userId : userIds) {
+			if (!_userLocalService.hasGroupUser(groupId, userId)) {
+				filteredUserIds.add(userId);
+			}
+		}
+
+		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
+	}
+
+	private long[] _filterRemoveUserIds(long groupId, long[] userIds)
+		throws Exception {
+
+		Set<Long> filteredUserIds = new HashSet<>();
+
+		for (long userId : userIds) {
+			if (_userLocalService.hasGroupUser(groupId, userId)) {
+				filteredUserIds.add(userId);
+			}
+		}
+
+		return ArrayUtil.toArray(filteredUserIds.toArray(new Long[0]));
 	}
 
 	private MembershipRequestLocalService _membershipRequestLocalService;

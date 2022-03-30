@@ -4,7 +4,7 @@ definition {
 	property osgi.module.configuration.file.names = "com.liferay.portal.search.web.internal.configuration.SearchWebConfiguration.config";
 	property osgi.module.configurations = "classicSearchPortletInFrontPage=&quot;true&quot;";
 	property portal.release = "true";
-	property portal.suite.search.engine = "elasticsearch6,elasticsearch7,solr";
+	property portal.suite.search.engine = "elasticsearch7";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Web Search";
 
@@ -25,8 +25,7 @@ definition {
 	@priority = "4"
 	test SearchByAssetAndModifiedRangeFacets {
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Blogs");
 
 		Blogs.addEntry(
@@ -36,8 +35,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Blogs");
 
 		Blogs.addEntry(
@@ -55,8 +53,7 @@ definition {
 			title = "WC WebContent2 Title");
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Wiki");
 
 		WikiNavigator.gotoNode(wikiNodeName = "Main");
@@ -70,8 +67,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Wiki");
 
 		WikiNavigator.gotoNode(wikiNodeName = "Main");
@@ -85,8 +81,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Documents and Media");
 
 		DMDocument.addCP(
@@ -113,10 +108,12 @@ definition {
 			AssertElementNotPresent(locator1 = "SearchResults#CLASSIC_ASSET_ENTRY_TABLE_TITLE");
 		}
 
-		ClassicSearch.viewAssetTypeFacetPG(
+		// Workaround COMMERCE-7285
+
+		/*ClassicSearch.viewAssetTypeFacetPG(
 			facetFrequency = "1",
 			searchAssetTitle = "Wiki Page2 Title",
-			searchAssetType = "Wiki Page");
+			searchAssetType = "Wiki Page");*/
 
 		ClassicSearch.unscopeAssetFacetPG();
 
@@ -140,8 +137,7 @@ definition {
 	@priority = "4"
 	test SearchByPermission {
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		WebContentNavigator.gotoAddCP();
@@ -152,7 +148,7 @@ definition {
 
 		PortletEntry.publish();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -163,7 +159,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -175,7 +171,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "People",
-			panel = "Site Administration",
 			portlet = "Memberships");
 
 		Site.addAllMembersCP();
@@ -195,7 +190,7 @@ definition {
 
 	@priority = "4"
 	test SearchByUserFacet {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -206,7 +201,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -216,7 +211,7 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -229,10 +224,9 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Blogs Page");
+		PagesAdmin.addPublicPage(pageName = "Blogs Page");
 
 		Navigator.gotoPage(pageName = "Blogs Page");
 
@@ -297,38 +291,28 @@ definition {
 
 	@priority = "5"
 	test SearchTwiceScopeEverything {
-		GlobalMenu.gotoPortlet(
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		GlobalMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea2@liferay.com",
 			userFirstName = "userfn2",
 			userLastName = "userln2",
 			userScreenName = "usersn2");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			panel = "Site Administration",
-			portlet = "Memberships",
-			site = "Guest");
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
+		JSONUser.addUserToSite(
+			groupName = "Guest",
+			userEmailAddress = "userea1@liferay.com");
 
 		Navigator.openURL();
 
@@ -357,38 +341,28 @@ definition {
 
 	@priority = "5"
 	test SearchTwiceScopeLetUserChoose {
-		GlobalMenu.gotoPortlet(
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		GlobalMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea2@liferay.com",
 			userFirstName = "userfn2",
 			userLastName = "userln2",
 			userScreenName = "usersn2");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			panel = "Site Administration",
-			portlet = "Memberships",
-			site = "Guest");
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
+		JSONUser.addUserToSite(
+			groupName = "Guest",
+			userEmailAddress = "userea1@liferay.com");
 
 		Navigator.openURL();
 
@@ -439,38 +413,28 @@ definition {
 
 	@priority = "5"
 	test SearchTwiceScopeThisSite {
-		GlobalMenu.gotoPortlet(
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
 
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea1@liferay.com",
 			userFirstName = "userfn1",
 			userLastName = "userln1",
 			userScreenName = "usersn1");
 
-		GlobalMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
+		JSONUser.addUser(
 			userEmailAddress = "userea2@liferay.com",
 			userFirstName = "userfn2",
 			userLastName = "userln2",
 			userScreenName = "usersn2");
 
-		ProductMenu.gotoPortlet(
-			category = "People",
-			panel = "Site Administration",
-			portlet = "Memberships",
-			site = "Guest");
-
-		Site.assignUserAsMemberCP(
-			userFirstName = "userfn1",
-			userLastName = "userln1",
-			userScreenName = "usersn1");
+		JSONUser.addUserToSite(
+			groupName = "Guest",
+			userEmailAddress = "userea1@liferay.com");
 
 		Navigator.openURL();
 
@@ -496,8 +460,7 @@ definition {
 	@priority = "4"
 	test ViewSearchResultForLongURL {
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Documents and Media");
 
 		DMDocument.addCP(

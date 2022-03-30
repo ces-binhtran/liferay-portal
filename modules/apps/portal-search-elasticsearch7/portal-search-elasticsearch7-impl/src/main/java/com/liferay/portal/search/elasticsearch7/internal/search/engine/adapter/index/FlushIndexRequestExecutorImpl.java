@@ -44,7 +44,7 @@ public class FlushIndexRequestExecutorImpl
 	public FlushIndexResponse execute(FlushIndexRequest flushIndexRequest) {
 		FlushRequest flushRequest = createFlushRequest(flushIndexRequest);
 
-		FlushResponse flushResponse = getFlushResponse(
+		FlushResponse flushResponse = _getFlushResponse(
 			flushRequest, flushIndexRequest);
 
 		FlushIndexResponse flushIndexResponse = new FlushIndexResponse();
@@ -89,23 +89,6 @@ public class FlushIndexRequestExecutorImpl
 		return flushRequest;
 	}
 
-	protected FlushResponse getFlushResponse(
-		FlushRequest flushRequest, FlushIndexRequest flushIndexRequest) {
-
-		RestHighLevelClient restHighLevelClient =
-			_elasticsearchClientResolver.getRestHighLevelClient(
-				flushIndexRequest.getConnectionId(), false);
-
-		IndicesClient indicesClient = restHighLevelClient.indices();
-
-		try {
-			return indicesClient.flush(flushRequest, RequestOptions.DEFAULT);
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-	}
-
 	@Reference(unbind = "-")
 	protected void setElasticsearchClientResolver(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
@@ -119,6 +102,24 @@ public class FlushIndexRequestExecutorImpl
 
 		_indexRequestShardFailureTranslator =
 			indexRequestShardFailureTranslator;
+	}
+
+	private FlushResponse _getFlushResponse(
+		FlushRequest flushRequest, FlushIndexRequest flushIndexRequest) {
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchClientResolver.getRestHighLevelClient(
+				flushIndexRequest.getConnectionId(),
+				flushIndexRequest.isPreferLocalCluster());
+
+		IndicesClient indicesClient = restHighLevelClient.indices();
+
+		try {
+			return indicesClient.flush(flushRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

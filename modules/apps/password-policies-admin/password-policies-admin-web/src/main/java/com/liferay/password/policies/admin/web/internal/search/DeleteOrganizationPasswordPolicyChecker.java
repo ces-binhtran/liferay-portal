@@ -39,8 +39,8 @@ public class DeleteOrganizationPasswordPolicyChecker
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		Organization organization = (Organization)obj;
+	public boolean isDisabled(Object object) {
+		Organization organization = (Organization)object;
 
 		try {
 			PasswordPolicyRel passwordPolicyRel =
@@ -56,7 +56,7 @@ public class DeleteOrganizationPasswordPolicyChecker
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;

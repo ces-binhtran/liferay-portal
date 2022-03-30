@@ -139,11 +139,11 @@ public interface Portlet extends PersistedModel, PortletModel {
 	/**
 	 * Checks whether this portlet is equal to the specified object.
 	 *
-	 * @param obj the object to compare this portlet against
+	 * @param object the object to compare this portlet against
 	 * @return <code>true</code> if the portlet is equal to the specified object
 	 */
 	@Override
-	public boolean equals(Object obj);
+	public boolean equals(Object object);
 
 	/**
 	 * Returns the action timeout of the portlet.
@@ -217,24 +217,6 @@ public interface Portlet extends PersistedModel, PortletModel {
 	public java.util.List
 		<com.liferay.asset.kernel.model.AssetRendererFactory<?>>
 			getAssetRendererFactoryInstances();
-
-	/**
-	 * Returns the names of the classes that represent atom collection adapters
-	 * associated with the portlet.
-	 *
-	 * @return the names of the classes that represent atom collection adapters
-	 associated with the portlet
-	 */
-	public java.util.List<String> getAtomCollectionAdapterClasses();
-
-	/**
-	 * Returns the atom collection adapter instances of the portlet.
-	 *
-	 * @return the atom collection adapter instances of the portlet
-	 */
-	public java.util.List
-		<com.liferay.portal.kernel.atom.AtomCollectionAdapter<?>>
-			getAtomCollectionAdapterInstances();
 
 	/**
 	 * Returns the names of the parameters that will be automatically propagated
@@ -1711,16 +1693,6 @@ public interface Portlet extends PersistedModel, PortletModel {
 	 asynchronous processing in resource requests
 	 */
 	public void setAsyncSupported(boolean asyncSupported);
-
-	/**
-	 * Sets the names of the classes that represent atom collection adapters
-	 * associated with the portlet.
-	 *
-	 * @param atomCollectionAdapterClasses the names of the classes that
-	 represent atom collection adapters associated with the portlet
-	 */
-	public void setAtomCollectionAdapterClasses(
-		java.util.List<String> atomCollectionAdapterClasses);
 
 	/**
 	 * Sets the names of the parameters that will be automatically propagated

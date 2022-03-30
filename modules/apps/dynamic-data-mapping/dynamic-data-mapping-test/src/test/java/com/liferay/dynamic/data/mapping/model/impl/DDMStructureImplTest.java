@@ -20,8 +20,6 @@ import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.util.PropsValues;
 
 import java.util.ArrayList;
@@ -30,15 +28,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import org.mockito.Matchers;
 
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
@@ -68,11 +63,9 @@ public class DDMStructureImplTest extends BaseDDMTestCase {
 		setUpDDMFormJSONSerializer();
 		setUpDDMStructureLocalServiceUtil();
 		setUpDDMTemplateLocalServiceUtil();
-		setUpHtmlUtil();
 		setUpJSONFactoryUtil();
 		setUpLanguageUtil();
 		setUpLocaleUtil();
-		setUpPortalUtil();
 		setUpPropsValues();
 		setUpSAXReaderUtil();
 	}
@@ -134,21 +127,21 @@ public class DDMStructureImplTest extends BaseDDMTestCase {
 
 	@Test
 	public void testGetDDMForm() throws Exception {
-		DDMForm ddmForm = createDDMForm(
+		DDMForm ddmForm1 = createDDMForm(
 			createAvailableLocales(LocaleUtil.US), LocaleUtil.US);
 
-		ddmForm.addDDMFormField(createTextDDMFormField("field1"));
+		ddmForm1.addDDMFormField(createTextDDMFormField("field1"));
 
-		DDMStructure structure = createStructure("Test Structure", ddmForm);
-
-		DDMForm ddmForm1 = structure.getDDMForm();
-
-		ddmForm1.addDDMFormField(createTextDDMFormField("field2"));
+		DDMStructure structure = createStructure("Test Structure", ddmForm1);
 
 		DDMForm ddmForm2 = structure.getDDMForm();
 
+		ddmForm2.addDDMFormField(createTextDDMFormField("field2"));
+
+		DDMForm ddmForm3 = structure.getDDMForm();
+
 		Map<String, DDMFormField> ddmFormFieldsMap =
-			ddmForm2.getDDMFormFieldsMap(false);
+			ddmForm3.getDDMFormFieldsMap(false);
 
 		Assert.assertFalse(ddmFormFieldsMap.containsKey("field2"));
 	}
@@ -371,22 +364,6 @@ public class DDMStructureImplTest extends BaseDDMTestCase {
 		DDMStructure structure = createStructure("Test Structure", ddmForm);
 
 		Assert.assertTrue(structure.getFieldRequired("field1"));
-	}
-
-	protected void setUpPortalUtil() {
-		PortalUtil portalUtil = new PortalUtil();
-
-		Portal portal = mock(Portal.class);
-
-		ResourceBundle resourceBundle = mock(ResourceBundle.class);
-
-		when(
-			portal.getResourceBundle(Matchers.any(Locale.class))
-		).thenReturn(
-			resourceBundle
-		);
-
-		portalUtil.setPortal(portal);
 	}
 
 }

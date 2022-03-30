@@ -19,12 +19,16 @@ import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../src/main/resourc
 import '@testing-library/jest-dom/extend-expect';
 import {act, cleanup, render} from '@testing-library/react';
 
-import {ControlsProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/Controls';
-import {EditableProcessorContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/EditableProcessorContext';
 import FragmentContent from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/FragmentContent';
-import resolveEditableValue from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/resolveEditableValue';
 import {BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/backgroundImageFragmentEntryProcessor';
-import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/store';
+import {VIEWPORT_SIZES} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/config/constants/viewportSizes';
+import {
+	ControlsProvider,
+	useSelectItem,
+} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/ControlsContext';
+import {EditableProcessorContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/EditableProcessorContext';
+import {StoreAPIContextProvider} from '../../../../../src/main/resources/META-INF/resources/page_editor/app/contexts/StoreContext';
+import resolveEditableValue from '../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/editable-value/resolveEditableValue';
 
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/services/serviceFetch',
@@ -32,14 +36,26 @@ jest.mock(
 );
 
 jest.mock(
-	'../../../../../src/main/resources/META-INF/resources/page_editor/app/components/fragment-content/resolveEditableValue',
+	'../../../../../src/main/resources/META-INF/resources/page_editor/app/utils/editable-value/resolveEditableValue',
 	() => jest.fn(() => Promise.resolve(['Default content']))
 );
 
 jest.mock(
 	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
 	() => ({
-		config: {},
+		config: {
+			commonStyles: [
+				{
+					styles: [
+						{
+							defaultValue: 'left',
+							name: 'textAlign',
+						},
+					],
+				},
+			],
+			frontendTokens: {},
+		},
 	})
 );
 
@@ -98,26 +114,45 @@ const item = {
 	type: '',
 };
 
-const renderFragmentContent = (fragmentEntryLink) => {
+const renderFragmentContent = ({
+	activeItemId,
+	fragmentEntryLink,
+	hasUpdatePermissions = true,
+	lockedExperience = false,
+	viewportSize = VIEWPORT_SIZES.desktop,
+}) => {
 	const state = {
 		fragmentEntryLinks: {
 			[FRAGMENT_ENTRY_LINK_ID]: fragmentEntryLink,
 		},
 		languageId: 'en_US',
-		permissions: {},
+		permissions: {
+			LOCKED_SEGMENTS_EXPERIMENT: lockedExperience,
+			UPDATE: hasUpdatePermissions,
+		},
 		segmentsExperienceId: '0',
+		selectedViewportSize: viewportSize,
 	};
 
 	const ref = React.createRef();
+
+	const AutoSelect = () => {
+		useSelectItem()(activeItemId);
+
+		return null;
+	};
 
 	return render(
 		<StoreAPIContextProvider dispatch={() => {}} getState={() => state}>
 			<EditableProcessorContextProvider>
 				<ControlsProvider>
+					<AutoSelect />
+
 					<FragmentContent
+						elementRef={ref}
 						fragmentEntryLinkId={FRAGMENT_ENTRY_LINK_ID}
-						itemId={item.itemId}
-						ref={ref}
+						getPortals={() => []}
+						item={item}
 					/>
 				</ControlsProvider>
 			</EditableProcessorContextProvider>
@@ -136,7 +171,7 @@ describe('FragmentContent', () => {
 		const fragmentEntryLink = getFragmentEntryLink();
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		const editableContent = document.body.querySelector('#editable-id');
@@ -148,13 +183,11 @@ describe('FragmentContent', () => {
 		const fragmentEntryLink = getFragmentEntryLink();
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'editable-id',
-			EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			{},
 			'en_US',
 			expect.any(Function)
 		);
@@ -167,13 +200,11 @@ describe('FragmentContent', () => {
 		});
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'editable-id',
-			EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
+			{},
 			'en_US',
 			expect.any(Function)
 		);
@@ -185,21 +216,38 @@ describe('FragmentContent', () => {
 
 			editableValues: {
 				[BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR]: {
-					'background-id': {},
+					'background-id': {
+						defaultValue: 'image.jpg',
+					},
 				},
 			},
 		});
 
 		await act(async () => {
-			renderFragmentContent(fragmentEntryLink);
+			renderFragmentContent({fragmentEntryLink});
 		});
 
 		expect(resolveEditableValue).toBeCalledWith(
-			fragmentEntryLink.editableValues,
-			'background-id',
-			BACKGROUND_IMAGE_FRAGMENT_ENTRY_PROCESSOR,
+			{defaultValue: 'image.jpg'},
 			'en_US',
 			expect.any(Function)
 		);
+	});
+
+	it('shows widgets topper even without update permissions', async () => {
+		const fragmentEntryLink = getFragmentEntryLink();
+
+		await act(async () => {
+			renderFragmentContent({
+				fragmentEntryLink,
+				hasUpdatePermissions: false,
+			});
+		});
+
+		expect(
+			document.body.querySelector(
+				'.page-editor__fragment-content--portlet-topper-hidden'
+			)
+		).toBeInTheDocument();
 	});
 });

@@ -15,6 +15,11 @@
 package com.liferay.jenkins.results.parser.test.clazz.group;
 
 import com.liferay.jenkins.results.parser.PortalTestClassJob;
+import com.liferay.jenkins.results.parser.test.clazz.TestClassFactory;
+
+import java.io.File;
+
+import org.json.JSONObject;
 
 /**
  * @author Yi-Chen Tsai
@@ -31,15 +36,25 @@ public class DefaultBatchTestClassGroup extends BatchTestClassGroup {
 	}
 
 	protected DefaultBatchTestClassGroup(
-		String batchName, BuildProfile buildProfile,
-		PortalTestClassJob portalTestClassJob) {
+		JSONObject jsonObject, PortalTestClassJob portalTestClassJob) {
 
-		super(batchName, buildProfile, portalTestClassJob);
+		super(jsonObject, portalTestClassJob);
+	}
 
-		addTestClass(
-			BatchTestClass.getInstance(batchName, portalGitWorkingDirectory));
+	protected DefaultBatchTestClassGroup(
+		String batchName, PortalTestClassJob portalTestClassJob) {
+
+		super(batchName, portalTestClassJob);
+
+		File buildTestBatchFile = new File(
+			portalGitWorkingDirectory.getWorkingDirectory(),
+			"build-test-batch.xml");
+
+		addTestClass(TestClassFactory.newTestClass(this, buildTestBatchFile));
 
 		setAxisTestClassGroups();
+
+		setSegmentTestClassGroups();
 	}
 
 }

@@ -19,8 +19,8 @@
 <%
 assetPublisherDisplayContext.setPageKeywords();
 
-if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisherDisplayContext.isSelectionStyleAssetList() && assetPublisherDisplayContext.isSelectionStyleManual() && ((assetPublisherDisplayContext.getAllAssetCategoryIds().length > 0) || (assetPublisherDisplayContext.getAllAssetTagNames().length > 0))) {
-	assetPublisherDisplayContext.setSelectionStyle("dynamic");
+if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisherDisplayContext.isSelectionStyleAssetList() && assetPublisherDisplayContext.isSelectionStyleManual() && (ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetCategoryIds()) || ArrayUtil.isNotEmpty(assetPublisherDisplayContext.getAllAssetTagNames()))) {
+	assetPublisherDisplayContext.setSelectionStyle(AssetPublisherSelectionStyleConstants.TYPE_DYNAMIC);
 }
 %>
 
@@ -33,10 +33,15 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 
 			<div class="btn-group-item">
 				<clay:link
-					elementClasses="btn btn-outline-borderless btn-outline-secondary btn-sm"
+					borderless="<%= true %>"
+					data-senna-off="<%= true %>"
+					displayType="secondary"
 					href="<%= rssURL.toString() %>"
 					icon="rss-full"
-					label='<%= LanguageUtil.get(request, "rss") %>'
+					label="rss"
+					outline="<%= true %>"
+					small="<%= true %>"
+					type="button"
 				/>
 			</div>
 
@@ -53,10 +58,11 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 					</portlet:actionURL>
 
 					<clay:link
-						buttonStyle="secondary"
-						elementClasses="btn-sm"
+						displayType="secondary"
 						href="<%= unsubscribeURL %>"
-						label='<%= LanguageUtil.get(request, "unsubscribe") %>'
+						label="unsubscribe"
+						small="<%= true %>"
+						type="button"
 					/>
 				</c:when>
 				<c:otherwise>
@@ -65,10 +71,11 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 					</portlet:actionURL>
 
 					<clay:link
-						buttonStyle="secondary"
-						elementClasses="btn-sm"
+						displayType="secondary"
 						href="<%= subscribeURL %>"
-						label='<%= LanguageUtil.get(request, "subscribe") %>'
+						label="subscribe"
+						small="<%= true %>"
+						type="button"
 					/>
 				</c:otherwise>
 			</c:choose>
@@ -79,6 +86,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 <c:if test="<%= assetPublisherDisplayContext.isShowMetadataDescriptions() %>">
 	<liferay-asset:categorization-filter
 		assetType="content"
+		groupIds="<%= assetPublisherDisplayContext.getGroupIds() %>"
 		portletURL="<%= assetPublisherDisplayContext.getPortletURL() %>"
 	/>
 </c:if>
@@ -116,7 +124,7 @@ if (assetPublisherDisplayContext.isEnableTagBasedNavigation() && !assetPublisher
 
 			<div class="alert alert-info text-center">
 				<c:choose>
-					<c:when test="<%= assetPublisherDisplayContext.isSelectionStyleAssetList() && (assetPublisherDisplayContext.fetchAssetListEntry() == null) && !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
+					<c:when test="<%= assetPublisherDisplayContext.isSelectionStyleAssetList() && (assetPublisherDisplayContext.fetchAssetListEntry() == null) && Validator.isNull(assetPublisherDisplayContext.getInfoListProviderKey()) && !portletName.equals(AssetPublisherPortletKeys.RELATED_ASSETS) %>">
 						<div>
 							<liferay-ui:message key="this-application-is-not-visible-to-users-yet" />
 						</div>
@@ -149,7 +157,8 @@ SearchContainer<AssetEntry> searchContainer = assetPublisherDisplayContext.getSe
 </c:if>
 
 <aui:script sandbox="<%= true %>">
-	var assetEntryId = '<%= assetPublisherDisplayContext.getAssetEntryId() %>';
+	var assetEntryId =
+		'<%= HtmlUtil.escape(assetPublisherDisplayContext.getAssetEntryId()) %>';
 
 	if (assetEntryId) {
 		window.location.hash = assetEntryId;

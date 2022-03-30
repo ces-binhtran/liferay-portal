@@ -46,16 +46,20 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess;
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLocalService;
+import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessFinder;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessLinkPersistence;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -76,11 +80,15 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoProcessLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoProcessLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoProcessLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the kaleo process to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoProcess the kaleo process
 	 * @return the kaleo process that was added
@@ -108,6 +116,10 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	/**
 	 * Deletes the kaleo process with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoProcessId the primary key of the kaleo process
 	 * @return the kaleo process that was removed
 	 * @throws PortalException if a kaleo process with the primary key could not be found
@@ -122,6 +134,10 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 
 	/**
 	 * Deletes the kaleo process from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoProcess the kaleo process
 	 * @return the kaleo process that was removed
@@ -138,6 +154,13 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kaleoProcessPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -371,6 +394,7 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -389,6 +413,7 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 			(KaleoProcess)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<KaleoProcess> getBasePersistence() {
 		return kaleoProcessPersistence;
 	}
@@ -481,6 +506,10 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	/**
 	 * Updates the kaleo process in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoProcess the kaleo process
 	 * @return the kaleo process that was updated
 	 */
@@ -488,6 +517,11 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	@Override
 	public KaleoProcess updateKaleoProcess(KaleoProcess kaleoProcess) {
 		return kaleoProcessPersistence.update(kaleoProcess);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -501,6 +535,8 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kaleoProcessLocalService = (KaleoProcessLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kaleoProcessLocalService);
 	}
 
 	/**
@@ -545,6 +581,22 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		KaleoProcessLocalService kaleoProcessLocalService) {
+
+		try {
+			Field field = KaleoProcessLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kaleoProcessLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected KaleoProcessLocalService kaleoProcessLocalService;
 
 	@Reference
@@ -561,14 +613,6 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 		counterLocalService;
 
 	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordLocalService
-		ddlRecordLocalService;
-
-	@Reference
-	protected com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService
-		ddlRecordSetLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ClassNameLocalService
 		classNameLocalService;
 
@@ -579,14 +623,5 @@ public abstract class KaleoProcessLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
-
-	@Reference
-	protected
-		com.liferay.portal.kernel.service.WorkflowDefinitionLinkLocalService
-			workflowDefinitionLinkLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
 
 }

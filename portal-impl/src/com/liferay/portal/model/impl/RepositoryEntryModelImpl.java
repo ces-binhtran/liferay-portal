@@ -31,12 +31,14 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -44,6 +46,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -69,12 +72,13 @@ public class RepositoryEntryModelImpl
 	public static final String TABLE_NAME = "RepositoryEntry";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"repositoryEntryId", Types.BIGINT}, {"groupId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"repositoryId", Types.BIGINT},
-		{"mappedId", Types.VARCHAR}, {"manualCheckInRequired", Types.BOOLEAN},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"repositoryEntryId", Types.BIGINT},
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"repositoryId", Types.BIGINT}, {"mappedId", Types.VARCHAR},
+		{"manualCheckInRequired", Types.BOOLEAN},
 		{"lastPublishDate", Types.TIMESTAMP}
 	};
 
@@ -83,6 +87,7 @@ public class RepositoryEntryModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("repositoryEntryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -98,7 +103,7 @@ public class RepositoryEntryModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table RepositoryEntry (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,repositoryEntryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,repositoryId LONG,mappedId VARCHAR(255) null,manualCheckInRequired BOOLEAN,lastPublishDate DATE null)";
+		"create table RepositoryEntry (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,repositoryEntryId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,repositoryId LONG,mappedId VARCHAR(255) null,manualCheckInRequired BOOLEAN,lastPublishDate DATE null,primary key (repositoryEntryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table RepositoryEntry";
 
@@ -114,31 +119,59 @@ public class RepositoryEntryModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.RepositoryEntry"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.RepositoryEntry"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.RepositoryEntry"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long MAPPEDID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long REPOSITORYID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long REPOSITORYENTRYID_COLUMN_BITMASK = 32L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
@@ -196,9 +229,6 @@ public class RepositoryEntryModelImpl
 				attributeName,
 				attributeGetterFunction.apply((RepositoryEntry)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -278,6 +308,12 @@ public class RepositoryEntryModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<RepositoryEntry, Long>)RepositoryEntry::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", RepositoryEntry::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<RepositoryEntry, Long>)
+				RepositoryEntry::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", RepositoryEntry::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid",
@@ -352,7 +388,25 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
+	}
+
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@Override
@@ -367,17 +421,20 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@Override
@@ -387,6 +444,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setRepositoryEntryId(long repositoryEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_repositoryEntryId = repositoryEntryId;
 	}
 
@@ -397,19 +458,20 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -419,19 +481,21 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -441,6 +505,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -472,6 +540,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -482,6 +554,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -498,6 +574,10 @@ public class RepositoryEntryModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -508,19 +588,21 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setRepositoryId(long repositoryId) {
-		_columnBitmask |= REPOSITORYID_COLUMN_BITMASK;
-
-		if (!_setOriginalRepositoryId) {
-			_setOriginalRepositoryId = true;
-
-			_originalRepositoryId = _repositoryId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_repositoryId = repositoryId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalRepositoryId() {
-		return _originalRepositoryId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("repositoryId"));
 	}
 
 	@Override
@@ -535,17 +617,20 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setMappedId(String mappedId) {
-		_columnBitmask |= MAPPEDID_COLUMN_BITMASK;
-
-		if (_originalMappedId == null) {
-			_originalMappedId = _mappedId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_mappedId = mappedId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalMappedId() {
-		return GetterUtil.getString(_originalMappedId);
+		return getColumnOriginalValue("mappedId");
 	}
 
 	@Override
@@ -560,6 +645,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setManualCheckInRequired(boolean manualCheckInRequired) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_manualCheckInRequired = manualCheckInRequired;
 	}
 
@@ -570,6 +659,10 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -580,6 +673,26 @@ public class RepositoryEntryModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -616,6 +729,7 @@ public class RepositoryEntryModelImpl
 		RepositoryEntryImpl repositoryEntryImpl = new RepositoryEntryImpl();
 
 		repositoryEntryImpl.setMvccVersion(getMvccVersion());
+		repositoryEntryImpl.setCtCollectionId(getCtCollectionId());
 		repositoryEntryImpl.setUuid(getUuid());
 		repositoryEntryImpl.setRepositoryEntryId(getRepositoryEntryId());
 		repositoryEntryImpl.setGroupId(getGroupId());
@@ -630,6 +744,42 @@ public class RepositoryEntryModelImpl
 		repositoryEntryImpl.setLastPublishDate(getLastPublishDate());
 
 		repositoryEntryImpl.resetOriginalValues();
+
+		return repositoryEntryImpl;
+	}
+
+	@Override
+	public RepositoryEntry cloneWithOriginalValues() {
+		RepositoryEntryImpl repositoryEntryImpl = new RepositoryEntryImpl();
+
+		repositoryEntryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		repositoryEntryImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		repositoryEntryImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		repositoryEntryImpl.setRepositoryEntryId(
+			this.<Long>getColumnOriginalValue("repositoryEntryId"));
+		repositoryEntryImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		repositoryEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		repositoryEntryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		repositoryEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		repositoryEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		repositoryEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		repositoryEntryImpl.setRepositoryId(
+			this.<Long>getColumnOriginalValue("repositoryId"));
+		repositoryEntryImpl.setMappedId(
+			this.<String>getColumnOriginalValue("mappedId"));
+		repositoryEntryImpl.setManualCheckInRequired(
+			this.<Boolean>getColumnOriginalValue("manualCheckInRequired"));
+		repositoryEntryImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
 
 		return repositoryEntryImpl;
 	}
@@ -650,16 +800,16 @@ public class RepositoryEntryModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof RepositoryEntry)) {
+		if (!(object instanceof RepositoryEntry)) {
 			return false;
 		}
 
-		RepositoryEntry repositoryEntry = (RepositoryEntry)obj;
+		RepositoryEntry repositoryEntry = (RepositoryEntry)object;
 
 		long primaryKey = repositoryEntry.getPrimaryKey();
 
@@ -676,11 +826,19 @@ public class RepositoryEntryModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -688,31 +846,11 @@ public class RepositoryEntryModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		RepositoryEntryModelImpl repositoryEntryModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		repositoryEntryModelImpl._originalUuid = repositoryEntryModelImpl._uuid;
+		_setModifiedDate = false;
 
-		repositoryEntryModelImpl._originalGroupId =
-			repositoryEntryModelImpl._groupId;
-
-		repositoryEntryModelImpl._setOriginalGroupId = false;
-
-		repositoryEntryModelImpl._originalCompanyId =
-			repositoryEntryModelImpl._companyId;
-
-		repositoryEntryModelImpl._setOriginalCompanyId = false;
-
-		repositoryEntryModelImpl._setModifiedDate = false;
-
-		repositoryEntryModelImpl._originalRepositoryId =
-			repositoryEntryModelImpl._repositoryId;
-
-		repositoryEntryModelImpl._setOriginalRepositoryId = false;
-
-		repositoryEntryModelImpl._originalMappedId =
-			repositoryEntryModelImpl._mappedId;
-
-		repositoryEntryModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -721,6 +859,8 @@ public class RepositoryEntryModelImpl
 			new RepositoryEntryCacheModel();
 
 		repositoryEntryCacheModel.mvccVersion = getMvccVersion();
+
+		repositoryEntryCacheModel.ctCollectionId = getCtCollectionId();
 
 		repositoryEntryCacheModel.uuid = getUuid();
 
@@ -796,7 +936,7 @@ public class RepositoryEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -807,9 +947,26 @@ public class RepositoryEntryModelImpl
 			Function<RepositoryEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((RepositoryEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((RepositoryEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -828,7 +985,7 @@ public class RepositoryEntryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -861,27 +1018,119 @@ public class RepositoryEntryModelImpl
 	}
 
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _repositoryEntryId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _repositoryId;
-	private long _originalRepositoryId;
-	private boolean _setOriginalRepositoryId;
 	private String _mappedId;
-	private String _originalMappedId;
 	private boolean _manualCheckInRequired;
 	private Date _lastPublishDate;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<RepositoryEntry, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((RepositoryEntry)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("repositoryEntryId", _repositoryEntryId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("repositoryId", _repositoryId);
+		_columnOriginalValues.put("mappedId", _mappedId);
+		_columnOriginalValues.put(
+			"manualCheckInRequired", _manualCheckInRequired);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("repositoryEntryId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("repositoryId", 1024L);
+
+		columnBitmasks.put("mappedId", 2048L);
+
+		columnBitmasks.put("manualCheckInRequired", 4096L);
+
+		columnBitmasks.put("lastPublishDate", 8192L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private RepositoryEntry _escapedModel;
 

@@ -4,6 +4,7 @@ definition {
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property testray.main.component.name = "Workflow";
+
 	var page = "Public Pages";
 	var pageName = "Site Page Name";
 	var siteName = "Site Name";
@@ -14,7 +15,7 @@ definition {
 
 		User.firstLoginPG();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -23,14 +24,14 @@ definition {
 			siteName = "Site Name",
 			siteType = "Blank");
 
-		SitePages.openPagesAdmin(siteURLKey = "Site Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
 			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Site Page Name");
+		PagesAdmin.addPublicPage(pageName = "Site Page Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
@@ -41,7 +42,7 @@ definition {
 			pageVersioningEnabled = "true",
 			siteName = "Site Name");
 
-		SitePages.openPagesAdmin(siteURLKey = "Site Name");
+		PagesAdmin.openPagesAdmin(siteURLKey = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
@@ -68,10 +69,60 @@ definition {
 		}
 	}
 
+	@description = "Verify that the Submit for Publication button is not available after the Page is submitted for publication"
+	@priority = "3"
+	test ButtonNotAvailableAfterSubmitForPublication {
+		Navigator.gotoStagedSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Portlet.addPG(
+			pageName = "Site Page Name",
+			portletName = "Blogs");
+
+		Page.viewWithWorkflowPG(
+			pageName = "Site Page Name",
+			workflowStatus = "Draft");
+
+		Staging.submitForPublicationPageRevision();
+
+		AssertElementNotPresent(locator1 = "Staging#STAGING_MENU_SUBMIT_FOR_PUBLICATION");
+	}
+
+	@description = "Verify that, after approval, the Page status is Ready for Publish"
+	@priority = "4"
+	test PageIsReadyForPublishAfterApproval {
+		Navigator.gotoStagedSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Portlet.addPG(
+			pageName = "Site Page Name",
+			portletName = "Blogs");
+
+		Staging.submitForPublicationPageRevision();
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Site Page Name",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "Site Page Name",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Workflow.viewWorkflowStatus(status = "Ready for Publish Process");
+	}
+
 	@priority = "4"
 	test RejectPageRevisionPG {
-		property portal.upstream = "quarantine";
-
 		var pageName = "Page Revision Page";
 
 		Navigator.gotoStagedSitePage(
@@ -83,7 +134,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "${pageName}");
+		PagesAdmin.addPublicPage(pageName = "${pageName}");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "${pageName}",
@@ -156,11 +207,106 @@ definition {
 			workflowStatus = "Pending (Update)");
 	}
 
+	@description = "Verify that when the Approved page is edited it's status comes to Draft"
+	@priority = "3"
+	test StatusComesToDraftWhenPageIsEdited {
+		Navigator.gotoStagedSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Portlet.addPG(
+			pageName = "Site Page Name",
+			portletName = "Blogs");
+
+		Staging.submitForPublicationPageRevision();
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Site Page Name",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "Site Page Name",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Site Page Name",
+			siteName = "Site Name");
+
+		Portlet.deletePG(portletName = "Blogs");
+
+		Workflow.viewWorkflowStatus(status = "Draft");
+	}
+
+	@description = "Verify that a Staging Area Page is Pending after it is submitted for publication"
+	@priority = "5"
+	test StatusIsPendingAfterSubmitForPublication {
+		property portal.upstream = "quarantine";
+
+		Navigator.gotoStagedSitePage(
+			pageName = "${pageName}",
+			siteName = "${siteName}");
+
+		Portlet.addPG(
+			pageName = "${pageName}",
+			portletName = "Blogs");
+
+		Page.viewWithWorkflowPG(
+			pageName = "${pageName}",
+			workflowStatus = "Draft");
+
+		Staging.submitForPublicationPageRevision();
+
+		Page.viewWithWorkflowPG(
+			pageName = "${pageName}",
+			workflowStatus = "Pending (Created)");
+	}
+
+	@description = "Verify that when the Approved page is edited the button Submit for Publication is displayed"
+	@priority = "3"
+	test SubmitForPublicationButtonIsDisplayedWhenPageIsEdited {
+		Navigator.gotoStagedSitePage(
+			pageName = "${pageName}",
+			siteName = "${siteName}");
+
+		Portlet.addPG(
+			pageName = "${pageName}",
+			portletName = "Blogs");
+
+		Staging.submitForPublicationPageRevision();
+
+		AssertElementNotPresent(locator1 = "Staging#STAGING_MENU_SUBMIT_FOR_PUBLICATION");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "${pageName}",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "${pageName}",
+			workflowAssetType = "Page Revision",
+			workflowTask = "Review");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "${pageName}",
+			siteName = "${siteName}");
+
+		Portlet.addPG(
+			pageName = "${pageName}",
+			portletName = "Message Boards");
+
+		AssertElementPresent(locator1 = "Staging#STAGING_MENU_SUBMIT_FOR_PUBLICATION");
+	}
+
 	@description = "This is a use case for LPS-65319."
 	@priority = "5"
 	test ViewApprovedPageAfterStagingDeactivated {
 		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
 
 		var pageName = "New Site Page Name";
 
@@ -173,7 +319,7 @@ definition {
 			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "${pageName}");
+		PagesAdmin.addPublicPage(pageName = "${pageName}");
 
 		Navigator.gotoStagedSitePage(
 			pageName = "${pageName}",
@@ -241,15 +387,13 @@ definition {
 			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.deletePage(pageName = "${pageName}");
+		PagesAdmin.deletePage(pageName = "${pageName}");
 	}
 
 	@description = "This is a use case for LPS-58754"
-	@priority = "2"
+	@priority = "3"
 	test WithdrawWorkflowSubmissionFromRemovedUser {
-		property portal.upstream = "quarantine";
-
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -260,7 +404,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -269,7 +413,7 @@ definition {
 			userEmailAddress = "user@liferay.com",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -278,7 +422,7 @@ definition {
 			siteName = "Site Name",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -326,7 +470,7 @@ definition {
 			workflowDefinition = "No Workflow",
 			workflowResourceValue = "Page Revision");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -335,16 +479,10 @@ definition {
 
 		User.deleteCP();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Workflow",
 			panel = "Applications",
 			portlet = "Submissions");
-
-		Workflow.withdrawTaskByActions(
-			workflowAssetTitle = "Site Page Name",
-			workflowAssetType = "Page Revision",
-			workflowDefinition = "Single Approver",
-			workflowTask = "Update");
 
 		Workflow.viewDefaultWorkflowSubmissions();
 	}

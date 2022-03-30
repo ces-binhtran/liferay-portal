@@ -15,25 +15,40 @@
 package com.liferay.journal.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.asset.kernel.model.DDMFormValuesReader;
+import com.liferay.dynamic.data.mapping.configuration.DDMIndexerConfiguration;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
+import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
+import com.liferay.dynamic.data.mapping.model.LocalizedValue;
+import com.liferay.dynamic.data.mapping.model.Value;
+import com.liferay.dynamic.data.mapping.render.ValueAccessor;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
+import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
+import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.search.TestOrderHelper;
+import com.liferay.dynamic.data.mapping.util.DDMBeanTranslatorUtil;
 import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.dynamic.data.mapping.util.DDMUtil;
 import com.liferay.journal.configuration.JournalServiceConfiguration;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
+import com.liferay.petra.string.StringPool;
+import com.liferay.portal.configuration.test.util.ConfigurationTestUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ClassedModel;
@@ -61,22 +76,28 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.BaseSearchTestCase;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -94,6 +115,21 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
+	@BeforeClass
+	public static void setUpClass() throws Exception {
+		ConfigurationTestUtil.saveConfiguration(
+			DDMIndexerConfiguration.class.getName(),
+			HashMapDictionaryBuilder.<String, Object>put(
+				"enableLegacyDDMIndexFields", false
+			).build());
+	}
+
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		ConfigurationTestUtil.deleteConfiguration(
+			DDMIndexerConfiguration.class.getName());
+	}
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
@@ -108,26 +144,24 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 
 		serviceContext.setCompanyId(TestPropsValues.getCompanyId());
 
-		PortalPreferences portalPreferenceces =
+		PortalPreferences portalPreferences =
 			PortletPreferencesFactoryUtil.getPortalPreferences(
 				TestPropsValues.getUserId(), true);
 
 		_originalPortalPreferencesXML = PortletPreferencesFactoryUtil.toXML(
-			portalPreferenceces);
+			portalPreferences);
 
-		portalPreferenceces.setValue("", "articleCommentsEnabled", "true");
+		portalPreferences.setValue("", "articleCommentsEnabled", "true");
 
 		PortalPreferencesLocalServiceUtil.updatePreferences(
 			TestPropsValues.getCompanyId(),
 			PortletKeys.PREFS_OWNER_TYPE_COMPANY,
-			PortletPreferencesFactoryUtil.toXML(portalPreferenceces));
+			PortletPreferencesFactoryUtil.toXML(portalPreferences));
 
 		_journalServiceConfiguration =
 			ConfigurationProviderUtil.getCompanyConfiguration(
 				JournalServiceConfiguration.class,
 				TestPropsValues.getCompanyId());
-
-		setUpDDMIndexer();
 	}
 
 	@After
@@ -359,6 +393,7 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 	}
 
 	@Override
+	@Test
 	public void testSearchAttachments() throws Exception {
 	}
 
@@ -556,13 +591,6 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 			QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 	}
 
-	protected void setUpDDMIndexer() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_ddmIndexer = registry.getService(
-			registry.getServiceReference(DDMIndexer.class));
-	}
-
 	@Override
 	protected BaseModel<?> updateBaseModel(
 			BaseModel<?> baseModel, String keywords,
@@ -593,6 +621,14 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 
 	protected class JournalArticleSearchTestOrderHelper
 		extends TestOrderHelper {
+
+		@Override
+		public void testOrderByDDMBooleanField() throws Exception {
+			testOrderByDDMField(
+				new String[] {"false", "true", "false", "true"},
+				new String[] {"true", "true", "false", "false"},
+				FieldConstants.BOOLEAN, DDMFormFieldTypeConstants.CHECKBOX);
+		}
 
 		protected JournalArticleSearchTestOrderHelper(
 				DDMIndexer ddmIndexer, Group group)
@@ -627,11 +663,10 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 				fieldValues.length);
 
 			for (String fieldValue : fieldValues) {
-				Map<Locale, String> map = HashMapBuilder.put(
-					LocaleUtil.US, fieldValue
-				).build();
-
-				contents.add(map);
+				contents.add(
+					HashMapBuilder.put(
+						LocaleUtil.US, fieldValue
+					).build());
 			}
 
 			String content = DDMStructureTestUtil.getSampleStructuredContent(
@@ -665,9 +700,61 @@ public class JournalArticleSearchTest extends BaseSearchTestCase {
 			return getBaseModelClassName();
 		}
 
+		@Override
+		protected String getValue(AssetRenderer<?> assetRenderer)
+			throws Exception {
+
+			DDMFormValuesReader ddmFormValuesReader =
+				assetRenderer.getDDMFormValuesReader();
+
+			DDMFormValues ddmFormValues = DDMBeanTranslatorUtil.translate(
+				ddmFormValuesReader.getDDMFormValues());
+
+			Map<String, List<DDMFormFieldValue>> ddmFormFieldValuesMap =
+				ddmFormValues.getDDMFormFieldValuesMap();
+
+			return ListUtil.toString(
+				ddmFormFieldValuesMap.get("name"),
+				new ValueAccessor(LocaleUtil.getDefault()) {
+
+					@Override
+					public String get(DDMFormFieldValue ddmFormFieldValue) {
+						Value value = ddmFormFieldValue.getValue();
+
+						DDMFormField ddmFormField =
+							ddmFormFieldValue.getDDMFormField();
+
+						DDMFormFieldOptions ddmFormFieldOptions =
+							(DDMFormFieldOptions)ddmFormField.getProperty(
+								"options");
+
+						Map<String, LocalizedValue> options =
+							ddmFormFieldOptions.getOptions();
+
+						if (StringUtil.equals(
+								ddmFormField.getType(),
+								DDMFormFieldTypeConstants.CHECKBOX_MULTIPLE) &&
+							(options.size() == 1)) {
+
+							if (Validator.isNull(value.getString(locale))) {
+								return Boolean.FALSE.toString();
+							}
+
+							return Boolean.TRUE.toString();
+						}
+
+						return value.getString(locale);
+					}
+
+				},
+				StringPool.PIPE);
+		}
+
 	}
 
+	@Inject
 	private DDMIndexer _ddmIndexer;
+
 	private DDMStructure _ddmStructure;
 	private JournalServiceConfiguration _journalServiceConfiguration;
 	private String _originalPortalPreferencesXML;

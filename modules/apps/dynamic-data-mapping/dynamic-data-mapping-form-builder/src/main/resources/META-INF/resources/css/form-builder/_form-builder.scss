@@ -6,8 +6,6 @@
 @import './form-pagination';
 @import './moveable';
 @import './resizeable';
-@import './share_url_popover';
-@import './sidebar';
 
 $c: '.ddm-form-builder';
 
@@ -29,7 +27,6 @@ $c: '.ddm-form-builder';
 
 	.ddm-field-container {
 		border: 2px solid transparent;
-		padding: 0 12px;
 
 		&.dragging,
 		&.expanded,
@@ -62,7 +59,7 @@ $c: '.ddm-form-builder';
 	}
 
 	.form-builder-layout {
-		padding: 1em;
+		padding: 1em 1.5rem;
 	}
 }
 

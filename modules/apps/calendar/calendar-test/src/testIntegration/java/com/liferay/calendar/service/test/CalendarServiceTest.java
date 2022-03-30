@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.util.HashMap;
 import java.util.Locale;
@@ -56,7 +57,9 @@ public class CalendarServiceTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@After
 	public void tearDown() {
@@ -126,13 +129,12 @@ public class CalendarServiceTest {
 
 			Map<Locale, String> descriptionMap = new HashMap<>();
 
-			ServiceContext serviceContext = new ServiceContext();
-
 			calendarResource =
 				_calendarResourceLocalService.addCalendarResource(
 					group.getCreatorUserId(), group.getGroupId(),
 					PortalUtil.getClassNameId(Group.class), group.getGroupId(),
-					null, null, nameMap, descriptionMap, true, serviceContext);
+					null, null, nameMap, descriptionMap, true,
+					new ServiceContext());
 		}
 
 		return calendarResource.getDefaultCalendar();

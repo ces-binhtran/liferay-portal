@@ -37,24 +37,33 @@ import org.osgi.service.component.annotations.Component;
 @Component(immediate = true, service = JournalCreationStrategy.class)
 public class JournalCreationStrategyImpl implements JournalCreationStrategy {
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean addGroupPermissions(
-			PortletDataContext context, Object journalObj)
+			PortletDataContext context, Object journalObject)
 		throws Exception {
 
 		return false;
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean addGuestPermissions(
-			PortletDataContext context, Object journalObj)
+			PortletDataContext context, Object journalObject)
 		throws Exception {
 
 		return false;
 	}
 
 	@Override
-	public long getAuthorUserId(PortletDataContext context, Object journalObj)
+	public long getAuthorUserId(
+			PortletDataContext context, Object journalObject)
 		throws Exception {
 
 		return JournalCreationStrategy.USE_DEFAULT_USER_ID_STRATEGY;

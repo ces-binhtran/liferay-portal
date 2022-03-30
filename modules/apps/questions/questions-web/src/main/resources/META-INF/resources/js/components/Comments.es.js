@@ -12,104 +12,112 @@
  * details.
  */
 
-import {useMutation} from '@apollo/client';
 import ClayButton from '@clayui/button';
 import ClayForm from '@clayui/form';
-import React, {useCallback, useState} from 'react';
+import {useMutation} from 'graphql-hooks';
+import React, {useCallback, useContext, useRef, useState} from 'react';
+import {withRouter} from 'react-router-dom';
 
+import {AppContext} from '../AppContext.es';
 import {createCommentQuery} from '../utils/client.es';
-import lang from '../utils/lang.es';
+import {getContextLink} from '../utils/utils.es';
 import Comment from './Comment.es';
-import QuestionsEditor from './QuestionsEditor';
+import DefaultQuestionsEditor from './DefaultQuestionsEditor.es';
 
-export default ({
-	comments,
-	commentsChange,
-	entityId,
-	showNewComment,
-	showNewCommentChange,
-}) => {
-	const [comment, setComment] = useState('');
-
-	const [createComment] = useMutation(createCommentQuery, {
-		onCompleted(data) {
-			setComment('');
-			showNewCommentChange(false);
-			commentsChange([
-				...comments,
-				data.createMessageBoardMessageMessageBoardMessage,
-			]);
+export default withRouter(
+	({
+		comments,
+		commentsChange,
+		editable = true,
+		entityId,
+		match: {
+			params: {questionId, sectionTitle},
 		},
-	});
+		showNewComment,
+		showNewCommentChange,
+	}) => {
+		const context = useContext(AppContext);
 
-	const _commentChange = useCallback(
-		(comment) => {
-			if (commentsChange) {
-				return commentsChange([
-					...comments.filter((o) => o.id !== comment.id),
-				]);
-			}
+		const editorRef = useRef('');
 
-			return null;
-		},
-		[commentsChange, comments]
-	);
+		const [isReplyButtonDisable, setIsReplyButtonDisable] = useState(false);
 
-	return (
-		<div>
-			{comments.map((comment) => (
-				<Comment
-					comment={comment}
-					commentChange={_commentChange}
-					key={comment.id}
-				/>
-			))}
+		const [createComment] = useMutation(createCommentQuery);
 
-			{showNewComment && (
-				<>
-					<ClayForm.Group small>
-						<QuestionsEditor
-							contents={comment}
-							onChange={(event) => {
-								setComment(event.editor.getData());
-							}}
-						/>
+		const _commentChange = useCallback(
+			(comment) => {
+				if (commentsChange) {
+					return commentsChange([
+						...comments.filter((o) => o.id !== comment.id),
+					]);
+				}
 
-						{comment.length < 15 && (
-							<p className="float-right small text-secondary">
-								{lang.sub(
-									Liferay.Language.get('x-characters-left'),
-									[15 - comment.length]
-								)}
-							</p>
-						)}
+				return null;
+			},
+			[commentsChange, comments]
+		);
 
-						<ClayButton.Group className="c-mt-3" spaced>
-							<ClayButton
-								disabled={comment.length < 15}
-								displayType="primary"
-								onClick={() => {
-									createComment({
-										variables: {
-											articleBody: comment,
-											parentMessageBoardMessageId: entityId,
-										},
-									});
-								}}
-							>
-								{Liferay.Language.get('reply')}
-							</ClayButton>
+		return (
+			<div>
+				{comments.map((comment) => (
+					<Comment
+						comment={comment}
+						commentChange={_commentChange}
+						editable={editable}
+						key={comment.id}
+					/>
+				))}
 
-							<ClayButton
-								displayType="secondary"
-								onClick={() => showNewCommentChange(false)}
-							>
-								{Liferay.Language.get('cancel')}
-							</ClayButton>
-						</ClayButton.Group>
-					</ClayForm.Group>
-				</>
-			)}
-		</div>
-	);
-};
+				{editable && showNewComment && (
+					<>
+						<ClayForm.Group small>
+							<DefaultQuestionsEditor
+								label={Liferay.Language.get('your-answer')}
+								onContentLengthValid={setIsReplyButtonDisable}
+								ref={editorRef}
+							/>
+
+							<ClayButton.Group className="c-mt-3" spaced>
+								<ClayButton
+									disabled={isReplyButtonDisable}
+									displayType="primary"
+									onClick={() => {
+										createComment({
+											fetchOptionsOverrides: getContextLink(
+												`${sectionTitle}/${questionId}`
+											),
+											variables: {
+												articleBody: editorRef.current.getContent(),
+												parentMessageBoardMessageId: entityId,
+											},
+										}).then(({data}) => {
+											editorRef.current.clearContent();
+											showNewCommentChange(false);
+											commentsChange([
+												...comments,
+												data.createMessageBoardMessageMessageBoardMessage,
+											]);
+										});
+									}}
+								>
+									{context.trustedUser
+										? Liferay.Language.get('reply')
+										: Liferay.Language.get(
+												'submit-for-publication'
+										  )}
+								</ClayButton>
+
+								<ClayButton
+									displayType="secondary"
+									onClick={() => showNewCommentChange(false)}
+								>
+									{Liferay.Language.get('cancel')}
+								</ClayButton>
+							</ClayButton.Group>
+						</ClayForm.Group>
+					</>
+				)}
+			</div>
+		);
+	}
+);

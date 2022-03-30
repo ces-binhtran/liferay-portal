@@ -64,7 +64,7 @@ public class JournalDefaultTemplateProviderImpl
 			templateVariableGroup.getTemplateVariableDefinitions();
 
 		StringBundler sb = new StringBundler(
-			templateVariableDefinitions.size() * 5 + 2);
+			(templateVariableDefinitions.size() * 5) + 2);
 
 		sb.append("<dl>");
 
@@ -95,7 +95,7 @@ public class JournalDefaultTemplateProviderImpl
 
 	@Override
 	public boolean isCacheable() {
-		return true;
+		return false;
 	}
 
 }

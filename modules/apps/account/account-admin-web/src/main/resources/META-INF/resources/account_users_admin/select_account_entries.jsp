@@ -18,12 +18,10 @@
 
 <%
 SearchContainer<AccountEntryDisplay> accountEntryDisplaySearchContainer = AccountEntryDisplaySearchContainerFactory.create(liferayPortletRequest, liferayPortletResponse);
-
-SelectAccountEntriesManagementToolbarDisplayContext selectAccountEntriesManagementToolbarDisplayContext = new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer);
 %>
 
 <clay:management-toolbar
-	displayContext="<%= selectAccountEntriesManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= new SelectAccountEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, accountEntryDisplaySearchContainer) %>"
 />
 
 <clay:container-fluid>
@@ -43,12 +41,6 @@ SelectAccountEntriesManagementToolbarDisplayContext selectAccountEntriesManageme
 
 			<liferay-ui:search-container-column-text
 				cssClass="table-cell-expand"
-				name="parent-account"
-				property="parentAccountEntryName"
-			/>
-
-			<liferay-ui:search-container-column-text
-				cssClass="table-cell-expand"
 				name="status"
 			>
 				<clay:label
@@ -63,28 +55,3 @@ SelectAccountEntriesManagementToolbarDisplayContext selectAccountEntriesManageme
 		/>
 	</liferay-ui:search-container>
 </clay:container-fluid>
-
-<aui:script use="liferay-search-container">
-	var searchContainer = Liferay.SearchContainer.get(
-		'<portlet:namespace />accountEntries'
-	);
-
-	searchContainer.on('rowToggled', function (event) {
-		var selectedItems = event.elements.allSelectedElements;
-
-		var result = {};
-
-		if (!selectedItems.isEmpty()) {
-			result = {
-				data: {
-					value: selectedItems.get('value').join(','),
-				},
-			};
-		}
-
-		Liferay.Util.getOpener().Liferay.fire(
-			'<%= HtmlUtil.escapeJS(renderResponse.getNamespace() + "selectAccountEntries") %>',
-			result
-		);
-	});
-</aui:script>

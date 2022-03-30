@@ -40,14 +40,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sharepoint.rest.oauth2.model.SharepointOAuth2TokenEntry;
 import com.liferay.sharepoint.rest.oauth2.service.SharepointOAuth2TokenEntryLocalService;
+import com.liferay.sharepoint.rest.oauth2.service.SharepointOAuth2TokenEntryLocalServiceUtil;
 import com.liferay.sharepoint.rest.oauth2.service.persistence.SharepointOAuth2TokenEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,11 +73,15 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SharepointOAuth2TokenEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sharepoint.rest.oauth2.service.SharepointOAuth2TokenEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SharepointOAuth2TokenEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SharepointOAuth2TokenEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the sharepoint o auth2 token entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was added
@@ -107,6 +115,10 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the sharepoint o auth2 token entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharepointOAuth2TokenEntryId the primary key of the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was removed
 	 * @throws PortalException if a sharepoint o auth2 token entry with the primary key could not be found
@@ -124,6 +136,10 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the sharepoint o auth2 token entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was removed
 	 */
@@ -139,6 +155,13 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return sharepointOAuth2TokenEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -304,6 +327,7 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -323,6 +347,7 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 				(SharepointOAuth2TokenEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SharepointOAuth2TokenEntry> getBasePersistence() {
 		return sharepointOAuth2TokenEntryPersistence;
 	}
@@ -369,6 +394,10 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	/**
 	 * Updates the sharepoint o auth2 token entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharepointOAuth2TokenEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharepointOAuth2TokenEntry the sharepoint o auth2 token entry
 	 * @return the sharepoint o auth2 token entry that was updated
 	 */
@@ -379,6 +408,11 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 
 		return sharepointOAuth2TokenEntryPersistence.update(
 			sharepointOAuth2TokenEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -393,6 +427,8 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		sharepointOAuth2TokenEntryLocalService =
 			(SharepointOAuth2TokenEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(sharepointOAuth2TokenEntryLocalService);
 	}
 
 	/**
@@ -435,6 +471,24 @@ public abstract class SharepointOAuth2TokenEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		SharepointOAuth2TokenEntryLocalService
+			sharepointOAuth2TokenEntryLocalService) {
+
+		try {
+			Field field =
+				SharepointOAuth2TokenEntryLocalServiceUtil.class.
+					getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, sharepointOAuth2TokenEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

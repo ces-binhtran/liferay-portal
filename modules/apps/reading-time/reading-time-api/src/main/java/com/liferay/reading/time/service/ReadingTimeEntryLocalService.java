@@ -15,7 +15,9 @@
 package com.liferay.reading.time.service;
 
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -29,6 +31,8 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalService;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -53,18 +57,20 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see ReadingTimeEntryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
 	rollbackFor = {PortalException.class, SystemException.class}
 )
 public interface ReadingTimeEntryLocalService
-	extends BaseLocalService, PersistedModelLocalService {
+	extends BaseLocalService, CTService<ReadingTimeEntry>,
+			PersistedModelLocalService {
 
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link ReadingTimeEntryLocalServiceUtil} to access the reading time entry local service. Add custom service methods to <code>com.liferay.reading.time.service.impl.ReadingTimeEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.reading.time.service.impl.ReadingTimeEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the reading time entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link ReadingTimeEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public ReadingTimeEntry addReadingTimeEntry(
 		GroupedModel groupedModel, Duration readingTimeDuration);
@@ -75,6 +81,10 @@ public interface ReadingTimeEntryLocalService
 
 	/**
 	 * Adds the reading time entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReadingTimeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param readingTimeEntry the reading time entry
 	 * @return the reading time entry that was added
@@ -110,6 +120,10 @@ public interface ReadingTimeEntryLocalService
 	/**
 	 * Deletes the reading time entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReadingTimeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param readingTimeEntryId the primary key of the reading time entry
 	 * @return the reading time entry that was removed
 	 * @throws PortalException if a reading time entry with the primary key could not be found
@@ -124,6 +138,10 @@ public interface ReadingTimeEntryLocalService
 	/**
 	 * Deletes the reading time entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReadingTimeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param readingTimeEntry the reading time entry
 	 * @return the reading time entry that was removed
 	 */
@@ -133,6 +151,9 @@ public interface ReadingTimeEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -331,11 +352,30 @@ public interface ReadingTimeEntryLocalService
 	/**
 	 * Updates the reading time entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ReadingTimeEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param readingTimeEntry the reading time entry
 	 * @return the reading time entry that was updated
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public ReadingTimeEntry updateReadingTimeEntry(
 		ReadingTimeEntry readingTimeEntry);
+
+	@Override
+	@Transactional(enabled = false)
+	public CTPersistence<ReadingTimeEntry> getCTPersistence();
+
+	@Override
+	@Transactional(enabled = false)
+	public Class<ReadingTimeEntry> getModelClass();
+
+	@Override
+	@Transactional(rollbackFor = Throwable.class)
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<ReadingTimeEntry>, R, E>
+				updateUnsafeFunction)
+		throws E;
 
 }

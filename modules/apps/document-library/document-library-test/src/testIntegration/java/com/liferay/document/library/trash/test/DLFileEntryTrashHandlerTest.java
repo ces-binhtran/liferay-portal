@@ -29,6 +29,8 @@ import com.liferay.document.library.kernel.service.DLTrashServiceUtil;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.test.util.DLAppTestUtil;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ClassedModel;
 import com.liferay.portal.kernel.model.Group;
@@ -194,11 +196,8 @@ public class DLFileEntryTrashHandlerTest
 
 	@Test
 	public void testFileNameUpdateWhenUpdatingTitle() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
-
 		DLFileEntry dlFileEntry = (DLFileEntry)addBaseModelWithWorkflow(
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		moveBaseModelToTrash(dlFileEntry.getFileEntryId());
 
@@ -232,6 +231,10 @@ public class DLFileEntryTrashHandlerTest
 		catch (com.liferay.trash.kernel.exception.TrashEntryException
 					trashEntryException) {
 
+			if (_log.isDebugEnabled()) {
+				_log.debug(trashEntryException);
+			}
+
 			throw new TrashEntryException();
 		}
 	}
@@ -244,6 +247,10 @@ public class DLFileEntryTrashHandlerTest
 		}
 		catch (com.liferay.trash.kernel.exception.RestoreEntryException
 					restoreEntryException) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(restoreEntryException);
+			}
 
 			throw new RestoreEntryException();
 		}
@@ -263,6 +270,7 @@ public class DLFileEntryTrashHandlerTest
 			primaryKey, RandomTestUtil.randomString() + ".txt",
 			ContentTypes.TEXT_PLAIN, dlFileEntry.getTitle(), StringPool.BLANK,
 			StringPool.BLANK, DLVersionNumberIncrease.MINOR, content.getBytes(),
+			dlFileEntry.getExpirationDate(), dlFileEntry.getReviewDate(),
 			serviceContext);
 
 		LiferayFileEntry liferayFileEntry = (LiferayFileEntry)fileEntry;
@@ -364,9 +372,7 @@ public class DLFileEntryTrashHandlerTest
 	protected String getUniqueTitle(BaseModel<?> baseModel) {
 		DLFileEntry dlFileEntry = (DLFileEntry)baseModel;
 
-		String title = dlFileEntry.getTitle();
-
-		return _trashHelper.getOriginalTitle(title);
+		return _trashHelper.getOriginalTitle(dlFileEntry.getTitle());
 	}
 
 	@Override
@@ -387,6 +393,9 @@ public class DLFileEntryTrashHandlerTest
 		255);
 
 	private static final int _FOLDER_NAME_MAX_LENGTH = 100;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		DLFileEntryTrashHandlerTest.class);
 
 	@Inject
 	private TrashHelper _trashHelper;

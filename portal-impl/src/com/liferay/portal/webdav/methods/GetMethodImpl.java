@@ -14,11 +14,9 @@
 
 package com.liferay.portal.webdav.methods;
 
-import com.liferay.portal.kernel.flash.FlashMagicBytesUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.webdav.Resource;
 import com.liferay.portal.kernel.webdav.WebDAVException;
 import com.liferay.portal.kernel.webdav.WebDAVRequest;
@@ -37,7 +35,7 @@ public class GetMethodImpl implements Method {
 
 	@Override
 	public int process(WebDAVRequest webDAVRequest) throws WebDAVException {
-		InputStream is = null;
+		InputStream inputStream = null;
 
 		try {
 			WebDAVStorage storage = webDAVRequest.getWebDAVStorage();
@@ -49,33 +47,25 @@ public class GetMethodImpl implements Method {
 			}
 
 			try {
-				is = resource.getContentAsStream();
+				inputStream = resource.getContentAsStream();
 			}
 			catch (Exception exception) {
-				_log.error(exception.getMessage());
+				_log.error(exception);
 			}
 
-			if (is != null) {
+			if (inputStream != null) {
 				String fileName = resource.getDisplayName();
-
-				FlashMagicBytesUtil.Result flashMagicBytesUtilResult =
-					FlashMagicBytesUtil.check(is);
-
-				if (flashMagicBytesUtilResult.isFlash()) {
-					fileName = FileUtil.stripExtension(fileName) + ".swf";
-				}
-
-				is = flashMagicBytesUtilResult.getInputStream();
 
 				try {
 					ServletResponseUtil.sendFileWithRangeHeader(
 						webDAVRequest.getHttpServletRequest(),
-						webDAVRequest.getHttpServletResponse(), fileName, is,
-						resource.getSize(), resource.getContentType());
+						webDAVRequest.getHttpServletResponse(), fileName,
+						inputStream, resource.getSize(),
+						resource.getContentType());
 				}
 				catch (Exception exception) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(exception, exception);
+						_log.warn(exception);
 					}
 				}
 

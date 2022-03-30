@@ -16,16 +16,29 @@ import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.
 import {useFilterStatic} from '../../shared/components/filter/hooks/useFilterStatic.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 
-const ProcessStatusFilter = ({
+const processStatusConstants = {
+	completed: 'Completed',
+	pending: 'Pending',
+};
+
+const processStatuses = [
+	{
+		key: processStatusConstants.completed,
+		name: Liferay.Language.get('completed'),
+	},
+	{
+		key: processStatusConstants.pending,
+		name: Liferay.Language.get('pending'),
+	},
+];
+
+export default function ProcessStatusFilter({
 	className,
 	filterKey = filterConstants.processStatus.key,
 	options = {},
 	prefixKey = '',
-}) => {
+}) {
 	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
 		withSelectionTitle: false,
 		withoutRouteParams: false,
 		...options,
@@ -38,7 +51,7 @@ const ProcessStatusFilter = ({
 		...options,
 	});
 
-	const defaultItem = useMemo(() => (items ? items[0] : undefined), [items]);
+	const defaultItem = useMemo(() => items[0], [items]);
 
 	const filterName = useFilterName(
 		options.multiple,
@@ -58,23 +71,6 @@ const ProcessStatusFilter = ({
 			{...options}
 		/>
 	);
-};
+}
 
-const processStatusConstants = {
-	completed: 'Completed',
-	pending: 'Pending',
-};
-
-const processStatuses = [
-	{
-		key: processStatusConstants.completed,
-		name: Liferay.Language.get('completed'),
-	},
-	{
-		key: processStatusConstants.pending,
-		name: Liferay.Language.get('pending'),
-	},
-];
-
-export default ProcessStatusFilter;
 export {processStatusConstants};

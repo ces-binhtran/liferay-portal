@@ -9,14 +9,15 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, waitForElement} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import {act, cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import ProcessListPage from '../../../src/main/resources/META-INF/resources/js/components/process-list-page/ProcessListPage.es';
 import {MockRouter} from '../../mock/MockRouter.es';
 
 describe('The process list page component having data should', () => {
-	let getAllByTestId;
+	let container;
 
 	const items = [
 		{
@@ -40,9 +41,10 @@ describe('The process list page component having data should', () => {
 	];
 	const data = {items, totalCount: items.length};
 
-	const clientMock = {
-		get: jest.fn().mockResolvedValue({data}),
-	};
+	fetch.mockResolvedValueOnce({
+		json: () => Promise.resolve(data),
+		ok: true,
+	});
 
 	const routeParams = {
 		page: 1,
@@ -53,32 +55,26 @@ describe('The process list page component having data should', () => {
 
 	afterEach(cleanup);
 
-	const wrapper = ({children}) => (
-		<MockRouter client={clientMock}>{children}</MockRouter>
-	);
+	const wrapper = ({children}) => <MockRouter>{children}</MockRouter>;
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		const renderResult = render(
 			<ProcessListPage routeParams={routeParams} />,
 			{wrapper}
 		);
 
-		getAllByTestId = renderResult.getAllByTestId;
+		container = renderResult.container;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered with process names', async () => {
-		const processName = await waitForElement(() =>
-			getAllByTestId('processName')
-		);
+	it('Be rendered with process names', () => {
+		const processName = container.querySelectorAll('.table-title');
 
-		expect(processName[0].children[0].innerHTML).toEqual(
-			'Single Approver 1'
-		);
-		expect(processName[1].children[0].innerHTML).toEqual(
-			'Single Approver 2'
-		);
-		expect(processName[2].children[0].innerHTML).toEqual(
-			'Single Approver 3'
-		);
+		expect(processName[0]).toHaveTextContent('Single Approver 1');
+		expect(processName[1]).toHaveTextContent('Single Approver 2');
+		expect(processName[2]).toHaveTextContent('Single Approver 3');
 	});
 });

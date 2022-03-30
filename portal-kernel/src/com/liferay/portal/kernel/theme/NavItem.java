@@ -15,18 +15,20 @@
 package com.liferay.portal.kernel.theme;
 
 import com.liferay.expando.kernel.model.ExpandoBridge;
+import com.liferay.exportimport.kernel.staging.LayoutStagingUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.LayoutType;
+import com.liferay.portal.kernel.model.LayoutTypeController;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -54,11 +56,9 @@ import javax.servlet.http.HttpServletRequest;
 public class NavItem implements Serializable {
 
 	public static List<NavItem> fromLayouts(
-			HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
-			Map<String, Object> contextObjects)
+			HttpServletRequest httpServletRequest, List<Layout> parentLayouts,
+			ThemeDisplay themeDisplay, Map<String, Object> contextObjects)
 		throws PortalException {
-
-		List<Layout> parentLayouts = themeDisplay.getLayouts();
 
 		if (parentLayouts == null) {
 			return Collections.emptyList();
@@ -74,6 +74,7 @@ public class NavItem implements Serializable {
 				Layout childLayout = iterator.next();
 
 				if (_isContentLayoutDraft(childLayout) ||
+					!_isLayoutRevisionDisplayable(childLayout) ||
 					childLayout.isHidden() ||
 					!LayoutPermissionUtil.contains(
 						themeDisplay.getPermissionChecker(), childLayout,
@@ -90,7 +91,9 @@ public class NavItem implements Serializable {
 			List<Layout> childLayouts = layoutChildLayouts.get(
 				parentLayout.getPlid());
 
-			if (_isContentLayoutDraft(parentLayout)) {
+			if (_isContentLayoutDraft(parentLayout) ||
+				!_isLayoutRevisionDisplayable(parentLayout)) {
+
 				continue;
 			}
 
@@ -101,6 +104,16 @@ public class NavItem implements Serializable {
 		}
 
 		return navItems;
+	}
+
+	public static List<NavItem> fromLayouts(
+			HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
+			Map<String, Object> contextObjects)
+		throws PortalException {
+
+		return fromLayouts(
+			httpServletRequest, themeDisplay.getLayouts(), themeDisplay,
+			contextObjects);
 	}
 
 	public NavItem(
@@ -125,16 +138,16 @@ public class NavItem implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof NavItem)) {
+		if (!(object instanceof NavItem)) {
 			return false;
 		}
 
-		NavItem navItem = (NavItem)obj;
+		NavItem navItem = (NavItem)object;
 
 		if (getLayoutId() == navItem.getLayoutId()) {
 			return true;
@@ -347,15 +360,10 @@ public class NavItem implements Serializable {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(_themeDisplay.getPathImage());
-		sb.append("/layout_icon?img_id=");
-		sb.append(_layout.getIconImageId());
-		sb.append("&t=");
-		sb.append(WebServerServletTokenUtil.getToken(_layout.getIconImageId()));
-
-		return sb.toString();
+		return StringBundler.concat(
+			_themeDisplay.getPathImage(), "/layout_icon?img_id=",
+			_layout.getIconImageId(), "&t=",
+			WebServerServletTokenUtil.getToken(_layout.getIconImageId()));
 	}
 
 	public boolean isBrowsable() {
@@ -385,32 +393,12 @@ public class NavItem implements Serializable {
 			layout.getAncestorPlid());
 	}
 
-	private static List<NavItem> _fromLayouts(
-		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
-		List<Layout> layouts, Map<String, Object> contextObjects) {
-
-		if ((layouts == null) || layouts.isEmpty()) {
-			return Collections.emptyList();
-		}
-
-		List<NavItem> navItems = new ArrayList<>(layouts.size());
-
-		for (Layout layout : layouts) {
-			navItems.add(
-				new NavItem(
-					httpServletRequest, themeDisplay, layout, contextObjects));
-		}
-
-		return navItems;
-	}
-
 	private static boolean _isContentLayoutDraft(Layout layout) {
 		if (!layout.isTypeContent()) {
 			return false;
 		}
 
-		Layout draftLayout = LayoutLocalServiceUtil.fetchLayout(
-			PortalUtil.getClassNameId(Layout.class), layout.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		if (draftLayout != null) {
 			boolean published = GetterUtil.getBoolean(
@@ -426,6 +414,32 @@ public class NavItem implements Serializable {
 		return true;
 	}
 
+	private static boolean _isLayoutRevisionDisplayable(Layout layout) {
+		if (layout.isTypeContent() ||
+			!LayoutStagingUtil.isBranchingLayout(layout)) {
+
+			return true;
+		}
+
+		LayoutRevision layoutRevision = LayoutStagingUtil.getLayoutRevision(
+			layout);
+
+		if (!layoutRevision.isIncomplete()) {
+			return true;
+		}
+
+		LayoutType layoutType = layout.getLayoutType();
+
+		LayoutTypeController layoutTypeController =
+			layoutType.getLayoutTypeController();
+
+		if (layoutTypeController.isWorkflowEnabled()) {
+			return true;
+		}
+
+		return false;
+	}
+
 	private NavItem(
 		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
 		Layout layout, List<Layout> childLayouts,
@@ -438,6 +452,25 @@ public class NavItem implements Serializable {
 
 		_children = _fromLayouts(
 			httpServletRequest, themeDisplay, childLayouts, contextObjects);
+	}
+
+	private List<NavItem> _fromLayouts(
+		HttpServletRequest httpServletRequest, ThemeDisplay themeDisplay,
+		List<Layout> layouts, Map<String, Object> contextObjects) {
+
+		if (ListUtil.isEmpty(layouts)) {
+			return Collections.emptyList();
+		}
+
+		List<NavItem> navItems = new ArrayList<>(layouts.size());
+
+		for (Layout layout : layouts) {
+			navItems.add(
+				new NavItem(
+					httpServletRequest, themeDisplay, layout, contextObjects));
+		}
+
+		return navItems;
 	}
 
 	private List<NavItem> _browsableChildren;

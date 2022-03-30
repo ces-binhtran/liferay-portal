@@ -11,12 +11,14 @@ create table BatchEngineExportTask (
 	content BLOB,
 	contentType VARCHAR(75) null,
 	endTime DATE null,
-	errorMessage VARCHAR(1000) null,
-	fieldNames VARCHAR(75) null,
+	errorMessage TEXT null,
+	fieldNames VARCHAR(1000) null,
 	executeStatus VARCHAR(75) null,
 	parameters TEXT null,
+	processedItemsCount INTEGER,
 	startTime DATE null,
-	taskItemDelegateName VARCHAR(75) null
+	taskItemDelegateName VARCHAR(75) null,
+	totalItemsCount INTEGER
 );
 
 create table BatchEngineImportTask (
@@ -33,11 +35,27 @@ create table BatchEngineImportTask (
 	content BLOB,
 	contentType VARCHAR(75) null,
 	endTime DATE null,
-	errorMessage VARCHAR(1000) null,
+	errorMessage TEXT null,
 	executeStatus VARCHAR(75) null,
 	fieldNameMapping TEXT null,
+	importStrategy INTEGER,
 	operation VARCHAR(75) null,
 	parameters TEXT null,
+	processedItemsCount INTEGER,
 	startTime DATE null,
-	taskItemDelegateName VARCHAR(75) null
+	taskItemDelegateName VARCHAR(75) null,
+	totalItemsCount INTEGER
+);
+
+create table BatchEngineImportTaskError (
+	mvccVersion LONG default 0 not null,
+	batchEngineImportTaskErrorId LONG not null primary key,
+	companyId LONG,
+	userId LONG,
+	createDate DATE null,
+	modifiedDate DATE null,
+	batchEngineImportTaskId LONG,
+	item TEXT null,
+	itemIndex INTEGER,
+	message TEXT null
 );

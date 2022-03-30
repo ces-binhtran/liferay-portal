@@ -19,10 +19,10 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.LayoutPrototype;
-import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.service.LayoutPrototypeLocalServiceWrapper;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -40,16 +40,6 @@ import org.osgi.service.component.annotations.Reference;
 public class LayoutPageTemplateLayoutPrototypeLocalServiceWrapper
 	extends LayoutPrototypeLocalServiceWrapper {
 
-	public LayoutPageTemplateLayoutPrototypeLocalServiceWrapper() {
-		super(null);
-	}
-
-	public LayoutPageTemplateLayoutPrototypeLocalServiceWrapper(
-		LayoutPrototypeLocalService layoutPrototypeLocalService) {
-
-		super(layoutPrototypeLocalService);
-	}
-
 	@Override
 	public LayoutPrototype addLayoutPrototype(
 			long userId, long companyId, Map<Locale, String> nameMap,
@@ -66,10 +56,22 @@ public class LayoutPageTemplateLayoutPrototypeLocalServiceWrapper
 			return layoutPrototype;
 		}
 
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchFirstLayoutPageTemplateEntry(
-					layoutPrototype.getLayoutPrototypeId());
+		long layoutPageTemplateEntryId = GetterUtil.getLong(
+			serviceContext.getAttribute("layoutPageTemplateEntryId"));
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry = null;
+
+		if (layoutPageTemplateEntryId != 0) {
+			layoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					fetchLayoutPageTemplateEntry(layoutPageTemplateEntryId);
+		}
+		else {
+			layoutPageTemplateEntry =
+				_layoutPageTemplateEntryLocalService.
+					fetchFirstLayoutPageTemplateEntry(
+						layoutPrototype.getLayoutPrototypeId());
+		}
 
 		if (layoutPageTemplateEntry != null) {
 			return layoutPrototype;
@@ -120,10 +122,14 @@ public class LayoutPageTemplateLayoutPrototypeLocalServiceWrapper
 			return layoutPrototype;
 		}
 
-		String nameXML = layoutPrototype.getName();
+		long userId = serviceContext.getUserId();
+
+		if (userId == 0) {
+			userId = layoutPageTemplateEntry.getUserId();
+		}
 
 		Locale defaultLocale = LocaleUtil.fromLanguageId(
-			LocalizationUtil.getDefaultLanguageId(nameXML));
+			LocalizationUtil.getDefaultLanguageId(layoutPrototype.getName()));
 
 		int status = WorkflowConstants.STATUS_INACTIVE;
 
@@ -132,8 +138,7 @@ public class LayoutPageTemplateLayoutPrototypeLocalServiceWrapper
 		}
 
 		_layoutPageTemplateEntryLocalService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getUserId(),
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
+			userId, layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
 			nameMap.get(defaultLocale), status);
 
 		return layoutPrototype;

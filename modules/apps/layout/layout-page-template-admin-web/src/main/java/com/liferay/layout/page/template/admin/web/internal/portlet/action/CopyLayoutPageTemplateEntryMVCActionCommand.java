@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-		"mvc.command.name=/layout_page_template/copy_layout_page_template_entry"
+		"mvc.command.name=/layout_page_template_admin/copy_layout_page_template_entry"
 	},
 	service = MVCActionCommand.class
 )
@@ -71,9 +71,9 @@ public class CopyLayoutPageTemplateEntryMVCActionCommand
 			TransactionInvokerUtil.invoke(
 				_transactionConfig, copyLayoutPageTemplateEntryCallable);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(t, t);
+				_log.debug(throwable, throwable);
 			}
 
 			SessionErrors.add(actionRequest, PortalException.class);

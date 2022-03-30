@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {findAllByTestId, findByTestId, render} from '@testing-library/react';
+import {act, render} from '@testing-library/react';
 import React from 'react';
 
 import CompletionVelocityCard from '../../../../src/main/resources/META-INF/resources/js/components/process-metrics/completion-velocity/CompletionVelocityCard.es';
@@ -83,52 +83,45 @@ const timeRangeData = {
 };
 
 describe('The completion velocity card component should', () => {
-	let getByTestId;
+	let getAllByText;
+	let getByText;
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		jsonSessionStorage.set('timeRanges', timeRangeData);
 
-		const clientMock = {
-			get: jest.fn().mockResolvedValue({data}),
-		};
+		fetch.mockResolvedValueOnce({
+			json: () => Promise.resolve(data),
+			ok: true,
+		});
 
 		const renderResult = render(
-			<MockRouter client={clientMock} query={query}>
+			<MockRouter query={query}>
 				<CompletionVelocityCard routeParams={{processId}} />
 			</MockRouter>
 		);
 
-		getByTestId = renderResult.getByTestId;
+		getAllByText = renderResult.getAllByText;
+		getByText = renderResult.getByText;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered with time range filter', async () => {
-		const timeRangeFilter = getByTestId('timeRangeFilter');
-		const filterItems = await findAllByTestId(
-			timeRangeFilter,
-			'filterItem'
-		);
-		const activeItem = filterItems.find((item) =>
-			item.className.includes('active')
-		);
-		const activeItemName = await findByTestId(activeItem, 'filterItemName');
+	it('Be rendered with time range filter', () => {
+		const timeRangeFilter = getByText('Last 30 Days');
+		const activeItem = document.querySelector('.active');
 
 		expect(timeRangeFilter).not.toBeNull();
-		expect(activeItemName).toHaveTextContent('Last 7 Days');
+		expect(activeItem).toHaveTextContent('Last 7 Days');
 	});
 
-	test('Be rendered with time range filter', async () => {
-		const velocityUnitFilter = await getByTestId('velocityUnitFilter');
-		const filterItems = await findAllByTestId(
-			velocityUnitFilter,
-			'filterItem'
-		);
+	it('Be rendered with velocity unit filter', () => {
+		const velocityUnitFilter = getAllByText('inst-day')[0];
 
-		const activeItem = filterItems.find((item) =>
-			item.className.includes('active')
-		);
-		const activeItemName = await findByTestId(activeItem, 'filterItemName');
+		const activeItem = document.querySelectorAll('.active')[1];
 
 		expect(velocityUnitFilter).not.toBeNull();
-		expect(activeItemName).toHaveTextContent('inst-day');
+		expect(activeItem).toHaveTextContent('inst-day');
 	});
 });

@@ -16,9 +16,9 @@ package com.liferay.oauth2.provider.service.base;
 
 import com.liferay.oauth2.provider.model.OAuth2Authorization;
 import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalService;
+import com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalServiceUtil;
 import com.liferay.oauth2.provider.service.persistence.OAuth2AuthorizationFinder;
 import com.liferay.oauth2.provider.service.persistence.OAuth2AuthorizationPersistence;
-import com.liferay.oauth2.provider.service.persistence.OAuth2ScopeGrantFinder;
 import com.liferay.oauth2.provider.service.persistence.OAuth2ScopeGrantPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -47,10 +47,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +75,15 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OAuth2AuthorizationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.oauth2.provider.service.OAuth2AuthorizationLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OAuth2AuthorizationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OAuth2AuthorizationLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the o auth2 authorization to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2AuthorizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param oAuth2Authorization the o auth2 authorization
 	 * @return the o auth2 authorization that was added
@@ -108,6 +115,10 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	/**
 	 * Deletes the o auth2 authorization with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2AuthorizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param oAuth2AuthorizationId the primary key of the o auth2 authorization
 	 * @return the o auth2 authorization that was removed
 	 * @throws PortalException if a o auth2 authorization with the primary key could not be found
@@ -124,6 +135,10 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	/**
 	 * Deletes the o auth2 authorization from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2AuthorizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param oAuth2Authorization the o auth2 authorization
 	 * @return the o auth2 authorization that was removed
 	 */
@@ -138,6 +153,13 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return oAuth2AuthorizationPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -303,6 +325,7 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -321,6 +344,7 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 			(OAuth2Authorization)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<OAuth2Authorization> getBasePersistence() {
 		return oAuth2AuthorizationPersistence;
 	}
@@ -365,6 +389,10 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 
 	/**
 	 * Updates the o auth2 authorization in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2AuthorizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param oAuth2Authorization the o auth2 authorization
 	 * @return the o auth2 authorization that was updated
@@ -554,6 +582,11 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 			oAuth2ScopeGrantId, oAuth2AuthorizationIds);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -566,6 +599,8 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		oAuth2AuthorizationLocalService =
 			(OAuth2AuthorizationLocalService)aopProxy;
+
+		_setLocalServiceUtilService(oAuth2AuthorizationLocalService);
 	}
 
 	/**
@@ -611,6 +646,23 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		OAuth2AuthorizationLocalService oAuth2AuthorizationLocalService) {
+
+		try {
+			Field field =
+				OAuth2AuthorizationLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, oAuth2AuthorizationLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected OAuth2AuthorizationLocalService oAuth2AuthorizationLocalService;
 
 	@Reference
@@ -625,8 +677,5 @@ public abstract class OAuth2AuthorizationLocalServiceBaseImpl
 
 	@Reference
 	protected OAuth2ScopeGrantPersistence oAuth2ScopeGrantPersistence;
-
-	@Reference
-	protected OAuth2ScopeGrantFinder oAuth2ScopeGrantFinder;
 
 }

@@ -16,6 +16,8 @@ package com.liferay.portal.remote.json.web.service.extender.internal;
 
 import com.liferay.portal.kernel.bean.ClassLoaderBeanHandler;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebServiceScannerStrategy;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 import com.liferay.portal.kernel.util.ProxyUtil;
 
@@ -33,7 +35,7 @@ public class ServiceJSONWebServiceScannerStrategy
 
 	@Override
 	public MethodDescriptor[] scan(Object service) {
-		Class<?> clazz = getTargetClass(service);
+		Class<?> clazz = _getTargetClass(service);
 
 		Method[] methods = clazz.getMethods();
 
@@ -54,10 +56,10 @@ public class ServiceJSONWebServiceScannerStrategy
 	}
 
 	/**
-	 * @see com.liferay.portal.jsonwebservice.SpringJSONWebServiceScannerStrategy#getTargetClass(
+	 * @see com.liferay.portal.jsonwebservice.SpringJSONWebServiceScannerStrategy#_getTargetClass(
 	 *      Object)
 	 */
-	protected Class<?> getTargetClass(Object service) {
+	private Class<?> _getTargetClass(Object service) {
 		while (ProxyUtil.isProxyClass(service.getClass())) {
 			InvocationHandler invocationHandler =
 				ProxyUtil.getInvocationHandler(service);
@@ -88,11 +90,18 @@ public class ServiceJSONWebServiceScannerStrategy
 				}
 				catch (ReflectiveOperationException
 							reflectiveOperationException) {
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(reflectiveOperationException);
+					}
 				}
 			}
 		}
 
 		return service.getClass();
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ServiceJSONWebServiceScannerStrategy.class);
 
 }

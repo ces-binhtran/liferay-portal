@@ -14,12 +14,13 @@
 
 package com.liferay.exportimport.internal.lifecycle;
 
-import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleEvent;
 import com.liferay.exportimport.kernel.lifecycle.ExportImportLifecycleListener;
+import com.liferay.exportimport.kernel.lifecycle.constants.ExportImportLifecycleConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.Staging;
 import com.liferay.exportimport.kernel.staging.StagingURLHelper;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -100,13 +101,12 @@ public class EventRemotePropagatorExportImportLifecycleListener
 				exportImportConfiguration ->
 					exportImportConfiguration.getSettingsMap());
 
-		Serializable sourceGroupIdSerializable = settingsMapOptional.map(
-			settingsMap -> settingsMap.get("sourceGroupId")
-		).orElse(
-			GroupConstants.ANY_PARENT_GROUP_ID
-		);
-
-		long sourceGroupId = GetterUtil.getLong(sourceGroupIdSerializable);
+		long sourceGroupId = GetterUtil.getLong(
+			settingsMapOptional.map(
+				settingsMap -> settingsMap.get("sourceGroupId")
+			).orElse(
+				GroupConstants.ANY_PARENT_GROUP_ID
+			));
 
 		Group sourceGroup = _groupLocalService.fetchGroup(sourceGroupId);
 
@@ -114,13 +114,12 @@ public class EventRemotePropagatorExportImportLifecycleListener
 			return false;
 		}
 
-		Serializable targetGroupIdSerializable = settingsMapOptional.map(
-			settingsMap -> settingsMap.get("targetGroupId")
-		).orElse(
-			GroupConstants.ANY_PARENT_GROUP_ID
-		);
-
-		long targetGroupId = GetterUtil.getLong(targetGroupIdSerializable);
+		long targetGroupId = GetterUtil.getLong(
+			settingsMapOptional.map(
+				settingsMap -> settingsMap.get("targetGroupId")
+			).orElse(
+				GroupConstants.ANY_PARENT_GROUP_ID
+			));
 
 		Group targetGroup = _groupLocalService.fetchGroup(targetGroupId);
 
@@ -140,7 +139,14 @@ public class EventRemotePropagatorExportImportLifecycleListener
 			return false;
 		}
 
-		return true;
+		String remoteAddress = GetterUtil.getString(
+			settingsMapOptional.map(
+				settingsMap -> settingsMap.get("remoteAddress")
+			).orElse(
+				StringPool.BLANK
+			));
+
+		return !remoteAddress.equals("localhost");
 	}
 
 	private Optional<ExportImportConfiguration> _getExportImportConfiguration(

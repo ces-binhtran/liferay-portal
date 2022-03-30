@@ -16,7 +16,6 @@ package com.liferay.project.templates.service.builder;
 
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
-import com.liferay.project.templates.extensions.util.FileUtil;
 import com.liferay.project.templates.extensions.util.Validator;
 import com.liferay.project.templates.util.FileTestUtil;
 
@@ -24,14 +23,8 @@ import java.io.File;
 
 import java.net.URI;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.concurrent.Callable;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -59,38 +52,54 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
 			new Object[][] {
-				{"spring", "guestbook", "com.liferay.docs.guestbook", "7.0.6"},
-				{"spring", "guestbook", "com.liferay.docs.guestbook", "7.1.3"},
-				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.2.1"},
-				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.3.2"},
+				{
+					"spring", "guestbook", "com.liferay.docs.guestbook",
+					"7.0.6-2"
+				},
+				{
+					"spring", "guestbook", "com.liferay.docs.guestbook",
+					"7.1.3-1"
+				},
+				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.2.1-1"},
+				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.3.7"},
+				{"ds", "guestbook", "com.liferay.docs.guestbook", "7.4.3.4"},
 				{
 					"spring", "backend-integration",
-					"com.liferay.docs.guestbook", "7.0.6"
+					"com.liferay.docs.guestbook", "7.0.6-2"
 				},
 				{
 					"spring", "backend-integration",
-					"com.liferay.docs.guestbook", "7.1.3"
+					"com.liferay.docs.guestbook", "7.1.3-1"
 				},
 				{
 					"ds", "backend-integration", "com.liferay.docs.guestbook",
-					"7.2.1"
+					"7.2.1-1"
 				},
 				{
 					"ds", "backend-integration", "com.liferay.docs.guestbook",
-					"7.3.2"
+					"7.3.7"
+				},
+				{
+					"ds", "backend-integration", "com.liferay.docs.guestbook",
+					"7.4.3.4"
 				},
 				{
 					"spring", "backend-integration",
-					"com.liferay.docs.guestbook", "7.2.1"
+					"com.liferay.docs.guestbook", "7.2.1-1"
 				},
 				{
 					"spring", "backend-integration",
-					"com.liferay.docs.guestbook", "7.3.2"
+					"com.liferay.docs.guestbook", "7.3.7"
 				},
-				{"spring", "sample", "com.test.sample", "7.0.6"},
-				{"spring", "sample", "com.test.sample", "7.1.3"},
-				{"ds", "sample", "com.test.sample", "7.2.1"},
-				{"ds", "sample", "com.test.sample", "7.3.2"}
+				{
+					"spring", "backend-integration",
+					"com.liferay.docs.guestbook", "7.4.3.4"
+				},
+				{"spring", "sample", "com.test.sample", "7.0.6-2"},
+				{"spring", "sample", "com.test.sample", "7.1.3-1"},
+				{"ds", "sample", "com.test.sample", "7.2.1-1"},
+				{"ds", "sample", "com.test.sample", "7.3.7"},
+				{"ds", "sample", "com.test.sample", "7.4.3.4"}
 			});
 	}
 
@@ -128,6 +137,32 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 			temporaryFolder, "gradle", "gradleWS", _liferayVersion,
 			mavenExecutor);
 
+		if (_liferayVersion.startsWith("7.0")) {
+			writeGradlePropertiesInWorkspace(
+				gradleWorkspaceDir,
+				"liferay.workspace.target.platform.version=7.0.6-2");
+		}
+		else if (_liferayVersion.startsWith("7.1")) {
+			writeGradlePropertiesInWorkspace(
+				gradleWorkspaceDir,
+				"liferay.workspace.target.platform.version=7.1.3-1");
+		}
+		else if (_liferayVersion.startsWith("7.2")) {
+			writeGradlePropertiesInWorkspace(
+				gradleWorkspaceDir,
+				"liferay.workspace.target.platform.version=7.2.1-1");
+		}
+		else if (_liferayVersion.startsWith("7.3")) {
+			writeGradlePropertiesInWorkspace(
+				gradleWorkspaceDir,
+				"liferay.workspace.target.platform.version=7.3.7");
+		}
+		else if (_liferayVersion.startsWith("7.4")) {
+			writeGradlePropertiesInWorkspace(
+				gradleWorkspaceDir,
+				"liferay.workspace.target.platform.version=7.4.3.4");
+		}
+
 		File gradleWorkspaceModulesDir = new File(
 			gradleWorkspaceDir, "modules");
 
@@ -146,8 +181,7 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 		if (_name.contains("sample")) {
 			testContains(
 				gradleProjectDir, "sample-service/build.gradle",
-				"compileOnly project(\":modules:nested:path:sample:" +
-					"sample-api\")");
+				"compile project(\":modules:nested:path:sample:sample-api\")");
 		}
 
 		if (_dependencyInjector.equals("ds")) {
@@ -157,17 +191,9 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 			testContains(
 				gradleProjectDir, _name + "-service/bnd.bnd",
 				"-dsannotations-options: inherit");
-
-			testNotContains(
-				gradleProjectDir, _name + "-service/build.gradle",
-				"com.liferay.portal.spring.extender");
 		}
 
 		if (_dependencyInjector.equals("spring")) {
-			testContains(
-				gradleProjectDir, _name + "-service/build.gradle",
-				"com.liferay.portal.spring.extender");
-
 			testNotContains(
 				gradleProjectDir, _name + "-service/bnd.bnd",
 				"-dsannotations-options: inherit");
@@ -176,8 +202,8 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				"dependency-injector=\"ds\"");
 		}
 
-		if (_liferayVersion.equals("7.0.6") ||
-			_liferayVersion.equals("7.1.3")) {
+		if (_liferayVersion.startsWith("7.0") ||
+			_liferayVersion.startsWith("7.1")) {
 
 			testContains(
 				gradleProjectDir, _name + "-api/build.gradle",
@@ -193,22 +219,13 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				gradleProjectDir, _name + "-service/build.gradle",
 				"org.osgi.annotation.versioning");
 		}
-		else {
+		else if (_liferayVersion.startsWith("7.2")) {
 			testContains(
 				gradleProjectDir, _name + "-api/build.gradle",
-				DEPENDENCY_PORTAL_KERNEL, "com.liferay.petra.lang",
-				"com.liferay.petra.string", "org.osgi.annotation.versioning");
+				DEPENDENCY_PORTAL_KERNEL, "org.osgi.annotation.versioning");
 			testContains(
 				gradleProjectDir, _name + "-service/build.gradle",
-				DEPENDENCY_PORTAL_KERNEL, "com.liferay.petra.lang",
-				"com.liferay.petra.string", "org.osgi.annotation.versioning",
-				"com.liferay.portal.aop.api");
-
-			if (_liferayVersion.equals("7.3.2")) {
-				testContains(
-					gradleProjectDir, _name + "-service/build.gradle",
-					"com.liferay.petra.sql.dsl.api");
-			}
+				DEPENDENCY_PORTAL_KERNEL, "org.osgi.annotation.versioning");
 
 			testNotContains(
 				gradleProjectDir, _name + "-api/build.gradle", "biz.aQute.bnd");
@@ -216,6 +233,24 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				gradleProjectDir, _name + "-service/build.gradle",
 				"biz.aQute.bnd");
 		}
+		else {
+			testContains(
+				gradleProjectDir, _name + "-api/build.gradle",
+				DEPENDENCY_RELEASE_PORTAL_API);
+			testContains(
+				gradleProjectDir, _name + "-service/build.gradle",
+				DEPENDENCY_RELEASE_PORTAL_API);
+
+			testNotContains(
+				gradleProjectDir, _name + "-api/build.gradle", "biz.aQute.bnd");
+			testNotContains(
+				gradleProjectDir, _name + "-service/build.gradle",
+				"biz.aQute.bnd");
+		}
+
+		File gradleUADModuleDir = new File(gradleProjectDir, _name + "-uad");
+
+		testNotExists(gradleUADModuleDir, "bnd.bnd");
 
 		File mavenWorkspaceDir = buildWorkspace(
 			temporaryFolder, "maven", "mavenWS", _liferayVersion,
@@ -236,6 +271,10 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 			"-DdependencyInjector=" + _dependencyInjector,
 			"-DliferayVersion=" + _liferayVersion);
 
+		File mavenUADModuleDir = new File(mavenProjectDir, _name + "-uad");
+
+		testNotExists(mavenUADModuleDir, "bnd.bnd");
+
 		if (isBuildProjects()) {
 			String projectPath;
 
@@ -246,142 +285,14 @@ public class ProjectTemplatesServiceBuilderWorkspaceTest
 				projectPath = ":modules:" + _name;
 			}
 
-			_testBuildTemplateServiceBuilder(
+			testBuildTemplateServiceBuilder(
 				gradleProjectDir, mavenProjectDir, gradleWorkspaceDir, _name,
-				_packageName, projectPath);
+				_packageName, projectPath, _gradleDistribution, mavenExecutor);
 		}
 	}
 
 	@Rule
 	public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-	private void _testBuildTemplateServiceBuilder(
-			File gradleProjectDir, File mavenProjectDir, final File rootProject,
-			String name, String packageName, final String projectPath)
-		throws Exception {
-
-		String apiProjectName = name + "-api";
-		final String serviceProjectName = name + "-service";
-
-		testContains(
-			gradleProjectDir, apiProjectName + "/bnd.bnd", "Export-Package:\\",
-			packageName + ".exception,\\", packageName + ".model,\\",
-			packageName + ".service,\\", packageName + ".service.persistence");
-
-		testContains(
-			gradleProjectDir, serviceProjectName + "/bnd.bnd",
-			"Liferay-Service: true");
-
-		if (!isBuildProjects()) {
-			return;
-		}
-
-		_testChangePortletModelHintsXml(
-			gradleProjectDir, serviceProjectName,
-			new Callable<Void>() {
-
-				@Override
-				public Void call() throws Exception {
-					executeGradle(
-						rootProject, _gradleDistribution,
-						projectPath + ":" + serviceProjectName +
-							_GRADLE_TASK_PATH_BUILD_SERVICE);
-
-					return null;
-				}
-
-			});
-
-		executeGradle(
-			rootProject, _gradleDistribution,
-			projectPath + ":" + serviceProjectName + GRADLE_TASK_PATH_BUILD);
-
-		File gradleApiBundleFile = testExists(
-			gradleProjectDir,
-			apiProjectName + "/build/libs/" + packageName + ".api-1.0.0.jar");
-
-		File gradleServiceBundleFile = testExists(
-			gradleProjectDir,
-			serviceProjectName + "/build/libs/" + packageName +
-				".service-1.0.0.jar");
-
-		if (!name.contains("sample")) {
-			_testChangePortletModelHintsXml(
-				mavenProjectDir, serviceProjectName,
-				new Callable<Void>() {
-
-					@Override
-					public Void call() throws Exception {
-						executeMaven(
-							new File(mavenProjectDir, serviceProjectName),
-							mavenExecutor, MAVEN_GOAL_BUILD_SERVICE);
-
-						return null;
-					}
-
-				});
-
-			File gradleServicePropertiesFile = new File(
-				gradleProjectDir,
-				serviceProjectName + "/src/main/resources/service.properties");
-
-			File mavenServicePropertiesFile = new File(
-				mavenProjectDir,
-				serviceProjectName + "/src/main/resources/service.properties");
-
-			Files.copy(
-				gradleServicePropertiesFile.toPath(),
-				mavenServicePropertiesFile.toPath(),
-				StandardCopyOption.REPLACE_EXISTING);
-
-			executeMaven(mavenProjectDir, mavenExecutor, MAVEN_GOAL_PACKAGE);
-
-			File mavenApiBundleFile = testExists(
-				mavenProjectDir,
-				apiProjectName + "/target/" + name + "-api-1.0.0.jar");
-			File mavenServiceBundleFile = testExists(
-				mavenProjectDir,
-				serviceProjectName + "/target/" + name + "-service-1.0.0.jar");
-
-			testBundlesDiff(gradleApiBundleFile, mavenApiBundleFile);
-			testBundlesDiff(gradleServiceBundleFile, mavenServiceBundleFile);
-		}
-	}
-
-	private void _testChangePortletModelHintsXml(
-			File projectDir, String serviceProjectName,
-			Callable<Void> buildServiceCallable)
-		throws Exception {
-
-		buildServiceCallable.call();
-
-		File file = testExists(
-			projectDir,
-			serviceProjectName +
-				"/src/main/resources/META-INF/portlet-model-hints.xml");
-
-		Path path = file.toPath();
-
-		String content = FileUtil.read(path);
-
-		String newContent = content.replace(
-			"<field name=\"field5\" type=\"String\" />",
-			"<field name=\"field5\" type=\"String\">\n\t\t\t<hint-collection " +
-				"name=\"CLOB\" />\n\t\t</field>");
-
-		Assert.assertNotEquals("Unexpected " + file, content, newContent);
-
-		Files.write(path, newContent.getBytes(StandardCharsets.UTF_8));
-
-		buildServiceCallable.call();
-
-		Assert.assertEquals(
-			"Changes in " + file + " incorrectly overridden", newContent,
-			FileUtil.read(path));
-	}
-
-	private static final String _GRADLE_TASK_PATH_BUILD_SERVICE =
-		":buildService";
 
 	private static URI _gradleDistribution;
 

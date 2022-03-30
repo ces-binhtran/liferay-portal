@@ -21,6 +21,9 @@ import com.liferay.dynamic.data.mapping.service.base.DDMStructureLinkLocalServic
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -105,9 +108,20 @@ public class DDMStructureLinkLocalServiceImpl
 		}
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public List<DDMStructureLink> getClassNameStructureLinks(long classNameId) {
-		return ddmStructureLinkPersistence.findByClassNameId(classNameId);
+		DynamicQuery dynamicQuery = dynamicQuery();
+
+		Property classNameIdProperty = PropertyFactoryUtil.forName(
+			"classNameId");
+
+		dynamicQuery.add(classNameIdProperty.eq(classNameId));
+
+		return dynamicQuery(dynamicQuery);
 	}
 
 	@Override
@@ -239,15 +253,10 @@ public class DDMStructureLinkLocalServiceImpl
 			ddmStructureLinkPersistence.findByC_C(classNameId, classPK);
 
 		if (structureLinks.isEmpty()) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("No DDMStructureLink found for {classNameId=");
-			sb.append(classNameId);
-			sb.append(", classPK=");
-			sb.append(classPK);
-			sb.append(StringPool.CLOSE_CURLY_BRACE);
-
-			throw new NoSuchStructureLinkException(sb.toString());
+			throw new NoSuchStructureLinkException(
+				StringBundler.concat(
+					"No DDMStructureLink found for {classNameId=", classNameId,
+					", classPK=", classPK, StringPool.CLOSE_CURLY_BRACE));
 		}
 
 		return structureLinks.get(0);

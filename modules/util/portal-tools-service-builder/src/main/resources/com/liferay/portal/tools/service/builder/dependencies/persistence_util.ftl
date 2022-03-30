@@ -17,10 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
-
 /**
  * The persistence utility for the ${entity.humanName} service. This utility wraps <code>${packagePath}.service.persistence.impl.${entity.name}PersistenceImpl</code> and provides direct access to the database for CRUD operations. This utility should only be used by the service layer, as it must operate within a transaction. Never access this utility in a JSP, controller, model, or other front-end class.
  *
@@ -57,8 +53,8 @@ public class ${entity.name}Util {
 	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#clearCache(com.liferay.portal.kernel.model.BaseModel)
 	 */
-	public static void clearCache(${entity.name} ${entity.varName}) {
-		getPersistence().clearCache(${entity.varName});
+	public static void clearCache(${entity.name} ${entity.variableName}) {
+		getPersistence().clearCache(${entity.variableName});
 	}
 
 	/**
@@ -99,15 +95,15 @@ public class ${entity.name}Util {
 	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#update(com.liferay.portal.kernel.model.BaseModel)
 	 */
-	public static ${entity.name} update(${entity.name} ${entity.varName}) {
-		return getPersistence().update(${entity.varName});
+	public static ${entity.name} update(${entity.name} ${entity.variableName}) {
+		return getPersistence().update(${entity.variableName});
 	}
 
 	/**
 	 * @see com.liferay.portal.kernel.service.persistence.BasePersistence#update(com.liferay.portal.kernel.model.BaseModel, ServiceContext)
 	 */
-	public static ${entity.name} update(${entity.name} ${entity.varName}, ServiceContext serviceContext) {
-		return getPersistence().update(${entity.varName}, serviceContext);
+	public static ${entity.name} update(${entity.name} ${entity.variableName}, ServiceContext serviceContext) {
+		return getPersistence().update(${entity.variableName}, serviceContext);
 	}
 
 	<#list methods as method>
@@ -163,35 +159,9 @@ public class ${entity.name}Util {
 	</#list>
 
 	public static ${entity.name}Persistence getPersistence() {
-		<#if osgiModule>
-			return _serviceTracker.getService();
-		<#else>
-			if (_persistence == null) {
-				<#if validator.isNotNull(pluginName)>
-					_persistence = (${entity.name}Persistence)PortletBeanLocatorUtil.locate(${apiPackagePath}.service.ServletContextUtil.getServletContextName(), ${entity.name}Persistence.class.getName());
-				<#else>
-					_persistence = (${entity.name}Persistence)PortalBeanLocatorUtil.locate(${entity.name}Persistence.class.getName());
-				</#if>
-			}
-
-			return _persistence;
-		</#if>
+		return _persistence;
 	}
 
-	<#if osgiModule>
-		private static ServiceTracker<${entity.name}Persistence, ${entity.name}Persistence> _serviceTracker;
-
-		static {
-			Bundle bundle = FrameworkUtil.getBundle(${entity.name}Persistence.class);
-
-			ServiceTracker<${entity.name}Persistence, ${entity.name}Persistence> serviceTracker = new ServiceTracker<${entity.name}Persistence, ${entity.name}Persistence>(bundle.getBundleContext(), ${entity.name}Persistence.class, null);
-
-			serviceTracker.open();
-
-			_serviceTracker = serviceTracker;
-		}
-	<#else>
-		private static ${entity.name}Persistence _persistence;
-	</#if>
+	private static volatile ${entity.name}Persistence _persistence;
 
 }

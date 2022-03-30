@@ -14,9 +14,9 @@
 
 import {
 	DefaultEventHandler,
-	ItemSelectorDialog,
 	addParams,
 	openModal,
+	openSelectionModal,
 } from 'frontend-js-web';
 import {Config} from 'metal-state';
 
@@ -24,7 +24,7 @@ class ElementsDefaultEventHandler extends DefaultEventHandler {
 	compareVersions(itemData) {
 		const namespace = this.namespace;
 
-		openModal({
+		openSelectionModal({
 			onSelect: (selectedItem) => {
 				let url = itemData.redirectURL;
 
@@ -66,29 +66,33 @@ class ElementsDefaultEventHandler extends DefaultEventHandler {
 	}
 
 	deleteArticleTranslations(itemData) {
-		this._openArticleTranslationsItemSelector(
-			Liferay.Language.get('delete'),
-			Liferay.Language.get('delete-translations'),
-			itemData.selectArticleTranslationsURL,
-			(selectedItems) => {
-				if (
-					confirm(
-						Liferay.Language.get(
-							'are-you-sure-you-want-to-delete-the-selected-entries'
+		openSelectionModal({
+			buttonAddLabel: Liferay.Language.get('delete'),
+			multiple: true,
+			onSelect: (selectedItems) => {
+				if (selectedItems) {
+					if (
+						confirm(
+							Liferay.Language.get(
+								'are-you-sure-you-want-to-delete-the-selected-entries'
+							)
 						)
-					)
-				) {
-					selectedItems.forEach((item) => {
-						document.hrefFm.appendChild(item);
-					});
-				}
+					) {
+						selectedItems.forEach((item) => {
+							document.hrefFm.appendChild(item);
+						});
 
-				submitForm(
-					document.hrefFm,
-					itemData.deleteArticleTranslationsURL
-				);
-			}
-		);
+						submitForm(
+							document.hrefFm,
+							itemData.deleteArticleTranslationsURL
+						);
+					}
+				}
+			},
+			selectEventName: this.ns('selectTranslations'),
+			title: Liferay.Language.get('delete-translations'),
+			url: itemData.selectArticleTranslationsURL,
+		});
 	}
 
 	expireArticles(itemData) {
@@ -104,6 +108,7 @@ class ElementsDefaultEventHandler extends DefaultEventHandler {
 
 	preview(itemData) {
 		openModal({
+			iframeBodyCssClass: '',
 			title: itemData.title,
 			url: itemData.previewURL,
 		});
@@ -139,38 +144,6 @@ class ElementsDefaultEventHandler extends DefaultEventHandler {
 
 	unsubscribeArticle(itemData) {
 		this._send(itemData.unsubscribeArticleURL);
-	}
-
-	/**
-	 * Opens an item selector to select some article translations.
-	 * @param {string} dialogButtonLabel
-	 * @param {string} dialogTitle
-	 * @param {string} selectArticleTranslationsURL
-	 * @param {function} callback Callback executed when some items have been
-	 *  selected. They will be sent as parameters to this callback
-	 * @private
-	 * @review
-	 */
-	_openArticleTranslationsItemSelector(
-		dialogButtonLabel,
-		dialogTitle,
-		selectArticleTranslationsURL,
-		callback
-	) {
-		const itemSelectorDialog = new ItemSelectorDialog({
-			buttonAddLabel: dialogButtonLabel,
-			eventName: this.ns('selectTranslations'),
-			title: dialogTitle,
-			url: selectArticleTranslationsURL,
-		});
-
-		itemSelectorDialog.on('selectedItemChange', (event) => {
-			if (event.selectedItem) {
-				callback(event.selectedItem);
-			}
-		});
-
-		itemSelectorDialog.open();
 	}
 
 	_send(url) {

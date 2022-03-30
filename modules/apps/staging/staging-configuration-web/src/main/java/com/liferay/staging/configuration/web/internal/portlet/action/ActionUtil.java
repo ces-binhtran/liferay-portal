@@ -83,9 +83,6 @@ public class ActionUtil {
 	public static String getTitle(Portlet portlet, RenderRequest renderRequest)
 		throws Exception {
 
-		ServletContext servletContext =
-			(ServletContext)renderRequest.getAttribute(WebKeys.CTX);
-
 		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -95,13 +92,16 @@ public class ActionUtil {
 		PortletPreferences portletSetup = getLayoutPortletSetup(
 			renderRequest, portlet);
 
-		portletSetup = getPortletSetup(
+		portletSetup = _getPortletSetup(
 			httpServletRequest, renderRequest.getPreferences(), portletSetup);
 
 		String title = PortletConfigurationUtil.getPortletTitle(
 			portletSetup, themeDisplay.getLanguageId());
 
 		if (Validator.isNull(title)) {
+			ServletContext servletContext =
+				(ServletContext)renderRequest.getAttribute(WebKeys.CTX);
+
 			title = PortalUtil.getPortletTitle(
 				portlet, servletContext, themeDisplay.getLocale());
 		}
@@ -116,7 +116,7 @@ public class ActionUtil {
 		HttpServletRequest httpServletRequest =
 			PortalUtil.getHttpServletRequest(renderRequest);
 
-		portletPreferences = getPortletPreferences(
+		portletPreferences = _getPortletPreferences(
 			httpServletRequest, renderRequest.getPreferences(),
 			portletPreferences);
 
@@ -129,7 +129,7 @@ public class ActionUtil {
 		return renderRequest;
 	}
 
-	protected static PortletPreferences getPortletPreferences(
+	private static PortletPreferences _getPortletPreferences(
 			HttpServletRequest httpServletRequest,
 			PortletPreferences portletConfigPortletPreferences,
 			PortletPreferences portletPreferences)
@@ -150,11 +150,11 @@ public class ActionUtil {
 			httpServletRequest, portletResource);
 	}
 
-	protected static PortletPreferences getPortletSetup(
+	private static PortletPreferences _getPortletSetup(
 			HttpServletRequest httpServletRequest,
 			PortletPreferences portletConfigPortletSetup,
 			PortletPreferences portletSetup)
-		throws PortalException {
+		throws Exception {
 
 		String portletResource = ParamUtil.getString(
 			httpServletRequest, "portletResource");

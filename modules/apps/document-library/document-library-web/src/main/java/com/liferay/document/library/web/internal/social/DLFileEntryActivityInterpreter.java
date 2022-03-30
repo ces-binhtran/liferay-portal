@@ -28,7 +28,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portlet.documentlibrary.social.DLActivityKeys;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
@@ -38,8 +37,6 @@ import com.liferay.social.kernel.model.SocialActivityInterpreter;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Ryan Park
@@ -93,7 +90,7 @@ public class DLFileEntryActivityInterpreter
 
 		sb.append(StringPool.SPACE);
 
-		String folderLink = getFolderLink(fileEntry, serviceContext);
+		String folderLink = _getFolderLink(fileEntry, serviceContext);
 
 		folderLink = addNoSuchEntryRedirect(
 			folderLink, DLFolder.class.getName(), fileEntry.getFolderId(),
@@ -104,32 +101,12 @@ public class DLFileEntryActivityInterpreter
 		return sb.toString();
 	}
 
-	protected String getFolderLink(
-		FileEntry fileEntry, ServiceContext serviceContext) {
-
-		StringBundler sb = new StringBundler(6);
-
-		sb.append(serviceContext.getPortalURL());
-		sb.append(serviceContext.getPathMain());
-		sb.append("/document_library/find_folder?groupId=");
-		sb.append(fileEntry.getRepositoryId());
-		sb.append("&folderId=");
-		sb.append(fileEntry.getFolderId());
-
-		return sb.toString();
-	}
-
 	@Override
 	protected String getPath(
 		SocialActivity activity, ServiceContext serviceContext) {
 
 		return "/document_library/find_file_entry?fileEntryId=" +
 			activity.getClassPK();
-	}
-
-	@Override
-	protected ResourceBundleLoader getResourceBundleLoader() {
-		return _resourceBundleLoader;
 	}
 
 	@Override
@@ -224,6 +201,15 @@ public class DLFileEntryActivityInterpreter
 		_dlAppLocalService = dlAppLocalService;
 	}
 
+	private String _getFolderLink(
+		FileEntry fileEntry, ServiceContext serviceContext) {
+
+		return StringBundler.concat(
+			serviceContext.getPortalURL(), serviceContext.getPathMain(),
+			"/document_library/find_folder?groupId=",
+			fileEntry.getRepositoryId(), "&folderId=", fileEntry.getFolderId());
+	}
+
 	private static final String[] _CLASS_NAMES = {DLFileEntry.class.getName()};
 
 	private DLAppLocalService _dlAppLocalService;
@@ -233,12 +219,5 @@ public class DLFileEntryActivityInterpreter
 	)
 	private ModelResourcePermission<FileEntry>
 		_fileEntryModelResourcePermission;
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.document.library.web)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

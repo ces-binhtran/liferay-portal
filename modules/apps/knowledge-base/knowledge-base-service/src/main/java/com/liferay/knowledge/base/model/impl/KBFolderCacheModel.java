@@ -37,16 +37,16 @@ public class KBFolderCacheModel
 	implements CacheModel<KBFolder>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof KBFolderCacheModel)) {
+		if (!(object instanceof KBFolderCacheModel)) {
 			return false;
 		}
 
-		KBFolderCacheModel kbFolderCacheModel = (KBFolderCacheModel)obj;
+		KBFolderCacheModel kbFolderCacheModel = (KBFolderCacheModel)object;
 
 		if ((kbFolderId == kbFolderCacheModel.kbFolderId) &&
 			(mvccVersion == kbFolderCacheModel.mvccVersion)) {
@@ -76,12 +76,14 @@ public class KBFolderCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(29);
+		StringBundler sb = new StringBundler(31);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
 		sb.append(", uuid=");
 		sb.append(uuid);
+		sb.append(", externalReferenceCode=");
+		sb.append(externalReferenceCode);
 		sb.append(", kbFolderId=");
 		sb.append(kbFolderId);
 		sb.append(", groupId=");
@@ -122,6 +124,13 @@ public class KBFolderCacheModel
 		}
 		else {
 			kbFolderImpl.setUuid(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			kbFolderImpl.setExternalReferenceCode("");
+		}
+		else {
+			kbFolderImpl.setExternalReferenceCode(externalReferenceCode);
 		}
 
 		kbFolderImpl.setKbFolderId(kbFolderId);
@@ -189,6 +198,7 @@ public class KBFolderCacheModel
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
 		uuid = objectInput.readUTF();
+		externalReferenceCode = objectInput.readUTF();
 
 		kbFolderId = objectInput.readLong();
 
@@ -217,6 +227,13 @@ public class KBFolderCacheModel
 		}
 		else {
 			objectOutput.writeUTF(uuid);
+		}
+
+		if (externalReferenceCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(externalReferenceCode);
 		}
 
 		objectOutput.writeLong(kbFolderId);
@@ -265,6 +282,7 @@ public class KBFolderCacheModel
 
 	public long mvccVersion;
 	public String uuid;
+	public String externalReferenceCode;
 	public long kbFolderId;
 	public long groupId;
 	public long companyId;

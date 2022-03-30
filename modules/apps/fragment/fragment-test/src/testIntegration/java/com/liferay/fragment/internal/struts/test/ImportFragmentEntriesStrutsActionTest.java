@@ -144,7 +144,7 @@ public class ImportFragmentEntriesStrutsActionTest {
 		FragmentCollection fragmentCollection = fragmentCollections.get(0);
 
 		Assert.assertEquals(
-			1,
+			4,
 			_fragmentEntryLocalService.getFragmentEntriesCount(
 				fragmentCollection.getFragmentCollectionId()));
 
@@ -160,48 +160,6 @@ public class ImportFragmentEntriesStrutsActionTest {
 		Assert.assertNotNull(
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
 				_group.getGroupId(), "page-template"));
-	}
-
-	private static Map<String, FileItem[]> _getFileParameters(
-			byte[] bytes, String namespace)
-		throws Exception {
-
-		LiferayFileItemFactory fileItemFactory = new LiferayFileItemFactory(
-			UploadServletRequestImpl.getTempDir());
-
-		LiferayFileItem liferayFileItem = fileItemFactory.createItem(
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(), true,
-			RandomTestUtil.randomString());
-
-		try (OutputStream outputStream = liferayFileItem.getOutputStream()) {
-			outputStream.write(bytes);
-		}
-
-		return HashMapBuilder.<String, FileItem[]>put(
-			namespace, new FileItem[] {liferayFileItem}
-		).build();
-	}
-
-	private static HttpServletRequest _getMultipartHttpServletRequest(
-		byte[] bytes, String fileNameParameter) {
-
-		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
-			new MockMultipartHttpServletRequest();
-
-		mockMultipartHttpServletRequest.addFile(
-			new MockMultipartFile(fileNameParameter, bytes));
-		mockMultipartHttpServletRequest.setContent(bytes);
-		mockMultipartHttpServletRequest.setContentType(
-			"multipart/form-data;boundary=" + System.currentTimeMillis());
-		mockMultipartHttpServletRequest.setCharacterEncoding("UTF-8");
-
-		MockHttpSession mockHttpSession = new MockHttpSession();
-
-		mockHttpSession.setAttribute(ProgressTracker.PERCENT, new Object());
-
-		mockMultipartHttpServletRequest.setSession(mockHttpSession);
-
-		return mockMultipartHttpServletRequest;
 	}
 
 	private byte[] _getFileBytes() throws Exception {
@@ -223,6 +181,55 @@ public class ImportFragmentEntriesStrutsActionTest {
 		}
 
 		return FileUtil.getBytes(zipWriter.getFile());
+	}
+
+	private Map<String, FileItem[]> _getFileParameters(
+			byte[] bytes, String namespace)
+		throws Exception {
+
+		return HashMapBuilder.<String, FileItem[]>put(
+			namespace,
+			() -> {
+				LiferayFileItemFactory fileItemFactory =
+					new LiferayFileItemFactory(
+						UploadServletRequestImpl.getTempDir());
+
+				LiferayFileItem liferayFileItem = fileItemFactory.createItem(
+					RandomTestUtil.randomString(),
+					RandomTestUtil.randomString(), true,
+					RandomTestUtil.randomString());
+
+				try (OutputStream outputStream =
+						liferayFileItem.getOutputStream()) {
+
+					outputStream.write(bytes);
+				}
+
+				return new FileItem[] {liferayFileItem};
+			}
+		).build();
+	}
+
+	private HttpServletRequest _getMultipartHttpServletRequest(
+		byte[] bytes, String fileNameParameter) {
+
+		MockMultipartHttpServletRequest mockMultipartHttpServletRequest =
+			new MockMultipartHttpServletRequest();
+
+		mockMultipartHttpServletRequest.addFile(
+			new MockMultipartFile(fileNameParameter, bytes));
+		mockMultipartHttpServletRequest.setContent(bytes);
+		mockMultipartHttpServletRequest.setContentType(
+			"multipart/form-data;boundary=" + System.currentTimeMillis());
+		mockMultipartHttpServletRequest.setCharacterEncoding("UTF-8");
+
+		MockHttpSession mockHttpSession = new MockHttpSession();
+
+		mockHttpSession.setAttribute(ProgressTracker.PERCENT, new Object());
+
+		mockMultipartHttpServletRequest.setSession(mockHttpSession);
+
+		return mockMultipartHttpServletRequest;
 	}
 
 	private void _processEvents(

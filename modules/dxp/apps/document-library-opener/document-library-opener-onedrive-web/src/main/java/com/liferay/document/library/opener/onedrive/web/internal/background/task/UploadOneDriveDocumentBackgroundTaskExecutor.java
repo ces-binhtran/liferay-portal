@@ -29,12 +29,12 @@ import com.liferay.document.library.opener.service.DLOpenerFileEntryReferenceLoc
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskResult;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusMessageSender;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
 import com.liferay.portal.kernel.backgroundtask.BaseBackgroundTaskExecutor;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.display.BackgroundTaskDisplay;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
@@ -45,7 +45,6 @@ import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 
 import com.microsoft.graph.concurrency.ChunkedUploadProvider;
 import com.microsoft.graph.concurrency.IProgressCallback;
@@ -68,7 +67,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.ResourceBundle;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -144,7 +142,7 @@ public class UploadOneDriveDocumentBackgroundTaskExecutor
 					_dlAppLocalService.getFileEntry(fileEntryId));
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 		}
 
 		return StringPool.BLANK;
@@ -152,11 +150,6 @@ public class UploadOneDriveDocumentBackgroundTaskExecutor
 
 	@Reference
 	protected Language language;
-
-	@Reference(
-		target = "(bundle.symbolic.name=com.liferay.document.library.opener.onedrive.web)"
-	)
-	protected ResourceBundleLoader resourceBundleLoader;
 
 	private IProgressCallback _createIProgressCallback(FileEntry fileEntry) {
 		return new IProgressCallback<DriveItem>() {
@@ -212,10 +205,7 @@ public class UploadOneDriveDocumentBackgroundTaskExecutor
 	}
 
 	private String _translate(Locale locale, String key) {
-		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(
-			locale);
-
-		return language.get(resourceBundle, key);
+		return language.get(locale, key);
 	}
 
 	private void _uploadFile(long userId, FileEntry fileEntry, Locale locale)
@@ -241,15 +231,12 @@ public class UploadOneDriveDocumentBackgroundTaskExecutor
 		jsonObject.add("file", new JsonObject());
 		jsonObject.add("name", new JsonPrimitive(fileEntry.getFileName()));
 
-		JsonObject responseJSONObject = customRequest.post(jsonObject);
+		JsonObject responseJsonObject = customRequest.post(jsonObject);
 
-		JsonPrimitive jsonPrimitive = responseJSONObject.getAsJsonPrimitive(
+		JsonPrimitive jsonPrimitive = responseJsonObject.getAsJsonPrimitive(
 			"id");
 
 		if (fileEntry.getSize() > 0) {
-			DriveItemUploadableProperties driveItemUploadableProperties =
-				new DriveItemUploadableProperties();
-
 			IDriveItemCreateUploadSessionRequest
 				iDriveItemCreateUploadSessionRequest =
 					iGraphServiceClientBuilder.me(
@@ -257,7 +244,7 @@ public class UploadOneDriveDocumentBackgroundTaskExecutor
 					).items(
 						jsonPrimitive.getAsString()
 					).createUploadSession(
-						driveItemUploadableProperties
+						new DriveItemUploadableProperties()
 					).buildRequest();
 
 			ChunkedUploadProvider<DriveItem> chunkedUploadProvider =

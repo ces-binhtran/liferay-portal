@@ -15,10 +15,30 @@
 package com.liferay.layout.admin.web.internal.portlet.action;
 
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
+import com.liferay.layout.admin.web.internal.display.context.LayoutsAdminDisplayContext;
+import com.liferay.layout.admin.web.internal.display.context.MillerColumnsDisplayContext;
+import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandler;
+import com.liferay.layout.admin.web.internal.servlet.taglib.util.LayoutActionDropdownItemsProvider;
+import com.liferay.layout.util.LayoutCopyHelper;
+import com.liferay.layout.util.template.LayoutConverterRegistry;
+import com.liferay.portal.kernel.json.JSONArray;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
+import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.staging.StagingGroupHelper;
+import com.liferay.translation.exporter.TranslationInfoItemFieldValuesExporterTracker;
+import com.liferay.translation.security.permission.TranslationPermission;
+import com.liferay.translation.url.provider.TranslationURLProvider;
+
+import java.util.Iterator;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -33,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/move_layout"
+		"mvc.command.name=/layout_admin/move_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -44,26 +64,100 @@ public class MoveLayoutMVCActionCommand extends BaseAddLayoutMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		long plid = ParamUtil.getLong(actionRequest, "plid");
-
 		long parentPlid = ParamUtil.getLong(actionRequest, "parentPlid");
-		int priority = ParamUtil.getInteger(
-			actionRequest, "priority", Integer.MAX_VALUE);
 
-		Layout layout = layoutLocalService.fetchLayout(plid);
+		JSONArray plidsJSONArray = JSONFactoryUtil.createJSONArray(
+			ParamUtil.getString(actionRequest, "plids"));
 
-		if (layout.getParentPlid() == parentPlid) {
-			_layoutService.updatePriority(plid, priority);
+		Iterator<JSONObject> iterator = plidsJSONArray.iterator();
+
+		try {
+			while (iterator.hasNext()) {
+				JSONObject jsonObject = iterator.next();
+
+				long plid = jsonObject.getLong("plid");
+				int priority = jsonObject.getInt("position");
+
+				Layout layout = layoutLocalService.fetchLayout(plid);
+
+				if (layout.getParentPlid() == parentPlid) {
+					_layoutService.updatePriority(plid, priority);
+				}
+				else {
+					_layoutService.updatePriority(plid, Integer.MAX_VALUE);
+
+					_layoutService.updateParentLayoutIdAndPriority(
+						plid, parentPlid, priority);
+				}
+			}
+
+			LiferayPortletRequest liferayPortletRequest =
+				_portal.getLiferayPortletRequest(actionRequest);
+			LiferayPortletResponse liferayPortletResponse =
+				_portal.getLiferayPortletResponse(actionResponse);
+
+			LayoutsAdminDisplayContext layoutsAdminDisplayContext =
+				new LayoutsAdminDisplayContext(
+					_layoutConverterRegistry, _layoutCopyHelper,
+					liferayPortletRequest, liferayPortletResponse,
+					_stagingGroupHelper);
+
+			JSONObject jsonObject = JSONUtil.put(
+				"layoutColumns",
+				() -> {
+					MillerColumnsDisplayContext millerColumnsDisplayContext =
+						new MillerColumnsDisplayContext(
+							new LayoutActionDropdownItemsProvider(
+								_portal.getHttpServletRequest(
+									liferayPortletRequest),
+								layoutsAdminDisplayContext,
+								_translationPermission,
+								_translationURLProvider),
+							layoutsAdminDisplayContext, liferayPortletRequest,
+							liferayPortletResponse,
+							_translationInfoItemFieldValuesExporterTracker);
+
+					return millerColumnsDisplayContext.
+						getLayoutColumnsJSONArray();
+				});
+
+			JSONPortletResponseUtil.writeJSON(
+				liferayPortletRequest, liferayPortletResponse, jsonObject);
 		}
-		else {
-			_layoutService.updatePriority(plid, Integer.MAX_VALUE);
+		catch (Exception exception) {
+			hideDefaultErrorMessage(actionRequest);
 
-			_layoutService.updateParentLayoutIdAndPriority(
-				plid, parentPlid, priority);
+			_layoutExceptionRequestHandler.handleException(
+				actionRequest, actionResponse, exception);
 		}
 	}
 
 	@Reference
+	private LayoutConverterRegistry _layoutConverterRegistry;
+
+	@Reference
+	private LayoutCopyHelper _layoutCopyHelper;
+
+	@Reference
+	private LayoutExceptionRequestHandler _layoutExceptionRequestHandler;
+
+	@Reference
 	private LayoutService _layoutService;
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private StagingGroupHelper _stagingGroupHelper;
+
+	@Reference
+	private TranslationInfoItemFieldValuesExporterTracker
+		_translationInfoItemFieldValuesExporterTracker;
+
+	@Reference
+	private TranslationPermission _translationPermission;
+
+	@Reference
+	private TranslationURLProvider _translationURLProvider;
 
 }

@@ -50,9 +50,9 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 				<clay:col
 					md="7"
 				>
-					<aui:field-wrapper label="state">
+					<aui:field-wrapper label="status">
 						<aui:fieldset>
-							<%= HtmlUtil.escape(workflowInstanceEditDisplayContext.getWorkflowInstanceState()) %>
+							<%= workflowInstanceEditDisplayContext.getStatus() %>
 						</aui:fieldset>
 					</aui:field-wrapper>
 				</clay:col>
@@ -124,21 +124,46 @@ renderResponse.setTitle(workflowInstanceEditDisplayContext.getHeaderTitle());
 							assetRenderer="<%= assetRenderer %>"
 							template="<%= AssetRenderer.TEMPLATE_ABSTRACT %>"
 						/>
+
+						<c:if test="<%= assetEntry != null %>">
+							<h4 class="task-content-author">
+								<liferay-ui:message key="author" />
+							</h4>
+
+							<liferay-asset:asset-metadata
+								className="<%= assetEntry.getClassName() %>"
+								classPK="<%= assetEntry.getClassPK() %>"
+								metadataFields='<%= new String[] {"author", "categories", "tags"} %>'
+							/>
+						</c:if>
 					</liferay-ui:panel>
 
-					<liferay-ui:panel
-						markupView="lexicon"
-						title="comments"
-					>
-						<liferay-comment:discussion
-							className="<%= assetRenderer.getClassName() %>"
-							classPK="<%= assetRenderer.getClassPK() %>"
-							formName='<%= "fm" + assetRenderer.getClassPK() %>'
-							ratingsEnabled="<%= false %>"
-							redirect="<%= currentURL %>"
-							userId="<%= user.getUserId() %>"
-						/>
-					</liferay-ui:panel>
+					<%
+					WorkflowHandler<?> workflowHandler = workflowInstanceEditDisplayContext.getWorkflowHandler();
+					%>
+
+					<c:if test="<%= workflowHandler.isCommentable() %>">
+
+						<%
+						WorkflowInstance workflowInstance = (WorkflowInstance)renderRequest.getAttribute(WebKeys.WORKFLOW_INSTANCE);
+
+						long discussionClassPK = workflowHandler.getDiscussionClassPK(workflowInstance.getWorkflowContext());
+						%>
+
+						<liferay-ui:panel
+							markupView="lexicon"
+							title="comments"
+						>
+							<liferay-comment:discussion
+								className="<%= assetRenderer.getClassName() %>"
+								classPK="<%= discussionClassPK %>"
+								formName='<%= "fm" + discussionClassPK %>'
+								ratingsEnabled="<%= false %>"
+								redirect="<%= currentURL %>"
+								userId="<%= user.getUserId() %>"
+							/>
+						</liferay-ui:panel>
+					</c:if>
 				</c:if>
 
 				<c:if test="<%= !workflowInstanceEditDisplayContext.isWorkflowTasksEmpty() %>">

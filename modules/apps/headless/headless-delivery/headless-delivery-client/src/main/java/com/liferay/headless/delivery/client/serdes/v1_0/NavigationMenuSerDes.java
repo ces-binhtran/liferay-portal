@@ -61,7 +61,7 @@ public class NavigationMenuSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (navigationMenu.getActions() != null) {
 			if (sb.length() > 1) {
@@ -162,6 +162,20 @@ public class NavigationMenuSerDes {
 			sb.append("]");
 		}
 
+		if (navigationMenu.getNavigationType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"navigationType\": ");
+
+			sb.append("\"");
+
+			sb.append(navigationMenu.getNavigationType());
+
+			sb.append("\"");
+		}
+
 		if (navigationMenu.getSiteId() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -192,7 +206,7 @@ public class NavigationMenuSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
 
 		if (navigationMenu.getActions() == null) {
 			map.put("actions", null);
@@ -249,6 +263,15 @@ public class NavigationMenuSerDes {
 			map.put(
 				"navigationMenuItems",
 				String.valueOf(navigationMenu.getNavigationMenuItems()));
+		}
+
+		if (navigationMenu.getNavigationType() == null) {
+			map.put("navigationType", null);
+		}
+		else {
+			map.put(
+				"navigationType",
+				String.valueOf(navigationMenu.getNavigationType()));
 		}
 
 		if (navigationMenu.getSiteId() == null) {
@@ -330,15 +353,18 @@ public class NavigationMenuSerDes {
 						));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "navigationType")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenu.setNavigationType(
+						NavigationMenu.NavigationType.create(
+							(String)jsonParserFieldValue));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "siteId")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenu.setSiteId(
 						Long.valueOf((String)jsonParserFieldValue));
 				}
-			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
 			}
 		}
 
@@ -368,7 +394,7 @@ public class NavigationMenuSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -404,7 +430,7 @@ public class NavigationMenuSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

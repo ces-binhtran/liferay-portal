@@ -23,10 +23,22 @@ import org.osgi.framework.Bundle;
  */
 public class PassAppLicenseVerifier implements AppLicenseVerifier {
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #verify(String,
+	 *             String, String, String[])}
+	 */
+	@Deprecated
 	@Override
 	public void verify(
 			Bundle bundle, String productId, String productType,
 			String productVersion)
+		throws Exception {
+	}
+
+	@Override
+	public void verify(
+			String productId, String productType, String productVersion,
+			String... bundleSymbolicNames)
 		throws Exception {
 	}
 

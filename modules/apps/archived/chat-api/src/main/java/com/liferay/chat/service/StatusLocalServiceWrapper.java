@@ -26,12 +26,20 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class StatusLocalServiceWrapper
 	implements ServiceWrapper<StatusLocalService>, StatusLocalService {
 
+	public StatusLocalServiceWrapper() {
+		this(null);
+	}
+
 	public StatusLocalServiceWrapper(StatusLocalService statusLocalService) {
 		_statusLocalService = statusLocalService;
 	}
 
 	/**
 	 * Adds the status to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect StatusLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param status the status
 	 * @return the status that was added
@@ -79,6 +87,10 @@ public class StatusLocalServiceWrapper
 	/**
 	 * Deletes the status with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect StatusLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param statusId the primary key of the status
 	 * @return the status that was removed
 	 * @throws PortalException if a status with the primary key could not be found
@@ -93,6 +105,10 @@ public class StatusLocalServiceWrapper
 	/**
 	 * Deletes the status from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect StatusLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param status the status
 	 * @return the status that was removed
 	 */
@@ -106,6 +122,13 @@ public class StatusLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _statusLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _statusLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -336,6 +359,10 @@ public class StatusLocalServiceWrapper
 
 	/**
 	 * Updates the status in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect StatusLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param status the status
 	 * @return the status that was updated

@@ -23,13 +23,11 @@ String tilesPortletContent = GetterUtil.getString(request.getAttribute(WebKeys.P
 
 Portlet portlet = (Portlet)request.getAttribute(WebKeys.RENDER_PORTLET);
 
-PortletPreferences portletSetup = portletDisplay.getPortletSetup();
-
 LiferayRenderResponse liferayRenderResponse = (LiferayRenderResponse)LiferayPortletUtil.getLiferayPortletResponse(renderResponse);
 
 // Portlet title
 
-String portletTitle = PortletConfigurationUtil.getPortletTitle(portletSetup, themeDisplay.getLanguageId());
+String portletTitle = PortletConfigurationUtil.getPortletTitle(portletDisplay.getPortletSetup(), themeDisplay.getLanguageId());
 
 if (portletDisplay.isActive() && Validator.isNull(portletTitle)) {
 	portletTitle = liferayRenderResponse.getTitle();
@@ -44,9 +42,7 @@ portletDisplay.setTitle(portletTitle);
 // Portlet description
 
 if (Validator.isNull(portletDisplay.getDescription())) {
-	String portletDescription = PortalUtil.getPortletDescription(portlet, application, locale);
-
-	portletDisplay.setDescription(portletDescription);
+	portletDisplay.setDescription(PortalUtil.getPortletDescription(portlet, application, locale));
 }
 
 Group group = layout.getGroup();
@@ -72,7 +68,9 @@ Group group = layout.getGroup();
 				<c:otherwise>
 
 					<%
-					pageContext.getOut().print(renderRequest.getAttribute(WebKeys.PORTLET_CONTENT));
+					JspWriter jspWriter = pageContext.getOut();
+
+					jspWriter.print(renderRequest.getAttribute(WebKeys.PORTLET_CONTENT));
 					%>
 
 				</c:otherwise>
@@ -83,7 +81,7 @@ Group group = layout.getGroup();
 		<liferay-theme:wrap-portlet
 			page="portlet.jsp"
 		>
-			<div class='<%= portletDisplay.isStateMin() ? "hide" : "" %> portlet-content-container'>
+			<div class="<%= portletDisplay.isStateMin() ? "hide" : "" %> portlet-content-container">
 				<%@ include file="/html/common/themes/portlet_content_wrapper.jspf" %>
 			</div>
 		</liferay-theme:wrap-portlet>

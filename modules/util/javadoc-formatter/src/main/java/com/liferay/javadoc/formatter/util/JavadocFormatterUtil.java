@@ -18,6 +18,8 @@ import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import com.thoughtworks.qdox.JavaProjectBuilder;
@@ -64,14 +66,14 @@ public class JavadocFormatterUtil {
 
 		Element rootElement = document.addElement("deprecations");
 
-		String[] excludes = {
-			"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
-			"**/classes/**", "**/node_modules/**", "**/node_modules_cache/**",
-			"**/portal-client/**", "**/tmp/**"
-		};
-
 		List<String> fileNames = scanForFiles(
-			dirName, excludes, new String[] {"**/*.java"});
+			dirName,
+			new String[] {
+				"**/.git/**", "**/.gradle/**", "**/bin/**", "**/build/**",
+				"**/classes/**", "**/node_modules/**",
+				"**/node_modules_cache/**", "**/tmp/**"
+			},
+			new String[] {"**/*.java"});
 
 		for (String fileName : fileNames) {
 			fileName = StringUtil.replace(
@@ -87,6 +89,10 @@ public class JavadocFormatterUtil {
 				javaProjectBuilder.addSource(new UnsyncStringReader(content));
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+
 				continue;
 			}
 
@@ -279,12 +285,8 @@ public class JavadocFormatterUtil {
 				(List<Element>)rootElement.elements("deprecated")) {
 
 			if (!annotatedElementName.equals(
-					deprecatedElement.attributeValue("name"))) {
-
-				continue;
-			}
-
-			if (!fullyQualifiedName.equals(
+					deprecatedElement.attributeValue("name")) ||
+				!fullyQualifiedName.equals(
 					deprecatedElement.attributeValue("fullyQualifiedName"))) {
 
 				continue;
@@ -302,9 +304,8 @@ public class JavadocFormatterUtil {
 				JavaExecutable javaExecutable =
 					(JavaExecutable)javaAnnotatedElement;
 
-				List<JavaType> javaTypes = javaExecutable.getParameterTypes();
-
-				String signature = javaTypes.toString();
+				String signature = String.valueOf(
+					javaExecutable.getParameterTypes());
 
 				if (!signature.equals(
 						deprecatedElement.attributeValue("signature"))) {
@@ -363,6 +364,9 @@ public class JavadocFormatterUtil {
 			_parseClass(rootElement, nestedJavaClass, fullyQualifiedName);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JavadocFormatterUtil.class);
 
 	private static final Pattern _deprecatedVersionPattern = Pattern.compile(
 		"As of (\\w+ \\([\\w.]+\\))");

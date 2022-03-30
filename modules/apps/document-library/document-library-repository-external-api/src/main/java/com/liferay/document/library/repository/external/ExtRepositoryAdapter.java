@@ -72,6 +72,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -84,9 +85,11 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 
 	@Override
 	public FileEntry addFileEntry(
-			long userId, long folderId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog,
-			InputStream inputStream, long size, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		String fileName = null;
@@ -310,15 +313,16 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@Override
 	public List<FileEntry> getFileEntries(
 			long folderId, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
-		return getFileEntries(folderId, start, end, obc);
+		return getFileEntries(folderId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getFileEntries(
-			long folderId, int start, int end, OrderByComparator<FileEntry> obc)
+			long folderId, int start, int end,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		String extRepositoryFolderKey = getExtRepositoryObjectKey(folderId);
@@ -331,19 +335,20 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 			_toExtRepositoryObjectAdapters(
 				ExtRepositoryObjectAdapterType.FILE, extRepositoryFileEntries);
 
-		return _sublist(extRepositoryFileEntryAdapters, start, end, obc);
+		return _sublist(
+			extRepositoryFileEntryAdapters, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getFileEntries(
 			long folderId, long fileEntryTypeId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		if (fileEntryTypeId ==
 				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT) {
 
-			return getFileEntries(folderId, start, end, obc);
+			return getFileEntries(folderId, start, end, orderByComparator);
 		}
 
 		return Collections.emptyList();
@@ -352,7 +357,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@Override
 	public List<FileEntry> getFileEntries(
 			long folderId, String[] mimeTypes, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		String extRepositoryFolderKey = getExtRepositoryObjectKey(folderId);
@@ -368,7 +373,8 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 		extRepositoryFileEntryAdapters = _filterByMimeType(
 			extRepositoryFileEntryAdapters, mimeTypes);
 
-		return _sublist(extRepositoryFileEntryAdapters, start, end, obc);
+		return _sublist(
+			extRepositoryFileEntryAdapters, start, end, orderByComparator);
 	}
 
 	@Override
@@ -528,7 +534,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@Override
 	public List<Folder> getFolders(
 			long parentFolderId, boolean includeMountFolders, int start,
-			int end, OrderByComparator<Folder> obc)
+			int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException {
 
 		String extRepositoryParentFolderKey = getExtRepositoryObjectKey(
@@ -542,12 +548,14 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 			_toExtRepositoryObjectAdapters(
 				ExtRepositoryObjectAdapterType.FOLDER, extRepositoryFolders);
 
-		return _sublist(extRepositoryFolderAdapters, start, end, obc);
+		return _sublist(
+			extRepositoryFolderAdapters, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<Object> getFoldersAndFileEntries(
-		long folderId, int start, int end, OrderByComparator<?> obc) {
+		long folderId, int start, int end,
+		OrderByComparator<?> orderByComparator) {
 
 		try {
 			String extRepositoryFolderKey = getExtRepositoryObjectKey(folderId);
@@ -563,7 +571,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 
 			return _sublist(
 				extRepositoryObjectAdapters, start, end,
-				(OrderByComparator<Object>)obc);
+				(OrderByComparator<Object>)orderByComparator);
 		}
 		catch (Exception exception) {
 			throw new RepositoryException(exception);
@@ -573,7 +581,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@Override
 	public List<Object> getFoldersAndFileEntries(
 			long folderId, String[] mimeTypes, int start, int end,
-			OrderByComparator<?> obc)
+			OrderByComparator<?> orderByComparator)
 		throws PortalException {
 
 		String extRepositoryFolderKey = getExtRepositoryObjectKey(folderId);
@@ -591,7 +599,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 
 		return _sublist(
 			extRepositoryObjectAdapters, start, end,
-			(OrderByComparator<Object>)obc);
+			(OrderByComparator<Object>)orderByComparator);
 	}
 
 	@Override
@@ -652,7 +660,7 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@SuppressWarnings("unused")
 	public List<Folder> getMountFolders(
 			long parentFolderId, int start, int end,
-			OrderByComparator<Folder> obc)
+			OrderByComparator<Folder> orderByComparator)
 		throws PortalException {
 
 		return Collections.emptyList();
@@ -875,6 +883,10 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				}
 				catch (UnsupportedOperationException
 							unsupportedOperationException) {
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(unsupportedOperationException);
+					}
 				}
 			}
 
@@ -882,16 +894,21 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				extRepositoryFileEntryKey,
 				extRepositoryFileVersion.getMimeType(), inputStream);
 
-			String changeLog = LanguageUtil.format(
-				serviceContext.getLocale(), "reverted-to-x", version, false);
-
 			if (needsCheckIn) {
+				String changeLog = LanguageUtil.format(
+					serviceContext.getLocale(), "reverted-to-x", version,
+					false);
+
 				try {
 					_extRepository.checkInExtRepositoryFileEntry(
 						extRepositoryFileEntryKey, true, changeLog);
 				}
 				catch (UnsupportedOperationException
 							unsupportedOperationException) {
+
+					if (_log.isDebugEnabled()) {
+						_log.debug(unsupportedOperationException);
+					}
 				}
 			}
 		}
@@ -950,6 +967,10 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 				extRepositorySearchResults) {
 
 			try {
+				if (extRepositorySearchResult.getObject() == null) {
+					continue;
+				}
+
 				ExtRepositoryObjectAdapter<?> extRepositoryEntryAdapter =
 					_toExtRepositoryObjectAdapter(
 						ExtRepositoryObjectAdapterType.OBJECT,
@@ -1013,9 +1034,10 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	@Override
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease,
-			InputStream inputStream, long size, ServiceContext serviceContext)
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		boolean needsCheckIn = false;
@@ -1323,10 +1345,11 @@ public class ExtRepositoryAdapter extends BaseRepositoryImpl {
 	}
 
 	private <T, V extends T> List<T> _sublist(
-		List<V> list, int start, int end, OrderByComparator<T> obc) {
+		List<V> list, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
-		if (obc != null) {
-			list = ListUtil.sort(list, obc);
+		if (orderByComparator != null) {
+			list = ListUtil.sort(list, orderByComparator);
 		}
 
 		return (List<T>)ListUtil.toList(ListUtil.subList(list, start, end));

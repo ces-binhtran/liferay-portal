@@ -12,9 +12,12 @@
  * details.
  */
 
+import {ReactPortal} from '@liferay/frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React from 'react';
-import ReactDOM from 'react-dom';
+
+import RawDOM from '../../common/components/RawDOM';
+import isNullOrUndefined from '../utils/isNullOrUndefined';
 
 /**
  * DOM node which will be manually updated and injects
@@ -31,7 +34,7 @@ export default class UnsafeHTML extends React.PureComponent {
 			this._syncRefProps();
 
 			if (
-				!this.state.ref.innerHTML ||
+				(!this.state.ref.childNodes.length && this.props.markup) ||
 				prevProps.markup !== this.props.markup
 			) {
 				this._syncRefContent();
@@ -48,7 +51,7 @@ export default class UnsafeHTML extends React.PureComponent {
 
 		const scriptElements = Array.from(
 			this.state.ref.querySelectorAll('script')
-		);
+		).filter((script) => !script.type || script.type === 'text/javascript');
 
 		const runNextScript = () => {
 			if (scriptElements.length) {
@@ -105,7 +108,34 @@ export default class UnsafeHTML extends React.PureComponent {
 	 */
 	_syncRefProps() {
 		const ref = this.state.ref;
-		ref.className = this.props.className;
+
+		if (this.props.className) {
+			ref.className = this.props.className;
+		}
+		else {
+			ref.removeAttribute('class');
+		}
+
+		if (this.props.data) {
+			Object.entries(this.props.data).forEach(([key, value]) => {
+				ref.dataset[key] = value;
+			});
+		}
+
+		if (this.props.id) {
+			ref.id = this.props.id;
+		}
+		else {
+			ref.removeAttribute('id');
+		}
+
+		ref.removeAttribute('style');
+
+		Object.entries(this.props.style).forEach(([key, value]) => {
+			if (!isNullOrUndefined(value)) {
+				ref.style[key] = value;
+			}
+		});
 	}
 
 	/**
@@ -139,13 +169,15 @@ export default class UnsafeHTML extends React.PureComponent {
 		return (
 			<>
 				<RawDOM
-					elementRef={this._updateRef}
 					TagName={this.props.TagName}
+					elementRef={this._updateRef}
 				/>
 
-				{this.state.portals.map(({Component, element}) =>
-					ReactDOM.createPortal(<Component />, element)
-				)}
+				{this.state.portals.map(({Component, element}, i) => (
+					<ReactPortal container={element} key={i}>
+						<Component />
+					</ReactPortal>
+				))}
 			</>
 		);
 	}
@@ -156,9 +188,14 @@ UnsafeHTML.defaultProps = {
 	className: '',
 	contentRef: null,
 	getPortals: () => [],
-	globalContext: window,
+	globalContext: {
+		document,
+		window,
+	},
+	id: '',
 	markup: '',
 	onRender: () => {},
+	style: {},
 };
 
 UnsafeHTML.propTypes = {
@@ -169,32 +206,12 @@ UnsafeHTML.propTypes = {
 		PropTypes.shape({current: PropTypes.object}),
 	]),
 	getPortals: PropTypes.func,
-	globalContext: PropTypes.object,
+	globalContext: PropTypes.shape({
+		document: PropTypes.object,
+		window: PropTypes.object,
+	}),
+	id: PropTypes.string,
 	markup: PropTypes.string,
 	onRender: PropTypes.func,
-};
-
-/**
- * Creates a DOM node that will be kept forever
- * to allow manipulating the DOM manually.
- */
-class RawDOM extends React.Component {
-	shouldComponentUpdate() {
-		return false;
-	}
-
-	render() {
-		const TagName = this.props.TagName;
-
-		return <TagName ref={this.props.elementRef} />;
-	}
-}
-
-RawDOM.defaultProps = {
-	TagName: 'div',
-};
-
-RawDOM.propTypes = {
-	TagName: PropTypes.string,
-	elementRef: PropTypes.func.isRequired,
+	style: PropTypes.object,
 };

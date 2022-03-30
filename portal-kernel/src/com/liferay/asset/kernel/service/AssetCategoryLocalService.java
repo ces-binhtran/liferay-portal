@@ -19,6 +19,7 @@ import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -63,6 +64,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see AssetCategoryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -75,11 +77,15 @@ public interface AssetCategoryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AssetCategoryLocalServiceUtil} to access the asset category local service. Add custom service methods to <code>com.liferay.portlet.asset.service.impl.AssetCategoryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.asset.service.impl.AssetCategoryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the asset category local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AssetCategoryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the asset category to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was added
@@ -87,17 +93,11 @@ public interface AssetCategoryLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public AssetCategory addAssetCategory(AssetCategory assetCategory);
 
-	public void addAssetEntryAssetCategories(
-		long entryId, List<AssetCategory> assetCategories);
-
-	public void addAssetEntryAssetCategories(long entryId, long[] categoryIds);
-
-	public void addAssetEntryAssetCategory(
-		long entryId, AssetCategory assetCategory);
-
-	public void addAssetEntryAssetCategory(long entryId, long categoryId);
-
-	@Indexable(type = IndexableType.REINDEX)
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addCategory(String, long, long, long, Map, Map, long, String[], ServiceContext)}
+	 */
+	@Deprecated
 	public AssetCategory addCategory(
 			long userId, long groupId, long parentCategoryId,
 			Map<Locale, String> titleMap, Map<Locale, String> descriptionMap,
@@ -110,6 +110,14 @@ public interface AssetCategoryLocalService
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
+	public AssetCategory addCategory(
+			String externalReferenceCode, long userId, long groupId,
+			long parentCategoryId, Map<Locale, String> titleMap,
+			Map<Locale, String> descriptionMap, long vocabularyId,
+			String[] categoryProperties, ServiceContext serviceContext)
+		throws PortalException;
+
 	public void addCategoryResources(
 			AssetCategory category, boolean addGroupPermissions,
 			boolean addGuestPermissions)
@@ -118,8 +126,6 @@ public interface AssetCategoryLocalService
 	public void addCategoryResources(
 			AssetCategory category, ModelPermissions modelPermissions)
 		throws PortalException;
-
-	public void clearAssetEntryAssetCategories(long entryId);
 
 	/**
 	 * Creates a new asset category with the primary key. Does not add the asset category to the database.
@@ -139,6 +145,10 @@ public interface AssetCategoryLocalService
 	/**
 	 * Deletes the asset category from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was removed
 	 */
@@ -148,6 +158,10 @@ public interface AssetCategoryLocalService
 	/**
 	 * Deletes the asset category with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param categoryId the primary key of the asset category
 	 * @return the asset category that was removed
 	 * @throws PortalException if a asset category with the primary key could not be found
@@ -155,17 +169,6 @@ public interface AssetCategoryLocalService
 	@Indexable(type = IndexableType.DELETE)
 	public AssetCategory deleteAssetCategory(long categoryId)
 		throws PortalException;
-
-	public void deleteAssetEntryAssetCategories(
-		long entryId, List<AssetCategory> assetCategories);
-
-	public void deleteAssetEntryAssetCategories(
-		long entryId, long[] categoryIds);
-
-	public void deleteAssetEntryAssetCategory(
-		long entryId, AssetCategory assetCategory);
-
-	public void deleteAssetEntryAssetCategory(long entryId, long categoryId);
 
 	public void deleteCategories(List<AssetCategory> categories)
 		throws PortalException;
@@ -195,6 +198,9 @@ public interface AssetCategoryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -266,15 +272,23 @@ public interface AssetCategoryLocalService
 	public AssetCategory fetchAssetCategory(long categoryId);
 
 	/**
-	 * Returns the asset category with the matching external reference code and company.
+	 * Returns the asset category with the matching external reference code and group.
 	 *
-	 * @param companyId the primary key of the company
+	 * @param groupId the primary key of the group
 	 * @param externalReferenceCode the asset category's external reference code
 	 * @return the matching asset category, or <code>null</code> if a matching asset category could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetCategory fetchAssetCategoryByExternalReferenceCode(
+		long groupId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAssetCategoryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AssetCategory fetchAssetCategoryByReferenceCode(
-		long companyId, String externalReferenceCode);
+		long groupId, String externalReferenceCode);
 
 	/**
 	 * Returns the asset category matching the UUID and group.
@@ -357,6 +371,19 @@ public interface AssetCategoryLocalService
 		throws PortalException;
 
 	/**
+	 * Returns the asset category with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the asset category's external reference code
+	 * @return the matching asset category
+	 * @throws PortalException if a matching asset category could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AssetCategory getAssetCategoryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	/**
 	 * Returns the asset category matching the UUID and group.
 	 *
 	 * @param uuid the asset category's UUID
@@ -368,30 +395,6 @@ public interface AssetCategoryLocalService
 	public AssetCategory getAssetCategoryByUuidAndGroupId(
 			String uuid, long groupId)
 		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetCategory> getAssetEntryAssetCategories(long entryId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetCategory> getAssetEntryAssetCategories(
-		long entryId, int start, int end);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<AssetCategory> getAssetEntryAssetCategories(
-		long entryId, int start, int end,
-		OrderByComparator<AssetCategory> orderByComparator);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getAssetEntryAssetCategoriesCount(long entryId);
-
-	/**
-	 * Returns the entryIds of the asset entries associated with the asset category.
-	 *
-	 * @param categoryId the categoryId of the asset category
-	 * @return long[] the entryIds of asset entries associated with the asset category
-	 */
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public long[] getAssetEntryPrimaryKeys(long categoryId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetCategory> getCategories();
@@ -431,7 +434,7 @@ public interface AssetCategoryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetCategory> getChildCategories(
 		long parentCategoryId, int start, int end,
-		OrderByComparator<AssetCategory> obc);
+		OrderByComparator<AssetCategory> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getChildCategoriesCount(long parentCategoryId);
@@ -475,12 +478,12 @@ public interface AssetCategoryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetCategory> getVocabularyCategories(
 		long vocabularyId, int start, int end,
-		OrderByComparator<AssetCategory> obc);
+		OrderByComparator<AssetCategory> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetCategory> getVocabularyCategories(
 		long parentCategoryId, long vocabularyId, int start, int end,
-		OrderByComparator<AssetCategory> obc);
+		OrderByComparator<AssetCategory> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getVocabularyCategoriesCount(long vocabularyId);
@@ -488,16 +491,10 @@ public interface AssetCategoryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AssetCategory> getVocabularyRootCategories(
 		long vocabularyId, int start, int end,
-		OrderByComparator<AssetCategory> obc);
+		OrderByComparator<AssetCategory> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getVocabularyRootCategoriesCount(long vocabularyId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public boolean hasAssetEntryAssetCategories(long entryId);
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public boolean hasAssetEntryAssetCategory(long entryId, long categoryId);
 
 	@Indexable(type = IndexableType.REINDEX)
 	public AssetCategory mergeCategories(long fromCategoryId, long toCategoryId)
@@ -538,10 +535,12 @@ public interface AssetCategoryLocalService
 			long[] parentCategoryIds, int start, int end, Sort sort)
 		throws PortalException;
 
-	public void setAssetEntryAssetCategories(long entryId, long[] categoryIds);
-
 	/**
 	 * Updates the asset category in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was updated

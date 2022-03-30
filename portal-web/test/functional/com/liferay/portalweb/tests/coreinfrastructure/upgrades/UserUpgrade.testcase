@@ -116,6 +116,7 @@ definition {
 	@priority = "5"
 	test ResetTestUserPasswordAfterUpgrade621015 {
 		property data.archive.type = "data-archive-portal";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.15";
 		property setup.wizard.enabled = "true";
 
@@ -126,6 +127,7 @@ definition {
 	@priority = "5"
 	test ResetTestUserPasswordAfterUpgrade621021 {
 		property data.archive.type = "data-archive-portal";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.21";
 		property setup.wizard.enabled = "true";
 
@@ -140,12 +142,7 @@ definition {
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -158,12 +155,7 @@ definition {
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -176,12 +168,46 @@ definition {
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		SearchAdministration.executeReindex();
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		Upgrade.viewAndEditUser();
+	}
+
+	@priority = "5"
+	test ViewAndEditUserAfterUpgrade720 {
+		property data.archive.type = "data-archive-user";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.2.0";
+
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
+
+		Upgrade.viewAndEditUser();
+	}
+
+	@priority = "5"
+	test ViewAndEditUserAfterUpgrade721 {
+		property data.archive.type = "data-archive-user";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.2.1";
+
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
+
+		Upgrade.viewAndEditUser();
+	}
+
+	@priority = "5"
+	test ViewAndEditUserAfterUpgrade730 {
+		property data.archive.type = "data-archive-user";
+		property database.types = "mariadb,mysql,postgresql";
+		property portal.version = "7.3.0";
+
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -189,17 +215,23 @@ definition {
 	@priority = "5"
 	test ViewAndEditUserAfterUpgrade7110 {
 		property data.archive.type = "data-archive-user";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.1.10";
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		SearchAdministration.executeReindex();
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		Upgrade.viewAndEditUser();
+	}
+
+	@priority = "5"
+	test ViewAndEditUserAfterUpgrade7210 {
+		property data.archive.type = "data-archive-user";
+		property portal.version = "7.2.10";
+
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -207,17 +239,23 @@ definition {
 	@priority = "5"
 	test ViewAndEditUserAfterUpgrade70106 {
 		property data.archive.type = "data-archive-user";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.0.10.6";
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
+		SearchAdministration.executeReindex();
 
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		Upgrade.viewAndEditUser();
+	}
+
+	@priority = "5"
+	test ViewAndEditUserAfterUpgrade72101 {
+		property data.archive.type = "data-archive-user";
+		property portal.version = "7.2.10.1";
+
+		SignIn.signIn();
+
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -230,12 +268,7 @@ definition {
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}
@@ -248,12 +281,7 @@ definition {
 
 		SignIn.signIn();
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 
 		Upgrade.viewAndEditUser();
 	}

@@ -27,6 +27,10 @@ public class KaleoTaskFormLocalServiceWrapper
 	implements KaleoTaskFormLocalService,
 			   ServiceWrapper<KaleoTaskFormLocalService> {
 
+	public KaleoTaskFormLocalServiceWrapper() {
+		this(null);
+	}
+
 	public KaleoTaskFormLocalServiceWrapper(
 		KaleoTaskFormLocalService kaleoTaskFormLocalService) {
 
@@ -35,6 +39,10 @@ public class KaleoTaskFormLocalServiceWrapper
 
 	/**
 	 * Adds the kaleo task form to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskFormLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskForm the kaleo task form
 	 * @return the kaleo task form that was added
@@ -103,6 +111,10 @@ public class KaleoTaskFormLocalServiceWrapper
 	/**
 	 * Deletes the kaleo task form from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskFormLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTaskForm the kaleo task form
 	 * @return the kaleo task form that was removed
 	 */
@@ -117,6 +129,10 @@ public class KaleoTaskFormLocalServiceWrapper
 
 	/**
 	 * Deletes the kaleo task form with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskFormLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskFormId the primary key of the kaleo task form
 	 * @return the kaleo task form that was removed
@@ -144,6 +160,13 @@ public class KaleoTaskFormLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kaleoTaskFormLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kaleoTaskFormLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -332,6 +355,10 @@ public class KaleoTaskFormLocalServiceWrapper
 
 	/**
 	 * Updates the kaleo task form in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskFormLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskForm the kaleo task form
 	 * @return the kaleo task form that was updated

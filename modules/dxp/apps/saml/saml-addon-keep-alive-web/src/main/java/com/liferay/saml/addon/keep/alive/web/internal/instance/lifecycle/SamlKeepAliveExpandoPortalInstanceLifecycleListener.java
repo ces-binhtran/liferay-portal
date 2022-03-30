@@ -22,6 +22,7 @@ import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.instance.lifecycle.BasePortalInstanceLifecycleListener;
+import com.liferay.portal.instance.lifecycle.Clusterable;
 import com.liferay.portal.instance.lifecycle.PortalInstanceLifecycleListener;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -38,15 +39,15 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(immediate = true, service = PortalInstanceLifecycleListener.class)
 public class SamlKeepAliveExpandoPortalInstanceLifecycleListener
-	extends BasePortalInstanceLifecycleListener {
+	extends BasePortalInstanceLifecycleListener implements Clusterable {
 
 	@Override
 	public void portalInstanceRegistered(Company company) throws Exception {
-		addExpandoColumn(company.getCompanyId(), SamlIdpSpConnection.class);
-		addExpandoColumn(company.getCompanyId(), SamlSpIdpConnection.class);
+		_addExpandoColumn(company.getCompanyId(), SamlIdpSpConnection.class);
+		_addExpandoColumn(company.getCompanyId(), SamlSpIdpConnection.class);
 	}
 
-	protected void addExpandoColumn(long companyId, Class<?> clazz)
+	private void _addExpandoColumn(long companyId, Class<?> clazz)
 		throws Exception {
 
 		if (_log.isDebugEnabled()) {
@@ -63,7 +64,7 @@ public class SamlKeepAliveExpandoPortalInstanceLifecycleListener
 		}
 		catch (NoSuchTableException noSuchTableException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchTableException, noSuchTableException);
+				_log.debug(noSuchTableException);
 			}
 
 			expandoTable = _expandoTableLocalService.addDefaultTable(

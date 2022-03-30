@@ -20,7 +20,6 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -109,7 +108,7 @@ public class BackgroundTaskThreadLocalManagerImpl
 		long companyId = GetterUtil.getLong(threadLocalValues.get("companyId"));
 
 		if (companyId > 0) {
-			CompanyThreadLocal.setCompanyId(requireCompany(companyId));
+			CompanyThreadLocal.setCompanyId(_requireCompany(companyId));
 		}
 
 		Boolean clusterInvoke = (Boolean)threadLocalValues.get("clusterInvoke");
@@ -135,16 +134,12 @@ public class BackgroundTaskThreadLocalManagerImpl
 
 		if (Validator.isNotNull(principalName)) {
 			PrincipalThreadLocal.setName(principalName);
-		}
 
-		if (Validator.isNotNull(principalName)) {
 			User user = _userLocalService.fetchUser(
 				PrincipalThreadLocal.getUserId());
 
-			PermissionChecker permissionChecker =
-				_permissionCheckerFactory.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				_permissionCheckerFactory.create(user));
 		}
 
 		Locale siteDefaultLocale = (Locale)threadLocalValues.get(
@@ -160,17 +155,6 @@ public class BackgroundTaskThreadLocalManagerImpl
 		if (themeDisplayLocale != null) {
 			LocaleThreadLocal.setThemeDisplayLocale(themeDisplayLocale);
 		}
-	}
-
-	protected long requireCompany(long companyId) {
-		Company company = companyLocalService.fetchCompany(companyId);
-
-		if (company != null) {
-			return companyId;
-		}
-
-		throw new StaleBackgroundTaskException(
-			"Unable to find company " + companyId);
 	}
 
 	@Reference(unbind = "-")
@@ -189,6 +173,17 @@ public class BackgroundTaskThreadLocalManagerImpl
 
 	@Reference
 	protected CompanyLocalService companyLocalService;
+
+	private long _requireCompany(long companyId) {
+		Company company = companyLocalService.fetchCompany(companyId);
+
+		if (company != null) {
+			return companyId;
+		}
+
+		throw new StaleBackgroundTaskException(
+			"Unable to find company " + companyId);
+	}
 
 	private PermissionCheckerFactory _permissionCheckerFactory;
 	private UserLocalService _userLocalService;

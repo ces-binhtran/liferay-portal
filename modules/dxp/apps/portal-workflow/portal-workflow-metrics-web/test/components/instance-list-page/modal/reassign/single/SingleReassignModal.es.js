@@ -9,14 +9,15 @@
  * distribution rights of the Software.
  */
 
-import {fireEvent, render} from '@testing-library/react';
-import React, {useState} from 'react';
+import {act, fireEvent, render} from '@testing-library/react';
+import React from 'react';
 
 import {InstanceListContext} from '../../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/InstanceListPageProvider.es';
 import {ModalContext} from '../../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/ModalProvider.es';
 import SingleReassignModal from '../../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/reassign/single/SingleReassignModal.es';
 import ToasterProvider from '../../../../../../src/main/resources/META-INF/resources/js/shared/components/toaster/ToasterProvider.es';
 import {MockRouter} from '../../../../../mock/MockRouter.es';
+import FetchMock, {fetchMockResponse} from '../../../../../mock/fetch.es';
 
 import '@testing-library/jest-dom/extend-expect';
 
@@ -29,7 +30,6 @@ const ContainerMock = ({children}) => {
 		status: 'In Progress',
 		taskNames: ['Review'],
 	};
-	const [visibleModal, setVisibleModal] = useState('singleReassign');
 
 	return (
 		<InstanceListContext.Provider
@@ -37,7 +37,7 @@ const ContainerMock = ({children}) => {
 				selectedInstance,
 			}}
 		>
-			<ModalContext.Provider value={{setVisibleModal, visibleModal}}>
+			<ModalContext.Provider value={{visibleModal: 'singleReassign'}}>
 				<ToasterProvider>{children}</ToasterProvider>
 			</ModalContext.Provider>
 		</InstanceListContext.Provider>
@@ -45,7 +45,7 @@ const ContainerMock = ({children}) => {
 };
 
 describe('The SingleReassignModal component should', () => {
-	let getByTestId;
+	let getByText;
 
 	const items = [
 		{
@@ -54,12 +54,11 @@ describe('The SingleReassignModal component should', () => {
 		},
 	];
 
-	const clientMock = {
-		get: jest
-			.fn()
-			.mockRejectedValueOnce(new Error('Request failed'))
-			.mockResolvedValueOnce({
-				data: {
+	const fetchMock = new FetchMock({
+		GET: {
+			default: [
+				fetchMockResponse({}, false),
+				fetchMockResponse({
 					items: [
 						{
 							assigneePerson: {id: 2, name: 'Test Test'},
@@ -74,88 +73,111 @@ describe('The SingleReassignModal component should', () => {
 						},
 					],
 					totalCount: items.length,
-				},
-			})
-			.mockResolvedValue({data: {items}}),
-		post: jest
-			.fn()
-			.mockRejectedValueOnce(new Error('Request failed'))
-			.mockResolvedValue({data: {items: []}}),
-	};
+				}),
+				fetchMockResponse({items}),
+			],
+		},
+		POST: {
+			default: [
+				fetchMockResponse(new Error('Request failed'), false),
+				fetchMockResponse({items: []}),
+			],
+		},
+	});
 
-	beforeAll(() => {
+	beforeAll(async () => {
 		const renderResult = render(
-			<MockRouter client={clientMock}>
+			<MockRouter>
 				<SingleReassignModal />
 			</MockRouter>,
 			{
 				wrapper: ContainerMock,
 			}
 		);
-		getByTestId = renderResult.getByTestId;
 
-		jest.runAllTimers();
+		getByText = renderResult.getByText;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Render modal with error message and retry', () => {
-		const alertError = getByTestId('alertError');
-		const emptyState = getByTestId('emptyState');
-		const retryBtn = getByTestId('retryButton');
+	beforeEach(() => {
+		fetchMock.mock();
+	});
 
-		expect(alertError).toHaveTextContent('your-request-has-failed');
-		expect(retryBtn).toHaveTextContent('retry');
-		expect(emptyState).toHaveTextContent('unable-to-retrieve-data');
+	afterEach(() => {
+		fetchMock.reset();
+	});
+
+	it('Render modal with error message and retry', async () => {
+		const alertError = getByText('your-request-has-failed');
+		const emptyStateMessage = getByText('unable-to-retrieve-data');
+		const retryBtn = getByText('retry');
+
+		expect(alertError).toBeTruthy();
+		expect(emptyStateMessage).toBeTruthy();
 
 		fireEvent.click(retryBtn);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Render modal with items', () => {
-		const table = getByTestId('singleReassignModalTable');
+	it('Render modal with items', async () => {
+		const cancelBtn = getByText('cancel');
+		const reassignBtn = getByText('reassign');
+		const table = document.querySelector('.table');
+
 		const item = table.children[1].children[0];
-		const cancelBtn = getByTestId('cancelButton');
-		const reassignBtn = getByTestId('reassignButton');
 
 		expect(cancelBtn).not.toHaveAttribute('disabled');
 		expect(reassignBtn).toHaveAttribute('disabled');
-
 		expect(item.children[0]).toHaveTextContent('1');
 		expect(item.children[1]).toHaveTextContent('Blogs Entry: Blog1');
 		expect(item.children[2]).toHaveTextContent('Review');
 		expect(item.children[3]).toHaveTextContent('Test Test');
 
-		const autocompleteInput = getByTestId('autocompleteInput');
+		const autocompleteInput = document.querySelector('input.form-control');
 
 		fireEvent.change(autocompleteInput, {target: {value: 'test'}});
 
-		fireEvent.mouseDown(getByTestId('dropDownListItem'));
+		fireEvent.mouseDown(document.querySelector('.dropdown-item'));
 
 		expect(reassignBtn).not.toHaveAttribute('disabled');
 
 		fireEvent.click(reassignBtn);
 
-		expect(cancelBtn).toHaveAttribute('disabled');
-		expect(reassignBtn).toHaveAttribute('disabled');
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Render modal reassign error and retry', () => {
-		const alertError = getByTestId('alertError');
-		const reassignBtn = getByTestId('reassignButton');
+	it('Render modal reassign error and retry', async () => {
+		const alertError = getByText('your-request-has-failed');
+		const reassignBtn = getByText('reassign');
 
-		expect(alertError).toHaveTextContent('your-request-has-failed');
+		expect(alertError).toBeTruthy();
 		expect(reassignBtn).not.toHaveAttribute('disabled');
 
 		fireEvent.click(reassignBtn);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Render alert with success message and close modal', () => {
-		const alertToast = getByTestId('alertToast');
+	it('Render alert with success message and close modal', async () => {
+		const alertToast = document.querySelector('.alert-dismissible');
+
 		const alertClose = alertToast.children[1];
 
 		expect(alertToast).toHaveTextContent('this-task-has-been-reassigned');
 
 		fireEvent.click(alertClose);
 
-		const alertContainer = getByTestId('alertContainer');
+		const alertContainer = document.querySelector('.alert-container');
 		expect(alertContainer.children[0].children.length).toBe(0);
 	});
 });

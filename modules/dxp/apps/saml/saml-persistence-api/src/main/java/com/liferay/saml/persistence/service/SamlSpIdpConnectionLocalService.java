@@ -61,11 +61,24 @@ public interface SamlSpIdpConnectionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SamlSpIdpConnectionLocalServiceUtil} to access the saml sp idp connection local service. Add custom service methods to <code>com.liferay.saml.persistence.service.impl.SamlSpIdpConnectionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.saml.persistence.service.impl.SamlSpIdpConnectionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the saml sp idp connection local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SamlSpIdpConnectionLocalServiceUtil} if injection and service tracking are not available.
 	 */
+	public SamlSpIdpConnection addSamlSpIdpConnection(
+			boolean assertionSignatureRequired, long clockSkew, boolean enabled,
+			boolean forceAuthn, boolean ldapImportEnabled, String metadataUrl,
+			InputStream metadataXmlInputStream, String name,
+			String nameIdFormat, String samlIdpEntityId,
+			boolean signAuthnRequest, boolean unknownUsersAreStrangers,
+			String userAttributeMappings, String userIdentifierExpression,
+			ServiceContext serviceContext)
+		throws PortalException;
 
 	/**
 	 * Adds the saml sp idp connection to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpIdpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlSpIdpConnection the saml sp idp connection
 	 * @return the saml sp idp connection that was added
@@ -73,32 +86,6 @@ public interface SamlSpIdpConnectionLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public SamlSpIdpConnection addSamlSpIdpConnection(
 		SamlSpIdpConnection samlSpIdpConnection);
-
-	public SamlSpIdpConnection addSamlSpIdpConnection(
-			String samlIdpEntityId, boolean assertionSignatureRequired,
-			long clockSkew, boolean enabled, boolean forceAuthn,
-			boolean ldapImportEnabled, String metadataUrl,
-			InputStream metadataXmlInputStream, String name,
-			String nameIdFormat, boolean signAuthnRequest,
-			boolean unknownUsersAreStrangers, String userAttributeMappings,
-			ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #addSamlSpIdpConnection(String, boolean, long, boolean,
-	 boolean, boolean, String, InputStream, String, String,
-	 boolean, boolean, String, ServiceContext)}
-	 */
-	@Deprecated
-	public SamlSpIdpConnection addSamlSpIdpConnection(
-			String samlIdpEntityId, boolean assertionSignatureRequired,
-			long clockSkew, boolean enabled, boolean forceAuthn,
-			boolean ldapImportEnabled, String metadataUrl,
-			InputStream metadataXmlInputStream, String name,
-			String nameIdFormat, boolean signAuthnRequest,
-			String userAttributeMappings, ServiceContext serviceContext)
-		throws PortalException;
 
 	/**
 	 * @throws PortalException
@@ -126,6 +113,10 @@ public interface SamlSpIdpConnectionLocalService
 	/**
 	 * Deletes the saml sp idp connection with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpIdpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpIdpConnectionId the primary key of the saml sp idp connection
 	 * @return the saml sp idp connection that was removed
 	 * @throws PortalException if a saml sp idp connection with the primary key could not be found
@@ -138,6 +129,10 @@ public interface SamlSpIdpConnectionLocalService
 	/**
 	 * Deletes the saml sp idp connection from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpIdpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpIdpConnection the saml sp idp connection
 	 * @return the saml sp idp connection that was removed
 	 */
@@ -147,6 +142,9 @@ public interface SamlSpIdpConnectionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -281,7 +279,7 @@ public interface SamlSpIdpConnectionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<SamlSpIdpConnection> getSamlSpIdpConnections(
 		long companyId, int start, int end,
-		OrderByComparator orderByComparator);
+		OrderByComparator<SamlSpIdpConnection> orderByComparator);
 
 	/**
 	 * Returns the number of saml sp idp connections.
@@ -298,33 +296,22 @@ public interface SamlSpIdpConnectionLocalService
 		throws PortalException;
 
 	public SamlSpIdpConnection updateSamlSpIdpConnection(
-			long samlSpIdpConnectionId, String samlIdpEntityId,
-			boolean assertionSignatureRequired, long clockSkew, boolean enabled,
-			boolean forceAuthn, boolean ldapImportEnabled, String metadataUrl,
+			long samlSpIdpConnectionId, boolean assertionSignatureRequired,
+			long clockSkew, boolean enabled, boolean forceAuthn,
+			boolean ldapImportEnabled, String metadataUrl,
 			InputStream metadataXmlInputStream, String name,
-			String nameIdFormat, boolean signAuthnRequest,
-			boolean unknownUsersAreStrangers, String userAttributeMappings,
+			String nameIdFormat, String samlIdpEntityId,
+			boolean signAuthnRequest, boolean unknownUsersAreStrangers,
+			String userAttributeMappings, String userIdentifierExpression,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateSamlSpIdpConnection(long, String, boolean, long,
-	 boolean, boolean, boolean, String, InputStream, String,
-	 String, boolean, boolean, String, ServiceContext)}
-	 */
-	@Deprecated
-	public SamlSpIdpConnection updateSamlSpIdpConnection(
-			long samlSpIdpConnectionId, String samlIdpEntityId,
-			boolean assertionSignatureRequired, long clockSkew, boolean enabled,
-			boolean forceAuthn, boolean ldapImportEnabled, String metadataUrl,
-			InputStream metadataXmlInputStream, String name,
-			String nameIdFormat, boolean signAuthnRequest,
-			String userAttributeMappings, ServiceContext serviceContext)
-		throws PortalException;
-
-	/**
 	 * Updates the saml sp idp connection in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpIdpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlSpIdpConnection the saml sp idp connection
 	 * @return the saml sp idp connection that was updated

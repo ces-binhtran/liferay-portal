@@ -23,8 +23,8 @@ import com.liferay.portal.kernel.service.UserNotificationEventLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.product.navigation.user.personal.bar.web.internal.contants.ProductNavigationUserPersonalBarPortletKeys;
-import com.liferay.product.navigation.user.personal.bar.web.internal.contants.ProductNavigationUserPersonalBarWebKeys;
+import com.liferay.product.navigation.user.personal.bar.web.internal.constants.ProductNavigationUserPersonalBarPortletKeys;
+import com.liferay.product.navigation.user.personal.bar.web.internal.constants.ProductNavigationUserPersonalBarWebKeys;
 import com.liferay.site.util.RecentGroupManager;
 
 import java.io.IOException;
@@ -76,7 +76,7 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 		if (!user.isDefaultUser()) {
 			renderRequest.setAttribute(
 				ProductNavigationUserPersonalBarWebKeys.NOTIFICATIONS_COUNT,
-				getNotificationsCount(themeDisplay));
+				_getNotificationsCount(themeDisplay));
 		}
 
 		_recentGroupManager.addRecentGroup(
@@ -84,17 +84,6 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 			themeDisplay.getScopeGroupId());
 
 		super.doDispatch(renderRequest, renderResponse);
-	}
-
-	protected int getNotificationsCount(ThemeDisplay themeDisplay) {
-		if (_userNotificationEventLocalService == null) {
-			return 0;
-		}
-
-		return _userNotificationEventLocalService.
-			getUserNotificationEventsCount(
-				themeDisplay.getUserId(),
-				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
 	}
 
 	@Reference(unbind = "-")
@@ -107,6 +96,17 @@ public class ProductNavigationUserPersonalBarPortlet extends MVCPortlet {
 		PanelCategoryRegistry panelCategoryRegistry) {
 
 		_panelCategoryRegistry = panelCategoryRegistry;
+	}
+
+	private int _getNotificationsCount(ThemeDisplay themeDisplay) {
+		if (_userNotificationEventLocalService == null) {
+			return 0;
+		}
+
+		return _userNotificationEventLocalService.
+			getUserNotificationEventsCount(
+				themeDisplay.getUserId(),
+				UserNotificationDeliveryConstants.TYPE_WEBSITE, true, false);
 	}
 
 	private PanelAppRegistry _panelAppRegistry;

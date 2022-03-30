@@ -50,11 +50,22 @@ public class AccountEntryWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("defaultBillingAddressId", getDefaultBillingAddressId());
+		attributes.put(
+			"defaultCPaymentMethodKey", getDefaultCPaymentMethodKey());
+		attributes.put(
+			"defaultDeliveryCTermEntryId", getDefaultDeliveryCTermEntryId());
+		attributes.put(
+			"defaultPaymentCTermEntryId", getDefaultPaymentCTermEntryId());
+		attributes.put(
+			"defaultShippingAddressId", getDefaultShippingAddressId());
 		attributes.put("parentAccountEntryId", getParentAccountEntryId());
-		attributes.put("name", getName());
 		attributes.put("description", getDescription());
 		attributes.put("domains", getDomains());
+		attributes.put("emailAddress", getEmailAddress());
 		attributes.put("logoId", getLogoId());
+		attributes.put("name", getName());
+		attributes.put("taxExemptionCode", getTaxExemptionCode());
 		attributes.put("taxIdNumber", getTaxIdNumber());
 		attributes.put("type", getType());
 		attributes.put("status", getStatus());
@@ -113,17 +124,46 @@ public class AccountEntryWrapper
 			setModifiedDate(modifiedDate);
 		}
 
+		Long defaultBillingAddressId = (Long)attributes.get(
+			"defaultBillingAddressId");
+
+		if (defaultBillingAddressId != null) {
+			setDefaultBillingAddressId(defaultBillingAddressId);
+		}
+
+		String defaultCPaymentMethodKey = (String)attributes.get(
+			"defaultCPaymentMethodKey");
+
+		if (defaultCPaymentMethodKey != null) {
+			setDefaultCPaymentMethodKey(defaultCPaymentMethodKey);
+		}
+
+		Long defaultDeliveryCTermEntryId = (Long)attributes.get(
+			"defaultDeliveryCTermEntryId");
+
+		if (defaultDeliveryCTermEntryId != null) {
+			setDefaultDeliveryCTermEntryId(defaultDeliveryCTermEntryId);
+		}
+
+		Long defaultPaymentCTermEntryId = (Long)attributes.get(
+			"defaultPaymentCTermEntryId");
+
+		if (defaultPaymentCTermEntryId != null) {
+			setDefaultPaymentCTermEntryId(defaultPaymentCTermEntryId);
+		}
+
+		Long defaultShippingAddressId = (Long)attributes.get(
+			"defaultShippingAddressId");
+
+		if (defaultShippingAddressId != null) {
+			setDefaultShippingAddressId(defaultShippingAddressId);
+		}
+
 		Long parentAccountEntryId = (Long)attributes.get(
 			"parentAccountEntryId");
 
 		if (parentAccountEntryId != null) {
 			setParentAccountEntryId(parentAccountEntryId);
-		}
-
-		String name = (String)attributes.get("name");
-
-		if (name != null) {
-			setName(name);
 		}
 
 		String description = (String)attributes.get("description");
@@ -138,10 +178,28 @@ public class AccountEntryWrapper
 			setDomains(domains);
 		}
 
+		String emailAddress = (String)attributes.get("emailAddress");
+
+		if (emailAddress != null) {
+			setEmailAddress(emailAddress);
+		}
+
 		Long logoId = (Long)attributes.get("logoId");
 
 		if (logoId != null) {
 			setLogoId(logoId);
+		}
+
+		String name = (String)attributes.get("name");
+
+		if (name != null) {
+			setName(name);
+		}
+
+		String taxExemptionCode = (String)attributes.get("taxExemptionCode");
+
+		if (taxExemptionCode != null) {
+			setTaxExemptionCode(taxExemptionCode);
 		}
 
 		String taxIdNumber = (String)attributes.get("taxIdNumber");
@@ -161,6 +219,11 @@ public class AccountEntryWrapper
 		if (status != null) {
 			setStatus(status);
 		}
+	}
+
+	@Override
+	public AccountEntry cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	@Override
@@ -203,6 +266,66 @@ public class AccountEntryWrapper
 		return model.getCreateDate();
 	}
 
+	@Override
+	public com.liferay.portal.kernel.model.Address getDefaultBillingAddress() {
+		return model.getDefaultBillingAddress();
+	}
+
+	/**
+	 * Returns the default billing address ID of this account entry.
+	 *
+	 * @return the default billing address ID of this account entry
+	 */
+	@Override
+	public long getDefaultBillingAddressId() {
+		return model.getDefaultBillingAddressId();
+	}
+
+	/**
+	 * Returns the default c payment method key of this account entry.
+	 *
+	 * @return the default c payment method key of this account entry
+	 */
+	@Override
+	public String getDefaultCPaymentMethodKey() {
+		return model.getDefaultCPaymentMethodKey();
+	}
+
+	/**
+	 * Returns the default delivery c term entry ID of this account entry.
+	 *
+	 * @return the default delivery c term entry ID of this account entry
+	 */
+	@Override
+	public long getDefaultDeliveryCTermEntryId() {
+		return model.getDefaultDeliveryCTermEntryId();
+	}
+
+	/**
+	 * Returns the default payment c term entry ID of this account entry.
+	 *
+	 * @return the default payment c term entry ID of this account entry
+	 */
+	@Override
+	public long getDefaultPaymentCTermEntryId() {
+		return model.getDefaultPaymentCTermEntryId();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.Address getDefaultShippingAddress() {
+		return model.getDefaultShippingAddress();
+	}
+
+	/**
+	 * Returns the default shipping address ID of this account entry.
+	 *
+	 * @return the default shipping address ID of this account entry
+	 */
+	@Override
+	public long getDefaultShippingAddressId() {
+		return model.getDefaultShippingAddressId();
+	}
+
 	/**
 	 * Returns the description of this account entry.
 	 *
@@ -221,6 +344,21 @@ public class AccountEntryWrapper
 	@Override
 	public String getDomains() {
 		return model.getDomains();
+	}
+
+	@Override
+	public String[] getDomainsArray() {
+		return model.getDomainsArray();
+	}
+
+	/**
+	 * Returns the email address of this account entry.
+	 *
+	 * @return the email address of this account entry
+	 */
+	@Override
+	public String getEmailAddress() {
+		return model.getEmailAddress();
 	}
 
 	/**
@@ -301,6 +439,16 @@ public class AccountEntryWrapper
 	@Override
 	public int getStatus() {
 		return model.getStatus();
+	}
+
+	/**
+	 * Returns the tax exemption code of this account entry.
+	 *
+	 * @return the tax exemption code of this account entry
+	 */
+	@Override
+	public String getTaxExemptionCode() {
+		return model.getTaxExemptionCode();
 	}
 
 	/**
@@ -389,6 +537,58 @@ public class AccountEntryWrapper
 	}
 
 	/**
+	 * Sets the default billing address ID of this account entry.
+	 *
+	 * @param defaultBillingAddressId the default billing address ID of this account entry
+	 */
+	@Override
+	public void setDefaultBillingAddressId(long defaultBillingAddressId) {
+		model.setDefaultBillingAddressId(defaultBillingAddressId);
+	}
+
+	/**
+	 * Sets the default c payment method key of this account entry.
+	 *
+	 * @param defaultCPaymentMethodKey the default c payment method key of this account entry
+	 */
+	@Override
+	public void setDefaultCPaymentMethodKey(String defaultCPaymentMethodKey) {
+		model.setDefaultCPaymentMethodKey(defaultCPaymentMethodKey);
+	}
+
+	/**
+	 * Sets the default delivery c term entry ID of this account entry.
+	 *
+	 * @param defaultDeliveryCTermEntryId the default delivery c term entry ID of this account entry
+	 */
+	@Override
+	public void setDefaultDeliveryCTermEntryId(
+		long defaultDeliveryCTermEntryId) {
+
+		model.setDefaultDeliveryCTermEntryId(defaultDeliveryCTermEntryId);
+	}
+
+	/**
+	 * Sets the default payment c term entry ID of this account entry.
+	 *
+	 * @param defaultPaymentCTermEntryId the default payment c term entry ID of this account entry
+	 */
+	@Override
+	public void setDefaultPaymentCTermEntryId(long defaultPaymentCTermEntryId) {
+		model.setDefaultPaymentCTermEntryId(defaultPaymentCTermEntryId);
+	}
+
+	/**
+	 * Sets the default shipping address ID of this account entry.
+	 *
+	 * @param defaultShippingAddressId the default shipping address ID of this account entry
+	 */
+	@Override
+	public void setDefaultShippingAddressId(long defaultShippingAddressId) {
+		model.setDefaultShippingAddressId(defaultShippingAddressId);
+	}
+
+	/**
 	 * Sets the description of this account entry.
 	 *
 	 * @param description the description of this account entry
@@ -406,6 +606,16 @@ public class AccountEntryWrapper
 	@Override
 	public void setDomains(String domains) {
 		model.setDomains(domains);
+	}
+
+	/**
+	 * Sets the email address of this account entry.
+	 *
+	 * @param emailAddress the email address of this account entry
+	 */
+	@Override
+	public void setEmailAddress(String emailAddress) {
+		model.setEmailAddress(emailAddress);
 	}
 
 	/**
@@ -486,6 +696,16 @@ public class AccountEntryWrapper
 	@Override
 	public void setStatus(int status) {
 		model.setStatus(status);
+	}
+
+	/**
+	 * Sets the tax exemption code of this account entry.
+	 *
+	 * @param taxExemptionCode the tax exemption code of this account entry
+	 */
+	@Override
+	public void setTaxExemptionCode(String taxExemptionCode) {
+		model.setTaxExemptionCode(taxExemptionCode);
 	}
 
 	/**

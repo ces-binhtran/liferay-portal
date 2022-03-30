@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.service;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -27,6 +28,7 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.SystemEventConstants;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.Indexable;
@@ -57,6 +59,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see OrganizationLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -69,7 +72,7 @@ public interface OrganizationLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link OrganizationLocalServiceUtil} to access the organization local service. Add custom service methods to <code>com.liferay.portal.service.impl.OrganizationLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.OrganizationLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the organization local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link OrganizationLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addGroupOrganization(long groupId, long organizationId);
 
@@ -137,6 +140,10 @@ public interface OrganizationLocalService
 	/**
 	 * Adds the organization to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param organization the organization
 	 * @return the organization that was added
 	 */
@@ -153,6 +160,18 @@ public interface OrganizationLocalService
 	public void addOrganizationResources(long userId, Organization organization)
 		throws PortalException;
 
+	public User addOrganizationUserByEmailAddress(
+			String emailAddress, long organizationId,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public Organization addOrUpdateOrganization(
+			String externalReferenceCode, long userId,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusId, String comments, boolean hasLogo,
+			byte[] logoBytes, boolean site, ServiceContext serviceContext)
+		throws PortalException;
+
 	/**
 	 * Assigns the password policy to the organizations, removing any other
 	 * currently assigned password policies.
@@ -166,6 +185,10 @@ public interface OrganizationLocalService
 	public void addUserOrganization(long userId, long organizationId);
 
 	public void addUserOrganization(long userId, Organization organization);
+
+	public void addUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws PortalException;
 
 	public void addUserOrganizations(
 		long userId, List<Organization> organizations);
@@ -211,6 +234,10 @@ public interface OrganizationLocalService
 	/**
 	 * Deletes the organization with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param organizationId the primary key of the organization
 	 * @return the organization that was removed
 	 * @throws PortalException if a organization with the primary key could not be found
@@ -221,6 +248,10 @@ public interface OrganizationLocalService
 
 	/**
 	 * Deletes the organization from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param organization the organization
 	 * @return the organization that was removed
@@ -242,6 +273,10 @@ public interface OrganizationLocalService
 
 	public void deleteUserOrganization(long userId, Organization organization);
 
+	public void deleteUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws PortalException;
+
 	public void deleteUserOrganizations(
 		long userId, List<Organization> organizations);
 
@@ -249,6 +284,9 @@ public interface OrganizationLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -338,6 +376,14 @@ public interface OrganizationLocalService
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Organization fetchOrganizationByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchOrganizationByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Organization fetchOrganizationByReferenceCode(
 		long companyId, String externalReferenceCode);
 
@@ -420,6 +466,19 @@ public interface OrganizationLocalService
 		throws PortalException;
 
 	/**
+	 * Returns the organization with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the organization's external reference code
+	 * @return the matching organization
+	 * @throws PortalException if a matching organization could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Organization getOrganizationByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException;
+
+	/**
 	 * Returns the organization with the matching UUID and company.
 	 *
 	 * @param uuid the organization's UUID
@@ -460,7 +519,7 @@ public interface OrganizationLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Organization> getOrganizations(
 			long userId, int start, int end,
-			OrderByComparator<Organization> obc)
+			OrderByComparator<Organization> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -532,14 +591,14 @@ public interface OrganizationLocalService
 	 return
 	 * @param end the upper bound of the range of organizations and users to
 	 return (not inclusive)
-	 * @param obc the comparator to order the organizations and users
-	 (optionally <code>null</code>)
+	 * @param orderByComparator the comparator to order the organizations and
+	 users (optionally <code>null</code>)
 	 * @return the organizations and users belonging to the parent organization
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Object> getOrganizationsAndUsers(
 		long companyId, long parentOrganizationId, int status, int start,
-		int end, OrderByComparator<?> obc);
+		int end, OrderByComparator<?> orderByComparator);
 
 	/**
 	 * Returns the number of organizations and users belonging to the parent
@@ -932,16 +991,17 @@ public interface OrganizationLocalService
 	 * @param start the lower bound of the range of organizations to return
 	 * @param end the upper bound of the range of organizations to return (not
 	 inclusive)
-	 * @param obc the comparator to order the organizations (optionally
-	 <code>null</code>)
-	 * @return the matching organizations ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the organizations
+	 (optionally <code>null</code>)
+	 * @return the matching organizations ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.OrganizationFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Organization> search(
 		long companyId, long parentOrganizationId, String keywords, String type,
 		Long regionId, Long countryId, LinkedHashMap<String, Object> params,
-		int start, int end, OrderByComparator<Organization> obc);
+		int start, int end, OrderByComparator<Organization> orderByComparator);
 
 	/**
 	 * Returns a name ordered range of all the organizations with the type,
@@ -1032,9 +1092,10 @@ public interface OrganizationLocalService
 	 * @param start the lower bound of the range of organizations to return
 	 * @param end the upper bound of the range of organizations to return (not
 	 inclusive)
-	 * @param obc the comparator to order the organizations (optionally
-	 <code>null</code>)
-	 * @return the matching organizations ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the organizations
+	 (optionally <code>null</code>)
+	 * @return the matching organizations ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.OrganizationFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -1042,7 +1103,7 @@ public interface OrganizationLocalService
 		long companyId, long parentOrganizationId, String name, String type,
 		String street, String city, String zip, Long regionId, Long countryId,
 		LinkedHashMap<String, Object> params, boolean andOperator, int start,
-		int end, OrderByComparator<Organization> obc);
+		int end, OrderByComparator<Organization> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the organizations whose name, type, or
@@ -1275,6 +1336,10 @@ public interface OrganizationLocalService
 
 	/**
 	 * Updates the organization in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param organization the organization
 	 * @return the organization that was updated

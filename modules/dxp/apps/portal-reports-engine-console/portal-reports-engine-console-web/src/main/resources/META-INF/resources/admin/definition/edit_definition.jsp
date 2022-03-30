@@ -54,11 +54,11 @@ else {
 
 <div class="report-message"></div>
 
-<portlet:actionURL name="editDefinition" var="actionURL">
+<portlet:actionURL name="/reports_admin/edit_definition" var="actionURL">
 	<portlet:param name="mvcPath" value="/admin/definition/edit_definition.jsp" />
 </portlet:actionURL>
 
-<aui:form action="<%= actionURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data" method="post" name="fm">
+<aui:form action="<%= actionURL %>" cssClass="container-fluid container-fluid-max-xl" enctype="multipart/form-data" method="post" name="fm">
 	<liferay-ui:error exception="<%= DefinitionFileException.InvalidDefinitionFile.class %>" message="please-enter-a-valid-file" />
 	<liferay-ui:error exception="<%= DefinitionNameException.class %>" message="please-enter-a-valid-name" />
 
@@ -88,9 +88,7 @@ else {
 				<aui:option label="<%= ReportDataSourceType.PORTAL.getValue() %>" selected="<%= sourceId == 0 %>" value="<%= 0 %>" />
 
 				<%
-				List<Source> sources = SourceServiceUtil.getSources(themeDisplay.getSiteGroupId(), null, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
-
-				for (Source source : sources) {
+				for (Source source : SourceServiceUtil.getSources(themeDisplay.getSiteGroupId(), null, null, false, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null)) {
 				%>
 
 					<aui:option label="<%= HtmlUtil.escape(source.getName(locale)) %>" selected="<%= sourceId == source.getSourceId() %>" value="<%= source.getSourceId() %>" />
@@ -104,7 +102,7 @@ else {
 			<aui:field-wrapper>
 				<aui:input cssClass="template-report" name="templateReport" style='<%= Validator.isNull(reportName) ? "display: block;" : "display: none;" %>' type="file" />
 
-				<span class="existing-report" style='<%= Validator.isNull(reportName) ? "display: none;" : "display: block;" %>'>
+				<span class="existing-report" style="<%= Validator.isNull(reportName) ? "display: none;" : "display: block;" %>">
 					<%= HtmlUtil.escape(reportName) %>
 
 					<img class="remove-existing-report" src="<%= themeDisplay.getPathThemeImages() %>/arrows/02_x.png" />
@@ -195,12 +193,12 @@ else {
 
 		<c:if test="<%= definition != null %>">
 			<c:if test="<%= DefinitionPermissionChecker.contains(permissionChecker, definition, ReportsActionKeys.ADD_REPORT) %>">
-				<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "addReport();" %>' value="add-report" />
+				<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "addReport();" %>' value="add-report" />
 
-				<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "addScheduler();" %>' value="add-schedule" />
+				<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "addScheduler();" %>' value="add-schedule" />
 			</c:if>
 
-			<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "deleteDefinition();" %>' value="delete" />
+			<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "deleteDefinition();" %>' value="delete" />
 		</c:if>
 
 		<aui:button cssClass="btn-lg" href="<%= viewURL %>" type="cancel" />
@@ -208,7 +206,7 @@ else {
 </aui:form>
 
 <script type="text/javascript">
-	AUI().ready(function (A) {
+	AUI().ready((A) => {
 		Liferay.Report.initialize({
 			namespace: '<portlet:namespace />',
 			parameters:
@@ -238,7 +236,7 @@ else {
 		) {
 			submitForm(
 				document.<portlet:namespace />fm,
-				'<portlet:actionURL name="deleteDefinition"><portlet:param name="redirect" value="<%= definitionsURL %>" /></portlet:actionURL>'
+				'<portlet:actionURL name="/reports_admin/delete_definition"><portlet:param name="redirect" value="<%= definitionsURL %>" /></portlet:actionURL>'
 			);
 		}
 	}

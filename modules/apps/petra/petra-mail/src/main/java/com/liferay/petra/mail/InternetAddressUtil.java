@@ -106,7 +106,7 @@ public class InternetAddressUtil {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(addresses.length * 2 - 1);
+		StringBundler sb = new StringBundler((addresses.length * 2) - 1);
 
 		for (int i = 0; i < (addresses.length - 1); i++) {
 			sb.append(toString(addresses[i]));
@@ -129,13 +129,10 @@ public class InternetAddressUtil {
 
 		for (char c : addressString.toCharArray()) {
 			if ((c == CharPool.NEW_LINE) || (c == CharPool.RETURN)) {
-				StringBundler sb = new StringBundler(3);
-
-				sb.append("Email address ");
-				sb.append(addressString);
-				sb.append(" is invalid because it contains line breaks");
-
-				throw new AddressException(sb.toString());
+				throw new AddressException(
+					StringBundler.concat(
+						"Email address ", addressString,
+						" is invalid because it contains line breaks"));
 			}
 		}
 	}

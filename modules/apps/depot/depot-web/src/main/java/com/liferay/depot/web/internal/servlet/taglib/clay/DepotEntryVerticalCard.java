@@ -15,25 +15,31 @@
 package com.liferay.depot.web.internal.servlet.taglib.clay;
 
 import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryGroupRelServiceUtil;
 import com.liferay.depot.web.internal.constants.DepotAdminWebKeys;
+import com.liferay.depot.web.internal.constants.DepotPortletKeys;
 import com.liferay.depot.web.internal.servlet.taglib.util.DepotActionDropdownItemsProvider;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.BaseBaseClayCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.dao.search.RowChecker;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.site.util.GroupURLProvider;
 
 import java.util.List;
+
+import javax.portlet.PortletRequest;
 
 /**
  * @author Alejandro Tardín
@@ -42,8 +48,7 @@ public class DepotEntryVerticalCard
 	extends BaseBaseClayCard implements VerticalCard {
 
 	public DepotEntryVerticalCard(
-			DepotEntry depotEntry, GroupURLProvider groupURLProvider,
-			LiferayPortletRequest liferayPortletRequest,
+			DepotEntry depotEntry, LiferayPortletRequest liferayPortletRequest,
 			LiferayPortletResponse liferayPortletResponse,
 			RowChecker rowChecker)
 		throws PortalException {
@@ -51,7 +56,6 @@ public class DepotEntryVerticalCard
 		super(depotEntry, rowChecker);
 
 		_depotEntry = depotEntry;
-		_groupURLProvider = groupURLProvider;
 		_liferayPortletRequest = liferayPortletRequest;
 		_liferayPortletResponse = liferayPortletResponse;
 
@@ -77,7 +81,21 @@ public class DepotEntryVerticalCard
 
 	@Override
 	public String getHref() {
-		return _groupURLProvider.getGroupURL(_group, _liferayPortletRequest);
+		try {
+			return PortletURLBuilder.create(
+				PortalUtil.getControlPanelPortletURL(
+					_liferayPortletRequest, _depotEntry.getGroup(),
+					DepotPortletKeys.DEPOT_ADMIN, 0, 0,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/depot/view_depot_dashboard"
+			).setParameter(
+				"depotEntryId", _depotEntry.getDepotEntryId()
+			).buildString();
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
 	}
 
 	@Override
@@ -95,13 +113,34 @@ public class DepotEntryVerticalCard
 	}
 
 	@Override
+	public String getSubtitle() {
+		try {
+			int count =
+				DepotEntryGroupRelServiceUtil.getDepotEntryGroupRelsCount(
+					_depotEntry);
+
+			if (count != 1) {
+				return LanguageUtil.format(
+					_liferayPortletRequest.getHttpServletRequest(),
+					"x-connected-sites", count);
+			}
+
+			return LanguageUtil.format(
+				_liferayPortletRequest.getHttpServletRequest(),
+				"x-connected-site", count);
+		}
+		catch (PortalException portalException) {
+			return ReflectionUtil.throwException(portalException);
+		}
+	}
+
+	@Override
 	public String getTitle() {
 		try {
-			return HtmlUtil.escape(
-				_group.getDescriptiveName(_themeDisplay.getLocale()));
+			return _group.getDescriptiveName(_themeDisplay.getLocale());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return _group.getName(_themeDisplay.getLocale());
@@ -117,7 +156,6 @@ public class DepotEntryVerticalCard
 
 	private final DepotEntry _depotEntry;
 	private final Group _group;
-	private final GroupURLProvider _groupURLProvider;
 	private final LiferayPortletRequest _liferayPortletRequest;
 	private final LiferayPortletResponse _liferayPortletResponse;
 	private final ThemeDisplay _themeDisplay;

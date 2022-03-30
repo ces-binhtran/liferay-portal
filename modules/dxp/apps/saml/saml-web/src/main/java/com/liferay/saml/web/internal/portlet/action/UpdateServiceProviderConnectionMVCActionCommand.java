@@ -21,9 +21,9 @@ import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.saml.constants.SamlPortletKeys;
 import com.liferay.saml.persistence.model.SamlIdpSpConnection;
 import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
-import com.liferay.saml.web.internal.constants.SamlAdminPortletKeys;
 
 import java.io.InputStream;
 
@@ -39,8 +39,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + SamlAdminPortletKeys.SAML_ADMIN,
-		"mvc.command.name=/admin/updateServiceProviderConnection"
+		"javax.portlet.name=" + SamlPortletKeys.SAML_ADMIN,
+		"mvc.command.name=/admin/update_service_provider_connection"
 	},
 	service = MVCActionCommand.class
 )
@@ -58,8 +58,6 @@ public class UpdateServiceProviderConnectionMVCActionCommand
 		long samlIdpSpConnectionId = ParamUtil.getLong(
 			uploadPortletRequest, "samlIdpSpConnectionId");
 
-		String samlSpEntityId = ParamUtil.getString(
-			uploadPortletRequest, "samlSpEntityId");
 		int assertionLifetime = ParamUtil.getInteger(
 			uploadPortletRequest, "assertionLifetime");
 		String attributeNames = ParamUtil.getString(
@@ -80,23 +78,25 @@ public class UpdateServiceProviderConnectionMVCActionCommand
 			uploadPortletRequest, "nameIdAttribute");
 		String nameIdFormat = ParamUtil.getString(
 			uploadPortletRequest, "nameIdFormat");
+		String samlSpEntityId = ParamUtil.getString(
+			uploadPortletRequest, "samlSpEntityId");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			SamlIdpSpConnection.class.getName(), uploadPortletRequest);
 
 		if (samlIdpSpConnectionId <= 0) {
 			_samlIdpSpConnectionLocalService.addSamlIdpSpConnection(
-				samlSpEntityId, assertionLifetime, attributeNames,
-				attributesEnabled, attributesNamespaceEnabled, enabled,
-				encryptionForced, metadataUrl, metadataXmlInputStream, name,
-				nameIdAttribute, nameIdFormat, serviceContext);
+				assertionLifetime, attributeNames, attributesEnabled,
+				attributesNamespaceEnabled, enabled, encryptionForced,
+				metadataUrl, metadataXmlInputStream, name, nameIdAttribute,
+				nameIdFormat, samlSpEntityId, serviceContext);
 		}
 		else {
 			_samlIdpSpConnectionLocalService.updateSamlIdpSpConnection(
-				samlIdpSpConnectionId, samlSpEntityId, assertionLifetime,
-				attributeNames, attributesEnabled, attributesNamespaceEnabled,
-				enabled, encryptionForced, metadataUrl, metadataXmlInputStream,
-				name, nameIdAttribute, nameIdFormat, serviceContext);
+				samlIdpSpConnectionId, assertionLifetime, attributeNames,
+				attributesEnabled, attributesNamespaceEnabled, enabled,
+				encryptionForced, metadataUrl, metadataXmlInputStream, name,
+				nameIdAttribute, nameIdFormat, samlSpEntityId, serviceContext);
 		}
 	}
 

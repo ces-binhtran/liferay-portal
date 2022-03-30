@@ -24,6 +24,7 @@ SamlIdpSpConnection samlIdpSpConnection = (SamlIdpSpConnection)row.getObject();
 
 <liferay-ui:icon-menu
 	icon="<%= StringPool.BLANK %>"
+	markupView="lexicon"
 	message="<%= StringPool.BLANK %>"
 >
 	<portlet:renderURL var="editURL">
@@ -38,7 +39,7 @@ SamlIdpSpConnection samlIdpSpConnection = (SamlIdpSpConnection)row.getObject();
 		url="<%= editURL %>"
 	/>
 
-	<portlet:actionURL name="/admin/deleteSamlIdpSpConnection" var="deleteURL">
+	<portlet:actionURL name="/admin/delete_saml_idp_sp_connection" var="deleteURL">
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 		<portlet:param name="samlIdpSpConnectionId" value="<%= String.valueOf(samlIdpSpConnection.getSamlIdpSpConnectionId()) %>" />
 	</portlet:actionURL>

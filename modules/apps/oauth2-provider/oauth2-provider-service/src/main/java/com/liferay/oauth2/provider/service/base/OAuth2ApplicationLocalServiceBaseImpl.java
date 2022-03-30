@@ -16,6 +16,7 @@ package com.liferay.oauth2.provider.service.base;
 
 import com.liferay.oauth2.provider.model.OAuth2Application;
 import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalService;
+import com.liferay.oauth2.provider.service.OAuth2ApplicationLocalServiceUtil;
 import com.liferay.oauth2.provider.service.persistence.OAuth2ApplicationPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -44,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,11 +73,15 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OAuth2ApplicationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.oauth2.provider.service.OAuth2ApplicationLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OAuth2ApplicationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OAuth2ApplicationLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the o auth2 application to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2ApplicationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param oAuth2Application the o auth2 application
 	 * @return the o auth2 application that was added
@@ -103,6 +111,10 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	/**
 	 * Deletes the o auth2 application with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2ApplicationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param oAuth2ApplicationId the primary key of the o auth2 application
 	 * @return the o auth2 application that was removed
 	 * @throws PortalException if a o auth2 application with the primary key could not be found
@@ -118,6 +130,10 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	/**
 	 * Deletes the o auth2 application from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2ApplicationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param oAuth2Application the o auth2 application
 	 * @return the o auth2 application that was removed
 	 */
@@ -132,6 +148,13 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return oAuth2ApplicationPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -289,6 +312,7 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -307,6 +331,7 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 			(OAuth2Application)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<OAuth2Application> getBasePersistence() {
 		return oAuth2ApplicationPersistence;
 	}
@@ -350,6 +375,10 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	/**
 	 * Updates the o auth2 application in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OAuth2ApplicationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param oAuth2Application the o auth2 application
 	 * @return the o auth2 application that was updated
 	 */
@@ -359,6 +388,11 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 		OAuth2Application oAuth2Application) {
 
 		return oAuth2ApplicationPersistence.update(oAuth2Application);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -372,6 +406,8 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		oAuth2ApplicationLocalService = (OAuth2ApplicationLocalService)aopProxy;
+
+		_setLocalServiceUtilService(oAuth2ApplicationLocalService);
 	}
 
 	/**
@@ -417,6 +453,23 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		OAuth2ApplicationLocalService oAuth2ApplicationLocalService) {
+
+		try {
+			Field field =
+				OAuth2ApplicationLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, oAuth2ApplicationLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected OAuth2ApplicationLocalService oAuth2ApplicationLocalService;
 
 	@Reference
@@ -425,17 +478,5 @@ public abstract class OAuth2ApplicationLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
 
 }

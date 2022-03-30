@@ -8,6 +8,9 @@
 
 .separator {
 	border-top: 1px solid #cdced9;
+	clear: both;
+	display: block;
+	margin: 15px auto;
 }
 
 // ---------- Status ----------
@@ -18,12 +21,4 @@
 
 span.alert {
 	display: inline-block;
-}
-
-// ---------- Update manager ----------
-
-.update-available {
-	margin-top: 10px;
-	padding: 2px;
-	text-align: left;
 }

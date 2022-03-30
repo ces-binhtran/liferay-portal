@@ -109,9 +109,7 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		Iterator<T> iterator = flags.iterator();
 
 		while (iterator.hasNext()) {
-			T flag = iterator.next();
-
-			String flagName = flag.toString();
+			String flagName = String.valueOf(iterator.next());
 
 			flagName = flagName.replace('_', '.');
 			flagName = flagName.toLowerCase();
@@ -176,9 +174,8 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 		Settings settings, Path projectDirPath, Path projectPathRootDirPath,
 		String projectPathPrefix) {
 
-		Path relativePath = projectPathRootDirPath.relativize(projectDirPath);
-
-		String projectPath = relativePath.toString();
+		String projectPath = String.valueOf(
+			projectPathRootDirPath.relativize(projectDirPath));
 
 		projectPath =
 			projectPathPrefix + ":" +
@@ -196,7 +193,7 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 			final String projectPathPrefix)
 		throws IOException {
 
-		final String buildProfile = System.getProperty("build.profile");
+		String buildProfile = System.getProperty("build.profile");
 
 		final Set<String> buildProfileFileNames =
 			GradlePluginsDefaultsUtil.getBuildProfileFileNames(
@@ -254,12 +251,9 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 						return FileVisitResult.CONTINUE;
 					}
 
-					if (excludedProjectDirTypes.contains(projectDirType)) {
-						return FileVisitResult.SKIP_SUBTREE;
-					}
-
-					if (!includedDirPaths.isEmpty() &&
-						!_startsWith(dirPath, includedDirPaths)) {
+					if (excludedProjectDirTypes.contains(projectDirType) ||
+						(!includedDirPaths.isEmpty() &&
+						 !_startsWith(dirPath, includedDirPaths))) {
 
 						return FileVisitResult.SKIP_SUBTREE;
 					}
@@ -291,11 +285,9 @@ public class LiferaySettingsPlugin implements Plugin<Settings> {
 	}
 
 	private boolean _isPortalRootDirPath(Path dirPath) {
-		if (!Files.exists(dirPath.resolve("modules"))) {
-			return false;
-		}
+		if (!Files.exists(dirPath.resolve("modules")) ||
+			!Files.exists(dirPath.resolve("portal-impl"))) {
 
-		if (!Files.exists(dirPath.resolve("portal-impl"))) {
 			return false;
 		}
 

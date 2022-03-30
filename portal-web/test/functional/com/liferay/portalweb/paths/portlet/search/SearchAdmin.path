@@ -2,40 +2,47 @@
 <head>
 <title>SearchAdmin</title>
 </head>
+
 <body>
-<table cellpadding="1" cellspacing="1" border="1">
+<table border="1" cellpadding="1" cellspacing="1">
 <thead>
 <tr><td rowspan="1" colspan="3">SearchAdmin</td></tr>
 </thead>
+
 <tbody>
+<tr>
+	<td>ACTIVE_CONNECTION_COUNT</td>
+	<td>//div[contains(@class,'container-fluid')]//span[contains(@class,'badge-item')]</td>
+	<td></td>
+</tr>
 <tr>
 	<td>CLIENT_VERSION</td>
 	<td>//div[contains(@class,'value')][preceding-sibling::div[contains(.,'Client Version')]]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ELASTICSEARCH6_CLIENT_VERSION</td>
-	<td>//div[contains(@class,'alert alert-info')]//strong[preceding-sibling::text()[contains(.,'Client Version')]][1]</td>
+	<td>CLUSTER_NAME</td>
+	<td>//div[contains(@class,'connection-info') and contains(.,'${key_connectionId}')]//span[contains(@class,'cluster-name')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ELASTICSEARCH6_ENGINE_VENDOR</td>
-	<td>//div[contains(@class,'alert alert-info')]//strong[preceding-sibling::text()[contains(.,'Search Engine Vendor')]][1]</td>
+	<td>CONNECTION_ID</td>
+	<td>//div[contains(@class,'connection-info-item')]//*[contains(@class,'connection-id')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>ELASTICSEARCH6_NODES</td>
-	<td>//div[contains(@class,'alert alert-info')]//strong[preceding-sibling::text()[contains(.,'Nodes')]][1]</td>
+	<td>EXECUTE_REINDEX_BUTTON</td>
+	<td>//li[contains(.,'${key_action}')]//button[contains(.,'Execute')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>LOCAL_CLUSTER_NAME</td>
-	<td>//div[contains(@class,'search-engine')]//div[3]//span[contains(@class,'cluster-name')]</td>
+	<td>NODE_COUNT</td>
+	<td>//div[contains(@class,'connection-info') and contains(.,'${key_connectionId}')]//a[contains(@aria-controls,'SearchAdminPortlet_Nodes')]</td>
 	<td></td>
 </tr>
 <tr>
-	<td>REMOTE_CLUSTER_NAME</td>
-	<td>//div[contains(@class,'search-engine')]//div[2]//span[contains(@class,'cluster-name')]</td>
+	<td>NODE_NAME</td>
+	<td>//div[contains(@class,'connection-info') and contains(.,'${key_connectionId}')]//tr[contains(@data-qa-id, 'row') and contains(.,'${key_nodeName}')]</td>
 	<td></td>
 </tr>
 <tr>
@@ -44,29 +51,13 @@
 	<td></td>
 </tr>
 <tr>
+	<td>SEARCH_ENGINE_VENDOR_KEY</td>
+	<td>//div[contains(@class,'key') and contains(.,'${key_localizedKey}')]</td>
+	<td></td>
+</tr>
+<tr>
 	<td>SERVER_VERSION</td>
 	<td>//td[contains(@class,'lfr-version-column')]</td>
-	<td></td>
-</tr>
-<!--SIDECAR-->
-<tr>
-	<td>ACTIVE_CONNECTION_COUNT</td>
-	<td>//div[contains(@class,'container-fluid')]//span[contains(@class,'badge-item')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SIDECAR_CLUSTER_NAME</td>
-	<td>//div[contains(@class,'connection-info') and contains(.,'EMBEDDED')]//span[contains(@class,'cluster-name')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SIDECAR_HEALTH</td>
-	<td>//div[contains(@class,'connection-info') and contains(.,'EMBEDDED')]//div[contains(@class,'connection-health-indicator-text')]</td>
-	<td></td>
-</tr>
-<tr>
-	<td>SIDECAR_NODES</td>
-	<td>//div[contains(@class,'connection-info') and contains(.,'EMBEDDED')]//tr[contains(.,'${key_nodeName}')]</td>
 	<td></td>
 </tr>
 </tbody>

@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-		"mvc.command.name=/layout_prototype/update_layout_prototype"
+		"mvc.command.name=/layout_page_template_admin/update_layout_prototype"
 	},
 	service = MVCActionCommand.class
 )
@@ -78,21 +78,21 @@ public class UpdateLayoutPrototypeMVCActionCommand
 				layoutPrototypeId, nameMap, new HashMap<>(), true,
 				serviceContext);
 
-			String redirect = ParamUtil.getString(actionRequest, "redirect");
-
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse,
-				JSONUtil.put("redirectURL", redirect));
+				JSONUtil.put(
+					"redirectURL",
+					ParamUtil.getString(actionRequest, "redirect")));
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(t, t);
+				_log.debug(throwable, throwable);
 			}
 
-			if (t instanceof LayoutPageTemplateEntryNameException) {
+			if (throwable instanceof LayoutPageTemplateEntryNameException) {
 				LayoutPageTemplateEntryNameException
 					layoutPageTemplateEntryNameException =
-						(LayoutPageTemplateEntryNameException)t;
+						(LayoutPageTemplateEntryNameException)throwable;
 
 				_layoutPageTemplateEntryExceptionRequestHandler.
 					handlePortalException(
@@ -100,17 +100,19 @@ public class UpdateLayoutPrototypeMVCActionCommand
 						layoutPageTemplateEntryNameException);
 			}
 			else {
-				ThemeDisplay themeDisplay =
-					(ThemeDisplay)actionRequest.getAttribute(
-						WebKeys.THEME_DISPLAY);
-
 				JSONPortletResponseUtil.writeJSON(
 					actionRequest, actionResponse,
 					JSONUtil.put(
 						"error",
-						LanguageUtil.get(
-							themeDisplay.getRequest(),
-							"an-unexpected-error-occurred")));
+						() -> {
+							ThemeDisplay themeDisplay =
+								(ThemeDisplay)actionRequest.getAttribute(
+									WebKeys.THEME_DISPLAY);
+
+							return LanguageUtil.get(
+								themeDisplay.getRequest(),
+								"an-unexpected-error-occurred");
+						}));
 			}
 		}
 	}

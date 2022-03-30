@@ -18,15 +18,12 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.processor.PortletRegistry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorPortletKeys;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
@@ -48,22 +45,31 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/delete_segments_experience"
+		"mvc.command.name=/layout_content_page_editor/delete_segments_experience"
 	},
 	service = MVCActionCommand.class
 )
 public class DeleteSegmentsExperienceMVCActionCommand
 	extends BaseContentPageEditorTransactionalMVCActionCommand {
 
-	protected void deleteSegmentsExperience(ActionRequest actionRequest)
-		throws PortalException {
+	@Override
+	protected JSONObject doTransactionalCommand(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws Exception {
+
+		_deleteSegmentsExperience(actionRequest);
+
+		return JSONFactoryUtil.createJSONObject();
+	}
+
+	private void _deleteSegmentsExperience(ActionRequest actionRequest)
+		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 
 		if (segmentsExperienceId != SegmentsExperienceConstants.ID_DEFAULT) {
 			_segmentsExperienceService.deleteSegmentsExperience(
@@ -74,7 +80,6 @@ public class DeleteSegmentsExperienceMVCActionCommand
 			_fragmentEntryLinkLocalService.
 				getFragmentEntryLinksBySegmentsExperienceId(
 					themeDisplay.getScopeGroupId(), segmentsExperienceId,
-					_portal.getClassNameId(Layout.class),
 					themeDisplay.getPlid());
 
 		for (FragmentEntryLink fragmentEntryLink : fragmentEntryLinks) {
@@ -88,13 +93,13 @@ public class DeleteSegmentsExperienceMVCActionCommand
 						fragmentEntryLink.getCompanyId(),
 						PortletKeys.PREFS_OWNER_ID_DEFAULT,
 						PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-						fragmentEntryLink.getClassPK(), portletId);
+						fragmentEntryLink.getPlid(), portletId);
 
 				if (jxPortletPreferences != null) {
 					_portletPreferencesLocalService.deletePortletPreferences(
 						PortletKeys.PREFS_OWNER_ID_DEFAULT,
 						PortletKeys.PREFS_OWNER_TYPE_LAYOUT,
-						fragmentEntryLink.getClassPK(), portletId);
+						fragmentEntryLink.getPlid(), portletId);
 				}
 			}
 
@@ -103,21 +108,8 @@ public class DeleteSegmentsExperienceMVCActionCommand
 		}
 	}
 
-	@Override
-	protected JSONObject doTransactionalCommand(
-			ActionRequest actionRequest, ActionResponse actionResponse)
-		throws Exception {
-
-		deleteSegmentsExperience(actionRequest);
-
-		return JSONFactoryUtil.createJSONObject();
-	}
-
 	@Reference
 	private FragmentEntryLinkLocalService _fragmentEntryLinkLocalService;
-
-	@Reference
-	private Portal _portal;
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;

@@ -16,7 +16,6 @@ package com.liferay.calendar.model.impl;
 
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarModel;
-import com.liferay.calendar.model.CalendarSoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
@@ -36,6 +35,7 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.io.Serializable;
@@ -43,16 +43,16 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -81,15 +81,16 @@ public class CalendarModelImpl
 	public static final String TABLE_NAME = "Calendar";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
-		{"calendarId", Types.BIGINT}, {"groupId", Types.BIGINT},
-		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
-		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
-		{"modifiedDate", Types.TIMESTAMP}, {"calendarResourceId", Types.BIGINT},
-		{"name", Types.VARCHAR}, {"description", Types.VARCHAR},
-		{"timeZoneId", Types.VARCHAR}, {"color", Types.INTEGER},
-		{"defaultCalendar", Types.BOOLEAN}, {"enableComments", Types.BOOLEAN},
-		{"enableRatings", Types.BOOLEAN}, {"lastPublishDate", Types.TIMESTAMP}
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"calendarId", Types.BIGINT},
+		{"groupId", Types.BIGINT}, {"companyId", Types.BIGINT},
+		{"userId", Types.BIGINT}, {"userName", Types.VARCHAR},
+		{"createDate", Types.TIMESTAMP}, {"modifiedDate", Types.TIMESTAMP},
+		{"calendarResourceId", Types.BIGINT}, {"name", Types.VARCHAR},
+		{"description", Types.VARCHAR}, {"timeZoneId", Types.VARCHAR},
+		{"color", Types.INTEGER}, {"defaultCalendar", Types.BOOLEAN},
+		{"enableComments", Types.BOOLEAN}, {"enableRatings", Types.BOOLEAN},
+		{"lastPublishDate", Types.TIMESTAMP}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -97,6 +98,7 @@ public class CalendarModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("calendarId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
@@ -117,7 +119,7 @@ public class CalendarModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table Calendar (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,calendarId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,calendarResourceId LONG,name STRING null,description STRING null,timeZoneId VARCHAR(75) null,color INTEGER,defaultCalendar BOOLEAN,enableComments BOOLEAN,enableRatings BOOLEAN,lastPublishDate DATE null)";
+		"create table Calendar (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,calendarId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,calendarResourceId LONG,name STRING null,description STRING null,timeZoneId VARCHAR(75) null,color INTEGER,defaultCalendar BOOLEAN,enableComments BOOLEAN,enableRatings BOOLEAN,lastPublishDate DATE null,primary key (calendarId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table Calendar";
 
@@ -131,79 +133,55 @@ public class CalendarModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CALENDARRESOURCEID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEFAULTCALENDAR_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static Calendar toModel(CalendarSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		Calendar model = new CalendarImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setCalendarId(soapModel.getCalendarId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setCalendarResourceId(soapModel.getCalendarResourceId());
-		model.setName(soapModel.getName());
-		model.setDescription(soapModel.getDescription());
-		model.setTimeZoneId(soapModel.getTimeZoneId());
-		model.setColor(soapModel.getColor());
-		model.setDefaultCalendar(soapModel.isDefaultCalendar());
-		model.setEnableComments(soapModel.isEnableComments());
-		model.setEnableRatings(soapModel.isEnableRatings());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<Calendar> toModels(CalendarSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<Calendar> models = new ArrayList<Calendar>(soapModels.length);
-
-		for (CalendarSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public CalendarModelImpl() {
@@ -256,9 +234,6 @@ public class CalendarModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((Calendar)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -336,6 +311,11 @@ public class CalendarModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<Calendar, Long>)Calendar::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", Calendar::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<Calendar, Long>)Calendar::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", Calendar::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid", (BiConsumer<Calendar, String>)Calendar::setUuid);
@@ -415,7 +395,26 @@ public class CalendarModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -431,17 +430,20 @@ public class CalendarModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -452,6 +454,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setCalendarId(long calendarId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_calendarId = calendarId;
 	}
 
@@ -463,19 +469,20 @@ public class CalendarModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -486,19 +493,21 @@ public class CalendarModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -509,6 +518,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -541,6 +554,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -552,6 +569,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -569,6 +590,10 @@ public class CalendarModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -580,19 +605,21 @@ public class CalendarModelImpl
 
 	@Override
 	public void setCalendarResourceId(long calendarResourceId) {
-		_columnBitmask |= CALENDARRESOURCEID_COLUMN_BITMASK;
-
-		if (!_setOriginalCalendarResourceId) {
-			_setOriginalCalendarResourceId = true;
-
-			_originalCalendarResourceId = _calendarResourceId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_calendarResourceId = calendarResourceId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCalendarResourceId() {
-		return _originalCalendarResourceId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("calendarResourceId"));
 	}
 
 	@JSON
@@ -651,7 +678,9 @@ public class CalendarModelImpl
 
 	@Override
 	public void setName(String name) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_name = name;
 	}
@@ -756,6 +785,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_description = description;
 	}
 
@@ -821,6 +854,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setTimeZoneId(String timeZoneId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_timeZoneId = timeZoneId;
 	}
 
@@ -832,6 +869,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setColor(int color) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_color = color;
 	}
 
@@ -849,19 +890,21 @@ public class CalendarModelImpl
 
 	@Override
 	public void setDefaultCalendar(boolean defaultCalendar) {
-		_columnBitmask |= DEFAULTCALENDAR_COLUMN_BITMASK;
-
-		if (!_setOriginalDefaultCalendar) {
-			_setOriginalDefaultCalendar = true;
-
-			_originalDefaultCalendar = _defaultCalendar;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_defaultCalendar = defaultCalendar;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalDefaultCalendar() {
-		return _originalDefaultCalendar;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("defaultCalendar"));
 	}
 
 	@JSON
@@ -878,6 +921,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setEnableComments(boolean enableComments) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_enableComments = enableComments;
 	}
 
@@ -895,6 +942,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setEnableRatings(boolean enableRatings) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_enableRatings = enableRatings;
 	}
 
@@ -906,6 +957,10 @@ public class CalendarModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -916,6 +971,26 @@ public class CalendarModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -1040,6 +1115,7 @@ public class CalendarModelImpl
 		CalendarImpl calendarImpl = new CalendarImpl();
 
 		calendarImpl.setMvccVersion(getMvccVersion());
+		calendarImpl.setCtCollectionId(getCtCollectionId());
 		calendarImpl.setUuid(getUuid());
 		calendarImpl.setCalendarId(getCalendarId());
 		calendarImpl.setGroupId(getGroupId());
@@ -1064,6 +1140,47 @@ public class CalendarModelImpl
 	}
 
 	@Override
+	public Calendar cloneWithOriginalValues() {
+		CalendarImpl calendarImpl = new CalendarImpl();
+
+		calendarImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		calendarImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		calendarImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		calendarImpl.setCalendarId(
+			this.<Long>getColumnOriginalValue("calendarId"));
+		calendarImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		calendarImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		calendarImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		calendarImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		calendarImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		calendarImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		calendarImpl.setCalendarResourceId(
+			this.<Long>getColumnOriginalValue("calendarResourceId"));
+		calendarImpl.setName(this.<String>getColumnOriginalValue("name"));
+		calendarImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		calendarImpl.setTimeZoneId(
+			this.<String>getColumnOriginalValue("timeZoneId"));
+		calendarImpl.setColor(this.<Integer>getColumnOriginalValue("color"));
+		calendarImpl.setDefaultCalendar(
+			this.<Boolean>getColumnOriginalValue("defaultCalendar"));
+		calendarImpl.setEnableComments(
+			this.<Boolean>getColumnOriginalValue("enableComments"));
+		calendarImpl.setEnableRatings(
+			this.<Boolean>getColumnOriginalValue("enableRatings"));
+		calendarImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+
+		return calendarImpl;
+	}
+
+	@Override
 	public int compareTo(Calendar calendar) {
 		int value = 0;
 
@@ -1077,16 +1194,16 @@ public class CalendarModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Calendar)) {
+		if (!(object instanceof Calendar)) {
 			return false;
 		}
 
-		Calendar calendar = (Calendar)obj;
+		Calendar calendar = (Calendar)object;
 
 		long primaryKey = calendar.getPrimaryKey();
 
@@ -1103,43 +1220,31 @@ public class CalendarModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		CalendarModelImpl calendarModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		calendarModelImpl._originalUuid = calendarModelImpl._uuid;
+		_setModifiedDate = false;
 
-		calendarModelImpl._originalGroupId = calendarModelImpl._groupId;
-
-		calendarModelImpl._setOriginalGroupId = false;
-
-		calendarModelImpl._originalCompanyId = calendarModelImpl._companyId;
-
-		calendarModelImpl._setOriginalCompanyId = false;
-
-		calendarModelImpl._setModifiedDate = false;
-
-		calendarModelImpl._originalCalendarResourceId =
-			calendarModelImpl._calendarResourceId;
-
-		calendarModelImpl._setOriginalCalendarResourceId = false;
-
-		calendarModelImpl._originalDefaultCalendar =
-			calendarModelImpl._defaultCalendar;
-
-		calendarModelImpl._setOriginalDefaultCalendar = false;
-
-		calendarModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -1147,6 +1252,8 @@ public class CalendarModelImpl
 		CalendarCacheModel calendarCacheModel = new CalendarCacheModel();
 
 		calendarCacheModel.mvccVersion = getMvccVersion();
+
+		calendarCacheModel.ctCollectionId = getCtCollectionId();
 
 		calendarCacheModel.uuid = getUuid();
 
@@ -1242,7 +1349,7 @@ public class CalendarModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1253,9 +1360,26 @@ public class CalendarModelImpl
 			Function<Calendar, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((Calendar)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((Calendar)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1274,7 +1398,7 @@ public class CalendarModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1306,27 +1430,18 @@ public class CalendarModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
 	private long _calendarId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _calendarResourceId;
-	private long _originalCalendarResourceId;
-	private boolean _setOriginalCalendarResourceId;
 	private String _name;
 	private String _nameCurrentLanguageId;
 	private String _description;
@@ -1334,11 +1449,122 @@ public class CalendarModelImpl
 	private String _timeZoneId;
 	private int _color;
 	private boolean _defaultCalendar;
-	private boolean _originalDefaultCalendar;
-	private boolean _setOriginalDefaultCalendar;
 	private boolean _enableComments;
 	private boolean _enableRatings;
 	private Date _lastPublishDate;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<Calendar, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((Calendar)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("calendarId", _calendarId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("calendarResourceId", _calendarResourceId);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("timeZoneId", _timeZoneId);
+		_columnOriginalValues.put("color", _color);
+		_columnOriginalValues.put("defaultCalendar", _defaultCalendar);
+		_columnOriginalValues.put("enableComments", _enableComments);
+		_columnOriginalValues.put("enableRatings", _enableRatings);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("calendarId", 8L);
+
+		columnBitmasks.put("groupId", 16L);
+
+		columnBitmasks.put("companyId", 32L);
+
+		columnBitmasks.put("userId", 64L);
+
+		columnBitmasks.put("userName", 128L);
+
+		columnBitmasks.put("createDate", 256L);
+
+		columnBitmasks.put("modifiedDate", 512L);
+
+		columnBitmasks.put("calendarResourceId", 1024L);
+
+		columnBitmasks.put("name", 2048L);
+
+		columnBitmasks.put("description", 4096L);
+
+		columnBitmasks.put("timeZoneId", 8192L);
+
+		columnBitmasks.put("color", 16384L);
+
+		columnBitmasks.put("defaultCalendar", 32768L);
+
+		columnBitmasks.put("enableComments", 65536L);
+
+		columnBitmasks.put("enableRatings", 131072L);
+
+		columnBitmasks.put("lastPublishDate", 262144L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private Calendar _escapedModel;
 

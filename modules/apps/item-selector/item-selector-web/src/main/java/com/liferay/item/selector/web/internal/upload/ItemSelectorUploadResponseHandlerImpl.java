@@ -20,9 +20,11 @@ import com.liferay.item.selector.ItemSelectorUploadResponseHandler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.repository.model.FileEntry;
+import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.upload.UploadPortletRequest;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.upload.UploadResponseHandler;
 
@@ -66,10 +68,12 @@ public class ItemSelectorUploadResponseHandlerImpl
 		String returnType = ParamUtil.getString(
 			uploadPortletRequest, "returnType");
 
-		ItemSelectorReturnTypeResolver itemSelectorReturnTypeResolver =
-			_itemSelectorReturnTypeResolverHandler.
-				getItemSelectorReturnTypeResolver(
-					returnType, FileEntry.class.getName());
+		ItemSelectorReturnTypeResolver<?, Object>
+			itemSelectorReturnTypeResolver =
+				(ItemSelectorReturnTypeResolver<?, Object>)
+					_itemSelectorReturnTypeResolverHandler.
+						getItemSelectorReturnTypeResolver(
+							returnType, FileEntry.class.getName());
 
 		if (itemSelectorReturnTypeResolver != null) {
 			try {
@@ -89,6 +93,11 @@ public class ItemSelectorUploadResponseHandlerImpl
 			}
 		}
 
+		SessionMessages.add(
+			uploadPortletRequest,
+			_portal.getPortletId(uploadPortletRequest) +
+				SessionMessages.KEY_SUFFIX_HIDE_DEFAULT_SUCCESS_MESSAGE);
+
 		return jsonObject;
 	}
 
@@ -98,5 +107,8 @@ public class ItemSelectorUploadResponseHandlerImpl
 	@Reference
 	private ItemSelectorReturnTypeResolverHandler
 		_itemSelectorReturnTypeResolverHandler;
+
+	@Reference
+	private Portal _portal;
 
 }

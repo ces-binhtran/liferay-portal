@@ -33,9 +33,9 @@ DecimalFormat decimalFormat = portletConfigurationCSSPortletDisplayContext.getDe
 			<aui:option label="Verdana" selected='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getTextDataProperty("fontFamily"), "Verdana") %>' />
 		</aui:select>
 
-		<aui:input label="bold" name="fontBold" type="toggle-switch" value='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getTextDataProperty("fontWeight"), "bold") %>' />
+		<aui:input inlineLabel="right" label="bold" labelCssClass="simple-toggle-switch" name="fontBold" type="toggle-switch" value='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getTextDataProperty("fontWeight"), "bold") %>' />
 
-		<aui:input label="italic" name="fontItalic" type="toggle-switch" value='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getTextDataProperty("fontStyle"), "italic") %>' />
+		<aui:input inlineLabel="right" label="italic" labelCssClass="simple-toggle-switch" name="fontItalic" type="toggle-switch" value='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getTextDataProperty("fontStyle"), "italic") %>' />
 
 		<aui:select label="size" name="fontSize" showEmptyOption="<%= true %>">
 
@@ -55,7 +55,7 @@ DecimalFormat decimalFormat = portletConfigurationCSSPortletDisplayContext.getDe
 		<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
 			<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getTextDataProperty("color") %>' />
 			<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "color") %>' />
-			<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "fontColor" %>' />
+			<liferay-util:param name="name" value='<%= liferayPortletResponse.getNamespace() + "fontColor" %>' />
 		</liferay-util:include>
 
 		<aui:select label="alignment" name="textAlign" showEmptyOption="<%= true %>">

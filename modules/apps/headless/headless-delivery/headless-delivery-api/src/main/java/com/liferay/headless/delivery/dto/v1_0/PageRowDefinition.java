@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -33,6 +36,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -40,16 +45,84 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageRowDefinition")
+@GraphQLName(
+	description = "Represents a definition of a Page row.",
+	value = "PageRowDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageRowDefinition")
-public class PageRowDefinition {
+public class PageRowDefinition implements Serializable {
 
 	public static PageRowDefinition toDTO(String json) {
 		return ObjectMapperUtil.readValue(PageRowDefinition.class, json);
 	}
 
-	@Schema
+	public static PageRowDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(PageRowDefinition.class, json);
+	}
+
+	@Schema(description = "The fragment style of a Page row.")
+	@Valid
+	public FragmentStyle getFragmentStyle() {
+		return fragmentStyle;
+	}
+
+	public void setFragmentStyle(FragmentStyle fragmentStyle) {
+		this.fragmentStyle = fragmentStyle;
+	}
+
+	@JsonIgnore
+	public void setFragmentStyle(
+		UnsafeSupplier<FragmentStyle, Exception> fragmentStyleUnsafeSupplier) {
+
+		try {
+			fragmentStyle = fragmentStyleUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The fragment style of a Page row.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentStyle fragmentStyle;
+
+	@Schema(description = "A list of fragment viewports of a Page row.")
+	@Valid
+	public FragmentViewport[] getFragmentViewports() {
+		return fragmentViewports;
+	}
+
+	public void setFragmentViewports(FragmentViewport[] fragmentViewports) {
+		this.fragmentViewports = fragmentViewports;
+	}
+
+	@JsonIgnore
+	public void setFragmentViewports(
+		UnsafeSupplier<FragmentViewport[], Exception>
+			fragmentViewportsUnsafeSupplier) {
+
+		try {
+			fragmentViewports = fragmentViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "A list of fragment viewports of a Page row.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentViewport[] fragmentViewports;
+
+	@Schema(
+		description = "A flag that indicates whether the page row has gutters."
+	)
 	public Boolean getGutters() {
 		return gutters;
 	}
@@ -73,11 +146,13 @@ public class PageRowDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the page row has gutters."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean gutters;
 
-	@Schema
+	@Schema(description = "The page row's modules per row.")
 	public Integer getModulesPerRow() {
 		return modulesPerRow;
 	}
@@ -101,11 +176,11 @@ public class PageRowDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page row's modules per row.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer modulesPerRow;
 
-	@Schema
+	@Schema(description = "The page row's number of columns.")
 	public Integer getNumberOfColumns() {
 		return numberOfColumns;
 	}
@@ -129,11 +204,13 @@ public class PageRowDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page row's number of columns.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Integer numberOfColumns;
 
-	@Schema
+	@Schema(
+		description = "A flag that indicates whether the page row has reverse order."
+	)
 	public Boolean getReverseOrder() {
 		return reverseOrder;
 	}
@@ -157,11 +234,78 @@ public class PageRowDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "A flag that indicates whether the page row has reverse order."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Boolean reverseOrder;
 
-	@Schema
+	@Schema(
+		deprecated = true,
+		description = "Deprecated as of Athanasius (7.3.x), replaced by rowViewports"
+	)
+	@Valid
+	public RowViewportConfig getRowViewportConfig() {
+		return rowViewportConfig;
+	}
+
+	public void setRowViewportConfig(RowViewportConfig rowViewportConfig) {
+		this.rowViewportConfig = rowViewportConfig;
+	}
+
+	@JsonIgnore
+	public void setRowViewportConfig(
+		UnsafeSupplier<RowViewportConfig, Exception>
+			rowViewportConfigUnsafeSupplier) {
+
+		try {
+			rowViewportConfig = rowViewportConfigUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Deprecated
+	@GraphQLField(
+		description = "Deprecated as of Athanasius (7.3.x), replaced by rowViewports"
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected RowViewportConfig rowViewportConfig;
+
+	@Schema(description = "A list of viewports of the page row.")
+	@Valid
+	public RowViewport[] getRowViewports() {
+		return rowViewports;
+	}
+
+	public void setRowViewports(RowViewport[] rowViewports) {
+		this.rowViewports = rowViewports;
+	}
+
+	@JsonIgnore
+	public void setRowViewports(
+		UnsafeSupplier<RowViewport[], Exception> rowViewportsUnsafeSupplier) {
+
+		try {
+			rowViewports = rowViewportsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "A list of viewports of the page row.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected RowViewport[] rowViewports;
+
+	@Schema(description = "The vertical aligment property of the page row.")
 	public String getVerticalAlignment() {
 		return verticalAlignment;
 	}
@@ -185,7 +329,9 @@ public class PageRowDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The vertical aligment property of the page row."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String verticalAlignment;
 
@@ -215,6 +361,36 @@ public class PageRowDefinition {
 		StringBundler sb = new StringBundler();
 
 		sb.append("{");
+
+		if (fragmentStyle != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentStyle\": ");
+
+			sb.append(String.valueOf(fragmentStyle));
+		}
+
+		if (fragmentViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < fragmentViewports.length; i++) {
+				sb.append(String.valueOf(fragmentViewports[i]));
+
+				if ((i + 1) < fragmentViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
 
 		if (gutters != null) {
 			if (sb.length() > 1) {
@@ -256,6 +432,36 @@ public class PageRowDefinition {
 			sb.append(reverseOrder);
 		}
 
+		if (rowViewportConfig != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewportConfig\": ");
+
+			sb.append(String.valueOf(rowViewportConfig));
+		}
+
+		if (rowViewports != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < rowViewports.length; i++) {
+				sb.append(String.valueOf(rowViewports[i]));
+
+				if ((i + 1) < rowViewports.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (verticalAlignment != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -276,15 +482,26 @@ public class PageRowDefinition {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageRowDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -300,14 +517,12 @@ public class PageRowDefinition {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -334,7 +549,7 @@ public class PageRowDefinition {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -342,7 +557,7 @@ public class PageRowDefinition {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -350,5 +565,10 @@ public class PageRowDefinition {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

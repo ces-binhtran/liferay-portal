@@ -126,9 +126,7 @@ for (long groupId : groupIds) {
 				continue;
 			}
 
-			String portletId = curRendererFactory.getPortletId();
-
-			if (group.isStagingGroup() && !group.isStagedPortlet(portletId)) {
+			if (group.isStagingGroup() && !group.isStagedPortlet(curRendererFactory.getPortletId())) {
 				curGroupId = group.getLiveGroupId();
 			}
 
@@ -145,45 +143,20 @@ for (long groupId : groupIds) {
 			Map<String, Object> data = HashMapBuilder.<String, Object>put(
 				"groupid", String.valueOf(curGroupId)
 			).build();
-
-			if (!curRendererFactory.isSupportsClassTypes()) {
-				data.put("href", assetBrowserURL.toString());
-
-				String type = curRendererFactory.getTypeName(locale);
-
-				data.put("destroyOnHide", true);
-				data.put("title", LanguageUtil.format(request, "select-x", type, false));
-				data.put("type", type);
 		%>
 
-				<liferay-ui:icon
-					cssClass="asset-selector"
-					data="<%= data %>"
-					id="<%= curGroupId + FriendlyURLNormalizerUtil.normalize(type) %>"
-					message="<%= HtmlUtil.escape(type) %>"
-					url="javascript:;"
-				/>
+			<c:choose>
+				<c:when test="<%= !curRendererFactory.isSupportsClassTypes() %>">
 
-			<%
-			}
-			else {
-				ClassTypeReader classTypeReader = curRendererFactory.getClassTypeReader();
-
-				List<ClassType> assetAvailableClassTypes = classTypeReader.getAvailableClassTypes(PortalUtil.getCurrentAndAncestorSiteGroupIds(curGroupId), locale);
-
-				for (ClassType assetAvailableClassType : assetAvailableClassTypes) {
-					assetBrowserURL.setParameter("subtypeSelectionId", String.valueOf(assetAvailableClassType.getClassTypeId()));
-					assetBrowserURL.setParameter("showNonindexable", String.valueOf(Boolean.TRUE));
-					assetBrowserURL.setParameter("showScheduled", String.valueOf(Boolean.TRUE));
-
+					<%
 					data.put("href", assetBrowserURL.toString());
 
-					String type = assetAvailableClassType.getName();
+					String type = curRendererFactory.getTypeName(locale);
 
 					data.put("destroyOnHide", true);
 					data.put("title", LanguageUtil.format(request, "select-x", type, false));
 					data.put("type", type);
-			%>
+					%>
 
 					<liferay-ui:icon
 						cssClass="asset-selector"
@@ -192,10 +165,44 @@ for (long groupId : groupIds) {
 						message="<%= HtmlUtil.escape(type) %>"
 						url="javascript:;"
 					/>
+				</c:when>
+				<c:otherwise>
+
+					<%
+					ClassTypeReader classTypeReader = curRendererFactory.getClassTypeReader();
+
+					List<ClassType> assetAvailableClassTypes = classTypeReader.getAvailableClassTypes(PortalUtil.getCurrentAndAncestorSiteGroupIds(curGroupId), locale);
+
+					for (ClassType assetAvailableClassType : assetAvailableClassTypes) {
+						assetBrowserURL.setParameter("subtypeSelectionId", String.valueOf(assetAvailableClassType.getClassTypeId()));
+						assetBrowserURL.setParameter("showNonindexable", String.valueOf(Boolean.TRUE));
+						assetBrowserURL.setParameter("showScheduled", String.valueOf(Boolean.TRUE));
+
+						data.put("href", assetBrowserURL.toString());
+
+						String type = assetAvailableClassType.getName();
+
+						data.put("destroyOnHide", true);
+						data.put("title", LanguageUtil.format(request, "select-x", type, false));
+						data.put("type", type);
+					%>
+
+						<liferay-ui:icon
+							cssClass="asset-selector"
+							data="<%= data %>"
+							id="<%= curGroupId + FriendlyURLNormalizerUtil.normalize(type) %>"
+							message="<%= HtmlUtil.escape(type) %>"
+							url="javascript:;"
+						/>
+
+					<%
+					}
+					%>
+
+				</c:otherwise>
+			</c:choose>
 
 		<%
-				}
-			}
 		}
 		%>
 
@@ -227,13 +234,13 @@ for (long groupId : groupIds) {
 	}
 </script>
 
-<aui:script require="metal-dom/src/dom as dom, frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	function selectAssets(assetEntryList) {
 		var assetClassName = '';
 		var assetEntryIds = [];
 
-		Array.prototype.forEach.call(assetEntryList, function (assetEntry) {
-			assetEntryIds.push(assetEntry.entityid);
+		Array.prototype.forEach.call(assetEntryList, (assetEntry) => {
+			assetEntryIds.push(assetEntry.value);
 
 			assetClassName = assetEntry.assetclassname;
 		});
@@ -248,35 +255,34 @@ for (long groupId : groupIds) {
 		});
 	}
 
-	var delegateHandler = dom.delegate(
+	var delegate = delegateModule.default;
+
+	var delegateHandler = delegate(
 		document.body,
 		'click',
 		'.asset-selector a',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var delegateTarget = event.delegateTarget;
 
-			var itemSelectorDialog = new ItemSelectorDialog.default({
-				eventName: '<%= eventName %>',
+			Liferay.Util.openSelectionModal({
+				customSelectEvent: true,
+				multiple: true,
+				onSelect: function (selectedItems) {
+					if (selectedItems) {
+						selectAssets(selectedItems);
+					}
+				},
+				selectEventName: '<%= eventName %>',
 				title: delegateTarget.dataset.title,
 				url: delegateTarget.dataset.href,
-			});
-
-			itemSelectorDialog.open();
-
-			itemSelectorDialog.on('selectedItemChange', function (event) {
-				var selectedItems = event.selectedItem;
-
-				if (selectedItems) {
-					selectAssets(selectedItems);
-				}
 			});
 		}
 	);
 
 	function handleDestroyPortlet() {
-		delegateHandler.removeListener();
+		delegateHandler.dispose();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

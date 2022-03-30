@@ -14,61 +14,36 @@
 
 package com.liferay.journal.web.internal.info.item.provider;
 
-import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.dynamic.data.mapping.exception.NoSuchStructureException;
-import com.liferay.dynamic.data.mapping.info.display.field.DDMFormValuesInfoDisplayFieldProvider;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMStructureInfoItemFieldSetProvider;
 import com.liferay.dynamic.data.mapping.info.item.provider.DDMTemplateInfoItemFieldSetProvider;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalService;
 import com.liferay.expando.info.item.provider.ExpandoInfoItemFieldSetProvider;
-import com.liferay.info.field.InfoField;
-import com.liferay.info.field.InfoFieldSetEntry;
-import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.InfoFormValues;
-import com.liferay.info.field.type.ImageInfoFieldType;
-import com.liferay.info.field.type.TextInfoFieldType;
-import com.liferay.info.field.type.URLInfoFieldType;
+import com.liferay.info.exception.NoSuchClassTypeException;
+import com.liferay.info.exception.NoSuchFormVariationException;
+import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.form.InfoForm;
-import com.liferay.info.item.InfoItemClassPKReference;
-import com.liferay.info.item.NoSuchClassTypeException;
-import com.liferay.info.item.NoSuchInfoItemException;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleDisplay;
-import com.liferay.journal.service.JournalArticleLocalService;
-import com.liferay.journal.util.JournalContent;
-import com.liferay.journal.util.JournalConverter;
-import com.liferay.journal.util.comparator.ArticleVersionComparator;
-import com.liferay.journal.web.internal.asset.JournalArticleDDMFormValuesReader;
+import com.liferay.journal.web.internal.info.item.JournalArticleInfoItemFields;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
-import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portlet.display.template.PortletDisplayTemplate;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
-import java.text.Format;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
@@ -87,23 +62,15 @@ public class JournalArticleInfoItemFormProvider
 
 	@Override
 	public InfoForm getInfoForm() {
-		InfoForm infoForm = new InfoForm(JournalArticle.class.getName());
-
-		infoForm.addAll(_getJournalArticleFields());
-
-		infoForm.add(
-			_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(
-				JournalArticle.class.getName()));
-
-		infoForm.add(
-			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
-				AssetEntry.class.getName()));
-
-		infoForm.add(
-			_expandoInfoItemFieldSetProvider.getInfoFieldSet(
-				JournalArticle.class.getName()));
-
-		return infoForm;
+		try {
+			return _getInfoForm(
+				StringPool.BLANK,
+				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+					JournalArticle.class.getName()));
+		}
+		catch (NoSuchFormVariationException noSuchFormVariationException) {
+			throw new RuntimeException(noSuchFormVariationException);
+		}
 	}
 
 	@Override
@@ -113,7 +80,12 @@ public class JournalArticleInfoItemFormProvider
 		long ddmStructureId = ddmStructure.getStructureId();
 
 		try {
-			return getInfoForm(ddmStructureId);
+			return _getInfoForm(
+				String.valueOf(ddmStructureId),
+				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+					_assetEntryLocalService.getEntry(
+						JournalArticle.class.getName(),
+						article.getResourcePrimKey())));
 		}
 		catch (NoSuchClassTypeException noSuchClassTypeException) {
 			throw new RuntimeException(
@@ -121,388 +93,215 @@ public class JournalArticleInfoItemFormProvider
 					ddmStructureId,
 				noSuchClassTypeException);
 		}
+		catch (PortalException portalException) {
+			throw new RuntimeException(
+				"Unable to get asset entry for journal article " +
+					article.getResourcePrimKey(),
+				portalException);
+		}
 	}
 
 	@Override
-	public InfoForm getInfoForm(long ddmStructureId)
-		throws NoSuchClassTypeException {
+	public InfoForm getInfoForm(String formVariationKey)
+		throws NoSuchFormVariationException {
 
-		InfoForm infoForm = getInfoForm();
+		return _getInfoForm(
+			formVariationKey,
+			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+				AssetEntry.class.getName()));
+	}
+
+	@Override
+	public InfoForm getInfoForm(String formVariationKey, long groupId)
+		throws NoSuchFormVariationException {
+
+		return _getInfoForm(
+			formVariationKey,
+			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+				JournalArticle.class.getName(),
+				GetterUtil.getLong(formVariationKey), groupId));
+	}
+
+	private InfoFieldSet _getBasicInformationInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.titleInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.descriptionInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.publishDateInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.authorNameInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.authorProfileImageInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.lastEditorNameInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.lastEditorProfileImageInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "basic-information")
+		).name(
+			"basic-information"
+		).build();
+	}
+
+	private InfoFieldSet _getDisplayPageInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.displayPageURLInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "display-page")
+		).name(
+			"display-page"
+		).build();
+	}
+
+	private InfoFieldSet _getFeaturedImageInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.smallImageInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "featured-image")
+		).name(
+			"featured-image"
+		).build();
+	}
+
+	private InfoForm _getInfoForm(
+			String formVariationKey, InfoFieldSet assetEntryInfoFieldSet)
+		throws NoSuchFormVariationException {
+
+		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales();
+
+		InfoLocalizedValue.Builder infoLocalizedValueBuilder =
+			InfoLocalizedValue.builder();
+
+		for (Locale locale : availableLocales) {
+			infoLocalizedValueBuilder.value(
+				locale,
+				ResourceActionsUtil.getModelResource(
+					locale, JournalArticle.class.getName()));
+		}
 
 		try {
-			infoForm.add(
-				_ddmStructureInfoItemFieldSetProvider.getInfoItemFieldSet(
-					ddmStructureId));
+			return InfoForm.builder(
+			).infoFieldSetEntry(
+				_getBasicInformationInfoFieldSet()
+			).<NoSuchStructureException>infoFieldSetEntry(
+				unsafeConsumer -> {
+					long ddmStructureId = GetterUtil.getLong(formVariationKey);
 
-			infoForm.add(
-				_ddmTemplateInfoItemFieldSetProvider.getInfoItemFieldSet(
-					ddmStructureId));
+					if (ddmStructureId != 0) {
+						unsafeConsumer.accept(
+							_ddmStructureInfoItemFieldSetProvider.
+								getInfoItemFieldSet(
+									ddmStructureId,
+									_getStructureFieldSetNameInfoLocalizedValue(
+										ddmStructureId)));
+
+						unsafeConsumer.accept(
+							_ddmTemplateInfoItemFieldSetProvider.
+								getInfoItemFieldSet(ddmStructureId));
+					}
+				}
+			).infoFieldSetEntry(
+				_templateInfoItemFieldSetProvider.getInfoFieldSet(
+					JournalArticle.class.getName(), formVariationKey)
+			).infoFieldSetEntry(
+				_getDisplayPageInfoFieldSet()
+			).infoFieldSetEntry(
+				_getFeaturedImageInfoFieldSet()
+			).infoFieldSetEntry(
+				_expandoInfoItemFieldSetProvider.getInfoFieldSet(
+					JournalArticle.class.getName())
+			).infoFieldSetEntry(
+				assetEntryInfoFieldSet
+			).infoFieldSetEntry(
+				_getScheduleInfoFieldSet()
+			).infoFieldSetEntry(
+				_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(
+					JournalArticle.class.getName())
+			).labelInfoLocalizedValue(
+				infoLocalizedValueBuilder.build()
+			).name(
+				JournalArticle.class.getName()
+			).build();
 		}
 		catch (NoSuchStructureException noSuchStructureException) {
-			throw new NoSuchClassTypeException(
-				ddmStructureId, noSuchStructureException);
+			throw new NoSuchFormVariationException(
+				formVariationKey, noSuchStructureException);
 		}
-
-		return infoForm;
 	}
 
-	@Override
-	public InfoFormValues getInfoFormValues(JournalArticle journalArticle) {
-		InfoFormValues infoFormValues = new InfoFormValues();
+	private InfoFieldSet _getScheduleInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.displayDateInfoField
+		).infoFieldSetEntry(
+			JournalArticleInfoItemFields.expirationDateInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "schedule")
+		).name(
+			"schedule"
+		).build();
+	}
 
-		infoFormValues.addAll(_getJournalArticleFormValues(journalArticle));
-
-		infoFormValues.setInfoItemClassPKReference(
-			new InfoItemClassPKReference(
-				JournalArticle.class.getName(),
-				journalArticle.getResourcePrimKey()));
+	private InfoLocalizedValue<String>
+			_getStructureFieldSetNameInfoLocalizedValue(long ddmStructureId)
+		throws NoSuchStructureException {
 
 		try {
-			infoFormValues.addAll(
-				_assetEntryInfoItemFieldSetProvider.getInfoFieldValues(
-					JournalArticle.class.getName(),
-					journalArticle.getResourcePrimKey()));
+			DDMStructure ddmStructure =
+				_ddmStructureLocalService.getDDMStructure(ddmStructureId);
+
+			Map<Locale, String> nameMap = new HashMap<>(
+				ddmStructure.getNameMap());
+
+			nameMap.replaceAll(
+				(locale, name) -> StringBundler.concat(
+					LanguageUtil.get(locale, "content"), StringPool.SPACE,
+					StringPool.OPEN_PARENTHESIS, name,
+					StringPool.CLOSE_PARENTHESIS));
+
+			return InfoLocalizedValue.<String>builder(
+			).values(
+				nameMap
+			).build();
 		}
-		catch (NoSuchInfoItemException noSuchInfoItemException) {
-			throw new RuntimeException(
-				"Caught unexpected exception", noSuchInfoItemException);
-		}
-
-		infoFormValues.addAll(
-			_expandoInfoItemFieldSetProvider.getInfoFieldValues(
-				JournalArticle.class.getName(), journalArticle));
-
-		infoFormValues.addAll(
-			_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
-				JournalArticle.class.getName(), journalArticle));
-
-		infoFormValues.addAll(_getDDMStructureInfoFieldValues(journalArticle));
-
-		infoFormValues.addAll(_getDDMTemplateInfoFieldValues(journalArticle));
-
-		return infoFormValues;
-	}
-
-	private String _getDateValue(Date date) {
-		if (date == null) {
-			return StringPool.BLANK;
-		}
-
-		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
-			locale);
-
-		return dateFormatDateTime.format(date);
-	}
-
-	private List<InfoFieldValue<Object>> _getDDMStructureInfoFieldValues(
-		JournalArticle article) {
-
-		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		List<InfoFieldValue<Object>> infoFieldValues = new ArrayList<>();
-
-		JournalArticleDDMFormValuesReader journalArticleDDMFormValuesReader =
-			new JournalArticleDDMFormValuesReader(article);
-
-		journalArticleDDMFormValuesReader.setFieldsToDDMFormValuesConverter(
-			_fieldsToDDMFormValuesConverter);
-		journalArticleDDMFormValuesReader.setJournalConverter(
-			_journalConverter);
-
-		try {
-			Map<String, Object> infoDisplayFieldsValues =
-				_ddmFormValuesInfoDisplayFieldProvider.
-					getInfoDisplayFieldsValues(
-						article,
-						journalArticleDDMFormValuesReader.getDDMFormValues(),
-						locale);
-
-			for (Map.Entry<String, Object> entry :
-					infoDisplayFieldsValues.entrySet()) {
-
-				String fieldName = entry.getKey();
-
-				InfoField infoField = new InfoField(
-					TextInfoFieldType.INSTANCE,
-					InfoLocalizedValue.localize(getClass(), fieldName),
-					fieldName);
-
-				infoFieldValues.add(
-					new InfoFieldValue<>(infoField, entry.getValue()));
-			}
+		catch (NoSuchStructureException noSuchStructureException) {
+			throw noSuchStructureException;
 		}
 		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
-		}
-
-		return infoFieldValues;
-	}
-
-	private List<InfoFieldValue<Object>> _getDDMTemplateInfoFieldValues(
-		JournalArticle journalArticle) {
-
-		List<InfoFieldValue<Object>> infoFieldValues = new ArrayList<>();
-
-		DDMStructure ddmStructure = journalArticle.getDDMStructure();
-
-		List<DDMTemplate> ddmTemplates = ddmStructure.getTemplates();
-
-		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		String languageId = LocaleUtil.toLanguageId(locale);
-
-		ddmTemplates.forEach(
-			ddmTemplate -> {
-				String fieldName = _getTemplateKey(ddmTemplate);
-
-				InfoField infoField = new InfoField(
-					TextInfoFieldType.INSTANCE,
-					InfoLocalizedValue.localize(getClass(), fieldName),
-					fieldName);
-
-				InfoFieldValue<Object> infoFieldValue = new InfoFieldValue<>(
-					infoField,
-					() -> {
-						JournalArticleDisplay journalArticleDisplay =
-							_journalContent.getDisplay(
-								journalArticle, ddmTemplate.getTemplateKey(),
-								com.liferay.portal.kernel.util.Constants.VIEW,
-								languageId, 1, null, _getThemeDisplay());
-
-						if (journalArticleDisplay != null) {
-							return journalArticleDisplay.getContent();
-						}
-
-						try {
-							journalArticleDisplay =
-								_journalArticleLocalService.getArticleDisplay(
-									journalArticle,
-									ddmTemplate.getTemplateKey(), null,
-									languageId, 1, null, _getThemeDisplay());
-
-							return journalArticleDisplay.getContent();
-						}
-						catch (Exception exception) {
-							throw new RuntimeException(
-								"Unable to render dynamic data mapping " +
-									"template" + ddmTemplate.getTemplateId(),
-								exception);
-						}
-					});
-
-				infoFieldValues.add(infoFieldValue);
-			});
-
-		return infoFieldValues;
-	}
-
-	private String _getDisplayPageURL(JournalArticle journalArticle)
-		throws PortalException {
-
-		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-			JournalArticle.class.getName(), journalArticle.getResourcePrimKey(),
-			_getThemeDisplay());
-	}
-
-	private JSONObject _getImageJSONObject(String alt, String url) {
-		JSONObject jsonObject = JSONUtil.put("url", url);
-
-		if (alt != null) {
-			jsonObject = jsonObject.put("alt", alt);
-		}
-
-		return jsonObject;
-	}
-
-	private Collection<InfoFieldSetEntry> _getJournalArticleFields() {
-		return Arrays.asList(
-			_titleInfoField, _descriptionInfoField, _smallImageInfoField,
-			_authorNameInfoField, _authorProfileImageInfoField,
-			_lastEditorNameInfoField, _lastEditorProfileImageInfoField,
-			_publishDateInfoField, _displayPageUrlInfoField);
-	}
-
-	private List<InfoFieldValue<Object>> _getJournalArticleFormValues(
-		JournalArticle journalArticle) {
-
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		try {
-			List<InfoFieldValue<Object>> journalArticleFieldValues =
-				new ArrayList<>();
-
-			journalArticleFieldValues.add(
-				new InfoFieldValue<>(
-					_titleInfoField, journalArticle.getTitle()));
-
-			journalArticleFieldValues.add(
-				new InfoFieldValue<>(
-					_descriptionInfoField, journalArticle.getDescription()));
-
-			journalArticleFieldValues.add(
-				new InfoFieldValue<>(
-					_smallImageInfoField,
-					_getImageJSONObject(
-						null,
-						journalArticle.getArticleImageURL(themeDisplay))));
-
-			User user = _getLastVersionUser(journalArticle);
-
-			if (user != null) {
-				journalArticleFieldValues.add(
-					new InfoFieldValue<>(
-						_authorNameInfoField, user.getFullName()));
-
-				journalArticleFieldValues.add(
-					new InfoFieldValue<>(
-						_authorProfileImageInfoField,
-						_getImageJSONObject(
-							user.getFullName(),
-							user.getPortraitURL(themeDisplay))));
-			}
-
-			User lastEditorUser = _userLocalService.fetchUser(
-				journalArticle.getUserId());
-
-			if (lastEditorUser != null) {
-				journalArticleFieldValues.add(
-					new InfoFieldValue<>(
-						_lastEditorNameInfoField,
-						lastEditorUser.getFullName()));
-
-				journalArticleFieldValues.add(
-					new InfoFieldValue<>(
-						_lastEditorProfileImageInfoField,
-						_getImageJSONObject(
-							lastEditorUser.getFullName(),
-							lastEditorUser.getPortraitURL(themeDisplay))));
-			}
-
-			journalArticleFieldValues.add(
-				new InfoFieldValue<>(
-					_publishDateInfoField,
-					_getDateValue(journalArticle.getDisplayDate())));
-
-			journalArticleFieldValues.add(
-				new InfoFieldValue<>(
-					_displayPageUrlInfoField,
-					_getDisplayPageURL(journalArticle)));
-
-			return journalArticleFieldValues;
-		}
-		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
+			throw new RuntimeException("Unexpected exception", portalException);
 		}
 	}
-
-	private User _getLastVersionUser(JournalArticle journalArticle) {
-		List<JournalArticle> articles = _journalArticleLocalService.getArticles(
-			journalArticle.getGroupId(), journalArticle.getArticleId(), 0, 1,
-			new ArticleVersionComparator(true));
-
-		journalArticle = articles.get(0);
-
-		return _userLocalService.fetchUser(journalArticle.getUserId());
-	}
-
-	private String _getTemplateKey(DDMTemplate ddmTemplate) {
-		String templateKey = ddmTemplate.getTemplateKey();
-
-		return PortletDisplayTemplate.DISPLAY_STYLE_PREFIX +
-			templateKey.replaceAll("\\W", "_");
-	}
-
-	private ThemeDisplay _getThemeDisplay() {
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		if (serviceContext != null) {
-			return serviceContext.getThemeDisplay();
-		}
-
-		return null;
-	}
-
-	@Reference
-	private AssetDisplayPageFriendlyURLProvider
-		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
 	private AssetEntryInfoItemFieldSetProvider
 		_assetEntryInfoItemFieldSetProvider;
 
-	private final InfoField _authorNameInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "author-name"), "authorName");
-	private final InfoField _authorProfileImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(
-			"com.liferay.journal.lang", "author-profile-image"),
-		"authorProfileImage");
-
 	@Reference
-	private DDMFormValuesInfoDisplayFieldProvider
-		_ddmFormValuesInfoDisplayFieldProvider;
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
 	private DDMStructureInfoItemFieldSetProvider
 		_ddmStructureInfoItemFieldSetProvider;
 
 	@Reference
+	private DDMStructureLocalService _ddmStructureLocalService;
+
+	@Reference
 	private DDMTemplateInfoItemFieldSetProvider
 		_ddmTemplateInfoItemFieldSetProvider;
 
-	private final InfoField _descriptionInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "description"), "description");
-	private final InfoField _displayPageUrlInfoField = new InfoField(
-		URLInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(
-			"com.liferay.asset.info.display.impl", "display-page-url"),
-		"displayPageURL");
-
 	@Reference
 	private ExpandoInfoItemFieldSetProvider _expandoInfoItemFieldSetProvider;
-
-	@Reference
-	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
 
 	@Reference
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
 
 	@Reference
-	private JournalArticleLocalService _journalArticleLocalService;
-
-	@Reference
-	private JournalContent _journalContent;
-
-	@Reference
-	private JournalConverter _journalConverter;
-
-	private final InfoField _lastEditorNameInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(
-			"com.liferay.journal.lang", "last-editor-name"),
-		"lastEditorName");
-	private final InfoField _lastEditorProfileImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "last-editor-profile-image"),
-		"lastEditorProfileImage");
-	private final InfoField _publishDateInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "publish-date"), "publishDate");
-	private final InfoField _smallImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize("com.liferay.journal.lang", "small-image"),
-		"smallImage");
-	private final InfoField _titleInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "title"), "title");
-
-	@Reference
-	private UserLocalService _userLocalService;
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 }

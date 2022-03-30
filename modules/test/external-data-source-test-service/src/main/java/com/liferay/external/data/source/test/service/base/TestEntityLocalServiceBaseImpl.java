@@ -16,6 +16,7 @@ package com.liferay.external.data.source.test.service.base;
 
 import com.liferay.external.data.source.test.model.TestEntity;
 import com.liferay.external.data.source.test.service.TestEntityLocalService;
+import com.liferay.external.data.source.test.service.TestEntityLocalServiceUtil;
 import com.liferay.external.data.source.test.service.persistence.TestEntityPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -45,6 +46,8 @@ import com.liferay.portal.spring.extender.service.ServiceReference;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -67,11 +70,15 @@ public abstract class TestEntityLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>TestEntityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.external.data.source.test.service.TestEntityLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>TestEntityLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>TestEntityLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the test entity to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TestEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param testEntity the test entity
 	 * @return the test entity that was added
@@ -99,6 +106,10 @@ public abstract class TestEntityLocalServiceBaseImpl
 	/**
 	 * Deletes the test entity with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TestEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param id the primary key of the test entity
 	 * @return the test entity that was removed
 	 * @throws PortalException if a test entity with the primary key could not be found
@@ -112,6 +123,10 @@ public abstract class TestEntityLocalServiceBaseImpl
 	/**
 	 * Deletes the test entity from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TestEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param testEntity the test entity
 	 * @return the test entity that was removed
 	 */
@@ -124,6 +139,13 @@ public abstract class TestEntityLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return testEntityPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -274,6 +296,7 @@ public abstract class TestEntityLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -291,6 +314,7 @@ public abstract class TestEntityLocalServiceBaseImpl
 			(TestEntity)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<TestEntity> getBasePersistence() {
 		return testEntityPersistence;
 	}
@@ -333,6 +357,10 @@ public abstract class TestEntityLocalServiceBaseImpl
 
 	/**
 	 * Updates the test entity in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TestEntityLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param testEntity the test entity
 	 * @return the test entity that was updated
@@ -410,11 +438,15 @@ public abstract class TestEntityLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.external.data.source.test.model.TestEntity",
 			testEntityLocalService);
+
+		_setLocalServiceUtilService(testEntityLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.external.data.source.test.model.TestEntity");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -456,6 +488,22 @@ public abstract class TestEntityLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		TestEntityLocalService testEntityLocalService) {
+
+		try {
+			Field field = TestEntityLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, testEntityLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

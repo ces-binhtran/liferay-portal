@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -134,22 +134,13 @@ public class SamlSpSessionPersistenceTest {
 
 		newSamlSpSession.setModifiedDate(RandomTestUtil.nextDate());
 
-		newSamlSpSession.setSamlIdpEntityId(RandomTestUtil.randomString());
-
-		newSamlSpSession.setSamlSpSessionKey(RandomTestUtil.randomString());
+		newSamlSpSession.setSamlPeerBindingId(RandomTestUtil.nextLong());
 
 		newSamlSpSession.setAssertionXml(RandomTestUtil.randomString());
 
 		newSamlSpSession.setJSessionId(RandomTestUtil.randomString());
 
-		newSamlSpSession.setNameIdFormat(RandomTestUtil.randomString());
-
-		newSamlSpSession.setNameIdNameQualifier(RandomTestUtil.randomString());
-
-		newSamlSpSession.setNameIdSPNameQualifier(
-			RandomTestUtil.randomString());
-
-		newSamlSpSession.setNameIdValue(RandomTestUtil.randomString());
+		newSamlSpSession.setSamlSpSessionKey(RandomTestUtil.randomString());
 
 		newSamlSpSession.setSessionIndex(RandomTestUtil.randomString());
 
@@ -178,11 +169,8 @@ public class SamlSpSessionPersistenceTest {
 			Time.getShortTimestamp(existingSamlSpSession.getModifiedDate()),
 			Time.getShortTimestamp(newSamlSpSession.getModifiedDate()));
 		Assert.assertEquals(
-			existingSamlSpSession.getSamlIdpEntityId(),
-			newSamlSpSession.getSamlIdpEntityId());
-		Assert.assertEquals(
-			existingSamlSpSession.getSamlSpSessionKey(),
-			newSamlSpSession.getSamlSpSessionKey());
+			existingSamlSpSession.getSamlPeerBindingId(),
+			newSamlSpSession.getSamlPeerBindingId());
 		Assert.assertEquals(
 			existingSamlSpSession.getAssertionXml(),
 			newSamlSpSession.getAssertionXml());
@@ -190,17 +178,8 @@ public class SamlSpSessionPersistenceTest {
 			existingSamlSpSession.getJSessionId(),
 			newSamlSpSession.getJSessionId());
 		Assert.assertEquals(
-			existingSamlSpSession.getNameIdFormat(),
-			newSamlSpSession.getNameIdFormat());
-		Assert.assertEquals(
-			existingSamlSpSession.getNameIdNameQualifier(),
-			newSamlSpSession.getNameIdNameQualifier());
-		Assert.assertEquals(
-			existingSamlSpSession.getNameIdSPNameQualifier(),
-			newSamlSpSession.getNameIdSPNameQualifier());
-		Assert.assertEquals(
-			existingSamlSpSession.getNameIdValue(),
-			newSamlSpSession.getNameIdValue());
+			existingSamlSpSession.getSamlSpSessionKey(),
+			newSamlSpSession.getSamlSpSessionKey());
 		Assert.assertEquals(
 			existingSamlSpSession.getSessionIndex(),
 			newSamlSpSession.getSessionIndex());
@@ -210,12 +189,10 @@ public class SamlSpSessionPersistenceTest {
 	}
 
 	@Test
-	public void testCountBySamlSpSessionKey() throws Exception {
-		_persistence.countBySamlSpSessionKey("");
+	public void testCountBySamlPeerBindingId() throws Exception {
+		_persistence.countBySamlPeerBindingId(RandomTestUtil.nextLong());
 
-		_persistence.countBySamlSpSessionKey("null");
-
-		_persistence.countBySamlSpSessionKey((String)null);
+		_persistence.countBySamlPeerBindingId(0L);
 	}
 
 	@Test
@@ -228,21 +205,21 @@ public class SamlSpSessionPersistenceTest {
 	}
 
 	@Test
-	public void testCountByNameIdValue() throws Exception {
-		_persistence.countByNameIdValue("");
+	public void testCountBySamlSpSessionKey() throws Exception {
+		_persistence.countBySamlSpSessionKey("");
 
-		_persistence.countByNameIdValue("null");
+		_persistence.countBySamlSpSessionKey("null");
 
-		_persistence.countByNameIdValue((String)null);
+		_persistence.countBySamlSpSessionKey((String)null);
 	}
 
 	@Test
-	public void testCountBySessionIndex() throws Exception {
-		_persistence.countBySessionIndex("");
+	public void testCountByC_SI() throws Exception {
+		_persistence.countByC_SI(RandomTestUtil.nextLong(), "");
 
-		_persistence.countBySessionIndex("null");
+		_persistence.countByC_SI(0L, "null");
 
-		_persistence.countBySessionIndex((String)null);
+		_persistence.countByC_SI(0L, (String)null);
 	}
 
 	@Test
@@ -272,10 +249,8 @@ public class SamlSpSessionPersistenceTest {
 		return OrderByComparatorFactoryUtil.create(
 			"SamlSpSession", "samlSpSessionId", true, "companyId", true,
 			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "samlIdpEntityId", true, "samlSpSessionKey",
-			true, "jSessionId", true, "nameIdFormat", true,
-			"nameIdNameQualifier", true, "nameIdSPNameQualifier", true,
-			"nameIdValue", true, "sessionIndex", true, "terminated", true);
+			"modifiedDate", true, "samlPeerBindingId", true, "jSessionId", true,
+			"samlSpSessionKey", true, "sessionIndex", true, "terminated", true);
 	}
 
 	@Test
@@ -497,29 +472,73 @@ public class SamlSpSessionPersistenceTest {
 
 		_persistence.clearCache();
 
-		SamlSpSession existingSamlSpSession = _persistence.findByPrimaryKey(
-			newSamlSpSession.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newSamlSpSession.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingSamlSpSession.getSamlSpSessionKey(),
-				ReflectionTestUtil.invoke(
-					existingSamlSpSession, "getOriginalSamlSpSessionKey",
-					new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingSamlSpSession.getJSessionId(),
-				ReflectionTestUtil.invoke(
-					existingSamlSpSession, "getOriginalJSessionId",
-					new Class<?>[0])));
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingSamlSpSession.getSessionIndex(),
-				ReflectionTestUtil.invoke(
-					existingSamlSpSession, "getOriginalSessionIndex",
-					new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		SamlSpSession newSamlSpSession = addSamlSpSession();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			SamlSpSession.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"samlSpSessionId", newSamlSpSession.getSamlSpSessionId()));
+
+		List<SamlSpSession> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(SamlSpSession samlSpSession) {
+		Assert.assertEquals(
+			samlSpSession.getJSessionId(),
+			ReflectionTestUtil.invoke(
+				samlSpSession, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "jSessionId"));
+
+		Assert.assertEquals(
+			samlSpSession.getSamlSpSessionKey(),
+			ReflectionTestUtil.invoke(
+				samlSpSession, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "samlSpSessionKey"));
+
+		Assert.assertEquals(
+			Long.valueOf(samlSpSession.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				samlSpSession, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			samlSpSession.getSessionIndex(),
+			ReflectionTestUtil.invoke(
+				samlSpSession, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "sessionIndex"));
 	}
 
 	protected SamlSpSession addSamlSpSession() throws Exception {
@@ -537,21 +556,13 @@ public class SamlSpSessionPersistenceTest {
 
 		samlSpSession.setModifiedDate(RandomTestUtil.nextDate());
 
-		samlSpSession.setSamlIdpEntityId(RandomTestUtil.randomString());
-
-		samlSpSession.setSamlSpSessionKey(RandomTestUtil.randomString());
+		samlSpSession.setSamlPeerBindingId(RandomTestUtil.nextLong());
 
 		samlSpSession.setAssertionXml(RandomTestUtil.randomString());
 
 		samlSpSession.setJSessionId(RandomTestUtil.randomString());
 
-		samlSpSession.setNameIdFormat(RandomTestUtil.randomString());
-
-		samlSpSession.setNameIdNameQualifier(RandomTestUtil.randomString());
-
-		samlSpSession.setNameIdSPNameQualifier(RandomTestUtil.randomString());
-
-		samlSpSession.setNameIdValue(RandomTestUtil.randomString());
+		samlSpSession.setSamlSpSessionKey(RandomTestUtil.randomString());
 
 		samlSpSession.setSessionIndex(RandomTestUtil.randomString());
 

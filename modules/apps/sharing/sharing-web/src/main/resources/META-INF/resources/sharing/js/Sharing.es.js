@@ -38,11 +38,51 @@ function filterDuplicateItems(items) {
 	);
 }
 
+const SharingAutocomplete = ({onItemClick = () => {}, sourceItems}) => {
+	return (
+		<ClayDropDown.ItemList>
+			{sourceItems.map((item) => (
+				<ClayDropDown.Item
+					key={item.id}
+					onClick={() => onItemClick(item)}
+				>
+					<div className="autofit-row autofit-row-center">
+						<div className="autofit-col mr-3">
+							<ClaySticker
+								className={`sticker-user-icon ${
+									item.portraitURL ? '' : item.userId % 10
+								}`}
+								size="lg"
+							>
+								{item.portraitURL ? (
+									<div className="sticker-overlay">
+										<img
+											className="sticker-img"
+											src={item.portraitURL}
+										/>
+									</div>
+								) : (
+									<ClayIcon symbol="user" />
+								)}
+							</ClaySticker>
+						</div>
+
+						<div className="autofit-col">
+							<strong>{item.fullName}</strong>
+
+							<span>{item.emailAddress}</span>
+						</div>
+					</div>
+				</ClayDropDown.Item>
+			))}
+		</ClayDropDown.ItemList>
+	);
+};
+
 const Sharing = ({
 	autocompleteUserURL,
 	classNameId,
 	classPK,
-	dialogId,
 	portletNamespace,
 	shareActionURL,
 	sharingEntryPermissionDisplayActionId,
@@ -56,14 +96,12 @@ const Sharing = ({
 	const [multiSelectValue, setMultiSelectValue] = useState('');
 	const [allowSharingChecked, setAllowSharingChecked] = useState(true);
 	const [sharingPermission, setSharingPermission] = useState('VIEW');
-	const emailValidationInProgress = useRef(false);
+	const emailValidationInProgressRef = useRef(false);
 
 	const closeDialog = () => {
-		const sharingDialog = Liferay.Util.getWindow(dialogId);
-
-		if (sharingDialog && sharingDialog.hide) {
-			sharingDialog.hide();
-		}
+		Liferay.Util.getOpener().Liferay.fire('closeModal', {
+			id: 'sharingDialog',
+		});
 	};
 
 	const showNotification = (message, error) => {
@@ -124,14 +162,6 @@ const Sharing = ({
 			});
 	};
 
-	const onModalClose = () => {
-		const sharingDialog = Liferay.Util.getWindow(dialogId);
-
-		if (sharingDialog && sharingDialog.hide) {
-			sharingDialog.hide();
-		}
-	};
-
 	const isEmailAddressValid = (email) => {
 		const emailRegex = /.+@.+\..+/i;
 
@@ -140,7 +170,7 @@ const Sharing = ({
 
 	const handleItemsChange = useCallback(
 		(items) => {
-			emailValidationInProgress.current = true;
+			emailValidationInProgressRef.current = true;
 
 			Promise.all(
 				items.map((item) => {
@@ -183,7 +213,7 @@ const Sharing = ({
 						}));
 				})
 			).then((results) => {
-				emailValidationInProgress.current = false;
+				emailValidationInProgressRef.current = false;
 
 				const erroredResults = results.filter(({error}) => !!error);
 
@@ -212,12 +242,14 @@ const Sharing = ({
 	);
 
 	const handleChange = useCallback((value) => {
-		if (!emailValidationInProgress.current) {
+		if (!emailValidationInProgressRef.current) {
 			setMultiSelectValue(value);
+
+			if (value.trim() === '') {
+				setEmailAddressErrorMessages([]);
+			}
 		}
 	}, []);
-
-	const multiSelectFilter = useCallback(() => true, []);
 
 	const {resource} = useResource({
 		fetchOptions: {
@@ -228,7 +260,7 @@ const Sharing = ({
 		fetchRetry: {
 			attempts: 0,
 		},
-		link: multiSelectValue ? autocompleteUserURL : undefined,
+		link: autocompleteUserURL,
 		variables: {
 			[`${portletNamespace}query`]: multiSelectValue,
 		},
@@ -251,7 +283,6 @@ const Sharing = ({
 							</label>
 
 							<ClayMultiSelect
-								filter={multiSelectFilter}
 								inputName={`${portletNamespace}userEmailAddress`}
 								inputValue={multiSelectValue}
 								items={selectedItems}
@@ -278,6 +309,7 @@ const Sharing = ({
 										: []
 								}
 							/>
+
 							<ClayForm.FeedbackGroup>
 								<ClayForm.Text>
 									{Liferay.Language.get(
@@ -357,59 +389,26 @@ const Sharing = ({
 					<ClayButton.Group spaced>
 						<ClayButton
 							displayType="secondary"
-							onClick={onModalClose}
+							onClick={closeDialog}
 						>
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
 
-						<ClayButton displayType="primary" type="submit">
+						<ClayButton
+							disabled={
+								!selectedItems.length ||
+								!!emailAddressErrorMessages.length ||
+								multiSelectValue.trim() !== ''
+							}
+							displayType="primary"
+							type="submit"
+						>
 							{Liferay.Language.get('share')}
 						</ClayButton>
 					</ClayButton.Group>
 				}
 			/>
 		</ClayForm>
-	);
-};
-
-const SharingAutocomplete = ({onItemClick = () => {}, sourceItems}) => {
-	return (
-		<ClayDropDown.ItemList>
-			{sourceItems.map((item) => (
-				<ClayDropDown.Item
-					key={item.id}
-					onClick={() => onItemClick(item)}
-				>
-					<div className="autofit-row autofit-row-center">
-						<div className="autofit-col mr-3">
-							<ClaySticker
-								className={`sticker-user-icon ${
-									item.portraitURL ? '' : item.userId % 10
-								}`}
-								size="lg"
-							>
-								{item.portraitURL ? (
-									<div className="sticker-overlay">
-										<img
-											className="sticker-img"
-											src={item.portraitURL}
-										/>
-									</div>
-								) : (
-									<ClayIcon symbol="user" />
-								)}
-							</ClaySticker>
-						</div>
-
-						<div className="autofit-col">
-							<strong>{item.fullName}</strong>
-
-							<span>{item.emailAddress}</span>
-						</div>
-					</div>
-				</ClayDropDown.Item>
-			))}
-		</ClayDropDown.ItemList>
 	);
 };
 

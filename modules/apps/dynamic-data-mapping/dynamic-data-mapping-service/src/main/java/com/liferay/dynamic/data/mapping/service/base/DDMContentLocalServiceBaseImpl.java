@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMContent;
 import com.liferay.dynamic.data.mapping.service.DDMContentLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMContentPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -53,10 +54,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,8 +72,11 @@ import org.osgi.service.component.annotations.Reference;
  *
  * @author Brian Wing Shun Chan
  * @see com.liferay.dynamic.data.mapping.service.impl.DDMContentLocalServiceImpl
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ DDMFieldLocalServiceImpl}
  * @generated
  */
+@Deprecated
 public abstract class DDMContentLocalServiceBaseImpl
 	extends BaseLocalServiceImpl
 	implements AopService, DDMContentLocalService, IdentifiableOSGiService {
@@ -77,11 +84,15 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMContentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMContentLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ddm content to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was added
@@ -109,6 +120,10 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm content with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param contentId the primary key of the ddm content
 	 * @return the ddm content that was removed
 	 * @throws PortalException if a ddm content with the primary key could not be found
@@ -122,6 +137,10 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm content from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was removed
 	 */
@@ -134,6 +153,13 @@ public abstract class DDMContentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmContentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -364,6 +390,7 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -381,6 +408,7 @@ public abstract class DDMContentLocalServiceBaseImpl
 			(DDMContent)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DDMContent> getBasePersistence() {
 		return ddmContentPersistence;
 	}
@@ -472,6 +500,10 @@ public abstract class DDMContentLocalServiceBaseImpl
 	/**
 	 * Updates the ddm content in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was updated
 	 */
@@ -479,6 +511,11 @@ public abstract class DDMContentLocalServiceBaseImpl
 	@Override
 	public DDMContent updateDDMContent(DDMContent ddmContent) {
 		return ddmContentPersistence.update(ddmContent);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -492,6 +529,8 @@ public abstract class DDMContentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmContentLocalService = (DDMContentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmContentLocalService);
 	}
 
 	/**
@@ -548,6 +587,22 @@ public abstract class DDMContentLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		DDMContentLocalService ddmContentLocalService) {
+
+		try {
+			Field field = DDMContentLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmContentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

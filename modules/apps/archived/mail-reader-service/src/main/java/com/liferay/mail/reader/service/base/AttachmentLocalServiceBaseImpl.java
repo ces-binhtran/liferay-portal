@@ -16,6 +16,7 @@ package com.liferay.mail.reader.service.base;
 
 import com.liferay.mail.reader.model.Attachment;
 import com.liferay.mail.reader.service.AttachmentLocalService;
+import com.liferay.mail.reader.service.AttachmentLocalServiceUtil;
 import com.liferay.mail.reader.service.persistence.AccountPersistence;
 import com.liferay.mail.reader.service.persistence.AttachmentPersistence;
 import com.liferay.mail.reader.service.persistence.FolderPersistence;
@@ -47,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,11 +75,15 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AttachmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.mail.reader.service.AttachmentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AttachmentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AttachmentLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the attachment to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AttachmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param attachment the attachment
 	 * @return the attachment that was added
@@ -103,6 +111,10 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/**
 	 * Deletes the attachment with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AttachmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param attachmentId the primary key of the attachment
 	 * @return the attachment that was removed
 	 * @throws PortalException if a attachment with the primary key could not be found
@@ -118,6 +130,10 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/**
 	 * Deletes the attachment from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AttachmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param attachment the attachment
 	 * @return the attachment that was removed
 	 */
@@ -130,6 +146,13 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return attachmentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -281,6 +304,7 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -298,6 +322,7 @@ public abstract class AttachmentLocalServiceBaseImpl
 			(Attachment)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<Attachment> getBasePersistence() {
 		return attachmentPersistence;
 	}
@@ -341,6 +366,10 @@ public abstract class AttachmentLocalServiceBaseImpl
 	/**
 	 * Updates the attachment in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AttachmentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param attachment the attachment
 	 * @return the attachment that was updated
 	 */
@@ -348,6 +377,11 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Override
 	public Attachment updateAttachment(Attachment attachment) {
 		return attachmentPersistence.update(attachment);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -361,6 +395,8 @@ public abstract class AttachmentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		attachmentLocalService = (AttachmentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(attachmentLocalService);
 	}
 
 	/**
@@ -402,6 +438,22 @@ public abstract class AttachmentLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		AttachmentLocalService attachmentLocalService) {
+
+		try {
+			Field field = AttachmentLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, attachmentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

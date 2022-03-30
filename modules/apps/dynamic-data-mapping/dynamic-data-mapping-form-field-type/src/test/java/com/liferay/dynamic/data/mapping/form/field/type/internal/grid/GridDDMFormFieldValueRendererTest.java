@@ -24,14 +24,22 @@ import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Pedro Queiroz
  */
 public class GridDDMFormFieldValueRendererTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testRender() throws Exception {
@@ -71,7 +79,7 @@ public class GridDDMFormFieldValueRendererTest {
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		GridDDMFormFieldValueRenderer gridDDMFormFieldValueRenderer =
-			createGridDDMFormFieldValueRenderer();
+			_createGridDDMFormFieldValueRenderer();
 
 		Assert.assertEquals(
 			"rowLabel 1: columnLabel 1",
@@ -120,7 +128,7 @@ public class GridDDMFormFieldValueRendererTest {
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		GridDDMFormFieldValueRenderer gridDDMFormFieldValueRenderer =
-			createGridDDMFormFieldValueRenderer();
+			_createGridDDMFormFieldValueRenderer();
 
 		Assert.assertEquals(
 			"rowLabel 1: columnLabel 1, rowLabel 2: columnLabel 2",
@@ -128,8 +136,8 @@ public class GridDDMFormFieldValueRendererTest {
 				ddmFormFieldValue, LocaleUtil.US));
 	}
 
-	protected GridDDMFormFieldValueAccessor
-		createGridDDMFormFieldValueAccessor() {
+	private GridDDMFormFieldValueAccessor
+		_createGridDDMFormFieldValueAccessor() {
 
 		GridDDMFormFieldValueAccessor gridDDMFormFieldValueAccessor =
 			new GridDDMFormFieldValueAccessor();
@@ -139,15 +147,14 @@ public class GridDDMFormFieldValueRendererTest {
 		return gridDDMFormFieldValueAccessor;
 	}
 
-	protected GridDDMFormFieldValueRenderer
-			createGridDDMFormFieldValueRenderer()
+	private GridDDMFormFieldValueRenderer _createGridDDMFormFieldValueRenderer()
 		throws Exception {
 
 		GridDDMFormFieldValueRenderer gridDDMFormFieldValueRenderer =
 			new GridDDMFormFieldValueRenderer();
 
 		gridDDMFormFieldValueRenderer.gridDDMFormFieldValueAccessor =
-			createGridDDMFormFieldValueAccessor();
+			_createGridDDMFormFieldValueAccessor();
 
 		return gridDDMFormFieldValueRenderer;
 	}

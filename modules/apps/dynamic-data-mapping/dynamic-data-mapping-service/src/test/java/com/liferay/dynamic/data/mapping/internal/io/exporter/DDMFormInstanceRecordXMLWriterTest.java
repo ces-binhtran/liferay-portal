@@ -49,8 +49,8 @@ public class DDMFormInstanceRecordXMLWriterTest extends PowerMockito {
 
 	@Before
 	public void setUp() throws Exception {
-		setUpPropsUtil();
-		setUpSAXReaderUtil();
+		_setUpPropsUtil();
+		_setUpSAXReaderUtil();
 	}
 
 	@Test
@@ -187,29 +187,27 @@ public class DDMFormInstanceRecordXMLWriterTest extends PowerMockito {
 		List<Map<String, String>> ddmFormFieldValues =
 			new ArrayList<Map<String, String>>() {
 				{
-					Map<String, String> map1 = HashMapBuilder.put(
-						"field1", "2"
-					).put(
-						"field2", "esta é uma 'string'"
-					).put(
-						"field3", "false"
-					).put(
-						"field4", "11.7"
-					).build();
+					add(
+						HashMapBuilder.put(
+							"field1", "2"
+						).put(
+							"field2", "esta é uma 'string'"
+						).put(
+							"field3", "false"
+						).put(
+							"field4", "11.7"
+						).build());
 
-					add(map1);
-
-					Map<String, String> map2 = HashMapBuilder.put(
-						"field1", "1"
-					).put(
-						"field2", "esta é uma 'string'"
-					).put(
-						"field3", ""
-					).put(
-						"field4", "10"
-					).build();
-
-					add(map2);
+					add(
+						HashMapBuilder.put(
+							"field1", "1"
+						).put(
+							"field2", "esta é uma 'string'"
+						).put(
+							"field3", ""
+						).put(
+							"field4", "10"
+						).build());
 				}
 			};
 
@@ -297,12 +295,12 @@ public class DDMFormInstanceRecordXMLWriterTest extends PowerMockito {
 		).asXML();
 	}
 
-	protected void setUpPropsUtil() {
+	private void _setUpPropsUtil() {
 		PropsTestUtil.setProps(
 			PropsKeys.XML_SECURITY_ENABLED, Boolean.TRUE.toString());
 	}
 
-	protected void setUpSAXReaderUtil() {
+	private void _setUpSAXReaderUtil() {
 		SAXReaderUtil saxReaderUtil = new SAXReaderUtil();
 
 		saxReaderUtil.setSAXReader(_saxReader);

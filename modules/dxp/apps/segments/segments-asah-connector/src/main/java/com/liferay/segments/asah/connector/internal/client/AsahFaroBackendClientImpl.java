@@ -19,9 +19,11 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.NestableRuntimeException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.asah.connector.internal.client.constants.FilterConstants;
 import com.liferay.segments.asah.connector.internal.client.data.binding.IndividualJSONObjectMapper;
 import com.liferay.segments.asah.connector.internal.client.data.binding.IndividualSegmentJSONObjectMapper;
 import com.liferay.segments.asah.connector.internal.client.data.binding.InterestTermsJSONObjectMapper;
@@ -33,14 +35,12 @@ import com.liferay.segments.asah.connector.internal.client.model.IndividualSegme
 import com.liferay.segments.asah.connector.internal.client.model.Results;
 import com.liferay.segments.asah.connector.internal.client.model.Topic;
 import com.liferay.segments.asah.connector.internal.client.util.FilterBuilder;
-import com.liferay.segments.asah.connector.internal.client.util.FilterConstants;
 import com.liferay.segments.asah.connector.internal.client.util.OrderByField;
 import com.liferay.segments.asah.connector.internal.util.AsahUtil;
 
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -270,9 +270,12 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 	}
 
 	private Map<String, String> _getHeaders(long companyId) {
-		return Collections.singletonMap(
+		return HashMapBuilder.put(
 			"OSB-Asah-Faro-Backend-Security-Signature",
-			AsahUtil.getAsahFaroBackendSecuritySignature(companyId));
+			AsahUtil.getAsahFaroBackendSecuritySignature(companyId)
+		).put(
+			"OSB-Asah-Project-ID", () -> AsahUtil.getAsahProjectId(companyId)
+		).build();
 	}
 
 	private MultivaluedMap<String, Object> _getParameters(
@@ -316,7 +319,7 @@ public class AsahFaroBackendClientImpl implements AsahFaroBackendClient {
 		uriVariables.putSingle("page", cur - 1);
 		uriVariables.putSingle("size", delta);
 
-		if ((orderByFields == null) || orderByFields.isEmpty()) {
+		if (ListUtil.isEmpty(orderByFields)) {
 			return uriVariables;
 		}
 

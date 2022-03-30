@@ -25,6 +25,10 @@ public class MembershipRequestLocalServiceWrapper
 	implements MembershipRequestLocalService,
 			   ServiceWrapper<MembershipRequestLocalService> {
 
+	public MembershipRequestLocalServiceWrapper() {
+		this(null);
+	}
+
 	public MembershipRequestLocalServiceWrapper(
 		MembershipRequestLocalService membershipRequestLocalService) {
 
@@ -44,6 +48,10 @@ public class MembershipRequestLocalServiceWrapper
 
 	/**
 	 * Adds the membership request to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MembershipRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param membershipRequest the membership request
 	 * @return the membership request that was added
@@ -87,6 +95,10 @@ public class MembershipRequestLocalServiceWrapper
 	/**
 	 * Deletes the membership request with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MembershipRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param membershipRequestId the primary key of the membership request
 	 * @return the membership request that was removed
 	 * @throws PortalException if a membership request with the primary key could not be found
@@ -102,6 +114,10 @@ public class MembershipRequestLocalServiceWrapper
 
 	/**
 	 * Deletes the membership request from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MembershipRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param membershipRequest the membership request
 	 * @return the membership request that was removed
@@ -147,6 +163,13 @@ public class MembershipRequestLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _membershipRequestLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _membershipRequestLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -357,10 +380,11 @@ public class MembershipRequestLocalServiceWrapper
 		search(
 			long groupId, int status, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.portal.kernel.model.MembershipRequest> obc) {
+				<com.liferay.portal.kernel.model.MembershipRequest>
+					orderByComparator) {
 
 		return _membershipRequestLocalService.search(
-			groupId, status, start, end, obc);
+			groupId, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -370,6 +394,10 @@ public class MembershipRequestLocalServiceWrapper
 
 	/**
 	 * Updates the membership request in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MembershipRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param membershipRequest the membership request
 	 * @return the membership request that was updated

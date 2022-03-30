@@ -10,68 +10,60 @@
  */
 
 import ClayButton from '@clayui/button';
+import ClayList from '@clayui/list';
 import ClayProgressBar from '@clayui/progress-bar';
-import React, {useMemo} from 'react';
+import React from 'react';
 
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import {ALL_INDEXES_KEY, getIndexesGroups} from './IndexesConstants.es';
-import {List} from './IndexesPageBodyList.es';
+import List from './IndexesPageBodyList.es';
 import {useReindexActions} from './hooks/useReindexActions.es';
 
-const Body = ({items = []}) => {
+function Body({items = []}) {
 	const {getReindexStatus, handleReindex, isReindexing} = useReindexActions();
 
-	const {completionPercentage = 0} = useMemo(
-		() => getReindexStatus(ALL_INDEXES_KEY),
-		[getReindexStatus]
-	);
+	const {completionPercentage = 0} = getReindexStatus(ALL_INDEXES_KEY);
 
-	const groups = useMemo(() => {
-		const groups = getIndexesGroups();
+	const groups = getIndexesGroups();
 
-		items.forEach(({group, ...index}) => {
-			if (groups[group]) {
-				groups[group].indexes.push(index);
-			}
-		});
-
-		return Object.values(groups);
-	}, [items]);
+	items.forEach(({group, ...index}) => {
+		if (groups[group]) {
+			groups[group].indexes.push(index);
+		}
+	});
 
 	return (
 		<>
-			<div className="mb-4 p-3 sheet">
-				<div className="autofit-row autofit-row-center">
-					<div className="autofit-col autofit-col-expand">
-						<h5
-							className="font-weight-semi-bold m-0 py-2"
-							data-testid="reindexAllLabel"
-						>
-							{Liferay.Language.get('workflow-indexes')}
-						</h5>
-					</div>
+			<ClayList>
+				<ClayList.Item
+					className="autofit-row-center reindex-action"
+					flex
+				>
+					<ClayList.ItemField
+						className="font-weight-semi-bold"
+						expand
+					>
+						{Liferay.Language.get('workflow-indexes')}
+					</ClayList.ItemField>
 
-					<div className="autofit-col">
+					<ClayList.ItemField>
 						{isReindexing(ALL_INDEXES_KEY) ? (
-							<ClayProgressBar
-								data-testid="reindexAllStatus"
-								value={completionPercentage}
-							/>
+							<ClayProgressBar value={completionPercentage} />
 						) : (
 							<ClayButton
-								data-testid="reindexAllBtn"
+								displayType="primary"
 								onClick={() => handleReindex(ALL_INDEXES_KEY)}
 								small
 							>
 								{Liferay.Language.get('reindex-all')}
 							</ClayButton>
 						)}
-					</div>
-				</div>
-			</div>
+					</ClayList.ItemField>
+				</ClayList.Item>
+			</ClayList>
 
 			<PromisesResolver.Resolved>
-				{groups.map((group, index) => (
+				{Object.values(groups).map((group, index) => (
 					<Body.List
 						disabled={
 							isReindexing(ALL_INDEXES_KEY) ||
@@ -87,8 +79,8 @@ const Body = ({items = []}) => {
 			</PromisesResolver.Resolved>
 		</>
 	);
-};
+}
 
 Body.List = List;
 
-export {Body};
+export default Body;

@@ -19,6 +19,7 @@ import com.liferay.multi.factor.authentication.web.internal.constants.MFAPortlet
 import com.liferay.multi.factor.authentication.web.internal.constants.MFAWebKeys;
 import com.liferay.multi.factor.authentication.web.internal.policy.MFAPolicy;
 import com.liferay.petra.encryptor.Encryptor;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
@@ -49,9 +50,7 @@ import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.ActionURL;
 import javax.portlet.PortletRequest;
-import javax.portlet.RenderURL;
 import javax.portlet.WindowState;
 import javax.portlet.filter.ActionRequestWrapper;
 
@@ -195,7 +194,7 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 		}
 
 		LiferayPortletURL liferayPortletURL = _portletURLFactory.create(
-			httpServletRequest, MFAPortletKeys.VERIFY, plid,
+			httpServletRequest, MFAPortletKeys.MFA_VERIFY, plid,
 			PortletRequest.RENDER_PHASE);
 
 		liferayPortletURL.setParameter(
@@ -217,37 +216,42 @@ public class LoginMVCActionCommand extends BaseMVCActionCommand {
 		LiferayPortletResponse liferayPortletResponse =
 			_portal.getLiferayPortletResponse(actionResponse);
 
-		ActionURL actionURL = liferayPortletResponse.createActionURL();
-
-		actionURL.setParameter(ActionRequest.ACTION_NAME, "/login/login");
-
 		Key key = Encryptor.generateKey();
 
-		Map<String, Object> stateMap = HashMapBuilder.<String, Object>put(
-			"requestParameters", actionRequest.getParameterMap()
-		).build();
-
 		String encryptedStateMapJSON = Encryptor.encrypt(
-			key, _jsonFactory.looseSerializeDeep(stateMap));
-
-		actionURL.setParameter("state", encryptedStateMapJSON);
+			key,
+			_jsonFactory.looseSerializeDeep(
+				HashMapBuilder.<String, Object>put(
+					"requestParameters", actionRequest.getParameterMap()
+				).build()));
 
 		HttpServletRequest httpServletRequest =
 			_portal.getOriginalServletRequest(
 				_portal.getHttpServletRequest(actionRequest));
 
-		String redirect = ParamUtil.getString(actionRequest, "redirect");
-
-		RenderURL returnToFullPageRenderURL =
-			liferayPortletResponse.createRenderURL();
-
-		if (Validator.isNotNull(redirect)) {
-			returnToFullPageRenderURL.setParameter("redirect", redirect);
-		}
-
 		LiferayPortletURL liferayPortletURL = _getLiferayPortletURL(
-			httpServletRequest, actionURL.toString(),
-			returnToFullPageRenderURL.toString());
+			httpServletRequest,
+			PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/login/login"
+			).setParameter(
+				"state", encryptedStateMapJSON
+			).buildString(),
+			PortletURLBuilder.createRenderURL(
+				liferayPortletResponse
+			).setRedirect(
+				() -> {
+					String redirect = ParamUtil.getString(
+						actionRequest, "redirect");
+
+					if (Validator.isNotNull(redirect)) {
+						return redirect;
+					}
+
+					return null;
+				}
+			).buildString());
 
 		String portletId = ParamUtil.getString(httpServletRequest, "p_p_id");
 

@@ -25,15 +25,9 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 @Meta.OCD(
 	id = "com.liferay.change.tracking.web.internal.configuration.CTConfiguration",
 	localization = "content/Language",
-	name = "change-tracking-portal-configuration-name"
+	name = "publications-portal-configuration-name"
 )
 public interface CTConfiguration {
-
-	@Meta.AD(
-		deflt = "Administrator", name = "administrator-role-names",
-		required = false
-	)
-	public String[] administratorRoleNames();
 
 	@Meta.AD(
 		deflt = "com.liferay.portal.kernel.model.Group|com.liferay.portal.kernel.model.User",

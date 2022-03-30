@@ -37,16 +37,17 @@ public class RepositoryCacheModel
 	implements CacheModel<Repository>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof RepositoryCacheModel)) {
+		if (!(object instanceof RepositoryCacheModel)) {
 			return false;
 		}
 
-		RepositoryCacheModel repositoryCacheModel = (RepositoryCacheModel)obj;
+		RepositoryCacheModel repositoryCacheModel =
+			(RepositoryCacheModel)object;
 
 		if ((repositoryId == repositoryCacheModel.repositoryId) &&
 			(mvccVersion == repositoryCacheModel.mvccVersion)) {
@@ -76,10 +77,12 @@ public class RepositoryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(33);
+		StringBundler sb = new StringBundler(35);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", repositoryId=");
@@ -120,6 +123,7 @@ public class RepositoryCacheModel
 		RepositoryImpl repositoryImpl = new RepositoryImpl();
 
 		repositoryImpl.setMvccVersion(mvccVersion);
+		repositoryImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			repositoryImpl.setUuid("");
@@ -203,6 +207,8 @@ public class RepositoryCacheModel
 		throws ClassNotFoundException, IOException {
 
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		repositoryId = objectInput.readLong();
@@ -229,6 +235,8 @@ public class RepositoryCacheModel
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -290,6 +298,7 @@ public class RepositoryCacheModel
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long repositoryId;
 	public long groupId;

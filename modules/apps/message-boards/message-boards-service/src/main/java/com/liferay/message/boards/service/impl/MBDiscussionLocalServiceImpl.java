@@ -18,10 +18,16 @@ import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.service.base.MBDiscussionLocalServiceBaseImpl;
 import com.liferay.message.boards.util.MBUtil;
 import com.liferay.portal.aop.AopService;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.dao.orm.Property;
+import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.subscription.service.SubscriptionLocalService;
 
@@ -46,9 +52,9 @@ public class MBDiscussionLocalServiceImpl
 			long threadId, ServiceContext serviceContext)
 		throws PortalException {
 
-		Group group = groupLocalService.getGroup(groupId);
+		Group group = _groupLocalService.getGroup(groupId);
 
-		User user = userLocalService.fetchUser(
+		User user = _userLocalService.fetchUser(
 			_portal.getValidUserId(group.getCompanyId(), userId));
 
 		long discussionId = counterLocalService.increment();
@@ -57,7 +63,7 @@ public class MBDiscussionLocalServiceImpl
 
 		discussion.setUuid(serviceContext.getUuid());
 		discussion.setGroupId(groupId);
-		discussion.setCompanyId(serviceContext.getCompanyId());
+		discussion.setCompanyId(group.getCompanyId());
 		discussion.setUserId(userId);
 		discussion.setUserName(user.getFullName());
 		discussion.setClassNameId(classNameId);
@@ -80,7 +86,7 @@ public class MBDiscussionLocalServiceImpl
 	@Override
 	public MBDiscussion fetchDiscussion(String className, long classPK) {
 		return mbDiscussionPersistence.fetchByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -100,13 +106,25 @@ public class MBDiscussionLocalServiceImpl
 		throws PortalException {
 
 		return mbDiscussionPersistence.findByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public List<MBDiscussion> getDiscussions(String className) {
-		return mbDiscussionPersistence.findByClassNameId(
-			classNameLocalService.getClassNameId(className));
+		DynamicQuery dynamicQuery = dynamicQuery();
+
+		Property classNameIdProperty = PropertyFactoryUtil.forName(
+			"classNameId");
+
+		dynamicQuery.add(
+			classNameIdProperty.eq(
+				_classNameLocalService.getClassNameId(className)));
+
+		return dynamicQuery(dynamicQuery);
 	}
 
 	@Override
@@ -136,9 +154,18 @@ public class MBDiscussionLocalServiceImpl
 	}
 
 	@Reference
+	private ClassNameLocalService _classNameLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
 	private SubscriptionLocalService _subscriptionLocalService;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

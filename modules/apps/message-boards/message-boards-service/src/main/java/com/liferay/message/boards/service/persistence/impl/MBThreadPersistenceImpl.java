@@ -20,8 +20,10 @@ import com.liferay.message.boards.model.MBThreadTable;
 import com.liferay.message.boards.model.impl.MBThreadImpl;
 import com.liferay.message.boards.model.impl.MBThreadModelImpl;
 import com.liferay.message.boards.service.persistence.MBThreadPersistence;
+import com.liferay.message.boards.service.persistence.MBThreadUtil;
 import com.liferay.message.boards.service.persistence.impl.constants.MBPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.change.tracking.CTColumnResolutionType;
 import com.liferay.portal.kernel.configuration.Configuration;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.FinderCache;
@@ -43,11 +45,15 @@ import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.helper.CTPersistenceHelper;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -56,13 +62,18 @@ import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.sql.Timestamp;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -85,7 +96,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = MBThreadPersistence.class)
+@Component(service = {MBThreadPersistence.class, BasePersistence.class})
 public class MBThreadPersistenceImpl
 	extends BasePersistenceImpl<MBThread> implements MBThreadPersistence {
 
@@ -180,27 +191,30 @@ public class MBThreadPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByUuid;
 				finderArgs = new Object[] {uuid};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid;
 			finderArgs = new Object[] {uuid, start, end, orderByComparator};
 		}
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -265,15 +279,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -580,11 +590,21 @@ public class MBThreadPersistenceImpl
 	public int countByUuid(String uuid) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {uuid};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid;
+
+			finderArgs = new Object[] {uuid};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -619,11 +639,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -706,17 +726,20 @@ public class MBThreadPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		Object[] finderArgs = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			finderArgs = new Object[] {uuid, groupId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByUUID_G, finderArgs, this);
+				_finderPathFetchByUUID_G, finderArgs);
 		}
 
 		if (result instanceof MBThread) {
@@ -767,7 +790,7 @@ public class MBThreadPersistenceImpl
 				List<MBThread> list = query.list();
 
 				if (list.isEmpty()) {
-					if (useFinderCache) {
+					if (useFinderCache && productionMode) {
 						finderCache.putResult(
 							_finderPathFetchByUUID_G, finderArgs, list);
 					}
@@ -781,11 +804,6 @@ public class MBThreadPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathFetchByUUID_G, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -828,11 +846,21 @@ public class MBThreadPersistenceImpl
 	public int countByUUID_G(String uuid, long groupId) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUUID_G;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {uuid, groupId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUUID_G;
+
+			finderArgs = new Object[] {uuid, groupId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -871,11 +899,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -977,18 +1005,21 @@ public class MBThreadPersistenceImpl
 
 		uuid = Objects.toString(uuid, "");
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByUuid_C;
 				finderArgs = new Object[] {uuid, companyId};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByUuid_C;
 			finderArgs = new Object[] {
 				uuid, companyId, start, end, orderByComparator
@@ -997,9 +1028,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -1070,15 +1101,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1411,11 +1438,21 @@ public class MBThreadPersistenceImpl
 	public int countByUuid_C(String uuid, long companyId) {
 		uuid = Objects.toString(uuid, "");
 
-		FinderPath finderPath = _finderPathCountByUuid_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {uuid, companyId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByUuid_C;
+
+			finderArgs = new Object[] {uuid, companyId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1454,11 +1491,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1551,27 +1588,30 @@ public class MBThreadPersistenceImpl
 		long groupId, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByGroupId;
 				finderArgs = new Object[] {groupId};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByGroupId;
 			finderArgs = new Object[] {groupId, start, end, orderByComparator};
 		}
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -1625,15 +1665,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2250,11 +2286,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByGroupId(long groupId) {
-		FinderPath finderPath = _finderPathCountByGroupId;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByGroupId;
+
+			finderArgs = new Object[] {groupId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2278,11 +2324,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -2402,17 +2448,20 @@ public class MBThreadPersistenceImpl
 	public MBThread fetchByRootMessageId(
 		long rootMessageId, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		Object[] finderArgs = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			finderArgs = new Object[] {rootMessageId};
 		}
 
 		Object result = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			result = finderCache.getResult(
-				_finderPathFetchByRootMessageId, finderArgs, this);
+				_finderPathFetchByRootMessageId, finderArgs);
 		}
 
 		if (result instanceof MBThread) {
@@ -2446,7 +2495,7 @@ public class MBThreadPersistenceImpl
 				List<MBThread> list = query.list();
 
 				if (list.isEmpty()) {
-					if (useFinderCache) {
+					if (useFinderCache && productionMode) {
 						finderCache.putResult(
 							_finderPathFetchByRootMessageId, finderArgs, list);
 					}
@@ -2456,7 +2505,7 @@ public class MBThreadPersistenceImpl
 						Collections.sort(list, Collections.reverseOrder());
 
 						if (_log.isWarnEnabled()) {
-							if (!useFinderCache) {
+							if (!productionMode || !useFinderCache) {
 								finderArgs = new Object[] {rootMessageId};
 							}
 
@@ -2475,11 +2524,6 @@ public class MBThreadPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathFetchByRootMessageId, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2518,11 +2562,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByRootMessageId(long rootMessageId) {
-		FinderPath finderPath = _finderPathCountByRootMessageId;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {rootMessageId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByRootMessageId;
+
+			finderArgs = new Object[] {rootMessageId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2546,11 +2600,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -2645,18 +2699,21 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByG_C;
 				finderArgs = new Object[] {groupId, categoryId};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_C;
 			finderArgs = new Object[] {
 				groupId, categoryId, start, end, orderByComparator
@@ -2665,9 +2722,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -2727,15 +2784,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3606,18 +3659,21 @@ public class MBThreadPersistenceImpl
 				groupId, categoryIds[0], start, end, orderByComparator);
 		}
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderArgs = new Object[] {
 					groupId, StringUtil.merge(categoryIds)
 				};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderArgs = new Object[] {
 				groupId, StringUtil.merge(categoryIds), start, end,
 				orderByComparator
@@ -3626,9 +3682,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_C, finderArgs, this);
+				_finderPathWithPaginationFindByG_C, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -3692,17 +3748,12 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(
 						_finderPathWithPaginationFindByG_C, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathWithPaginationFindByG_C, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3739,11 +3790,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_C(long groupId, long categoryId) {
-		FinderPath finderPath = _finderPathCountByG_C;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_C;
+
+			finderArgs = new Object[] {groupId, categoryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -3771,11 +3832,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -3802,12 +3863,19 @@ public class MBThreadPersistenceImpl
 			categoryIds = ArrayUtil.sortedUnique(categoryIds);
 		}
 
-		Object[] finderArgs = new Object[] {
-			groupId, StringUtil.merge(categoryIds)
-		};
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_C, finderArgs, this);
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderArgs = new Object[] {groupId, StringUtil.merge(categoryIds)};
+
+			count = (Long)finderCache.getResult(
+				_finderPathWithPaginationCountByG_C, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -3846,13 +3914,12 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathWithPaginationCountByG_C, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathWithPaginationCountByG_C, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathWithPaginationCountByG_C, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -4075,6 +4142,9 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
@@ -4085,9 +4155,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -4147,15 +4217,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4814,11 +4880,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_NotC(long groupId, long categoryId) {
-		FinderPath finderPath = _finderPathWithPaginationCountByG_NotC;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByG_NotC;
+
+			finderArgs = new Object[] {groupId, categoryId};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -4846,11 +4922,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -4999,18 +5075,21 @@ public class MBThreadPersistenceImpl
 		long groupId, int status, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByG_S;
 				finderArgs = new Object[] {groupId, status};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_S;
 			finderArgs = new Object[] {
 				groupId, status, start, end, orderByComparator
@@ -5019,9 +5098,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -5081,15 +5160,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -5742,11 +5817,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_S(long groupId, int status) {
-		FinderPath finderPath = _finderPathCountByG_S;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_S;
+
+			finderArgs = new Object[] {groupId, status};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -5774,11 +5859,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -5928,18 +6013,21 @@ public class MBThreadPersistenceImpl
 		long categoryId, double priority, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByC_P;
 				finderArgs = new Object[] {categoryId, priority};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByC_P;
 			finderArgs = new Object[] {
 				categoryId, priority, start, end, orderByComparator
@@ -5948,9 +6036,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -6010,15 +6098,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6338,11 +6422,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByC_P(long categoryId, double priority) {
-		FinderPath finderPath = _finderPathCountByC_P;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {categoryId, priority};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByC_P;
+
+			finderArgs = new Object[] {categoryId, priority};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -6370,11 +6464,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -6471,18 +6565,21 @@ public class MBThreadPersistenceImpl
 		Date lastPostDate, double priority, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByL_P;
 				finderArgs = new Object[] {_getTime(lastPostDate), priority};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByL_P;
 			finderArgs = new Object[] {
 				_getTime(lastPostDate), priority, start, end, orderByComparator
@@ -6491,9 +6588,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -6565,15 +6662,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -6904,11 +6997,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByL_P(Date lastPostDate, double priority) {
-		FinderPath finderPath = _finderPathCountByL_P;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {_getTime(lastPostDate), priority};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByL_P;
+
+			finderArgs = new Object[] {_getTime(lastPostDate), priority};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -6947,11 +7050,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -7059,20 +7162,23 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, Date lastPostDate, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByG_C_L;
 				finderArgs = new Object[] {
 					groupId, categoryId, _getTime(lastPostDate)
 				};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_C_L;
 			finderArgs = new Object[] {
 				groupId, categoryId, _getTime(lastPostDate), start, end,
@@ -7082,9 +7188,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -7161,15 +7267,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -7900,13 +8002,23 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_C_L(long groupId, long categoryId, Date lastPostDate) {
-		FinderPath finderPath = _finderPathCountByG_C_L;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {
-			groupId, categoryId, _getTime(lastPostDate)
-		};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_C_L;
+
+			finderArgs = new Object[] {
+				groupId, categoryId, _getTime(lastPostDate)
+			};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -7949,11 +8061,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -8135,18 +8247,21 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int status, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindByG_C_S;
 				finderArgs = new Object[] {groupId, categoryId, status};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindByG_C_S;
 			finderArgs = new Object[] {
 				groupId, categoryId, status, start, end, orderByComparator
@@ -8155,9 +8270,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -8222,15 +8337,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -9153,18 +9264,21 @@ public class MBThreadPersistenceImpl
 				groupId, categoryIds[0], status, start, end, orderByComparator);
 		}
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderArgs = new Object[] {
 					groupId, StringUtil.merge(categoryIds), status
 				};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderArgs = new Object[] {
 				groupId, StringUtil.merge(categoryIds), status, start, end,
 				orderByComparator
@@ -9173,9 +9287,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_C_S, finderArgs, this);
+				_finderPathWithPaginationFindByG_C_S, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -9246,17 +9360,12 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(
 						_finderPathWithPaginationFindByG_C_S, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathWithPaginationFindByG_C_S, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -9295,11 +9404,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_C_S(long groupId, long categoryId, int status) {
-		FinderPath finderPath = _finderPathCountByG_C_S;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathCountByG_C_S;
+
+			finderArgs = new Object[] {groupId, categoryId, status};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -9331,11 +9450,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -9363,12 +9482,21 @@ public class MBThreadPersistenceImpl
 			categoryIds = ArrayUtil.sortedUnique(categoryIds);
 		}
 
-		Object[] finderArgs = new Object[] {
-			groupId, StringUtil.merge(categoryIds), status
-		};
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_C_S, finderArgs, this);
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderArgs = new Object[] {
+				groupId, StringUtil.merge(categoryIds), status
+			};
+
+			count = (Long)finderCache.getResult(
+				_finderPathWithPaginationCountByG_C_S, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -9413,13 +9541,13 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathWithPaginationCountByG_C_S, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathWithPaginationCountByG_C_S, finderArgs,
+						count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathWithPaginationCountByG_C_S, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -9666,6 +9794,9 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int status, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
@@ -9676,9 +9807,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -9743,15 +9874,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -10675,18 +10802,21 @@ public class MBThreadPersistenceImpl
 				groupId, categoryIds[0], status, start, end, orderByComparator);
 		}
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderArgs = new Object[] {
 					groupId, StringUtil.merge(categoryIds), status
 				};
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderArgs = new Object[] {
 				groupId, StringUtil.merge(categoryIds), status, start, end,
 				orderByComparator
@@ -10695,9 +10825,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				_finderPathWithPaginationFindByG_C_NotS, finderArgs, this);
+				_finderPathWithPaginationFindByG_C_NotS, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -10768,18 +10898,13 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(
 						_finderPathWithPaginationFindByG_C_NotS, finderArgs,
 						list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathWithPaginationFindByG_C_NotS, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -10818,11 +10943,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_C_NotS(long groupId, long categoryId, int status) {
-		FinderPath finderPath = _finderPathWithPaginationCountByG_C_NotS;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByG_C_NotS;
+
+			finderArgs = new Object[] {groupId, categoryId, status};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -10854,11 +10989,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -10886,12 +11021,21 @@ public class MBThreadPersistenceImpl
 			categoryIds = ArrayUtil.sortedUnique(categoryIds);
 		}
 
-		Object[] finderArgs = new Object[] {
-			groupId, StringUtil.merge(categoryIds), status
-		};
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountByG_C_NotS, finderArgs, this);
+		Object[] finderArgs = null;
+
+		Long count = null;
+
+		if (productionMode) {
+			finderArgs = new Object[] {
+				groupId, StringUtil.merge(categoryIds), status
+			};
+
+			count = (Long)finderCache.getResult(
+				_finderPathWithPaginationCountByG_C_NotS, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler();
@@ -10936,14 +11080,13 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathWithPaginationCountByG_C_NotS, finderArgs,
-					count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathWithPaginationCountByG_C_NotS, finderArgs,
+						count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathWithPaginationCountByG_C_NotS, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -11192,6 +11335,9 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int status, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
@@ -11202,9 +11348,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -11269,15 +11415,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -11971,11 +12113,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_NotC_S(long groupId, long categoryId, int status) {
-		FinderPath finderPath = _finderPathWithPaginationCountByG_NotC_S;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByG_NotC_S;
+
+			finderArgs = new Object[] {groupId, categoryId, status};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -12007,11 +12159,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -12177,6 +12329,9 @@ public class MBThreadPersistenceImpl
 		long groupId, long categoryId, int status, int start, int end,
 		OrderByComparator<MBThread> orderByComparator, boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
@@ -12187,9 +12342,9 @@ public class MBThreadPersistenceImpl
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (MBThread mbThread : list) {
@@ -12254,15 +12409,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -12956,11 +13107,21 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countByG_NotC_NotS(long groupId, long categoryId, int status) {
-		FinderPath finderPath = _finderPathWithPaginationCountByG_NotC_NotS;
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
 
-		Object[] finderArgs = new Object[] {groupId, categoryId, status};
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = null;
+
+		if (productionMode) {
+			finderPath = _finderPathWithPaginationCountByG_NotC_NotS;
+
+			finderArgs = new Object[] {groupId, categoryId, status};
+
+			count = (Long)finderCache.getResult(finderPath, finderArgs);
+		}
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -12992,11 +13153,11 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(finderPath, finderArgs, count);
+				if (productionMode) {
+					finderCache.putResult(finderPath, finderArgs, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -13098,9 +13259,12 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(MBThread mbThread) {
+		if (mbThread.getCtCollectionId() != 0) {
+			return;
+		}
+
 		entityCache.putResult(
-			entityCacheEnabled, MBThreadImpl.class, mbThread.getPrimaryKey(),
-			mbThread);
+			MBThreadImpl.class, mbThread.getPrimaryKey(), mbThread);
 
 		finderCache.putResult(
 			_finderPathFetchByUUID_G,
@@ -13109,9 +13273,9 @@ public class MBThreadPersistenceImpl
 		finderCache.putResult(
 			_finderPathFetchByRootMessageId,
 			new Object[] {mbThread.getRootMessageId()}, mbThread);
-
-		mbThread.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the message boards threads in the entity cache if it is enabled.
@@ -13120,15 +13284,22 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<MBThread> mbThreads) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (mbThreads.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (MBThread mbThread : mbThreads) {
+			if (mbThread.getCtCollectionId() != 0) {
+				continue;
+			}
+
 			if (entityCache.getResult(
-					entityCacheEnabled, MBThreadImpl.class,
-					mbThread.getPrimaryKey()) == null) {
+					MBThreadImpl.class, mbThread.getPrimaryKey()) == null) {
 
 				cacheResult(mbThread);
-			}
-			else {
-				mbThread.resetOriginalValues();
 			}
 		}
 	}
@@ -13144,9 +13315,7 @@ public class MBThreadPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(MBThreadImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MBThreadImpl.class);
 	}
 
 	/**
@@ -13158,38 +13327,22 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public void clearCache(MBThread mbThread) {
-		entityCache.removeResult(
-			entityCacheEnabled, MBThreadImpl.class, mbThread.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((MBThreadModelImpl)mbThread, true);
+		entityCache.removeResult(MBThreadImpl.class, mbThread);
 	}
 
 	@Override
 	public void clearCache(List<MBThread> mbThreads) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (MBThread mbThread : mbThreads) {
-			entityCache.removeResult(
-				entityCacheEnabled, MBThreadImpl.class,
-				mbThread.getPrimaryKey());
-
-			clearUniqueFindersCache((MBThreadModelImpl)mbThread, true);
+			entityCache.removeResult(MBThreadImpl.class, mbThread);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(MBThreadImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, MBThreadImpl.class, primaryKey);
+			entityCache.removeResult(MBThreadImpl.class, primaryKey);
 		}
 	}
 
@@ -13200,60 +13353,16 @@ public class MBThreadPersistenceImpl
 			mbThreadModelImpl.getUuid(), mbThreadModelImpl.getGroupId()
 		};
 
+		finderCache.putResult(_finderPathCountByUUID_G, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByUUID_G, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByUUID_G, args, mbThreadModelImpl, false);
+			_finderPathFetchByUUID_G, args, mbThreadModelImpl);
 
 		args = new Object[] {mbThreadModelImpl.getRootMessageId()};
 
 		finderCache.putResult(
-			_finderPathCountByRootMessageId, args, Long.valueOf(1), false);
+			_finderPathCountByRootMessageId, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathFetchByRootMessageId, args, mbThreadModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		MBThreadModelImpl mbThreadModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				mbThreadModelImpl.getUuid(), mbThreadModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if ((mbThreadModelImpl.getColumnBitmask() &
-			 _finderPathFetchByUUID_G.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				mbThreadModelImpl.getOriginalUuid(),
-				mbThreadModelImpl.getOriginalGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUUID_G, args);
-			finderCache.removeResult(_finderPathFetchByUUID_G, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {mbThreadModelImpl.getRootMessageId()};
-
-			finderCache.removeResult(_finderPathCountByRootMessageId, args);
-			finderCache.removeResult(_finderPathFetchByRootMessageId, args);
-		}
-
-		if ((mbThreadModelImpl.getColumnBitmask() &
-			 _finderPathFetchByRootMessageId.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				mbThreadModelImpl.getOriginalRootMessageId()
-			};
-
-			finderCache.removeResult(_finderPathCountByRootMessageId, args);
-			finderCache.removeResult(_finderPathFetchByRootMessageId, args);
-		}
+			_finderPathFetchByRootMessageId, args, mbThreadModelImpl);
 	}
 
 	/**
@@ -13343,7 +13452,7 @@ public class MBThreadPersistenceImpl
 					MBThreadImpl.class, mbThread.getPrimaryKeyObj());
 			}
 
-			if (mbThread != null) {
+			if ((mbThread != null) && ctPersistenceHelper.isRemove(mbThread)) {
 				session.delete(mbThread);
 			}
 		}
@@ -13392,23 +13501,23 @@ public class MBThreadPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (mbThread.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				mbThread.setCreateDate(now);
+				mbThread.setCreateDate(date);
 			}
 			else {
-				mbThread.setCreateDate(serviceContext.getCreateDate(now));
+				mbThread.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!mbThreadModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				mbThread.setModifiedDate(now);
+				mbThread.setModifiedDate(date);
 			}
 			else {
-				mbThread.setModifiedDate(serviceContext.getModifiedDate(now));
+				mbThread.setModifiedDate(serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -13442,10 +13551,13 @@ public class MBThreadPersistenceImpl
 		try {
 			session = openSession();
 
-			if (mbThread.isNew()) {
-				session.save(mbThread);
+			if (ctPersistenceHelper.isInsert(mbThread)) {
+				if (!isNew) {
+					session.evict(
+						MBThreadImpl.class, mbThread.getPrimaryKeyObj());
+				}
 
-				mbThread.setNew(false);
+				session.save(mbThread);
 			}
 			else {
 				mbThread = (MBThread)session.merge(mbThread);
@@ -13458,301 +13570,24 @@ public class MBThreadPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {mbThreadModelImpl.getUuid()};
-
-			finderCache.removeResult(_finderPathCountByUuid, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getUuid(), mbThreadModelImpl.getCompanyId()
-			};
-
-			finderCache.removeResult(_finderPathCountByUuid_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {mbThreadModelImpl.getGroupId()};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getGroupId(),
-				mbThreadModelImpl.getCategoryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_C, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_C, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getGroupId(), mbThreadModelImpl.getStatus()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_S, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_S, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getCategoryId(),
-				mbThreadModelImpl.getPriority()
-			};
-
-			finderCache.removeResult(_finderPathCountByC_P, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByC_P, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getLastPostDate(),
-				mbThreadModelImpl.getPriority()
-			};
-
-			finderCache.removeResult(_finderPathCountByL_P, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByL_P, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getGroupId(),
-				mbThreadModelImpl.getCategoryId(),
-				mbThreadModelImpl.getLastPostDate()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_C_L, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_C_L, args);
-
-			args = new Object[] {
-				mbThreadModelImpl.getGroupId(),
-				mbThreadModelImpl.getCategoryId(), mbThreadModelImpl.getStatus()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_C_S, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByG_C_S, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalUuid()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {mbThreadModelImpl.getUuid()};
-
-				finderCache.removeResult(_finderPathCountByUuid, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
+		if (mbThread.getCtCollectionId() != 0) {
+			if (isNew) {
+				mbThread.setNew(false);
 			}
 
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
+			mbThread.resetOriginalValues();
 
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalUuid(),
-					mbThreadModelImpl.getOriginalCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getUuid(),
-					mbThreadModelImpl.getCompanyId()
-				};
-
-				finderCache.removeResult(_finderPathCountByUuid_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {mbThreadModelImpl.getGroupId()};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getGroupId(),
-					mbThreadModelImpl.getCategoryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_S, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getGroupId(),
-					mbThreadModelImpl.getStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_S, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_P.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalPriority()
-				};
-
-				finderCache.removeResult(_finderPathCountByC_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByC_P, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getCategoryId(),
-					mbThreadModelImpl.getPriority()
-				};
-
-				finderCache.removeResult(_finderPathCountByC_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByC_P, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByL_P.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalLastPostDate(),
-					mbThreadModelImpl.getOriginalPriority()
-				};
-
-				finderCache.removeResult(_finderPathCountByL_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByL_P, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getLastPostDate(),
-					mbThreadModelImpl.getPriority()
-				};
-
-				finderCache.removeResult(_finderPathCountByL_P, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByL_P, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_C_L.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalLastPostDate()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_L, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_L, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getGroupId(),
-					mbThreadModelImpl.getCategoryId(),
-					mbThreadModelImpl.getLastPostDate()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_L, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_L, args);
-			}
-
-			if ((mbThreadModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByG_C_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					mbThreadModelImpl.getOriginalGroupId(),
-					mbThreadModelImpl.getOriginalCategoryId(),
-					mbThreadModelImpl.getOriginalStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_S, args);
-
-				args = new Object[] {
-					mbThreadModelImpl.getGroupId(),
-					mbThreadModelImpl.getCategoryId(),
-					mbThreadModelImpl.getStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByG_C_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByG_C_S, args);
-			}
+			return mbThread;
 		}
 
 		entityCache.putResult(
-			entityCacheEnabled, MBThreadImpl.class, mbThread.getPrimaryKey(),
-			mbThread, false);
+			MBThreadImpl.class, mbThreadModelImpl, false, true);
 
-		clearUniqueFindersCache(mbThreadModelImpl, false);
 		cacheUniqueFindersCache(mbThreadModelImpl);
+
+		if (isNew) {
+			mbThread.setNew(false);
+		}
 
 		mbThread.resetOriginalValues();
 
@@ -13801,12 +13636,137 @@ public class MBThreadPersistenceImpl
 	/**
 	 * Returns the message boards thread with the primary key or returns <code>null</code> if it could not be found.
 	 *
+	 * @param primaryKey the primary key of the message boards thread
+	 * @return the message boards thread, or <code>null</code> if a message boards thread with the primary key could not be found
+	 */
+	@Override
+	public MBThread fetchByPrimaryKey(Serializable primaryKey) {
+		if (ctPersistenceHelper.isProductionMode(MBThread.class)) {
+			return super.fetchByPrimaryKey(primaryKey);
+		}
+
+		MBThread mbThread = null;
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			mbThread = (MBThread)session.get(MBThreadImpl.class, primaryKey);
+
+			if (mbThread != null) {
+				cacheResult(mbThread);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return mbThread;
+	}
+
+	/**
+	 * Returns the message boards thread with the primary key or returns <code>null</code> if it could not be found.
+	 *
 	 * @param threadId the primary key of the message boards thread
 	 * @return the message boards thread, or <code>null</code> if a message boards thread with the primary key could not be found
 	 */
 	@Override
 	public MBThread fetchByPrimaryKey(long threadId) {
 		return fetchByPrimaryKey((Serializable)threadId);
+	}
+
+	@Override
+	public Map<Serializable, MBThread> fetchByPrimaryKeys(
+		Set<Serializable> primaryKeys) {
+
+		if (ctPersistenceHelper.isProductionMode(MBThread.class)) {
+			return super.fetchByPrimaryKeys(primaryKeys);
+		}
+
+		if (primaryKeys.isEmpty()) {
+			return Collections.emptyMap();
+		}
+
+		Map<Serializable, MBThread> map = new HashMap<Serializable, MBThread>();
+
+		if (primaryKeys.size() == 1) {
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			Serializable primaryKey = iterator.next();
+
+			MBThread mbThread = fetchByPrimaryKey(primaryKey);
+
+			if (mbThread != null) {
+				map.put(primaryKey, mbThread);
+			}
+
+			return map;
+		}
+
+		if ((databaseInMaxParameters > 0) &&
+			(primaryKeys.size() > databaseInMaxParameters)) {
+
+			Iterator<Serializable> iterator = primaryKeys.iterator();
+
+			while (iterator.hasNext()) {
+				Set<Serializable> page = new HashSet<>();
+
+				for (int i = 0;
+					 (i < databaseInMaxParameters) && iterator.hasNext(); i++) {
+
+					page.add(iterator.next());
+				}
+
+				map.putAll(fetchByPrimaryKeys(page));
+			}
+
+			return map;
+		}
+
+		StringBundler sb = new StringBundler((primaryKeys.size() * 2) + 1);
+
+		sb.append(getSelectSQL());
+		sb.append(" WHERE ");
+		sb.append(getPKDBName());
+		sb.append(" IN (");
+
+		for (Serializable primaryKey : primaryKeys) {
+			sb.append((long)primaryKey);
+
+			sb.append(",");
+		}
+
+		sb.setIndex(sb.index() - 1);
+
+		sb.append(")");
+
+		String sql = sb.toString();
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Query query = session.createQuery(sql);
+
+			for (MBThread mbThread : (List<MBThread>)query.list()) {
+				map.put(mbThread.getPrimaryKeyObj(), mbThread);
+
+				cacheResult(mbThread);
+			}
+		}
+		catch (Exception exception) {
+			throw processException(exception);
+		}
+		finally {
+			closeSession(session);
+		}
+
+		return map;
 	}
 
 	/**
@@ -13872,27 +13832,30 @@ public class MBThreadPersistenceImpl
 		int start, int end, OrderByComparator<MBThread> orderByComparator,
 		boolean useFinderCache) {
 
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
 		FinderPath finderPath = null;
 		Object[] finderArgs = null;
 
 		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
 			(orderByComparator == null)) {
 
-			if (useFinderCache) {
+			if (useFinderCache && productionMode) {
 				finderPath = _finderPathWithoutPaginationFindAll;
 				finderArgs = FINDER_ARGS_EMPTY;
 			}
 		}
-		else if (useFinderCache) {
+		else if (useFinderCache && productionMode) {
 			finderPath = _finderPathWithPaginationFindAll;
 			finderArgs = new Object[] {start, end, orderByComparator};
 		}
 
 		List<MBThread> list = null;
 
-		if (useFinderCache) {
+		if (useFinderCache && productionMode) {
 			list = (List<MBThread>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -13928,15 +13891,11 @@ public class MBThreadPersistenceImpl
 
 				cacheResult(list);
 
-				if (useFinderCache) {
+				if (useFinderCache && productionMode) {
 					finderCache.putResult(finderPath, finderArgs, list);
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -13965,8 +13924,15 @@ public class MBThreadPersistenceImpl
 	 */
 	@Override
 	public int countAll() {
-		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+		boolean productionMode = ctPersistenceHelper.isProductionMode(
+			MBThread.class);
+
+		Long count = null;
+
+		if (productionMode) {
+			count = (Long)finderCache.getResult(
+				_finderPathCountAll, FINDER_ARGS_EMPTY);
+		}
 
 		if (count == null) {
 			Session session = null;
@@ -13978,13 +13944,12 @@ public class MBThreadPersistenceImpl
 
 				count = (Long)query.uniqueResult();
 
-				finderCache.putResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				if (productionMode) {
+					finderCache.putResult(
+						_finderPathCountAll, FINDER_ARGS_EMPTY, count);
+				}
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -14016,8 +13981,79 @@ public class MBThreadPersistenceImpl
 	}
 
 	@Override
-	protected Map<String, Integer> getTableColumnsMap() {
+	public Set<String> getCTColumnNames(
+		CTColumnResolutionType ctColumnResolutionType) {
+
+		return _ctColumnNamesMap.getOrDefault(
+			ctColumnResolutionType, Collections.emptySet());
+	}
+
+	@Override
+	public List<String> getMappingTableNames() {
+		return _mappingTableNames;
+	}
+
+	@Override
+	public Map<String, Integer> getTableColumnsMap() {
 		return MBThreadModelImpl.TABLE_COLUMNS_MAP;
+	}
+
+	@Override
+	public String getTableName() {
+		return "MBThread";
+	}
+
+	@Override
+	public List<String[]> getUniqueIndexColumnNames() {
+		return _uniqueIndexColumnNames;
+	}
+
+	private static final Map<CTColumnResolutionType, Set<String>>
+		_ctColumnNamesMap = new EnumMap<CTColumnResolutionType, Set<String>>(
+			CTColumnResolutionType.class);
+	private static final List<String> _mappingTableNames =
+		new ArrayList<String>();
+	private static final List<String[]> _uniqueIndexColumnNames =
+		new ArrayList<String[]>();
+
+	static {
+		Set<String> ctControlColumnNames = new HashSet<String>();
+		Set<String> ctIgnoreColumnNames = new HashSet<String>();
+		Set<String> ctStrictColumnNames = new HashSet<String>();
+
+		ctControlColumnNames.add("mvccVersion");
+		ctControlColumnNames.add("ctCollectionId");
+		ctStrictColumnNames.add("uuid_");
+		ctStrictColumnNames.add("groupId");
+		ctStrictColumnNames.add("companyId");
+		ctStrictColumnNames.add("userId");
+		ctStrictColumnNames.add("userName");
+		ctStrictColumnNames.add("createDate");
+		ctIgnoreColumnNames.add("modifiedDate");
+		ctStrictColumnNames.add("categoryId");
+		ctStrictColumnNames.add("rootMessageId");
+		ctStrictColumnNames.add("rootMessageUserId");
+		ctStrictColumnNames.add("title");
+		ctStrictColumnNames.add("lastPostByUserId");
+		ctStrictColumnNames.add("lastPostDate");
+		ctStrictColumnNames.add("priority");
+		ctStrictColumnNames.add("question");
+		ctStrictColumnNames.add("lastPublishDate");
+		ctStrictColumnNames.add("status");
+		ctStrictColumnNames.add("statusByUserId");
+		ctStrictColumnNames.add("statusByUserName");
+		ctStrictColumnNames.add("statusDate");
+
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.CONTROL, ctControlColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.IGNORE, ctIgnoreColumnNames);
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.PK, Collections.singleton("threadId"));
+		_ctColumnNamesMap.put(
+			CTColumnResolutionType.STRICT, ctStrictColumnNames);
+
+		_uniqueIndexColumnNames.add(new String[] {"uuid_", "groupId"});
 	}
 
 	/**
@@ -14025,342 +14061,321 @@ public class MBThreadPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		MBThreadModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		MBThreadModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
 		_finderPathCountByUuid = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
 		_finderPathFetchByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
 			new String[] {String.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {"uuid_", "groupId"}, true);
 
 		_finderPathCountByUUID_G = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "groupId"}, false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.UUID_COLUMN_BITMASK |
-			MBThreadModelImpl.COMPANYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathCountByUuid_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
 		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
 		_finderPathCountByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
 		_finderPathFetchByRootMessageId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_ENTITY, "fetchByRootMessageId",
-			new String[] {Long.class.getName()},
-			MBThreadModelImpl.ROOTMESSAGEID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"rootMessageId"},
+			true);
 
 		_finderPathCountByRootMessageId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByRootMessageId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"rootMessageId"},
+			false);
 
 		_finderPathWithPaginationFindByG_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId"}, true);
 
 		_finderPathWithoutPaginationFindByG_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {"groupId", "categoryId"}, true);
 
 		_finderPathCountByG_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "categoryId"}, false);
 
 		_finderPathWithPaginationCountByG_C = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "categoryId"}, false);
 
 		_finderPathWithPaginationFindByG_NotC = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_NotC",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId"}, true);
 
 		_finderPathWithPaginationCountByG_NotC = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_NotC",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"groupId", "categoryId"}, false);
 
 		_finderPathWithPaginationFindByG_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByG_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.STATUS_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {"groupId", "status"}, true);
 
 		_finderPathCountByG_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_S",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"groupId", "status"}, false);
 
 		_finderPathWithPaginationFindByC_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_P",
 			new String[] {
 				Long.class.getName(), Double.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"categoryId", "priority"}, true);
 
 		_finderPathWithoutPaginationFindByC_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_P",
 			new String[] {Long.class.getName(), Double.class.getName()},
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {"categoryId", "priority"}, true);
 
 		_finderPathCountByC_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_P",
-			new String[] {Long.class.getName(), Double.class.getName()});
+			new String[] {Long.class.getName(), Double.class.getName()},
+			new String[] {"categoryId", "priority"}, false);
 
 		_finderPathWithPaginationFindByL_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByL_P",
 			new String[] {
 				Date.class.getName(), Double.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"lastPostDate", "priority"}, true);
 
 		_finderPathWithoutPaginationFindByL_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByL_P",
 			new String[] {Date.class.getName(), Double.class.getName()},
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK);
+			new String[] {"lastPostDate", "priority"}, true);
 
 		_finderPathCountByL_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByL_P",
-			new String[] {Date.class.getName(), Double.class.getName()});
+			new String[] {Date.class.getName(), Double.class.getName()},
+			new String[] {"lastPostDate", "priority"}, false);
 
 		_finderPathWithPaginationFindByG_C_L = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Date.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "lastPostDate"}, true);
 
 		_finderPathWithoutPaginationFindByG_C_L = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Date.class.getName()
 			},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK);
+			new String[] {"groupId", "categoryId", "lastPostDate"}, true);
 
 		_finderPathCountByG_C_L = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_L",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Date.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "lastPostDate"}, false);
 
 		_finderPathWithPaginationFindByG_C_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByG_C_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
 			},
-			MBThreadModelImpl.GROUPID_COLUMN_BITMASK |
-			MBThreadModelImpl.CATEGORYID_COLUMN_BITMASK |
-			MBThreadModelImpl.STATUS_COLUMN_BITMASK |
-			MBThreadModelImpl.PRIORITY_COLUMN_BITMASK |
-			MBThreadModelImpl.LASTPOSTDATE_COLUMN_BITMASK);
+			new String[] {"groupId", "categoryId", "status"}, true);
 
 		_finderPathCountByG_C_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, false);
 
 		_finderPathWithPaginationCountByG_C_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, false);
 
 		_finderPathWithPaginationFindByG_C_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_C_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, true);
 
 		_finderPathWithPaginationCountByG_C_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_C_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, false);
 
 		_finderPathWithPaginationFindByG_NotC_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_NotC_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, true);
 
 		_finderPathWithPaginationCountByG_NotC_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_NotC_S",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, false);
 
 		_finderPathWithPaginationFindByG_NotC_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, MBThreadImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByG_NotC_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, true);
 
 		_finderPathWithPaginationCountByG_NotC_NotS = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countByG_NotC_NotS",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName()
-			});
+			},
+			new String[] {"groupId", "categoryId", "status"}, false);
+
+		_setMBThreadUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setMBThreadUtilPersistence(null);
+
 		entityCache.removeCache(MBThreadImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setMBThreadUtilPersistence(
+		MBThreadPersistence mbThreadPersistence) {
+
+		try {
+			Field field = MBThreadUtil.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, mbThreadPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -14369,12 +14384,6 @@ public class MBThreadPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.message.boards.model.MBThread"),
-			true);
 	}
 
 	@Override
@@ -14395,7 +14404,8 @@ public class MBThreadPersistenceImpl
 		super.setSessionFactory(sessionFactory);
 	}
 
-	private boolean _columnBitmaskEnabled;
+	@Reference
+	protected CTPersistenceHelper ctPersistenceHelper;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -14403,7 +14413,7 @@ public class MBThreadPersistenceImpl
 	@Reference
 	protected FinderCache finderCache;
 
-	private Long _getTime(Date date) {
+	private static Long _getTime(Date date) {
 		if (date == null) {
 			return null;
 		}
@@ -14460,13 +14470,12 @@ public class MBThreadPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid"});
 
-	static {
-		try {
-			Class.forName(MBPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private MBThreadModelArgumentsResolver _mbThreadModelArgumentsResolver;
 
 }

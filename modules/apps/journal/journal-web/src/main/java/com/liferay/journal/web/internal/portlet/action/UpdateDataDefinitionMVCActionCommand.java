@@ -14,20 +14,29 @@
 
 package com.liferay.journal.web.internal.portlet.action;
 
+import com.liferay.data.engine.field.type.util.LocalizedValueUtil;
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
+import com.liferay.data.engine.rest.resource.exception.DataDefinitionValidationException;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.journal.constants.JournalPortletKeys;
-import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
+import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
+import java.util.Locale;
+import java.util.Map;
+
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
+import javax.portlet.PortletException;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -40,31 +49,79 @@ import org.osgi.service.component.annotations.Component;
 	},
 	service = MVCActionCommand.class
 )
-public class UpdateDataDefinitionMVCActionCommand extends BaseMVCActionCommand {
+public class UpdateDataDefinitionMVCActionCommand
+	extends BaseTransactionalMVCActionCommand {
 
 	@Override
-	protected void doProcessAction(
+	public boolean processAction(
+			ActionRequest actionRequest, ActionResponse actionResponse)
+		throws PortletException {
+
+		try {
+			return super.processAction(actionRequest, actionResponse);
+		}
+		catch (PortletException portletException) {
+			if (portletException.getCause() instanceof
+					DataDefinitionValidationException) {
+
+				DataDefinitionValidationException
+					dataDefinitionValidationException =
+						(DataDefinitionValidationException)
+							portletException.getCause();
+
+				SessionErrors.add(
+					actionRequest, dataDefinitionValidationException.getClass(),
+					dataDefinitionValidationException);
+			}
+			else {
+				throw portletException;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	protected void doTransactionalCommand(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
+		DataDefinitionResource.Builder dataDefinitionResourcedBuilder =
+			_dataDefinitionResourceFactory.create();
+
 		DataDefinitionResource dataDefinitionResource =
-			DataDefinitionResource.builder(
-			).user(
+			dataDefinitionResourcedBuilder.user(
 				themeDisplay.getUser()
 			).build();
 
-		DataDefinition dataDefinition = DataDefinition.toDTO(
-			ParamUtil.getString(actionRequest, "dataDefinition"));
+		long dataDefinitionId = ParamUtil.getLong(
+			actionRequest, "dataDefinitionId");
 
-		dataDefinition.setDefaultDataLayout(
-			DataLayout.toDTO(ParamUtil.getString(actionRequest, "dataLayout")));
+		String dataDefinitionString = ParamUtil.getString(
+			actionRequest, "dataDefinition");
+
+		DataDefinition dataDefinition = DataDefinition.toDTO(
+			dataDefinitionString);
+
+		String structureKey = ParamUtil.getString(
+			actionRequest, "structureKey");
+		String dataLayout = ParamUtil.getString(actionRequest, "dataLayout");
+		Map<Locale, String> descriptionMap =
+			LocalizationUtil.getLocalizationMap(actionRequest, "description");
+
+		dataDefinition.setDataDefinitionKey(structureKey);
+		dataDefinition.setDefaultDataLayout(DataLayout.toDTO(dataLayout));
+		dataDefinition.setDescription(
+			LocalizedValueUtil.toStringObjectMap(descriptionMap));
 
 		dataDefinitionResource.putDataDefinition(
-			ParamUtil.getLong(actionRequest, "dataDefinitionId"),
-			dataDefinition);
+			dataDefinitionId, dataDefinition);
 	}
+
+	@Reference
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
 
 }

@@ -14,9 +14,9 @@
 
 package com.liferay.journal.web.internal.util;
 
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.journal.util.comparator.ArticleCreateDateComparator;
 import com.liferay.journal.util.comparator.ArticleDisplayDateComparator;
@@ -66,7 +66,7 @@ public class JournalPortletUtil {
 		String key =
 			"journal-add-menu-fav-items-" + themeDisplay.getScopeGroupId();
 
-		folderId = getAddMenuFavItemFolderId(folderId);
+		folderId = _getAddMenuFavItemFolderId(folderId);
 
 		if (folderId <= 0) {
 			return key;
@@ -171,7 +171,7 @@ public class JournalPortletUtil {
 		return breadcrumbEntries;
 	}
 
-	protected static long getAddMenuFavItemFolderId(long folderId)
+	private static long _getAddMenuFavItemFolderId(long folderId)
 		throws PortalException {
 
 		if (folderId <= 0) {

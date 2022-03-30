@@ -59,7 +59,7 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 	public Object visit(AndExpression andExpression) {
 		_andOperator = true;
 
-		return doVisitLogicalExpression(andExpression);
+		return _visitLogicalExpression(andExpression);
 	}
 
 	@Override
@@ -79,7 +79,7 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 
 		SPIDDMFormRuleCondition spiDDMFormRuleCondition =
 			new SPIDDMFormRuleCondition(
-				_operatorMap.get(comparisonExpression.getOperator()),
+				_operators.get(comparisonExpression.getOperator()),
 				Arrays.asList(leftOperand, rightOperand));
 
 		_spiDDMFormRuleConditions.push(spiDDMFormRuleCondition);
@@ -99,6 +99,22 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 
 		List<Expression> parameterExpressions =
 			functionCallExpression.getParameterExpressions();
+
+		if (Objects.equals(functionName, "getJSONValue")) {
+			SPIDDMFormRuleCondition.Operand operand = doVisit(
+				parameterExpressions.get(0));
+
+			return new SPIDDMFormRuleCondition.Operand(
+				"json", operand.getValue());
+		}
+
+		if (Objects.equals(functionName, "getOptionLabel")) {
+			SPIDDMFormRuleCondition.Operand operand = doVisit(
+				parameterExpressions.get(1));
+
+			return new SPIDDMFormRuleCondition.Operand(
+				"option", operand.getValue());
+		}
 
 		if (Objects.equals(functionName, "getValue")) {
 			SPIDDMFormRuleCondition.Operand operand = doVisit(
@@ -124,7 +140,7 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 		}
 
 		_spiDDMFormRuleConditions.push(
-			createDDMFormRuleCondition(functionName, operands));
+			_createDDMFormRuleCondition(functionName, operands));
 
 		return _spiDDMFormRuleConditions;
 	}
@@ -153,7 +169,7 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 	public Object visit(OrExpression orExpression) {
 		_andOperator = false;
 
-		return doVisitLogicalExpression(orExpression);
+		return _visitLogicalExpression(orExpression);
 	}
 
 	@Override
@@ -167,37 +183,37 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 		return new SPIDDMFormRuleCondition.Operand("field", term.getValue());
 	}
 
-	protected SPIDDMFormRuleCondition createDDMFormRuleCondition(
-		String functionName, List<SPIDDMFormRuleCondition.Operand> operands) {
-
-		String functionNameOperator = _functionNameOperatorMap.get(
-			functionName);
-
-		return new SPIDDMFormRuleCondition(functionNameOperator, operands);
-	}
-
 	protected <T> T doVisit(Expression expression) {
 		return (T)expression.accept(this);
 	}
 
-	protected List<SPIDDMFormRuleCondition> doVisitLogicalExpression(
+	private SPIDDMFormRuleCondition _createDDMFormRuleCondition(
+		String functionName, List<SPIDDMFormRuleCondition.Operand> operands) {
+
+		String functionNameOperator = _functionNameOperators.getOrDefault(
+			functionName, functionName);
+
+		return new SPIDDMFormRuleCondition(functionNameOperator, operands);
+	}
+
+	private List<SPIDDMFormRuleCondition> _visitLogicalExpression(
 		BinaryExpression binaryExpression) {
 
-		Object o1 = doVisit(binaryExpression.getLeftOperandExpression());
-		Object o2 = doVisit(binaryExpression.getRightOperandExpression());
+		Object object1 = doVisit(binaryExpression.getLeftOperandExpression());
+		Object object2 = doVisit(binaryExpression.getRightOperandExpression());
 
-		if (o1 instanceof SPIDDMFormRuleCondition) {
-			_spiDDMFormRuleConditions.push((SPIDDMFormRuleCondition)o1);
+		if (object1 instanceof SPIDDMFormRuleCondition) {
+			_spiDDMFormRuleConditions.push((SPIDDMFormRuleCondition)object1);
 		}
 
-		if (o2 instanceof SPIDDMFormRuleCondition) {
-			_spiDDMFormRuleConditions.push((SPIDDMFormRuleCondition)o2);
+		if (object2 instanceof SPIDDMFormRuleCondition) {
+			_spiDDMFormRuleConditions.push((SPIDDMFormRuleCondition)object2);
 		}
 
 		return _spiDDMFormRuleConditions;
 	}
 
-	private static final Map<String, String> _functionNameOperatorMap =
+	private static final Map<String, String> _functionNameOperators =
 		HashMapBuilder.put(
 			"belongsTo", "belongs-to"
 		).put(
@@ -207,7 +223,7 @@ public class ConditionExpressionVisitor extends ExpressionVisitor<Object> {
 		).put(
 			"isEmpty", "is-empty"
 		).build();
-	private static final Map<String, String> _operatorMap = HashMapBuilder.put(
+	private static final Map<String, String> _operators = HashMapBuilder.put(
 		"<", "less-than"
 	).put(
 		"<=", "less-than-equals"

@@ -26,7 +26,7 @@ import java.util.Map;
  * This class is a wrapper for {@link DispatchLog}.
  * </p>
  *
- * @author Alessio Antonio Rendina
+ * @author Matija Petanjek
  * @see DispatchLog
  * @generated
  */
@@ -138,6 +138,11 @@ public class DispatchLogWrapper
 		if (status != null) {
 			setStatus(status);
 		}
+	}
+
+	@Override
+	public DispatchLog cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**

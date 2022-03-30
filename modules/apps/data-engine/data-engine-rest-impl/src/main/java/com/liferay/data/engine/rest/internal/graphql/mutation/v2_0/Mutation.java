@@ -16,6 +16,7 @@ package com.liferay.data.engine.rest.internal.graphql.mutation.v2_0;
 
 import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.dto.v2_0.DataLayout;
+import com.liferay.data.engine.rest.dto.v2_0.DataLayoutRenderingContext;
 import com.liferay.data.engine.rest.dto.v2_0.DataListView;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecord;
 import com.liferay.data.engine.rest.dto.v2_0.DataRecordCollection;
@@ -27,9 +28,12 @@ import com.liferay.data.engine.rest.resource.v2_0.DataRecordResource;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
+import com.liferay.portal.vulcan.pagination.Page;
 
 import java.util.function.BiFunction;
 
@@ -135,6 +139,20 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public DataDefinition patchDataDefinition(
+			@GraphQLName("dataDefinitionId") Long dataDefinitionId,
+			@GraphQLName("dataDefinition") DataDefinition dataDefinition)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dataDefinitionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataDefinitionResource ->
+				dataDefinitionResource.patchDataDefinition(
+					dataDefinitionId, dataDefinition));
+	}
+
+	@GraphQLField
 	public DataDefinition updateDataDefinition(
 			@GraphQLName("dataDefinitionId") Long dataDefinitionId,
 			@GraphQLName("dataDefinition") DataDefinition dataDefinition)
@@ -162,20 +180,24 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean updateDataDefinitionPermission(
-			@GraphQLName("dataDefinitionId") Long dataDefinitionId,
-			@GraphQLName("permissions")
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
+	public java.util.Collection<com.liferay.portal.vulcan.permission.Permission>
+			updateDataDefinitionPermissionsPage(
+				@GraphQLName("dataDefinitionId") Long dataDefinitionId,
+				@GraphQLName("permissions")
+					com.liferay.portal.vulcan.permission.Permission[]
+						permissions)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
+		return _applyComponentServiceObjects(
 			_dataDefinitionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			dataDefinitionResource ->
-				dataDefinitionResource.putDataDefinitionPermission(
-					dataDefinitionId, permissions));
+			dataDefinitionResource -> {
+				Page paginationPage =
+					dataDefinitionResource.putDataDefinitionPermissionsPage(
+						dataDefinitionId, permissions);
 
-		return true;
+				return paginationPage.getItems();
+			});
 	}
 
 	@GraphQLField
@@ -194,7 +216,7 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean deleteDataLayoutsDataDefinition(
+	public boolean deleteDataDefinitionDataLayout(
 			@GraphQLName("dataDefinitionId") Long dataDefinitionId)
 		throws Exception {
 
@@ -202,7 +224,7 @@ public class Mutation {
 			_dataLayoutResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			dataLayoutResource ->
-				dataLayoutResource.deleteDataLayoutsDataDefinition(
+				dataLayoutResource.deleteDataDefinitionDataLayout(
 					dataDefinitionId));
 
 		return true;
@@ -288,6 +310,35 @@ public class Mutation {
 			this::_populateResourceContext,
 			dataLayoutResource -> dataLayoutResource.putDataLayoutBatch(
 				callbackURL, object));
+	}
+
+	@GraphQLField
+	public Response createDataLayoutContext(
+			@GraphQLName("dataLayoutId") Long dataLayoutId,
+			@GraphQLName("dataLayoutRenderingContext")
+				DataLayoutRenderingContext dataLayoutRenderingContext)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dataLayoutResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataLayoutResource -> dataLayoutResource.postDataLayoutContext(
+				dataLayoutId, dataLayoutRenderingContext));
+	}
+
+	@GraphQLField
+	public boolean deleteDataDefinitionDataListView(
+			@GraphQLName("dataDefinitionId") Long dataDefinitionId)
+		throws Exception {
+
+		_applyVoidComponentServiceObjects(
+			_dataListViewResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataListViewResource ->
+				dataListViewResource.deleteDataDefinitionDataListView(
+					dataDefinitionId));
+
+		return true;
 	}
 
 	@GraphQLField
@@ -459,6 +510,19 @@ public class Mutation {
 	}
 
 	@GraphQLField
+	public DataRecord patchDataRecord(
+			@GraphQLName("dataRecordId") Long dataRecordId,
+			@GraphQLName("dataRecord") DataRecord dataRecord)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_dataRecordResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			dataRecordResource -> dataRecordResource.patchDataRecord(
+				dataRecordId, dataRecord));
+	}
+
+	@GraphQLField
 	public DataRecord updateDataRecord(
 			@GraphQLName("dataRecordId") Long dataRecordId,
 			@GraphQLName("dataRecord") DataRecord dataRecord)
@@ -575,20 +639,26 @@ public class Mutation {
 	}
 
 	@GraphQLField
-	public boolean updateDataRecordCollectionPermission(
-			@GraphQLName("dataRecordCollectionId") Long dataRecordCollectionId,
-			@GraphQLName("permissions")
-				com.liferay.portal.vulcan.permission.Permission[] permissions)
+	public java.util.Collection<com.liferay.portal.vulcan.permission.Permission>
+			updateDataRecordCollectionPermissionsPage(
+				@GraphQLName("dataRecordCollectionId") Long
+					dataRecordCollectionId,
+				@GraphQLName("permissions")
+					com.liferay.portal.vulcan.permission.Permission[]
+						permissions)
 		throws Exception {
 
-		_applyVoidComponentServiceObjects(
+		return _applyComponentServiceObjects(
 			_dataRecordCollectionResourceComponentServiceObjects,
 			this::_populateResourceContext,
-			dataRecordCollectionResource ->
-				dataRecordCollectionResource.putDataRecordCollectionPermission(
-					dataRecordCollectionId, permissions));
+			dataRecordCollectionResource -> {
+				Page paginationPage =
+					dataRecordCollectionResource.
+						putDataRecordCollectionPermissionsPage(
+							dataRecordCollectionId, permissions);
 
-		return true;
+				return paginationPage.getItems();
+			});
 	}
 
 	private <T, R, E1 extends Throwable, E2 extends Throwable> R
@@ -641,6 +711,8 @@ public class Mutation {
 			_httpServletResponse);
 		dataDefinitionResource.setContextUriInfo(_uriInfo);
 		dataDefinitionResource.setContextUser(_user);
+		dataDefinitionResource.setGroupLocalService(_groupLocalService);
+		dataDefinitionResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(DataLayoutResource dataLayoutResource)
@@ -652,6 +724,8 @@ public class Mutation {
 		dataLayoutResource.setContextHttpServletResponse(_httpServletResponse);
 		dataLayoutResource.setContextUriInfo(_uriInfo);
 		dataLayoutResource.setContextUser(_user);
+		dataLayoutResource.setGroupLocalService(_groupLocalService);
+		dataLayoutResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -665,6 +739,8 @@ public class Mutation {
 			_httpServletResponse);
 		dataListViewResource.setContextUriInfo(_uriInfo);
 		dataListViewResource.setContextUser(_user);
+		dataListViewResource.setGroupLocalService(_groupLocalService);
+		dataListViewResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(DataRecordResource dataRecordResource)
@@ -676,6 +752,8 @@ public class Mutation {
 		dataRecordResource.setContextHttpServletResponse(_httpServletResponse);
 		dataRecordResource.setContextUriInfo(_uriInfo);
 		dataRecordResource.setContextUser(_user);
+		dataRecordResource.setGroupLocalService(_groupLocalService);
+		dataRecordResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -690,6 +768,8 @@ public class Mutation {
 			_httpServletResponse);
 		dataRecordCollectionResource.setContextUriInfo(_uriInfo);
 		dataRecordCollectionResource.setContextUser(_user);
+		dataRecordCollectionResource.setGroupLocalService(_groupLocalService);
+		dataRecordCollectionResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private static ComponentServiceObjects<DataDefinitionResource>
@@ -705,10 +785,12 @@ public class Mutation {
 
 	private AcceptLanguage _acceptLanguage;
 	private com.liferay.portal.kernel.model.Company _company;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
-	private com.liferay.portal.kernel.model.User _user;
+	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private RoleLocalService _roleLocalService;
+	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
+	private com.liferay.portal.kernel.model.User _user;
 
 }

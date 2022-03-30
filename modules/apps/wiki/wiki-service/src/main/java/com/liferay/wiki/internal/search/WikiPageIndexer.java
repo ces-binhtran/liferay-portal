@@ -15,6 +15,7 @@
 package com.liferay.wiki.internal.search;
 
 import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.Comment;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.IndexableActionableDynamicQuery;
@@ -32,6 +33,7 @@ import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.search.Hits;
 import com.liferay.portal.kernel.search.IndexWriterHelper;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
@@ -50,6 +52,7 @@ import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.trash.TrashHelper;
@@ -106,18 +109,18 @@ public class WikiPageIndexer
 	}
 
 	@Override
-	public void addRelatedEntryFields(Document document, Object obj)
+	public void addRelatedEntryFields(Document document, Object object)
 		throws Exception {
 
 		long classPK = 0;
 
-		if (obj instanceof Comment) {
-			Comment comment = (Comment)obj;
+		if (object instanceof Comment) {
+			Comment comment = (Comment)object;
 
 			classPK = comment.getClassPK();
 		}
-		else if (obj instanceof FileEntry) {
-			FileEntry fileEntry = (FileEntry)obj;
+		else if (object instanceof FileEntry) {
+			FileEntry fileEntry = (FileEntry)object;
 
 			RelatedModelCapability relatedModelCapability =
 				fileEntry.getRepositoryCapability(RelatedModelCapability.class);
@@ -131,6 +134,10 @@ public class WikiPageIndexer
 			page = _wikiPageLocalService.getPage(classPK);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return;
 		}
 
@@ -212,12 +219,26 @@ public class WikiPageIndexer
 	}
 
 	@Override
+	public Hits search(SearchContext searchContext) throws SearchException {
+		Hits hits = super.search(searchContext);
+
+		hits.setQueryTerms(
+			ArrayUtil.append(
+				GetterUtil.getStringValues(hits.getQueryTerms()),
+				StringUtil.split(
+					searchContext.getKeywords(), StringPool.SPACE)));
+
+		return hits;
+	}
+
+	@Override
 	public void updateFullQuery(SearchContext searchContext) {
 	}
 
 	@Override
 	protected void doDelete(WikiPage wikiPage) throws Exception {
-		deleteDocument(wikiPage.getCompanyId(), wikiPage.getPrimaryKey());
+		deleteDocument(
+			wikiPage.getCompanyId(), "UID=" + uidFactory.getUID(wikiPage));
 	}
 
 	@Override
@@ -237,7 +258,8 @@ public class WikiPageIndexer
 		catch (WikiFormatException wikiFormatException) {
 			if (_log.isDebugEnabled()) {
 				_log.debug(
-					"Unable to get wiki engine for " + wikiPage.getFormat());
+					"Unable to get wiki engine for " + wikiPage.getFormat(),
+					wikiFormatException);
 			}
 		}
 
@@ -263,6 +285,9 @@ public class WikiPageIndexer
 				LocalizationUtil.getLocalizedName(Field.TITLE, languageId),
 				title);
 		}
+
+		document.addNumber(
+			"versionCount", GetterUtil.getDouble(wikiPage.getVersion()));
 
 		return document;
 	}
@@ -306,7 +331,7 @@ public class WikiPageIndexer
 	protected void doReindex(String[] ids) throws Exception {
 		long companyId = GetterUtil.getLong(ids[0]);
 
-		reindexNodes(companyId);
+		_reindexNodes(companyId);
 	}
 
 	@Override
@@ -325,69 +350,7 @@ public class WikiPageIndexer
 			getSearchEngineId(), wikiPage.getCompanyId(), getDocument(wikiPage),
 			isCommitImmediately());
 
-		reindexAttachments(wikiPage);
-	}
-
-	protected void reindexAttachments(WikiPage wikiPage)
-		throws PortalException {
-
-		Indexer<DLFileEntry> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
-			DLFileEntry.class);
-
-		for (FileEntry attachmentsFileEntry :
-				wikiPage.getAttachmentsFileEntries()) {
-
-			indexer.reindex((DLFileEntry)attachmentsFileEntry.getModel());
-		}
-	}
-
-	protected void reindexNodes(final long companyId) throws PortalException {
-		ActionableDynamicQuery actionableDynamicQuery =
-			_wikiNodeLocalService.getActionableDynamicQuery();
-
-		actionableDynamicQuery.setCompanyId(companyId);
-		actionableDynamicQuery.setPerformActionMethod(
-			(WikiNode node) -> reindexPages(
-				companyId, node.getGroupId(), node.getNodeId()));
-
-		actionableDynamicQuery.performActions();
-	}
-
-	protected void reindexPages(long companyId, long groupId, final long nodeId)
-		throws PortalException {
-
-		final IndexableActionableDynamicQuery indexableActionableDynamicQuery =
-			_wikiPageLocalService.getIndexableActionableDynamicQuery();
-
-		indexableActionableDynamicQuery.setAddCriteriaMethod(
-			dynamicQuery -> {
-				Property nodeIdProperty = PropertyFactoryUtil.forName("nodeId");
-
-				dynamicQuery.add(nodeIdProperty.eq(nodeId));
-
-				Property headProperty = PropertyFactoryUtil.forName("head");
-
-				dynamicQuery.add(headProperty.eq(true));
-			});
-		indexableActionableDynamicQuery.setCompanyId(companyId);
-		indexableActionableDynamicQuery.setGroupId(groupId);
-		indexableActionableDynamicQuery.setPerformActionMethod(
-			(WikiPage page) -> {
-				try {
-					indexableActionableDynamicQuery.addDocuments(
-						getDocument(page));
-				}
-				catch (PortalException portalException) {
-					if (_log.isWarnEnabled()) {
-						_log.warn(
-							"Unable to index wiki page " + page.getPageId(),
-							portalException);
-					}
-				}
-			});
-		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
-
-		indexableActionableDynamicQuery.performActions();
+		_reindexAttachments(wikiPage);
 	}
 
 	@Reference(unbind = "-")
@@ -430,6 +393,17 @@ public class WikiPageIndexer
 		}
 	}
 
+	private void _reindexAttachments(WikiPage wikiPage) throws Exception {
+		Indexer<DLFileEntry> indexer = IndexerRegistryUtil.nullSafeGetIndexer(
+			DLFileEntry.class);
+
+		for (FileEntry attachmentsFileEntry :
+				wikiPage.getAttachmentsFileEntries()) {
+
+			indexer.reindex((DLFileEntry)attachmentsFileEntry.getModel());
+		}
+	}
+
 	private void _reindexEveryVersionOfResourcePrimKey(long resourcePrimKey)
 		throws Exception {
 
@@ -452,6 +426,55 @@ public class WikiPageIndexer
 				_deleteDocument(wikiPage);
 			}
 		}
+	}
+
+	private void _reindexNodes(long companyId) throws Exception {
+		ActionableDynamicQuery actionableDynamicQuery =
+			_wikiNodeLocalService.getActionableDynamicQuery();
+
+		actionableDynamicQuery.setCompanyId(companyId);
+		actionableDynamicQuery.setPerformActionMethod(
+			(WikiNode node) -> _reindexPages(
+				companyId, node.getGroupId(), node.getNodeId()));
+
+		actionableDynamicQuery.performActions();
+	}
+
+	private void _reindexPages(long companyId, long groupId, long nodeId)
+		throws PortalException {
+
+		IndexableActionableDynamicQuery indexableActionableDynamicQuery =
+			_wikiPageLocalService.getIndexableActionableDynamicQuery();
+
+		indexableActionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> {
+				Property nodeIdProperty = PropertyFactoryUtil.forName("nodeId");
+
+				dynamicQuery.add(nodeIdProperty.eq(nodeId));
+
+				Property headProperty = PropertyFactoryUtil.forName("head");
+
+				dynamicQuery.add(headProperty.eq(true));
+			});
+		indexableActionableDynamicQuery.setCompanyId(companyId);
+		indexableActionableDynamicQuery.setGroupId(groupId);
+		indexableActionableDynamicQuery.setPerformActionMethod(
+			(WikiPage page) -> {
+				try {
+					indexableActionableDynamicQuery.addDocuments(
+						getDocument(page));
+				}
+				catch (PortalException portalException) {
+					if (_log.isWarnEnabled()) {
+						_log.warn(
+							"Unable to index wiki page " + page.getPageId(),
+							portalException);
+					}
+				}
+			});
+		indexableActionableDynamicQuery.setSearchEngineId(getSearchEngineId());
+
+		indexableActionableDynamicQuery.performActions();
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

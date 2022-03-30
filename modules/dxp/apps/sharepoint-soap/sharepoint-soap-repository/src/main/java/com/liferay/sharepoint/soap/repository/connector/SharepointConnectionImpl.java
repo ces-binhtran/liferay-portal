@@ -304,7 +304,9 @@ public class SharepointConnectionImpl implements SharepointConnection {
 		_addFolderOperation = _buildOperation(AddFolderOperation.class);
 		_addOrUpdateFileOperation = _buildOperation(
 			AddOrUpdateFileOperation.class);
-		_batchOperation = _buildOperation(BatchOperation.class);
+
+		_buildOperation(BatchOperation.class);
+
 		_cancelCheckOutFileOperation = _buildOperation(
 			CancelCheckOutFileOperation.class);
 		_checkInFileOperation = _buildOperation(CheckInFileOperation.class);
@@ -356,6 +358,7 @@ public class SharepointConnectionImpl implements SharepointConnection {
 
 		authenticator.setAuthSchemes(
 			Collections.singletonList(AuthSchemes.NTLM));
+		authenticator.setDomain(url.getHost());
 		authenticator.setHost(url.getHost());
 		authenticator.setPassword(_sharepointConnectionInfo.getPassword());
 		authenticator.setPort(url.getPort());
@@ -418,7 +421,6 @@ public class SharepointConnectionImpl implements SharepointConnection {
 
 	private AddFolderOperation _addFolderOperation;
 	private AddOrUpdateFileOperation _addOrUpdateFileOperation;
-	private BatchOperation _batchOperation;
 	private CancelCheckOutFileOperation _cancelCheckOutFileOperation;
 	private CheckInFileOperation _checkInFileOperation;
 	private CheckOutFileOperation _checkOutFileOperation;

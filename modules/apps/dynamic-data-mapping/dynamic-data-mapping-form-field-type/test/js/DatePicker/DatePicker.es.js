@@ -12,175 +12,167 @@
  * details.
  */
 
-import dom from 'metal-dom';
+import '@testing-library/jest-dom/extend-expect';
+import {fireEvent, render, screen} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import moment from 'moment';
+import React from 'react';
 
 import DatePicker from '../../../src/main/resources/META-INF/resources/DatePicker/DatePicker.es';
 
-let component;
-const spritemap = 'icons.svg';
-
-const defaultDatePickerConfig = {
-	name: 'dateField',
-	spritemap,
-};
-
 describe('DatePicker', () => {
-	afterEach(() => {
-		component.dispose();
+	it('renders the help text', () => {
+		render(<DatePicker tip="Type something" />);
+
+		expect(document.querySelector('.form-text')).toHaveTextContent(
+			'Type something'
+		);
 	});
 
-	beforeEach(() => {
-		jest.useFakeTimers();
+	it('renders the label', () => {
+		render(<DatePicker label="Date picker" />);
+
+		expect(screen.getByText('Date picker')).toBeInTheDocument();
 	});
 
-	it('has a helptext', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-			tip: 'Type something',
-		});
+	it('renders the predefined value', () => {
+		render(<DatePicker predefinedValue="2020-06-02" />);
 
-		expect(component).toMatchSnapshot();
+		expect(screen.getByRole('textbox')).toHaveValue('06/02/2020');
 	});
 
-	it('has an id', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-			id: 'ID',
-		});
+	it('expands the datepicker on calendar icon click', () => {
+		render(<DatePicker />);
 
-		expect(component).toMatchSnapshot();
+		userEvent.click(screen.getByLabelText('Choose date'));
+
+		expect(
+			document.body.querySelector('.date-picker-dropdown-menu.show')
+		).toBeInTheDocument();
 	});
 
-	it('has a label', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-			label: 'label',
-		});
+	it('fills the input with the date selected on Date Picker', () => {
+		render(<DatePicker onChange={() => {}} />);
 
-		expect(component).toMatchSnapshot();
+		userEvent.click(screen.getByLabelText('Choose date'));
+		userEvent.click(screen.getByLabelText('Select current date'));
+
+		expect(screen.getByRole('textbox')).toHaveValue(
+			moment().format('MM/DD/YYYY')
+		);
 	});
 
-	it('has a predefinedValue', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-			predefinedValue: '05/05/2019',
-		});
+	it('calls the onChange callback with a valid date', () => {
+		const onChange = jest.fn();
 
-		expect(component).toMatchSnapshot();
+		render(<DatePicker onChange={onChange} />);
+
+		userEvent.click(screen.getByLabelText('Choose date'));
+		userEvent.click(screen.getByLabelText('Select current date'));
+
+		expect(onChange).toHaveBeenCalledWith(
+			{},
+			moment().format('YYYY-MM-DD')
+		);
 	});
 
-	it('expands the datepicker when clicking the calendar icon', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-		});
+	it('fills the input date according to the locale', () => {
+		render(<DatePicker locale="ja_JP" onChange={() => {}} />);
 
-		const spy = jest.spyOn(component, 'emit');
+		userEvent.click(screen.getByLabelText('Choose date'));
+		userEvent.click(screen.getByLabelText('Select current date'));
 
-		dom.triggerEvent(
-			component.element.querySelector('.input-group-item button'),
-			'click'
+		expect(screen.getByRole('textbox')).toHaveValue(
+			moment().format('YYYY/MM/DD')
 		);
-
-		const event = {};
-
-		component._handleToggle(event);
-
-		expect(spy).toBeCalled();
 	});
 
-	it('fills the input with the current date selected on Date Picker', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-		});
+	it('fills the input completely when last item of a date mask is a symbol', () => {
+		render(<DatePicker locale="hu_HU" onChange={() => {}} />);
 
-		const spy = jest.spyOn(component, 'emit');
+		const input = screen.getByRole('textbox');
 
-		dom.triggerEvent(
-			component.element.querySelector('.input-group-item button'),
-			'click'
-		);
+		userEvent.type(input, '1111.11.11.');
 
-		jest.runAllTimers();
-
-		dom.triggerEvent(
-			component.element.querySelector("[aria-label='live']"),
-			'click'
-		);
-
-		jest.runAllTimers();
-
-		expect(spy).toHaveBeenCalledWith('fieldEdited', expect.anything());
+		expect(input).toHaveValue('1111.11.11.');
 	});
 
-	it('decreases the current month when the back arrow is selected on Date Picker', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-		});
-
-		dom.triggerEvent(
-			component.element.querySelector('.input-group-item button'),
-			'click'
+	it('sets the hidden input with occidental digits', () => {
+		render(
+			<DatePicker
+				defaultLanguageId="ar_SA"
+				name="test-date"
+				onChange={() => {}}
+				value="2021-01-01"
+			/>
 		);
+		const input = screen.getByRole('textbox');
+		const hiddenInput = document.querySelector('[name=test-date]');
 
-		jest.runAllTimers();
-
-		dom.triggerEvent(
-			component.element.querySelector("[aria-label='live']"),
-			'click'
-		);
-
-		const monthBefore = component._month;
-
-		jest.runAllTimers();
-
-		dom.triggerEvent(
-			component.element.querySelector("[aria-label='angle-left']"),
-			'click'
-		);
-
-		jest.runAllTimers();
-
-		if (monthBefore > 0) {
-			expect(component._month).toEqual(monthBefore - 1);
-		}
-		else if (monthBefore == 0) {
-			expect(component._month).toEqual(11);
-		}
+		expect(input).toHaveValue('٠١/٠١/٢٠٢١');
+		expect(hiddenInput).toHaveValue('2021-01-01');
 	});
 
-	it('increases the current month when the forward arrow is selected on Date Picker', () => {
-		component = new DatePicker({
-			...defaultDatePickerConfig,
-		});
-
-		dom.triggerEvent(
-			component.element.querySelector('.input-group-item button'),
-			'click'
+	/* TODO: remove skip after alow user to input arabic digits */
+	it.skip('passes only occidental digits to the onChange callback', () => {
+		const onChange = jest.fn();
+		render(
+			<DatePicker locale="ar_SA" name="test-date" onChange={onChange} />
 		);
 
-		jest.runAllTimers();
+		const input = screen.getByRole('textbox');
 
-		dom.triggerEvent(
-			component.element.querySelector("[aria-label='live']"),
-			'click'
+		userEvent.type(input, '٠١/٠١/٢٠٢١');
+
+		expect(onChange).toHaveBeenLastCalledWith('');
+	});
+
+	xit('fills the input date and time according to the locale', () => {
+		const {container} = render(
+			<DatePicker locale="pt_BR" onChange={() => {}} type="date_time" />
 		);
 
-		const monthBefore = component._month;
+		userEvent.click(screen.getByLabelText('Choose date'));
 
-		jest.runAllTimers();
-
-		dom.triggerEvent(
-			component.element.querySelector("[aria-label='angle-right']"),
-			'click'
+		const hours = screen.getByLabelText('Enter the hour in 00:00 format');
+		const minutes = screen.getByLabelText(
+			'Enter the minutes in 00:00 format'
 		);
 
-		jest.runAllTimers();
+		userEvent.click(screen.getByLabelText('Select current date'));
 
-		if (monthBefore < 11) {
-			expect(component._month).toEqual(monthBefore + 1);
-		}
-		else if (monthBefore == 11) {
-			expect(component._month).toEqual(0);
-		}
+		userEvent.type(hours, '23');
+		userEvent.type(minutes, '30');
+
+		expect(container.querySelector('[type=text]')).toHaveValue(
+			moment().format('DD/MM/YYYY [23:30]')
+		);
+	});
+
+	xit('calls the onChange callback with a valid date and time', () => {
+		const onChange = jest.fn();
+
+		render(<DatePicker onChange={onChange} type="date_time" />);
+
+		userEvent.click(screen.getByLabelText('Choose date'));
+
+		const hours = screen.getByLabelText('Enter the hour in 00:00 format');
+		const minutes = screen.getByLabelText(
+			'Enter the minutes in 00:00 format'
+		);
+		const sufix = screen.getByLabelText(
+			'Select time of day (AM/PM) using up (PM) and down (AM) arrow keys'
+		);
+
+		userEvent.click(screen.getByLabelText('Select current date'));
+
+		userEvent.type(hours, '11');
+		userEvent.type(minutes, '30');
+		fireEvent.keyDown(sufix, {code: 'ArrowUp', key: 'ArrowUp'}); // PM
+
+		expect(onChange).toHaveBeenCalledWith(
+			{},
+			moment().format('YYYY-MM-DD [23:30]')
+		);
 	});
 });

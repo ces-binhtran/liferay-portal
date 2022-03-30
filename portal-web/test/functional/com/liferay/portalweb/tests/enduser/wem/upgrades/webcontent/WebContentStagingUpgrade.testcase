@@ -10,14 +10,7 @@ definition {
 	setUp {
 		SignIn.signIn();
 
-		Smoke.viewWelcomePage();
-
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 	}
 
 	@priority = "5"
@@ -59,7 +52,6 @@ definition {
 	@priority = "5"
 	test PublishStagingArchiveAfterUpgrade7110 {
 		property data.archive.type = "data-archive-staging-unpublished";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.1.10";
 
 		Upgrade.publishStagedSite();
@@ -68,7 +60,6 @@ definition {
 	@priority = "5"
 	test PublishStagingArchiveAfterUpgrade70106 {
 		property data.archive.type = "data-archive-staging-unpublished";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.0.10.6";
 
 		Upgrade.publishStagedSite();
@@ -77,7 +68,6 @@ definition {
 	@priority = "5"
 	test PublishStagingArchiveAfterUpgrade72101 {
 		property data.archive.type = "data-archive-staging-unpublished";
-		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "7.2.10.1";
 
 		Upgrade.publishStagedSite();
@@ -86,6 +76,7 @@ definition {
 	@priority = "5"
 	test PublishStagingArchiveAfterUpgrade621015 {
 		property data.archive.type = "data-archive-staging-unpublished";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.15";
 
 		Upgrade.publishStagedSite();
@@ -94,6 +85,7 @@ definition {
 	@priority = "5"
 	test PublishStagingArchiveAfterUpgrade621021 {
 		property data.archive.type = "data-archive-staging-unpublished";
+		property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 		property portal.version = "6.2.10.21";
 
 		Upgrade.publishStagedSite();

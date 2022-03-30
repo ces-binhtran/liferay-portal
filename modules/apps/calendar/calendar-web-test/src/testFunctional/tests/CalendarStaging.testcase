@@ -1,10 +1,11 @@
 @component-name = "portal-calendar"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property testray.main.component.name = "Calendar";
+
 	var pageName = "Staging Test Page";
 	var portletName = "Calendar";
 
@@ -13,7 +14,7 @@ definition {
 
 		User.firstLoginPG();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Sites",
 			panel = "Control Panel",
 			portlet = "Sites");
@@ -22,14 +23,13 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPublicPage(
 			pageName = "Staging Test Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Staging Test Page",
 			privacy = "Public Pages",
@@ -64,8 +64,6 @@ definition {
 	@description = "This is a use case for LPS-52083."
 	@priority = "3"
 	test AddEvent {
-		property portal.upstream = "quarantine";
-
 		CalendarNavigator.gotoAddEvent();
 
 		CalendarEvent.editTitle(eventTitle = "Calendar Event Title");
@@ -82,7 +80,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
-			panel = "Site Administration",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "Site Name");
@@ -144,16 +141,98 @@ definition {
 		CalendarEvent.viewAvailableCalendars(availableCalendarList = "Test Test");
 	}
 
+	@description = "This is a use case for LPS-74684."
 	@priority = "5"
-	test SchedulePublishToLiveWithEventAndResource {
+	test InviteUserViaUnpublishedEventAndViewNoResponse {
 		property portal.acceptance = "true";
-		property testray.component.names = "Training";
 
 		Navigator.openSiteURL(siteName = "Site Name");
 
 		ProductMenu.gotoPortlet(
 			category = "Publishing",
+			portlet = "Staging");
+
+		Staging.activateStagingCP(siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
 			panel = "Site Administration",
+			portlet = "Workflow");
+
+		Workflow.configureWorkflow(
+			workflowDefinition = "Single Approver",
+			workflowResourceValue = "Calendar Event");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
+		CalendarNavigator.gotoAddEvent();
+
+		CalendarEvent.add(
+			calendarName = "Site Name",
+			eventTitle = "Invite User Event",
+			eventType = "Regular",
+			optionSet = "true",
+			optionSetValue = "inviteResource",
+			pageName = "Staging Test Page",
+			pageStaging = "true",
+			siteName = "Site Name",
+			siteURL = "true",
+			specificOptionSetValue = "Test Test",
+			user = "Test Test",
+			workflow = "true");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.assignToMeTaskByActions(
+			workflowAssetTitle = "Invite User Event",
+			workflowAssetType = "Calendar Event",
+			workflowTask = "Review");
+
+		UserBar.gotoDropdownItem(dropdownItem = "My Workflow Tasks");
+
+		Workflow.approveTaskByActions(
+			workflowAssetTitle = "Invite User Event",
+			workflowAssetType = "Calendar Event",
+			workflowTask = "Review");
+
+		Navigator.gotoSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
+		CalendarScheduler.viewSpecificEventNotPresent(eventTitle = "Invite User Event");
+
+		Navigator.gotoStagedSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
+		Staging.gotoPublishToLive();
+
+		Staging.publishToLive();
+
+		Navigator.gotoSitePage(
+			pageName = "Staging Test Page",
+			siteName = "Site Name");
+
+		CalendarEvent.viewSiteRSVPWithApprovedWorkflow(
+			eventTitle = "Invite User Event",
+			rsvp = "Yes",
+			userCalendarName = "Test Test");
+
+		CalendarEvent.viewInvitedUserRSVPWithApprovedWorkflow(
+			eventTitle = "Invite User Event",
+			siteCalendarName = "Site Name",
+			siteName = "Site Name",
+			userCalendarName = "Test Test");
+	}
+
+	@priority = "5"
+	test SchedulePublishToLiveWithEventAndResource {
+		Navigator.openSiteURL(siteName = "Site Name");
+
+		ProductMenu.gotoPortlet(
+			category = "Publishing",
 			portlet = "Staging");
 
 		Staging.activateStagingCP(siteName = "Site Name");

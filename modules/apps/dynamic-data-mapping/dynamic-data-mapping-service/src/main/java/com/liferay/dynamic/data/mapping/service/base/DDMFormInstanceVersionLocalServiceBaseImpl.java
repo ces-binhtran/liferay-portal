@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceVersion;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceVersionPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -47,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +76,15 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMFormInstanceVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMFormInstanceVersionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMFormInstanceVersionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMFormInstanceVersionLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ddm form instance version to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceVersion the ddm form instance version
 	 * @return the ddm form instance version that was added
@@ -108,6 +116,10 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm form instance version with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param formInstanceVersionId the primary key of the ddm form instance version
 	 * @return the ddm form instance version that was removed
 	 * @throws PortalException if a ddm form instance version with the primary key could not be found
@@ -124,6 +136,10 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm form instance version from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceVersion the ddm form instance version
 	 * @return the ddm form instance version that was removed
 	 */
@@ -138,6 +154,13 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmFormInstanceVersionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -303,6 +326,7 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -321,6 +345,7 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 			(DDMFormInstanceVersion)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DDMFormInstanceVersion> getBasePersistence() {
 		return ddmFormInstanceVersionPersistence;
 	}
@@ -367,6 +392,10 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	/**
 	 * Updates the ddm form instance version in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceVersion the ddm form instance version
 	 * @return the ddm form instance version that was updated
 	 */
@@ -376,6 +405,11 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 		DDMFormInstanceVersion ddmFormInstanceVersion) {
 
 		return ddmFormInstanceVersionPersistence.update(ddmFormInstanceVersion);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -391,6 +425,8 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		ddmFormInstanceVersionLocalService =
 			(DDMFormInstanceVersionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmFormInstanceVersionLocalService);
 	}
 
 	/**
@@ -448,6 +484,23 @@ public abstract class DDMFormInstanceVersionLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		DDMFormInstanceVersionLocalService ddmFormInstanceVersionLocalService) {
+
+		try {
+			Field field =
+				DDMFormInstanceVersionLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmFormInstanceVersionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

@@ -35,9 +35,10 @@ import com.liferay.portal.spring.transaction.DefaultTransactionExecutor;
 import com.liferay.portal.spring.transaction.TransactionAttributeAdapter;
 import com.liferay.portal.spring.transaction.TransactionInterceptor;
 import com.liferay.portal.spring.transaction.TransactionStatusAdapter;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.portlet.PortalPreferencesWrapperCacheUtil;
 
 import java.lang.reflect.Method;
 
@@ -45,6 +46,8 @@ import java.util.ConcurrentModificationException;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.FutureTask;
+
+import org.hibernate.util.JDBCExceptionReporter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -73,8 +76,8 @@ public class PortalPreferencesImplTest {
 	public static void setUpClass() throws NoSuchMethodException {
 		_updatePreferencesMethod =
 			PortalPreferencesLocalService.class.getMethod(
-				"updatePortalPreferences",
-				com.liferay.portal.kernel.model.PortalPreferences.class);
+				"updatePreferences", long.class, int.class,
+				PortalPreferences.class);
 
 		_aopInvocationHandler = ProxyUtil.fetchInvocationHandler(
 			_portalPreferencesLocalService, AopInvocationHandler.class);
@@ -125,9 +128,6 @@ public class PortalPreferencesImplTest {
 
 				return null;
 			});
-
-		PortalPreferencesWrapperCacheUtil.remove(
-			_testOwnerId, PortletKeys.PREFS_OWNER_TYPE_USER);
 	}
 
 	@Test
@@ -149,10 +149,10 @@ public class PortalPreferencesImplTest {
 			Assert.fail();
 		}
 		catch (Exception exception) {
-			Throwable cause = exception.getCause();
+			Throwable throwable = exception.getCause();
 
 			Assert.assertSame(
-				ConcurrentModificationException.class, cause.getClass());
+				ConcurrentModificationException.class, throwable.getClass());
 		}
 	}
 
@@ -181,16 +181,18 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				JDBCExceptionReporter.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
 		}
 		catch (Exception exception) {
-			Throwable cause = exception.getCause();
+			Throwable throwable = exception.getCause();
 
 			Assert.assertSame(
-				ConcurrentModificationException.class, cause.getClass());
+				ConcurrentModificationException.class, throwable.getClass());
 		}
 	}
 
@@ -253,16 +255,18 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				JDBCExceptionReporter.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
 		}
 		catch (Exception exception) {
-			Throwable cause = exception.getCause();
+			Throwable throwable = exception.getCause();
 
 			Assert.assertSame(
-				ConcurrentModificationException.class, cause.getClass());
+				ConcurrentModificationException.class, throwable.getClass());
 		}
 	}
 
@@ -325,16 +329,18 @@ public class PortalPreferencesImplTest {
 				return null;
 			});
 
-		try {
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				JDBCExceptionReporter.class.getName(), LoggerTestUtil.OFF)) {
+
 			updateSynchronously(futureTask1, futureTask2);
 
 			Assert.fail();
 		}
 		catch (Exception exception) {
-			Throwable cause = exception.getCause();
+			Throwable throwable = exception.getCause();
 
 			Assert.assertSame(
-				ConcurrentModificationException.class, cause.getClass());
+				ConcurrentModificationException.class, throwable.getClass());
 		}
 	}
 
@@ -400,12 +406,8 @@ public class PortalPreferencesImplTest {
 				_originalTransactionExecutor.commit(
 					transactionAttributeAdapter, transactionStatusAdapter);
 			}
-			catch (Throwable t) {
-				ReflectionUtil.throwException(t);
-			}
-			finally {
-				PortalPreferencesWrapperCacheUtil.remove(
-					_testOwnerId, PortletKeys.PREFS_OWNER_TYPE_USER);
+			catch (Throwable throwable) {
+				ReflectionUtil.throwException(throwable);
 			}
 		}
 

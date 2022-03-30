@@ -37,8 +37,8 @@ public class OrganizationSiteMembershipChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isChecked(Object obj) {
-		Organization organization = (Organization)obj;
+	public boolean isChecked(Object object) {
+		Organization organization = (Organization)object;
 
 		try {
 			if (OrganizationLocalServiceUtil.hasGroupOrganization(
@@ -50,21 +50,21 @@ public class OrganizationSiteMembershipChecker extends EmptyOnClickRowChecker {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		Organization organization = (Organization)obj;
+	public boolean isDisabled(Object object) {
+		Organization organization = (Organization)object;
 
 		if (_group.getOrganizationId() == organization.getOrganizationId()) {
 			return true;
 		}
 
-		return isChecked(obj);
+		return isChecked(object);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

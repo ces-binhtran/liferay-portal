@@ -22,7 +22,6 @@ import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCrite
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -75,9 +74,7 @@ public class DepotAdminMembershipsDisplayContext {
 	public List<Group> getDepotGroups(int start, int end)
 		throws PortalException {
 
-		List<Group> depotGroups = _getDepotGroups();
-
-		return ListUtil.subList(depotGroups, start, end);
+		return ListUtil.subList(_getDepotGroups(), start, end);
 	}
 
 	public int getDepotGroupsCount() throws PortalException {
@@ -169,7 +166,7 @@ public class DepotAdminMembershipsDisplayContext {
 		while (iterator.hasNext()) {
 			Group group = iterator.next();
 
-			if (group.getType() != GroupConstants.TYPE_DEPOT) {
+			if (!group.isDepot()) {
 				iterator.remove();
 			}
 			else if (!permissionChecker.isCompanyAdmin() &&

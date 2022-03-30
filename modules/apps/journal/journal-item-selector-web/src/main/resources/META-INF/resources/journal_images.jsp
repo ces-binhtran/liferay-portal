@@ -33,16 +33,17 @@ List<RepositoryEntry> portletFileEntries = new ArrayList<>();
 int portletFileEntriesCount = 0;
 
 if (journalArticle != null) {
-	portletFileEntries.addAll(journalArticle.getImagesFileEntries(start, end, journalItemSelectorViewDisplayContext.getOrderByComparator()));
+	portletFileEntries.addAll(journalArticle.getImagesFileEntries(start, end, (OrderByComparator<FileEntry>)journalItemSelectorViewDisplayContext.getOrderByComparator()));
 	portletFileEntriesCount = journalArticle.getImagesFileEntriesCount();
 }
 %>
 
 <liferay-item-selector:repository-entry-browser
+	editImageURL="<%= journalItemSelectorViewDisplayContext.getEditImageURL(liferayPortletResponse) %>"
 	emptyResultsMessage='<%= LanguageUtil.get(resourceBundle, "there-are-no-journal-images") %>'
 	itemSelectedEventName="<%= journalItemSelectorViewDisplayContext.getItemSelectedEventName() %>"
 	itemSelectorReturnTypeResolver="<%= journalItemSelectorViewDisplayContext.getItemSelectorReturnTypeResolver() %>"
-	maxFileSize="<%= DLValidatorUtil.getMaxAllowableSize() %>"
+	maxFileSize="<%= DLValidatorUtil.getMaxAllowableSize(null) %>"
 	portletURL="<%= journalItemSelectorViewDisplayContext.getPortletURL(request, liferayPortletResponse) %>"
 	repositoryEntries="<%= portletFileEntries %>"
 	repositoryEntriesCount="<%= portletFileEntriesCount %>"

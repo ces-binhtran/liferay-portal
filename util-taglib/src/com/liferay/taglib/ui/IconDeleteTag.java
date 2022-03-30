@@ -18,11 +18,11 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
+import com.liferay.portal.kernel.servlet.FileAvailabilityUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.taglib.FileAvailabilityUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 import java.util.ResourceBundle;
@@ -90,6 +90,10 @@ public class IconDeleteTag extends IconTag {
 					icon = "times-circle";
 				}
 			}
+
+			if (!isLabel()) {
+				setLinkCssClass("component-action");
+			}
 		}
 
 		setIcon(icon);
@@ -120,11 +124,8 @@ public class IconDeleteTag extends IconTag {
 		if (url.startsWith(Http.HTTP_WITH_SLASH) ||
 			url.startsWith(Http.HTTPS_WITH_SLASH)) {
 
-			url = "submitForm(document.hrefFm, '".concat(
-				HtmlUtil.escapeJS(url)
-			).concat(
-				"');"
-			);
+			url = StringBundler.concat(
+				"submitForm(document.hrefFm, '", HtmlUtil.escapeJS(url), "');");
 		}
 
 		if (!_trash) {

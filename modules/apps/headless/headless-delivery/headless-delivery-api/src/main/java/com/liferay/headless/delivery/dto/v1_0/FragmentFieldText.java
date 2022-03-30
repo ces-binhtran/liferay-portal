@@ -20,11 +20,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,16 +46,23 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentFieldText")
+@GraphQLName(
+	description = "Represents a fragment field with text.",
+	value = "FragmentFieldText"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentFieldText")
-public class FragmentFieldText {
+public class FragmentFieldText implements Serializable {
 
 	public static FragmentFieldText toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentFieldText.class, json);
 	}
 
-	@Schema
+	public static FragmentFieldText unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(FragmentFieldText.class, json);
+	}
+
+	@Schema(description = "A link to a fragment.")
 	@Valid
 	public FragmentLink getFragmentLink() {
 		return fragmentLink;
@@ -76,11 +87,11 @@ public class FragmentFieldText {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "A link to a fragment.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected FragmentLink fragmentLink;
 
-	@Schema
+	@Schema(description = "The fragment field's text.")
 	@Valid
 	public Object getText() {
 		return text;
@@ -103,7 +114,7 @@ public class FragmentFieldText {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment field's text.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object text;
 
@@ -151,7 +162,17 @@ public class FragmentFieldText {
 
 			sb.append("\"text\": ");
 
-			sb.append(String.valueOf(text));
+			if (text instanceof Map) {
+				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)text));
+			}
+			else if (text instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)text));
+				sb.append("\"");
+			}
+			else {
+				sb.append(text);
+			}
 		}
 
 		sb.append("}");
@@ -160,15 +181,26 @@ public class FragmentFieldText {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentFieldText",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -184,14 +216,12 @@ public class FragmentFieldText {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -218,7 +248,7 @@ public class FragmentFieldText {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -226,7 +256,7 @@ public class FragmentFieldText {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -234,5 +264,10 @@ public class FragmentFieldText {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

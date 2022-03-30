@@ -3,25 +3,24 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Test Plugins";
 	property portlet.plugins.includes = "test-user-attributes-portlet";
+	property testray.main.component.name = "Test Plugins";
 
 	setUp {
 		User.firstLoginPG();
 	}
 
 	tearDown {
-		Page.tearDownCP();
+		PagesAdmin.tearDownCP();
 	}
 
 	@priority = "4"
 	test ViewUserAttributes {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test User Attributes Page");
+		PagesAdmin.addPublicPage(pageName = "Test User Attributes Page");
 
 		Navigator.gotoPage(pageName = "Test User Attributes Page");
 

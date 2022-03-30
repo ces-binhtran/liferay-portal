@@ -26,12 +26,20 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class EntryLocalServiceWrapper
 	implements EntryLocalService, ServiceWrapper<EntryLocalService> {
 
+	public EntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public EntryLocalServiceWrapper(EntryLocalService entryLocalService) {
 		_entryLocalService = entryLocalService;
 	}
 
 	/**
 	 * Adds the entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param entry the entry
 	 * @return the entry that was added
@@ -77,6 +85,10 @@ public class EntryLocalServiceWrapper
 	/**
 	 * Deletes the entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param entry the entry
 	 * @return the entry that was removed
 	 */
@@ -89,6 +101,10 @@ public class EntryLocalServiceWrapper
 
 	/**
 	 * Deletes the entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param entryId the primary key of the entry
 	 * @return the entry that was removed
@@ -115,6 +131,13 @@ public class EntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _entryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _entryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -331,6 +354,10 @@ public class EntryLocalServiceWrapper
 
 	/**
 	 * Updates the entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param entry the entry
 	 * @return the entry that was updated

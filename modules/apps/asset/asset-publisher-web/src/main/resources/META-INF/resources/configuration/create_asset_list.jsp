@@ -26,7 +26,7 @@ String portletResource = ParamUtil.getString(request, "portletResource");
 	</aui:a>
 </div>
 
-<aui:script require="metal-dom/src/all/dom as dom,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as openSimpleInputModal">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule,frontend-js-web/liferay/modal/commands/OpenSimpleInputModal.es as openSimpleInputModal">
 	function handleCreateAssetListLinkClick(event) {
 		event.preventDefault();
 
@@ -39,11 +39,13 @@ String portletResource = ParamUtil.getString(request, "portletResource");
 			mainFieldPlaceholder: '<liferay-ui:message key="title" />',
 			namespace:
 				'<%= PortalUtil.getPortletNamespace(HtmlUtil.escape(portletResource)) %>',
-			spritemap: '<%= themeDisplay.getPathThemeImages() %>/lexicon/icons.svg',
+			spritemap: '<%= themeDisplay.getPathThemeImages() %>/clay/icons.svg',
 		});
 	}
 
-	var createAssetListLinkClickHandler = dom.delegate(
+	var delegate = delegateModule.default;
+
+	var createAssetListLinkClickHandler = delegate(
 		document.body,
 		'click',
 		'a.create-collection-link',
@@ -51,7 +53,7 @@ String portletResource = ParamUtil.getString(request, "portletResource");
 	);
 
 	function handleDestroyPortlet() {
-		createAssetListLinkClickHandler.removeListener();
+		createAssetListLinkClickHandler.dispose();
 
 		Liferay.detach('destroyPortlet', handleDestroyPortlet);
 	}

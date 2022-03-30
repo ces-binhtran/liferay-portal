@@ -23,11 +23,11 @@ import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentCollectionLocalService;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.fragment.service.FragmentEntryLocalService;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
@@ -43,7 +43,6 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -82,7 +81,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 
 		_company = _companyLocalService.getCompany(_group.getCompanyId());
 
-		_layout = _addLayout();
+		_layout = LayoutTestUtil.addTypeContentLayout(_group);
 	}
 
 	@Test
@@ -142,10 +141,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 			fragmentEntry.getFragmentEntryId(),
 			persistedFragmentEntryLink.getFragmentEntryId());
 		Assert.assertEquals(
-			PortalUtil.getClassNameId(Layout.class.getName()),
-			persistedFragmentEntryLink.getClassNameId());
-		Assert.assertEquals(
-			_layout.getPlid(), persistedFragmentEntryLink.getClassPK());
+			_layout.getPlid(), persistedFragmentEntryLink.getPlid());
 		Assert.assertEquals(
 			fragmentEntry.getCss(), persistedFragmentEntryLink.getCss());
 		Assert.assertEquals(
@@ -164,10 +160,8 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 		FragmentEntry fragmentEntry = _getFragmentEntry(_group.getGroupId());
 
 		List<FragmentEntryLink> originalFragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-				_group.getGroupId(),
-				PortalUtil.getClassNameId(Layout.class.getName()),
-				_layout.getPlid());
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+				_group.getGroupId(), _layout.getPlid());
 
 		MockLiferayPortletActionRequest actionRequest =
 			_getMockLiferayPortletActionRequest(_group.getGroupId());
@@ -180,10 +174,8 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 			new Class<?>[] {ActionRequest.class}, actionRequest);
 
 		List<FragmentEntryLink> actualFragmentEntryLinks =
-			_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-				_group.getGroupId(),
-				PortalUtil.getClassNameId(Layout.class.getName()),
-				_layout.getPlid());
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+				_group.getGroupId(), _layout.getPlid());
 
 		Assert.assertEquals(
 			actualFragmentEntryLinks.toString(),
@@ -204,19 +196,6 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 			new Class<?>[] {ActionRequest.class}, actionRequest);
 	}
 
-	private Layout _addLayout() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				TestPropsValues.getGroupId(), TestPropsValues.getUserId());
-
-		return _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-			StringPool.BLANK, serviceContext);
-	}
-
 	private FragmentEntry _getFragmentEntry(long groupId) throws Exception {
 		ServiceContext serviceContext =
 			ServiceContextTestUtil.getServiceContext();
@@ -231,7 +210,7 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 			fragmentCollection.getFragmentCollectionId(),
 			StringUtil.randomString(), StringUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), "{fieldSets: []}", 0,
+			RandomTestUtil.randomString(), false, "{fieldSets: []}", null, 0,
 			FragmentConstants.TYPE_COMPONENT, WorkflowConstants.STATUS_APPROVED,
 			serviceContext);
 	}
@@ -290,7 +269,9 @@ public class AddFragmentEntryLinkMVCActionCommandTest {
 	@Inject
 	private LayoutLocalService _layoutLocalService;
 
-	@Inject(filter = "mvc.command.name=/content_layout/add_fragment_entry_link")
+	@Inject(
+		filter = "mvc.command.name=/layout_content_page_editor/add_fragment_entry_link"
+	)
 	private MVCActionCommand _mvcActionCommand;
 
 }

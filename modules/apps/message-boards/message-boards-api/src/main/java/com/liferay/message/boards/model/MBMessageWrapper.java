@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -43,7 +45,10 @@ public class MBMessageWrapper
 	public Map<String, Object> getModelAttributes() {
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
+		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
+		attributes.put("externalReferenceCode", getExternalReferenceCode());
 		attributes.put("messageId", getMessageId());
 		attributes.put("groupId", getGroupId());
 		attributes.put("companyId", getCompanyId());
@@ -77,10 +82,29 @@ public class MBMessageWrapper
 
 	@Override
 	public void setModelAttributes(Map<String, Object> attributes) {
+		Long mvccVersion = (Long)attributes.get("mvccVersion");
+
+		if (mvccVersion != null) {
+			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
+		}
+
 		String uuid = (String)attributes.get("uuid");
 
 		if (uuid != null) {
 			setUuid(uuid);
+		}
+
+		String externalReferenceCode = (String)attributes.get(
+			"externalReferenceCode");
+
+		if (externalReferenceCode != null) {
+			setExternalReferenceCode(externalReferenceCode);
 		}
 
 		Long messageId = (Long)attributes.get("messageId");
@@ -261,6 +285,11 @@ public class MBMessageWrapper
 		return model.buildTreePath();
 	}
 
+	@Override
+	public MBMessage cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Returns the allow pingbacks of this message-boards message.
 	 *
@@ -408,6 +437,16 @@ public class MBMessageWrapper
 		return model.getCreateDate();
 	}
 
+	/**
+	 * Returns the ct collection ID of this message-boards message.
+	 *
+	 * @return the ct collection ID of this message-boards message
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
+	}
+
 	@Override
 	public java.util.List<com.liferay.portal.kernel.repository.model.FileEntry>
 			getDeletedAttachmentsFileEntries()
@@ -429,6 +468,16 @@ public class MBMessageWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return model.getDeletedAttachmentsFileEntriesCount();
+	}
+
+	/**
+	 * Returns the external reference code of this message-boards message.
+	 *
+	 * @return the external reference code of this message-boards message
+	 */
+	@Override
+	public String getExternalReferenceCode() {
+		return model.getExternalReferenceCode();
 	}
 
 	/**
@@ -479,6 +528,16 @@ public class MBMessageWrapper
 	@Override
 	public Date getModifiedDate() {
 		return model.getModifiedDate();
+	}
+
+	/**
+	 * Returns the mvcc version of this message-boards message.
+	 *
+	 * @return the mvcc version of this message-boards message
+	 */
+	@Override
+	public long getMvccVersion() {
+		return model.getMvccVersion();
 	}
 
 	/**
@@ -970,6 +1029,26 @@ public class MBMessageWrapper
 	}
 
 	/**
+	 * Sets the ct collection ID of this message-boards message.
+	 *
+	 * @param ctCollectionId the ct collection ID of this message-boards message
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
+	 * Sets the external reference code of this message-boards message.
+	 *
+	 * @param externalReferenceCode the external reference code of this message-boards message
+	 */
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		model.setExternalReferenceCode(externalReferenceCode);
+	}
+
+	/**
 	 * Sets the format of this message-boards message.
 	 *
 	 * @param format the format of this message-boards message
@@ -1017,6 +1096,16 @@ public class MBMessageWrapper
 	@Override
 	public void setModifiedDate(Date modifiedDate) {
 		model.setModifiedDate(modifiedDate);
+	}
+
+	/**
+	 * Sets the mvcc version of this message-boards message.
+	 *
+	 * @param mvccVersion the mvcc version of this message-boards message
+	 */
+	@Override
+	public void setMvccVersion(long mvccVersion) {
+		model.setMvccVersion(mvccVersion);
 	}
 
 	/**
@@ -1192,6 +1281,20 @@ public class MBMessageWrapper
 	@Override
 	public void updateTreePath(String treePath) {
 		model.updateTreePath(treePath);
+	}
+
+	@Override
+	public Map<String, Function<MBMessage, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<MBMessage, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

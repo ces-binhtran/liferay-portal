@@ -148,10 +148,6 @@ public class FragmentFieldImageSerDes {
 						FragmentLinkSerDes.toDTO((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -180,7 +176,7 @@ public class FragmentFieldImageSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -216,7 +212,7 @@ public class FragmentFieldImageSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

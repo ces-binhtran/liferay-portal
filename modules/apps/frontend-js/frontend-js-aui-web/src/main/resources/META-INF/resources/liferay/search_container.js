@@ -17,7 +17,7 @@ AUI.add(
 	(A) => {
 		var Lang = A.Lang;
 
-		var CSS_TEMPLATE = 'lfr-template';
+		var CSS_TEMPLATE = 'd-none';
 
 		var STR_BLANK = '';
 
@@ -34,7 +34,11 @@ AUI.add(
 
 			NAME: 'searchcontainer',
 
-			constructor(config) {
+			// NOTE: Do not convert the constructor to an object concise method.
+			//
+			// See: https://stackoverflow.com/a/45119651/2103996
+
+			constructor: function constructor(config) {
 				var id = config.id;
 
 				config.boundingBox = config.boundingBox || '#' + id;
@@ -77,7 +81,7 @@ AUI.add(
 
 					var action = 'show';
 
-					if (instance._ids.length == 0) {
+					if (instance._ids.length === 0) {
 						action = 'hide';
 
 						if (instance._emptyResultsMessage) {
@@ -88,7 +92,7 @@ AUI.add(
 					instance._parentContainer[action]();
 				},
 
-				addRow(arr, id) {
+				addRow(array, id, columnsCssClasses) {
 					var instance = this;
 
 					var row;
@@ -97,23 +101,33 @@ AUI.add(
 						var template = instance._table.one('.' + CSS_TEMPLATE);
 
 						if (template) {
-							row = template.clone();
+							row = template.previous()
+								? template.previous().clone()
+								: template.clone();
 
 							var cells = row.all('> td');
 
 							cells.empty();
 
-							arr.forEach((item, index) => {
+							array.forEach((item, index) => {
 								var cell = cells.item(index);
 
 								if (cell) {
 									cell.html(item);
+									if (
+										columnsCssClasses &&
+										columnsCssClasses[index]
+									) {
+										cell.addClass(columnsCssClasses[index]);
+									}
 								}
 							});
 
 							template.placeBefore(row);
 
 							row.removeClass(CSS_TEMPLATE);
+
+							row.attr('id', instance.get('id') + '_' + id);
 
 							instance._ids.push(id);
 						}
@@ -124,7 +138,7 @@ AUI.add(
 							id,
 							ids: instance._ids,
 							row,
-							rowData: arr,
+							rowData: array,
 						});
 					}
 
@@ -143,24 +157,27 @@ AUI.add(
 					});
 				},
 
-				deleteRow(obj, id) {
+				deleteRow(object, id) {
 					var instance = this;
 
-					if (Lang.isNumber(obj) || Lang.isString(obj)) {
+					if (Lang.isNumber(object) || Lang.isString(object)) {
 						var row = null;
 
 						instance._table.all('tr').some((item, index) => {
-							if (!item.hasClass(CSS_TEMPLATE) && index == obj) {
+							if (
+								!item.hasClass(CSS_TEMPLATE) &&
+								index === object
+							) {
 								row = item;
 							}
 
 							return row;
 						});
 
-						obj = row;
+						object = row;
 					}
 					else {
-						obj = A.one(obj);
+						object = A.one(object);
 					}
 
 					if (id) {
@@ -176,18 +193,18 @@ AUI.add(
 					instance.fire('deleteRow', {
 						id,
 						ids: instance._ids,
-						row: obj,
+						row: object,
 					});
 
-					if (obj) {
-						if (obj.get('nodeName').toLowerCase() !== 'tr') {
-							obj = obj.ancestor('tr');
+					if (object) {
+						if (object.get('nodeName').toLowerCase() !== 'tr') {
+							object = object.ancestor('tr');
 						}
 
 						// LPS-83031
 
 						setTimeout(() => {
-							obj.remove(true);
+							object.remove(true);
 						}, 0);
 					}
 				},
@@ -260,7 +277,7 @@ AUI.add(
 								.attr('method')
 								.toLowerCase();
 
-							if (method && method == 'get') {
+							if (method && method === 'get') {
 								instance._dataStore = null;
 							}
 						}
@@ -297,7 +314,7 @@ AUI.add(
 					var instance = this;
 
 					if (ids) {
-						if (typeof ids == 'string') {
+						if (typeof ids === 'string') {
 							ids = ids.split(',');
 						}
 
@@ -312,19 +329,19 @@ AUI.add(
 				},
 			},
 
-			register(obj) {
+			register(object) {
 				var instance = this;
 
-				var id = obj.get('id');
+				var id = object.get('id');
 
-				instance._cache[id] = obj;
+				instance._cache[id] = object;
 
-				Liferay.component(id, obj, {
+				Liferay.component(id, object, {
 					destroyOnNavigate: true,
 				});
 
 				Liferay.fire('search-container:registered', {
-					searchContainer: obj,
+					searchContainer: object,
 				});
 			},
 		});

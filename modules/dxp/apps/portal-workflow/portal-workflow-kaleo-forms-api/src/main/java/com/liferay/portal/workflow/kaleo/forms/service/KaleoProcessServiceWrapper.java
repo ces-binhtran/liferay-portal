@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class KaleoProcessServiceWrapper
 	implements KaleoProcessService, ServiceWrapper<KaleoProcessService> {
 
+	public KaleoProcessServiceWrapper() {
+		this(null);
+	}
+
 	public KaleoProcessServiceWrapper(KaleoProcessService kaleoProcessService) {
 		_kaleoProcessService = kaleoProcessService;
 	}
@@ -144,7 +148,8 @@ public class KaleoProcessServiceWrapper
 		<com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess> search(
 			long groupId, String keywords, int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				orderByComparator) {
+				<com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess>
+					orderByComparator) {
 
 		return _kaleoProcessService.search(
 			groupId, keywords, start, end, orderByComparator);

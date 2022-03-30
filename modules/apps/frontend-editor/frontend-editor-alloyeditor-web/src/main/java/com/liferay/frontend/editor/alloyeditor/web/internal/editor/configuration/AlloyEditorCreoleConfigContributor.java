@@ -24,19 +24,12 @@ import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Sergio González
@@ -77,14 +70,13 @@ public class AlloyEditorCreoleConfigContributor
 			}
 		}
 
-		JSONObject linkEditJSONObject = JSONUtil.put(
-			"appendProtocol", false
-		).put(
-			"showTargetSelector", false
-		);
-
 		JSONObject buttonCfgJSONObject = JSONUtil.put(
-			"linkEditBrowse", linkEditJSONObject);
+			"linkEditBrowse",
+			JSONUtil.put(
+				"appendProtocol", false
+			).put(
+				"showTargetSelector", false
+			));
 
 		jsonObject.put(
 			"buttonCfg", buttonCfgJSONObject
@@ -106,20 +98,14 @@ public class AlloyEditorCreoleConfigContributor
 
 		String removePlugins = jsonObject.getString("removePlugins");
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append("ae_dragresize,ae_tableresize,bidi,div,flash,font,forms,");
-		sb.append("indentblock,justify,keystrokes,maximize,newpage,pagebreak,");
-		sb.append("preview,print,save,showblocks,smiley,stylescombo,");
-		sb.append("templates,video");
-
 		jsonObject.put(
 			"removePlugins",
-			removePlugins.concat(
-				","
-			).concat(
-				sb.toString()
-			)
+			StringBundler.concat(
+				removePlugins,
+				",ae_dragresize,ae_tableresize,bidi,div,font,forms,",
+				"indentblock,justify,keystrokes,maximize,newpage,pagebreak,",
+				"preview,print,save,showblocks,smiley,stylescombo,templates,",
+				"video")
 		).put(
 			"toolbars", getToolbarsJSONObject(themeDisplay.getLocale())
 		);
@@ -128,76 +114,63 @@ public class AlloyEditorCreoleConfigContributor
 	protected JSONObject getStyleFormatJSONObject(
 		String styleFormatName, String element, int type) {
 
-		JSONObject jsonObject = JSONUtil.put("name", styleFormatName);
-
-		JSONObject styleJSONObject = JSONUtil.put(
-			"element", element
+		return JSONUtil.put(
+			"name", styleFormatName
 		).put(
-			"type", type
+			"style",
+			JSONUtil.put(
+				"element", element
+			).put(
+				"type", type
+			)
 		);
-
-		jsonObject.put("style", styleJSONObject);
-
-		return jsonObject;
 	}
 
 	protected JSONArray getStyleFormatsJSONArray(Locale locale) {
-		ResourceBundle resourceBundle = null;
-
-		try {
-			resourceBundle = _resourceBundleLoader.loadResourceBundle(locale);
-		}
-		catch (MissingResourceException missingResourceException) {
-			resourceBundle = ResourceBundleUtil.EMPTY_RESOURCE_BUNDLE;
-		}
-
 		return JSONUtil.putAll(
 			getStyleFormatJSONObject(
-				LanguageUtil.get(resourceBundle, "normal"), "p",
+				LanguageUtil.get(locale, "normal"), "p", _CKEDITOR_STYLE_BLOCK),
+			getStyleFormatJSONObject(
+				LanguageUtil.format(locale, "heading-x", "1"), "h1",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "1"), "h1",
+				LanguageUtil.format(locale, "heading-x", "2"), "h2",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "2"), "h2",
+				LanguageUtil.format(locale, "heading-x", "3"), "h3",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "3"), "h3",
+				LanguageUtil.format(locale, "heading-x", "4"), "h4",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "4"), "h4",
+				LanguageUtil.format(locale, "heading-x", "5"), "h5",
 				_CKEDITOR_STYLE_BLOCK),
 			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "5"), "h5",
-				_CKEDITOR_STYLE_BLOCK),
-			getStyleFormatJSONObject(
-				LanguageUtil.format(resourceBundle, "heading-x", "6"), "h6",
+				LanguageUtil.format(locale, "heading-x", "6"), "h6",
 				_CKEDITOR_STYLE_BLOCK));
 	}
 
 	protected JSONObject getStyleFormatsJSONObject(Locale locale) {
-		JSONObject stylesJSONObject = JSONUtil.put(
-			"styles", getStyleFormatsJSONArray(locale));
-
 		return JSONUtil.put(
-			"cfg", stylesJSONObject
+			"cfg", JSONUtil.put("styles", getStyleFormatsJSONArray(locale))
 		).put(
 			"name", "styles"
 		);
 	}
 
 	protected JSONObject getToolbarsAddJSONObject() {
-		JSONObject cfgJSONObject = JSONUtil.put(
-			"tableAttributes", JSONFactoryUtil.createJSONObject());
-
-		JSONObject buttonJSONObject = JSONUtil.put(
-			"cfg", cfgJSONObject
-		).put(
-			"name", "table"
-		);
-
 		return JSONUtil.put(
-			"buttons", JSONUtil.putAll("image", buttonJSONObject, "hline")
+			"buttons",
+			JSONUtil.putAll(
+				"image",
+				JSONUtil.put(
+					"cfg",
+					JSONUtil.put(
+						"tableAttributes", JSONFactoryUtil.createJSONObject())
+				).put(
+					"name", "table"
+				),
+				"hline")
 		).put(
 			"tabIndex", 2
 		);
@@ -219,41 +192,28 @@ public class AlloyEditorCreoleConfigContributor
 		);
 	}
 
-	protected JSONObject getToolbarsStylesSelectionsHeadingTextJSONObject(
-		Locale locale) {
-
-		return JSONUtil.put(
-			"buttons", JSONUtil.put(getStyleFormatsJSONObject(locale))
-		).put(
-			"name", "headertext"
-		).put(
-			"test", "AlloyEditor.SelectionTest.headingtext"
-		);
-	}
-
 	protected JSONArray getToolbarsStylesSelectionsJSONArray(Locale locale) {
 		return JSONUtil.putAll(
-			getToolbarsStylesSelectionsHeadingTextJSONObject(locale),
+			_getToolbarsStylesSelectionsHeadingTextJSONObject(locale),
 			getToolbarsStylesSelectionsLinkJSONObject(),
 			getToolbarsStylesSelectionsTextJSONObject(locale),
 			getToolbarsStylesSelectionsTableJSONObject());
 	}
 
 	protected JSONObject getToolbarsStylesSelectionsLinkJSONObject() {
-		JSONObject cfgJSONObject = JSONUtil.put(
-			"appendProtocol", false
-		).put(
-			"showTargetSelector", false
-		);
-
-		JSONObject linkEditJSONObject = JSONUtil.put(
-			"cfg", cfgJSONObject
-		).put(
-			"name", "linkEditBrowse"
-		);
-
 		return JSONUtil.put(
-			"buttons", JSONUtil.put(linkEditJSONObject)
+			"buttons",
+			JSONUtil.put(
+				JSONUtil.put(
+					"cfg",
+					JSONUtil.put(
+						"appendProtocol", false
+					).put(
+						"showTargetSelector", false
+					)
+				).put(
+					"name", "linkEditBrowse"
+				))
 		).put(
 			"name", "link"
 		).put(
@@ -294,13 +254,18 @@ public class AlloyEditorCreoleConfigContributor
 		);
 	}
 
-	private static final int _CKEDITOR_STYLE_BLOCK = 1;
+	private JSONObject _getToolbarsStylesSelectionsHeadingTextJSONObject(
+		Locale locale) {
 
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.frontend.editor.lang)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
+		return JSONUtil.put(
+			"buttons", JSONUtil.put(getStyleFormatsJSONObject(locale))
+		).put(
+			"name", "headertext"
+		).put(
+			"test", "AlloyEditor.SelectionTest.headingtext"
+		);
+	}
+
+	private static final int _CKEDITOR_STYLE_BLOCK = 1;
 
 }

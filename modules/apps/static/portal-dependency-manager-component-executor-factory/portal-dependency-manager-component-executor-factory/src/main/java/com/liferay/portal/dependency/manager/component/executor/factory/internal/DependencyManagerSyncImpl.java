@@ -14,11 +14,15 @@
 
 package com.liferay.portal.dependency.manager.component.executor.factory.internal;
 
+import com.liferay.portal.kernel.concurrent.DefaultNoticeableFuture;
+import com.liferay.portal.kernel.concurrent.FutureListener;
 import com.liferay.portal.kernel.dependency.manager.DependencyManagerSync;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.osgi.framework.ServiceRegistration;
@@ -39,35 +43,45 @@ public class DependencyManagerSyncImpl implements DependencyManagerSync {
 		_syncTimeout = syncTimeout;
 	}
 
-	public void setDependencyManagerSyncServiceRegistration(
-		ServiceRegistration<?> dependencyManagerSyncServiceRegistration) {
+	@Override
+	public void registerSyncCallable(Callable<Void> syncCallable) {
+		_addFutureListener(
+			future -> {
+				try {
+					syncCallable.call();
+				}
+				catch (Exception exception) {
+					_log.error("Unable to sync callable", exception);
+				}
+			});
+	}
 
-		_dependencyManagerSyncServiceRegistration =
-			dependencyManagerSyncServiceRegistration;
+	@Override
+	public void registerSyncFuture(Future<Void> syncFuture) {
+		_addFutureListener(
+			future -> {
+				try {
+					syncFuture.get(_syncTimeout, TimeUnit.SECONDS);
+				}
+				catch (Exception exception) {
+					_log.error("Unable to sync future", exception);
+				}
+			});
 	}
 
 	@Override
 	public void sync() {
-		ServiceRegistration<?> dependencyManagerSyncServiceRegistration =
-			_dependencyManagerSyncServiceRegistration;
-
-		if (dependencyManagerSyncServiceRegistration != null) {
-			try {
-				dependencyManagerSyncServiceRegistration.unregister();
-			}
-			catch (IllegalStateException illegalStateException) {
-
-				// Concurrent unregister, no need to do anything
-
-			}
-
-			_dependencyManagerSyncServiceRegistration = null;
+		if (_syncDefaultNoticeableFuture.isDone()) {
+			return;
 		}
 
 		try {
 			_componentExecutorFactoryRegistration.unregister();
 		}
 		catch (IllegalStateException illegalStateException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(illegalStateException);
+			}
 
 			// Concurrent unregister, no need to do anything
 
@@ -92,15 +106,31 @@ public class DependencyManagerSyncImpl implements DependencyManagerSync {
 			_log.error(
 				"Dependency manager sync interrupted", interruptedException);
 		}
+
+		_syncDefaultNoticeableFuture.run();
+	}
+
+	private void _addFutureListener(FutureListener<Void> futureListener) {
+		_syncDefaultNoticeableFuture.addFutureListener(
+			new FutureListener<Void>() {
+
+				@Override
+				public void complete(Future<Void> future) {
+					futureListener.complete(future);
+
+					_syncDefaultNoticeableFuture.removeFutureListener(this);
+				}
+
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DependencyManagerSyncImpl.class);
 
 	private final ServiceRegistration<?> _componentExecutorFactoryRegistration;
-	private volatile ServiceRegistration<?>
-		_dependencyManagerSyncServiceRegistration;
 	private final ExecutorService _executorService;
+	private final DefaultNoticeableFuture<Void> _syncDefaultNoticeableFuture =
+		new DefaultNoticeableFuture<>();
 	private final long _syncTimeout;
 
 }

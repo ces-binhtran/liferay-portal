@@ -1,10 +1,11 @@
 @component-name = "portal-calendar"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property testray.main.component.name = "Calendar";
+
 	var pageName = "Calendar Page";
 	var portletName = "Calendar";
 
@@ -15,14 +16,13 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPublicPage(
 			pageName = "Calendar Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Calendar Page",
 			privacy = "Public Pages",
@@ -52,14 +52,12 @@ definition {
 
 			CalendarConfiguration.tearDown();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
 	@priority = "3"
 	test EditInviteForCalendarResourceCalendar {
-		property portal.upstream = "quarantine";
-
 		CalendarResource.add(calendarResourceName = "Calendar Resource Name");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
@@ -140,7 +138,7 @@ definition {
 
 	@priority = "3"
 	test EditInviteForUserCalendar {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -175,8 +173,6 @@ definition {
 
 	@priority = "3"
 	test EditReminderForCalendarResourceCalendar {
-		property portal.upstream = "quarantine";
-
 		CalendarResource.add(calendarResourceName = "Calendar Resource Name");
 
 		Navigator.gotoPage(pageName = "Calendar Page");
@@ -257,7 +253,7 @@ definition {
 
 	@priority = "3"
 	test EditReminderForUserCalendar {
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");

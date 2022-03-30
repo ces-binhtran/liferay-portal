@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.repository;
 
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.repository.capabilities.CapabilityProvider;
@@ -23,11 +24,13 @@ import com.liferay.portal.kernel.repository.model.FileVersion;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.repository.model.RepositoryEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.File;
 import java.io.InputStream;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,15 +39,18 @@ import java.util.List;
 public interface DocumentRepository extends CapabilityProvider {
 
 	public FileEntry addFileEntry(
-			long userId, long folderId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog, File file,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog, File file,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public FileEntry addFileEntry(
-			long userId, long folderId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog, InputStream is,
-			long size, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public FileShortcut addFileShortcut(
@@ -85,21 +91,28 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public void deleteFolder(long folderId) throws PortalException;
 
+	public default FileEntry fetchFileEntryByExternalReferenceCode(
+		String externalReferenceCode) {
+
+		return null;
+	}
+
 	public List<FileEntry> getFileEntries(
 			long folderId, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public List<FileEntry> getFileEntries(
-			long folderId, int start, int end, OrderByComparator<FileEntry> obc)
+			long folderId, int start, int end,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public default List<FileEntry> getFileEntries(
 			long folderId, String[] mimeTypes, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
-		return getFileEntries(folderId, status, start, end, obc);
+		return getFileEntries(folderId, status, start, end, orderByComparator);
 	}
 
 	public List<RepositoryEntry> getFileEntriesAndFileShortcuts(
@@ -126,6 +139,29 @@ public interface DocumentRepository extends CapabilityProvider {
 	public FileEntry getFileEntry(long folderId, String title)
 		throws PortalException;
 
+	public default FileEntry getFileEntryByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		try {
+			return getFileEntry(
+				GetterUtil.getLongStrict(externalReferenceCode));
+		}
+		catch (NumberFormatException numberFormatException) {
+			throw new NoSuchFileEntryException(
+				"No file entry exists with external reference code " +
+					externalReferenceCode,
+				numberFormatException);
+		}
+	}
+
+	public default FileEntry getFileEntryByFileName(
+			long folderId, String fileName)
+		throws PortalException {
+
+		return getFileEntry(folderId, fileName);
+	}
+
 	public FileEntry getFileEntryByUuid(String uuid) throws PortalException;
 
 	public FileShortcut getFileShortcut(long fileShortcutId)
@@ -141,17 +177,17 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public List<Folder> getFolders(
 			long parentFolderId, boolean includeMountFolders, int start,
-			int end, OrderByComparator<Folder> obc)
+			int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	public List<Folder> getFolders(
 			long parentFolderId, int status, boolean includeMountFolders,
-			int start, int end, OrderByComparator<Folder> obc)
+			int start, int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	public List<RepositoryEntry> getFoldersAndFileEntriesAndFileShortcuts(
 			long folderId, int status, boolean includeMountFolders, int start,
-			int end, OrderByComparator<?> obc)
+			int end, OrderByComparator<?> orderByComparator)
 		throws PortalException;
 
 	public int getFoldersAndFileEntriesAndFileShortcutsCount(
@@ -167,7 +203,7 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public List<FileEntry> getRepositoryFileEntries(
 			long userId, long rootFolderId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	public long getRepositoryId();
@@ -189,16 +225,18 @@ public interface DocumentRepository extends CapabilityProvider {
 
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
+			File file, Date expirationDate, Date reviewDate,
 			ServiceContext serviceContext)
 		throws PortalException;
 
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, InputStream is,
-			long size, ServiceContext serviceContext)
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public FileShortcut updateFileShortcut(

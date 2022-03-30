@@ -17,17 +17,12 @@
 <%@ include file="/init.jsp" %>
 
 <clay:row
-	id='<%= renderResponse.getNamespace() + "ordering" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "ordering" %>'
 >
 	<clay:col
 		md="6"
 	>
-
-		<%
-		String orderByColumn1 = assetPublisherDisplayContext.getOrderByColumn1();
-		%>
-
-		<aui:select label="order-by" name="preferences--orderByColumn1--" value="<%= orderByColumn1 %>" wrapperCssClass="field-inline w80">
+		<aui:select label="order-by" name="preferences--orderByColumn1--" value="<%= assetPublisherDisplayContext.getOrderByColumn1() %>" wrapperCssClass="field-inline w80">
 			<c:if test="<%= assetPublisherDisplayContext.isOrderingByTitleEnabled() %>">
 				<aui:option label="title" />
 			</c:if>
@@ -121,24 +116,13 @@
 	</clay:col>
 </clay:row>
 
-<aui:script use="aui-base">
-	A.one('#<portlet:namespace />ordering').delegate(
-		'click',
-		function (event) {
-			var currentTarget = event.currentTarget;
-
-			var orderByTypeContainer = currentTarget.ancestor(
-				'.order-by-type-container'
-			);
-
-			orderByTypeContainer.all('.icon').toggleClass('hide');
-
-			var orderByTypeField = orderByTypeContainer.one('.order-by-type-field');
-
-			var newVal = orderByTypeField.val() === 'ASC' ? 'DESC' : 'ASC';
-
-			orderByTypeField.val(newVal);
-		},
-		'.icon'
-	);
-</aui:script>
+<liferay-frontend:component
+	context='<%=
+		HashMapBuilder.<String, Object>put(
+			"iconCssClass", ".icon"
+		).put(
+			"orderingContainerId", liferayPortletResponse.getNamespace() + "ordering"
+		).build()
+	%>'
+	module="js/Ordering"
+/>

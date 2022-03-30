@@ -18,7 +18,7 @@ import React, {useContext, useEffect, useState} from 'react';
 
 import {ModalContext} from '../../../ModalProvider.es';
 
-const Card = ({cardIndex, nextTransitions = [], tasks}) => {
+function Card({cardIndex, nextTransitions = [], tasks}) {
 	const {
 		bulkTransition: {transition, transitionTasks},
 		setBulkTransition,
@@ -129,7 +129,6 @@ const Card = ({cardIndex, nextTransitions = [], tasks}) => {
 					{tasks.length > 10 && (
 						<span
 							className="mt-4 show-all-button"
-							data-testid="showAllButton"
 							onClick={() => {
 								setShowAll(!showAll);
 							}}
@@ -150,7 +149,8 @@ const Card = ({cardIndex, nextTransitions = [], tasks}) => {
 						className="control-label"
 						htmlFor={`transitionSelect${cardIndex}`}
 					>
-						{`${Liferay.Language.get('transition-to')}`}{' '}
+						{Liferay.Language.get('transition-to') + ' '}
+
 						<ClayIcon
 							className="reference-mark text-warning"
 							symbol="asterisk"
@@ -160,7 +160,6 @@ const Card = ({cardIndex, nextTransitions = [], tasks}) => {
 					<ClaySelect
 						aria-label="Select Label"
 						className="error-field"
-						data-testid="transitionSelect"
 						id={`transitionSelect${cardIndex}`}
 						onChange={handleChange}
 					>
@@ -191,16 +190,15 @@ const Card = ({cardIndex, nextTransitions = [], tasks}) => {
 			<Card.Footer comment={comment} setComment={setComment} />
 		</>
 	);
-};
+}
 
-const Footer = ({comment, setComment}) => {
+function Footer({comment, setComment}) {
 	const [addComment, setAddComment] = useState(false);
 
 	return (
-		<ClayPanel.Footer className="pb-3" data-testid="selectTransitionFooter">
+		<ClayPanel.Footer className="pb-3">
 			{!addComment ? (
 				<ClayButton
-					data-testid="addCommentButton"
 					displayType="secondary"
 					onClick={() => setAddComment(true)}
 				>
@@ -218,7 +216,6 @@ const Footer = ({comment, setComment}) => {
 
 					<ClayInput
 						component="textarea"
-						data-testid="commentField"
 						id="commentTextArea"
 						onChange={({target}) => setComment(target.value)}
 						placeholder={Liferay.Language.get('comment')}
@@ -229,8 +226,8 @@ const Footer = ({comment, setComment}) => {
 			)}
 		</ClayPanel.Footer>
 	);
-};
+}
 
 Card.Footer = Footer;
 
-export {Card};
+export default Card;

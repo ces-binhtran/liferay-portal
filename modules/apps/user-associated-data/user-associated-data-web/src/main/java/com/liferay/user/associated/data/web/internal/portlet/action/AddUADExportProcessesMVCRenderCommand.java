@@ -22,7 +22,7 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.user.associated.data.constants.UserAssociatedDataPortletKeys;
 import com.liferay.user.associated.data.web.internal.constants.UADWebKeys;
-import com.liferay.user.associated.data.web.internal.util.UADApplicationExportHelper;
+import com.liferay.user.associated.data.web.internal.helper.UADApplicationExportHelper;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/add_uad_export_processes"
+		"mvc.command.name=/user_associated_data/add_uad_export_processes"
 	},
 	service = MVCRenderCommand.class
 )

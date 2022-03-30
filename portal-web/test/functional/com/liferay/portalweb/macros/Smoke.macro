@@ -6,14 +6,14 @@ definition {
 	@summary-ignore = "true"
 	macro runSmoke {
 		task ("Ensure that the super admin can add a Blank Site") {
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Sites",
 				panel = "Control Panel",
 				portlet = "Sites");
 
 			Site.addBlankCP(siteName = "Site Name");
 
-			GlobalMenu.gotoPortlet(
+			ApplicationsMenu.gotoPortlet(
 				category = "Sites",
 				panel = "Control Panel",
 				portlet = "Sites");
@@ -23,19 +23,18 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages",
 			site = "Site Name");
 
-		SitePages.addPublicPage(pageName = "Test Page1");
+		PagesAdmin.addPublicPage(pageName = "Test Page1");
 
-		SitePages.addPublicPage(pageName = "Test Page2");
+		PagesAdmin.addPublicPage(pageName = "Test Page2");
 
-		SitePages.addPublicPage(pageName = "Test Page3");
+		PagesAdmin.addPublicPage(pageName = "Test Page3");
 
 		var pageName = "Test Page1";
-		var portletBody = "Welcome to Liferay";
-		var portletName = "Hello World";
+		var portletBody = "Test Page1";
+		var portletName = "Menu Display";
 		var siteName = "Site Name";
 
 		task ("Add a '${portletName}' portlet to the page named '${pageName}'") {
@@ -71,7 +70,7 @@ definition {
 
 		task ("Add a '${fragmentName}' fragment to the content page named '${contentPageName}'") {
 			task ("Create a Content Page") {
-				SitePages.openPagesAdmin(siteURLKey = "${siteName}");
+				PagesAdmin.openPagesAdmin(siteURLKey = "${siteName}");
 
 				ContentPages.addPage(pageName = "${contentPageName}");
 			}
@@ -79,8 +78,7 @@ definition {
 			task ("Add a basic '${fragmentName}' component") {
 				PageEditor.addFragment(
 					collectionName = "${collectionName}",
-					fragmentName = "${fragmentName}",
-					fragmentOrder = "4");
+					fragmentName = "${fragmentName}");
 			}
 
 			task ("Publish Content Page") {
@@ -96,7 +94,6 @@ definition {
 			task ("Assert the '${fragmentName}' fragment is present") {
 				AssertElementPresent(locator1 = "//h1[contains(.,'Heading Example')]");
 			}
-
 		}
 
 		var portlet = "Web Content";
@@ -105,8 +102,7 @@ definition {
 			Navigator.openSiteURL(siteName = "Site Name");
 
 			ProductMenu.gotoPortlet(
-				category = "Content &amp; Data",
-				panel = "Site Administration",
+				category = "Content & Data",
 				portlet = "${portlet}");
 
 			SiteAdmin.viewPortletTitle(portletTitle = "${portlet}");
@@ -128,15 +124,17 @@ definition {
 		}
 	}
 
-	@summary = "View default welcome page while signed in as '${userFirstName} ${userLastName}'"
-	macro viewWelcomePage {
-		AssertTextPresent(
-			locator1 = "HelloWorld#PORTLET_TITLE",
-			value1 = "Hello World");
+	@summary = "View default welcome content page while signed in as '${userFirstName} ${userLastName}' and check that image is present"
+	macro viewWelcomeContentPage {
+		ContentPages.viewFragmentText(
+			fragmentName = "heading",
+			id = "element-text",
+			text = "Welcome to Liferay");
 
-		AssertTextEquals.assertPartialText(
-			locator1 = "HelloWorld#PORTLET_CONTENT",
-			value1 = "Welcome to Liferay");
+		ContentPages.viewFragmentImage(
+			fragmentName = "image",
+			id = "image-square",
+			image = "tree.png");
 	}
 
 }

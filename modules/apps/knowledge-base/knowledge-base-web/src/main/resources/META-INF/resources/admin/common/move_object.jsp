@@ -67,7 +67,7 @@ if (portletTitleBasedNavigation) {
 	/>
 </c:if>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl container-form-lg\"" : StringPool.BLANK %>>
 	<liferay-portlet:actionURL name="moveKBObject" var="moveKBObjectURL" />
 
 	<aui:form action="<%= moveKBObjectURL %>" method="post" name="fm">
@@ -99,49 +99,25 @@ if (portletTitleBasedNavigation) {
 					<aui:button name="selectKBObjectButton" value="select" />
 				</aui:field-wrapper>
 			</aui:fieldset>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" value="move" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" value="move" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </div>
 
-<aui:script>
+<script>
 	var selectKBObjectButton = document.getElementById(
 		'<portlet:namespace />selectKBObjectButton'
 	);
 
 	if (selectKBObjectButton) {
-		selectKBObjectButton.addEventListener('click', function (event) {
-			Liferay.Util.selectEntity(
-				{
-					dialog: {
-						constrain: true,
-						destroyOnHide: true,
-						modal: true,
-						width: 680,
-					},
-					id: '<portlet:namespace />selectKBObject',
-					title: '<liferay-ui:message key="select-parent" />',
-
-					<liferay-portlet:renderURL var="selectKBObjectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-						<portlet:param name="mvcPath" value='<%= templatePath + "select_parent.jsp" %>' />
-						<portlet:param name="resourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
-						<portlet:param name="resourcePrimKey" value="<%= String.valueOf(resourcePrimKey) %>" />
-						<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(parentResourceClassNameId) %>" />
-						<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
-						<portlet:param name="originalParentResourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
-						<portlet:param name="priority" value="<%= String.valueOf(priority) %>" />
-						<portlet:param name="status" value="<%= String.valueOf(status) %>" />
-						<portlet:param name="targetStatus" value="<%= String.valueOf(targetStatus) %>" />
-					</liferay-portlet:renderURL>
-
-					uri: '<%= HtmlUtil.escapeJS(selectKBObjectURL) %>',
-				},
-				function (event) {
+		selectKBObjectButton.addEventListener('click', (event) => {
+			Liferay.Util.openSelectionModal({
+				onSelect: function (event) {
 					Liferay.Util.setFormValues(document.<portlet:namespace />fm, {
 						parentPriority: event.priority,
 						parentResourceClassNameId: event.resourceclassnameid,
@@ -155,8 +131,24 @@ if (portletTitleBasedNavigation) {
 					};
 
 					Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
-				}
-			);
+				},
+				selectEventName: '<portlet:namespace />selectKBObject',
+				title: '<liferay-ui:message key="select-parent" />',
+
+				<liferay-portlet:renderURL var="selectKBObjectURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+					<portlet:param name="mvcPath" value='<%= templatePath + "select_parent.jsp" %>' />
+					<portlet:param name="resourceClassNameId" value="<%= String.valueOf(resourceClassNameId) %>" />
+					<portlet:param name="resourcePrimKey" value="<%= String.valueOf(resourcePrimKey) %>" />
+					<portlet:param name="parentResourceClassNameId" value="<%= String.valueOf(parentResourceClassNameId) %>" />
+					<portlet:param name="parentResourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
+					<portlet:param name="originalParentResourcePrimKey" value="<%= String.valueOf(parentResourcePrimKey) %>" />
+					<portlet:param name="priority" value="<%= String.valueOf(priority) %>" />
+					<portlet:param name="status" value="<%= String.valueOf(status) %>" />
+					<portlet:param name="targetStatus" value="<%= String.valueOf(targetStatus) %>" />
+				</liferay-portlet:renderURL>
+
+				url: '<%= HtmlUtil.escapeJS(selectKBObjectURL) %>',
+			});
 		});
 	}
-</aui:script>
+</script>

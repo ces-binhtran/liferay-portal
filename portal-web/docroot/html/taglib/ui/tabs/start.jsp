@@ -59,6 +59,7 @@ if (url != null) {
 	String[] urlArray = PortalUtil.stripURLAnchor(url, "&#");
 
 	anchor = urlArray[1];
+
 	url = urlArray[0];
 
 	if (!url.contains(StringPool.QUESTION)) {
@@ -69,6 +70,7 @@ if (url != null) {
 // Back url
 
 String backLabel = (String)request.getAttribute("liferay-ui:tabs:backLabel");
+
 String backURL = (String)request.getAttribute("liferay-ui:tabs:backURL");
 
 if (Validator.isNotNull(backURL) && !backURL.equals("javascript:history.go(-1);")) {
@@ -117,15 +119,15 @@ String type = GetterUtil.getString((String)request.getAttribute("liferay-ui:tabs
 			}
 			%>
 
-			<nav class="navbar navbar-default <%= cssClass %>">
+			<nav class="navbar <%= cssClass %>">
 				<div class="container-fluid">
 					<ul class="nav navbar-nav">
 						<c:if test="<%= names.length > 1 %>">
-							<li class="active dropdown">
-								<a class="dropdown-toggle" data-toggle="liferay-dropdown" href="javascript:;">
-									<span id='<%= namespace + param + "dropdownTitle" %>'><%= LanguageUtil.get(resourceBundle, HtmlUtil.escape(name)) %></span>
+							<li class="active dropdown nav-item">
+								<a class="dropdown-toggle nav-link" data-toggle="liferay-dropdown" href="javascript:;">
+									<span class="navbar-text-truncate" id="<%= namespace + param + "dropdownTitle" %>"><%= LanguageUtil.get(resourceBundle, HtmlUtil.escape(name)) %></span>
 
-									<span class="caret"></span>
+									<aui:icon image="caret-bottom" markupView="lexicon" />
 								</a>
 
 								<ul class="dropdown-menu">
@@ -200,7 +202,7 @@ String type = GetterUtil.getString((String)request.getAttribute("liferay-ui:tabs
 	%>
 
 		<li class="nav-item" data-tab-name="<%= names[i] %>" id="<%= namespace %><%= param %><%= StringUtil.toCharCode(values[i]) %>TabsId">
-			<a class="<%= linkCssClass %>" href='<%= Validator.isNotNull(curURL) ? HtmlUtil.escapeAttribute(curURL) : "javascript:;" %>' onClick="<%= Validator.isNotNull(curOnClick) ? curOnClick : StringPool.BLANK %>">
+			<a class="<%= linkCssClass %>" href="<%= Validator.isNotNull(curURL) ? HtmlUtil.escapeAttribute(curURL) : "javascript:;" %>" onClick="<%= Validator.isNotNull(curOnClick) ? curOnClick : StringPool.BLANK %>">
 				<%= LanguageUtil.get(resourceBundle, HtmlUtil.escape(names[i])) %>
 			</a>
 		</li>

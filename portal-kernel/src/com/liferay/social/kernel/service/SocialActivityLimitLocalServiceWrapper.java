@@ -30,6 +30,10 @@ public class SocialActivityLimitLocalServiceWrapper
 	implements ServiceWrapper<SocialActivityLimitLocalService>,
 			   SocialActivityLimitLocalService {
 
+	public SocialActivityLimitLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SocialActivityLimitLocalServiceWrapper(
 		SocialActivityLimitLocalService socialActivityLimitLocalService) {
 
@@ -49,6 +53,10 @@ public class SocialActivityLimitLocalServiceWrapper
 
 	/**
 	 * Adds the social activity limit to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityLimitLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityLimit the social activity limit
 	 * @return the social activity limit that was added
@@ -100,6 +108,10 @@ public class SocialActivityLimitLocalServiceWrapper
 	/**
 	 * Deletes the social activity limit with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityLimitLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param activityLimitId the primary key of the social activity limit
 	 * @return the social activity limit that was removed
 	 * @throws PortalException if a social activity limit with the primary key could not be found
@@ -115,6 +127,10 @@ public class SocialActivityLimitLocalServiceWrapper
 	/**
 	 * Deletes the social activity limit from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityLimitLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param socialActivityLimit the social activity limit
 	 * @return the social activity limit that was removed
 	 */
@@ -129,6 +145,13 @@ public class SocialActivityLimitLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _socialActivityLimitLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _socialActivityLimitLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -321,6 +344,10 @@ public class SocialActivityLimitLocalServiceWrapper
 
 	/**
 	 * Updates the social activity limit in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityLimitLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityLimit the social activity limit
 	 * @return the social activity limit that was updated

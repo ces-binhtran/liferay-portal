@@ -61,7 +61,21 @@ public class ContentStructureSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (contentStructure.getAssetLibraryKey() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentStructure.getAssetLibraryKey()));
+
+			sb.append("\"");
+		}
 
 		if (contentStructure.getAvailableLanguages() != null) {
 			if (sb.length() > 1) {
@@ -245,7 +259,16 @@ public class ContentStructureSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (contentStructure.getAssetLibraryKey() == null) {
+			map.put("assetLibraryKey", null);
+		}
+		else {
+			map.put(
+				"assetLibraryKey",
+				String.valueOf(contentStructure.getAssetLibraryKey()));
+		}
 
 		if (contentStructure.getAvailableLanguages() == null) {
 			map.put("availableLanguages", null);
@@ -360,7 +383,15 @@ public class ContentStructureSerDes {
 			ContentStructure contentStructure, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "availableLanguages")) {
+			if (Objects.equals(jsonParserFieldName, "assetLibraryKey")) {
+				if (jsonParserFieldValue != null) {
+					contentStructure.setAssetLibraryKey(
+						(String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(
+						jsonParserFieldName, "availableLanguages")) {
+
 				if (jsonParserFieldValue != null) {
 					contentStructure.setAvailableLanguages(
 						toStrings((Object[])jsonParserFieldValue));
@@ -436,10 +467,6 @@ public class ContentStructureSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -468,7 +495,7 @@ public class ContentStructureSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -504,7 +531,7 @@ public class ContentStructureSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

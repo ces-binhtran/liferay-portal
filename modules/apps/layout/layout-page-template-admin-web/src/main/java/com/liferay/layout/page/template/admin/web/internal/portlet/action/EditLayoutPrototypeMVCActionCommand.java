@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutPrototypeService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 
@@ -40,7 +41,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutPageTemplateAdminPortletKeys.LAYOUT_PAGE_TEMPLATES,
-		"mvc.command.name=/layout_prototype/edit_layout_prototype"
+		"mvc.command.name=/layout_page_template_admin/edit_layout_prototype"
 	},
 	service = MVCActionCommand.class
 )
@@ -63,14 +64,22 @@ public class EditLayoutPrototypeMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			LayoutPrototype.class.getName(), actionRequest);
 
-		if (layoutPrototypeId <= 0) {
-			_layoutPrototypeService.addLayoutPrototype(
-				nameMap, descriptionMap, active, serviceContext);
+		try {
+			if (layoutPrototypeId <= 0) {
+				_layoutPrototypeService.addLayoutPrototype(
+					nameMap, descriptionMap, active, serviceContext);
+			}
+			else {
+				_layoutPrototypeService.updateLayoutPrototype(
+					layoutPrototypeId, nameMap, descriptionMap, active,
+					serviceContext);
+			}
 		}
-		else {
-			_layoutPrototypeService.updateLayoutPrototype(
-				layoutPrototypeId, nameMap, descriptionMap, active,
-				serviceContext);
+		catch (Exception exception) {
+			actionResponse.setRenderParameter(
+				"mvcPath", "/edit_layout_prototype.jsp");
+
+			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 	}
 

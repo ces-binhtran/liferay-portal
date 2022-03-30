@@ -15,12 +15,10 @@
 package com.liferay.redirect.configuration;
 
 /**
- * @author Alejandro Tardín
- * @deprecated As of Athanasius (7.3.x)
+ * @author     Alejandro Tardín
  */
-@Deprecated
 public interface RedirectConfiguration {
 
-	public boolean isEnabled();
+	public boolean isRedirectNotFoundEnabled();
 
 }

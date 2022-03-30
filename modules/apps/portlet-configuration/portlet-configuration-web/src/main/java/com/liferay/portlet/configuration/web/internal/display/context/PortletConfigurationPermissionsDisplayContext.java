@@ -14,13 +14,13 @@
 
 package com.liferay.portlet.configuration.web.internal.display.context;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.ResourcePrimKeyException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.Portlet;
@@ -71,7 +71,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import javax.portlet.ActionRequest;
 import javax.portlet.PortletMode;
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -124,11 +123,8 @@ public class PortletConfigurationPermissionsDisplayContext {
 			_getPortletResource(), getModelResource());
 
 		if (Objects.equals(getModelResource(), Group.class.getName())) {
-			long modelResourceGroupId = GetterUtil.getLong(
-				getResourcePrimKey());
-
 			Group modelResourceGroup = GroupLocalServiceUtil.getGroup(
-				modelResourceGroupId);
+				GetterUtil.getLong(getResourcePrimKey()));
 
 			if (modelResourceGroup.isLayoutPrototype() ||
 				modelResourceGroup.isLayoutSetPrototype() ||
@@ -149,10 +145,8 @@ public class PortletConfigurationPermissionsDisplayContext {
 			}
 		}
 		else if (Objects.equals(getModelResource(), Role.class.getName())) {
-			long modelResourceRoleId = GetterUtil.getLong(getResourcePrimKey());
-
 			Role modelResourceRole = RoleLocalServiceUtil.getRole(
-				modelResourceRoleId);
+				GetterUtil.getLong(getResourcePrimKey()));
 
 			String name = modelResourceRole.getName();
 
@@ -162,11 +156,8 @@ public class PortletConfigurationPermissionsDisplayContext {
 				resourceActions = new ArrayList<>(resourceActions);
 
 				resourceActions.remove(ActionKeys.ASSIGN_MEMBERS);
-				resourceActions.remove(ActionKeys.DEFINE_PERMISSIONS);
 				resourceActions.remove(ActionKeys.DELETE);
-				resourceActions.remove(ActionKeys.PERMISSIONS);
 				resourceActions.remove(ActionKeys.UPDATE);
-				resourceActions.remove(ActionKeys.VIEW);
 			}
 		}
 
@@ -176,11 +167,11 @@ public class PortletConfigurationPermissionsDisplayContext {
 	}
 
 	public String getClearResultsURL() throws Exception {
-		PortletURL clearResultsURL = getIteratorURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getIteratorURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	public PortletURL getDefinePermissionsURL() throws Exception {
@@ -242,26 +233,30 @@ public class PortletConfigurationPermissionsDisplayContext {
 	}
 
 	public PortletURL getIteratorURL() throws Exception {
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			_httpServletRequest,
-			PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/edit_permissions.jsp");
-		portletURL.setParameter(
-			"returnToFullPageURL", _getReturnToFullPageURL());
-		portletURL.setParameter(
-			"portletConfiguration", Boolean.TRUE.toString());
-		portletURL.setParameter("portletResource", _getPortletResource());
-		portletURL.setParameter("modelResource", getModelResource());
-		portletURL.setParameter(
-			"resourceGroupId", String.valueOf(_getResourceGroupId()));
-		portletURL.setParameter("resourcePrimKey", getResourcePrimKey());
-		portletURL.setParameter("roleTypes", _getRoleTypesParam());
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				_httpServletRequest,
+				PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_permissions.jsp"
+		).setPortletResource(
+			_getPortletResource()
+		).setParameter(
+			"modelResource", getModelResource()
+		).setParameter(
+			"portletConfiguration", true
+		).setParameter(
+			"resourceGroupId", _getResourceGroupId()
+		).setParameter(
+			"resourcePrimKey", getResourcePrimKey()
+		).setParameter(
+			"returnToFullPageURL", _getReturnToFullPageURL()
+		).setParameter(
+			"roleTypes", _getRoleTypesParam()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildPortletURL();
 	}
 
 	public String getModelResource() {
@@ -349,10 +344,8 @@ public class PortletConfigurationPermissionsDisplayContext {
 			getModelResource());
 
 		if (Objects.equals(getModelResource(), Role.class.getName())) {
-			long modelResourceRoleId = GetterUtil.getLong(getResourcePrimKey());
-
 			Role modelResourceRole = RoleLocalServiceUtil.getRole(
-				modelResourceRoleId);
+				GetterUtil.getLong(getResourcePrimKey()));
 
 			RoleTypeContributor roleTypeContributor =
 				_roleTypeContributorProvider.getRoleTypeContributor(
@@ -372,8 +365,6 @@ public class PortletConfigurationPermissionsDisplayContext {
 		}
 
 		boolean filterGuestRole = false;
-		boolean permissionCheckGuestEnabled =
-			PropsValues.PERMISSIONS_CHECK_GUEST_ENABLED;
 
 		if (Objects.equals(getModelResource(), Layout.class.getName())) {
 			Layout resourceLayout = LayoutLocalServiceUtil.getLayout(
@@ -383,7 +374,7 @@ public class PortletConfigurationPermissionsDisplayContext {
 				Group resourceLayoutGroup = resourceLayout.getGroup();
 
 				if (!resourceLayoutGroup.isLayoutSetPrototype() &&
-					!permissionCheckGuestEnabled) {
+					!PropsValues.PERMISSIONS_CHECK_GUEST_ENABLED) {
 
 					filterGuestRole = true;
 				}
@@ -396,18 +387,15 @@ public class PortletConfigurationPermissionsDisplayContext {
 				PortletConstants.LAYOUT_SEPARATOR);
 
 			if (pos > 0) {
-				long resourcePlid = GetterUtil.getLong(
-					getResourcePrimKey().substring(0, pos));
-
 				Layout resourceLayout = LayoutLocalServiceUtil.getLayout(
-					resourcePlid);
+					GetterUtil.getLong(resourcePrimKey.substring(0, pos)));
 
 				if (resourceLayout.isPrivateLayout()) {
 					Group resourceLayoutGroup = resourceLayout.getGroup();
 
 					if (!resourceLayoutGroup.isLayoutPrototype() &&
 						!resourceLayoutGroup.isLayoutSetPrototype() &&
-						!permissionCheckGuestEnabled) {
+						!PropsValues.PERMISSIONS_CHECK_GUEST_ENABLED) {
 
 						filterGuestRole = true;
 					}
@@ -415,9 +403,11 @@ public class PortletConfigurationPermissionsDisplayContext {
 			}
 		}
 
-		Set<String> excludedRoleNamesSet = new HashSet<>();
-
-		excludedRoleNamesSet.add(RoleConstants.ADMINISTRATOR);
+		Set<String> excludedRoleNamesSet = new HashSet<String>() {
+			{
+				add(RoleConstants.ADMINISTRATOR);
+			}
+		};
 
 		if (filterGroupRoles) {
 			for (RoleTypeContributor roleTypeContributor :
@@ -442,43 +432,43 @@ public class PortletConfigurationPermissionsDisplayContext {
 			teamGroupId = _group.getParentGroupId();
 		}
 
+		long roleModelResourceRoleId = modelResourceRoleId;
+
+		long roleTeamGroupId = teamGroupId;
+
 		RoleVisibilityConfiguration stricterRoleVisibilityConfiguration =
 			ConfigurationProviderUtil.getCompanyConfiguration(
 				RoleVisibilityConfiguration.class, themeDisplay.getCompanyId());
 
 		if (Validator.isNull(searchTerms.getKeywords())) {
-			int count = 0;
-			List<Role> roles = null;
-
 			if (stricterRoleVisibilityConfiguration.
 					restrictPermissionSelectorRoleVisibility()) {
 
-				count = RoleServiceUtil.getGroupRolesAndTeamRolesCount(
-					themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-					excludedRoleNames, getRoleTypes(), modelResourceRoleId,
-					teamGroupId);
-
-				roles = RoleServiceUtil.getGroupRolesAndTeamRoles(
-					themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-					excludedRoleNames, getRoleTypes(), modelResourceRoleId,
-					teamGroupId, roleSearchContainer.getStart(),
-					roleSearchContainer.getEnd());
+				roleSearchContainer.setResultsAndTotal(
+					() -> RoleServiceUtil.getGroupRolesAndTeamRoles(
+						themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+						excludedRoleNames, getRoleTypes(),
+						roleModelResourceRoleId, roleTeamGroupId,
+						roleSearchContainer.getStart(),
+						roleSearchContainer.getEnd()),
+					RoleServiceUtil.getGroupRolesAndTeamRolesCount(
+						themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+						excludedRoleNames, getRoleTypes(),
+						roleModelResourceRoleId, roleTeamGroupId));
 			}
 			else {
-				count = RoleLocalServiceUtil.getGroupRolesAndTeamRolesCount(
-					themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-					excludedRoleNames, getRoleTypes(), modelResourceRoleId,
-					teamGroupId);
-
-				roles = RoleLocalServiceUtil.getGroupRolesAndTeamRoles(
-					themeDisplay.getCompanyId(), searchTerms.getKeywords(),
-					excludedRoleNames, getRoleTypes(), modelResourceRoleId,
-					teamGroupId, roleSearchContainer.getStart(),
-					roleSearchContainer.getEnd());
+				roleSearchContainer.setResultsAndTotal(
+					() -> RoleLocalServiceUtil.getGroupRolesAndTeamRoles(
+						themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+						excludedRoleNames, getRoleTypes(),
+						roleModelResourceRoleId, roleTeamGroupId,
+						roleSearchContainer.getStart(),
+						roleSearchContainer.getEnd()),
+					RoleLocalServiceUtil.getGroupRolesAndTeamRolesCount(
+						themeDisplay.getCompanyId(), searchTerms.getKeywords(),
+						excludedRoleNames, getRoleTypes(),
+						roleModelResourceRoleId, roleTeamGroupId));
 			}
-
-			roleSearchContainer.setResults(roles);
-			roleSearchContainer.setTotal(count);
 		}
 		else {
 			List<Role> roles = null;
@@ -512,12 +502,11 @@ public class PortletConfigurationPermissionsDisplayContext {
 								   themeDisplay.getLocale()));
 				});
 
-			roleSearchContainer.setResults(
-				ListUtil.subList(
+			roleSearchContainer.setResultsAndTotal(
+				() -> ListUtil.subList(
 					filteredRoles, roleSearchContainer.getStart(),
-					roleSearchContainer.getEnd()));
-
-			roleSearchContainer.setTotal(filteredRoles.size());
+					roleSearchContainer.getEnd()),
+				filteredRoles.size());
 		}
 
 		_roleSearchContainer = roleSearchContainer;
@@ -542,7 +531,7 @@ public class PortletConfigurationPermissionsDisplayContext {
 
 		_roleTypes = RoleConstants.TYPES_REGULAR_AND_SITE;
 
-		if (_group.getType() == GroupConstants.TYPE_DEPOT) {
+		if (_group.isDepot()) {
 			_roleTypes = _TYPES_DEPOT_AND_REGULAR;
 		}
 
@@ -617,13 +606,12 @@ public class PortletConfigurationPermissionsDisplayContext {
 			(ThemeDisplay)_httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		Portlet portlet = PortletLocalServiceUtil.getPortletById(
-			themeDisplay.getCompanyId(), _getPortletResource());
-
-		HttpSession session = _httpServletRequest.getSession();
+		HttpSession httpSession = _httpServletRequest.getSession();
 
 		_selResourceDescription = PortalUtil.getPortletTitle(
-			portlet, session.getServletContext(), themeDisplay.getLocale());
+			PortletLocalServiceUtil.getPortletById(
+				themeDisplay.getCompanyId(), _getPortletResource()),
+			httpSession.getServletContext(), themeDisplay.getLocale());
 
 		return _selResourceDescription;
 	}
@@ -631,37 +619,42 @@ public class PortletConfigurationPermissionsDisplayContext {
 	public PortletURL getUpdateRolePermissionsURL()
 		throws ResourcePrimKeyException, WindowStateException {
 
-		int cur = ParamUtil.getInteger(
-			_httpServletRequest, SearchContainer.DEFAULT_CUR_PARAM);
-		int delta = ParamUtil.getInteger(
-			_httpServletRequest, SearchContainer.DEFAULT_DELTA_PARAM);
-
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			_httpServletRequest,
-			PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
-			PortletRequest.ACTION_PHASE);
-
-		portletURL.setParameter(
-			ActionRequest.ACTION_NAME, "updateRolePermissions");
-		portletURL.setParameter("mvcPath", "/edit_permissions.jsp");
-		portletURL.setParameter("cur", String.valueOf(cur));
-		portletURL.setParameter("delta", String.valueOf(delta));
-		portletURL.setParameter(
-			"returnToFullPageURL", _getReturnToFullPageURL());
-		portletURL.setParameter(
-			"portletConfiguration", Boolean.TRUE.toString());
-		portletURL.setParameter("portletResource", _getPortletResource());
-		portletURL.setParameter("modelResource", getModelResource());
-		portletURL.setParameter(
-			"modelResourceDescription", getModelResourceDescription());
-		portletURL.setParameter(
-			"resourceGroupId", String.valueOf(_getResourceGroupId()));
-		portletURL.setParameter("resourcePrimKey", getResourcePrimKey());
-		portletURL.setParameter("roleTypes", _getRoleTypesParam());
-
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				_httpServletRequest,
+				PortletConfigurationPortletKeys.PORTLET_CONFIGURATION,
+				PortletRequest.ACTION_PHASE)
+		).setActionName(
+			"updateRolePermissions"
+		).setMVCPath(
+			"/edit_permissions.jsp"
+		).setPortletResource(
+			_getPortletResource()
+		).setParameter(
+			"cur",
+			ParamUtil.getInteger(
+				_httpServletRequest, SearchContainer.DEFAULT_CUR_PARAM)
+		).setParameter(
+			"delta",
+			ParamUtil.getInteger(
+				_httpServletRequest, SearchContainer.DEFAULT_DELTA_PARAM)
+		).setParameter(
+			"modelResource", getModelResource()
+		).setParameter(
+			"modelResourceDescription", getModelResourceDescription()
+		).setParameter(
+			"portletConfiguration", true
+		).setParameter(
+			"resourceGroupId", _getResourceGroupId()
+		).setParameter(
+			"resourcePrimKey", getResourcePrimKey()
+		).setParameter(
+			"returnToFullPageURL", _getReturnToFullPageURL()
+		).setParameter(
+			"roleTypes", _getRoleTypesParam()
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildPortletURL();
 	}
 
 	private int[] _getGroupRoleTypes(Group group, int[] defaultRoleTypes) {
@@ -696,14 +689,14 @@ public class PortletConfigurationPermissionsDisplayContext {
 			return _resourceGroupId;
 		}
 
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)_httpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
 		_resourceGroupId = ParamUtil.getLong(
 			_httpServletRequest, "resourceGroupId");
 
 		if (_resourceGroupId == 0) {
+			ThemeDisplay themeDisplay =
+				(ThemeDisplay)_httpServletRequest.getAttribute(
+					WebKeys.THEME_DISPLAY);
+
 			_resourceGroupId = themeDisplay.getScopeGroupId();
 		}
 

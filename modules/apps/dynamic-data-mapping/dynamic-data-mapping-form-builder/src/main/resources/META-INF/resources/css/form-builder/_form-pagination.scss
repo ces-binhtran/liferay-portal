@@ -24,7 +24,7 @@ $c: '.ddm-form-pagination';
 		min-height: 90px;
 	}
 
-	.dmm-wizard,
+	.ddm-wizard,
 	.ddm-pagination {
 		width: 100%;
 	}
@@ -39,6 +39,11 @@ $c: '.ddm-form-pagination';
 
 	.ddm-page-settings {
 		margin-left: 2.4rem;
+	}
+
+	.ddm-wizard {
+		margin-bottom: 24px;
+		padding: 0 15px;
 	}
 
 	.multi-step-item {
@@ -74,7 +79,7 @@ $c: '.ddm-form-pagination';
 	.add-page-button-container {
 		align-items: center;
 		display: flex;
-		margin: 20px 0;
+		margin: 24px 0;
 
 		.add-page-button {
 			margin: 0 10px;
@@ -129,9 +134,6 @@ $c: '.ddm-form-pagination';
 		.reorder-page-button {
 			border-width: 0;
 			margin-right: 4px;
-			padding-left: 9px;
-			padding-right: 9px;
-			padding-top: 9px;
 		}
 	}
 

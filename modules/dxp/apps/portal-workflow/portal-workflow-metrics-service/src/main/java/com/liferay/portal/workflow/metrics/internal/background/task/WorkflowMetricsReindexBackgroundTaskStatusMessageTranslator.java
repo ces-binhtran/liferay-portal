@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.workflow.metrics.internal.background.task.constants.WorkflowMetricsReindexBackgroundTaskConstants;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -37,7 +38,7 @@ public class WorkflowMetricsReindexBackgroundTaskStatusMessageTranslator
 			WorkflowMetricsReindexBackgroundTaskConstants.PHASE);
 
 		if (Validator.isNotNull(phase)) {
-			setPhaseAttributes(backgroundTaskStatus, message);
+			_setPhaseAttributes(backgroundTaskStatus, message);
 
 			return;
 		}
@@ -75,7 +76,22 @@ public class WorkflowMetricsReindexBackgroundTaskStatusMessageTranslator
 				percentage));
 	}
 
-	protected void setPhaseAttributes(
+	private int _getPercentage(
+		long count, int indexerCount, int indexerTotal, long total) {
+
+		if ((total <= 0) || (indexerTotal <= 0)) {
+			return 100;
+		}
+
+		double indexerPercentage = count / (double)total;
+
+		double totalPercentage =
+			(indexerCount + indexerPercentage) / indexerTotal;
+
+		return (int)Math.min(Math.ceil(totalPercentage * 100), 100);
+	}
+
+	private void _setPhaseAttributes(
 		BackgroundTaskStatus backgroundTaskStatus, Message message) {
 
 		String[] indexEntityNames = (String[])message.get(
@@ -100,25 +116,6 @@ public class WorkflowMetricsReindexBackgroundTaskStatusMessageTranslator
 			WorkflowMetricsReindexBackgroundTaskConstants.PHASE,
 			message.getString(
 				WorkflowMetricsReindexBackgroundTaskConstants.PHASE));
-	}
-
-	private int _getPercentage(
-		long count, int indexerCount, int indexerTotal, long total) {
-
-		if (total <= 0) {
-			return 100;
-		}
-
-		if (indexerTotal <= 0) {
-			return 100;
-		}
-
-		double indexerPercentage = count / (double)total;
-
-		double totalPercentage =
-			(indexerCount + indexerPercentage) / indexerTotal;
-
-		return (int)Math.min(Math.ceil(totalPercentage * 100), 100);
 	}
 
 }

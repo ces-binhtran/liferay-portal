@@ -55,6 +55,9 @@ public class DLFileEntryTypeTable extends BaseTable<DLFileEntryTypeTable> {
 		"createDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 	public final Column<DLFileEntryTypeTable, Date> modifiedDate = createColumn(
 		"modifiedDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
+	public final Column<DLFileEntryTypeTable, Long> dataDefinitionId =
+		createColumn(
+			"dataDefinitionId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<DLFileEntryTypeTable, String> fileEntryTypeKey =
 		createColumn(
 			"fileEntryTypeKey", String.class, Types.VARCHAR,
@@ -64,6 +67,8 @@ public class DLFileEntryTypeTable extends BaseTable<DLFileEntryTypeTable> {
 	public final Column<DLFileEntryTypeTable, String> description =
 		createColumn(
 			"description", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<DLFileEntryTypeTable, Integer> scope = createColumn(
+		"scope", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
 	public final Column<DLFileEntryTypeTable, Date> lastPublishDate =
 		createColumn(
 			"lastPublishDate", Date.class, Types.TIMESTAMP,

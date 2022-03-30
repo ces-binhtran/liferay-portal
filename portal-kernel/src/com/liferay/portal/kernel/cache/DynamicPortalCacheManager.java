@@ -62,8 +62,7 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 				}
 
 				return new DynamicPortalCache<>(
-					this, portalCache, key, portalCache.isBlocking(),
-					portalCache.isMVCC());
+					this, portalCache, key, portalCache.isMVCC());
 			});
 	}
 
@@ -71,15 +70,7 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 	public PortalCache<K, V> getPortalCache(String portalCacheName)
 		throws PortalCacheException {
 
-		return getPortalCache(portalCacheName, false);
-	}
-
-	@Override
-	public PortalCache<K, V> getPortalCache(
-			String portalCacheName, boolean blocking)
-		throws PortalCacheException {
-
-		return getPortalCache(portalCacheName, blocking, false);
+		return getPortalCache(portalCacheName, false, false);
 	}
 
 	@Override
@@ -90,8 +81,8 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 		return _dynamicPortalCaches.computeIfAbsent(
 			portalCacheName,
 			key -> new DynamicPortalCache<>(
-				this, _portalCacheManager.getPortalCache(key, blocking, mvcc),
-				key, blocking, mvcc));
+				this, _portalCacheManager.getPortalCache(key, false, mvcc), key,
+				mvcc));
 	}
 
 	@Override
@@ -113,16 +104,6 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 	@Override
 	public boolean isClusterAware() {
 		return _portalCacheManager.isClusterAware();
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #reconfigurePortalCaches(URL, ClassLoader)}
-	 */
-	@Deprecated
-	@Override
-	public void reconfigurePortalCaches(URL configurationURL) {
-		reconfigurePortalCaches(configurationURL, null);
 	}
 
 	@Override
@@ -220,8 +201,7 @@ public class DynamicPortalCacheManager<K extends Serializable, V>
 
 			dynamicPortalCache.setPortalCache(
 				_portalCacheManager.getPortalCache(
-					dynamicPortalCache.getPortalCacheName(),
-					dynamicPortalCache.isBlocking(),
+					dynamicPortalCache.getPortalCacheName(), false,
 					dynamicPortalCache.isMVCC()));
 		}
 	}

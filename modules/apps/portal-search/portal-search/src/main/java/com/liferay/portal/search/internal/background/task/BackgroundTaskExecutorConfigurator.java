@@ -16,11 +16,8 @@ package com.liferay.portal.search.internal.background.task;
 
 import com.liferay.petra.executor.PortalExecutorManager;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskExecutor;
-import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.search.ccr.CrossClusterReplicationHelper;
-import com.liferay.portal.search.index.IndexNameBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
-import java.util.Dictionary;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,8 +27,6 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Michael C. Han
@@ -43,13 +38,12 @@ public class BackgroundTaskExecutorConfigurator {
 	protected void activate(BundleContext bundleContext) {
 		BackgroundTaskExecutor reindexPortalBackgroundTaskExecutor =
 			new ReindexPortalBackgroundTaskExecutor(
-				bundleContext, _crossClusterReplicationHelper,
-				_indexNameBuilder, _portalExecutorManager);
+				bundleContext, _portalExecutorManager);
 
-		registerBackgroundTaskExecutor(
+		_registerBackgroundTaskExecutor(
 			bundleContext, reindexPortalBackgroundTaskExecutor);
 
-		registerBackgroundTaskExecutor(
+		_registerBackgroundTaskExecutor(
 			bundleContext, _reindexSingleIndexerBackgroundTaskExecutor);
 	}
 
@@ -62,32 +56,21 @@ public class BackgroundTaskExecutorConfigurator {
 		}
 	}
 
-	protected void registerBackgroundTaskExecutor(
+	private void _registerBackgroundTaskExecutor(
 		BundleContext bundleContext,
 		BackgroundTaskExecutor backgroundTaskExecutor) {
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
 		Class<?> clazz = backgroundTaskExecutor.getClass();
-
-		properties.put("background.task.executor.class.name", clazz.getName());
 
 		ServiceRegistration<BackgroundTaskExecutor> serviceRegistration =
 			bundleContext.registerService(
 				BackgroundTaskExecutor.class, backgroundTaskExecutor,
-				properties);
+				HashMapDictionaryBuilder.<String, Object>put(
+					"background.task.executor.class.name", clazz.getName()
+				).build());
 
 		_serviceRegistrations.add(serviceRegistration);
 	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	private CrossClusterReplicationHelper _crossClusterReplicationHelper;
-
-	@Reference
-	private IndexNameBuilder _indexNameBuilder;
 
 	@Reference
 	private PortalExecutorManager _portalExecutorManager;

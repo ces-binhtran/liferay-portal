@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.service;
 
+import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -27,6 +28,10 @@ public class FragmentCollectionServiceWrapper
 	implements FragmentCollectionService,
 			   ServiceWrapper<FragmentCollectionService> {
 
+	public FragmentCollectionServiceWrapper() {
+		this(null);
+	}
+
 	public FragmentCollectionServiceWrapper(
 		FragmentCollectionService fragmentCollectionService) {
 
@@ -34,7 +39,7 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.fragment.model.FragmentCollection addFragmentCollection(
+	public FragmentCollection addFragmentCollection(
 			long groupId, String name, String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -44,7 +49,7 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.fragment.model.FragmentCollection addFragmentCollection(
+	public FragmentCollection addFragmentCollection(
 			long groupId, String fragmentCollectionKey, String name,
 			String description,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
@@ -55,8 +60,8 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.fragment.model.FragmentCollection
-			deleteFragmentCollection(long fragmentCollectionId)
+	public FragmentCollection deleteFragmentCollection(
+			long fragmentCollectionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentCollectionService.deleteFragmentCollection(
@@ -72,8 +77,7 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.fragment.model.FragmentCollection
-			fetchFragmentCollection(long fragmentCollectionId)
+	public FragmentCollection fetchFragmentCollection(long fragmentCollectionId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentCollectionService.fetchFragmentCollection(
@@ -81,103 +85,90 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(long groupId) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId) {
 
 		return _fragmentCollectionService.getFragmentCollections(groupId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(long groupId, boolean includeSystem) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, boolean includeSystem) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, includeSystem);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long groupId, boolean includeSystem, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, boolean includeSystem, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, includeSystem, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(long groupId, int start, int end) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, int start, int end) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, start, end);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long groupId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long groupId, String name, boolean includeSystem, int start,
-			int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, String name, boolean includeSystem, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, name, includeSystem, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long groupId, String name, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long groupId, String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupId, name, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(long[] groupIds) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long[] groupIds) {
 
 		return _fragmentCollectionService.getFragmentCollections(groupIds);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long[] groupIds, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long[] groupIds, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupIds, start, end, orderByComparator);
 	}
 
 	@Override
-	public java.util.List<com.liferay.fragment.model.FragmentCollection>
-		getFragmentCollections(
-			long[] groupIds, String name, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.fragment.model.FragmentCollection>
-					orderByComparator) {
+	public java.util.List<FragmentCollection> getFragmentCollections(
+		long[] groupIds, String name, int start, int end,
+		com.liferay.portal.kernel.util.OrderByComparator<FragmentCollection>
+			orderByComparator) {
 
 		return _fragmentCollectionService.getFragmentCollections(
 			groupIds, name, start, end, orderByComparator);
@@ -239,9 +230,8 @@ public class FragmentCollectionServiceWrapper
 	}
 
 	@Override
-	public com.liferay.fragment.model.FragmentCollection
-			updateFragmentCollection(
-				long fragmentCollectionId, String name, String description)
+	public FragmentCollection updateFragmentCollection(
+			long fragmentCollectionId, String name, String description)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _fragmentCollectionService.updateFragmentCollection(

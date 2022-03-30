@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,13 +45,21 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("ContentStructureField")
+@GraphQLName(
+	description = "Represents each field in a content structure, backed by a content field.",
+	value = "ContentStructureField"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ContentStructureField")
-public class ContentStructureField {
+public class ContentStructureField implements Serializable {
 
 	public static ContentStructureField toDTO(String json) {
 		return ObjectMapperUtil.readValue(ContentStructureField.class, json);
+	}
+
+	public static ContentStructureField unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			ContentStructureField.class, json);
 	}
 
 	@Schema(
@@ -143,7 +154,7 @@ public class ContentStructureField {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String label;
 
-	@Schema
+	@Schema(description = "The form field's labels.")
 	@Valid
 	public Map<String, String> getLabel_i18n() {
 		return label_i18n;
@@ -169,7 +180,7 @@ public class ContentStructureField {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The form field's labels.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> label_i18n;
 
@@ -357,7 +368,7 @@ public class ContentStructureField {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String predefinedValue;
 
-	@Schema
+	@Schema(description = "The localized form field's default values.")
 	@Valid
 	public Map<String, String> getPredefinedValue_i18n() {
 		return predefinedValue_i18n;
@@ -385,7 +396,7 @@ public class ContentStructureField {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized form field's default values.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, String> predefinedValue_i18n;
 
@@ -699,15 +710,26 @@ public class ContentStructureField {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.ContentStructureField",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -723,14 +745,12 @@ public class ContentStructureField {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -757,7 +777,7 @@ public class ContentStructureField {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -765,7 +785,7 @@ public class ContentStructureField {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -773,5 +793,10 @@ public class ContentStructureField {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

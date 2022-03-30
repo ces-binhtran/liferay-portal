@@ -22,9 +22,7 @@ long sourcePlid = ParamUtil.getLong(request, "sourcePlid");
 List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.getAutoSiteNavigationMenus();
 %>
 
-<clay:container-fluid
-	cssClass="pt-2"
->
+<clay:container-fluid>
 	<liferay-frontend:edit-form
 		action="<%= (sourcePlid <= 0) ? layoutsAdminDisplayContext.getAddLayoutURL() : layoutsAdminDisplayContext.getCopyLayoutURL(sourcePlid) %>"
 		method="post"
@@ -88,6 +86,7 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 								className="<%= Layout.class.getName() %>"
 								classPK="<%= 0 %>"
 								showOnlyRequiredVocabularies="<%= true %>"
+								visibilityTypes="<%= AssetVocabularyConstants.VISIBILITY_TYPES %>"
 							/>
 						</c:when>
 						<c:otherwise>
@@ -102,79 +101,21 @@ List<SiteNavigationMenu> autoSiteNavigationMenus = layoutsAdminDisplayContext.ge
 
 		<liferay-frontend:edit-form-footer>
 			<clay:button
-				label='<%= LanguageUtil.get(resourceBundle, "add") %>'
+				id='<%= liferayPortletResponse.getNamespace() + "addButton" %>'
+				label="add"
 				type="submit"
 			/>
 
 			<clay:button
-				elementClasses="btn-cancel btn-secondary"
-				label='<%= LanguageUtil.get(resourceBundle, "cancel") %>'
+				cssClass="btn-cancel"
+				displayType="secondary"
+				label="cancel"
 			/>
 		</liferay-frontend:edit-form-footer>
 	</liferay-frontend:edit-form>
 </clay:container-fluid>
 
-<aui:script use="liferay-alert">
-	var form = document.<portlet:namespace />fm;
-
-	form.addEventListener('submit', function (event) {
-		event.stopPropagation();
-
-		var formData = new FormData();
-
-		formData.append('p_auth', Liferay.authToken);
-
-		formActionURL = new URL(form.action);
-
-		formActionURL.searchParams.delete('p_auth');
-
-		form.action = formActionURL;
-
-		Array.prototype.slice
-			.call(form.querySelectorAll('input'))
-			.forEach(function (input) {
-				if (input.type == 'checkbox' && !input.checked) {
-					return;
-				}
-
-				if (input.name && input.value) {
-					formData.append(input.name, input.value);
-				}
-			});
-
-		Liferay.Util.fetch(form.action, {
-			body: formData,
-			method: 'POST',
-		})
-			.then(function (response) {
-				return response.json();
-			})
-			.then(function (response) {
-				if (response.redirectURL) {
-					var redirectURL = new URL(
-						response.redirectURL,
-						window.location.origin
-					);
-
-					redirectURL.searchParams.set('p_p_state', 'normal');
-
-					Liferay.fire('closeWindow', {
-						id: '<portlet:namespace />addLayoutDialog',
-						redirect: redirectURL.toString(),
-					});
-				}
-				else {
-					new Liferay.Alert({
-						delay: {
-							hide: 3000,
-							show: 0,
-						},
-						duration: 500,
-						icon: 'exclamation-circle',
-						message: response.errorMessage,
-						type: 'danger',
-					}).render();
-				}
-			});
-	});
-</aui:script>
+<liferay-frontend:component
+	componentId='<%= liferayPortletResponse.getNamespace() + "addLayout" %>'
+	module="js/AddLayout"
+/>

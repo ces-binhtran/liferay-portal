@@ -55,7 +55,7 @@ public class CMISRepositoryUtil {
 			Validator.isNull(
 				typeSettingsUnicodeProperties.getProperty(typeSettingsKey))) {
 
-			Repository cmisRepository = getCMISRepository(parameters);
+			Repository cmisRepository = _getCMISRepository(parameters);
 
 			typeSettingsUnicodeProperties.setProperty(
 				typeSettingsKey, cmisRepository.getId());
@@ -79,10 +79,14 @@ public class CMISRepositoryUtil {
 			createSession(Map<String, String> parameters)
 		throws PrincipalException, RepositoryException {
 
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(
-					CMISRepositoryUtil.class.getClassLoader())) {
+		Thread currentThread = Thread.currentThread();
 
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		currentThread.setContextClassLoader(
+			CMISRepositoryUtil.class.getClassLoader());
+
+		try {
 			Session session = _sessionFactory.createSession(parameters);
 
 			session.setDefaultContext(_operationContext);
@@ -102,6 +106,9 @@ public class CMISRepositoryUtil {
 		catch (Exception exception) {
 			throw new RepositoryException(exception);
 		}
+		finally {
+			currentThread.setContextClassLoader(contextClassLoader);
+		}
 	}
 
 	public static String getTypeSettingsValue(
@@ -120,17 +127,24 @@ public class CMISRepositoryUtil {
 		return value;
 	}
 
-	protected static Repository getCMISRepository(
+	private static Repository _getCMISRepository(
 		Map<String, String> parameters) {
 
-		try (ContextClassLoaderSetter contextClassLoaderSetter =
-				new ContextClassLoaderSetter(
-					CMISRepositoryUtil.class.getClassLoader())) {
+		Thread currentThread = Thread.currentThread();
 
+		ClassLoader contextClassLoader = currentThread.getContextClassLoader();
+
+		currentThread.setContextClassLoader(
+			CMISRepositoryUtil.class.getClassLoader());
+
+		try {
 			List<Repository> repositories = _sessionFactory.getRepositories(
 				parameters);
 
 			return repositories.get(0);
+		}
+		finally {
+			currentThread.setContextClassLoader(contextClassLoader);
 		}
 	}
 

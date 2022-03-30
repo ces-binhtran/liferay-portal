@@ -14,7 +14,7 @@
 
 import ClayCard from '@clayui/card';
 import {ClayInput} from '@clayui/form';
-import {useIsMounted} from 'frontend-js-react-web';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {fetch} from 'frontend-js-web';
 import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -60,12 +60,12 @@ function Comparator({
 			const diffURL = new URL(resourceURL);
 
 			diffURL.searchParams.append(
-				`_${portletNamespace}_filterSourceVersion`,
+				`${portletNamespace}filterSourceVersion`,
 				sourceVersion
 			);
 
 			diffURL.searchParams.append(
-				`_${portletNamespace}_filterTargetVersion`,
+				`${portletNamespace}filterTargetVersion`,
 				filterTargetVersion
 			);
 
@@ -73,6 +73,13 @@ function Comparator({
 		},
 		[portletNamespace, resourceURL, sourceVersion]
 	);
+
+	const [diff, setDiff] = useState(diffHtmlResults);
+	const [diffURL, setDiffURL] = useState(getDiffURL(targetVersion));
+	const [filterQuery, setFilterQuery] = useState('');
+	const [selectedLanguageId, setSelectedLanguageId] = useState(languageId);
+	const [selectedVersion, setSelectedVersion] = useState(null);
+	const [visibleVersions, setVisibleVersions] = useState(selectableVersions);
 
 	const handleFilterChange = useCallback(
 		(event) => {
@@ -93,23 +100,14 @@ function Comparator({
 		[selectableVersions]
 	);
 
-	const [diff, setDiff] = useState(diffHtmlResults);
-	const [diffURL, setDiffURL] = useState(getDiffURL(targetVersion));
-	const [filterQuery, setFilterQuery] = useState('');
-	const [selectedLanguageId, setSelectedLanguageId] = useState(languageId);
-	const [selectedVersion, setSelectedVersion] = useState(null);
-	const [visibleVersions, setVisibleVersions] = useState(selectableVersions);
-
-	const diffCache = useRef({[diffURL]: diff});
+	const diffCacheRef = useRef({[diffURL]: diff});
 	const formRef = useRef();
 
 	const handleTargetChange = useCallback(
 		(event) => {
 			const target = event.target.closest('[data-version]');
 
-			const currentTargetVersion = target
-				? target.getAttribute('data-version')
-				: null;
+			const currentTargetVersion = target ? target.dataset.version : null;
 
 			const selectedVersion = selectableVersions.find((version) => {
 				return version.version === currentTargetVersion;
@@ -122,7 +120,7 @@ function Comparator({
 	);
 
 	useEffect(() => {
-		const cached = diffCache.current[diffURL];
+		const cached = diffCacheRef.current[diffURL];
 
 		if (cached) {
 			setDiff(cached);
@@ -131,16 +129,16 @@ function Comparator({
 			fetch(diffURL)
 				.then((res) => res.text())
 				.then((text) => {
-					diffCache.current[diffURL] = text;
+					diffCacheRef.current[diffURL] = text;
 				})
 				.catch(() => {
-					diffCache.current[diffURL] = Liferay.Language.get(
+					diffCacheRef.current[diffURL] = Liferay.Language.get(
 						'an-error-occurred-while-processing-the-requested-resource'
 					);
 				})
 				.finally(() => {
 					if (isMounted()) {
-						setDiff(diffCache.current[diffURL]);
+						setDiff(diffCacheRef.current[diffURL]);
 					}
 				});
 		}
@@ -149,24 +147,24 @@ function Comparator({
 	return (
 		<form
 			action={portletURL}
-			className="container-fluid-1280 diff-version-comparator"
+			className="container-fluid container-fluid-max-xl container-view diff-version-comparator"
 			method="post"
 			name={`${portletNamespace}diffVersionFm`}
 			ref={formRef}
 		>
 			<ClayInput
-				name={`_${portletNamespace}_sourceVersion`}
+				name={`${portletNamespace}sourceVersion`}
 				type="hidden"
 				value={sourceVersion}
 			/>
 
 			<ClayInput
-				name={`_${portletNamespace}_targetVersion`}
+				name={`${portletNamespace}targetVersion`}
 				type="hidden"
 				value={targetVersion}
 			/>
 
-			<ClayCard className="main-content-card" horizontal>
+			<ClayCard horizontal>
 				<ClayCard.Body>
 					<ClayCard.Description displayType="title">
 						{Liferay.Language.get(

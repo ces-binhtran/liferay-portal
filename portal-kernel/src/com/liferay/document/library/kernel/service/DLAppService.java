@@ -16,6 +16,7 @@ package com.liferay.document.library.kernel.service;
 
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.portal.kernel.cache.thread.local.ThreadLocalCachable;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -39,6 +40,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.File;
 import java.io.InputStream;
 
+import java.util.Date;
 import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -53,6 +55,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -64,7 +67,7 @@ public interface DLAppService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DLAppServiceUtil} to access the dl app remote service. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLAppServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLAppServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the dl app remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DLAppServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
@@ -84,20 +87,24 @@ public interface DLAppService extends BaseService {
 	 * @param folderId the primary key of the file entry's parent folder
 	 * @param sourceFileName the original file's name
 	 * @param mimeType the file's MIME type
-	 * @param title the name to be assigned to the file (optionally <code>null
-	 </code>)
+	 * @param title the name to be assigned to the file (optionally
+	 <code>null </code>)
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param bytes the file's data (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
-	 attributes for the file entry. In a Liferay repository, it may
-	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
-	 type </li> <li> fieldsMap - mapping for fields associated with a
-	 custom file entry type </li> </ul>
+	 attributes for the file entry. In a Liferay repository, it
+	 may include:  <ul> <li> fileEntryTypeId - ID for a custom
+	 file entry type </li> <li> fieldsMap - mapping for fields
+	 associated with a custom file entry type </li> </ul>
 	 * @return the file entry
 	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addFileEntry(String, long, long, String, String, String,
+	 String, String, byte[], Date, Date, ServiceContext)}
 	 */
+	@Deprecated
 	public FileEntry addFileEntry(
 			long repositoryId, long folderId, String sourceFileName,
 			String mimeType, String title, String description, String changeLog,
@@ -121,20 +128,24 @@ public interface DLAppService extends BaseService {
 	 * @param folderId the primary key of the file entry's parent folder
 	 * @param sourceFileName the original file's name
 	 * @param mimeType the file's MIME type
-	 * @param title the name to be assigned to the file (optionally <code>null
-	 </code>)
+	 * @param title the name to be assigned to the file (optionally
+	 <code>null </code>)
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
 	 * @param file the file's data (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
-	 attributes for the file entry. In a Liferay repository, it may
-	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
-	 type </li> <li> fieldsMap - mapping for fields associated with a
-	 custom file entry type </li> </ul>
+	 attributes for the file entry. In a Liferay repository, it
+	 may include:  <ul> <li> fileEntryTypeId - ID for a custom
+	 file entry type </li> <li> fieldsMap - mapping for fields
+	 associated with a custom file entry type </li> </ul>
 	 * @return the file entry
 	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addFileEntry(String, long, long, String, String, String,
+	 String, String, File, Date, Date, ServiceContext)}
 	 */
+	@Deprecated
 	public FileEntry addFileEntry(
 			long repositoryId, long folderId, String sourceFileName,
 			String mimeType, String title, String description, String changeLog,
@@ -158,12 +169,58 @@ public interface DLAppService extends BaseService {
 	 * @param folderId the primary key of the file entry's parent folder
 	 * @param sourceFileName the original file's name
 	 * @param mimeType the file's MIME type
+	 * @param title the name to be assigned to the file (optionally
+	 <code>null </code>)
+	 * @param description the file's description
+	 * @param changeLog the file's version change log
+	 * @param inputStream the file's data (optionally <code>null</code>)
+	 * @param size the file's size (optionally <code>0</code>)
+	 * @param serviceContext the service context to be applied. Can set the
+	 asset category IDs, asset tag names, and expando bridge
+	 attributes for the file entry. In a Liferay repository, it
+	 may include:  <ul> <li> fileEntryTypeId - ID for a custom
+	 file entry type </li> <li> fieldsMap - mapping for fields
+	 associated with a custom file entry type </li> </ul>
+	 * @return the file entry
+	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addFileEntry(String, long, long, String, String, String,
+	 String, String, InputStream, long, Date, Date,
+	 ServiceContext)}
+	 */
+	@Deprecated
+	public FileEntry addFileEntry(
+			long repositoryId, long folderId, String sourceFileName,
+			String mimeType, String title, String description, String changeLog,
+			InputStream inputStream, long size, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Adds a file entry and associated metadata. It is created based on a byte
+	 * array.
+	 *
+	 * <p>
+	 * This method takes two file names, the <code>sourceFileName</code> and the
+	 * <code>title</code>. The <code>sourceFileName</code> corresponds to the
+	 * name of the actual file being uploaded. The <code>title</code>
+	 * corresponds to a name the client wishes to assign this file after it has
+	 * been uploaded to the portal. If it is <code>null</code>, the <code>
+	 * sourceFileName</code> will be used.
+	 * </p>
+	 *
+	 * @param externalReferenceCode the file entry's external reference code
+	 * @param repositoryId the primary key of the repository
+	 * @param folderId the primary key of the file entry's parent folder
+	 * @param sourceFileName the original file's name
+	 * @param mimeType the file's MIME type
 	 * @param title the name to be assigned to the file (optionally <code>null
 	 </code>)
 	 * @param description the file's description
 	 * @param changeLog the file's version change log
-	 * @param is the file's data (optionally <code>null</code>)
-	 * @param size the file's size (optionally <code>0</code>)
+	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null
+	 </code>)
+	 * @param reviewDate the file's review Date (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
 	 attributes for the file entry. In a Liferay repository, it may
@@ -174,9 +231,95 @@ public interface DLAppService extends BaseService {
 	 * @throws PortalException if a portal exception occurred
 	 */
 	public FileEntry addFileEntry(
-			long repositoryId, long folderId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			InputStream is, long size, ServiceContext serviceContext)
+			String externalReferenceCode, long repositoryId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String description, String changeLog, byte[] bytes,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Adds a file entry and associated metadata. It is created based on a
+	 * {@link File} object.
+	 *
+	 * <p>
+	 * This method takes two file names, the <code>sourceFileName</code> and the
+	 * <code>title</code>. The <code>sourceFileName</code> corresponds to the
+	 * name of the actual file being uploaded. The <code>title</code>
+	 * corresponds to a name the client wishes to assign this file after it has
+	 * been uploaded to the portal. If it is <code>null</code>, the <code>
+	 * sourceFileName</code> will be used.
+	 * </p>
+	 *
+	 * @param externalReferenceCode the file entry's external reference code.
+	 * @param repositoryId the primary key of the repository
+	 * @param folderId the primary key of the file entry's parent folder
+	 * @param sourceFileName the original file's name
+	 * @param mimeType the file's MIME type
+	 * @param title the name to be assigned to the file (optionally <code>null
+	 </code>)
+	 * @param description the file's description
+	 * @param changeLog the file's version change log
+	 * @param file the file's data (optionally <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null
+	 </code>)
+	 * @param reviewDate the file's review Date (optionally <code>null</code>)
+	 * @param serviceContext the service context to be applied. Can set the
+	 asset category IDs, asset tag names, and expando bridge
+	 attributes for the file entry. In a Liferay repository, it may
+	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
+	 type </li> <li> fieldsMap - mapping for fields associated with a
+	 custom file entry type </li> </ul>
+	 * @return the file entry
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public FileEntry addFileEntry(
+			String externalReferenceCode, long repositoryId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String description, String changeLog, File file,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Adds a file entry and associated metadata. It is created based on a
+	 * {@link InputStream} object.
+	 *
+	 * <p>
+	 * This method takes two file names, the <code>sourceFileName</code> and the
+	 * <code>title</code>. The <code>sourceFileName</code> corresponds to the
+	 * name of the actual file being uploaded. The <code>title</code>
+	 * corresponds to a name the client wishes to assign this file after it has
+	 * been uploaded to the portal. If it is <code>null</code>, the <code>
+	 * sourceFileName</code> will be used.
+	 * </p>
+	 *
+	 * @param externalReferenceCode the file entry's external reference code.
+	 * @param repositoryId the primary key of the repository
+	 * @param folderId the primary key of the file entry's parent folder
+	 * @param sourceFileName the original file's name
+	 * @param mimeType the file's MIME type
+	 * @param title the name to be assigned to the file (optionally <code>null
+	 </code>)
+	 * @param description the file's description
+	 * @param changeLog the file's version change log
+	 * @param inputStream the file's data (optionally <code>null</code>)
+	 * @param size the file's size (optionally <code>0</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null</code>)
+	 * @param reviewDate the file's review Date (optionally <code>null</code>)
+	 * @param serviceContext the service context to be applied. Can set the
+	 asset category IDs, asset tag names, and expando bridge
+	 attributes for the file entry. In a Liferay repository, it may
+	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
+	 type </li> <li> fieldsMap - mapping for fields associated with a
+	 custom file entry type </li> </ul>
+	 * @return the file entry
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public FileEntry addFileEntry(
+			String externalReferenceCode, long repositoryId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String description, String changeLog, InputStream inputStream,
+			long size, Date expirationDate, Date reviewDate,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -556,16 +699,16 @@ public interface DLAppService extends BaseService {
 	 * @param folderId the primary key of the file entry's folder
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the file entries (optionally
-	 <code>null</code>)
+	 * @param orderByComparator the comparator to order the file entries
+	 (optionally <code>null</code>)
 	 * @return the range of file entries in the folder ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getFileEntries(
 			long repositoryId, long folderId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -609,8 +752,8 @@ public interface DLAppService extends BaseService {
 	 * @param fileEntryTypeId the primary key of the file entry type
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the results by (optionally
-	 <code>null</code>)
+	 * @param orderByComparator the comparator to order the results by
+	 (optionally <code>null</code>)
 	 * @return the range of file entries with the file entry type in the folder
 	 ordered by <code>null</code>
 	 * @throws PortalException if a portal exception occurred
@@ -618,7 +761,7 @@ public interface DLAppService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getFileEntries(
 			long repositoryId, long folderId, long fileEntryTypeId, int start,
-			int end, OrderByComparator<FileEntry> obc)
+			int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -629,7 +772,7 @@ public interface DLAppService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getFileEntries(
 			long repositoryId, long folderId, String[] mimeTypes, int start,
-			int end, OrderByComparator<FileEntry> obc)
+			int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -739,6 +882,33 @@ public interface DLAppService extends BaseService {
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FileEntry getFileEntry(long groupId, long folderId, String title)
+		throws PortalException;
+
+	/**
+	 * Returns the file entry with the external reference code.
+	 *
+	 * @param groupId the primary key of the file entry's group
+	 * @param externalReferenceCode the file entry's external reference code
+	 * @return the file entry with the external reference code
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FileEntry getFileEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	/**
+	 * Returns the file entry with the file name in the folder.
+	 *
+	 * @param groupId the primary key of the file entry's group
+	 * @param folderId the primary key of the file entry's folder
+	 * @param fileName the file entry's file name
+	 * @return the file entry with the file name in the folder
+	 * @throws PortalException if a portal exception occurred
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FileEntry getFileEntryByFileName(
+			long groupId, long folderId, String fileName)
 		throws PortalException;
 
 	/**
@@ -876,16 +1046,16 @@ public interface DLAppService extends BaseService {
 	 third-party repositories
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the folders (optionally
+	 * @param orderByComparator the comparator to order the folders (optionally
 	 <code>null</code>)
 	 * @return the range of immediate subfolders of the parent folder ordered by
-	 comparator <code>obc</code>
+	 comparator <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Folder> getFolders(
 			long repositoryId, long parentFolderId, boolean includeMountFolders,
-			int start, int end, OrderByComparator<Folder> obc)
+			int start, int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -908,17 +1078,17 @@ public interface DLAppService extends BaseService {
 	 third-party repositories
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the folders (optionally
+	 * @param orderByComparator the comparator to order the folders (optionally
 	 <code>null</code>)
 	 * @return the range of immediate subfolders of the parent folder ordered by
-	 comparator <code>obc</code>
+	 comparator <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Folder> getFolders(
 			long repositoryId, long parentFolderId, int status,
 			boolean includeMountFolders, int start, int end,
-			OrderByComparator<Folder> obc)
+			OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -964,16 +1134,16 @@ public interface DLAppService extends BaseService {
 	 * @param parentFolderId the primary key of the folder's parent folder
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the folders (optionally
+	 * @param orderByComparator the comparator to order the folders (optionally
 	 <code>null</code>)
 	 * @return the range of immediate subfolders of the parent folder ordered by
-	 comparator <code>obc</code>
+	 comparator <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Folder> getFolders(
 			long repositoryId, long parentFolderId, int start, int end,
-			OrderByComparator<Folder> obc)
+			OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -1026,32 +1196,32 @@ public interface DLAppService extends BaseService {
 	 third-party repositories
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the results (optionally
+	 * @param orderByComparator the comparator to order the results (optionally
 	 <code>null</code>)
 	 * @return the range of immediate subfolders, file entries, and file
 	 shortcuts in the parent folder ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long repositoryId, long folderId, int status,
 			boolean includeMountFolders, int start, int end,
-			OrderByComparator<?> obc)
+			OrderByComparator<?> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long repositoryId, long folderId, int status, String[] mimeTypes,
 			boolean includeMountFolders, boolean includeOwner, int start,
-			int end, OrderByComparator<?> obc)
+			int end, OrderByComparator<?> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long repositoryId, long folderId, int status, String[] mimeTypes,
 			boolean includeMountFolders, int start, int end,
-			OrderByComparator<?> obc)
+			OrderByComparator<?> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -1198,16 +1368,16 @@ public interface DLAppService extends BaseService {
 	 (optionally <code>0</code>)
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the file entries (optionally
-	 <code>null</code>)
+	 * @param orderByComparator the comparator to order the file entries
+	 (optionally <code>null</code>)
 	 * @return the range of matching file entries ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getGroupFileEntries(
 			long groupId, long userId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -1262,22 +1432,23 @@ public interface DLAppService extends BaseService {
 	 search
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the file entries (optionally
-	 <code>null</code>)
+	 * @param orderByComparator the comparator to order the file entries
+	 (optionally <code>null</code>)
 	 * @return the range of matching file entries ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getGroupFileEntries(
 			long groupId, long userId, long rootFolderId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<FileEntry> getGroupFileEntries(
 			long groupId, long userId, long rootFolderId, String[] mimeTypes,
-			int status, int start, int end, OrderByComparator<FileEntry> obc)
+			int status, int start, int end,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -1381,17 +1552,17 @@ public interface DLAppService extends BaseService {
 	 * @param parentFolderId the primary key of the folder's parent folder
 	 * @param start the lower bound of the range of results
 	 * @param end the upper bound of the range of results (not inclusive)
-	 * @param obc the comparator to order the folders (optionally
+	 * @param orderByComparator the comparator to order the folders (optionally
 	 <code>null</code>)
 	 * @return the range of immediate subfolders of the parent folder that are
 	 used for mounting third-party repositories ordered by comparator
-	 <code>obc</code>
+	 <code>orderByComparator</code>
 	 * @throws PortalException if a portal exception occurred
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<Folder> getMountFolders(
 			long repositoryId, long parentFolderId, int start, int end,
-			OrderByComparator<Folder> obc)
+			OrderByComparator<Folder> orderByComparator)
 		throws PortalException;
 
 	/**
@@ -1682,6 +1853,9 @@ public interface DLAppService extends BaseService {
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
 	 * @param bytes the file's data (optionally <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null
+	 </code>)
+	 * @param reviewDate the file's review date (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
 	 attributes for the file entry. In a Liferay repository, it may
@@ -1695,7 +1869,52 @@ public interface DLAppService extends BaseService {
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
 			DLVersionNumberIncrease dlVersionNumberIncrease, byte[] bytes,
-			ServiceContext serviceContext)
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * Updates a file entry and associated metadata based on a {@link File}
+	 * object. If the file data is <code>null</code>, then only the associated
+	 * metadata (i.e., <code>title</code>, <code>description</code>, and
+	 * parameters in the <code>serviceContext</code>) will be updated.
+	 *
+	 * <p>
+	 * This method takes two file names, the <code>sourceFileName</code> and the
+	 * <code>title</code>. The <code>sourceFileName</code> corresponds to the
+	 * name of the actual file being uploaded. The <code>title</code>
+	 * corresponds to a name the client wishes to assign this file after it has
+	 * been uploaded to the portal.
+	 * </p>
+	 *
+	 * @param fileEntryId the primary key of the file entry
+	 * @param sourceFileName the original file's name (optionally
+	 <code>null</code>)
+	 * @param mimeType the file's MIME type (optionally <code>null</code>)
+	 * @param title the new name to be assigned to the file (optionally <code>
+	 <code>null</code></code>)
+	 * @param description the file's new description
+	 * @param changeLog the file's version change log (optionally
+	 <code>null</code>)
+	 * @param dlVersionNumberIncrease the kind of version number increase to
+	 apply for these changes.
+	 * @param file the file's data (optionally <code>null</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null
+	 </code>)
+	 * @param reviewDate the file's review date (optionally <code>null</code>)
+	 * @param serviceContext the service context to be applied. Can set the
+	 asset category IDs, asset tag names, and expando bridge
+	 attributes for the file entry. In a Liferay repository, it may
+	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
+	 type </li> <li> fieldsMap - mapping for fields associated with a
+	 custom file entry type </li> </ul>
+	 * @return the file entry
+	 * @throws PortalException if a portal exception occurred
+	 */
+	public FileEntry updateFileEntry(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -1732,7 +1951,12 @@ public interface DLAppService extends BaseService {
 	 custom file entry type </li> </ul>
 	 * @return the file entry
 	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateFileEntry(long, String, String, String, String,
+	 String, DLVersionNumberIncrease, File,
+	 Date, Date, ServiceContext)}
 	 */
+	@Deprecated
 	public FileEntry updateFileEntry(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
@@ -1765,8 +1989,11 @@ public interface DLAppService extends BaseService {
 	 <code>null</code>)
 	 * @param dlVersionNumberIncrease the kind of version number increase to
 	 apply for these changes.
-	 * @param is the file's data (optionally <code>null</code>)
+	 * @param inputStream the file's data (optionally <code>null</code>)
 	 * @param size the file's size (optionally <code>0</code>)
+	 * @param expirationDate the file's expiration date (optionally <code>null
+	 </code>)
+	 * @param reviewDate the file's review date (optionally <code>null</code>)
 	 * @param serviceContext the service context to be applied. Can set the
 	 asset category IDs, asset tag names, and expando bridge
 	 attributes for the file entry. In a Liferay repository, it may
@@ -1779,10 +2006,73 @@ public interface DLAppService extends BaseService {
 	public FileEntry updateFileEntry(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, InputStream is,
-			long size, ServiceContext serviceContext)
+			DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * Updates a file entry and associated metadata based on an {@link
+	 * InputStream} object. If the file data is <code>null</code>, then only the
+	 * associated metadata (i.e., <code>title</code>, <code>description</code>,
+	 * and parameters in the <code>serviceContext</code>) will be updated.
+	 *
+	 * <p>
+	 * This method takes two file names, the <code>sourceFileName</code> and the
+	 * <code>title</code>. The <code>sourceFileName</code> corresponds to the
+	 * name of the actual file being uploaded. The <code>title</code>
+	 * corresponds to a name the client wishes to assign this file after it has
+	 * been uploaded to the portal.
+	 * </p>
+	 *
+	 * @param fileEntryId the primary key of the file entry
+	 * @param sourceFileName the original file's name (optionally
+	 <code>null</code>)
+	 * @param mimeType the file's MIME type (optionally <code>null</code>)
+	 * @param title the new name to be assigned to the file (optionally <code>
+	 <code>null</code></code>)
+	 * @param description the file's new description
+	 * @param changeLog the file's version change log (optionally
+	 <code>null</code>)
+	 * @param dlVersionNumberIncrease the kind of version number increase to
+	 apply for these changes.
+	 * @param inputStream the file's data (optionally <code>null</code>)
+	 * @param size the file's size (optionally <code>0</code>)
+	 * @param serviceContext the service context to be applied. Can set the
+	 asset category IDs, asset tag names, and expando bridge
+	 attributes for the file entry. In a Liferay repository, it may
+	 include:  <ul> <li> fileEntryTypeId - ID for a custom file entry
+	 type </li> <li> fieldsMap - mapping for fields associated with a
+	 custom file entry type </li> </ul>
+	 * @return the file entry
+	 * @throws PortalException if a portal exception occurred
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateFileEntry(long, String, String, String, String,
+	 String, DLVersionNumberIncrease, InputStream, long,
+	 Date, Date, ServiceContext)}
+	 */
+	@Deprecated
+	public FileEntry updateFileEntry(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, ServiceContext serviceContext)
+		throws PortalException;
+
+	public FileEntry updateFileEntryAndCheckIn(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateFileEntryAndCheckIn(long, String, String, String,
+	 String, String, DLVersionNumberIncrease, File,
+	 Date, Date, ServiceContext)}
+	 */
+	@Deprecated
 	public FileEntry updateFileEntryAndCheckIn(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
@@ -1793,8 +2083,23 @@ public interface DLAppService extends BaseService {
 	public FileEntry updateFileEntryAndCheckIn(
 			long fileEntryId, String sourceFileName, String mimeType,
 			String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, InputStream is,
-			long size, ServiceContext serviceContext)
+			DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateFileEntryAndCheckIn(long, String, String, String, String,
+	 String, DLVersionNumberIncrease, InputStream, long,
+	 Date, Date, ServiceContext)}
+	 */
+	@Deprecated
+	public FileEntry updateFileEntryAndCheckIn(
+			long fileEntryId, String sourceFileName, String mimeType,
+			String title, String description, String changeLog,
+			DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**

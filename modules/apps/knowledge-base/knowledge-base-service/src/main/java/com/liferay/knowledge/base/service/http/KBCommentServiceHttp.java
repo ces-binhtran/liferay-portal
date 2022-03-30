@@ -46,7 +46,6 @@ import com.liferay.portal.kernel.util.MethodKey;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see KBCommentServiceSoap
  * @generated
  */
 public class KBCommentServiceHttp {
@@ -220,7 +219,8 @@ public class KBCommentServiceHttp {
 				HttpPrincipal httpPrincipal, long groupId, int status,
 				int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.knowledge.base.model.KBComment> obc)
+					<com.liferay.knowledge.base.model.KBComment>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -229,7 +229,7 @@ public class KBCommentServiceHttp {
 				_getKBCommentsParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, status, start, end, obc);
+				methodKey, groupId, status, start, end, orderByComparator);
 
 			Object returnObj = null;
 
@@ -264,7 +264,8 @@ public class KBCommentServiceHttp {
 			getKBComments(
 				HttpPrincipal httpPrincipal, long groupId, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.knowledge.base.model.KBComment> obc)
+					<com.liferay.knowledge.base.model.KBComment>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -273,7 +274,7 @@ public class KBCommentServiceHttp {
 				_getKBCommentsParameterTypes5);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, start, end, obc);
+				methodKey, groupId, start, end, orderByComparator);
 
 			Object returnObj = null;
 
@@ -352,7 +353,8 @@ public class KBCommentServiceHttp {
 				HttpPrincipal httpPrincipal, long groupId, String className,
 				long classPK, int status, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.knowledge.base.model.KBComment> obc)
+					<com.liferay.knowledge.base.model.KBComment>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -362,7 +364,7 @@ public class KBCommentServiceHttp {
 
 			MethodHandler methodHandler = new MethodHandler(
 				methodKey, groupId, className, classPK, status, start, end,
-				obc);
+				orderByComparator);
 
 			Object returnObj = null;
 
@@ -398,7 +400,8 @@ public class KBCommentServiceHttp {
 				HttpPrincipal httpPrincipal, long groupId, String className,
 				long classPK, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.knowledge.base.model.KBComment> obc)
+					<com.liferay.knowledge.base.model.KBComment>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -407,7 +410,8 @@ public class KBCommentServiceHttp {
 				_getKBCommentsParameterTypes8);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, className, classPK, start, end, obc);
+				methodKey, groupId, className, classPK, start, end,
+				orderByComparator);
 
 			Object returnObj = null;
 

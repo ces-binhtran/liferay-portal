@@ -38,12 +38,12 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Dictionary;
-import java.util.List;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -67,7 +67,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
-		"mvc.command.name=/analytics/add_channel"
+		"mvc.command.name=/analytics_settings/add_channel"
 	},
 	service = MVCActionCommand.class
 )
@@ -113,7 +113,7 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 				"name", group.getDescriptiveName(themeDisplay.getLocale()));
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				"content.Language", themeDisplay.getLocale(), getClass());
@@ -155,27 +155,26 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 
 		Stream<String> stream = Arrays.stream(selectedGroupIds);
 
-		List<Group> groups = stream.map(
-			Long::valueOf
-		).map(
-			groupLocalService::fetchGroup
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
-
 		HttpResponse httpResponse = AnalyticsSettingsUtil.doPost(
 			JSONUtil.put(
 				"channelType", channelType
 			).put(
 				"dataSourceId",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())
 			).put(
 				"groups",
 				JSONUtil.toJSONArray(
-					groups, group -> _buildGroupJSONObject(group, themeDisplay))
+					stream.map(
+						Long::valueOf
+					).map(
+						groupLocalService::fetchGroup
+					).filter(
+						Objects::nonNull
+					).collect(
+						Collectors.toList()
+					),
+					group -> _buildGroupJSONObject(group, themeDisplay))
 			),
 			themeDisplay.getCompanyId(), "api/1.0/channels");
 
@@ -221,7 +220,7 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 			themeDisplay.getCompanyId(),
 			String.format(
 				"api/1.0/data-sources/%s/details",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())));
 
 		StatusLine statusLine = httpResponse.getStatusLine();
@@ -246,14 +245,14 @@ public class AddChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		UnicodeProperties unicodeProperties = new UnicodeProperties(true);
-
-		unicodeProperties.setProperty(
-			"liferayAnalyticsGroupIds",
-			StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA));
-
 		_companyService.updatePreferences(
-			themeDisplay.getCompanyId(), unicodeProperties);
+			themeDisplay.getCompanyId(),
+			UnicodePropertiesBuilder.create(
+				true
+			).put(
+				"liferayAnalyticsGroupIds",
+				StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA)
+			).build());
 
 		return liferayAnalyticsGroupIds;
 	}

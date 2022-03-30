@@ -103,11 +103,14 @@ public class ClusterLinkPortalCacheClusterChannel
 					_sentEventCounter.incrementAndGet();
 				}
 				catch (InterruptedException interruptedException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(interruptedException);
+					}
 				}
 			}
-			catch (Throwable t) {
+			catch (Throwable throwable) {
 				if (_log.isWarnEnabled()) {
-					_log.warn("Please fix the unexpected throwable", t);
+					_log.warn("Please fix the unexpected throwable", throwable);
 				}
 			}
 		}
@@ -133,6 +136,9 @@ public class ClusterLinkPortalCacheClusterChannel
 				_portalCacheClusterEventQueue.put(portalCacheClusterEvent);
 			}
 			catch (InterruptedException interruptedException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(interruptedException);
+				}
 			}
 		}
 	}

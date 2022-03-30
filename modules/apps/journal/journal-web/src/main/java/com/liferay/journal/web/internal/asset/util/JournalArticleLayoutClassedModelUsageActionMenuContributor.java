@@ -18,11 +18,13 @@ import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.info.item.InfoItemIdentifier;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.web.internal.security.permission.resource.JournalArticlePermission;
 import com.liferay.layout.model.LayoutClassedModelUsage;
 import com.liferay.layout.util.LayoutClassedModelUsageActionMenuContributor;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -34,22 +36,17 @@ import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.util.List;
-import java.util.ResourceBundle;
 
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Pavel Savinov
@@ -82,10 +79,6 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 					(ThemeDisplay)httpServletRequest.getAttribute(
 						WebKeys.THEME_DISPLAY);
 
-				ResourceBundle resourceBundle =
-					_resourceBundleLoader.loadResourceBundle(
-						themeDisplay.getLocale());
-
 				if (approvedArticle != null) {
 					add(
 						dropdownItem -> {
@@ -93,10 +86,11 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 								_getURL(
 									layoutClassedModelUsage,
 									AssetRendererFactory.TYPE_LATEST_APPROVED,
+									InfoItemIdentifier.VERSION_LATEST_APPROVED,
 									httpServletRequest));
 							dropdownItem.setLabel(
 								LanguageUtil.get(
-									resourceBundle, "view-in-page"));
+									themeDisplay.getLocale(), "view-in-page"));
 						});
 				}
 
@@ -118,7 +112,7 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 							}
 
 							String label = LanguageUtil.get(
-								resourceBundle, key);
+								themeDisplay.getLocale(), key);
 
 							add(
 								dropdownItem -> {
@@ -126,6 +120,7 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 										_getURL(
 											layoutClassedModelUsage,
 											AssetRendererFactory.TYPE_LATEST,
+											InfoItemIdentifier.VERSION_LATEST,
 											httpServletRequest));
 									dropdownItem.setLabel(label);
 								});
@@ -143,7 +138,7 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 
 	private String _getURL(
 			LayoutClassedModelUsage layoutClassedModelUsage, int previewType,
-			HttpServletRequest httpServletRequest)
+			String previewVersion, HttpServletRequest httpServletRequest)
 		throws PortalException {
 
 		ThemeDisplay themeDisplay =
@@ -168,21 +163,25 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 				String.valueOf(layoutClassedModelUsage.getClassPK()));
 			layoutURL = _http.setParameter(
 				layoutURL, "previewType", String.valueOf(previewType));
+			layoutURL = _http.setParameter(
+				layoutURL, "previewVersion", previewVersion);
 		}
 		else {
-			PortletURL portletURL = PortletURLFactoryUtil.create(
-				httpServletRequest, layoutClassedModelUsage.getContainerKey(),
-				layoutClassedModelUsage.getPlid(), PortletRequest.RENDER_PHASE);
-
-			portletURL.setParameter(
-				"previewClassNameId",
-				String.valueOf(layoutClassedModelUsage.getClassNameId()));
-			portletURL.setParameter(
-				"previewClassPK",
-				String.valueOf(layoutClassedModelUsage.getClassPK()));
-			portletURL.setParameter("previewType", String.valueOf(previewType));
-
-			layoutURL = portletURL.toString();
+			layoutURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					httpServletRequest,
+					layoutClassedModelUsage.getContainerKey(),
+					layoutClassedModelUsage.getPlid(),
+					PortletRequest.RENDER_PHASE)
+			).setParameter(
+				"previewClassNameId", layoutClassedModelUsage.getClassNameId()
+			).setParameter(
+				"previewClassPK", layoutClassedModelUsage.getClassPK()
+			).setParameter(
+				"previewType", previewType
+			).setParameter(
+				"previewVersion", previewVersion
+			).buildString();
 		}
 
 		String portletURLString = _http.setParameter(
@@ -206,12 +205,5 @@ public class JournalArticleLayoutClassedModelUsageActionMenuContributor
 
 	@Reference
 	private Portal _portal;
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.journal.web)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 }

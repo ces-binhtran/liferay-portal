@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author Leonardo Barros
@@ -41,17 +42,41 @@ public class AutoFillDDMFormRuleActionSerializer
 	public String serialize(
 		SPIDDMFormRuleSerializerContext spiDDMFormRuleSerializerContext) {
 
+		Map<String, String> inputParametersMapper =
+			_autoFillDDMFormRuleAction.getInputParametersMapper();
+
+		for (Map.Entry<String, String> inputParameterMapper :
+				inputParametersMapper.entrySet()) {
+
+			if (Objects.equals(
+					inputParameterMapper.getValue(), StringPool.BLANK)) {
+
+				return null;
+			}
+		}
+
+		Map<String, String> outputParametersMapper =
+			_autoFillDDMFormRuleAction.getOutputParametersMapper();
+
+		for (Map.Entry<String, String> outputParameterMapper :
+				outputParametersMapper.entrySet()) {
+
+			if (Objects.equals(
+					outputParameterMapper.getValue(), StringPool.BLANK)) {
+
+				return null;
+			}
+		}
+
 		return String.format(
 			_FUNCTION_CALL_TERNARY_EXPRESSION_FORMAT, "call",
 			StringUtil.quote(
 				_autoFillDDMFormRuleAction.getDDMDataProviderInstanceUUID()),
-			convertAutoFillInputParameters(
-				_autoFillDDMFormRuleAction.getInputParametersMapper()),
-			convertAutoFillOutputParameters(
-				_autoFillDDMFormRuleAction.getOutputParametersMapper()));
+			_convertAutoFillInputParameters(inputParametersMapper),
+			_convertAutoFillOutputParameters(outputParametersMapper));
 	}
 
-	protected String convertAutoFillInputParameters(
+	private String _convertAutoFillInputParameters(
 		Map<String, String> inputParametersMapper) {
 
 		if (MapUtil.isEmpty(inputParametersMapper)) {
@@ -59,7 +84,7 @@ public class AutoFillDDMFormRuleActionSerializer
 		}
 
 		StringBundler sb = new StringBundler(
-			inputParametersMapper.size() * 4 - 1);
+			(inputParametersMapper.size() * 4) - 1);
 
 		for (Map.Entry<String, String> inputParameterMapper :
 				inputParametersMapper.entrySet()) {
@@ -75,7 +100,7 @@ public class AutoFillDDMFormRuleActionSerializer
 		return StringUtil.quote(sb.toString());
 	}
 
-	protected String convertAutoFillOutputParameters(
+	private String _convertAutoFillOutputParameters(
 		Map<String, String> outputParametersMapper) {
 
 		if (MapUtil.isEmpty(outputParametersMapper)) {
@@ -83,7 +108,7 @@ public class AutoFillDDMFormRuleActionSerializer
 		}
 
 		StringBundler sb = new StringBundler(
-			outputParametersMapper.size() * 4 - 1);
+			(outputParametersMapper.size() * 4) - 1);
 
 		for (Map.Entry<String, String> outputParameterMapper :
 				outputParametersMapper.entrySet()) {

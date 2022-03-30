@@ -15,6 +15,7 @@
 package com.liferay.wiki.social.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
@@ -86,9 +87,12 @@ public class WikiActivityInterpreterTest
 
 	@Override
 	protected void moveModelsToTrash() throws Exception {
-		WikiPageLocalServiceUtil.movePageAttachmentToTrash(
-			TestPropsValues.getUserId(), _page.getNodeId(), _page.getTitle(),
-			_attachmentFileName);
+		FileEntry fileEntry =
+			WikiPageLocalServiceUtil.movePageAttachmentToTrash(
+				TestPropsValues.getUserId(), _page.getNodeId(),
+				_page.getTitle(), _attachmentFileName);
+
+		_trashFileName = fileEntry.getFileName();
 
 		_page = WikiPageLocalServiceUtil.movePageToTrash(
 			TestPropsValues.getUserId(), _page);
@@ -103,13 +107,11 @@ public class WikiActivityInterpreterTest
 		TrashEntry trashEntry = TrashEntryLocalServiceUtil.getEntry(
 			WikiPage.class.getName(), _page.getResourcePrimKey());
 
-		String trashTitle = trashHelper.getTrashTitle(trashEntry.getEntryId());
-
-		_page.setTitle(trashTitle);
+		_page.setTitle(trashHelper.getTrashTitle(trashEntry.getEntryId()));
 
 		WikiPageLocalServiceUtil.restorePageAttachmentFromTrash(
 			TestPropsValues.getUserId(), _page.getNodeId(), _page.getTitle(),
-			_attachmentFileName);
+			_trashFileName);
 
 		WikiPageLocalServiceUtil.restorePageFromTrash(
 			TestPropsValues.getUserId(), _page);
@@ -117,5 +119,6 @@ public class WikiActivityInterpreterTest
 
 	private String _attachmentFileName;
 	private WikiPage _page;
+	private String _trashFileName;
 
 }

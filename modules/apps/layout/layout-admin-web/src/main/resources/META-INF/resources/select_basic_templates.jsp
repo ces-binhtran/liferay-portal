@@ -17,31 +17,27 @@
 <%@ include file="/init.jsp" %>
 
 <%
-SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request);
-
-List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries();
+SelectLayoutPageTemplateEntryDisplayContext selectLayoutPageTemplateEntryDisplayContext = new SelectLayoutPageTemplateEntryDisplayContext(request, liferayPortletResponse);
 %>
 
-<div class="lfr-search-container-wrapper" id="<portlet:namespace/>layoutTypes">
-	<c:if test="<%= ListUtil.isNotEmpty(masterLayoutPageTemplateEntries) %>">
-		<ul class="card-page card-page-equal-height">
+<div class="lfr-search-container-wrapper" id="<portlet:namespace />layoutTypes">
+	<ul class="card-page card-page-equal-height">
 
-			<%
-			for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : masterLayoutPageTemplateEntries) {
-			%>
+		<%
+		for (LayoutPageTemplateEntry masterLayoutPageTemplateEntry : selectLayoutPageTemplateEntryDisplayContext.getMasterLayoutPageTemplateEntries()) {
+		%>
 
-				<li class="card-page-item col-md-4 col-sm-6">
-					<clay:vertical-card
-						verticalCard="<%= new SelectBasicTemplatesVerticalCard(masterLayoutPageTemplateEntry, renderRequest, renderResponse) %>"
-					/>
-				</li>
+			<li class="card-page-item card-page-item-asset">
+				<clay:vertical-card
+					verticalCard="<%= new SelectBasicTemplatesVerticalCard(masterLayoutPageTemplateEntry, renderRequest, renderResponse) %>"
+				/>
+			</li>
 
-			<%
-			}
-			%>
+		<%
+		}
+		%>
 
-		</ul>
-	</c:if>
+	</ul>
 
 	<c:if test="<%= selectLayoutPageTemplateEntryDisplayContext.getTypesCount() > 0 %>">
 		<h6 class="sheet-subtitle">
@@ -54,9 +50,9 @@ List<LayoutPageTemplateEntry> masterLayoutPageTemplateEntries = selectLayoutPage
 			for (String type : selectLayoutPageTemplateEntryDisplayContext.getTypes()) {
 			%>
 
-				<li class="card-page-item col-md-4 col-sm-6">
-					<clay:horizontal-card
-						horizontalCard="<%= new SelectBasicTemplatesHorizontalCard(type, renderRequest, renderResponse) %>"
+				<li class="card-page-item card-page-item-directory">
+					<clay:navigation-card
+						navigationCard="<%= new SelectBasicTemplatesNavigationCard(type, renderRequest, renderResponse) %>"
 					/>
 				</li>
 

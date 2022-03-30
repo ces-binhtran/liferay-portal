@@ -16,6 +16,8 @@ package com.liferay.roles.admin.web.internal.portlet.configuration.icon;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.role.RoleConstants;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
@@ -23,7 +25,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigura
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.RoleService;
-import com.liferay.portal.kernel.service.permission.RolePermissionUtil;
+import com.liferay.portal.kernel.service.permission.RolePermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -68,9 +70,7 @@ public class PermissionsPortletConfigurationIcon
 			WebKeys.THEME_DISPLAY);
 
 		try {
-			long roleId = _getRoleId(portletRequest);
-
-			Role role = _roleService.fetchRole(roleId);
+			Role role = _roleService.fetchRole(_getRoleId(portletRequest));
 
 			int[] roleTypes = {role.getType()};
 
@@ -88,6 +88,9 @@ public class PermissionsPortletConfigurationIcon
 				themeDisplay.getRequest());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return url;
@@ -112,7 +115,7 @@ public class PermissionsPortletConfigurationIcon
 			String roleName = role.getName();
 
 			if (!roleName.equals(RoleConstants.OWNER) &&
-				RolePermissionUtil.contains(
+				_rolePermission.contains(
 					themeDisplay.getPermissionChecker(), roleId,
 					ActionKeys.PERMISSIONS)) {
 
@@ -122,6 +125,9 @@ public class PermissionsPortletConfigurationIcon
 			return false;
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return false;
@@ -142,8 +148,14 @@ public class PermissionsPortletConfigurationIcon
 			_portal.getHttpServletRequest(portletRequest), "roleId");
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		PermissionsPortletConfigurationIcon.class);
+
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private RolePermission _rolePermission;
 
 	private RoleService _roleService;
 

@@ -40,7 +40,7 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 			selectable="<%= false %>"
 		/>
 
-		<aui:form action="<%= portletConfigurationPermissionsDisplayContext.getUpdateRolePermissionsURL() %>" cssClass="container-fluid-1280" method="post" name="fm">
+		<aui:form action="<%= portletConfigurationPermissionsDisplayContext.getUpdateRolePermissionsURL() %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 			<aui:input name="resourceId" type="hidden" value="<%= resource.getResourceId() %>" />
 
 			<liferay-ui:search-container
@@ -66,18 +66,25 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 						RoleTypeContributor roleTypeContributor = roleTypeContributorProvider.getRoleTypeContributor(role.getType());
 						%>
 
-						<liferay-ui:icon
-							icon='<%= (roleTypeContributor != null) ? roleTypeContributor.getIcon() : "users" %>'
-							label="<%= false %>"
-							markupView="lexicon"
-							message='<%= LanguageUtil.get(request, (roleTypeContributor != null) ? roleTypeContributor.getTitle(locale) : "team") %>'
-						/>
+						<span class="text-truncate-inline">
+							<span class="inline-item-before">
+								<liferay-ui:icon
+									icon='<%= (roleTypeContributor != null) ? roleTypeContributor.getIcon() : "users" %>'
+									label="<%= false %>"
+									markupView="lexicon"
+									message='<%= LanguageUtil.get(request, (roleTypeContributor != null) ? roleTypeContributor.getTitle(locale) : "team") %>'
+								/>
+							</span>
+							<span class="lfr-portal-tooltip text-truncate" title="<%= role.getTitle(locale) %>">
+								<%= role.getTitle(locale) %>
+							</span>
 
-						<%= role.getTitle(locale) %>
-
-						<c:if test="<%= layout.isPrivateLayout() && name.equals(RoleConstants.GUEST) %>">
-							<liferay-ui:icon-help message="under-the-current-configuration-all-users-automatically-inherit-permissions-from-the-guest-role" />
-						</c:if>
+							<c:if test="<%= layout.isPrivateLayout() && name.equals(RoleConstants.GUEST) %>">
+								<span class="inline-item-after">
+									<liferay-ui:icon-help message="under-the-current-configuration-all-users-automatically-inherit-permissions-from-the-guest-role" />
+								</span>
+							</c:if>
+						</span>
 					</liferay-ui:search-container-column-text>
 
 					<%
@@ -128,7 +135,7 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 								type = ResourceActionsUtil.getModelResource(locale, resource.getName());
 							}
 
-							dataMessage = HtmlUtil.escapeAttribute(LanguageUtil.format(request, preselectedMsg, new Object[] {role.getTitle(locale), ResourceActionsUtil.getAction(request, action), type, HtmlUtil.escape(portletConfigurationPermissionsDisplayContext.getGroupDescriptiveName())}, false));
+							dataMessage = HtmlUtil.escapeAttribute(LanguageUtil.format(request, preselectedMsg, new Object[] {role.getTitle(locale), _getActionLabel(request, resource.getName(), action), type, HtmlUtil.escape(portletConfigurationPermissionsDisplayContext.getGroupDescriptiveName())}, false));
 						}
 
 						String actionSeparator = Validator.isNotNull(preselectedMsg) ? ActionUtil.PRESELECTED : ActionUtil.ACTION;
@@ -136,13 +143,13 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 
 						<liferay-ui:search-container-column-text
 							cssClass="table-column-text-center"
-							name="<%= ResourceActionsUtil.getAction(request, action) %>"
+							name="<%= _getActionLabel(request, resource.getName(), action) %>"
 						>
 							<c:if test="<%= disabled && checked %>">
-								<input name="<%= renderResponse.getNamespace() + role.getRoleId() + actionSeparator + action %>" type="hidden" value="<%= true %>" />
+								<input name="<%= liferayPortletResponse.getNamespace() + role.getRoleId() + actionSeparator + action %>" type="hidden" value="<%= true %>" />
 							</c:if>
 
-							<input <%= checked ? "checked" : StringPool.BLANK %> class="<%= Validator.isNotNull(preselectedMsg) ? "lfr-checkbox-preselected lfr-portal-tooltip" : StringPool.BLANK %>" title="<%= dataMessage %>" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= FriendlyURLNormalizerUtil.normalize(role.getName()) + actionSeparator + action %>" name="<%= renderResponse.getNamespace() + role.getRoleId() + actionSeparator + action %>" onclick="<%= Validator.isNotNull(preselectedMsg) ? "return false;" : StringPool.BLANK %>" type="checkbox" />
+							<input <%= checked ? "checked" : StringPool.BLANK %> class="<%= Validator.isNotNull(preselectedMsg) ? "lfr-checkbox-preselected lfr-portal-tooltip" : StringPool.BLANK %>" title="<%= dataMessage %>" <%= disabled ? "disabled" : StringPool.BLANK %> id="<%= FriendlyURLNormalizerUtil.normalize(role.getName()) + actionSeparator + action %>" name="<%= liferayPortletResponse.getNamespace() + role.getRoleId() + actionSeparator + action %>" onclick="<%= Validator.isNotNull(preselectedMsg) ? "return false;" : StringPool.BLANK %>" type="checkbox" />
 						</liferay-ui:search-container-column-text>
 
 					<%
@@ -172,7 +179,7 @@ if (Validator.isNotNull(portletConfigurationPermissionsDisplayContext.getModelRe
 	);
 
 	if (<portlet:namespace />saveButton) {
-		<portlet:namespace />saveButton.addEventListener('click', function (event) {
+		<portlet:namespace />saveButton.addEventListener('click', (event) => {
 			event.preventDefault();
 
 			if (

@@ -27,9 +27,11 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.test.util.PropsTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.upgrade.MockPortletPreferences;
 import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.portal.search.context.SearchContextFactory;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderFactoryImpl;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.legacy.searcher.SearchResponseBuilderFactory;
@@ -39,6 +41,7 @@ import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.summary.SummaryBuilderFactory;
 import com.liferay.portal.search.web.constants.SearchPortletParameterNames;
 import com.liferay.portal.search.web.internal.facet.SearchFacetTracker;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 import com.liferay.portlet.portletconfiguration.util.ConfigurationRenderRequest;
 
 import java.util.Collections;
@@ -51,6 +54,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mock;
@@ -62,46 +67,91 @@ import org.mockito.MockitoAnnotations;
  */
 public class SearchDisplayContextTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 
-		themeDisplay = createThemeDisplay();
+		themeDisplay = _createThemeDisplay();
 
-		setUpHttpServletRequest();
-		setUpPortletURLFactory();
-		setUpRenderRequest();
-		setUpSearcher();
-		setUpSearchResponseBuilderFactory();
+		_setUpHttpServletRequest();
+		_setUpPortletURLFactory();
+		_setUpRenderRequest();
+		_setUpSearchContextFactory();
+		_setUpSearcher();
+		_setUpSearchResponseBuilderFactory();
 	}
 
 	@Test
 	public void testConfigurationKeywordsEmptySkipsSearch() throws Exception {
-		assertSearchSkippedAndNullResults(
+		_assertSearchSkippedAndNullResults(
 			null,
 			new ConfigurationRenderRequest(renderRequest, portletPreferences));
 	}
 
 	@Test
+	public void testNoScopeParameter() throws Exception {
+		portletPreferences.setValue("searchScope", "let-the-user-choose");
+
+		_assertSearchKeywords(StringPool.DOUBLE_SPACE, StringPool.BLANK);
+	}
+
+	@Test
 	public void testSearchKeywordsBlank() throws Exception {
-		assertSearchKeywords(StringPool.BLANK, StringPool.BLANK);
+		_assertSearchKeywords(StringPool.BLANK, StringPool.BLANK);
 	}
 
 	@Test
 	public void testSearchKeywordsNullWord() throws Exception {
-		assertSearchKeywords(StringPool.NULL, StringPool.NULL);
+		_assertSearchKeywords(StringPool.NULL, StringPool.NULL);
 	}
 
 	@Test
 	public void testSearchKeywordsSpaces() throws Exception {
-		assertSearchKeywords(StringPool.DOUBLE_SPACE, StringPool.BLANK);
+		_assertSearchKeywords(StringPool.DOUBLE_SPACE, StringPool.BLANK);
 	}
 
-	protected void assertSearchKeywords(
+	@Mock
+	protected HttpServletRequest httpServletRequest;
+
+	protected PortletPreferences portletPreferences =
+		new MockPortletPreferences();
+
+	@Mock
+	protected PortletURLFactory portletURLFactory;
+
+	@Mock
+	protected RenderRequest renderRequest;
+
+	@Mock
+	protected SearchContextFactory searchContextFactory;
+
+	@Mock
+	protected Searcher searcher;
+
+	protected SearchRequestBuilderFactory searchRequestBuilderFactory =
+		new SearchRequestBuilderFactoryImpl();
+
+	@Mock
+	protected SearchResponse searchResponse;
+
+	@Mock
+	protected SearchResponseBuilder searchResponseBuilder;
+
+	@Mock
+	protected SearchResponseBuilderFactory searchResponseBuilderFactory;
+
+	protected ThemeDisplay themeDisplay;
+
+	private void _assertSearchKeywords(
 			String requestKeywords, String searchDisplayContextKeywords)
 		throws Exception {
 
-		SearchDisplayContext searchDisplayContext = createSearchDisplayContext(
+		SearchDisplayContext searchDisplayContext = _createSearchDisplayContext(
 			requestKeywords, renderRequest);
 
 		Assert.assertEquals(
@@ -123,11 +173,11 @@ public class SearchDisplayContextTest {
 			searchDisplayContextKeywords, searchContext.getKeywords());
 	}
 
-	protected void assertSearchSkippedAndNullResults(
+	private void _assertSearchSkippedAndNullResults(
 			String requestKeywords, RenderRequest renderRequest)
 		throws Exception {
 
-		SearchDisplayContext searchDisplayContext = createSearchDisplayContext(
+		SearchDisplayContext searchDisplayContext = _createSearchDisplayContext(
 			requestKeywords, renderRequest);
 
 		Assert.assertNull(searchDisplayContext.getHits());
@@ -138,7 +188,7 @@ public class SearchDisplayContextTest {
 		Mockito.verifyZeroInteractions(searcher);
 	}
 
-	protected JSONArray createJSONArray() {
+	private JSONArray _createJSONArray() {
 		JSONArray jsonArray = Mockito.mock(JSONArray.class);
 
 		Mockito.doReturn(
@@ -158,11 +208,11 @@ public class SearchDisplayContextTest {
 		return jsonArray;
 	}
 
-	protected JSONFactory createJSONFactory() {
+	private JSONFactory _createJSONFactory() {
 		JSONFactory jsonFactory = Mockito.mock(JSONFactory.class);
 
 		Mockito.doReturn(
-			createJSONObject()
+			_createJSONObject()
 		).when(
 			jsonFactory
 		).createJSONObject();
@@ -170,7 +220,7 @@ public class SearchDisplayContextTest {
 		return jsonFactory;
 	}
 
-	protected JSONObject createJSONObject() {
+	private JSONObject _createJSONObject() {
 		JSONObject jsonObject = Mockito.mock(JSONObject.class);
 
 		Mockito.doReturn(
@@ -182,7 +232,7 @@ public class SearchDisplayContextTest {
 		);
 
 		Mockito.doReturn(
-			createJSONArray()
+			_createJSONArray()
 		).when(
 			jsonObject
 		).getJSONArray(
@@ -192,10 +242,7 @@ public class SearchDisplayContextTest {
 		return jsonObject;
 	}
 
-	protected Portal createPortal(
-			ThemeDisplay themeDisplay, RenderRequest renderRequest)
-		throws Exception {
-
+	private Portal _createPortal(RenderRequest renderRequest) throws Exception {
 		Portal portal = Mockito.mock(Portal.class);
 
 		Mockito.doReturn(
@@ -209,28 +256,27 @@ public class SearchDisplayContextTest {
 		return portal;
 	}
 
-	protected SearchDisplayContext createSearchDisplayContext(
+	private SearchDisplayContext _createSearchDisplayContext(
 			String keywords, RenderRequest renderRequest)
 		throws Exception {
 
-		setUpRequestKeywords(keywords);
+		_setUpRequestKeywords(keywords);
 
 		PropsTestUtil.setProps(Collections.emptyMap());
 
 		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
 
-		jsonFactoryUtil.setJSONFactory(createJSONFactory());
+		jsonFactoryUtil.setJSONFactory(_createJSONFactory());
 
 		return new SearchDisplayContext(
-			renderRequest, portletPreferences,
-			createPortal(themeDisplay, renderRequest), Mockito.mock(Html.class),
-			Mockito.mock(Language.class), searcher,
+			renderRequest, portletPreferences, _createPortal(renderRequest),
+			Mockito.mock(Html.class), Mockito.mock(Language.class), searcher,
 			Mockito.mock(IndexSearchPropsValues.class), portletURLFactory,
-			Mockito.mock(SummaryBuilderFactory.class),
+			Mockito.mock(SummaryBuilderFactory.class), searchContextFactory,
 			searchRequestBuilderFactory, new SearchFacetTracker());
 	}
 
-	protected ThemeDisplay createThemeDisplay() throws Exception {
+	private ThemeDisplay _createThemeDisplay() throws Exception {
 		ThemeDisplay themeDisplay = new ThemeDisplay();
 
 		themeDisplay.setCompany(Mockito.mock(Company.class));
@@ -239,7 +285,7 @@ public class SearchDisplayContextTest {
 		return themeDisplay;
 	}
 
-	protected void setUpHttpServletRequest() throws Exception {
+	private void _setUpHttpServletRequest() throws Exception {
 		Mockito.doReturn(
 			themeDisplay
 		).when(
@@ -249,7 +295,7 @@ public class SearchDisplayContextTest {
 		);
 	}
 
-	protected void setUpPortletURLFactory() throws Exception {
+	private void _setUpPortletURLFactory() throws Exception {
 		Mockito.doReturn(
 			Mockito.mock(PortletURL.class)
 		).when(
@@ -257,7 +303,7 @@ public class SearchDisplayContextTest {
 		).getPortletURL();
 	}
 
-	protected void setUpRenderRequest() throws Exception {
+	private void _setUpRenderRequest() throws Exception {
 		Mockito.doReturn(
 			themeDisplay
 		).when(
@@ -267,7 +313,7 @@ public class SearchDisplayContextTest {
 		);
 	}
 
-	protected void setUpRequestKeywords(String keywords) {
+	private void _setUpRequestKeywords(String keywords) {
 		Mockito.doReturn(
 			keywords
 		).when(
@@ -285,7 +331,19 @@ public class SearchDisplayContextTest {
 		);
 	}
 
-	protected void setUpSearcher() throws Exception {
+	private void _setUpSearchContextFactory() throws Exception {
+		Mockito.doReturn(
+			new SearchContext()
+		).when(
+			searchContextFactory
+		).getSearchContext(
+			Mockito.any(), Mockito.any(), Mockito.anyLong(), Mockito.any(),
+			Mockito.any(), Mockito.any(), Mockito.any(), Mockito.anyLong(),
+			Mockito.any(), Mockito.anyLong()
+		);
+	}
+
+	private void _setUpSearcher() throws Exception {
 		Mockito.doReturn(
 			Mockito.mock(Hits.class)
 		).when(
@@ -303,7 +361,7 @@ public class SearchDisplayContextTest {
 		);
 	}
 
-	protected void setUpSearchResponseBuilderFactory() {
+	private void _setUpSearchResponseBuilderFactory() {
 		Mockito.doReturn(
 			searchResponseBuilder
 		).when(
@@ -318,34 +376,5 @@ public class SearchDisplayContextTest {
 			searchResponseBuilder
 		).build();
 	}
-
-	@Mock
-	protected HttpServletRequest httpServletRequest;
-
-	@Mock
-	protected PortletPreferences portletPreferences;
-
-	@Mock
-	protected PortletURLFactory portletURLFactory;
-
-	@Mock
-	protected RenderRequest renderRequest;
-
-	@Mock
-	protected Searcher searcher;
-
-	protected SearchRequestBuilderFactory searchRequestBuilderFactory =
-		new SearchRequestBuilderFactoryImpl();
-
-	@Mock
-	protected SearchResponse searchResponse;
-
-	@Mock
-	protected SearchResponseBuilder searchResponseBuilder;
-
-	@Mock
-	protected SearchResponseBuilderFactory searchResponseBuilderFactory;
-
-	protected ThemeDisplay themeDisplay;
 
 }

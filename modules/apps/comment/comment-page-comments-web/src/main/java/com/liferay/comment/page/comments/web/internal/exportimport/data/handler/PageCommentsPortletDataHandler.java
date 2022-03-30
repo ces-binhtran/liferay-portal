@@ -16,6 +16,7 @@ package com.liferay.comment.page.comments.web.internal.exportimport.data.handler
 
 import com.liferay.comment.page.comments.web.internal.constants.PageCommentsPortletKeys;
 import com.liferay.exportimport.kernel.lar.BasePortletDataHandler;
+import com.liferay.exportimport.kernel.lar.DataLevel;
 import com.liferay.exportimport.kernel.lar.ExportImportProcessCallbackRegistry;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataHandler;
@@ -52,7 +53,7 @@ public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
 
 	public static final String NAMESPACE = "comment";
 
-	public static final String SCHEMA_VERSION = "1.0.0";
+	public static final String SCHEMA_VERSION = "4.0.0";
 
 	@Override
 	public StagedModelType[] getDeletionSystemEventStagedModelTypes() {
@@ -103,6 +104,7 @@ public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
 	@Activate
 	protected void activate() {
 		setDataAlwaysStaged(true);
+		setDataLevel(DataLevel.PORTLET_INSTANCE);
 		setPublishToLiveByDefault(true);
 	}
 
@@ -126,7 +128,7 @@ public class PageCommentsPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 

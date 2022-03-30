@@ -25,12 +25,15 @@ import java.io.IOException;
 
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
+import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.cluster.repositories.get.GetRepositoriesRequest;
 import org.elasticsearch.action.admin.cluster.repositories.get.GetRepositoriesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.SnapshotClient;
-import org.elasticsearch.cluster.metadata.RepositoryMetaData;
+import org.elasticsearch.cluster.metadata.RepositoryMetadata;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.repositories.RepositoryMissingException;
 
@@ -56,21 +59,21 @@ public class GetSnapshotRepositoriesRequestExecutorImpl
 
 		try {
 			GetRepositoriesResponse elasticsearchGetRepositoriesResponse =
-				getGetRepositoriesResponse(
+				_getGetRepositoriesResponse(
 					getRepositoriesRequest, getSnapshotRepositoriesRequest);
 
-			List<RepositoryMetaData> repositoriesMetaDatas =
+			List<RepositoryMetadata> repositoriesMetadatas =
 				elasticsearchGetRepositoriesResponse.repositories();
 
-			repositoriesMetaDatas.forEach(
-				repositoryMetaData -> {
+			repositoriesMetadatas.forEach(
+				repositoryMetadata -> {
 					Settings repositoryMetadataSettings =
-						repositoryMetaData.settings();
+						repositoryMetadata.settings();
 
 					SnapshotRepositoryDetails snapshotRepositoryDetails =
 						new SnapshotRepositoryDetails(
-							repositoryMetaData.name(),
-							repositoryMetaData.type(),
+							repositoryMetadata.name(),
+							repositoryMetadata.type(),
 							repositoryMetadataSettings.toString());
 
 					getSnapshotRepositoriesResponse.
@@ -80,13 +83,11 @@ public class GetSnapshotRepositoriesRequestExecutorImpl
 		}
 		catch (RepositoryMissingException repositoryMissingException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(
-					repositoryMissingException, repositoryMissingException);
+				_log.debug(repositoryMissingException);
 			}
 		}
-		finally {
-			return getSnapshotRepositoriesResponse;
-		}
+
+		return getSnapshotRepositoriesResponse;
 	}
 
 	protected GetRepositoriesRequest createGetRepositoriesRequest(
@@ -101,13 +102,21 @@ public class GetSnapshotRepositoriesRequestExecutorImpl
 		return getRepositoriesRequest;
 	}
 
-	protected GetRepositoriesResponse getGetRepositoriesResponse(
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private GetRepositoriesResponse _getGetRepositoriesResponse(
 		GetRepositoriesRequest getRepositoriesRequest,
 		GetSnapshotRepositoriesRequest getSnapshotRepositoriesRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				getSnapshotRepositoriesRequest.getConnectionId(), false);
+				getSnapshotRepositoriesRequest.getConnectionId(),
+				getSnapshotRepositoriesRequest.isPreferLocalCluster());
 
 		SnapshotClient snapshotClient = restHighLevelClient.snapshot();
 
@@ -115,16 +124,20 @@ public class GetSnapshotRepositoriesRequestExecutorImpl
 			return snapshotClient.getRepository(
 				getRepositoriesRequest, RequestOptions.DEFAULT);
 		}
+		catch (ElasticsearchStatusException elasticsearchStatusException) {
+			String message = elasticsearchStatusException.getMessage();
+
+			if (message.contains("type=repository_missing_exception")) {
+				throw new RepositoryMissingException(
+					StringUtils.substringBetween(
+						message, "reason=[", "] missing"));
+			}
+
+			throw elasticsearchStatusException;
+		}
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

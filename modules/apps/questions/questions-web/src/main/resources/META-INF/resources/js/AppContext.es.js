@@ -20,11 +20,10 @@ const AppContext = createContext({});
 
 const AppContextProvider = ({children, ...context}) => {
 	const [canCreateThread, setCanCreateThread] = useState(false);
-	const [section, setSection] = useState({});
 
 	useEffect(() => {
 		client
-			.query({
+			.request({
 				query: hasListPermissionsQuery,
 				variables: {
 					siteKey: context.siteKey,
@@ -42,8 +41,6 @@ const AppContextProvider = ({children, ...context}) => {
 			value={{
 				...context,
 				canCreateThread,
-				section,
-				setSection,
 			}}
 		>
 			{children}

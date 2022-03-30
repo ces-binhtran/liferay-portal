@@ -26,9 +26,9 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.user.associated.data.anonymizer.UADAnonymizer;
 import com.liferay.user.associated.data.constants.UserAssociatedDataPortletKeys;
 import com.liferay.user.associated.data.display.UADDisplay;
+import com.liferay.user.associated.data.web.internal.helper.SelectedUserHelper;
+import com.liferay.user.associated.data.web.internal.helper.UADApplicationSummaryHelper;
 import com.liferay.user.associated.data.web.internal.registry.UADRegistry;
-import com.liferay.user.associated.data.web.internal.util.SelectedUserHelper;
-import com.liferay.user.associated.data.web.internal.util.UADApplicationSummaryHelper;
 
 import java.io.Serializable;
 
@@ -75,10 +75,11 @@ public abstract class BaseUADMVCActionCommand extends BaseMVCActionCommand {
 					selectedUserId);
 
 			if (totalReviewableUADEntitiesCount == 0) {
-				mvcRenderCommandName = "/completed_data_erasure";
+				mvcRenderCommandName =
+					"/user_associated_data/completed_data_erasure";
 			}
 			else {
-				mvcRenderCommandName = "/review_uad_data";
+				mvcRenderCommandName = "/user_associated_data/review_uad_data";
 			}
 		}
 
@@ -117,10 +118,12 @@ public abstract class BaseUADMVCActionCommand extends BaseMVCActionCommand {
 					getTotalNonreviewableUADEntitiesCount(selectedUserId);
 
 			if (totalNonreviewableUADEntitiesCount == 0) {
-				mvcRenderCommandName = "/completed_data_erasure";
+				mvcRenderCommandName =
+					"/user_associated_data/completed_data_erasure";
 			}
 			else {
-				mvcRenderCommandName = "/anonymize_nonreviewable_uad_data";
+				mvcRenderCommandName =
+					"/user_associated_data/anonymize_nonreviewable_uad_data";
 			}
 		}
 
@@ -197,21 +200,14 @@ public abstract class BaseUADMVCActionCommand extends BaseMVCActionCommand {
 		ActionRequest actionRequest, String entityType) {
 
 		return uadRegistry.getUADAnonymizer(
-			getUADRegistryKey(actionRequest, entityType));
+			_getUADRegistryKey(actionRequest, entityType));
 	}
 
 	protected UADDisplay<?> getUADDisplay(
 		ActionRequest actionRequest, String entityType) {
 
 		return uadRegistry.getUADDisplay(
-			getUADRegistryKey(actionRequest, entityType));
-	}
-
-	protected String getUADRegistryKey(
-		ActionRequest actionRequest, String entityType) {
-
-		return ParamUtil.getString(
-			actionRequest, "uadRegistryKey__" + entityType);
+			_getUADRegistryKey(actionRequest, entityType));
 	}
 
 	@Reference
@@ -222,5 +218,12 @@ public abstract class BaseUADMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	protected UADRegistry uadRegistry;
+
+	private String _getUADRegistryKey(
+		ActionRequest actionRequest, String entityType) {
+
+		return ParamUtil.getString(
+			actionRequest, "uadRegistryKey__" + entityType);
+	}
 
 }

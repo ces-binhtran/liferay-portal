@@ -23,14 +23,22 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMFormValuesTestUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
  * @author Renato Rego
  */
 public class RadioDDMFormFieldValueRendererTest {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testRender() throws Exception {
@@ -59,7 +67,7 @@ public class RadioDDMFormFieldValueRendererTest {
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
 		RadioDDMFormFieldValueRenderer radioDDMFormFieldValueRenderer =
-			createRadioDDMFormFieldValueRenderer();
+			_createRadioDDMFormFieldValueRenderer();
 
 		Assert.assertEquals(
 			"option 1",
@@ -67,8 +75,8 @@ public class RadioDDMFormFieldValueRendererTest {
 				ddmFormFieldValue, LocaleUtil.US));
 	}
 
-	protected RadioDDMFormFieldValueRenderer
-			createRadioDDMFormFieldValueRenderer()
+	private RadioDDMFormFieldValueRenderer
+			_createRadioDDMFormFieldValueRenderer()
 		throws Exception {
 
 		RadioDDMFormFieldValueRenderer radioDDMFormFieldValueRenderer =

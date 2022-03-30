@@ -36,6 +36,12 @@ public interface CrossClusterReplicationConfiguration {
 	public boolean ccrEnabled();
 
 	@Meta.AD(
+		deflt = "true", description = "automatic-replication-enabled-help",
+		name = "automatic-replication-enabled", required = false
+	)
+	public boolean automaticReplicationEnabled();
+
+	@Meta.AD(
 		description = "cross-cluster-replication-local-cluster-connection-configurations-help",
 		name = "cross-cluster-replication-local-cluster-connection-configurations",
 		required = false
@@ -47,5 +53,18 @@ public interface CrossClusterReplicationConfiguration {
 		name = "remote-cluster-alias", required = false
 	)
 	public String remoteClusterAlias();
+
+	@Meta.AD(
+		deflt = "localhost:9300",
+		description = "remote-cluster-seed-node-transport-address-help",
+		name = "remote-cluster-seed-node-transport-address", required = false
+	)
+	public String remoteClusterSeedNodeTransportAddress();
+
+	@Meta.AD(
+		description = "excluded-indexes-help", name = "excluded-indexes",
+		required = false
+	)
+	public String[] excludedIndexes();
 
 }

@@ -16,12 +16,12 @@ import ClayAlert from '@clayui/alert';
 import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import {ClayCheckbox, ClayInput, ClaySelectWithOption} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
+import {useTimeout} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useTimeout} from 'frontend-js-react-web';
 import {fetch, objectToFormData} from 'frontend-js-web';
-import dom from 'metal-dom';
 import PropTypes from 'prop-types';
 import React, {useEffect, useState} from 'react';
 
@@ -35,7 +35,6 @@ const ManageCollaborators = ({
 	classNameId,
 	classPK,
 	collaborators,
-	dialogId,
 	portletNamespace,
 }) => {
 	const [currentCollaborators, setCurrentCollaborators] = useState(
@@ -68,11 +67,9 @@ const ManageCollaborators = ({
 	};
 
 	const closeDialog = () => {
-		const collaboratorsDialog = Liferay.Util.getWindow(dialogId);
-
-		if (collaboratorsDialog && collaboratorsDialog.hide) {
-			collaboratorsDialog.hide();
-		}
+		Liferay.Util.getOpener().Liferay.fire('closeModal', {
+			id: 'sharingDialog',
+		});
 	};
 
 	const objectToPairArray = (object) => {
@@ -121,8 +118,7 @@ const ManageCollaborators = ({
 		if (
 			invalidElements.indexOf(eventTarget.nodeName.toLowerCase()) === -1
 		) {
-			const collaboratorContainer = dom.closest(
-				eventTarget,
+			const collaboratorContainer = eventTarget.closest(
 				'.list-group-item'
 			);
 
@@ -142,13 +138,28 @@ const ManageCollaborators = ({
 
 		setCurrentCollaborators(
 			currentCollaborators.filter(
-				(collaborator) => collaborator.userId != collaboratorId
+				(collaborator) => collaborator.userId !== collaboratorId
 			)
 		);
 
 		deleteSharingEntryIds.push(sharingEntryId);
 
 		setDeleteSharingEntryIds(deleteSharingEntryIds);
+	};
+
+	const setCollaborator = (updatedCollaborator) => {
+		setCurrentCollaborators(
+			currentCollaborators.map((collaborator) => {
+				if (collaborator.userId === updatedCollaborator.userId) {
+					return {
+						...collaborator,
+						...updatedCollaborator,
+					};
+				}
+
+				return collaborator;
+			})
+		);
 	};
 
 	const handleExpirationDateCheckboxChange = (event) => {
@@ -212,6 +223,23 @@ const ManageCollaborators = ({
 		delay(() => findExpirationDateError(), 0);
 	};
 
+	const showNotification = (message, error) => {
+		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
+
+		const openToastParams = {
+			message,
+		};
+
+		if (error) {
+			openToastParams.title = Liferay.Language.get('error');
+			openToastParams.type = 'danger';
+		}
+
+		closeDialog();
+
+		parentOpenToast(openToastParams);
+	};
+
 	const handleSaveButtonClick = () => {
 		if (findExpirationDateError()) {
 			return;
@@ -254,9 +282,9 @@ const ManageCollaborators = ({
 					classPK,
 				});
 
-				showNotification(json.successMessage);
-
 				setLoadingResponse(false);
+
+				showNotification(json.successMessage);
 			})
 			.catch((error) => {
 				showNotification(error.message, true);
@@ -282,38 +310,6 @@ const ManageCollaborators = ({
 			...sharingEntryIdsAndShareables,
 			[sharingEntryId]: shareable,
 		});
-	};
-
-	const setCollaborator = (updatedCollaborator) => {
-		setCurrentCollaborators(
-			currentCollaborators.map((collaborator) => {
-				if (collaborator.userId === updatedCollaborator.userId) {
-					return {
-						...collaborator,
-						...updatedCollaborator,
-					};
-				}
-
-				return collaborator;
-			})
-		);
-	};
-
-	const showNotification = (message, error) => {
-		const parentOpenToast = Liferay.Util.getOpener().Liferay.Util.openToast;
-
-		const openToastParams = {
-			message,
-		};
-
-		if (error) {
-			openToastParams.title = Liferay.Language.get('error');
-			openToastParams.type = 'danger';
-		}
-
-		closeDialog();
-
-		parentOpenToast(openToastParams);
 	};
 
 	useEffect(() => {
@@ -351,7 +347,7 @@ const ManageCollaborators = ({
 				onClick={handleCollaboratorClick}
 				role="button"
 			>
-				<div className="autofit-col">
+				<ClayLayout.ContentCol>
 					<ClaySticker
 						className={
 							!portraitURL && `user-icon-color-${userId % 10}`
@@ -365,15 +361,17 @@ const ManageCollaborators = ({
 							<ClayIcon symbol="user" />
 						)}
 					</ClaySticker>
-				</div>
-				<div className="autofit-col autofit-col-expand">
-					<div className="autofit-row autofit-row-center">
-						<div className="autofit-col autofit-col-expand">
+				</ClayLayout.ContentCol>
+
+				<ClayLayout.ContentCol expand>
+					<ClayLayout.ContentRow verticalAlign="center">
+						<ClayLayout.ContentCol expand>
 							<strong>
 								<span>{fullName}</span>
 							</strong>
-						</div>
-						<div className="autofit-col">
+						</ClayLayout.ContentCol>
+
+						<ClayLayout.ContentCol>
 							{sharingEntryExpirationDate ? (
 								<ClayIcon
 									data-title={
@@ -384,8 +382,9 @@ const ManageCollaborators = ({
 							) : (
 								<span className="lexicon-icon"></span>
 							)}
-						</div>
-						<div className="autofit-col">
+						</ClayLayout.ContentCol>
+
+						<ClayLayout.ContentCol>
 							{sharingEntryShareable ? (
 								<ClayIcon
 									data-title={Liferay.Language.get(
@@ -396,8 +395,9 @@ const ManageCollaborators = ({
 							) : (
 								<span className="lexicon-icon"></span>
 							)}
-						</div>
-						<div className="autofit-col">
+						</ClayLayout.ContentCol>
+
+						<ClayLayout.ContentCol>
 							<ClaySelectWithOption
 								name={sharingEntryId}
 								onChange={(event) => {
@@ -415,8 +415,9 @@ const ManageCollaborators = ({
 									] || sharingEntryPermissionActionId
 								}
 							/>
-						</div>
-						<div className="autofit-col">
+						</ClayLayout.ContentCol>
+
+						<ClayLayout.ContentCol>
 							<ClayButtonWithIcon
 								borderless
 								data-collaborator-id={userId}
@@ -426,15 +427,16 @@ const ManageCollaborators = ({
 								onClick={handleDeleteCollaboratorButtonClick}
 								symbol="times-circle"
 							/>
-						</div>
-					</div>
+						</ClayLayout.ContentCol>
+					</ClayLayout.ContentRow>
+
 					<div
 						className={classNames({
 							hide: userId !== expandedCollaboratorId,
 						})}
 					>
-						<div className="autofit-row autofit-row-center">
-							<div className="autofit-col">
+						<ClayLayout.ContentRow verticalAlign="center">
+							<ClayLayout.ContentCol>
 								<div className="form-group">
 									<div className="custom-checkbox custom-control">
 										<ClayCheckbox
@@ -453,10 +455,11 @@ const ManageCollaborators = ({
 										/>
 									</div>
 								</div>
-							</div>
-						</div>
-						<div className="autofit-row autofit-row-center">
-							<div className="autofit-col">
+							</ClayLayout.ContentCol>
+						</ClayLayout.ContentRow>
+
+						<ClayLayout.ContentRow verticalAlign="center">
+							<ClayLayout.ContentCol>
 								<div className="form-group">
 									<div className="custom-checkbox custom-control">
 										<ClayCheckbox
@@ -474,15 +477,12 @@ const ManageCollaborators = ({
 										/>
 									</div>
 								</div>
-							</div>
-							<div
-								className={classNames(
-									'autofit-col',
-									'no-padding',
-									{
-										'has-error': sharingEntryExpirationDateError,
-									}
-								)}
+							</ClayLayout.ContentCol>
+
+							<ClayLayout.ContentCol
+								className={classNames('no-padding', {
+									'has-error': sharingEntryExpirationDateError,
+								})}
 							>
 								<ClayInput
 									className="form-control"
@@ -494,10 +494,10 @@ const ManageCollaborators = ({
 									onBlur={handleExpirationDateInputBlur}
 									type="date"
 								/>
-							</div>
-						</div>
+							</ClayLayout.ContentCol>
+						</ClayLayout.ContentRow>
 					</div>
-				</div>
+				</ClayLayout.ContentCol>
 			</li>
 		);
 	};
@@ -533,20 +533,24 @@ const ManageCollaborators = ({
 						</ul>
 					</>
 				) : (
-					<div className="autofit-row autofit-row-center empty-collaborators">
-						<div className="autofit-col autofit-col-expand">
+					<ClayLayout.ContentRow
+						className="empty-collaborators"
+						verticalAlign="center"
+					>
+						<ClayLayout.ContentCol expand>
 							<div className="message-content">
 								<h3>
 									{Liferay.Language.get('no-collaborators')}
 								</h3>
+
 								<p>
 									{Liferay.Language.get(
 										'to-add-collaborators-share-the-file-again'
 									)}
 								</p>
 							</div>
-						</div>
-					</div>
+						</ClayLayout.ContentCol>
+					</ClayLayout.ContentRow>
 				)}
 			</div>
 			<div className="modal-footer">
@@ -559,12 +563,14 @@ const ManageCollaborators = ({
 						>
 							{Liferay.Language.get('cancel')}
 						</ClayButton>
+
 						<ClayButton
 							disabled={loadingResponse || expirationDateError}
 							displayType="primary"
 							onClick={handleSaveButtonClick}
 						>
 							{loadingResponse && <ClayLoadingIndicator />}
+
 							{Liferay.Language.get('save')}
 						</ClayButton>
 					</ClayButton.Group>

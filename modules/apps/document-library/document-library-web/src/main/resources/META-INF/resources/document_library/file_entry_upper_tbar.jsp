@@ -17,10 +17,10 @@
 <%@ include file="/document_library/init.jsp" %>
 
 <%
-DLViewFileVersionDisplayContext dlViewFileVersionDisplayContext = (DLViewFileVersionDisplayContext)request.getAttribute("file_entry_upper_tbar.jsp-dlViewFileVersionDisplayContext");
-String documentTitle = GetterUtil.getString(request.getAttribute("file_entry_upper_tbar.jsp-documentTitle"));
-FileEntry fileEntry = (FileEntry)request.getAttribute("file_entry_upper_tbar.jsp-fileEntry");
-FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tbar.jsp-fileVersion");
+DLViewFileEntryDisplayContext dlViewFileEntryDisplayContext = (DLViewFileEntryDisplayContext)request.getAttribute(DLViewFileEntryDisplayContext.class.getName());
+
+FileEntry fileEntry = dlViewFileEntryDisplayContext.getFileEntry();
+FileVersion fileVersion = dlViewFileEntryDisplayContext.getFileVersion();
 %>
 
 <div class="upper-tbar-container-fixed">
@@ -29,8 +29,8 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 			<ul class="tbar-nav">
 				<li class="tbar-item tbar-item-expand">
 					<div class="tbar-section text-left">
-						<h2 class="text-truncate-inline upper-tbar-title" title="<%= HtmlUtil.escapeAttribute(documentTitle) %>">
-							<span class="text-truncate"><%= HtmlUtil.escape(documentTitle) %></span>
+						<h2 class="text-truncate-inline upper-tbar-title" title="<%= HtmlUtil.escapeAttribute(dlViewFileEntryDisplayContext.getDocumentTitle()) %>">
+							<span class="text-truncate"><%= HtmlUtil.escape(dlViewFileEntryDisplayContext.getDocumentTitle()) %></span>
 						</h2>
 
 						<c:if test="<%= fileEntry.hasLock() || fileEntry.isCheckedOut() %>">
@@ -39,8 +39,8 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 							</span>
 						</c:if>
 
-						<c:if test="<%= dlViewFileVersionDisplayContext.isShared() %>">
-							<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title='<%= LanguageUtil.get(request, "shared") %>'>
+						<c:if test="<%= dlViewFileEntryDisplayContext.isShared() %>">
+							<span class="inline-item inline-item-after lfr-portal-tooltip state-icon" title="<%= LanguageUtil.get(request, "shared") %>">
 								<aui:icon image="users" markupView="lexicon" message="shared" />
 							</span>
 						</c:if>
@@ -48,17 +48,17 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 				</li>
 				<li class="tbar-item">
 					<clay:button
-						elementClasses="btn-outline-borderless btn-outline-secondary"
+						borderless="<%= true %>"
+						data-qa-id="infoButton"
+						displayType="secondary"
 						icon="info-circle-open"
 						id='<%= liferayPortletResponse.getNamespace() + "OpenContextualSidebar" %>'
-						monospaced="true"
-						size="sm"
-						style="<%= false %>"
+						small="<%= true %>"
 						title='<%= LanguageUtil.get(resourceBundle, "info") %>'
 					/>
 				</li>
 
-				<c:if test="<%= dlViewFileVersionDisplayContext.isSharingLinkVisible() %>">
+				<c:if test="<%= dlViewFileEntryDisplayContext.isSharingLinkVisible() %>">
 					<li class="d-none d-sm-flex tbar-item">
 						<liferay-sharing:button
 							className="<%= DLFileEntryConstants.getClassName() %>"
@@ -67,30 +67,24 @@ FileVersion fileVersion = (FileVersion)request.getAttribute("file_entry_upper_tb
 					</li>
 				</c:if>
 
-				<c:if test="<%= dlViewFileVersionDisplayContext.isDownloadLinkVisible() %>">
+				<c:if test="<%= dlViewFileEntryDisplayContext.isDownloadLinkVisible() %>">
 					<li class="d-none d-sm-flex tbar-item">
-
-						<%
-						Map<String, String> data = HashMapBuilder.put(
-							"analytics-file-entry-id", String.valueOf(fileEntry.getFileEntryId())
-						).build();
-						%>
-
 						<clay:link
-							buttonStyle="primary"
-							data="<%= data %>"
-							elementClasses="btn-sm"
+							data-analytics-file-entry-id="<%= fileEntry.getFileEntryId() %>"
+							displayType="primary"
 							href="<%= DLURLHelperUtil.getDownloadURL(fileEntry, fileVersion, themeDisplay, StringPool.BLANK, false, true) %>"
 							icon="download"
-							label='<%= LanguageUtil.get(resourceBundle, "download") %>'
+							label="download"
+							small="<%= true %>"
 							title='<%= LanguageUtil.format(resourceBundle, "file-size-x", LanguageUtil.formatStorageSize(fileVersion.getSize(), locale), false) %>'
+							type="button"
 						/>
 					</li>
 				</c:if>
 
 				<li class="tbar-item">
 					<liferay-ui:menu
-						menu="<%= dlViewFileVersionDisplayContext.getMenu() %>"
+						menu="<%= dlViewFileEntryDisplayContext.getMenu() %>"
 					/>
 				</li>
 			</ul>

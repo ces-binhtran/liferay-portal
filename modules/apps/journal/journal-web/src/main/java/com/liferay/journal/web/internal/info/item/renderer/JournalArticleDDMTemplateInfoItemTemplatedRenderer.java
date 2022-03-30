@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.staging.StagingGroupHelper;
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,14 +45,12 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Eudaldo Alonso
  */
 @Component(
-	property = "service.ranking:Integer=300", service = InfoItemRenderer.class
+	property = "service.ranking:Integer=100", service = InfoItemRenderer.class
 )
 public class JournalArticleDDMTemplateInfoItemTemplatedRenderer
 	implements InfoItemTemplatedRenderer<JournalArticle> {
@@ -149,10 +145,7 @@ public class JournalArticleDDMTemplateInfoItemTemplatedRenderer
 
 	@Override
 	public String getLabel(Locale locale) {
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(locale);
-
-		return LanguageUtil.get(resourceBundle, "ddm-template");
+		return LanguageUtil.get(locale, "ddm-template");
 	}
 
 	@Override
@@ -195,13 +188,6 @@ public class JournalArticleDDMTemplateInfoItemTemplatedRenderer
 
 	@Reference
 	private Portal _portal;
-
-	@Reference(
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(bundle.symbolic.name=com.liferay.journal.web)"
-	)
-	private volatile ResourceBundleLoader _resourceBundleLoader;
 
 	private ServletContext _servletContext;
 

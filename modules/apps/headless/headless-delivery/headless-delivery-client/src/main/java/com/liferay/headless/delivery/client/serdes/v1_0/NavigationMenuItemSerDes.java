@@ -60,7 +60,36 @@ public class NavigationMenuItemSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (navigationMenuItem.getAvailableLanguages() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"availableLanguages\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < navigationMenuItem.getAvailableLanguages().length; i++) {
+
+				sb.append("\"");
+
+				sb.append(
+					_escape(navigationMenuItem.getAvailableLanguages()[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) <
+						navigationMenuItem.getAvailableLanguages().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
 
 		if (navigationMenuItem.getCreator() != null) {
 			if (sb.length() > 1) {
@@ -128,6 +157,16 @@ public class NavigationMenuItemSerDes {
 			sb.append("\"");
 		}
 
+		if (navigationMenuItem.getLink_i18n() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"link_i18n\": ");
+
+			sb.append(_toJSON(navigationMenuItem.getLink_i18n()));
+		}
+
 		if (navigationMenuItem.getName() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -188,6 +227,20 @@ public class NavigationMenuItemSerDes {
 			sb.append(navigationMenuItem.getParentNavigationMenuId());
 		}
 
+		if (navigationMenuItem.getSitePageURL() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sitePageURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(navigationMenuItem.getSitePageURL()));
+
+			sb.append("\"");
+		}
+
 		if (navigationMenuItem.getType() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -216,6 +269,16 @@ public class NavigationMenuItemSerDes {
 			sb.append("\"");
 		}
 
+		if (navigationMenuItem.getUseCustomName() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"useCustomName\": ");
+
+			sb.append(navigationMenuItem.getUseCustomName());
+		}
+
 		sb.append("}");
 
 		return sb.toString();
@@ -238,7 +301,16 @@ public class NavigationMenuItemSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (navigationMenuItem.getAvailableLanguages() == null) {
+			map.put("availableLanguages", null);
+		}
+		else {
+			map.put(
+				"availableLanguages",
+				String.valueOf(navigationMenuItem.getAvailableLanguages()));
+		}
 
 		if (navigationMenuItem.getCreator() == null) {
 			map.put("creator", null);
@@ -281,6 +353,14 @@ public class NavigationMenuItemSerDes {
 			map.put("link", String.valueOf(navigationMenuItem.getLink()));
 		}
 
+		if (navigationMenuItem.getLink_i18n() == null) {
+			map.put("link_i18n", null);
+		}
+		else {
+			map.put(
+				"link_i18n", String.valueOf(navigationMenuItem.getLink_i18n()));
+		}
+
 		if (navigationMenuItem.getName() == null) {
 			map.put("name", null);
 		}
@@ -314,6 +394,15 @@ public class NavigationMenuItemSerDes {
 				String.valueOf(navigationMenuItem.getParentNavigationMenuId()));
 		}
 
+		if (navigationMenuItem.getSitePageURL() == null) {
+			map.put("sitePageURL", null);
+		}
+		else {
+			map.put(
+				"sitePageURL",
+				String.valueOf(navigationMenuItem.getSitePageURL()));
+		}
+
 		if (navigationMenuItem.getType() == null) {
 			map.put("type", null);
 		}
@@ -326,6 +415,15 @@ public class NavigationMenuItemSerDes {
 		}
 		else {
 			map.put("url", String.valueOf(navigationMenuItem.getUrl()));
+		}
+
+		if (navigationMenuItem.getUseCustomName() == null) {
+			map.put("useCustomName", null);
+		}
+		else {
+			map.put(
+				"useCustomName",
+				String.valueOf(navigationMenuItem.getUseCustomName()));
 		}
 
 		return map;
@@ -349,7 +447,13 @@ public class NavigationMenuItemSerDes {
 			NavigationMenuItem navigationMenuItem, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "creator")) {
+			if (Objects.equals(jsonParserFieldName, "availableLanguages")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setAvailableLanguages(
+						toStrings((Object[])jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "creator")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenuItem.setCreator(
 						CreatorSerDes.toDTO((String)jsonParserFieldValue));
@@ -376,6 +480,13 @@ public class NavigationMenuItemSerDes {
 			else if (Objects.equals(jsonParserFieldName, "link")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenuItem.setLink((String)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "link_i18n")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setLink_i18n(
+						(Map)NavigationMenuItemSerDes.toMap(
+							(String)jsonParserFieldValue));
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "name")) {
@@ -413,6 +524,12 @@ public class NavigationMenuItemSerDes {
 						Long.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "sitePageURL")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setSitePageURL(
+						(String)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "type")) {
 				if (jsonParserFieldValue != null) {
 					navigationMenuItem.setType((String)jsonParserFieldValue);
@@ -423,9 +540,11 @@ public class NavigationMenuItemSerDes {
 					navigationMenuItem.setUrl((String)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
+			else if (Objects.equals(jsonParserFieldName, "useCustomName")) {
+				if (jsonParserFieldValue != null) {
+					navigationMenuItem.setUseCustomName(
+						(Boolean)jsonParserFieldValue);
+				}
 			}
 		}
 
@@ -455,7 +574,7 @@ public class NavigationMenuItemSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -491,7 +610,7 @@ public class NavigationMenuItemSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

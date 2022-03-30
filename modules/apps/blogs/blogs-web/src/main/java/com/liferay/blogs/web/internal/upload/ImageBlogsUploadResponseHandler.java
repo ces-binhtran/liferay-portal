@@ -73,13 +73,13 @@ public class ImageBlogsUploadResponseHandler implements UploadResponseHandler {
 				errorType = ServletResponseConstants.SC_FILE_SIZE_EXCEPTION;
 			}
 
-			JSONObject errorJSONObject = JSONUtil.put(
-				"errorType", errorType
-			).put(
-				"message", errorMessage
-			);
-
-			jsonObject.put("error", errorJSONObject);
+			jsonObject.put(
+				"error",
+				JSONUtil.put(
+					"errorType", errorType
+				).put(
+					"message", errorMessage
+				));
 		}
 
 		return jsonObject;
@@ -101,7 +101,8 @@ public class ImageBlogsUploadResponseHandler implements UploadResponseHandler {
 			BlogsFileUploadsConfiguration.class, properties);
 	}
 
-	private BlogsFileUploadsConfiguration _blogsFileUploadsConfiguration;
+	private volatile BlogsFileUploadsConfiguration
+		_blogsFileUploadsConfiguration;
 
 	@Reference
 	private ItemSelectorUploadResponseHandler

@@ -12,17 +12,20 @@
  * details.
  */
 
+import {ClayButtonWithIcon} from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClaySticker from '@clayui/sticker';
-import {ClayTooltipProvider} from '@clayui/tooltip';
 import classnames from 'classnames';
+import {DRAG_TYPES} from 'data-engine-js-components-web';
 import React, {useEffect, useState} from 'react';
 import {useDrag} from 'react-dnd';
 import {getEmptyImage} from 'react-dnd-html5-backend';
 
-import {DRAG_FIELD_TYPE} from '../../drag-and-drop/dragTypes.es';
-import Button from '../button/Button.es';
+import DropDown from '../drop-down/DropDown.es';
+
+import './FieldType.scss';
 import FieldTypeDragPreview from './FieldTypeDragPreview.es';
 
 const ICONS = {
@@ -33,8 +36,9 @@ const ICONS = {
 	select: 'list',
 };
 
-export default (props) => {
+const FieldType = (props) => {
 	const {
+		actions,
 		active,
 		className,
 		deleteLabel = Liferay.Language.get('delete'),
@@ -42,10 +46,11 @@ export default (props) => {
 		disabled,
 		dragAlignment = 'left',
 		draggable = true,
-		dragType = DRAG_FIELD_TYPE,
+		dragType = DRAG_TYPES.DRAG_FIELD_TYPE_ADD,
 		icon,
 		label,
 		name,
+		required,
 		onClick,
 		onDelete,
 		onDoubleClick,
@@ -76,7 +81,7 @@ export default (props) => {
 			return;
 		}
 
-		onDoubleClick({...props});
+		onDoubleClick?.({...props});
 	};
 
 	const [loading, setLoading] = useState(false);
@@ -84,60 +89,66 @@ export default (props) => {
 	const fieldIcon = ICONS[icon] ? ICONS[icon] : icon;
 
 	return (
-		<div
-			className={classnames(
-				className,
-				'autofit-row',
-				'autofit-row-center',
-				'field-type',
-				{
-					active,
-					disabled,
-					dragging,
-					loading,
-				}
-			)}
+		<ClayLayout.ContentRow
+			className={classnames(className, 'field-type', {
+				active,
+				disabled,
+				dragging,
+				loading,
+			})}
 			data-field-type-name={name}
 			onClick={onClick && handleOnClick}
-			onDoubleClick={onDoubleClick && handleOnDoubleClick}
+			onDoubleClick={handleOnDoubleClick}
 			ref={drag}
+			title={label}
+			verticalAlign="center"
 		>
-			{dragAlignment === 'left' && (
-				<div className="autofit-col pl-2 pr-2">
+			{draggable && dragAlignment === 'left' && (
+				<ClayLayout.ContentCol className="pl-2 pr-2">
 					<ClayIcon symbol="drag" />
-				</div>
+				</ClayLayout.ContentCol>
 			)}
 
-			<div
-				className={classnames('autofit-col', 'pr-2', {
+			<ClayLayout.ContentCol
+				className={classnames('pr-2', {
 					'pl-2': dragAlignment === 'right',
 				})}
 			>
 				<ClaySticker
 					className="data-layout-builder-field-sticker"
-					displayType="light"
+					displayType="dark"
 					size="md"
 				>
 					<ClayIcon symbol={fieldIcon} />
 				</ClaySticker>
-			</div>
+			</ClayLayout.ContentCol>
 
-			<div className="autofit-col autofit-col-expand pr-2">
-				<h4 className="list-group-title text-truncate">
-					<span>{label}</span>
-				</h4>
+			<ClayLayout.ContentCol className="pr-2" expand>
+				<div className="d-flex list-group-title">
+					<span className="text-truncate">{label}</span>
+
+					{required && (
+						<span className="reference-mark">
+							<ClayIcon symbol="asterisk" />
+						</span>
+					)}
+				</div>
 
 				{description && (
 					<p className="list-group-subtitle text-truncate">
 						<small>{description}</small>
 					</p>
 				)}
+			</ClayLayout.ContentCol>
+
+			<div className="autofit-col pr-2">
+				{actions && <DropDown actions={actions} />}
 			</div>
 
-			{dragAlignment === 'right' && (
-				<div className="autofit-col pr-2">
+			{draggable && dragAlignment === 'right' && (
+				<ClayLayout.ContentCol className="pr-2">
 					<ClayIcon symbol="drag" />
-				</div>
+				</ClayLayout.ContentCol>
 			)}
 
 			{onDelete && (
@@ -145,32 +156,33 @@ export default (props) => {
 					{loading ? (
 						<ClayLoadingIndicator />
 					) : (
-						<ClayTooltipProvider>
-							<Button
-								borderless
-								data-tooltip-align="right"
-								data-tooltip-delay="200"
-								displayType="secondary"
-								onClick={(event) => {
-									event.stopPropagation();
+						<ClayButtonWithIcon
+							borderless
+							data-tooltip-align="right"
+							data-tooltip-delay="200"
+							displayType="secondary"
+							onClick={(event) => {
+								event.stopPropagation();
 
-									setLoading(true);
+								setLoading(true);
 
-									onDelete(name)
-										.then(() => setLoading(false))
-										.catch((error) => {
-											setLoading(false);
+								onDelete(name)
+									.then(() => setLoading(false))
+									.catch((error) => {
+										setLoading(false);
 
-											throw error;
-										});
-								}}
-								symbol="times-circle"
-								title={deleteLabel}
-							/>
-						</ClayTooltipProvider>
+										throw error;
+									});
+							}}
+							symbol="times-circle"
+							title={deleteLabel}
+						/>
 					)}
 				</div>
 			)}
-		</div>
+		</ClayLayout.ContentRow>
 	);
 };
+
+FieldType.displayName = 'FieldType';
+export default FieldType;

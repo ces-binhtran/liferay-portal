@@ -1,10 +1,11 @@
 @component-name = "portal-calendar"
 definition {
 
+	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column${line.separator}company.default.time.zone=America/Los_Angeles";
 	property testray.main.component.name = "Calendar";
+
 	var pageName = "Calendar Page";
 	var portletName = "Calendar";
 
@@ -15,14 +16,13 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPublicPage(
 			pageName = "Calendar Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Calendar Page",
 			privacy = "Public Pages",
@@ -52,7 +52,7 @@ definition {
 
 			CalendarConfiguration.tearDown();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
@@ -65,11 +65,13 @@ definition {
 
 		Portlet.addPG(
 			pageName = "Calendar Page",
-			portletName = "Language");
+			portletName = "Language Selector");
 
 		LanguagePortlet.selectLanguagePG(
 			locale = "es_ES",
 			textIcon = "español-España");
+
+		CalendarNavigator.gotoView(viewType = "Week");
 
 		CalendarScheduler.addLocalizedEvent(
 			eventTitle = "Calendar Event Title",

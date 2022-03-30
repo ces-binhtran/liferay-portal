@@ -234,6 +234,7 @@ public class ProcessMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
 			_createBooleanQuery(completed),
@@ -311,6 +312,8 @@ public class ProcessMetricResourceImpl
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
+			_queries.term("blocked", Boolean.FALSE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
 			_createProcessIdTermsQuery(processIds));
@@ -399,7 +402,7 @@ public class ProcessMetricResourceImpl
 			onTimeFilterAggregation, overdueFilterAggregation,
 			_resourceHelper.creatInstanceCountScriptedMetricAggregation(
 				Collections.emptyList(), null, dateEnd, dateStart,
-				Collections.emptyList(), Collections.emptyList()));
+				Collections.emptyList()));
 
 		termsAggregation.addPipelineAggregations(
 			_createBucketSelectorPipelineAggregation());
@@ -463,7 +466,7 @@ public class ProcessMetricResourceImpl
 		if (_isOrderByInstanceCount(fieldSort.getField())) {
 			for (Bucket bucket : instanceTermsAggregationResult.getBuckets()) {
 				ProcessMetric processMetric = processMetricsMap.remove(
-					Long.valueOf(bucket.getKey()));
+					GetterUtil.getLong(bucket.getKey()));
 
 				_populateProcessWithSLAMetrics(
 					slaTermsAggregationResult.getBucket(bucket.getKey()),
@@ -495,7 +498,7 @@ public class ProcessMetricResourceImpl
 		else {
 			for (Bucket bucket : slaTermsAggregationResult.getBuckets()) {
 				ProcessMetric processMetric = processMetricsMap.remove(
-					Long.valueOf(bucket.getKey()));
+					GetterUtil.getLong(bucket.getKey()));
 
 				_populateProcessWithSLAMetrics(bucket, processMetric);
 				_setInstanceCount(
@@ -617,10 +620,8 @@ public class ProcessMetricResourceImpl
 			(FilterAggregationResult)bucket.getChildAggregationResult(
 				"instanceCountFilter");
 
-		ValueCountAggregationResult valueCountAggregationResult;
-
 		if (filterAggregationResult != null) {
-			valueCountAggregationResult =
+			ValueCountAggregationResult valueCountAggregationResult =
 				(ValueCountAggregationResult)
 					filterAggregationResult.getChildAggregationResult(
 						"instanceCount");

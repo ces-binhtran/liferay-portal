@@ -1,24 +1,39 @@
-let handleProviderResize = function() {};
-
 let content = null;
 let videoContainer = null;
 let errorMessage = null;
 let loadingIndicator = null;
+let videoMask = null;
+
+const height = configuration.videoHeight
+	? configuration.videoHeight.replace('px', '')
+	: configuration.videoHeight;
+const width = configuration.videoWidth
+	? configuration.videoWidth.replace('px', '')
+	: configuration.videoWidth;
 
 function resize() {
-	content.style.width = '';
-	content.style.height = '';
+	const scrollPosition = {
+		left: window.scrollX,
+		top: window.scrollY,
+	};
 
-	requestAnimationFrame(function() {
+	content.style.height = '';
+	content.style.width = '';
+
+	requestAnimationFrame(function () {
 		try {
 			const boundingClientRect = content.getBoundingClientRect();
 
-			const width = configuration.width || boundingClientRect.width;
-			const height = configuration.height || width * 0.5625;
+			const contentWidth = width || boundingClientRect.width;
 
-			content.style.height = height + 'px';
-			content.style.width = width +'px';
-		} catch (error) {
+			const contentHeight = height || contentWidth * 0.5625;
+
+			content.style.height = contentHeight + 'px';
+			content.style.width = contentWidth + 'px';
+
+			window.scrollTo(scrollPosition);
+		}
+		catch (error) {
 			window.removeEventListener('resize', resize);
 		}
 	});
@@ -28,6 +43,10 @@ function showVideo() {
 	videoContainer.removeAttribute('aria-hidden');
 	errorMessage.parentElement.removeChild(errorMessage);
 	loadingIndicator.parentElement.removeChild(loadingIndicator);
+
+	if (!document.body.classList.contains('has-edit-mode-menu')) {
+		videoMask.parentElement.removeChild(videoMask);
+	}
 
 	window.addEventListener('resize', resize);
 
@@ -39,17 +58,18 @@ function showError() {
 		errorMessage.removeAttribute('hidden');
 		videoContainer.parentElement.removeChild(videoContainer);
 		loadingIndicator.parentElement.removeChild(loadingIndicator);
-	} else {
+	}
+	else {
 		fragmentElement.parentElement.removeChild(fragmentElement);
 	}
-};
+}
 
 const rawProvider = {
-	getParameters: function(url) {
+	getParameters: function (url) {
 		return {url: url};
 	},
 
-	showVideo: function(parameters) {
+	showVideo: function (parameters) {
 		const video = document.createElement('video');
 		const source = document.createElement('source');
 
@@ -66,58 +86,70 @@ const rawProvider = {
 		video.appendChild(source);
 		videoContainer.appendChild(video);
 		showVideo();
-	}
+	},
 };
 
 const youtubeProvider = {
-	getParameters: function(url) {
+	getParameters: function (url) {
 		const start = url.searchParams.get('start');
 
 		if (['www.youtube.com', 'youtube.com'].includes(url.hostname)) {
 			const videoId = url.searchParams.get('v');
 
 			if (videoId) {
-				return {videoId: videoId, start: start};
+				return {
+					start: start,
+					videoId: videoId,
+				};
 			}
-		} else if (['www.youtu.be', 'youtu.be'].includes(url.hostname)) {
+		}
+		else if (['www.youtu.be', 'youtu.be'].includes(url.hostname)) {
 			const videoId = url.pathname.substr(1);
 
 			if (videoId) {
-				return {videoId: videoId, start: start};
+				return {
+					start: start,
+					videoId: videoId,
+				};
 			}
 		}
 	},
 
-	showVideo: function(parameters) {
+	showVideo: function (parameters) {
 		const handleAPIReady = function () {
 			const player = new YT.Player(videoContainer, {
-				height: configuration.height,
-				width: configuration.width,
-				videoId: parameters.videoId,
-				playerVars: {
-					autoplay: configuration.autoPlay,
-					controls: configuration.hideControls ? 0 : 1,
-					loop: configuration.loop ? 0 : 1,
-					start: !parameters.start ? 0 : parameters.start
-				},
 				events: {
-					onReady: function() {
+					onReady: function () {
 						if (configuration.mute) {
 							player.mute();
 						}
 
 						showVideo();
-					}
-				}
+					},
+				},
+				height: height,
+				playerVars: {
+					autoplay: configuration.autoPlay,
+					controls: configuration.hideControls ? 0 : 1,
+					loop: configuration.loop ? 1 : 0,
+					playlist: configuration.loop
+						? parameters.videoId
+						: undefined,
+					start: !parameters.start ? 0 : parameters.start,
+				},
+				videoId: parameters.videoId,
+				width: width,
 			});
 		};
 
 		if ('YT' in window) {
 			handleAPIReady();
-		} else {
-			const oldCallback = window.onYouTubeIframeAPIReady || (function() {});
+		}
+		else {
+			const oldCallback =
+				window.onYouTubeIframeAPIReady || function () {};
 
-			window.onYouTubeIframeAPIReady = function() {
+			window.onYouTubeIframeAPIReady = function () {
 				oldCallback();
 				handleAPIReady();
 			};
@@ -125,7 +157,9 @@ const youtubeProvider = {
 			const apiSrc = '//www.youtube.com/iframe_api';
 
 			let script = Array.from(document.querySelectorAll('script')).find(
-				function(script) { return script.src === apiSrc}
+				function (script) {
+					return script.src === apiSrc;
+				}
 			);
 
 			if (!script) {
@@ -134,7 +168,7 @@ const youtubeProvider = {
 				document.body.appendChild(script);
 			}
 		}
-	}
+	},
 };
 
 function main() {
@@ -147,12 +181,13 @@ function main() {
 	videoContainer = content.querySelector('.video-container');
 	errorMessage = content.querySelector('.error-message');
 	loadingIndicator = content.querySelector('.loading-animation');
+	videoMask = content.querySelector('.video-mask');
 
 	window.removeEventListener('resize', resize);
 
 	try {
 		let matched = false;
-		const url = new URL(configuration.url);
+		const url = new URL(configuration.url, window.location.origin);
 		const providers = [youtubeProvider, rawProvider];
 
 		for (let i = 0; i < providers.length && !matched; i++) {
@@ -168,7 +203,8 @@ function main() {
 		if (!matched) {
 			showError();
 		}
-	} catch (error) {
+	}
+	catch (error) {
 		showError();
 	}
 }

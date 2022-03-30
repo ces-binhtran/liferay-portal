@@ -45,9 +45,7 @@ public class PwdGenerator {
 			throw new IllegalArgumentException("Keys are null");
 		}
 
-		StringBundler fullKeySB = new StringBundler(keys);
-
-		String fullKey = fullKeySB.toString();
+		String fullKey = String.valueOf(new StringBundler(keys));
 
 		int fullKeyLength = fullKey.length();
 
@@ -55,7 +53,7 @@ public class PwdGenerator {
 
 		long secureLong = 0;
 
-		StringBuilder sb = new StringBuilder(length);
+		StringBundler sb = new StringBundler(length);
 
 		for (int i = 0; i < length; i++) {
 			if ((i % refreshPeriod) == 0) {

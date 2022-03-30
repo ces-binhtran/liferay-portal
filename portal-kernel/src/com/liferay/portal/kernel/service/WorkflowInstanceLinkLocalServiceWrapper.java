@@ -29,6 +29,10 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 	implements ServiceWrapper<WorkflowInstanceLinkLocalService>,
 			   WorkflowInstanceLinkLocalService {
 
+	public WorkflowInstanceLinkLocalServiceWrapper() {
+		this(null);
+	}
+
 	public WorkflowInstanceLinkLocalServiceWrapper(
 		WorkflowInstanceLinkLocalService workflowInstanceLinkLocalService) {
 
@@ -47,6 +51,10 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 
 	/**
 	 * Adds the workflow instance link to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WorkflowInstanceLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param workflowInstanceLink the workflow instance link
 	 * @return the workflow instance link that was added
@@ -100,6 +108,10 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 	/**
 	 * Deletes the workflow instance link with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WorkflowInstanceLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param workflowInstanceLinkId the primary key of the workflow instance link
 	 * @return the workflow instance link that was removed
 	 * @throws PortalException if a workflow instance link with the primary key could not be found
@@ -124,6 +136,10 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 
 	/**
 	 * Deletes the workflow instance link from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WorkflowInstanceLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param workflowInstanceLink the workflow instance link
 	 * @return the workflow instance link that was removed
@@ -150,6 +166,13 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _workflowInstanceLinkLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _workflowInstanceLinkLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -398,6 +421,19 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 	}
 
 	@Override
+	public void startWorkflowInstance(
+			long companyId, long groupId, long userId, String className,
+			long classPK,
+			java.util.Map<String, java.io.Serializable> workflowContext,
+			boolean waitForCompletion)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_workflowInstanceLinkLocalService.startWorkflowInstance(
+			companyId, groupId, userId, className, classPK, workflowContext,
+			waitForCompletion);
+	}
+
+	@Override
 	public void updateClassPK(
 			long companyId, long groupId, String className, long oldClassPK,
 			long newClassPK)
@@ -409,6 +445,10 @@ public class WorkflowInstanceLinkLocalServiceWrapper
 
 	/**
 	 * Updates the workflow instance link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect WorkflowInstanceLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param workflowInstanceLink the workflow instance link
 	 * @return the workflow instance link that was updated

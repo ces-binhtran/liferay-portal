@@ -17,6 +17,14 @@
 <%@ include file="/init.jsp" %>
 
 <%
+String redirect = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/configuration_admin/view_configuration_screen"
+).setParameter(
+	"configurationScreenKey", "2-synced-contact-data"
+).buildString();
+
 AnalyticsConfiguration analyticsConfiguration = (AnalyticsConfiguration)request.getAttribute(AnalyticsSettingsWebKeys.ANALYTICS_CONFIGURATION);
 AnalyticsUsersManager analyticsUsersManager = (AnalyticsUsersManager)request.getAttribute(AnalyticsSettingsWebKeys.ANALYTICS_USERS_MANAGER);
 
@@ -29,9 +37,34 @@ if (!Validator.isBlank(analyticsConfiguration.token())) {
 boolean syncAllContacts = analyticsConfiguration.syncAllContacts();
 Set<String> syncedOrganizationIds = SetUtil.fromArray(analyticsConfiguration.syncedOrganizationIds());
 Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.syncedUserGroupIds());
+
+portletDisplay.setShowBackIcon(true);
+portletDisplay.setURLBack(ParamUtil.getString(request, "backURL", redirect));
+
+PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "select-contact-data"), redirect);
+PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(resourceBundle, "select-contacts"), currentURL);
 %>
 
-<portlet:actionURL name="/analytics/edit_synced_contacts" var="editSyncedContactsURL" />
+<portlet:renderURL var="editSyncedContactsFieldsURL">
+	<portlet:param name="mvcRenderCommandName" value="/analytics_settings/edit_synced_contacts_fields" />
+</portlet:renderURL>
+
+<clay:container-fluid>
+	<clay:row>
+		<clay:col
+			size="12"
+		>
+			<div id="breadcrumb">
+				<liferay-ui:breadcrumb
+					showCurrentGroup="<%= false %>"
+					showGuestGroup="<%= false %>"
+					showLayout="<%= false %>"
+					showPortletBreadcrumb="<%= true %>"
+				/>
+			</div>
+		</clay:col>
+	</clay:row>
+</clay:container-fluid>
 
 <clay:sheet
 	cssClass="portlet-analytics-settings"
@@ -40,7 +73,11 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 		<liferay-ui:message key="contact-data" />
 	</h2>
 
-	<aui:form action="<%= editSyncedContactsURL %>" method="post" name="fm">
+	<div class="c-pb-3 form-text">
+		<liferay-ui:message key="contact-data-help" />
+	</div>
+
+	<aui:form action="<%= editSyncedContactsFieldsURL %>" method="post" name="fm">
 		<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 		<fieldset <%= connected ? "" : "disabled" %>>
@@ -48,9 +85,7 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 				<liferay-ui:message key="sync-all-contacts" />
 			</label>
 
-			<div class="form-text">
-				<liferay-ui:message key="sync-all-contacts-help" />
-			</div>
+			<br />
 
 			<label class="mb-5 mt-3 toggle-switch">
 				<input class="toggle-switch-check" name="<portlet:namespace />syncAllContacts" type="checkbox" <%= syncAllContacts ? "checked" : "" %> />
@@ -69,10 +104,6 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 				<liferay-ui:message key="sync-by-user-groups-and-organizations" />
 			</label>
 
-			<div class="form-text">
-				<liferay-ui:message key="sync-by-user-groups-and-organizations-help" />
-			</div>
-
 			<c:choose>
 				<c:when test="<%= connected %>">
 					<portlet:renderURL var="createUserGroupURL">
@@ -89,8 +120,8 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 
 				<div class="pr-3">
 					<clay:sticker
-						cssClass="sticker-light"
-						displayType="light"
+						cssClass="sticker-dark"
+						displayType="dark"
 						icon="users"
 					/>
 				</div>
@@ -117,7 +148,7 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 			<c:choose>
 				<c:when test="<%= connected %>">
 					<portlet:renderURL var="createOrganizationsURL">
-						<portlet:param name="mvcRenderCommandName" value="/analytics_settings/edit_synced_organizations" />
+						<portlet:param name="mvcRenderCommandName" value="/analytics_settings/edit_synced_contacts_organizations" />
 						<portlet:param name="redirect" value="<%= currentURL %>" />
 					</portlet:renderURL>
 
@@ -130,8 +161,8 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 
 				<div class="pr-3">
 					<clay:sticker
-						cssClass="sticker-light"
-						displayType="light"
+						cssClass="sticker-dark"
+						displayType="dark"
 						icon="organizations"
 					/>
 				</div>
@@ -156,8 +187,11 @@ Set<String> syncedUserGroupIds = SetUtil.fromArray(analyticsConfiguration.synced
 			</c:choose>
 		<fieldset>
 
-		<aui:button-row>
-			<aui:button disabled="<%= !connected %>" type="submit" value="save" />
-		</aui:button-row>
+		<div class="text-right">
+			<aui:button-row>
+				<aui:button href="<%= redirect %>" type="cancel" value="cancel" />
+				<aui:button disabled="<%= !connected %>" type="submit" value="save-and-next" />
+			</aui:button-row>
+		</div>
 	</aui:form>
 </clay:sheet>

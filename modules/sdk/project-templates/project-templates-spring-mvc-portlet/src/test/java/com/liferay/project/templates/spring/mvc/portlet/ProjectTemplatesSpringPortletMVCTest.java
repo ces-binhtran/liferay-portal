@@ -51,16 +51,19 @@ public class ProjectTemplatesSpringPortletMVCTest
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
 			new Object[][] {
-				{"springportletmvc", "embedded", "jsp", "7.0.6"},
-				{"springportletmvc", "embedded", "jsp", "7.1.3"},
-				{"springportletmvc", "embedded", "jsp", "7.2.1"},
-				{"springportletmvc", "embedded", "jsp", "7.3.2"},
-				{"portletmvc4spring", "embedded", "jsp", "7.1.3"},
-				{"portletmvc4spring", "embedded", "jsp", "7.2.1"},
-				{"portletmvc4spring", "embedded", "jsp", "7.3.2"},
-				{"portletmvc4spring", "embedded", "thymeleaf", "7.1.3"},
-				{"portletmvc4spring", "embedded", "thymeleaf", "7.2.1"},
-				{"portletmvc4spring", "embedded", "thymeleaf", "7.3.2"}
+				{"springportletmvc", "embedded", "jsp", "7.0.6-2"},
+				{"springportletmvc", "embedded", "jsp", "7.1.3-1"},
+				{"springportletmvc", "embedded", "jsp", "7.2.1-1"},
+				{"springportletmvc", "embedded", "jsp", "7.3.7"},
+				{"springportletmvc", "embedded", "jsp", "7.4.2-1"},
+				{"portletmvc4spring", "embedded", "jsp", "7.1.3-1"},
+				{"portletmvc4spring", "embedded", "jsp", "7.2.1-1"},
+				{"portletmvc4spring", "embedded", "jsp", "7.3.7"},
+				{"portletmvc4spring", "embedded", "jsp", "7.4.2-1"},
+				{"portletmvc4spring", "embedded", "thymeleaf", "7.1.3-1"},
+				{"portletmvc4spring", "embedded", "thymeleaf", "7.2.1-1"},
+				{"portletmvc4spring", "embedded", "thymeleaf", "7.3.7"},
+				{"portletmvc4spring", "embedded", "thymeleaf", "7.4.2-1"}
 			});
 	}
 
@@ -96,10 +99,11 @@ public class ProjectTemplatesSpringPortletMVCTest
 			temporaryFolder, "gradle", "gradleWS", _liferayVersion,
 			mavenExecutor);
 
-		File gradleWorkspaceWarsDir = new File(gradleWorkspaceDir, "wars");
+		File gradleWorkspaceModulesDir = new File(
+			gradleWorkspaceDir, "modules");
 
 		File gradleProjectDir = _buildSpringMVCTemplate(
-			gradleWorkspaceWarsDir, "gradle", _framework,
+			gradleWorkspaceModulesDir, "gradle", _framework,
 			_frameworkDependencies, _viewType, _liferayVersion);
 
 		testNotContains(
@@ -112,52 +116,14 @@ public class ProjectTemplatesSpringPortletMVCTest
 			gradleProjectDir,
 			"src/main/java/com/test/controller/UserController.java");
 
-		if (_liferayVersion.equals("7.0.6")) {
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-display.xml",
-				"liferay-display_7_0_0.dtd");
+		testTemplateWarPortletDTD(gradleProjectDir, _liferayVersion);
 
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-portlet.xml",
-				"liferay-portlet-app_7_0_0.dtd");
-
+		if (_liferayVersion.startsWith("7.0")) {
 			testContains(
 				gradleProjectDir, "src/main/webapp/WEB-INF/web.xml",
 				"version=\"3.0\" xmlns=\"http://java.sun.com/xml/ns/javaee");
 		}
-		else if (_liferayVersion.equals("7.1.3")) {
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-display.xml",
-				"liferay-display_7_1_0.dtd");
-
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-portlet.xml",
-				"liferay-portlet-app_7_1_0.dtd");
-
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/web.xml",
-				"version=\"3.1\" xmlns=\"http://xmlns.jcp.org/xml/ns/javaee\"");
-		}
-		else if (_liferayVersion.equals("7.2.1")) {
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-display.xml",
-				"liferay-display_7_2_0.dtd");
-
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-portlet.xml",
-				"liferay-portlet-app_7_2_0.dtd");
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/web.xml",
-				"version=\"3.1\" xmlns=\"http://xmlns.jcp.org/xml/ns/javaee\"");
-		}
-		else if (_liferayVersion.startsWith("7.3")) {
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-display.xml",
-				"liferay-display_7_3_0.dtd");
-
-			testContains(
-				gradleProjectDir, "src/main/webapp/WEB-INF/liferay-portlet.xml",
-				"liferay-portlet-app_7_3_0.dtd");
+		else {
 			testContains(
 				gradleProjectDir, "src/main/webapp/WEB-INF/web.xml",
 				"version=\"3.1\" xmlns=\"http://xmlns.jcp.org/xml/ns/javaee\"");
@@ -208,10 +174,10 @@ public class ProjectTemplatesSpringPortletMVCTest
 			temporaryFolder, "maven", "mavenWS", _liferayVersion,
 			mavenExecutor);
 
-		File mavenWarsDir = new File(mavenWorkspaceDir, "wars");
+		File mavenModulesDir = new File(mavenWorkspaceDir, "modules");
 
 		File mavenProjectDir = _buildSpringMVCTemplate(
-			mavenWarsDir, "maven", _framework, _frameworkDependencies,
+			mavenModulesDir, "maven", _framework, _frameworkDependencies,
 			_viewType, _liferayVersion);
 
 		if (isBuildProjects()) {
@@ -221,7 +187,7 @@ public class ProjectTemplatesSpringPortletMVCTest
 			buildProjects(
 				_gradleDistribution, mavenExecutor, gradleWorkspaceDir,
 				mavenProjectDir, gradleOutputDir, mavenOutputDir,
-				":wars:sampleSpringMVCPortlet" + GRADLE_TASK_PATH_BUILD);
+				":modules:sampleSpringMVCPortlet" + GRADLE_TASK_PATH_BUILD);
 		}
 	}
 

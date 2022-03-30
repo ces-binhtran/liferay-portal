@@ -12,15 +12,16 @@
  * details.
  */
 
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 
 export default function useControlledState(value) {
-	const [nextValue, setNextValue] = useState(null);
-	const currentValue = nextValue === null ? value : nextValue;
+	const [nextValue, setNextValue] = useState(value);
+	const [previousValue, setPreviousValue] = useState(value);
 
-	useEffect(() => {
-		setNextValue(null);
-	}, [value]);
+	if (value !== previousValue) {
+		setNextValue(value);
+		setPreviousValue(value);
+	}
 
-	return [currentValue, setNextValue];
+	return [nextValue, setNextValue];
 }

@@ -19,6 +19,7 @@ import com.liferay.gradle.plugins.change.log.builder.BuildChangeLogTask;
 import com.liferay.gradle.plugins.change.log.builder.ChangeLogBuilderPlugin;
 import com.liferay.gradle.plugins.defaults.internal.util.FileUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.Validator;
 
 import java.io.BufferedWriter;
@@ -52,7 +53,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskContainer;
-import org.gradle.util.GUtil;
 import org.gradle.util.VersionNumber;
 
 /**
@@ -170,7 +170,6 @@ public class WriteArtifactPublishCommandsTask extends DefaultTask {
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	public WriteArtifactPublishCommandsTask prepNextFiles(
 		Iterable<?> prepNextFiles) {
 
@@ -357,9 +356,8 @@ public class WriteArtifactPublishCommandsTask extends DefaultTask {
 	}
 
 	private String _getGradleCommand(String taskName, String... arguments) {
-		Task task = GradleUtil.getTask(getProject(), taskName);
-
-		return _getGradleCommand(task, arguments);
+		return _getGradleCommand(
+			GradleUtil.getTask(getProject(), taskName), arguments);
 	}
 
 	private String _getGradleCommand(Task task, String... arguments) {

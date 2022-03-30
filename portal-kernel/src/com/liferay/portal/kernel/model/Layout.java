@@ -74,6 +74,8 @@ public interface Layout extends LayoutModel, PersistedModel {
 
 		};
 
+	public Layout fetchDraftLayout();
+
 	/**
 	 * Returns all layouts that are direct or indirect children of the current
 	 * layout.
@@ -109,6 +111,9 @@ public interface Layout extends LayoutModel, PersistedModel {
 	 * @return the current layout's list of parent layouts
 	 */
 	public java.util.List<Layout> getAncestors()
+		throws com.liferay.portal.kernel.exception.PortalException;
+
+	public String getBreadcrumb(java.util.Locale locale)
 		throws com.liferay.portal.kernel.exception.PortalException;
 
 	/**
@@ -335,6 +340,8 @@ public interface Layout extends LayoutModel, PersistedModel {
 	public boolean isContentDisplayPage();
 
 	public boolean isCustomizable();
+
+	public boolean isDraftLayout();
 
 	/**
 	 * Returns <code>true</code> if the current layout is the first layout in

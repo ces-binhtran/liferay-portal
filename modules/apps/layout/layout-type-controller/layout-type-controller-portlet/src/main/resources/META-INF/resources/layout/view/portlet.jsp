@@ -16,10 +16,6 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-HttpServletRequest originalServletRequest = (HttpServletRequest)request.getAttribute(PortletLayoutTypeControllerWebKeys.ORIGINAL_HTTP_SERVLET_REQUEST);
-%>
-
 <c:choose>
 	<c:when test="<%= themeDisplay.isStatePopUp() || themeDisplay.isWidget() || layoutTypePortlet.hasStateMax() %>">
 
@@ -44,6 +40,8 @@ HttpServletRequest originalServletRequest = (HttpServletRequest)request.getAttri
 		}
 
 		if (Validator.isNotNull(templateContent)) {
+			HttpServletRequest originalServletRequest = (HttpServletRequest)request.getAttribute(PortletLayoutTypeControllerWebKeys.ORIGINAL_HTTP_SERVLET_REQUEST);
+
 			RuntimePageUtil.processTemplate(originalServletRequest, response, ppid, new StringTemplateResource(templateId, templateContent), langType);
 		}
 		%>
@@ -57,16 +55,12 @@ HttpServletRequest originalServletRequest = (HttpServletRequest)request.getAttri
 		</style>
 
 		<%
-		PortletLayoutDisplayContext portletLayoutDisplayContext = (PortletLayoutDisplayContext)request.getAttribute(PortletLayoutDisplayContext.class.getName());
-
-		LayoutStructure layoutStructure = portletLayoutDisplayContext.getLayoutStructure();
-
-		LayoutStructureItem layoutStructureItem = layoutStructure.getMainLayoutStructureItem();
-
-		request.setAttribute("render_layout_structure.jsp-childrenItemIds", layoutStructureItem.getChildrenItemIds());
+		PortletLayoutDisplayContext portletLayoutDisplayContext = (PortletLayoutDisplayContext)request.getAttribute(PortletLayoutTypeControllerWebKeys.PORTLET_LAYOUT_DISPLAY_CONTEXT);
 		%>
 
-		<liferay-util:include page="/layout/view/render_layout_structure.jsp" servletContext="<%= application %>" />
+		<liferay-layout:render-layout-structure
+			layoutStructure="<%= portletLayoutDisplayContext.getLayoutStructure(themeDisplay.getScopeGroupId(), themeDisplay.getLayout()) %>"
+		/>
 	</c:otherwise>
 </c:choose>
 

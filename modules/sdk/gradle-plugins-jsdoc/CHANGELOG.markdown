@@ -1,5 +1,123 @@
 # Liferay Gradle Plugins JSDoc Change Log
 
+## 2.0.65 - 2022-01-03
+
+### Dependencies
+- [LPS-144756] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.14.
+
+## 2.0.64 - 2022-01-03
+
+### Dependencies
+- [LPS-144575] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.13.
+
+## 2.0.63 - 2022-01-03
+
+### Dependencies
+- [LPS-144575] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.12.
+
+## 2.0.62 - 2021-12-29
+
+### Dependencies
+- [LPS-144575] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.11.
+
+## 2.0.61 - 2021-12-02
+
+### Commits
+- [LPS-142100] [LPS-141250] revert (eee87baefd)
+
+### Dependencies
+- [LPS-143280] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.10.
+- [LPS-142100 LPS-141250] Update the com.liferay.gradle.plugins.node dependency
+to version 7.2.9.
+- [LPS-142100] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.8.
+
+## 2.0.60 - 2021-05-24
+
+### Commits
+- [LPS-130505] Revert "LPS-130505 SF, no need to call methods" (d4477c5996)
+- [LPS-130505] SF, no need to call methods (54557cd107)
+
+### Dependencies
+- [LPS-106149] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.7.
+
+## 2.0.59 - 2021-03-29
+
+### Dependencies
+- [LPS-129858] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.6.
+
+## 2.0.58 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.5.
+- [LPS-105380 LPS-121824] Update the com.liferay.gradle.plugins.node dependency
+to version 7.2.4.
+
+## 2.0.57 - 2020-10-02
+
+### Dependencies
+- [LPS-105380] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.3.
+
+## 2.0.56 - 2020-10-01
+
+### Dependencies
+- [LPS-121567 LPS-105380] Update the com.liferay.gradle.plugins.node dependency
+to version 7.2.2.
+
+## 2.0.55 - 2020-08-17
+
+### Dependencies
+- [LPS-100168] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.1.
+
+## 2.0.54 - 2020-07-21
+
+### Dependencies
+- [LPS-105873] Update the com.liferay.gradle.plugins.node dependency to version
+7.2.0.
+
+## 2.0.53 - 2020-07-09
+
+### Dependencies
+- [LPS-116808] Update the com.liferay.gradle.plugins.node dependency to version
+7.1.2.
+- [LPS-116808] Update the com.liferay.gradle.plugins.node dependency to version
+7.1.1.
+
+## 2.0.52 - 2020-07-07
+
+### Dependencies
+- [LPS-105873] Update the com.liferay.gradle.plugins.node dependency to version
+7.1.0.
+
+## 2.0.51 - 2020-04-28
+
+### Dependencies
+- [LPS-110422] Update the com.liferay.gradle.plugins.node dependency to version
+7.0.5.
+
+## 2.0.50 - 2020-03-30
+
+### Dependencies
+- [LPS-111192] Update the com.liferay.gradle.plugins.node dependency to version
+7.0.4.
+
 ## 2.0.49 - 2020-03-17
 
 ### Dependencies
@@ -432,8 +550,23 @@ the same application.
 [LPS-102367]: https://issues.liferay.com/browse/LPS-102367
 [LPS-103580]: https://issues.liferay.com/browse/LPS-103580
 [LPS-104132]: https://issues.liferay.com/browse/LPS-104132
+[LPS-105380]: https://issues.liferay.com/browse/LPS-105380
+[LPS-105873]: https://issues.liferay.com/browse/LPS-105873
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
 [LPS-110486]: https://issues.liferay.com/browse/LPS-110486
+[LPS-111192]: https://issues.liferay.com/browse/LPS-111192
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-116808]: https://issues.liferay.com/browse/LPS-116808
+[LPS-121567]: https://issues.liferay.com/browse/LPS-121567
+[LPS-121824]: https://issues.liferay.com/browse/LPS-121824
+[LPS-129858]: https://issues.liferay.com/browse/LPS-129858
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-141250]: https://issues.liferay.com/browse/LPS-141250
+[LPS-142100]: https://issues.liferay.com/browse/LPS-142100
+[LPS-143280]: https://issues.liferay.com/browse/LPS-143280
+[LPS-144575]: https://issues.liferay.com/browse/LPS-144575
+[LPS-144756]: https://issues.liferay.com/browse/LPS-144756
 [LRDOCS-4111]: https://issues.liferay.com/browse/LRDOCS-4111
 [LRDOCS-6412]: https://issues.liferay.com/browse/LRDOCS-6412
 [LRQA-52072]: https://issues.liferay.com/browse/LRQA-52072

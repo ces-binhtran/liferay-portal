@@ -16,6 +16,7 @@ package com.liferay.portlet.announcements.service.base;
 
 import com.liferay.announcements.kernel.model.AnnouncementsDelivery;
 import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalService;
+import com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalServiceUtil;
 import com.liferay.announcements.kernel.service.persistence.AnnouncementsDeliveryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -38,13 +39,13 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -68,11 +69,15 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AnnouncementsDeliveryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.announcements.kernel.service.AnnouncementsDeliveryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AnnouncementsDeliveryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AnnouncementsDeliveryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the announcements delivery to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsDeliveryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param announcementsDelivery the announcements delivery
 	 * @return the announcements delivery that was added
@@ -102,6 +107,10 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	/**
 	 * Deletes the announcements delivery with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsDeliveryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param deliveryId the primary key of the announcements delivery
 	 * @return the announcements delivery that was removed
 	 * @throws PortalException if a announcements delivery with the primary key could not be found
@@ -117,6 +126,10 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	/**
 	 * Deletes the announcements delivery from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsDeliveryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param announcementsDelivery the announcements delivery
 	 * @return the announcements delivery that was removed
 	 */
@@ -131,6 +144,13 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return announcementsDeliveryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -288,6 +308,7 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -306,6 +327,7 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 			(AnnouncementsDelivery)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AnnouncementsDelivery> getBasePersistence() {
 		return announcementsDeliveryPersistence;
 	}
@@ -350,6 +372,10 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 
 	/**
 	 * Updates the announcements delivery in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsDeliveryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param announcementsDelivery the announcements delivery
 	 * @return the announcements delivery that was updated
@@ -431,73 +457,19 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.announcements.kernel.model.AnnouncementsDelivery",
 			announcementsDeliveryLocalService);
+
+		_setLocalServiceUtilService(announcementsDeliveryLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.announcements.kernel.model.AnnouncementsDelivery");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -543,6 +515,23 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AnnouncementsDeliveryLocalService announcementsDeliveryLocalService) {
+
+		try {
+			Field field =
+				AnnouncementsDeliveryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, announcementsDeliveryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = AnnouncementsDeliveryLocalService.class)
 	protected AnnouncementsDeliveryLocalService
 		announcementsDeliveryLocalService;
@@ -555,18 +544,6 @@ public abstract class AnnouncementsDeliveryLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

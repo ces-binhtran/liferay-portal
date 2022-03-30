@@ -14,17 +14,22 @@
 
 package com.liferay.headless.delivery.dto.v1_0;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,16 +51,24 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("NavigationMenu")
+@GraphQLName(
+	description = "Represents a navigation menu.", value = "NavigationMenu"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "NavigationMenu")
-public class NavigationMenu {
+public class NavigationMenu implements Serializable {
 
 	public static NavigationMenu toDTO(String json) {
 		return ObjectMapperUtil.readValue(NavigationMenu.class, json);
 	}
 
-	@Schema
+	public static NavigationMenu unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(NavigationMenu.class, json);
+	}
+
+	@Schema(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@Valid
 	public Map<String, Map<String, String>> getActions() {
 		return actions;
@@ -81,11 +94,13 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "Block of actions allowed by the user making the request."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
 
-	@Schema
+	@Schema(description = "The navigation menu's creator.")
 	@Valid
 	public Creator getCreator() {
 		return creator;
@@ -110,11 +125,11 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(description = "The navigation menu's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -138,11 +153,11 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema
+	@Schema(description = "The last time the navigation menu changed.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -166,11 +181,11 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The last time the navigation menu changed.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema
+	@Schema(description = "The navigation menu's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -192,11 +207,11 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long id;
 
-	@Schema
+	@Schema(description = "The navigation menu's name.")
 	public String getName() {
 		return name;
 	}
@@ -218,11 +233,13 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(
+		description = "The list of navigation menu items this navigation menu has."
+	)
 	@Valid
 	public NavigationMenuItem[] getNavigationMenuItems() {
 		return navigationMenuItems;
@@ -250,11 +267,58 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The list of navigation menu items this navigation menu has."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected NavigationMenuItem[] navigationMenuItems;
 
-	@Schema
+	@Schema(
+		description = "The navigation menu's type (primary, secondary, social)."
+	)
+	@Valid
+	public NavigationType getNavigationType() {
+		return navigationType;
+	}
+
+	@JsonIgnore
+	public String getNavigationTypeAsString() {
+		if (navigationType == null) {
+			return null;
+		}
+
+		return navigationType.toString();
+	}
+
+	public void setNavigationType(NavigationType navigationType) {
+		this.navigationType = navigationType;
+	}
+
+	@JsonIgnore
+	public void setNavigationType(
+		UnsafeSupplier<NavigationType, Exception>
+			navigationTypeUnsafeSupplier) {
+
+		try {
+			navigationType = navigationTypeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The navigation menu's type (primary, secondary, social)."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected NavigationType navigationType;
+
+	@Schema(
+		description = "The ID of the site to which this navigation menu is scoped."
+	)
 	public Long getSiteId() {
 		return siteId;
 	}
@@ -278,7 +342,9 @@ public class NavigationMenu {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The ID of the site to which this navigation menu is scoped."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long siteId;
 
@@ -404,6 +470,20 @@ public class NavigationMenu {
 			sb.append("]");
 		}
 
+		if (navigationType != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"navigationType\": ");
+
+			sb.append("\"");
+
+			sb.append(navigationType);
+
+			sb.append("\"");
+		}
+
 		if (siteId != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -420,15 +500,64 @@ public class NavigationMenu {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.NavigationMenu",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
-	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+	@GraphQLName("NavigationType")
+	public static enum NavigationType {
 
-		return string.replaceAll("\"", "\\\\\"");
+		PRIMARY("Primary"), SECONDARY("Secondary"), SOCIAL("Social");
+
+		@JsonCreator
+		public static NavigationType create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
+			for (NavigationType navigationType : values()) {
+				if (Objects.equals(navigationType.getValue(), value)) {
+					return navigationType;
+				}
+			}
+
+			throw new IllegalArgumentException("Invalid enum value: " + value);
+		}
+
+		@JsonValue
+		public String getValue() {
+			return _value;
+		}
+
+		@Override
+		public String toString() {
+			return _value;
+		}
+
+		private NavigationType(String value) {
+			_value = value;
+		}
+
+		private final String _value;
+
+	}
+
+	private static String _escape(Object object) {
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
+
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -444,14 +573,12 @@ public class NavigationMenu {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -478,7 +605,7 @@ public class NavigationMenu {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -486,7 +613,7 @@ public class NavigationMenu {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -494,5 +621,10 @@ public class NavigationMenu {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

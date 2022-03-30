@@ -19,15 +19,19 @@
 <%
 String tabs2 = ParamUtil.getString(request, "tabs2", "export");
 
-String redirect = ParamUtil.getString(request, "redirect");
 String returnToFullPageURL = ParamUtil.getString(request, "returnToFullPageURL");
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "exportImport");
-portletURL.setParameter("redirect", redirect);
-portletURL.setParameter("returnToFullPageURL", returnToFullPageURL);
-portletURL.setParameter("portletResource", portletResource);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	"/export_import/export_import"
+).setRedirect(
+	ParamUtil.getString(request, "redirect")
+).setPortletResource(
+	portletResource
+).setParameter(
+	"returnToFullPageURL", returnToFullPageURL
+).buildPortletURL();
 %>
 
 <c:choose>
@@ -47,9 +51,8 @@ portletURL.setParameter("portletResource", portletResource);
 							navigationItem -> {
 								navigationItem.setActive(tabs2.equals("export"));
 								navigationItem.setHref(portletURL.toString());
-								navigationItem.setLabel(LanguageUtil.get(request, "export"));
-							}
-						);
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "export"));
+							});
 
 						portletURL.setParameter("tabs2", "import");
 
@@ -57,9 +60,8 @@ portletURL.setParameter("portletResource", portletResource);
 							navigationItem -> {
 								navigationItem.setActive(tabs2.equals("import"));
 								navigationItem.setHref(portletURL.toString());
-								navigationItem.setLabel(LanguageUtil.get(request, "import"));
-							}
-						);
+								navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "import"));
+							});
 					}
 				}
 			%>'

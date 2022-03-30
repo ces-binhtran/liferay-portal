@@ -17,9 +17,8 @@ package com.liferay.portal.properties.swapper.internal;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.model.Account;
 import com.liferay.portal.kernel.model.Company;
-import com.liferay.portal.kernel.service.AccountLocalService;
+import com.liferay.portal.kernel.module.framework.ModuleServiceLifecycle;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
@@ -55,7 +54,7 @@ public class DefaultCompanyNameSwapper {
 			if (!_hasCustomCompanyName(
 					defaultCompany, originalCompanyDefaultName)) {
 
-				_updateCompanyName(defaultCompany);
+				defaultCompany = _updateCompanyName(defaultCompany);
 			}
 
 			if (!Objects.equals(
@@ -92,31 +91,19 @@ public class DefaultCompanyNameSwapper {
 		return false;
 	}
 
-	private void _updateCompanyName(Company company) {
-		try {
-			Account account = _accountLocalService.getAccount(
-				company.getAccountId());
+	private Company _updateCompanyName(Company company) {
+		company.setName(PropsValues.COMPANY_DEFAULT_NAME);
 
-			account.setName(PropsValues.COMPANY_DEFAULT_NAME);
-
-			_accountLocalService.updateAccount(account);
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(
-					"Unable to swap default company name for " + company,
-					portalException);
-			}
-		}
+		return _companyLocalService.updateCompany(company);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DefaultCompanyNameSwapper.class);
 
 	@Reference
-	private AccountLocalService _accountLocalService;
-
-	@Reference
 	private CompanyLocalService _companyLocalService;
+
+	@Reference(target = ModuleServiceLifecycle.PORTLETS_INITIALIZED)
+	private ModuleServiceLifecycle _moduleServiceLifecycle;
 
 }

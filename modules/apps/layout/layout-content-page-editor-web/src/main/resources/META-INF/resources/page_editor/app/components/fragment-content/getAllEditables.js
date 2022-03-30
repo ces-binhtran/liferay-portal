@@ -40,8 +40,11 @@ export default function getAllEditables(fragmentElement) {
 				editableId,
 				editableValueNamespace: EDITABLE_FRAGMENT_ENTRY_PROCESSOR,
 				element: fragmentElement.querySelector(
-					`lfr-editable#${editableId}`
+					`lfr-editable[id="${editableId}"]`
 				),
+				priority:
+					parseInt(editableElement.dataset.lfrPriority, 10) ||
+					Infinity,
 				processor: Processors[type] || Processors.fallback,
 				type,
 			};
@@ -59,6 +62,9 @@ export default function getAllEditables(fragmentElement) {
 				element: fragmentElement.querySelector(
 					`[data-lfr-editable-id="${editableId}"]`
 				),
+				priority:
+					parseInt(editableElement.dataset.lfrPriority, 10) ||
+					Infinity,
 				processor: Processors[type] || Processors.fallback,
 				type,
 			};
@@ -77,6 +83,9 @@ export default function getAllEditables(fragmentElement) {
 				element: fragmentElement.querySelector(
 					`[data-lfr-background-image-id="${editableId}"]`
 				),
+				priority:
+					parseInt(editableElement.dataset.lfrPriority, 10) ||
+					Infinity,
 				processor: Processors['background-image'],
 				type: 'background-image',
 			};

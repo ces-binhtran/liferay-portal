@@ -18,14 +18,15 @@ import com.liferay.fragment.exception.FragmentEntryConfigurationException;
 import com.liferay.fragment.validator.FragmentEntryValidator;
 import com.liferay.petra.json.validator.JSONValidator;
 import com.liferay.petra.json.validator.JSONValidatorException;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Validator;
-
-import java.io.InputStream;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -55,13 +56,8 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 			return;
 		}
 
-		InputStream configurationJSONSchemaInputStream =
-			FragmentEntryValidatorImpl.class.getResourceAsStream(
-				"dependencies/configuration-json-schema.json");
-
 		try {
-			JSONValidator.validate(
-				configuration, configurationJSONSchemaInputStream);
+			_jsonValidator.validate(configuration);
 
 			JSONObject configurationJSONObject =
 				JSONFactoryUtil.createJSONObject(configuration);
@@ -132,11 +128,12 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 		}
 		catch (JSONException jsonException) {
 			throw new FragmentEntryConfigurationException(
-				jsonException.getMessage(), jsonException);
+				_getMessage(jsonException.getMessage()), jsonException);
 		}
 		catch (JSONValidatorException jsonValidatorException) {
 			throw new FragmentEntryConfigurationException(
-				jsonValidatorException.getMessage(), jsonValidatorException);
+				_getMessage(jsonValidatorException.getMessage()),
+				jsonValidatorException);
 		}
 	}
 
@@ -187,5 +184,16 @@ public class FragmentEntryValidatorImpl implements FragmentEntryValidator {
 
 		return false;
 	}
+
+	private String _getMessage(String message) {
+		return StringBundler.concat(
+			LanguageUtil.get(
+				LocaleUtil.getDefault(), "fragment-configuration-is-invalid"),
+			System.lineSeparator(), message);
+	}
+
+	private static final JSONValidator _jsonValidator = new JSONValidator(
+		FragmentEntryValidatorImpl.class.getResourceAsStream(
+			"dependencies/configuration-json-schema.json"));
 
 }

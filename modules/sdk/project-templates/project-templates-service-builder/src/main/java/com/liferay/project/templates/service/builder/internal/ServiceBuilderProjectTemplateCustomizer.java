@@ -16,6 +16,8 @@ package com.liferay.project.templates.service.builder.internal;
 
 import com.liferay.project.templates.extensions.ProjectTemplateCustomizer;
 import com.liferay.project.templates.extensions.ProjectTemplatesArgs;
+import com.liferay.project.templates.extensions.util.FileUtil;
+import com.liferay.project.templates.extensions.util.VersionUtil;
 import com.liferay.project.templates.extensions.util.WorkspaceUtil;
 
 import java.io.File;
@@ -43,6 +45,40 @@ public class ServiceBuilderProjectTemplateCustomizer
 			ProjectTemplatesArgs projectTemplatesArgs, File destinationDir,
 			ArchetypeGenerationResult archetypeGenerationResult)
 		throws Exception {
+
+		ServiceBuilderProjectTemplatesArgs serviceBuilderProjectTemplatesArgs =
+			(ServiceBuilderProjectTemplatesArgs)
+				projectTemplatesArgs.getProjectTemplatesArgsExt();
+
+		String addOns = serviceBuilderProjectTemplatesArgs.getAddOns();
+
+		Path destinationDirPath = destinationDir.toPath();
+
+		Path projectPath = destinationDirPath.resolve(
+			projectTemplatesArgs.getName());
+
+		File projectDir = projectPath.toFile();
+
+		String artifactId = projectTemplatesArgs.getName();
+
+		if (addOns.equals("false")) {
+			File uadDir = new File(projectDir, artifactId + "-uad");
+
+			FileUtil.deleteDir(uadDir.toPath());
+		}
+
+		File serviceDir = new File(projectDir, artifactId + "-service");
+
+		File serviceXMLFile = new File(serviceDir, "service.xml");
+
+		String minorVersionString = String.valueOf(
+			VersionUtil.getMinorVersion(
+				projectTemplatesArgs.getLiferayVersion()));
+
+		FileUtil.replaceString(
+			serviceXMLFile, "7.0", "7." + minorVersionString);
+		FileUtil.replaceString(
+			serviceXMLFile, "7_0", "7_" + minorVersionString);
 	}
 
 	@Override
@@ -72,7 +108,12 @@ public class ServiceBuilderProjectTemplateCustomizer
 
 			relativePath = relativePath.replace(File.separatorChar, ':');
 
-			apiPath = ":" + relativePath + ":" + artifactId + apiPath;
+			if (relativePath.isEmpty()) {
+				apiPath = ":" + artifactId + apiPath;
+			}
+			else {
+				apiPath = ":" + relativePath + ":" + artifactId + apiPath;
+			}
 		}
 
 		Properties properties = archetypeGenerationRequest.getProperties();
@@ -83,6 +124,21 @@ public class ServiceBuilderProjectTemplateCustomizer
 			(ServiceBuilderProjectTemplatesArgs)
 				projectTemplatesArgs.getProjectTemplatesArgsExt();
 
+		String addOns = serviceBuilderProjectTemplatesArgs.getAddOns();
+
+		String liferayVersion = projectTemplatesArgs.getLiferayVersion();
+
+		if (addOns.equals("true") &&
+			(liferayVersion.startsWith("7.0") ||
+			 liferayVersion.startsWith("7.1"))) {
+
+			throw new IllegalArgumentException(
+				"Add Ons are not supported in 7.0 or 7.1");
+		}
+
+		setProperty(
+			properties, "addOns",
+			serviceBuilderProjectTemplatesArgs.getAddOns());
 		setProperty(
 			properties, "dependencyInjector",
 			serviceBuilderProjectTemplatesArgs.getDependencyInjector());

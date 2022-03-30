@@ -21,6 +21,7 @@ import com.liferay.dynamic.data.mapping.kernel.DDMFormValues;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -50,6 +51,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +67,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see DLFileEntryLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -77,11 +80,15 @@ public interface DLFileEntryLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DLFileEntryLocalServiceUtil} to access the document library file entry local service. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the document library file entry local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DLFileEntryLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the document library file entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntry the document library file entry
 	 * @return the document library file entry that was added
@@ -90,15 +97,19 @@ public interface DLFileEntryLocalService
 	public DLFileEntry addDLFileEntry(DLFileEntry dlFileEntry);
 
 	public DLFileEntry addFileEntry(
-			long userId, long groupId, long repositoryId, long folderId,
-			String sourceFileName, String mimeType, String title,
-			String description, String changeLog, long fileEntryTypeId,
+			String externalReferenceCode, long userId, long groupId,
+			long repositoryId, long folderId, String sourceFileName,
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, long fileEntryTypeId,
 			Map<String, DDMFormValues> ddmFormValuesMap, File file,
-			InputStream is, long size, ServiceContext serviceContext)
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DLFileVersion cancelCheckOut(long userId, long fileEntryId)
 		throws PortalException;
+
+	public void checkFileEntries(long checkInterval) throws PortalException;
 
 	public void checkInFileEntry(
 			long userId, long fileEntryId,
@@ -161,6 +172,10 @@ public interface DLFileEntryLocalService
 	/**
 	 * Deletes the document library file entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntry the document library file entry
 	 * @return the document library file entry that was removed
 	 */
@@ -169,6 +184,10 @@ public interface DLFileEntryLocalService
 
 	/**
 	 * Deletes the document library file entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fileEntryId the primary key of the document library file entry
 	 * @return the document library file entry that was removed
@@ -224,6 +243,9 @@ public interface DLFileEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -295,6 +317,25 @@ public interface DLFileEntryLocalService
 	public DLFileEntry fetchDLFileEntry(long fileEntryId);
 
 	/**
+	 * Returns the document library file entry with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the document library file entry's external reference code
+	 * @return the matching document library file entry, or <code>null</code> if a matching document library file entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry fetchDLFileEntryByExternalReferenceCode(
+		long groupId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchDLFileEntryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry fetchDLFileEntryByReferenceCode(
+		long groupId, String externalReferenceCode);
+
+	/**
 	 * Returns the document library file entry matching the UUID and group.
 	 *
 	 * @param uuid the document library file entry's UUID
@@ -314,6 +355,10 @@ public interface DLFileEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntry fetchFileEntryByAnyImageId(long imageId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry fetchFileEntryByExternalReferenceCode(
+		long groupId, String externalReferenceCode);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntry fetchFileEntryByFileName(
@@ -392,6 +437,19 @@ public interface DLFileEntryLocalService
 	public DLFileEntry getDLFileEntry(long fileEntryId) throws PortalException;
 
 	/**
+	 * Returns the document library file entry with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the document library file entry's external reference code
+	 * @return the matching document library file entry
+	 * @throws PortalException if a matching document library file entry could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry getDLFileEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	/**
 	 * Returns the document library file entry matching the UUID and group.
 	 *
 	 * @param uuid the document library file entry's UUID
@@ -437,12 +495,12 @@ public interface DLFileEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 		long groupId, long folderId, int status, int start, int end,
-		OrderByComparator<DLFileEntry> obc);
+		OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
 		long groupId, long folderId, int start, int end,
-		OrderByComparator<DLFileEntry> obc);
+		OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getFileEntries(
@@ -486,6 +544,16 @@ public interface DLFileEntryLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry getFileEntryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntry getFileEntryByFileName(
+			long groupId, long folderId, String fileName)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntry getFileEntryByName(
 			long groupId, long folderId, String name)
 		throws PortalException;
@@ -500,7 +568,8 @@ public interface DLFileEntryLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
-		long groupId, int start, int end, OrderByComparator<DLFileEntry> obc);
+		long groupId, int start, int end,
+		OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
@@ -509,17 +578,17 @@ public interface DLFileEntryLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, int start, int end,
-		OrderByComparator<DLFileEntry> obc);
+		OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long rootFolderId, int start, int end,
-		OrderByComparator<DLFileEntry> obc);
+		OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntry> getGroupFileEntries(
 		long groupId, long userId, long repositoryId, long rootFolderId,
-		int start, int end, OrderByComparator<DLFileEntry> obc);
+		int start, int end, OrderByComparator<DLFileEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupFileEntriesCount(long groupId);
@@ -614,6 +683,10 @@ public interface DLFileEntryLocalService
 	/**
 	 * Updates the document library file entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntry the document library file entry
 	 * @return the document library file entry that was updated
 	 */
@@ -622,18 +695,16 @@ public interface DLFileEntryLocalService
 
 	public DLFileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease,
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
 			long fileEntryTypeId, Map<String, DDMFormValues> ddmFormValuesMap,
-			File file, InputStream is, long size, ServiceContext serviceContext)
+			File file, InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException;
 
 	public DLFileEntry updateFileEntryType(
 			long userId, long fileEntryId, long fileEntryTypeId,
 			ServiceContext serviceContext)
-		throws PortalException;
-
-	public void updateSmallImage(long smallImageId, long largeImageId)
 		throws PortalException;
 
 	public DLFileEntry updateStatus(

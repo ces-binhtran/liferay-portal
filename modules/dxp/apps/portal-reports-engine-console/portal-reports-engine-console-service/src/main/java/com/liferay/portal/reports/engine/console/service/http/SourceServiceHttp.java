@@ -46,7 +46,6 @@ import com.liferay.portal.reports.engine.console.service.SourceServiceUtil;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see SourceServiceSoap
  * @generated
  */
 public class SourceServiceHttp {
@@ -185,7 +184,8 @@ public class SourceServiceHttp {
 				HttpPrincipal httpPrincipal, long groupId, String name,
 				String driverUrl, boolean andSearch, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					orderByComparator)
+					<com.liferay.portal.reports.engine.console.model.Source>
+						orderByComparator)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {

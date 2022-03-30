@@ -34,7 +34,7 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 
 <clay:container-fluid>
 	<div class="site-pages-variation taglib-header">
-		<a class="icon-monospaced list-unstyled portlet-icon-back text-default" href="<%= HtmlUtil.escapeAttribute(redirect) %>" title='<%= HtmlUtil.escapeAttribute(LanguageUtil.get(resourceBundle, "back")) %>'>
+		<a class="icon-monospaced list-unstyled portlet-icon-back text-default" href="<%= HtmlUtil.escapeAttribute(redirect) %>" title="<%= HtmlUtil.escapeAttribute(LanguageUtil.get(resourceBundle, "back")) %>">
 			<liferay-ui:icon
 				icon="angle-left"
 				markupView="lexicon"
@@ -49,8 +49,8 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 	</div>
 
 	<div id="<portlet:namespace />mergeLayoutSetBranch">
-		<portlet:actionURL name="mergeLayoutSetBranch" var="mergeLayoutSetBranchURL">
-			<portlet:param name="mvcRenderCommandName" value="viewLayoutSetBranches" />
+		<portlet:actionURL name="/staging_bar/merge_layout_set_branch" var="mergeLayoutSetBranchURL">
+			<portlet:param name="mvcRenderCommandName" value="/staging_bar/view_layout_set_branches" />
 		</portlet:actionURL>
 
 		<aui:form action="<%= mergeLayoutSetBranchURL %>" enctype="multipart/form-data" method="post" name="fm4">
@@ -86,7 +86,7 @@ if (layoutSetBranches.contains(layoutSetBranch)) {
 					/>
 
 					<liferay-ui:search-container-column-text>
-						<a class="layout-set-branch" data-layoutSetBranchId="<%= curLayoutSetBranchId %>" data-layoutSetBranchMessage='<%= LanguageUtil.format(request, "are-you-sure-you-want-to-merge-changes-from-x", layoutSetBranchDisplayName, false) %>' data-layoutSetBranchName="<%= HtmlUtil.escapeAttribute(curLayoutSetBranch.getName()) %>" href="#" id="<portlet:namespace /><%= curLayoutSetBranchId %>" onClick="<portlet:namespace />selectLayoutSetBranch('<%= curLayoutSetBranchId %>');">
+						<a class="layout-set-branch" data-layoutSetBranchId="<%= curLayoutSetBranchId %>" data-layoutSetBranchMessage="<%= LanguageUtil.format(request, "are-you-sure-you-want-to-merge-changes-from-x", layoutSetBranchDisplayName, false) %>" data-layoutSetBranchName="<%= HtmlUtil.escapeAttribute(curLayoutSetBranch.getName()) %>" href="#" id="<portlet:namespace /><%= curLayoutSetBranchId %>" onClick="<portlet:namespace />selectLayoutSetBranch('<%= curLayoutSetBranchId %>');">
 							<liferay-ui:message key="select" />
 						</a>
 					</liferay-ui:search-container-column-text>

@@ -26,16 +26,16 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + StagingProcessesPortletKeys.STAGING_PROCESSES,
-		"mvc.command.name=viewPublishConfigurations"
+		"mvc.command.name=/staging_processes/view_publish_configurations"
 	},
 	service = MVCRenderCommand.class
 )
 public class ViewPublishConfigurationsMVCRenderCommand
-	extends GetGroupMVCRenderCommand {
+	extends BaseGroupMVCRenderCommand {
 
 	@Override
 	protected String getPath() {
-		return "/publish_templates/view.jsp";
+		return "/publish_templates/view_publish_configurations.jsp";
 	}
 
 }

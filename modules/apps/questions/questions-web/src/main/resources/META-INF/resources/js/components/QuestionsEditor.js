@@ -12,8 +12,8 @@
  * details.
  */
 
+import {useEventListener} from '@liferay/frontend-js-react-web';
 import {Editor} from 'frontend-editor-ckeditor-web';
-import {useEventListener} from 'frontend-js-react-web';
 import {isPhone, isTablet} from 'frontend-js-web';
 import React, {useContext, useEffect, useMemo, useRef, useState} from 'react';
 
@@ -33,10 +33,16 @@ const getToolbarSet = (toolbarSet) => {
 export function getCKEditorConfig() {
 	const config = {
 		allowedContent: true,
+		codeSnippet_languages: {
+			html: 'HTML',
+			java: 'Java',
+			javascript: 'JavaScript',
+		},
 		codeSnippet_theme: 'monokai_sublime',
 		extraPlugins: 'codesnippet,itemselector',
 		height: 216,
 		removePlugins: 'elementspath',
+		tabSpaces: 4,
 	};
 
 	config.toolbar = [
@@ -66,14 +72,18 @@ const QuestionsEditor = ({
 
 	const [toolbarSet, setToolbarSet] = useState(initialToolbarSet);
 
-	const config = useMemo(
-		() => ({
+	const config = useMemo(() => {
+		const CKEditorConfig = getCKEditorConfig();
+		if (editorConfig.readOnly) {
+			CKEditorConfig.toolbar.pop('Source');
+		}
+
+		return {
 			toolbar: toolbarSet,
-			...getCKEditorConfig(),
+			...CKEditorConfig,
 			...editorConfig,
-		}),
-		[editorConfig, toolbarSet]
-	);
+		};
+	}, [editorConfig, toolbarSet]);
 
 	useEffect(() => {
 		setToolbarSet(getToolbarSet(initialToolbarSet));
@@ -86,6 +96,34 @@ const QuestionsEditor = ({
 		window
 	);
 
+	const insertTextAtCursor = (element, text) => {
+		const val = element.value;
+		let endIndex;
+		let range;
+		if (
+			typeof element.selectionStart !== 'undefined' &&
+			typeof element.selectionEnd !== 'undefined'
+		) {
+			endIndex = element.selectionEnd;
+			element.value =
+				val.slice(0, element.selectionStart) +
+				text +
+				val.slice(endIndex);
+			element.selectionStart = element.selectionEnd =
+				endIndex + text.length;
+		}
+		else if (
+			typeof document.selection !== 'undefined' &&
+			typeof document.selection.createRange !== 'undefined'
+		) {
+			element.focus();
+			range = document.selection.createRange();
+			range.collapse(false);
+			range.text = text;
+			range.select();
+		}
+	};
+
 	return (
 		<div className={cssClass} id={`${name}Container`}>
 			<Editor
@@ -96,19 +134,51 @@ const QuestionsEditor = ({
 				onBeforeLoad={(CKEDITOR) => {
 					if (CKEDITOR) {
 						CKEDITOR.disableAutoInline = true;
+
+						if (!CKEDITOR.plugins.externals) {
+							CKEDITOR.plugins.addExternal(
+								'tab',
+								'/plugins/tab/plugin.js'
+							);
+						}
+
 						CKEDITOR.getNextZIndex = () => 1000;
 						CKEDITOR.dtd.$removeEmpty.i = 0;
 						CKEDITOR.dtd.$removeEmpty.span = 0;
 
 						CKEDITOR.on('instanceCreated', ({editor}) => {
-							editor.name = name;
-
 							if (context.imageBrowseURL) {
 								editor.config.filebrowserImageBrowseUrl = context.imageBrowseURL.replace(
 									'EDITOR_NAME_',
-									name
+									editor.name
 								);
 							}
+
+							editor.on('dialogShow', ({data}) => {
+								if (data._.name === 'codeSnippet') {
+									const {code, lang} = data._.contents.info;
+
+									document.getElementById(
+										lang._.inputId
+									).value = 'java';
+
+									const textarea = document.getElementById(
+										code._.inputId
+									);
+									textarea.onkeydown = (ev) => {
+										if (ev.keyCode === 9) {
+											insertTextAtCursor(
+												textarea,
+												'    '
+											);
+											ev.preventDefault();
+											ev.stopPropagation();
+
+											return false;
+										}
+									};
+								}
+							});
 						});
 					}
 				}}

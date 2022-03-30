@@ -85,11 +85,11 @@ renderResponse.setTitle(title);
 
 		<liferay-ui:error exception="<%= FolderNameException.class %>">
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.NAME_RESERVED_WORDS} %>" key="the-folder-name-cannot-be-blank-or-a-reserved-word-such-as-x" />
+				<liferay-ui:message arguments="<%= JournalFolderConstants.NAME_RESERVED_WORDS %>" key="the-folder-name-cannot-be-blank-or-a-reserved-word-such-as-x" />
 			</p>
 
 			<p>
-				<liferay-ui:message arguments="<%= new String[] {JournalFolderConstants.getNameInvalidCharacters(journalDisplayContext.getCharactersBlacklist())} %>" key="the-folder-name-cannot-contain-the-following-invalid-characters-x" />
+				<liferay-ui:message arguments="<%= JournalFolderConstants.getNameInvalidCharacters(journalDisplayContext.getCharactersBlacklist()) %>" key="the-folder-name-cannot-contain-the-following-invalid-characters-x" />
 			</p>
 		</liferay-ui:error>
 
@@ -149,34 +149,14 @@ renderResponse.setTitle(title);
 
 						<aui:button name="selectFolderButton" value="select" />
 
-						<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+						<aui:script sandbox="<%= true %>">
 							var selectFolderButton = document.getElementById(
 								'<portlet:namespace />selectFolderButton'
 							);
 
-							if (selectFolderButton) {
-								selectFolderButton.addEventListener('click', function (event) {
-									event.preventDefault();
-
-									var itemSelectorDialog = new ItemSelectorDialog.default({
-										eventName: '<portlet:namespace />selectFolder',
-										singleSelect: true,
-										title: '<liferay-ui:message arguments="folder" key="select-x" />',
-
-										<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-											<portlet:param name="mvcPath" value="/select_folder.jsp" />
-											<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
-											<portlet:param name="parentFolderId" value="<%= String.valueOf(parentFolderId) %>" />
-										</portlet:renderURL>
-
-										url: '<%= selectFolderURL.toString() %>',
-									});
-
-									itemSelectorDialog.open();
-
-									itemSelectorDialog.on('selectedItemChange', function (event) {
-										var selectedItem = event.selectedItem;
-
+							selectFolderButton.addEventListener('click', (event) => {
+								Liferay.Util.openSelectionModal({
+									onSelect: function (selectedItem) {
 										if (selectedItem) {
 											var folderData = {
 												idString: 'parentFolderId',
@@ -187,13 +167,23 @@ renderResponse.setTitle(title);
 
 											Liferay.Util.selectFolder(folderData, '<portlet:namespace />');
 										}
-									});
+									},
+									selectEventName: '<portlet:namespace />selectFolder',
+									title: '<liferay-ui:message arguments="folder" key="select-x" />',
+
+									<portlet:renderURL var="selectFolderURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+										<portlet:param name="mvcPath" value="/select_folder.jsp" />
+										<portlet:param name="folderId" value="<%= String.valueOf(folderId) %>" />
+										<portlet:param name="parentFolderId" value="<%= String.valueOf(parentFolderId) %>" />
+									</portlet:renderURL>
+
+									url: '<%= selectFolderURL.toString() %>',
 								});
-							}
+							});
 						</aui:script>
 
 						<%
-						String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentFolderId', 'parentFolderName', this, '" + renderResponse.getNamespace() + "');";
+						String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentFolderId', 'parentFolderName', this, '" + liferayPortletResponse.getNamespace() + "');";
 						%>
 
 						<aui:button disabled="<%= parentFolderId <= 0 %>" name="removeFolderButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
@@ -239,7 +229,7 @@ renderResponse.setTitle(title);
 
 						<aui:input checked="<%= folder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW %>" id="restrictionTypeDefined" label='<%= workflowEnabled ? LanguageUtil.format(request, "define-specific-structure-restrictions-and-workflow-for-this-folder-x", HtmlUtil.escape(folder.getName())) : LanguageUtil.format(request, "define-specific-structure-restrictions-for-this-folder-x", HtmlUtil.escape(folder.getName())) %>' name="restrictionType" type="radio" value="<%= JournalFolderConstants.RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW %>" />
 
-						<div class='<%= (folder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />restrictionTypeDefinedDiv">
+						<div class="<%= (folder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_DDM_STRUCTURES_AND_WORKFLOW) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />restrictionTypeDefinedDiv">
 							<liferay-ui:search-container
 								headerNames="<%= headerNames %>"
 								total="<%= ddmStructures.size() %>"
@@ -313,7 +303,7 @@ renderResponse.setTitle(title);
 							</c:otherwise>
 						</c:choose>
 
-						<div class='<%= (rootFolder || (folder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_WORKFLOW)) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />restrictionTypeWorkflowDiv">
+						<div class="<%= (rootFolder || (folder.getRestrictionType() == JournalFolderConstants.RESTRICTION_TYPE_WORKFLOW)) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />restrictionTypeWorkflowDiv">
 							<aui:select label='<%= rootFolder ? "default-workflow-for-all-structures" : StringPool.BLANK %>' name='<%= "workflowDefinition" + JournalArticleConstants.DDM_STRUCTURE_ID_ALL %>'>
 								<aui:option label="no-workflow" value="" />
 
@@ -392,8 +382,8 @@ renderResponse.setTitle(title);
 	);
 
 	if (selectDDMStructureButton) {
-		selectDDMStructureButton.addEventListener('click', function (event) {
-			Liferay.Util.openModal({
+		selectDDMStructureButton.addEventListener('click', (event) => {
+			Liferay.Util.openSelectionModal({
 				onSelect: function (selectedItem) {
 					var ddmStructureLink =
 						'<a class="modify-link" data-rowId="' +
@@ -435,7 +425,7 @@ renderResponse.setTitle(title);
 
 	searchContainer.get('contentBox').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			var link = event.currentTarget;
 
 			var tr = link.ancestor('tr');

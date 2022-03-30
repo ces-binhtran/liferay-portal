@@ -14,7 +14,9 @@
 
 package com.liferay.comment.web.internal.notifications;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.comment.web.internal.constants.CommentPortletKeys;
 import com.liferay.message.boards.model.MBDiscussion;
 import com.liferay.message.boards.service.MBDiscussionLocalService;
@@ -50,34 +52,36 @@ public class CommentUserNotificationHandler
 		setPortletId(CommentPortletKeys.COMMENT);
 	}
 
-	protected MBDiscussion fetchDiscussion(JSONObject jsonObject) {
-		long classPK = jsonObject.getLong("classPK");
-
-		try {
-			return _mbDiscussionLocalService.fetchDiscussion(classPK);
-		}
-		catch (SystemException systemException) {
-
-			// LPS-52675
-
-			if (_log.isDebugEnabled()) {
-				_log.debug(systemException, systemException);
-			}
-
-			return null;
-		}
-	}
-
 	@Override
 	protected AssetRenderer<?> getAssetRenderer(JSONObject jsonObject) {
-		MBDiscussion mbDiscussion = fetchDiscussion(jsonObject);
+		MBDiscussion mbDiscussion = _fetchDiscussion(jsonObject);
 
 		if (mbDiscussion == null) {
 			return null;
 		}
 
-		return getAssetRenderer(
+		AssetRenderer<?> assetRenderer = getAssetRenderer(
 			mbDiscussion.getClassName(), mbDiscussion.getClassPK());
+
+		if (assetRenderer == null) {
+			try {
+				AssetRendererFactory<?> assetRendererFactory =
+					AssetRendererFactoryRegistryUtil.
+						getAssetRendererFactoryByClassName(
+							mbDiscussion.getClassName());
+
+				assetRenderer = assetRendererFactory.getAssetRenderer(
+					mbDiscussion.getClassPK(),
+					AssetRendererFactory.TYPE_LATEST);
+			}
+			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+			}
+		}
+
+		return assetRenderer;
 	}
 
 	@Override
@@ -90,7 +94,7 @@ public class CommentUserNotificationHandler
 		JSONObject jsonObject, AssetRenderer<?> assetRenderer,
 		ServiceContext serviceContext) {
 
-		MBDiscussion mbDiscussion = fetchDiscussion(jsonObject);
+		MBDiscussion mbDiscussion = _fetchDiscussion(jsonObject);
 
 		if (mbDiscussion == null) {
 			return null;
@@ -145,6 +149,24 @@ public class CommentUserNotificationHandler
 		}
 
 		return message;
+	}
+
+	private MBDiscussion _fetchDiscussion(JSONObject jsonObject) {
+		long classPK = jsonObject.getLong("classPK");
+
+		try {
+			return _mbDiscussionLocalService.fetchDiscussion(classPK);
+		}
+		catch (SystemException systemException) {
+
+			// LPS-52675
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(systemException);
+			}
+
+			return null;
+		}
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

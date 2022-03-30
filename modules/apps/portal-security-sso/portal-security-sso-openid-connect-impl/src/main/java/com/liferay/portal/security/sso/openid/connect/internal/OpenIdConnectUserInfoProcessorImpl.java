@@ -43,7 +43,9 @@ public class OpenIdConnectUserInfoProcessorImpl
 	implements OpenIdConnectUserInfoProcessor {
 
 	@Override
-	public long processUserInfo(UserInfo userInfo, long companyId)
+	public long processUserInfo(
+			UserInfo userInfo, long companyId, String mainPath,
+			String portalURL)
 		throws PortalException {
 
 		String emailAddress = userInfo.getEmailAddress();
@@ -55,7 +57,7 @@ public class OpenIdConnectUserInfoProcessorImpl
 			return user.getUserId();
 		}
 
-		checkAddUser(companyId, emailAddress);
+		_checkAddUser(companyId, emailAddress);
 
 		String firstName = userInfo.getGivenName();
 		String lastName = userInfo.getFamilyName();
@@ -63,20 +65,12 @@ public class OpenIdConnectUserInfoProcessorImpl
 		if (Validator.isNull(firstName) || Validator.isNull(lastName) ||
 			Validator.isNull(emailAddress)) {
 
-			StringBundler sb = new StringBundler(9);
-
-			sb.append("Unable to map OpenId Connect user to the portal, ");
-			sb.append("missing or invalid profile information: ");
-			sb.append("{emailAddresss=");
-			sb.append(emailAddress);
-			sb.append(", firstName=");
-			sb.append(firstName);
-			sb.append(", lastName=");
-			sb.append(lastName);
-			sb.append("}");
-
 			throw new OpenIdConnectServiceException.UserMappingException(
-				sb.toString());
+				StringBundler.concat(
+					"Unable to map OpenId Connect user to the portal, missing ",
+					"or invalid profile information: {emailAddresss=",
+					emailAddress, ", firstName=", firstName, ", lastName=",
+					lastName, "}"));
 		}
 
 		long creatorUserId = 0;
@@ -85,13 +79,11 @@ public class OpenIdConnectUserInfoProcessorImpl
 		String password2 = null;
 		boolean autoScreenName = true;
 		String screenName = StringPool.BLANK;
-		long facebookId = 0;
 
 		Company company = _companyLocalService.getCompany(companyId);
 
 		Locale locale = company.getLocale();
 
-		String middleName = userInfo.getMiddleName();
 		long prefixId = 0;
 		long suffixId = 0;
 		boolean male = true;
@@ -107,10 +99,13 @@ public class OpenIdConnectUserInfoProcessorImpl
 
 		ServiceContext serviceContext = new ServiceContext();
 
+		serviceContext.setPathMain(mainPath);
+		serviceContext.setPortalURL(portalURL);
+
 		user = _userLocalService.addUser(
 			creatorUserId, companyId, autoPassword, password1, password2,
-			autoScreenName, screenName, emailAddress, facebookId, null, locale,
-			firstName, middleName, lastName, prefixId, suffixId, male,
+			autoScreenName, screenName, emailAddress, locale, firstName,
+			userInfo.getMiddleName(), lastName, prefixId, suffixId, male,
 			birthdayMonth, birthdayDay, birthdayYear, jobTitle, groupIds,
 			organizationIds, roleIds, userGroupIds, sendEmail, serviceContext);
 
@@ -119,7 +114,7 @@ public class OpenIdConnectUserInfoProcessorImpl
 		return user.getUserId();
 	}
 
-	protected void checkAddUser(long companyId, String emailAddress)
+	private void _checkAddUser(long companyId, String emailAddress)
 		throws PortalException {
 
 		Company company = _companyLocalService.getCompany(companyId);

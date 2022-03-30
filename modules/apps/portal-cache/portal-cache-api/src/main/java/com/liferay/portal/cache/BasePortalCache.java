@@ -45,11 +45,6 @@ public abstract class BasePortalCache<K extends Serializable, V>
 	}
 
 	@Override
-	public boolean isBlocking() {
-		return false;
-	}
-
-	@Override
 	public boolean isMVCC() {
 		return false;
 	}

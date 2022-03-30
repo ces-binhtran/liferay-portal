@@ -122,7 +122,7 @@ if (recurrence != null) {
 			</tr>
 		</tbody>
 
-		<tbody class='calendar-portlet-interval-view <%= (frequency == Frequency.WEEKLY) ? "" : "hide" %>' id="<portlet:namespace />view<%= Frequency.WEEKLY %>">
+		<tbody class="calendar-portlet-interval-view <%= (frequency == Frequency.WEEKLY) ? "" : "hide" %>" id="<portlet:namespace />view<%= Frequency.WEEKLY %>">
 			<tr>
 				<th class="calendar-portlet-recurrence-title">
 					<liferay-ui:message key="repeat-on" />:
@@ -153,7 +153,7 @@ if (recurrence != null) {
 			</tr>
 		</tbody>
 
-		<tbody class='calendar-portlet-interval-view <%= ((frequency == Frequency.MONTHLY) || (frequency == Frequency.YEARLY)) ? "" : "hide" %>' id="<portlet:namespace />viewPositionInMonth">
+		<tbody class="calendar-portlet-interval-view <%= ((frequency == Frequency.MONTHLY) || (frequency == Frequency.YEARLY)) ? "" : "hide" %>" id="<portlet:namespace />viewPositionInMonth">
 			<tr>
 				<th class="calendar-portlet-recurrence-title">
 					<liferay-ui:message key="repeat-on" />:
@@ -163,13 +163,13 @@ if (recurrence != null) {
 
 					<aui:input checked="<%= ListUtil.isNotEmpty(weekdays) %>" inlineField="<%= true %>" label="day-of-the-week" name="repeatOnWeekday" type="radio" value="true" />
 
-					<div class='<%= ListUtil.isEmpty(weekdays) ? "hide" : StringPool.BLANK %>' id="<portlet:namespace />viewPositionalWeekday">
+					<div class="<%= ListUtil.isEmpty(weekdays) ? "hide" : StringPool.BLANK %>" id="<portlet:namespace />viewPositionalWeekday">
 
 						<%
 						Weekday weekday = positionalWeekday.getWeekday();
 						%>
 
-						<aui:input checked="<%= positionalWeekday.getPosition() == -1 %>" label="repeat-on-month-last-day-of-the-week" name="lastPosition" type="checkbox" />
+						<aui:input checked="<%= positionalWeekday.getPosition() == -1 %>" label="repeat-on-months-last-day-of-the-week" name="lastPosition" type="checkbox" />
 
 						<aui:input name="position" type="hidden" value="<%= positionalWeekday.getPosition() %>" />
 
@@ -210,7 +210,7 @@ if (recurrence != null) {
 							<liferay-ui:input-date
 								dayParam="untilDateDay"
 								dayValue="<%= untilJCalendar.get(java.util.Calendar.DATE) %>"
-								disabled="<%= !onChecked %>"
+								disabled="<%= onChecked %>"
 								monthParam="untilDateMonth"
 								monthValue="<%= untilJCalendar.get(java.util.Calendar.MONTH) %>"
 								name="untilDate"
@@ -245,8 +245,23 @@ if (recurrence != null) {
 	var recurrenceContainerNode = A.one(
 		'#<portlet:namespace />recurrenceContainer'
 	);
-	var repeatCheckboxNode = A.one('#<portlet:namespace />repeat');
+
+	var repeatCheckboxNode = document.getElementById('<portlet:namespace />repeat');
 	var summaryNode = A.one('#<portlet:namespace />summary');
+
+	var afterInput = A.one('#<portlet:namespace />ends_3');
+	var neverInput = A.one('#<portlet:namespace />ends_1');
+
+	let onRadioChange = (radioButton) => {
+		radioButton.on('change', (event) => {
+			document
+				.querySelector('span.has-success')
+				.classList.remove('has-success');
+		});
+	};
+
+	onRadioChange(afterInput);
+	onRadioChange(neverInput);
 
 	var recurrenceDialogController = new Liferay.RecurrenceDialogController({
 		container: '#<portlet:namespace />recurrenceContainer',
@@ -257,7 +272,7 @@ if (recurrence != null) {
 		limitCountInput: '#<portlet:namespace />count',
 		limitCountRadioButton: '[name=<portlet:namespace />ends][value=after]',
 		limitDateDatePicker: Liferay.component(
-			'<%= renderResponse.getNamespace() + HtmlUtil.getAUICompatibleId("untilDateDatePicker") %>'
+			'<%= liferayPortletResponse.getNamespace() + HtmlUtil.getAUICompatibleId("untilDateDatePicker") %>'
 		),
 		limitDateRadioButton: '[name=<portlet:namespace />ends][value=on]',
 		monthlyRecurrenceOptions: '#<portlet:namespace />viewPositionInMonth',
@@ -294,7 +309,7 @@ if (recurrence != null) {
 
 		editEventFormNode.once(
 			'key',
-			function (event) {
+			(event) => {
 				if (window.<portlet:namespace />recurrenceDialog.get('visible')) {
 					event.stopPropagation();
 				}
@@ -367,8 +382,8 @@ if (recurrence != null) {
 		Liferay.on('destroyPortlet', destroyRecurrenceDialog);
 	};
 
-	repeatCheckboxNode.on('change', function (event) {
-		var checked = event.currentTarget.get('checked');
+	repeatCheckboxNode.addEventListener('change', (event) => {
+		var checked = event.currentTarget.checked;
 
 		if (!checked) {
 			summaryNode.empty();
@@ -380,13 +395,13 @@ if (recurrence != null) {
 		<portlet:namespace />openRecurrenceDialog(checked);
 	});
 
-	summaryNode.on('click', function (event) {
+	summaryNode.on('click', (event) => {
 		<portlet:namespace />openRecurrenceDialog(true);
 
 		event.halt();
 	});
 
-	recurrenceDialogController.on('recurrenceChange', function (event) {
+	recurrenceDialogController.on('recurrenceChange', (event) => {
 		window.<portlet:namespace />updateSummaries();
 	});
 

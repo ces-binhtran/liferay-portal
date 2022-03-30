@@ -624,7 +624,7 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 		return fields.keySet();
 	}
 
-	protected void indexDuplicates(final String name, int count) {
+	protected void indexDuplicates(String name, int count) {
 		String field = GROUP_FIELD;
 
 		for (int i = 1; i <= count; i++) {
@@ -660,11 +660,11 @@ public abstract class BaseGroupByTestCase extends BaseIndexingTestCase {
 	private boolean _shouldIgnoreSearchEngineGlitchAndRetry(
 		RuntimeException runtimeException) {
 
-		Throwable t1 = runtimeException.getCause();
+		Throwable throwable1 = runtimeException.getCause();
 
-		Throwable t2 = t1.getCause();
+		Throwable throwable2 = throwable1.getCause();
 
-		String message = t2.getMessage();
+		String message = throwable2.getMessage();
 
 		if (message.equals(
 				"numHits must be > 0; please use TotalHitCountCollector if " +

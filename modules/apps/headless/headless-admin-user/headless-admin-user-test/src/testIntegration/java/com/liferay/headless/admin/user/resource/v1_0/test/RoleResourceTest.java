@@ -30,6 +30,9 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.SynchronousMailTestRule;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,6 +40,8 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -46,6 +51,11 @@ import org.junit.runner.RunWith;
 @DataGuard(scope = DataGuard.Scope.METHOD)
 @RunWith(Arquillian.class)
 public class RoleResourceTest extends BaseRoleResourceTestCase {
+
+	@ClassRule
+	@Rule
+	public static final SynchronousMailTestRule synchronousMailTestRule =
+		SynchronousMailTestRule.INSTANCE;
 
 	@Before
 	@Override
@@ -96,19 +106,41 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	@Override
 	@Test
 	public void testGetRolesPage() throws Exception {
-		Page<Role> page = roleResource.getRolesPage(Pagination.of(1, 100));
+		Page<Role> page = roleResource.getRolesPage(
+			null, Pagination.of(1, 100));
 
 		List<Role> roles = new ArrayList<>(page.getItems());
 
 		roles.add(_addRole(randomRole()));
 		roles.add(_addRole(randomRole()));
 
-		page = roleResource.getRolesPage(Pagination.of(1, roles.size()));
+		page = roleResource.getRolesPage(null, Pagination.of(1, roles.size()));
 
 		Assert.assertEquals(roles.size(), page.getTotalCount());
 
 		assertEqualsIgnoringOrder(roles, (List<Role>)page.getItems());
 		assertValid(page);
+	}
+
+	@Override
+	@Test
+	public void testGetRolesPageWithPagination() throws Exception {
+		Page<Role> rolesPage = roleResource.getRolesPage(null, null);
+
+		testGetRolesPage_addRole(randomRole());
+		testGetRolesPage_addRole(randomRole());
+		testGetRolesPage_addRole(randomRole());
+
+		Page<Role> page1 = roleResource.getRolesPage(null, Pagination.of(1, 2));
+
+		List<Role> roles1 = (List<Role>)page1.getItems();
+
+		Assert.assertEquals(roles1.toString(), 2, roles1.size());
+
+		Page<Role> page2 = roleResource.getRolesPage(null, Pagination.of(2, 2));
+
+		Assert.assertEquals(
+			rolesPage.getTotalCount() + 3, page2.getTotalCount());
 	}
 
 	@Override
@@ -154,16 +186,23 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			404,
 			roleResource.postOrganizationRoleUserAccountAssociationHttpResponse(
 				0L, _user.getUserId(), organization.getOrganizationId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postOrganizationRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_REGULAR)),
-				_user.getUserId(), organization.getOrganizationId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postOrganizationRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_SITE)),
-				_user.getUserId(), organization.getOrganizationId()));
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
+
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.
+					postOrganizationRoleUserAccountAssociationHttpResponse(
+						_getRoleId(_addRole(RoleConstants.TYPE_REGULAR)),
+						_user.getUserId(), organization.getOrganizationId()));
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.
+					postOrganizationRoleUserAccountAssociationHttpResponse(
+						_getRoleId(_addRole(RoleConstants.TYPE_SITE)),
+						_user.getUserId(), organization.getOrganizationId()));
+		}
 	}
 
 	@Override
@@ -180,16 +219,21 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			404,
 			roleResource.postRoleUserAccountAssociationHttpResponse(
 				0L, _user.getUserId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_ORGANIZATION)),
-				_user.getUserId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_SITE)),
-				_user.getUserId()));
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
+
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.postRoleUserAccountAssociationHttpResponse(
+					_getRoleId(_addRole(RoleConstants.TYPE_ORGANIZATION)),
+					_user.getUserId()));
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.postRoleUserAccountAssociationHttpResponse(
+					_getRoleId(_addRole(RoleConstants.TYPE_SITE)),
+					_user.getUserId()));
+		}
 	}
 
 	@Override
@@ -206,16 +250,21 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 			404,
 			roleResource.postSiteRoleUserAccountAssociationHttpResponse(
 				0L, _user.getUserId(), testGroup.getGroupId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postSiteRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_REGULAR)),
-				_user.getUserId(), testGroup.getGroupId()));
-		assertHttpResponseStatusCode(
-			500,
-			roleResource.postSiteRoleUserAccountAssociationHttpResponse(
-				_getRoleId(_addRole(RoleConstants.TYPE_ORGANIZATION)),
-				_user.getUserId(), testGroup.getGroupId()));
+
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				_CLASS_NAME_EXCEPTION_MAPPER, LoggerTestUtil.ERROR)) {
+
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.postSiteRoleUserAccountAssociationHttpResponse(
+					_getRoleId(_addRole(RoleConstants.TYPE_REGULAR)),
+					_user.getUserId(), testGroup.getGroupId()));
+			assertHttpResponseStatusCode(
+				500,
+				roleResource.postSiteRoleUserAccountAssociationHttpResponse(
+					_getRoleId(_addRole(RoleConstants.TYPE_ORGANIZATION)),
+					_user.getUserId(), testGroup.getGroupId()));
+		}
 	}
 
 	@Override
@@ -259,6 +308,11 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 	@Override
 	protected Role testGetRole_addRole() throws Exception {
 		return _addRole(randomRole());
+	}
+
+	@Override
+	protected Role testGetRolesPage_addRole(Role role) throws Exception {
+		return _addRole(role);
 	}
 
 	@Override
@@ -348,6 +402,10 @@ public class RoleResourceTest extends BaseRoleResourceTestCase {
 		throw new IllegalArgumentException(
 			"Invalid role type label " + roleTypeLabel);
 	}
+
+	private static final String _CLASS_NAME_EXCEPTION_MAPPER =
+		"com.liferay.portal.vulcan.internal.jaxrs.exception.mapper." +
+			"ExceptionMapper";
 
 	private User _user;
 

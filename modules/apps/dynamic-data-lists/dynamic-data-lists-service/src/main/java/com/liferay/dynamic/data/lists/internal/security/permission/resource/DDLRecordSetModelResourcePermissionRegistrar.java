@@ -14,17 +14,16 @@
 
 package com.liferay.dynamic.data.lists.internal.security.permission.resource;
 
-import com.liferay.dynamic.data.lists.constants.DDLActionKeys;
 import com.liferay.dynamic.data.lists.constants.DDLConstants;
 import com.liferay.dynamic.data.lists.constants.DDLPortletKeys;
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.exportimport.kernel.staging.permission.StagingPermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
 import java.util.Dictionary;
 
@@ -43,9 +42,10 @@ public class DDLRecordSetModelResourcePermissionRegistrar {
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("model.class.name", DDLRecordSet.class.getName());
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"model.class.name", DDLRecordSet.class.getName()
+			).build();
 
 		_serviceRegistration = bundleContext.registerService(
 			(Class<ModelResourcePermission<DDLRecordSet>>)
@@ -60,10 +60,6 @@ public class DDLRecordSetModelResourcePermissionRegistrar {
 								DDLRecordSetConstants.
 									SCOPE_DYNAMIC_DATA_LISTS) {
 
-							return null;
-						}
-
-						if (actionId.equals(DDLActionKeys.ADD_RECORD)) {
 							return null;
 						}
 

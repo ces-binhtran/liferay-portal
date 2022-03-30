@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.BlogPostingSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class BlogPosting implements Cloneable {
+public class BlogPosting implements Cloneable, Serializable {
 
 	public static BlogPosting toDTO(String json) {
 		return BlogPostingSerDes.toDTO(json);
@@ -267,6 +269,27 @@ public class BlogPosting implements Cloneable {
 
 	protected String encodingFormat;
 
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
+
 	public String getFriendlyUrlPath() {
 		return friendlyUrlPath;
 	}
@@ -411,6 +434,28 @@ public class BlogPosting implements Cloneable {
 
 	protected RelatedContent[] relatedContents;
 
+	public RenderedContent[] getRenderedContents() {
+		return renderedContents;
+	}
+
+	public void setRenderedContents(RenderedContent[] renderedContents) {
+		this.renderedContents = renderedContents;
+	}
+
+	public void setRenderedContents(
+		UnsafeSupplier<RenderedContent[], Exception>
+			renderedContentsUnsafeSupplier) {
+
+		try {
+			renderedContents = renderedContentsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected RenderedContent[] renderedContents;
+
 	public Long getSiteId() {
 		return siteId;
 	}
@@ -543,7 +588,9 @@ public class BlogPosting implements Cloneable {
 
 		public static ViewableBy create(String value) {
 			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
+				if (Objects.equals(viewableBy.getValue(), value) ||
+					Objects.equals(viewableBy.name(), value)) {
+
 					return viewableBy;
 				}
 			}

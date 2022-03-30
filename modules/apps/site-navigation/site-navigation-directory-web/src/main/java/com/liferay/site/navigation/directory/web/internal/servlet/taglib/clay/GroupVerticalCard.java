@@ -15,6 +15,8 @@
 package com.liferay.site.navigation.directory.web.internal.servlet.taglib.clay;
 
 import com.liferay.frontend.taglib.clay.servlet.taglib.soy.VerticalCard;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HtmlUtil;
@@ -35,12 +37,6 @@ public class GroupVerticalCard implements VerticalCard {
 	}
 
 	@Override
-	public String getAspectRatioCssClasses() {
-		return "aspect-ratio-item-center-middle " +
-			"aspect-ratio-item-vertical-fluid";
-	}
-
-	@Override
 	public String getHref() {
 		if (_group.getGroupId() != _themeDisplay.getScopeGroupId()) {
 			return _group.getDisplayURL(_themeDisplay);
@@ -50,8 +46,13 @@ public class GroupVerticalCard implements VerticalCard {
 	}
 
 	@Override
+	public String getIcon() {
+		return "sites";
+	}
+
+	@Override
 	public String getImageSrc() {
-		return _group.getLogoURL(_themeDisplay, true);
+		return _group.getLogoURL(_themeDisplay, false);
 	}
 
 	@Override
@@ -66,15 +67,26 @@ public class GroupVerticalCard implements VerticalCard {
 				_group.getDescriptiveName(_themeDisplay.getLocale()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return HtmlUtil.escape(_group.getName(_themeDisplay.getLocale()));
 	}
 
 	@Override
+	public Boolean isFlushVertical() {
+		return true;
+	}
+
+	@Override
 	public boolean isSelectable() {
 		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		GroupVerticalCard.class);
 
 	private final Group _group;
 	private final ThemeDisplay _themeDisplay;

@@ -64,11 +64,15 @@ public interface BatchEngineExportTaskLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link BatchEngineExportTaskLocalServiceUtil} to access the batch engine export task local service. Add custom service methods to <code>com.liferay.batch.engine.service.impl.BatchEngineExportTaskLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.batch.engine.service.impl.BatchEngineExportTaskLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the batch engine export task local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link BatchEngineExportTaskLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the batch engine export task to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was added
@@ -102,6 +106,10 @@ public interface BatchEngineExportTaskLocalService
 	/**
 	 * Deletes the batch engine export task from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was removed
 	 */
@@ -111,6 +119,10 @@ public interface BatchEngineExportTaskLocalService
 
 	/**
 	 * Deletes the batch engine export task with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTaskId the primary key of the batch engine export task
 	 * @return the batch engine export task that was removed
@@ -130,6 +142,9 @@ public interface BatchEngineExportTaskLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -257,6 +272,15 @@ public interface BatchEngineExportTaskLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<BatchEngineExportTask> getBatchEngineExportTasks(
+		long companyId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<BatchEngineExportTask> getBatchEngineExportTasks(
+		long companyId, int start, int end,
+		OrderByComparator<BatchEngineExportTask> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<BatchEngineExportTask> getBatchEngineExportTasks(
 		String executeStatus);
 
 	/**
@@ -266,6 +290,9 @@ public interface BatchEngineExportTaskLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getBatchEngineExportTasksCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getBatchEngineExportTasksCount(long companyId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public BatchEngineExportTaskContentBlobModel getContentBlobModel(
@@ -298,6 +325,10 @@ public interface BatchEngineExportTaskLocalService
 
 	/**
 	 * Updates the batch engine export task in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was updated

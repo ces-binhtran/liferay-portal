@@ -1,6 +1,7 @@
-@component-name = "portal-forms-and-workflow-ee"
+@component-name = "portal-workflow-ee"
 definition {
 
+	property portal.acceptance = "true";
 	property portal.release = "false";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
@@ -35,7 +36,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -56,7 +56,7 @@ definition {
 
 		Select(
 			locator1 = "Select#REPORT_FORMAT",
-			value1 = "csv");
+			value1 = "CSV");
 
 		Type(
 			locator1 = "TextInput#EMAIL_NOTIFICATIONS",
@@ -97,7 +97,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -128,7 +127,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -144,13 +142,10 @@ definition {
 
 	@priority = "4"
 	test ChangeReportName {
-		property portal.acceptance = "true";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -164,7 +159,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportName = "Custom Name",
 			reportsDefinitionName = "Reports Definition Name");
 
@@ -180,15 +175,38 @@ definition {
 		ReportsAdmin.viewNoReportEntryFile(reportsFileName = "reports_admin_template_source_sample_class_name");
 	}
 
-	@priority = "4"
-	test DeleteReportFile {
+	@description = "LRQA-64780 - Automate LPS-127390: Filter and Order options in Reports Admin do not function properly"
+	@priority = "5"
+	test CheckFilterAndOrderOption {
 		property portal.acceptance = "true";
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
+			portlet = "Reports Admin");
+
+		ReportsAdmin.gotoDefinitions();
+
+		ReportsAdmin.addReportDefinition(
+			dataSource = "Portal",
+			reportsDefinitionDescription = "Reports Definition Description",
+			reportsDefinitionName = "Reports Definition Name",
+			templateFile = "reports_admin_template_source_sample_class_name.jrxml");
+
+		Click(locator1 = "Dropdown#FILTER_AND_ORDER");
+
+		MenuItem.click(menuItem = "All");
+
+		ReportsAdmin.assertReportEntryPresent(reportsDefinitionName = "Reports Definition Name");
+	}
+
+	@priority = "4"
+	test DeleteReportFile {
+		Navigator.openURL();
+
+		ProductMenu.gotoPortlet(
+			category = "Configuration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -202,7 +220,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportsDefinitionName = "Reports Definition Name");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -220,7 +238,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -230,18 +247,15 @@ definition {
 
 	@priority = "4"
 	test DeliverReportToEmail {
-		property portal.acceptance = "true";
-		property portal.upstream = "quarantine";
-
 		property test.assert.javascript.errors = "false";
 		property test.smtp.server.enabled = "true";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -287,7 +301,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -301,7 +314,7 @@ definition {
 		ReportsAdmin.addReportEntry(
 			emailNotificationsAddress = "test@liferay.com",
 			emailRecipientAddress = "test@liferay.com",
-			reportFormat = "csv",
+			reportFormat = "CSV",
 			reportsDefinitionName = "Reports Definition Name");
 
 		ReportsAdmin.viewReportEntry(reportsDefinitionName = "Reports Definition Name");
@@ -322,7 +335,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -353,13 +365,10 @@ definition {
 
 	@priority = "4"
 	test DownloadReportPDF {
-		property portal.acceptance = "true";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -385,9 +394,9 @@ definition {
 			reportsFileName = "reports_admin_template_source_sample_class_name.pdf",
 			userName = "Test Test");
 
-		ReportsAdmin.downloadReportEntryFile(
-			reportFormat = "pdf",
-			reportsFileName = "reports_admin_template_source_sample_class_name.pdf");
+		takeScreenshot();
+
+		ReportsAdmin.downloadReportEntryFile(reportsFileName = "reports_admin_template_source_sample_class_name.pdf");
 	}
 
 	@priority = "4"
@@ -396,7 +405,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -431,7 +439,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -466,7 +473,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -501,7 +507,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -533,7 +538,7 @@ definition {
 	@description = "This is a use case for LPS-43525."
 	@priority = "3"
 	test TestDatabaseConnection {
-		property portal.acceptance = "true";
+		property database.types = "mysql";
 
 		var databasePassword = PropsUtil.get("database.mysql.password");
 		var databaseURL = PropsUtil.get("database.mysql.url");
@@ -543,7 +548,6 @@ definition {
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoSources();
@@ -562,28 +566,26 @@ definition {
 
 	@priority = "4"
 	test ViewEmailNotificationDelivery {
-		property portal.upstream = "quarantine";
-
 		property test.assert.javascript.errors = "false";
 		property test.name.skip.portal.instance = "CPReportsadmin#ViewEmailNotificationDelivery";
+
 		var portalURL = PropsUtil.get("portal.url");
 
 		var siteName = TestCase.getSiteName(siteName = "${siteName}");
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Server Administration");
 
 		ServerAdministration.configureMailServerSettings(
-			userName = PropsUtil.get("email.address.1"),
-			userPassword = PropsUtil.get("email.password.1"));
+			userName = PropsUtil.get("email.address.2"),
+			userPassword = PropsUtil.get("email.password.2"));
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -595,7 +597,7 @@ definition {
 			templateFile = "reports_admin_template_source_sample_class_name.jrxml");
 
 		ReportsAdmin.addReportEntry(
-			emailNotificationsAddress = PropsUtil.get("email.address.2"),
+			emailNotificationsAddress = PropsUtil.get("email.address.4"),
 			emailRecipientAddress = "test@liferay.com",
 			reportFormat = "pdf",
 			reportName = "Custom Report Name",
@@ -604,8 +606,8 @@ definition {
 		Pause(locator1 = "30000");
 
 		Gmail.login(
-			userEmailAddress = PropsUtil.get("email.address.2"),
-			userPassword = PropsUtil.get("email.password.2"));
+			userEmailAddress = PropsUtil.get("email.address.4"),
+			userPassword = PropsUtil.get("email.password.4"));
 
 		Gmail.gotoHtmlMode();
 
@@ -642,26 +644,24 @@ definition {
 
 	@priority = "4"
 	test ViewEmailRecipientDelivery {
-		property portal.upstream = "quarantine";
-
-		property test.name.skip.portal.instance = "CPReportsadmin#ViewEmailRecipientDelivery";
-		var portalURL = PropsUtil.get("portal.url");
 		property test.assert.javascript.errors = "false";
+		property test.name.skip.portal.instance = "CPReportsadmin#ViewEmailRecipientDelivery";
 
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
+		var portalURL = PropsUtil.get("portal.url");
+
+		ApplicationsMenu.gotoPortlet(
+			category = "System",
 			panel = "Control Panel",
 			portlet = "Server Administration");
 
 		ServerAdministration.configureMailServerSettings(
-			userName = PropsUtil.get("email.address.1"),
-			userPassword = PropsUtil.get("email.password.1"));
+			userName = PropsUtil.get("email.address.2"),
+			userPassword = PropsUtil.get("email.password.2"));
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();
@@ -690,7 +690,7 @@ definition {
 			emailFromUserName = "Joe Bloggs",
 			gmailAssetType = "New Report: reports_admin_template_source_sample_class_name.pdf",
 			gmailMessageAttachment = "reports_admin_template_source_sample_class_name.pdf",
-			gmailMessageBody = "You have a new report.",
+			gmailMessageBody = "Please review the attached report.",
 			gmailMessageTitle = "New Report: reports_admin_template_source_sample_class_name.pdf");
 
 		var key_gmailAssetType = "New Report: reports_admin_template_source_sample_class_name.pdf";
@@ -707,13 +707,10 @@ definition {
 
 	@priority = "3"
 	test ViewReportDefinitionParametersFields {
-		property portal.acceptance = "true";
-
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
 			category = "Configuration",
-			panel = "Site Administration",
 			portlet = "Reports Admin");
 
 		ReportsAdmin.gotoDefinitions();

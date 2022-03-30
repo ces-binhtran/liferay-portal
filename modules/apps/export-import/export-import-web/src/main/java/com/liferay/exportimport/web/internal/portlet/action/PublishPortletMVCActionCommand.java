@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT_IMPORT,
-		"mvc.command.name=publishPortlet"
+		"mvc.command.name=/export_import/publish_portlet"
 	},
 	service = MVCActionCommand.class
 )
@@ -113,7 +113,7 @@ public class PublishPortletMVCActionCommand extends BaseMVCActionCommand {
 				SessionErrors.add(actionRequest, exception.getClass());
 			}
 			else {
-				_log.error(exception, exception);
+				_log.error(exception);
 
 				SessionErrors.add(
 					actionRequest,

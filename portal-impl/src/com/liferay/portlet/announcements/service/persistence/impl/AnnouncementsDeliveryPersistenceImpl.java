@@ -18,9 +18,11 @@ import com.liferay.announcements.kernel.exception.NoSuchDeliveryException;
 import com.liferay.announcements.kernel.model.AnnouncementsDelivery;
 import com.liferay.announcements.kernel.model.AnnouncementsDeliveryTable;
 import com.liferay.announcements.kernel.service.persistence.AnnouncementsDeliveryPersistence;
+import com.liferay.announcements.kernel.service.persistence.AnnouncementsDeliveryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -31,7 +33,10 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portlet.announcements.model.impl.AnnouncementsDeliveryImpl;
@@ -39,6 +44,7 @@ import com.liferay.portlet.announcements.model.impl.AnnouncementsDeliveryModelIm
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.HashMap;
@@ -176,7 +182,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AnnouncementsDelivery>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AnnouncementsDelivery announcementsDelivery : list) {
@@ -235,10 +241,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -548,8 +550,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -576,8 +577,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -686,7 +685,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AnnouncementsDelivery>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (AnnouncementsDelivery announcementsDelivery : list) {
@@ -745,10 +744,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1057,8 +1052,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1085,8 +1079,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1176,7 +1168,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		if (useFinderCache) {
 			result = FinderCacheUtil.getResult(
-				_finderPathFetchByU_T, finderArgs, this);
+				_finderPathFetchByU_T, finderArgs);
 		}
 
 		if (result instanceof AnnouncementsDelivery) {
@@ -1242,11 +1234,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(
-						_finderPathFetchByU_T, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1293,8 +1280,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId, type};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1336,8 +1322,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1368,8 +1352,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		setModelImplClass(AnnouncementsDeliveryImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(AnnouncementsDeliveryTable.INSTANCE);
 	}
@@ -1382,7 +1364,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 	@Override
 	public void cacheResult(AnnouncementsDelivery announcementsDelivery) {
 		EntityCacheUtil.putResult(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
 			AnnouncementsDeliveryImpl.class,
 			announcementsDelivery.getPrimaryKey(), announcementsDelivery);
 
@@ -1393,9 +1374,9 @@ public class AnnouncementsDeliveryPersistenceImpl
 				announcementsDelivery.getType()
 			},
 			announcementsDelivery);
-
-		announcementsDelivery.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the announcements deliveries in the entity cache if it is enabled.
@@ -1406,18 +1387,22 @@ public class AnnouncementsDeliveryPersistenceImpl
 	public void cacheResult(
 		List<AnnouncementsDelivery> announcementsDeliveries) {
 
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (announcementsDeliveries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (AnnouncementsDelivery announcementsDelivery :
 				announcementsDeliveries) {
 
 			if (EntityCacheUtil.getResult(
-					AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
 					AnnouncementsDeliveryImpl.class,
 					announcementsDelivery.getPrimaryKey()) == null) {
 
 				cacheResult(announcementsDelivery);
-			}
-			else {
-				announcementsDelivery.resetOriginalValues();
 			}
 		}
 	}
@@ -1426,68 +1411,47 @@ public class AnnouncementsDeliveryPersistenceImpl
 	 * Clears the cache for all announcements deliveries.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(AnnouncementsDeliveryImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(AnnouncementsDeliveryImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the announcements delivery.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(AnnouncementsDelivery announcementsDelivery) {
 		EntityCacheUtil.removeResult(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
-			announcementsDelivery.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(AnnouncementsDeliveryModelImpl)announcementsDelivery, true);
+			AnnouncementsDeliveryImpl.class, announcementsDelivery);
 	}
 
 	@Override
 	public void clearCache(
 		List<AnnouncementsDelivery> announcementsDeliveries) {
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (AnnouncementsDelivery announcementsDelivery :
 				announcementsDeliveries) {
 
 			EntityCacheUtil.removeResult(
-				AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-				AnnouncementsDeliveryImpl.class,
-				announcementsDelivery.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(AnnouncementsDeliveryModelImpl)announcementsDelivery, true);
+				AnnouncementsDeliveryImpl.class, announcementsDelivery);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(AnnouncementsDeliveryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			EntityCacheUtil.removeResult(
-				AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
 				AnnouncementsDeliveryImpl.class, primaryKey);
 		}
 	}
@@ -1500,37 +1464,9 @@ public class AnnouncementsDeliveryPersistenceImpl
 			announcementsDeliveryModelImpl.getType()
 		};
 
+		FinderCacheUtil.putResult(_finderPathCountByU_T, args, Long.valueOf(1));
 		FinderCacheUtil.putResult(
-			_finderPathCountByU_T, args, Long.valueOf(1), false);
-		FinderCacheUtil.putResult(
-			_finderPathFetchByU_T, args, announcementsDeliveryModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		AnnouncementsDeliveryModelImpl announcementsDeliveryModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				announcementsDeliveryModelImpl.getUserId(),
-				announcementsDeliveryModelImpl.getType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_T, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_T, args);
-		}
-
-		if ((announcementsDeliveryModelImpl.getColumnBitmask() &
-			 _finderPathFetchByU_T.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				announcementsDeliveryModelImpl.getOriginalUserId(),
-				announcementsDeliveryModelImpl.getOriginalType()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByU_T, args);
-			FinderCacheUtil.removeResult(_finderPathFetchByU_T, args);
-		}
+			_finderPathFetchByU_T, args, announcementsDeliveryModelImpl);
 	}
 
 	/**
@@ -1674,10 +1610,8 @@ public class AnnouncementsDeliveryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (announcementsDelivery.isNew()) {
+			if (isNew) {
 				session.save(announcementsDelivery);
-
-				announcementsDelivery.setNew(false);
 			}
 			else {
 				announcementsDelivery = (AnnouncementsDelivery)session.merge(
@@ -1691,84 +1625,15 @@ public class AnnouncementsDeliveryPersistenceImpl
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!AnnouncementsDeliveryModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				announcementsDeliveryModelImpl.getCompanyId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {announcementsDeliveryModelImpl.getUserId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUserId, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((announcementsDeliveryModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					announcementsDeliveryModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {
-					announcementsDeliveryModelImpl.getCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((announcementsDeliveryModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					announcementsDeliveryModelImpl.getOriginalUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-
-				args = new Object[] {
-					announcementsDeliveryModelImpl.getUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
-			announcementsDelivery.getPrimaryKey(), announcementsDelivery,
-			false);
+			AnnouncementsDeliveryImpl.class, announcementsDeliveryModelImpl,
+			false, true);
 
-		clearUniqueFindersCache(announcementsDeliveryModelImpl, false);
 		cacheUniqueFindersCache(announcementsDeliveryModelImpl);
+
+		if (isNew) {
+			announcementsDelivery.setNew(false);
+		}
 
 		announcementsDelivery.resetOriginalValues();
 
@@ -1911,7 +1776,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<AnnouncementsDelivery>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1952,10 +1817,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1985,7 +1846,7 @@ public class AnnouncementsDeliveryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -2002,9 +1863,6 @@ public class AnnouncementsDeliveryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -2044,94 +1902,89 @@ public class AnnouncementsDeliveryPersistenceImpl
 	 * Initializes the announcements delivery persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
 		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			AnnouncementsDeliveryModelImpl.COMPANYID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
 		_finderPathCountByCompanyId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
 		_finderPathWithPaginationFindByUserId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId"}, true);
 
 		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] {Long.class.getName()},
-			AnnouncementsDeliveryModelImpl.USERID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
 		_finderPathCountByUserId = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"userId"},
+			false);
 
 		_finderPathFetchByU_T = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED,
-			AnnouncementsDeliveryImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByU_T",
+			FINDER_CLASS_NAME_ENTITY, "fetchByU_T",
 			new String[] {Long.class.getName(), String.class.getName()},
-			AnnouncementsDeliveryModelImpl.USERID_COLUMN_BITMASK |
-			AnnouncementsDeliveryModelImpl.TYPE_COLUMN_BITMASK);
+			new String[] {"userId", "type_"}, true);
 
 		_finderPathCountByU_T = new FinderPath(
-			AnnouncementsDeliveryModelImpl.ENTITY_CACHE_ENABLED,
-			AnnouncementsDeliveryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByU_T",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"userId", "type_"}, false);
+
+		_setAnnouncementsDeliveryUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setAnnouncementsDeliveryUtilPersistence(null);
+
 		EntityCacheUtil.removeCache(AnnouncementsDeliveryImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setAnnouncementsDeliveryUtilPersistence(
+		AnnouncementsDeliveryPersistence announcementsDeliveryPersistence) {
+
+		try {
+			Field field = AnnouncementsDeliveryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, announcementsDeliveryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	private static final String _SQL_SELECT_ANNOUNCEMENTSDELIVERY =
@@ -2160,5 +2013,10 @@ public class AnnouncementsDeliveryPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"type"});
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
+	}
 
 }

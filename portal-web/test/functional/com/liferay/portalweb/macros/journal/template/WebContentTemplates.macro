@@ -3,11 +3,14 @@ definition {
 	@summary = "Helper function to add fields '${templateFieldNames}' to the template"
 	macro _addFields {
 		if (isSet(templateFieldNames)) {
+			Navigator.gotoSidebarTab(tabName = "Elements");
+
 			for (var fieldName : list "${templateFieldNames}") {
-				var key_fieldName = "${fieldName}";
+				var key_panelTitle = "Fields";
+				var key_variableName = "${fieldName}";
 
 				AssertClick(
-					locator1 = "DDMEditTemplate#SCRIPT_FIELD",
+					locator1 = "DDMEditTemplate#WEB_CONTENT_SCRIPT_VARIABLE",
 					value1 = "${fieldName}");
 			}
 		}
@@ -15,11 +18,14 @@ definition {
 
 	macro _addGeneralVariables {
 		if (isSet(generalVariables)) {
+			Navigator.gotoSidebarTab(tabName = "Elements");
+
 			for (var generalVariable : list "${generalVariables}") {
-				var key_generalVariable = "${generalVariable}";
+				var key_panelTitle = "General Variables";
+				var key_variableName = "${generalVariable}";
 
 				AssertClick(
-					locator1 = "DDMEditTemplate#SCRIPT_GENERAL_VARIABLE",
+					locator1 = "DDMEditTemplate#WEB_CONTENT_SCRIPT_VARIABLE",
 					value1 = "${generalVariable}");
 			}
 		}
@@ -28,6 +34,8 @@ definition {
 	@summary = "Helper function to add description '${description}' to the template"
 	macro _inputDescription {
 		if (isSet(templateDescription)) {
+			Navigator.gotoSidebarTab(tabName = "Properties");
+
 			PortletEntry.inputDescription(description = "${templateDescription}");
 		}
 	}
@@ -35,9 +43,13 @@ definition {
 	@summary = "Helper function to link structure '${structureName}' to the template"
 	macro _inputStructure {
 		if (isSet(structureName)) {
-			AssertClick(
-				locator1 = "DDMEditTemplate#DETAILS_SELECT_STRUCTURE",
-				value1 = "Select");
+			Navigator.gotoSidebarTab(tabName = "Properties");
+
+			WaitForLiferayEvent.initializeLiferayEventLog();
+
+			Click(
+				buttonId = "selectDDMStructure",
+				locator1 = "Button#BUTTON_ID");
 
 			SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
@@ -45,9 +57,16 @@ definition {
 
 			AssertElementPresent(locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK");
 
-			AssertClick.assertTextClickAt(
-				locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
-				value1 = "${structureName}");
+			var browserType = PropsUtil.get("browser.type");
+
+			if ("${browserType}" == "safari") {
+				Click.javaScriptClick(locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK");
+			}
+			else {
+				AssertClick.assertTextClickAt(
+					locator1 = "DDMSelectStructure#DDM_STRUCTURE_TABLE_NAME_LINK",
+					value1 = "${structureName}");
+			}
 
 			SelectFrameTop();
 		}
@@ -56,15 +75,22 @@ definition {
 	@summary = "Helper function to add a script to a template via file"
 	macro _inputTemplateFile {
 		if (isSet(templateFile)) {
-			UploadCommonFile(
-				locator1 = "DDMEditTemplate#SCRIPT_FILE_FIELD",
-				value1 = "${templateFile}");
+			Click(locator1 = "Icon#HEADER_VERTICAL_ELLIPSIS");
+
+			var filePath = TestCase.getDependenciesDirPath(fileName = "${templateFile}");
+
+			UploadFile(
+				inputFieldId = "importScript",
+				locator1 = "TextInput#INPUT_ID",
+				value1 = "${filePath}");
 		}
 	}
 
 	@summary = "Click on the add button to add a template named '${templateName}' for structure '${structureName}', input most basic fields and then save the template"
 	macro addCP {
 		LexiconEntry.gotoAdd();
+
+		WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 
 		WebContentTemplates.inputTemplateAddScreenFields(
 			generalVariables = "${generalVariables}",
@@ -73,16 +99,17 @@ definition {
 			templateDescription = "${templateDescription}",
 			templateFieldNames = "${templateFieldNames}",
 			templateFile = "${templateFile}",
-			templateLanguage = "${templateLanguage}",
 			templateName = "${templateName}",
 			templateScript = "${templateScript}");
 
-		DDLDataDefinition.save(changeListEnabled = "${changeListEnabled}");
+		DDLDataDefinition.save(publicationsEnabled = "${publicationsEnabled}");
 	}
 
 	@summary = "Attempt to add a blank template"
 	macro addNullCP {
 		LexiconEntry.gotoAdd();
+
+		WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 
 		AssertElementNotPresent(locator1 = "TextInput#REQUIRED_ALERT");
 
@@ -108,11 +135,31 @@ definition {
 		SelectFrameTop();
 	}
 
+	macro copyCP {
+		WebContentTemplates.gotoTemplateEllipsisItem(
+			item = "Copy",
+			templateName = "${templateName}");
+
+		if (isSet(templateCopyName)) {
+			PortletEntry.inputName(name = "${templateCopyName}");
+		}
+
+		if (isSet(description)) {
+			PortletEntry.inputDescription(description = "${description}");
+		}
+
+		Click(locator1 = "Button#COPY");
+
+		Alert.viewSuccessMessage();
+	}
+
 	@summary = "Attempt to delete the template '${templateName}'"
 	macro deleteCP {
 		var key_ddlTemplateName = "${templateName}";
 
-		Click(locator1 = "Icon#VERTICAL_ELLIPSIS_BUTTON");
+		Click(
+			key_card = "${templateName}",
+			locator1 = "Card#CARD_ELLIPSIS");
 
 		MenuItem.clickNoError(menuItem = "Delete");
 
@@ -132,6 +179,12 @@ definition {
 
 	@summary = "Click on '${templateName}' ellipsis > '${item}'"
 	macro gotoTemplateEllipsisItem {
+		LexiconEntry.changeDisplayStyle(displayStyle = "cards");
+
+		if ("${item}" == "Permissions") {
+			WaitForLiferayEvent.initializeLiferayEventLog();
+		}
+
 		LexiconCard.clickEllipsisItem(
 			card = "${templateName}",
 			item = "${item}");
@@ -140,8 +193,8 @@ definition {
 	@summary = "Type '${templateScript}' into the template ACE editor field"
 	macro inputScript {
 		if (isSet(templateScript)) {
-			Type.typeAceEditor(
-				locator1 = "DDMEditTemplate#SCRIPT_CONTENT_FIELD",
+			Type.typeCodeMirrorEditorNoError(
+				locator1 = "DDMEditTemplate#CODE_MIRROR_EDITOR",
 				value1 = "${templateScript}");
 		}
 	}
@@ -159,21 +212,18 @@ definition {
 		WebContentTemplates._inputDescription(templateDescription = "${templateDescription}");
 
 		if (isSet(imageSourceURL)) {
+			Navigator.gotoSidebarTab(tabName = "Properties");
+
 			WebContent.addFeaturedImageFromURL(imageSourceURL = "${imageSourceURL}");
 		}
 
 		WebContentTemplates.inputScript(templateScript = "${templateScript}");
 
-		if ("${templateLanguage}" == "xsl") {
-			WebContentTemplates._inputTemplateFile(templateFile = "${templateFile}");
-		}
-		else {
-			WebContentTemplates._addFields(templateFieldNames = "${templateFieldNames}");
+		WebContentTemplates._addFields(templateFieldNames = "${templateFieldNames}");
 
-			WebContentTemplates._addGeneralVariables(generalVariables = "${generalVariables}");
+		WebContentTemplates._addGeneralVariables(generalVariables = "${generalVariables}");
 
-			WebContentTemplates._inputTemplateFile(templateFile = "${templateFile}");
-		}
+		WebContentTemplates._inputTemplateFile(templateFile = "${templateFile}");
 	}
 
 	@summary = "Add localization for the template name"
@@ -183,6 +233,8 @@ definition {
 		var key_ddlTemplateName = "${templateName}";
 
 		WebContentNavigator.gotoViewTemplate(templateName = "${templateName}");
+
+		WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 
 		AssertTextEquals(
 			locator1 = "TextInput#NAME",
@@ -209,16 +261,17 @@ definition {
 			item = "Edit",
 			templateName = "${templatePreviousName}");
 
+		WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
+
 		WebContentTemplates.inputTemplateAddScreenFields(
 			imageSourceURL = "${imageSourceURL}",
 			templateDescription = "${templateDescription}",
 			templateFieldNames = "${templateFieldNames}",
 			templateFile = "${templateFile}",
-			templateLanguage = "${templateLanguage}",
 			templateName = "${templateName}",
 			templateScript = "${templateScript}");
 
-		DDLDataDefinition.save(changeListEnabled = "${changeListEnabled}");
+		DDLDataDefinition.save(publicationsEnabled = "${publicationsEnabled}");
 	}
 
 	@summary = "Open Web Content Templates admin page for the site '${siteURLKey}'"
@@ -231,8 +284,7 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		Navigator.gotoNavItem(navItem = "Templates");
@@ -266,15 +318,22 @@ definition {
 
 	@summary = "Assert that the cards entry for template '${templateName}' is present"
 	macro viewCardsEntryCP {
-		var key_ddlTemplateName = "${templateName}";
-
-		AssertTextEquals(
-			locator1 = "DDMSelectTemplate#TEMPLATE_CARDS_NAME",
-			value1 = "${templateName}");
+		LexiconCard.viewCardTitle(card = "${templateName}");
 
 		if (isSet(templateSmallImage)) {
 			AssertVisible(
 				locator1 = "DDMSelectTemplate#TEMPLATE_CARDS_SMALL_IMAGE",
+				value1 = "${templateSmallImage}");
+		}
+	}
+
+	@summary = "Assert that the cards entry for template '${templateName}' is present with alternate path"
+	macro viewCardsEntryCP2 {
+		LexiconCard.viewCardTitle(card = "${templateName}");
+
+		if (isSet(templateSmallImage)) {
+			AssertVisible(
+				locator1 = "DDMSelectTemplate#TEMPLATE_CARDS_SMALL_IMAGE_2",
 				value1 = "${templateSmallImage}");
 		}
 	}
@@ -287,12 +346,14 @@ definition {
 
 		LexiconEntry.changeDisplayStyle(displayStyle = "table");
 
-		AssertTextEquals(
-			locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_NAME",
-			value1 = "${templateName}");
+		AssertVisible(
+			key_tableEntry = "${templateName}",
+			locator1 = "LexiconTable#TABLE_ENTRY");
 
 		AssertTextEquals(
-			locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_DESCRIPTION",
+			key_columnName = "description",
+			key_tableEntry = "${templateName}",
+			locator1 = "LexiconTable#TABLE_ENTRY_INFO",
 			value1 = "${templateDescription}");
 
 		if (isSet(structureName)) {
@@ -301,58 +362,31 @@ definition {
 				value1 = "${structureName}");
 		}
 
-		if ("${templateLanguage}" == "vm") {
-			AssertTextEquals(
-				locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_LANGUAGE",
-				value1 = "Velocity");
-		}
-		else if ("${templateLanguage}" == "xsl") {
-			AssertTextEquals(
-				locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_LANGUAGE",
-				value1 = "Extensible Stylesheet Language");
-		}
-		else {
-			AssertTextEquals(
-				locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_LANGUAGE",
-				value1 = "FreeMarker");
-		}
-
 		if ("${userEditPermission}" != "noEditPermission") {
 			WebContentNavigator.gotoViewTemplate(templateName = "${templateName}");
+
+			WaitForVisible(locator1 = "Sidebar#PANEL_OPEN");
 
 			AssertTextEquals(
 				locator1 = "TextInput#NAME",
 				value1 = "${templateName}");
+
+			Navigator.gotoSidebarTab(tabName = "Properties");
 
 			AssertTextEquals(
 				locator1 = "TextArea#DESCRIPTION",
 				value1 = "${templateDescription}");
 
 			if (isSet(structureName)) {
-				AssertTextEquals.assertValue(
-					locator1 = "DDMEditTemplate#DETAILS_STRUCTURE",
+				AssertTextEquals(
+					key_text = "Structure",
+					locator1 = "TextInput#ANY",
 					value1 = "${structureName}");
 			}
 
-			if ("${templateLanguage}" == "vm") {
-				AssertTextEquals.assertPartialText(
-					locator1 = "DDMEditTemplate#DETAILS_LANGUAGE",
-					value1 = "Velocity (.vm)");
-			}
-			else if ("${templateLanguage}" == "xsl") {
-				AssertTextEquals.assertPartialText(
-					locator1 = "DDMEditTemplate#DETAILS_LANGUAGE",
-					value1 = "Extensible Stylesheet Language (.xsl)");
-			}
-			else {
-				AssertTextEquals.assertPartialText(
-					locator1 = "DDMEditTemplate#DETAILS_LANGUAGE",
-					value1 = "FreeMarker (.ftl)");
-			}
-
 			if (isSet(templateScript)) {
-				AssertTextEquals.assertPartialTextAceEditor(
-					locator1 = "DDMEditTemplate#SCRIPT_CONTENT_FIELD",
+				AssertTextEquals.assertPartialText(
+					locator1 = "DDMEditTemplate#CODE_MIRROR_EDITOR_CONTENT",
 					value1 = "${templateScript}");
 			}
 		}
@@ -362,9 +396,9 @@ definition {
 	macro viewTableEntryCP {
 		var key_ddlTemplateName = "${templateName}";
 
-		AssertTextEquals(
-			locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_NAME",
-			value1 = "${templateName}");
+		AssertVisible(
+			key_tableEntry = "${templateName}",
+			locator1 = "LexiconTable#TABLE_ENTRY");
 
 		if (isSet(templateSmallImage)) {
 			AssertVisible(
@@ -372,10 +406,10 @@ definition {
 				value1 = "${templateSmallImage}");
 		}
 		else {
-			var key_ddlTemplateDescription = "${templateDescription}";
-
 			AssertTextEquals(
-				locator1 = "DDMSelectTemplate#TEMPLATE_TABLE_DESCRIPTION",
+				key_columnName = "description",
+				key_tableEntry = "${templateName}",
+				locator1 = "LexiconTable#TABLE_ENTRY_INFO",
 				value1 = "${templateDescription}");
 		}
 	}

@@ -26,6 +26,7 @@ import org.gradle.api.tasks.CacheableTask;
 
 /**
  * @author Peter Shin
+ * @author David Truong
  */
 @CacheableTask
 public class YarnInstallTask extends ExecutePackageManagerTask {
@@ -59,11 +60,13 @@ public class YarnInstallTask extends ExecutePackageManagerTask {
 			completeArgs.add("--frozen-lockfile");
 		}
 
+		completeArgs.add("--ignore-engines");
+
 		return completeArgs;
 	}
 
 	private void _createYarnrcFile(File yarnrcFile) throws Exception {
-		List<String> contents = new ArrayList<>(2);
+		List<String> contents = new ArrayList<>();
 
 		contents.add("disable-self-update-check true");
 		contents.add("yarn-offline-mirror \"./node_modules_cache\"");
@@ -73,9 +76,7 @@ public class YarnInstallTask extends ExecutePackageManagerTask {
 	}
 
 	private File _getYarnrcFile() {
-		File scriptFile = getScriptFile();
-
-		return new File(scriptFile.getParentFile(), ".yarnrc");
+		return new File(getWorkingDir(), ".yarnrc");
 	}
 
 	private Object _frozenLockFile;

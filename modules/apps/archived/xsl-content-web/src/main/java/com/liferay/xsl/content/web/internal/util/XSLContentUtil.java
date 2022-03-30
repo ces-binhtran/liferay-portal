@@ -57,30 +57,30 @@ public class XSLContentUtil {
 	}
 
 	public static String transform(
-			XSLContentConfiguration xslContentConfiguration, URL xmlUrl,
-			URL xslUrl)
+			XSLContentConfiguration xslContentConfiguration, URL xmlURL,
+			URL xslURL)
 		throws Exception {
 
-		TransformerFactory transformerFactory = getTransformerFactory(
+		TransformerFactory transformerFactory = _getTransformerFactory(
 			xslContentConfiguration);
 
-		DocumentBuilder documentBuilder = getDocumentBuilder(
+		DocumentBuilder documentBuilder = _getDocumentBuilder(
 			xslContentConfiguration);
 
 		Transformer transformer = transformerFactory.newTransformer(
-			getXslSource(documentBuilder, xslUrl));
+			_getXslSource(documentBuilder, xslURL));
 
 		UnsyncByteArrayOutputStream unsyncByteArrayOutputStream =
 			new UnsyncByteArrayOutputStream();
 
 		transformer.transform(
-			getXmlSource(documentBuilder, xmlUrl),
+			_getXmlSource(documentBuilder, xmlURL),
 			new StreamResult(unsyncByteArrayOutputStream));
 
 		return unsyncByteArrayOutputStream.toString();
 	}
 
-	protected static DocumentBuilder getDocumentBuilder(
+	private static DocumentBuilder _getDocumentBuilder(
 			XSLContentConfiguration xslContentConfiguration)
 		throws Exception {
 
@@ -102,7 +102,7 @@ public class XSLContentUtil {
 		return documentBuilderFactory.newDocumentBuilder();
 	}
 
-	protected static TransformerFactory getTransformerFactory(
+	private static TransformerFactory _getTransformerFactory(
 			XSLContentConfiguration xslContentConfiguration)
 		throws Exception {
 
@@ -116,11 +116,11 @@ public class XSLContentUtil {
 		return transformerFactory;
 	}
 
-	protected static Source getXmlSource(
-			DocumentBuilder documentBuilder, URL xmlUrl)
+	private static Source _getXmlSource(
+			DocumentBuilder documentBuilder, URL xmlURL)
 		throws Exception {
 
-		String xml = HttpUtil.URLtoString(xmlUrl);
+		String xml = HttpUtil.URLtoString(xmlURL);
 
 		Document xmlDocument = documentBuilder.parse(
 			new ByteArrayInputStream(xml.getBytes()));
@@ -128,11 +128,11 @@ public class XSLContentUtil {
 		return new DOMSource(xmlDocument);
 	}
 
-	protected static Source getXslSource(
-			DocumentBuilder documentBuilder, URL xslUrl)
+	private static Source _getXslSource(
+			DocumentBuilder documentBuilder, URL xslURL)
 		throws Exception {
 
-		String xsl = HttpUtil.URLtoString(xslUrl);
+		String xsl = HttpUtil.URLtoString(xslURL);
 
 		Document xslDocument = documentBuilder.parse(
 			new ByteArrayInputStream(xsl.getBytes()));

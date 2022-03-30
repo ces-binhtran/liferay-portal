@@ -32,7 +32,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -47,7 +46,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
@@ -106,7 +104,9 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 		WorkflowTaskTransitionsResource.Builder builder =
 			WorkflowTaskTransitionsResource.builder();
 
-		workflowTaskTransitionsResource = builder.locale(
+		workflowTaskTransitionsResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -191,20 +191,46 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 	}
 
 	@Test
-	public void testGetWorkflowTaskTransition() throws Exception {
-		Assert.assertTrue(false);
+	public void testPostWorkflowTaskTransition() throws Exception {
+		WorkflowTaskTransitions randomWorkflowTaskTransitions =
+			randomWorkflowTaskTransitions();
+
+		WorkflowTaskTransitions postWorkflowTaskTransitions =
+			testPostWorkflowTaskTransition_addWorkflowTaskTransitions(
+				randomWorkflowTaskTransitions);
+
+		assertEquals(
+			randomWorkflowTaskTransitions, postWorkflowTaskTransitions);
+		assertValid(postWorkflowTaskTransitions);
 	}
 
-	@Test
-	public void testGraphQLGetWorkflowTaskTransition() throws Exception {
-		Assert.assertTrue(true);
-	}
-
-	@Test
-	public void testGraphQLGetWorkflowTaskTransitionNotFound()
+	protected WorkflowTaskTransitions
+			testPostWorkflowTaskTransition_addWorkflowTaskTransitions(
+				WorkflowTaskTransitions workflowTaskTransitions)
 		throws Exception {
 
-		Assert.assertTrue(true);
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		WorkflowTaskTransitions workflowTaskTransitions,
+		List<WorkflowTaskTransitions> workflowTaskTransitionses) {
+
+		boolean contains = false;
+
+		for (WorkflowTaskTransitions item : workflowTaskTransitionses) {
+			if (equals(workflowTaskTransitions, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			workflowTaskTransitionses + " does not contain " +
+				workflowTaskTransitions,
+			contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -275,8 +301,8 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 		}
 	}
 
-	protected void assertValid(
-		WorkflowTaskTransitions workflowTaskTransitions) {
+	protected void assertValid(WorkflowTaskTransitions workflowTaskTransitions)
+		throws Exception {
 
 		boolean valid = true;
 
@@ -328,8 +354,8 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.admin.workflow.dto.v1_0.
 						WorkflowTaskTransitions.class)) {
 
@@ -345,12 +371,13 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -364,7 +391,7 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -430,9 +457,24 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -602,12 +644,12 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -617,10 +659,10 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -634,8 +676,9 @@ public abstract class BaseWorkflowTaskTransitionsResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseWorkflowTaskTransitionsResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(
+			BaseWorkflowTaskTransitionsResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

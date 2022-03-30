@@ -16,11 +16,8 @@ package com.liferay.change.tracking.service.base;
 
 import com.liferay.change.tracking.model.CTCollection;
 import com.liferay.change.tracking.service.CTCollectionLocalService;
+import com.liferay.change.tracking.service.CTCollectionLocalServiceUtil;
 import com.liferay.change.tracking.service.persistence.CTCollectionPersistence;
-import com.liferay.change.tracking.service.persistence.CTEntryPersistence;
-import com.liferay.change.tracking.service.persistence.CTMessagePersistence;
-import com.liferay.change.tracking.service.persistence.CTPreferencesPersistence;
-import com.liferay.change.tracking.service.persistence.CTProcessPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -48,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +72,15 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTCollectionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.service.CTCollectionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTCollectionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTCollectionLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ct collection to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was added
@@ -104,6 +108,10 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	/**
 	 * Deletes the ct collection with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctCollectionId the primary key of the ct collection
 	 * @return the ct collection that was removed
 	 * @throws PortalException if a ct collection with the primary key could not be found
@@ -118,6 +126,10 @@ public abstract class CTCollectionLocalServiceBaseImpl
 
 	/**
 	 * Deletes the ct collection from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was removed
@@ -134,6 +146,13 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctCollectionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -287,6 +306,7 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -305,6 +325,7 @@ public abstract class CTCollectionLocalServiceBaseImpl
 			(CTCollection)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<CTCollection> getBasePersistence() {
 		return ctCollectionPersistence;
 	}
@@ -348,6 +369,10 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	/**
 	 * Updates the ct collection in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTCollectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctCollection the ct collection
 	 * @return the ct collection that was updated
 	 */
@@ -355,6 +380,11 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	@Override
 	public CTCollection updateCTCollection(CTCollection ctCollection) {
 		return ctCollectionPersistence.update(ctCollection);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -368,6 +398,8 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctCollectionLocalService = (CTCollectionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctCollectionLocalService);
 	}
 
 	/**
@@ -412,6 +444,22 @@ public abstract class CTCollectionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		CTCollectionLocalService ctCollectionLocalService) {
+
+		try {
+			Field field = CTCollectionLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctCollectionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected CTCollectionLocalService ctCollectionLocalService;
 
 	@Reference
@@ -420,17 +468,5 @@ public abstract class CTCollectionLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected CTEntryPersistence ctEntryPersistence;
-
-	@Reference
-	protected CTMessagePersistence ctMessagePersistence;
-
-	@Reference
-	protected CTPreferencesPersistence ctPreferencesPersistence;
-
-	@Reference
-	protected CTProcessPersistence ctProcessPersistence;
 
 }

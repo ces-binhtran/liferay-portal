@@ -27,6 +27,10 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 	implements KaleoTimerInstanceTokenLocalService,
 			   ServiceWrapper<KaleoTimerInstanceTokenLocalService> {
 
+	public KaleoTimerInstanceTokenLocalServiceWrapper() {
+		this(null);
+	}
+
 	public KaleoTimerInstanceTokenLocalServiceWrapper(
 		KaleoTimerInstanceTokenLocalService
 			kaleoTimerInstanceTokenLocalService) {
@@ -37,6 +41,10 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Adds the kaleo timer instance token to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTimerInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTimerInstanceToken the kaleo timer instance token
 	 * @return the kaleo timer instance token that was added
@@ -149,6 +157,10 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 	/**
 	 * Deletes the kaleo timer instance token from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTimerInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTimerInstanceToken the kaleo timer instance token
 	 * @return the kaleo timer instance token that was removed
 	 */
@@ -164,6 +176,10 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Deletes the kaleo timer instance token with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTimerInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTimerInstanceTokenId the primary key of the kaleo timer instance token
 	 * @return the kaleo timer instance token that was removed
@@ -208,6 +224,13 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kaleoTimerInstanceTokenLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kaleoTimerInstanceTokenLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -428,6 +451,10 @@ public class KaleoTimerInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Updates the kaleo timer instance token in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTimerInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTimerInstanceToken the kaleo timer instance token
 	 * @return the kaleo timer instance token that was updated

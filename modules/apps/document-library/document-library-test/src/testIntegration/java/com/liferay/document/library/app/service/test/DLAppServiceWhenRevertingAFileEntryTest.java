@@ -21,7 +21,6 @@ import com.liferay.document.library.sync.constants.DLSyncConstants;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.document.library.workflow.WorkflowHandlerInvocationCounter;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
@@ -60,29 +59,27 @@ public class DLAppServiceWhenRevertingAFileEntryTest extends BaseDLAppTestCase {
 			Assert.assertEquals(
 				1,
 				workflowHandlerInvocationCounter.getCount(
-					"updateStatus", int.class, Map.class));
+					"updateStatus", Object.class, int.class, Map.class));
 
 			String version = fileEntry.getVersion();
 
 			DLAppServiceTestUtil.updateFileEntry(
 				group.getGroupId(), fileEntry.getFileEntryId(),
-				RandomTestUtil.randomString(), true);
+				RandomTestUtil.randomString(), null, null, true);
 
 			Assert.assertEquals(
 				2,
 				workflowHandlerInvocationCounter.getCount(
-					"updateStatus", int.class, Map.class));
-
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext(group.getGroupId());
+					"updateStatus", Object.class, int.class, Map.class));
 
 			DLAppServiceUtil.revertFileEntry(
-				fileEntry.getFileEntryId(), version, serviceContext);
+				fileEntry.getFileEntryId(), version,
+				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 			Assert.assertEquals(
 				3,
 				workflowHandlerInvocationCounter.getCount(
-					"updateStatus", int.class, Map.class));
+					"updateStatus", Object.class, int.class, Map.class));
 		}
 	}
 
@@ -101,7 +98,7 @@ public class DLAppServiceWhenRevertingAFileEntryTest extends BaseDLAppTestCase {
 
 		DLAppServiceTestUtil.updateFileEntry(
 			group.getGroupId(), fileEntry.getFileEntryId(),
-			RandomTestUtil.randomString(), true);
+			RandomTestUtil.randomString(), null, null, true);
 
 		Assert.assertEquals(2, updateCounter.get());
 

@@ -12,30 +12,12 @@
  * details.
  */
 
-export const containsFieldSet = (dataDefinition, dataDefinitionId) => {
-	let hasFieldSet = false;
+import {getLocalizedValue} from './lang.es';
 
-	forEachDataDefinitionField(dataDefinition, (dataDefinitionField) => {
-		const {customProperties, fieldType} = dataDefinitionField;
-
-		if (
-			fieldType === 'fieldset' &&
-			customProperties &&
-			customProperties.ddmStructureId == dataDefinitionId
-		) {
-			hasFieldSet = true;
-		}
-
-		return hasFieldSet;
-	});
-
-	return hasFieldSet;
-};
-
-export const forEachDataDefinitionField = (
+export function forEachDataDefinitionField(
 	dataDefinition = {dataDefinitionFields: []},
 	fn
-) => {
+) {
 	const {dataDefinitionFields = []} = dataDefinition;
 
 	for (let i = 0; i < dataDefinitionFields.length; i++) {
@@ -59,12 +41,12 @@ export const forEachDataDefinitionField = (
 	}
 
 	return false;
-};
+}
 
-export const getDataDefinitionField = (
+export function getDataDefinitionField(
 	dataDefinition = {dataDefinitionFields: []},
 	fieldName
-) => {
+) {
 	let field = null;
 
 	forEachDataDefinitionField(dataDefinition, (currentField) => {
@@ -78,23 +60,30 @@ export const getDataDefinitionField = (
 	});
 
 	return field;
-};
+}
 
-export const getFieldLabel = (dataDefinition, fieldName) => {
+export function getFieldLabel(dataDefinition, fieldName) {
 	const field = getDataDefinitionField(dataDefinition, fieldName);
 
-	return field ? field.label[themeDisplay.getLanguageId()] : fieldName;
-};
+	if (field) {
+		return getLocalizedValue(dataDefinition.defaultLanguageId, field.label);
+	}
 
-export const getOptionLabel = (options = {}, value) => {
-	return (options[themeDisplay.getLanguageId()] || []).reduce(
-		(result, option) => {
-			if (option.value === value) {
-				return option.label;
-			}
+	return fieldName;
+}
 
-			return result;
-		},
-		value
-	);
-};
+export function getOptionLabel(
+	options = {},
+	value,
+	defaultLanguageId = themeDisplay.getDefaultLanguageId(),
+	languageId = themeDisplay.getLanguageId()
+) {
+	const getLabel = (languageId) => {
+		if (options[languageId]) {
+			return options[languageId].find((option) => option.value === value)
+				?.label;
+		}
+	};
+
+	return getLabel(languageId) || getLabel(defaultLanguageId) || value;
+}

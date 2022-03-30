@@ -36,7 +36,7 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 
 <portlet:actionURL name="/monitoring/edit_session" var="editSessionURL" />
 
-<aui:form action="<%= editSessionURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editSessionURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="sessionId" type="hidden" value="<%= sessionId %>" />
 
@@ -170,8 +170,11 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 							userSessionAlive = true;
 
 							HttpSession userSession = PortalSessionContext.get(sessionId);
+							%>
 
-							if (userSession != null) {
+							<c:if test="<%= userSession != null %>">
+
+								<%
 								try {
 									Set<String> sortedAttrNames = new TreeSet<String>();
 
@@ -184,36 +187,37 @@ renderResponse.setTitle(LanguageUtil.format(request, "session-id-x", sessionId, 
 									}
 
 									for (String attrName : sortedAttrNames) {
-							%>
+								%>
 
 										<dt class="h4">
 											<%= HtmlUtil.escape(attrName) %>
 										</dt>
 
-							<%
+								<%
 									}
 								}
 								catch (Exception e) {
 									userSessionAlive = false;
 
-									_log.error(e, e);
+									_log.error(e);
 								}
-							}
-							%>
+								%>
 
+							</c:if>
 						</dl>
 					</liferay-ui:panel>
 				</liferay-ui:panel-container>
 			</aui:fieldset-group>
 
 			<aui:button-row>
-				<c:if test="<%= userSessionAlive && !session.getId().equals(sessionId) %>">
+				<c:if test="<%= userSessionAlive && !Objects.equals(session.getId(), sessionId) %>">
 					<aui:button type="submit" value="kill-session" />
 				</c:if>
 			</aui:button-row>
 		</c:otherwise>
 	</c:choose>
 </aui:form>
+
 <%!
-	private static Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_monitoring_web.edit_session_jsp");
 %>

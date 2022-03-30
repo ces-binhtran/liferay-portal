@@ -15,6 +15,8 @@
 package com.liferay.bookmarks.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.model.BookmarksFolder;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
@@ -24,7 +26,6 @@ import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Indexer;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -34,6 +35,8 @@ import com.liferay.portal.kernel.test.rule.SynchronousDestinationTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.searcher.Searcher;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
@@ -99,7 +102,7 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 		_group = group;
 		_groups = groupSearchFixture.getGroups();
 		_indexedFieldsFixture = new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
+			resourcePermissionLocalService, uidFactory, documentBuilderFactory);
 		_users = userSearchFixture.getUsers();
 	}
 
@@ -142,6 +145,9 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 	@Inject
 	protected BookmarksFolderService bookmarksFolderService;
 
+	@Inject
+	protected DocumentBuilderFactory documentBuilderFactory;
+
 	@Inject(
 		filter = "indexer.class.name=com.liferay.bookmarks.model.BookmarksEntry"
 	)
@@ -151,13 +157,13 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 
 	@Inject
-	protected SearchEngineHelper searchEngineHelper;
-
-	@Inject
 	protected Searcher searcher;
 
 	@Inject
 	protected SearchRequestBuilderFactory searchRequestBuilderFactory;
+
+	@Inject
+	protected UIDFactory uidFactory;
 
 	@Inject
 	protected UserLocalService userLocalService;
@@ -167,6 +173,9 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 		throws Exception {
 
 		Map<String, String> map = HashMapBuilder.put(
+			Field.ASSET_ENTRY_ID,
+			String.valueOf(_getAssetEntryId(bookmarksEntry))
+		).put(
 			Field.COMPANY_ID, String.valueOf(bookmarksEntry.getCompanyId())
 		).put(
 			Field.DESCRIPTION, bookmarksEntry.getDescription()
@@ -193,6 +202,9 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 		).put(
 			Field.USER_NAME, StringUtil.lowerCase(bookmarksEntry.getUserName())
 		).put(
+			"assetEntryId_sortable",
+			String.valueOf(_getAssetEntryId(bookmarksEntry))
+		).put(
 			"title_sortable", StringUtil.lowerCase(bookmarksEntry.getName())
 		).put(
 			"visible", "true"
@@ -203,8 +215,7 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 		_bookmarksFixture.populateTreePath(bookmarksEntry.getTreePath(), map);
 
 		_indexedFieldsFixture.populatePriority("0.0", map);
-		_indexedFieldsFixture.populateUID(
-			BookmarksEntry.class.getName(), bookmarksEntry.getEntryId(), map);
+		_indexedFieldsFixture.populateUID(bookmarksEntry, map);
 		_indexedFieldsFixture.populateViewCount(
 			BookmarksEntry.class, bookmarksEntry.getEntryId(), map);
 
@@ -212,6 +223,17 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 		_populateRoles(bookmarksEntry, map);
 
 		return map;
+	}
+
+	private long _getAssetEntryId(BookmarksEntry bookmarksEntry) {
+		AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
+			BookmarksEntry.class.getName(), bookmarksEntry.getEntryId());
+
+		if (assetEntry == null) {
+			return 0;
+		}
+
+		return assetEntry.getEntryId();
 	}
 
 	private void _populateDates(
@@ -235,6 +257,9 @@ public class BookmarksEntryIndexerIndexedFieldsTest {
 			bookmarksEntry.getEntryId(), bookmarksEntry.getGroupId(), null,
 			map);
 	}
+
+	@Inject
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@DeleteAfterTestRun
 	private List<BookmarksEntry> _bookmarksEntries;

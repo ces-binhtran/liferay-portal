@@ -129,11 +129,7 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 
 					String name = file.getName();
 
-					if (!name.startsWith(prefix)) {
-						return false;
-					}
-
-					if (!name.endsWith(suffix)) {
+					if (!name.startsWith(prefix) || !name.endsWith(suffix)) {
 						return false;
 					}
 
@@ -192,6 +188,10 @@ public class FileUtil extends com.liferay.gradle.util.FileUtil {
 	}
 
 	public static boolean hasSourceFiles(Task task, Spec<File> spec) {
+		if (exists(task.getProject(), ".lfrbuild-releng-skip-source")) {
+			return false;
+		}
+
 		TaskInputs taskInputs = task.getInputs();
 
 		return hasFiles(taskInputs.getSourceFiles(), spec);

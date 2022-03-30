@@ -218,28 +218,13 @@ public class NewEnvJVMTestRuleTest {
 		return pid;
 	}
 
-	private static Map<String, String> _fromString(String s) {
-		Map<String, String> map = new HashMap<>();
-
-		for (String entry : StringUtil.split(s, _SEPARATOR_VARIABLE)) {
-			String[] parts = StringUtil.split(entry, _SEPARATOR_KEY_VALUE);
-
-			if (parts.length == 1) {
-				map.put(parts[0], null);
-			}
-			else {
-				map.put(parts[0], parts[1]);
-			}
-		}
-
-		return map;
-	}
-
 	private static Map<String, String> _getEnvironment() {
 		Map<String, String> environment = new HashMap<>(System.getenv());
 
+		environment.remove("CACHE_DIR");
 		environment.remove("MODULES_BASE_DIR_NAMES_WITH_CHANGES");
 		environment.remove("PROJECT_NAMES");
+		environment.remove("PORTAL_BUNDLES_DIST_URL");
 		environment.remove("SUBREPOSITORY_PACKAGE_NAMES");
 		environment.remove("TERMCAP");
 
@@ -259,6 +244,23 @@ public class NewEnvJVMTestRuleTest {
 		sb.setIndex(sb.index() - 1);
 
 		return sb.toString();
+	}
+
+	private Map<String, String> _fromString(String s) {
+		Map<String, String> map = new HashMap<>();
+
+		for (String entry : StringUtil.split(s, _SEPARATOR_VARIABLE)) {
+			String[] parts = StringUtil.split(entry, _SEPARATOR_KEY_VALUE);
+
+			if (parts.length == 1) {
+				map.put(parts[0], null);
+			}
+			else {
+				map.put(parts[0], parts[1]);
+			}
+		}
+
+		return map;
 	}
 
 	private static final String _ENVIRONMENT_KEY_USER = "USER";

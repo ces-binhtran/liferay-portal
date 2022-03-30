@@ -76,16 +76,16 @@ public class VersionableName
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof VersionableName)) {
+		if (!(object instanceof VersionableName)) {
 			return false;
 		}
 
-		VersionableName versionableName = (VersionableName)obj;
+		VersionableName versionableName = (VersionableName)object;
 
 		if (Objects.equals(_name, versionableName._name)) {
 			return true;
@@ -117,15 +117,8 @@ public class VersionableName
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{name=");
-		sb.append(_name);
-		sb.append(", versions=");
-		sb.append(_versions);
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"{name=", _name, ", versions=", _versions, "}");
 	}
 
 	private final String _name;

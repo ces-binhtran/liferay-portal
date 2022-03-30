@@ -14,6 +14,7 @@
 
 package com.liferay.sharing.web.internal.portlet.action;
 
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.HashMapBuilder;
@@ -24,8 +25,6 @@ import com.liferay.sharing.web.internal.constants.SharingWebKeys;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplayAction;
 import com.liferay.sharing.web.internal.helper.SharingHelper;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.RenderRequest;
 import javax.portlet.RenderResponse;
 import javax.portlet.ResourceURL;
@@ -39,8 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + SharingPortletKeys.SHARING,
-		"mvc.command.name=/", "mvc.command.name=/sharing/share"
+		"javax.portlet.name=" + SharingPortletKeys.SHARING, "mvc.command.name=/"
 	},
 	service = MVCRenderCommand.class
 )
@@ -90,18 +88,17 @@ public class ViewMVCRenderCommand implements MVCRenderCommand {
 	private String _getAutocompleteUserURL(RenderResponse renderResponse) {
 		ResourceURL autocompleteUserURL = renderResponse.createResourceURL();
 
-		autocompleteUserURL.setResourceID("/sharing/users");
+		autocompleteUserURL.setResourceID("/sharing/autocomplete_user");
 
 		return autocompleteUserURL.toString();
 	}
 
 	private String _getShareActionURL(RenderResponse renderResponse) {
-		PortletURL shareActionURL = renderResponse.createActionURL();
-
-		shareActionURL.setParameter(
-			ActionRequest.ACTION_NAME, "/sharing/share");
-
-		return shareActionURL.toString();
+		return PortletURLBuilder.createActionURL(
+			renderResponse
+		).setActionName(
+			"/sharing/share_entry"
+		).buildString();
 	}
 
 	private String _getSharingVerifyEmailAddressURL(

@@ -14,7 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.service.impl;
 
-import com.liferay.dynamic.data.mapping.internal.search.util.DDMSearchHelper;
+import com.liferay.dynamic.data.mapping.internal.search.helper.DDMSearchHelper;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormLayoutDeserializerDeserializeResponse;
@@ -36,6 +36,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
@@ -60,13 +61,31 @@ import org.osgi.service.component.annotations.Reference;
 public class DDMStructureLayoutLocalServiceImpl
 	extends DDMStructureLayoutLocalServiceBaseImpl {
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #addStructureLayout(long, long, long, String, long,
+	 *             DDMFormLayout, ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public DDMStructureLayout addStructureLayout(
 			long userId, long groupId, long structureVersionId,
 			DDMFormLayout ddmFormLayout, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		return addStructureLayout(
+			userId, groupId, 0, null, structureVersionId, ddmFormLayout,
+			serviceContext);
+	}
+
+	@Override
+	public DDMStructureLayout addStructureLayout(
+			long userId, long groupId, long classNameId,
+			String structureLayoutKey, long structureVersionId,
+			DDMFormLayout ddmFormLayout, ServiceContext serviceContext)
+		throws PortalException {
+
+		User user = _userLocalService.getUser(userId);
 
 		validate(ddmFormLayout);
 
@@ -80,8 +99,13 @@ public class DDMStructureLayoutLocalServiceImpl
 		structureLayout.setCompanyId(user.getCompanyId());
 		structureLayout.setUserId(user.getUserId());
 		structureLayout.setUserName(user.getFullName());
+		structureLayout.setClassNameId(classNameId);
 		structureLayout.setStructureLayoutKey(
-			String.valueOf(counterLocalService.increment()));
+			Optional.ofNullable(
+				structureLayoutKey
+			).orElseGet(
+				() -> String.valueOf(counterLocalService.increment())
+			));
 		structureLayout.setStructureVersionId(structureVersionId);
 		structureLayout.setDefinition(serialize(ddmFormLayout));
 
@@ -97,7 +121,7 @@ public class DDMStructureLayoutLocalServiceImpl
 			String definition, ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long structureLayoutId = counterLocalService.increment();
 
@@ -360,5 +384,8 @@ public class DDMStructureLayoutLocalServiceImpl
 
 	@Reference(target = "(ddm.form.layout.serializer.type=json)")
 	private DDMFormLayoutSerializer _jsonDDMFormLayoutSerializer;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

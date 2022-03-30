@@ -134,7 +134,7 @@ public class ReCaptchaImpl extends SimpleCaptchaImpl {
 				"secret", _captchaConfiguration.reCaptchaPrivateKey());
 		}
 		catch (SystemException systemException) {
-			_log.error(systemException, systemException);
+			_log.error(systemException);
 		}
 
 		options.addPart("remoteip", httpServletRequest.getRemoteAddr());
@@ -147,7 +147,7 @@ public class ReCaptchaImpl extends SimpleCaptchaImpl {
 			content = HttpUtil.URLtoString(options);
 		}
 		catch (IOException ioException) {
-			_log.error(ioException, ioException);
+			_log.error(ioException);
 
 			throw new CaptchaConfigurationException();
 		}
@@ -175,7 +175,7 @@ public class ReCaptchaImpl extends SimpleCaptchaImpl {
 				throw new CaptchaConfigurationException();
 			}
 
-			StringBundler sb = new StringBundler(jsonArray.length() * 2 - 1);
+			StringBundler sb = new StringBundler((jsonArray.length() * 2) - 1);
 
 			for (int i = 0; i < jsonArray.length(); i++) {
 				sb.append(jsonArray.getString(i));

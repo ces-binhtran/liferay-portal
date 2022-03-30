@@ -60,7 +60,7 @@ public class UpdateAnnouncementsDeliveriesMVCActionCommand
 		User user = _portal.getSelectedUser(actionRequest);
 
 		List<AnnouncementsDelivery> announcementsDeliveries =
-			getAnnouncementsDeliveries(actionRequest, user);
+			_getAnnouncementsDeliveries(actionRequest, user);
 
 		for (AnnouncementsDelivery announcementsDelivery :
 				announcementsDeliveries) {
@@ -78,7 +78,7 @@ public class UpdateAnnouncementsDeliveriesMVCActionCommand
 		}
 	}
 
-	protected List<AnnouncementsDelivery> getAnnouncementsDeliveries(
+	private List<AnnouncementsDelivery> _getAnnouncementsDeliveries(
 		ActionRequest actionRequest) {
 
 		List<AnnouncementsDelivery> announcementsDeliveries = new ArrayList<>();
@@ -86,15 +86,12 @@ public class UpdateAnnouncementsDeliveriesMVCActionCommand
 		for (String type : AnnouncementsEntryConstants.TYPES) {
 			boolean email = ParamUtil.getBoolean(
 				actionRequest, "announcementsType" + type + "Email");
-			boolean sms = ParamUtil.getBoolean(
-				actionRequest, "announcementsType" + type + "Sms");
 
 			AnnouncementsDelivery announcementsDelivery =
 				new AnnouncementsDeliveryImpl();
 
 			announcementsDelivery.setType(type);
 			announcementsDelivery.setEmail(email);
-			announcementsDelivery.setSms(sms);
 
 			announcementsDeliveries.add(announcementsDelivery);
 		}
@@ -102,7 +99,7 @@ public class UpdateAnnouncementsDeliveriesMVCActionCommand
 		return announcementsDeliveries;
 	}
 
-	protected List<AnnouncementsDelivery> getAnnouncementsDeliveries(
+	private List<AnnouncementsDelivery> _getAnnouncementsDeliveries(
 			ActionRequest actionRequest, User user)
 		throws Exception {
 
@@ -115,7 +112,7 @@ public class UpdateAnnouncementsDeliveriesMVCActionCommand
 				user.getUserId());
 		}
 
-		return getAnnouncementsDeliveries(actionRequest);
+		return _getAnnouncementsDeliveries(actionRequest);
 	}
 
 	@Reference

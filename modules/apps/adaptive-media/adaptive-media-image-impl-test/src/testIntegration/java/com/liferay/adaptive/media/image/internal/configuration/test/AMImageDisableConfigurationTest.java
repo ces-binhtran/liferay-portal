@@ -49,23 +49,21 @@ public class AMImageDisableConfigurationTest
 
 	@Test
 	public void testDisableAllConfigurationEntries() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
+		_amImageConfigurationHelper.addAMImageConfigurationEntry(
+			TestPropsValues.getCompanyId(), "one", "onedesc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "onedesc", "1", properties);
-
-		properties = HashMapBuilder.put(
-			"max-height", "200"
-		).put(
-			"max-width", "200"
-		).build();
-
-		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "two", "twodesc", "2", properties);
+			TestPropsValues.getCompanyId(), "two", "twodesc", "2",
+			HashMapBuilder.put(
+				"max-height", "200"
+			).put(
+				"max-width", "200"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "1");
@@ -91,26 +89,24 @@ public class AMImageDisableConfigurationTest
 	public void testDisableConfigurationWithExistingDisabledConfiguration()
 		throws Exception {
 
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "onedesc", "1", properties);
+			TestPropsValues.getCompanyId(), "one", "onedesc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "1");
 
-		properties = HashMapBuilder.put(
-			"max-height", "200"
-		).put(
-			"max-width", "200"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "two", "twodesc", "2", properties);
+			TestPropsValues.getCompanyId(), "two", "twodesc", "2",
+			HashMapBuilder.put(
+				"max-height", "200"
+			).put(
+				"max-width", "200"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "2");
@@ -130,14 +126,13 @@ public class AMImageDisableConfigurationTest
 
 	@Test
 	public void testDisableDisabledConfigurationEntry() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "desc", "1", properties);
+			TestPropsValues.getCompanyId(), "one", "desc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "1");
@@ -160,23 +155,21 @@ public class AMImageDisableConfigurationTest
 
 	@Test
 	public void testDisableFirstConfigurationEntry() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
+		_amImageConfigurationHelper.addAMImageConfigurationEntry(
+			TestPropsValues.getCompanyId(), "one", "onedesc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "onedesc", "1", properties);
-
-		properties = HashMapBuilder.put(
-			"max-height", "200"
-		).put(
-			"max-width", "200"
-		).build();
-
-		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "two", "twodesc", "2", properties);
+			TestPropsValues.getCompanyId(), "two", "twodesc", "2",
+			HashMapBuilder.put(
+				"max-height", "200"
+			).put(
+				"max-width", "200"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "1");
@@ -212,23 +205,21 @@ public class AMImageDisableConfigurationTest
 
 	@Test
 	public void testDisableSecondConfigurationEntry() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
+		_amImageConfigurationHelper.addAMImageConfigurationEntry(
+			TestPropsValues.getCompanyId(), "one", "onedesc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "onedesc", "1", properties);
-
-		properties = HashMapBuilder.put(
-			"max-height", "200"
-		).put(
-			"max-width", "200"
-		).build();
-
-		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "two", "twodesc", "2", properties);
+			TestPropsValues.getCompanyId(), "two", "twodesc", "2",
+			HashMapBuilder.put(
+				"max-height", "200"
+			).put(
+				"max-width", "200"
+			).build());
 
 		_amImageConfigurationHelper.disableAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "2");
@@ -250,14 +241,13 @@ public class AMImageDisableConfigurationTest
 
 	@Test
 	public void testDisableUniqueConfigurationEntry() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
-			TestPropsValues.getCompanyId(), "one", "desc", "1", properties);
+			TestPropsValues.getCompanyId(), "one", "desc", "1",
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 
 		Optional<AMImageConfigurationEntry> amImageConfigurationEntryOptional =
 			_amImageConfigurationHelper.getAMImageConfigurationEntry(

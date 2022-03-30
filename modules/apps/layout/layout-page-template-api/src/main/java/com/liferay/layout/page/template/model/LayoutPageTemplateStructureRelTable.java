@@ -38,6 +38,9 @@ public class LayoutPageTemplateStructureRelTable
 	public final Column<LayoutPageTemplateStructureRelTable, Long> mvccVersion =
 		createColumn(
 			"mvccVersion", Long.class, Types.BIGINT, Column.FLAG_NULLITY);
+	public final Column<LayoutPageTemplateStructureRelTable, Long>
+		ctCollectionId = createColumn(
+			"ctCollectionId", Long.class, Types.BIGINT, Column.FLAG_PRIMARY);
 	public final Column<LayoutPageTemplateStructureRelTable, String> uuid =
 		createColumn("uuid_", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<LayoutPageTemplateStructureRelTable, Long>
@@ -70,6 +73,23 @@ public class LayoutPageTemplateStructureRelTable
 			Column.FLAG_DEFAULT);
 	public final Column<LayoutPageTemplateStructureRelTable, Clob> data =
 		createColumn("data_", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
+	public final Column<LayoutPageTemplateStructureRelTable, Date>
+		lastPublishDate = createColumn(
+			"lastPublishDate", Date.class, Types.TIMESTAMP,
+			Column.FLAG_DEFAULT);
+	public final Column<LayoutPageTemplateStructureRelTable, Integer> status =
+		createColumn(
+			"status", Integer.class, Types.INTEGER, Column.FLAG_DEFAULT);
+	public final Column<LayoutPageTemplateStructureRelTable, Long>
+		statusByUserId = createColumn(
+			"statusByUserId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
+	public final Column<LayoutPageTemplateStructureRelTable, String>
+		statusByUserName = createColumn(
+			"statusByUserName", String.class, Types.VARCHAR,
+			Column.FLAG_DEFAULT);
+	public final Column<LayoutPageTemplateStructureRelTable, Date> statusDate =
+		createColumn(
+			"statusDate", Date.class, Types.TIMESTAMP, Column.FLAG_DEFAULT);
 
 	private LayoutPageTemplateStructureRelTable() {
 		super(

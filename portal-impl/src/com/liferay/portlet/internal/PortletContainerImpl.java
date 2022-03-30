@@ -342,11 +342,7 @@ public class PortletContainerImpl implements PortletContainer {
 	}
 
 	private boolean _isPublishedContentPage(Layout layout) {
-		if (layout.isTypeContent() &&
-			((layout.getClassNameId() == 0) ||
-			 (PortalUtil.getClassNameId(Layout.class.getName()) !=
-				 layout.getClassNameId()))) {
-
+		if (!layout.isDraftLayout() && layout.isTypeContent()) {
 			return true;
 		}
 
@@ -599,8 +595,6 @@ public class PortletContainerImpl implements PortletContainer {
 		PortletConfig portletConfig = PortletConfigFactoryUtil.create(
 			portlet, servletContext);
 
-		PortletContext portletContext = portletConfig.getPortletContext();
-
 		LayoutTypePortlet layoutTypePortlet =
 			(LayoutTypePortlet)layout.getLayoutType();
 
@@ -670,8 +664,9 @@ public class PortletContainerImpl implements PortletContainer {
 				scopeGroupId, layout, portlet.getPortletId(), null);
 
 		LiferayEventRequest liferayEventRequest = EventRequestFactory.create(
-			httpServletRequest, portlet, invokerPortlet, portletContext,
-			windowState, portletMode, portletPreferences, layout.getPlid());
+			httpServletRequest, portlet, invokerPortlet,
+			portletConfig.getPortletContext(), windowState, portletMode,
+			portletPreferences, layout.getPlid());
 
 		liferayEventRequest.setEvent(
 			serializeEvent(event, invokerPortlet.getPortletClassLoader()));
@@ -989,10 +984,6 @@ public class PortletContainerImpl implements PortletContainer {
 			}
 		}
 
-		PortletMode portletMode = PortletModeFactory.getPortletMode(
-			ParamUtil.getString(httpServletRequest, "p_p_mode"),
-			portletSpecMajorVersion);
-
 		PortletPreferencesIds portletPreferencesIds =
 			PortletPreferencesFactoryUtil.getPortletPreferencesIds(
 				httpServletRequest, portlet.getPortletId());
@@ -1047,6 +1038,10 @@ public class PortletContainerImpl implements PortletContainer {
 		LiferayResourceResponse liferayResourceResponse = null;
 
 		if (liferayResourceRequest == null) {
+			PortletMode portletMode = PortletModeFactory.getPortletMode(
+				ParamUtil.getString(httpServletRequest, "p_p_mode"),
+				portletSpecMajorVersion);
+
 			PortletPreferences portletPreferences =
 				PortletPreferencesLocalServiceUtil.getStrictPreferences(
 					portletPreferencesIds);
@@ -1110,7 +1105,7 @@ public class PortletContainerImpl implements PortletContainer {
 			(MutableRenderParametersImpl)
 				liferayStateAwareResponse.getRenderParameters();
 
-		Map<String, String[]> mutableRenderParametersMap =
+		Map<String, String[]> mutableRenderParameterMap =
 			mutableRenderParametersImpl.getParameterMap();
 
 		Map<String, QName> supportedPublicRenderParameterMap = new HashMap<>();
@@ -1130,7 +1125,7 @@ public class PortletContainerImpl implements PortletContainer {
 		Map<String, String[]> privateRenderParameterMap = new HashMap<>();
 
 		for (Map.Entry<String, String[]> entry :
-				mutableRenderParametersMap.entrySet()) {
+				mutableRenderParameterMap.entrySet()) {
 
 			String key = entry.getKey();
 

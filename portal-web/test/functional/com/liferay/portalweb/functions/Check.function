@@ -12,9 +12,7 @@ definition {
 			selenium.clickAt();
 		}
 
-		selenium.assertChecked(
-			"xpath=( //div[@class='checkbox']//input[@title='Select All'])[2]"
-		);
+		selenium.assertChecked("xpath=( //div[@class='checkbox']//input[@title='Select All'])[2]");
 
 		selenium.assertJavaScriptErrors();
 
@@ -46,7 +44,9 @@ definition {
 
 		selenium.mouseOver();
 
-		selenium.clickAt();
+		if (selenium.isNotChecked()) {
+			selenium.clickAt();
+		}
 
 		selenium.assertChecked();
 
@@ -65,8 +65,6 @@ definition {
 		if (selenium.isNotChecked()) {
 			selenium.clickAt();
 		}
-
-		AssertChecked.assertCheckedNotVisible();
 
 		selenium.assertJavaScriptErrors();
 

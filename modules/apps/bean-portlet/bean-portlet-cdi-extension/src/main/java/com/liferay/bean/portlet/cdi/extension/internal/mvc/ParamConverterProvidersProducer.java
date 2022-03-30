@@ -28,7 +28,7 @@ import javax.inject.Inject;
 import javax.ws.rs.ext.ParamConverterProvider;
 
 /**
- * @author  Neil Griffin
+ * @author Neil Griffin
  */
 @ApplicationScoped
 public class ParamConverterProvidersProducer {
@@ -58,7 +58,7 @@ public class ParamConverterProvidersProducer {
 	private List<ParamConverterProvider> _paramConverterProviders;
 
 	private static class ParamConverterProviderPriorityComparator
-		extends DescendingPriorityComparator<ParamConverterProvider> {
+		extends BaseDescendingPriorityComparator<ParamConverterProvider> {
 
 		private ParamConverterProviderPriorityComparator() {
 			super(0);

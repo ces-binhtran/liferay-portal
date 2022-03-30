@@ -23,6 +23,7 @@ import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.SessionClicks;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.struts.Action;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
@@ -49,7 +50,7 @@ public class SessionClickAction implements Action {
 			AuthTokenUtil.checkCSRFToken(
 				httpServletRequest, SessionClickAction.class.getName());
 
-			HttpSession session = httpServletRequest.getSession();
+			HttpSession httpSession = httpServletRequest.getSession();
 
 			Enumeration<String> enumeration =
 				httpServletRequest.getParameterNames();
@@ -60,12 +61,15 @@ public class SessionClickAction implements Action {
 			while (enumeration.hasMoreElements()) {
 				String name = enumeration.nextElement();
 
-				if (!name.equals("doAsUserId") && !name.equals("p_auth")) {
+				if (!StringUtil.equals(name, "cmd") &&
+					!StringUtil.equals(name, "doAsUserId") &&
+					!StringUtil.equals(name, "p_auth")) {
+
 					String value = ParamUtil.getString(
 						httpServletRequest, name);
 
 					if (useHttpSession) {
-						SessionClicks.put(session, name, value);
+						SessionClicks.put(httpSession, name, value);
 					}
 					else {
 						SessionClicks.put(httpServletRequest, name, value);
@@ -79,7 +83,7 @@ public class SessionClickAction implements Action {
 				String cmd = ParamUtil.getString(
 					httpServletRequest, Constants.CMD);
 
-				if (cmd.equals("get")) {
+				if (StringUtil.equals(cmd, "get")) {
 					httpServletResponse.setContentType(ContentTypes.TEXT_PLAIN);
 				}
 				else {
@@ -104,19 +108,19 @@ public class SessionClickAction implements Action {
 	}
 
 	protected String getValue(HttpServletRequest httpServletRequest) {
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		String cmd = ParamUtil.getString(httpServletRequest, Constants.CMD);
 
 		boolean useHttpSession = ParamUtil.getBoolean(
 			httpServletRequest, "useHttpSession");
 
-		if (cmd.equals("get")) {
+		if (StringUtil.equals(cmd, "get")) {
 			String key = ParamUtil.getString(httpServletRequest, "key");
 			String value = StringPool.BLANK;
 
 			if (useHttpSession) {
-				value = SessionClicks.get(session, key, cmd);
+				value = SessionClicks.get(httpSession, key, cmd);
 			}
 			else {
 				value = SessionClicks.get(httpServletRequest, key, cmd);
@@ -124,7 +128,7 @@ public class SessionClickAction implements Action {
 
 			return value;
 		}
-		else if (cmd.equals("getAll")) {
+		else if (StringUtil.equals(cmd, "getAll")) {
 			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
 
 			String[] keys = httpServletRequest.getParameterValues("key");
@@ -133,7 +137,7 @@ public class SessionClickAction implements Action {
 				String value = StringPool.BLANK;
 
 				if (useHttpSession) {
-					value = SessionClicks.get(session, key, cmd);
+					value = SessionClicks.get(httpSession, key, cmd);
 				}
 				else {
 					value = SessionClicks.get(httpServletRequest, key, cmd);

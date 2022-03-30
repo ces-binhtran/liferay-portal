@@ -15,7 +15,6 @@
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.document;
 
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
-import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequestTranslator;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentResponse;
 
@@ -42,9 +41,10 @@ public class IndexDocumentRequestExecutorImpl
 		IndexDocumentRequest indexDocumentRequest) {
 
 		IndexRequest indexRequest =
-			_bulkableDocumentRequestTranslator.translate(indexDocumentRequest);
+			_elasticsearchBulkableDocumentRequestTranslator.translate(
+				indexDocumentRequest);
 
-		IndexResponse indexResponse = getIndexResponse(
+		IndexResponse indexResponse = _getIndexResponse(
 			indexRequest, indexDocumentRequest);
 
 		RestStatus restStatus = indexResponse.status();
@@ -53,12 +53,29 @@ public class IndexDocumentRequestExecutorImpl
 			restStatus.getStatus(), indexResponse.getId());
 	}
 
-	protected IndexResponse getIndexResponse(
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setBulkableDocumentRequestTranslator(
+		ElasticsearchBulkableDocumentRequestTranslator
+			elasticsearchBulkableDocumentRequestTranslator) {
+
+		_elasticsearchBulkableDocumentRequestTranslator =
+			elasticsearchBulkableDocumentRequestTranslator;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private IndexResponse _getIndexResponse(
 		IndexRequest indexRequest, IndexDocumentRequest indexDocumentRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				indexDocumentRequest.getConnectionId(), false);
+				indexDocumentRequest.getConnectionId(),
+				indexDocumentRequest.isPreferLocalCluster());
 
 		try {
 			return restHighLevelClient.index(
@@ -69,22 +86,8 @@ public class IndexDocumentRequestExecutorImpl
 		}
 	}
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
-	protected void setBulkableDocumentRequestTranslator(
-		BulkableDocumentRequestTranslator bulkableDocumentRequestTranslator) {
-
-		_bulkableDocumentRequestTranslator = bulkableDocumentRequestTranslator;
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
-	}
-
-	private BulkableDocumentRequestTranslator
-		_bulkableDocumentRequestTranslator;
+	private ElasticsearchBulkableDocumentRequestTranslator
+		_elasticsearchBulkableDocumentRequestTranslator;
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

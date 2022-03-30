@@ -34,10 +34,13 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.redirect.exception.NoSuchNotFoundEntryException;
 import com.liferay.redirect.model.RedirectNotFoundEntry;
@@ -45,10 +48,12 @@ import com.liferay.redirect.model.RedirectNotFoundEntryTable;
 import com.liferay.redirect.model.impl.RedirectNotFoundEntryImpl;
 import com.liferay.redirect.model.impl.RedirectNotFoundEntryModelImpl;
 import com.liferay.redirect.service.persistence.RedirectNotFoundEntryPersistence;
+import com.liferay.redirect.service.persistence.RedirectNotFoundEntryUtil;
 import com.liferay.redirect.service.persistence.impl.constants.RedirectPersistenceConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -74,7 +79,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = RedirectNotFoundEntryPersistence.class)
+@Component(
+	service = {RedirectNotFoundEntryPersistence.class, BasePersistence.class}
+)
 public class RedirectNotFoundEntryPersistenceImpl
 	extends BasePersistenceImpl<RedirectNotFoundEntry>
 	implements RedirectNotFoundEntryPersistence {
@@ -192,7 +199,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<RedirectNotFoundEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (RedirectNotFoundEntry redirectNotFoundEntry : list) {
@@ -251,10 +258,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -564,7 +567,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -591,8 +594,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -681,8 +682,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByG_U, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByG_U, finderArgs);
 		}
 
 		if (result instanceof RedirectNotFoundEntry) {
@@ -748,10 +748,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(_finderPathFetchByG_U, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -798,7 +794,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, url};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -840,8 +836,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -878,7 +872,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 	@Override
 	public void cacheResult(RedirectNotFoundEntry redirectNotFoundEntry) {
 		entityCache.putResult(
-			entityCacheEnabled, RedirectNotFoundEntryImpl.class,
+			RedirectNotFoundEntryImpl.class,
 			redirectNotFoundEntry.getPrimaryKey(), redirectNotFoundEntry);
 
 		finderCache.putResult(
@@ -888,9 +882,9 @@ public class RedirectNotFoundEntryPersistenceImpl
 				redirectNotFoundEntry.getUrl()
 			},
 			redirectNotFoundEntry);
-
-		redirectNotFoundEntry.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the redirect not found entries in the entity cache if it is enabled.
@@ -901,17 +895,22 @@ public class RedirectNotFoundEntryPersistenceImpl
 	public void cacheResult(
 		List<RedirectNotFoundEntry> redirectNotFoundEntries) {
 
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (redirectNotFoundEntries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (RedirectNotFoundEntry redirectNotFoundEntry :
 				redirectNotFoundEntries) {
 
 			if (entityCache.getResult(
-					entityCacheEnabled, RedirectNotFoundEntryImpl.class,
+					RedirectNotFoundEntryImpl.class,
 					redirectNotFoundEntry.getPrimaryKey()) == null) {
 
 				cacheResult(redirectNotFoundEntry);
-			}
-			else {
-				redirectNotFoundEntry.resetOriginalValues();
 			}
 		}
 	}
@@ -927,9 +926,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(RedirectNotFoundEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(RedirectNotFoundEntryImpl.class);
 	}
 
 	/**
@@ -942,45 +939,28 @@ public class RedirectNotFoundEntryPersistenceImpl
 	@Override
 	public void clearCache(RedirectNotFoundEntry redirectNotFoundEntry) {
 		entityCache.removeResult(
-			entityCacheEnabled, RedirectNotFoundEntryImpl.class,
-			redirectNotFoundEntry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(RedirectNotFoundEntryModelImpl)redirectNotFoundEntry, true);
+			RedirectNotFoundEntryImpl.class, redirectNotFoundEntry);
 	}
 
 	@Override
 	public void clearCache(
 		List<RedirectNotFoundEntry> redirectNotFoundEntries) {
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (RedirectNotFoundEntry redirectNotFoundEntry :
 				redirectNotFoundEntries) {
 
 			entityCache.removeResult(
-				entityCacheEnabled, RedirectNotFoundEntryImpl.class,
-				redirectNotFoundEntry.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(RedirectNotFoundEntryModelImpl)redirectNotFoundEntry, true);
+				RedirectNotFoundEntryImpl.class, redirectNotFoundEntry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(RedirectNotFoundEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
-				entityCacheEnabled, RedirectNotFoundEntryImpl.class,
-				primaryKey);
+				RedirectNotFoundEntryImpl.class, primaryKey);
 		}
 	}
 
@@ -992,37 +972,9 @@ public class RedirectNotFoundEntryPersistenceImpl
 			redirectNotFoundEntryModelImpl.getUrl()
 		};
 
+		finderCache.putResult(_finderPathCountByG_U, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByG_U, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByG_U, args, redirectNotFoundEntryModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		RedirectNotFoundEntryModelImpl redirectNotFoundEntryModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				redirectNotFoundEntryModelImpl.getGroupId(),
-				redirectNotFoundEntryModelImpl.getUrl()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_U, args);
-			finderCache.removeResult(_finderPathFetchByG_U, args);
-		}
-
-		if ((redirectNotFoundEntryModelImpl.getColumnBitmask() &
-			 _finderPathFetchByG_U.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				redirectNotFoundEntryModelImpl.getOriginalGroupId(),
-				redirectNotFoundEntryModelImpl.getOriginalUrl()
-			};
-
-			finderCache.removeResult(_finderPathCountByG_U, args);
-			finderCache.removeResult(_finderPathFetchByG_U, args);
-		}
+			_finderPathFetchByG_U, args, redirectNotFoundEntryModelImpl);
 	}
 
 	/**
@@ -1164,25 +1116,25 @@ public class RedirectNotFoundEntryPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (redirectNotFoundEntry.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				redirectNotFoundEntry.setCreateDate(now);
+				redirectNotFoundEntry.setCreateDate(date);
 			}
 			else {
 				redirectNotFoundEntry.setCreateDate(
-					serviceContext.getCreateDate(now));
+					serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!redirectNotFoundEntryModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				redirectNotFoundEntry.setModifiedDate(now);
+				redirectNotFoundEntry.setModifiedDate(date);
 			}
 			else {
 				redirectNotFoundEntry.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -1218,10 +1170,8 @@ public class RedirectNotFoundEntryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (redirectNotFoundEntry.isNew()) {
+			if (isNew) {
 				session.save(redirectNotFoundEntry);
-
-				redirectNotFoundEntry.setNew(false);
 			}
 			else {
 				redirectNotFoundEntry = (RedirectNotFoundEntry)session.merge(
@@ -1235,54 +1185,15 @@ public class RedirectNotFoundEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				redirectNotFoundEntryModelImpl.getGroupId()
-			};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((redirectNotFoundEntryModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					redirectNotFoundEntryModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {
-					redirectNotFoundEntryModelImpl.getGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, RedirectNotFoundEntryImpl.class,
-			redirectNotFoundEntry.getPrimaryKey(), redirectNotFoundEntry,
-			false);
+			RedirectNotFoundEntryImpl.class, redirectNotFoundEntryModelImpl,
+			false, true);
 
-		clearUniqueFindersCache(redirectNotFoundEntryModelImpl, false);
 		cacheUniqueFindersCache(redirectNotFoundEntryModelImpl);
+
+		if (isNew) {
+			redirectNotFoundEntry.setNew(false);
+		}
 
 		redirectNotFoundEntry.resetOriginalValues();
 
@@ -1427,7 +1338,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<RedirectNotFoundEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1468,10 +1379,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1501,7 +1408,7 @@ public class RedirectNotFoundEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1518,9 +1425,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1556,68 +1460,73 @@ public class RedirectNotFoundEntryPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		RedirectNotFoundEntryModelImpl.setEntityCacheEnabled(
-			entityCacheEnabled);
-		RedirectNotFoundEntryModelImpl.setFinderCacheEnabled(
-			finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			RedirectNotFoundEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			RedirectNotFoundEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			RedirectNotFoundEntryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			RedirectNotFoundEntryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
-			new String[] {Long.class.getName()},
-			RedirectNotFoundEntryModelImpl.GROUPID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
 		_finderPathCountByGroupId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
 		_finderPathFetchByG_U = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			RedirectNotFoundEntryImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByG_U",
+			FINDER_CLASS_NAME_ENTITY, "fetchByG_U",
 			new String[] {Long.class.getName(), String.class.getName()},
-			RedirectNotFoundEntryModelImpl.GROUPID_COLUMN_BITMASK |
-			RedirectNotFoundEntryModelImpl.URL_COLUMN_BITMASK);
+			new String[] {"groupId", "url"}, true);
 
 		_finderPathCountByG_U = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByG_U",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"groupId", "url"}, false);
+
+		_setRedirectNotFoundEntryUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setRedirectNotFoundEntryUtilPersistence(null);
+
 		entityCache.removeCache(RedirectNotFoundEntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setRedirectNotFoundEntryUtilPersistence(
+		RedirectNotFoundEntryPersistence redirectNotFoundEntryPersistence) {
+
+		try {
+			Field field = RedirectNotFoundEntryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, redirectNotFoundEntryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -1626,12 +1535,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.redirect.model.RedirectNotFoundEntry"),
-			true);
 	}
 
 	@Override
@@ -1651,8 +1554,6 @@ public class RedirectNotFoundEntryPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -1684,13 +1585,13 @@ public class RedirectNotFoundEntryPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		RedirectNotFoundEntryPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(RedirectPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private RedirectNotFoundEntryModelArgumentsResolver
+		_redirectNotFoundEntryModelArgumentsResolver;
 
 }

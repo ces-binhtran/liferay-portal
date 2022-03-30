@@ -87,6 +87,10 @@ public final class AllowedIPAddressesValidatorFactory {
 				inetAddress = InetAddressUtil.getInetAddressByName(ipAddress);
 			}
 			catch (UnknownHostException unknownHostException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(unknownHostException);
+				}
+
 				return false;
 			}
 
@@ -152,10 +156,8 @@ public final class AllowedIPAddressesValidatorFactory {
 				bytesNetmask[i] = (byte)_BYTE[8];
 			}
 
-			int byteOffset = cidr % 8;
-
 			if (netmaskBytes < bytesNetmask.length) {
-				bytesNetmask[netmaskBytes] = (byte)_BYTE[byteOffset];
+				bytesNetmask[netmaskBytes] = (byte)_BYTE[cidr % 8];
 			}
 
 			return bytesNetmask;

@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.dao.db;
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.util.Arrays;
@@ -41,15 +42,8 @@ public class IndexMetadata extends Index implements Comparable<IndexMetadata> {
 
 		_columnNames = columnNames;
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("drop index ");
-		sb.append(indexName);
-		sb.append(" on ");
-		sb.append(tableName);
-		sb.append(StringPool.SEMICOLON);
-
-		_dropSQL = sb.toString();
+		_dropSQL = StringBundler.concat(
+			"drop index ", indexName, " on ", tableName, StringPool.SEMICOLON);
 	}
 
 	@Override
@@ -63,16 +57,16 @@ public class IndexMetadata extends Index implements Comparable<IndexMetadata> {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof IndexMetadata)) {
+		if (!(object instanceof IndexMetadata)) {
 			return false;
 		}
 
-		IndexMetadata indexMetadata = (IndexMetadata)obj;
+		IndexMetadata indexMetadata = (IndexMetadata)object;
 
 		if (Objects.equals(getTableName(), indexMetadata.getTableName()) &&
 			Arrays.equals(_columnNames, indexMetadata._columnNames)) {
@@ -98,7 +92,7 @@ public class IndexMetadata extends Index implements Comparable<IndexMetadata> {
 	}
 
 	public String getCreateSQL(int[] lengths) {
-		int sbSize = 8 + _columnNames.length * 2;
+		int sbSize = 8 + (_columnNames.length * 2);
 
 		if (lengths != null) {
 			sbSize += _columnNames.length * 3;
@@ -158,6 +152,20 @@ public class IndexMetadata extends Index implements Comparable<IndexMetadata> {
 
 	public Boolean redundantTo(IndexMetadata indexMetadata) {
 		String[] indexMetadataColumnNames = indexMetadata._columnNames;
+
+		if (indexMetadata.isUnique() && isUnique()) {
+			if ((_columnNames.length <= indexMetadataColumnNames.length) &&
+				ArrayUtil.containsAll(indexMetadataColumnNames, _columnNames)) {
+
+				return Boolean.FALSE;
+			}
+
+			if ((_columnNames.length > indexMetadataColumnNames.length) &&
+				ArrayUtil.containsAll(_columnNames, indexMetadataColumnNames)) {
+
+				return Boolean.TRUE;
+			}
+		}
 
 		if (_columnNames.length <= indexMetadataColumnNames.length) {
 			for (int i = 0; i < _columnNames.length; i++) {

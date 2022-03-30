@@ -16,6 +16,7 @@ package com.liferay.bookmarks.service.base;
 
 import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
+import com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.bookmarks.service.persistence.BookmarksEntryPersistence;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderFinder;
 import com.liferay.bookmarks.service.persistence.BookmarksFolderPersistence;
@@ -61,10 +62,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -85,11 +89,15 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>BookmarksEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>BookmarksEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>BookmarksEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the bookmarks entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BookmarksEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param bookmarksEntry the bookmarks entry
 	 * @return the bookmarks entry that was added
@@ -117,6 +125,10 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the bookmarks entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BookmarksEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param entryId the primary key of the bookmarks entry
 	 * @return the bookmarks entry that was removed
 	 * @throws PortalException if a bookmarks entry with the primary key could not be found
@@ -132,6 +144,10 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the bookmarks entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BookmarksEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param bookmarksEntry the bookmarks entry
 	 * @return the bookmarks entry that was removed
 	 */
@@ -144,6 +160,13 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return bookmarksEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -437,6 +460,7 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -455,6 +479,7 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 			(BookmarksEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<BookmarksEntry> getBasePersistence() {
 		return bookmarksEntryPersistence;
 	}
@@ -547,6 +572,10 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	/**
 	 * Updates the bookmarks entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BookmarksEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param bookmarksEntry the bookmarks entry
 	 * @return the bookmarks entry that was updated
 	 */
@@ -554,6 +583,11 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	@Override
 	public BookmarksEntry updateBookmarksEntry(BookmarksEntry bookmarksEntry) {
 		return bookmarksEntryPersistence.update(bookmarksEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -567,6 +601,8 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		bookmarksEntryLocalService = (BookmarksEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(bookmarksEntryLocalService);
 	}
 
 	/**
@@ -611,6 +647,22 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		BookmarksEntryLocalService bookmarksEntryLocalService) {
+
+		try {
+			Field field = BookmarksEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, bookmarksEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected BookmarksEntryLocalService bookmarksEntryLocalService;
 
 	@Reference
@@ -631,35 +683,11 @@ public abstract class BookmarksEntryLocalServiceBaseImpl
 		classNameLocalService;
 
 	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService
 		userLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
-
-	@Reference
-	protected com.liferay.social.kernel.service.SocialActivityLocalService
-		socialActivityLocalService;
 
 }

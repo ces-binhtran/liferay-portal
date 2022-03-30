@@ -14,9 +14,16 @@
 
 package com.liferay.revert.schema.version.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.revert.schema.version.model.RSVEntry;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for RSVEntry. This utility wraps
@@ -41,21 +48,23 @@ public class RSVEntryLocalServiceUtil {
 	/**
 	 * Adds the rsv entry to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was added
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry addRSVEntry(
-		com.liferay.revert.schema.version.model.RSVEntry rsvEntry) {
-
+	public static RSVEntry addRSVEntry(RSVEntry rsvEntry) {
 		return getService().addRSVEntry(rsvEntry);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -66,19 +75,16 @@ public class RSVEntryLocalServiceUtil {
 	 * @param rsvEntryId the primary key for the new rsv entry
 	 * @return the new rsv entry
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry
-		createRSVEntry(long rsvEntryId) {
-
+	public static RSVEntry createRSVEntry(long rsvEntryId) {
 		return getService().createRSVEntry(rsvEntryId);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
@@ -86,13 +92,16 @@ public class RSVEntryLocalServiceUtil {
 	/**
 	 * Deletes the rsv entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntryId the primary key of the rsv entry
 	 * @return the rsv entry that was removed
 	 * @throws PortalException if a rsv entry with the primary key could not be found
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry
-			deleteRSVEntry(long rsvEntryId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static RSVEntry deleteRSVEntry(long rsvEntryId)
+		throws PortalException {
 
 		return getService().deleteRSVEntry(rsvEntryId);
 	}
@@ -100,25 +109,26 @@ public class RSVEntryLocalServiceUtil {
 	/**
 	 * Deletes the rsv entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was removed
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry
-		deleteRSVEntry(
-			com.liferay.revert.schema.version.model.RSVEntry rsvEntry) {
-
+	public static RSVEntry deleteRSVEntry(RSVEntry rsvEntry) {
 		return getService().deleteRSVEntry(rsvEntry);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -128,9 +138,7 @@ public class RSVEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -146,9 +154,8 @@ public class RSVEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -166,10 +173,9 @@ public class RSVEntryLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -181,9 +187,7 @@ public class RSVEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -195,15 +199,13 @@ public class RSVEntryLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.revert.schema.version.model.RSVEntry
-		fetchRSVEntry(long rsvEntryId) {
-
+	public static RSVEntry fetchRSVEntry(long rsvEntryId) {
 		return getService().fetchRSVEntry(rsvEntryId);
 	}
 
@@ -232,9 +234,8 @@ public class RSVEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -250,10 +251,7 @@ public class RSVEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of rsv entries (not inclusive)
 	 * @return the range of rsv entries
 	 */
-	public static java.util.List
-		<com.liferay.revert.schema.version.model.RSVEntry> getRSVEntries(
-			int start, int end) {
-
+	public static List<RSVEntry> getRSVEntries(int start, int end) {
 		return getService().getRSVEntries(start, end);
 	}
 
@@ -273,45 +271,28 @@ public class RSVEntryLocalServiceUtil {
 	 * @return the rsv entry
 	 * @throws PortalException if a rsv entry with the primary key could not be found
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry getRSVEntry(
-			long rsvEntryId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
+	public static RSVEntry getRSVEntry(long rsvEntryId) throws PortalException {
 		return getService().getRSVEntry(rsvEntryId);
 	}
 
 	/**
 	 * Updates the rsv entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RSVEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param rsvEntry the rsv entry
 	 * @return the rsv entry that was updated
 	 */
-	public static com.liferay.revert.schema.version.model.RSVEntry
-		updateRSVEntry(
-			com.liferay.revert.schema.version.model.RSVEntry rsvEntry) {
-
+	public static RSVEntry updateRSVEntry(RSVEntry rsvEntry) {
 		return getService().updateRSVEntry(rsvEntry);
 	}
 
 	public static RSVEntryLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker<RSVEntryLocalService, RSVEntryLocalService>
-		_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(RSVEntryLocalService.class);
-
-		ServiceTracker<RSVEntryLocalService, RSVEntryLocalService>
-			serviceTracker =
-				new ServiceTracker<RSVEntryLocalService, RSVEntryLocalService>(
-					bundle.getBundleContext(), RSVEntryLocalService.class,
-					null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile RSVEntryLocalService _service;
 
 }

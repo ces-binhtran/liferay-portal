@@ -42,7 +42,7 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 
 			showStatusMessage = Liferay.lazyLoad(
 				'frontend-js-web/liferay/toast/commands/OpenToast.es',
-				function (toastCommands, data) {
+				(toastCommands, data) => {
 					toastCommands.openToast(data);
 				}
 			);
@@ -57,14 +57,14 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 				Liferay.Util.fetch('<%= googleDriveBackgroundTaskStatusURL %>', {
 					method: 'POST',
 				})
-					.then(function (response) {
+					.then((response) => {
 						if (!response.ok) {
 							throw defaultError;
 						}
 
 						return response.json();
 					})
-					.then(function (response) {
+					.then((response) => {
 						if (response.complete) {
 							url = response.googleDocsEditURL;
 
@@ -77,7 +77,7 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 							setTimeout(polling, TIME_POLLING);
 						}
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						showError(error);
 
 						Liferay.Util.getWindow(dialogId).hide();
@@ -87,7 +87,6 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 			function showError(message) {
 				showStatusMessage({
 					message: message,
-					title: '<liferay-ui:message key="error" />:',
 					type: 'danger',
 				});
 			}
@@ -116,10 +115,10 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 						width: 320,
 					},
 				},
-				function () {
+				() => {
 					setTimeout(polling, TIME_POLLING);
 
-					setTimeout(function () {
+					setTimeout(() => {
 						isTimeConsumed = true;
 
 						navigate();
@@ -131,5 +130,5 @@ DLOpenerGoogleDriveFileReference dlOpenerGoogleDriveFileReference = (DLOpenerGoo
 </c:if>
 
 <liferay-util:html-top>
-	<link href='<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>' rel="stylesheet" type="text/css" />
+	<link href="<%= HtmlUtil.escapeAttribute(PortalUtil.getStaticResourceURL(request, StringBundler.concat(themeDisplay.getCDNBaseURL(), PortalUtil.getPathProxy(), application.getContextPath(), "/css/document_library.css"))) %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>

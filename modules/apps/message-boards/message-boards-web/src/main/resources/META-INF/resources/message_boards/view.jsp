@@ -39,9 +39,11 @@ String assetTagName = ParamUtil.getString(request, "tag");
 
 boolean useAssetEntryQuery = Validator.isNotNull(assetTagName);
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", mvcRenderCommandName);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCRenderCommandName(
+	mvcRenderCommandName
+).buildPortletURL();
 
 int cur1 = ParamUtil.getInteger(request, "cur1");
 
@@ -203,11 +205,11 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 						floatElements="end"
 					>
 						<clay:content-col
-							expand="true"
+							expand="<%= true %>"
 						>
 							<c:choose>
 								<c:when test="<%= category != null %>">
-									<h3><%= HtmlUtil.escape(category.getName()) %></h3>
+									<h3 class="component-title"><%= HtmlUtil.escape(category.getName()) %></h3>
 								</c:when>
 								<c:otherwise>
 
@@ -236,10 +238,11 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 
 									<div class="btn-group-item">
 										<clay:link
-											buttonStyle="secondary"
-											elementClasses="btn-sm"
+											displayType="secondary"
 											href="<%= editCategoryURL %>"
-											label='<%= LanguageUtil.get(request, "add-category[message-board]") %>'
+											label="add-category[message-board]"
+											small="<%= true %>"
+											type="button"
 										/>
 									</div>
 								</c:if>
@@ -253,10 +256,11 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 
 									<div class="btn-group-item">
 										<clay:link
-											buttonStyle="primary"
-											elementClasses="btn-sm"
+											displayType="primary"
 											href="<%= editMessageURL %>"
-											label='<%= LanguageUtil.get(request, "new-thread") %>'
+											label="new-thread"
+											small="<%= true %>"
+											type="button"
 										/>
 									</div>
 								</c:if>
@@ -445,9 +449,9 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 								floatElements="end"
 							>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
-									<h3><liferay-ui:message key="recent-posts" /></h3>
+									<h3 class="component-title"><liferay-ui:message key="recent-posts" /></h3>
 								</clay:content-col>
 
 								<clay:content-col>
@@ -491,9 +495,9 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 								floatElements="end"
 							>
 								<clay:content-col
-									expand="true"
+									expand="<%= true %>"
 								>
-									<h3><liferay-ui:message key="my-posts" /></h3>
+									<h3 class="component-title"><liferay-ui:message key="my-posts" /></h3>
 								</clay:content-col>
 
 								<clay:content-col>
@@ -525,9 +529,7 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 					if (groupThreadsUserId > 0) {
 						portletURL.setParameter("groupThreadsUserId", String.valueOf(groupThreadsUserId));
 					}
-					%>
 
-					<%
 					SearchContainer threadEntriesSearchContainer = new SearchContainer(renderRequest, null, null, "cur1", 0, mbListDisplayContext.getThreadEntriesDelta(), portletURL, null, "there-are-no-threads");
 
 					mbListDisplayContext.setThreadEntriesDelta(threadEntriesSearchContainer);
@@ -562,5 +564,5 @@ request.setAttribute("view.jsp-viewCategory", Boolean.TRUE.toString());
 </c:choose>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_message_boards_web.message_boards.view_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_message_boards_web.message_boards.view_jsp");
 %>

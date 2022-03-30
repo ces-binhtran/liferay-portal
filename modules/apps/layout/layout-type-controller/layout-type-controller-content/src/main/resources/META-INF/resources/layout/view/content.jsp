@@ -18,9 +18,15 @@
 
 <%
 String ppid = ParamUtil.getString(request, "p_p_id");
+
+RenderContentLayoutDisplayContext renderContentLayoutDisplayContext = new RenderContentLayoutDisplayContext(request, response);
 %>
 
-<liferay-ui:success key="layoutPublished" message="the-page-was-published-succesfully" />
+<liferay-util:html-top>
+	<%= renderContentLayoutDisplayContext.getPortletHeaderPaths() %>
+</liferay-util:html-top>
+
+<liferay-ui:success key="layoutPublished" message="the-page-was-published-successfully" />
 
 <c:choose>
 	<c:when test="<%= (themeDisplay.isStatePopUp() || themeDisplay.isWidget() || layoutTypePortlet.hasStateMax()) && Validator.isNotNull(ppid) %>">
@@ -52,9 +58,6 @@ String ppid = ParamUtil.getString(request, "p_p_id");
 	<c:otherwise>
 		<div class="layout-content portlet-layout" id="main-content" role="main">
 			<liferay-layout:render-fragment-layout
-				groupId="<%= layout.getGroupId() %>"
-				mode="<%= FragmentEntryLinkConstants.VIEW %>"
-				plid="<%= layout.getPlid() %>"
 				showPreview="<%= true %>"
 			/>
 		</div>
@@ -62,3 +65,7 @@ String ppid = ParamUtil.getString(request, "p_p_id");
 </c:choose>
 
 <liferay-ui:layout-common />
+
+<liferay-util:html-bottom>
+	<%= renderContentLayoutDisplayContext.getPortletFooterPaths() %>
+</liferay-util:html-bottom>

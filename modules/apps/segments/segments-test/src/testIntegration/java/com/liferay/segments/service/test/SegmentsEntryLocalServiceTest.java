@@ -37,6 +37,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.segments.constants.SegmentsEntryConstants;
@@ -285,9 +286,10 @@ public class SegmentsEntryLocalServiceTest {
 			_group.getGroupId());
 
 		_segmentsExperienceLocalService.addSegmentsExperience(
+			TestPropsValues.getUserId(), _group.getGroupId(),
 			segmentsEntry.getSegmentsEntryId(), 0, 0,
 			RandomTestUtil.randomLocaleStringMap(), RandomTestUtil.randomInt(),
-			false,
+			false, new UnicodeProperties(true),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_segmentsEntryLocalService.deleteSegmentsEntry(
@@ -383,7 +385,8 @@ public class SegmentsEntryLocalServiceTest {
 		BaseModelSearchResult<SegmentsEntry> baseModelSearchResult =
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				segmentsEntry.getCompanyId(), segmentsEntry.getGroupId(),
-				segmentsEntry.getNameCurrentValue(), true, 0, 1, null);
+				segmentsEntry.getNameCurrentValue(), true,
+				new LinkedHashMap<>(), 0, 1, null);
 
 		List<SegmentsEntry> segmentsEntries =
 			baseModelSearchResult.getBaseModels();
@@ -402,16 +405,15 @@ public class SegmentsEntryLocalServiceTest {
 		SegmentsEntry segmentsEntry2 = SegmentsTestUtil.addSegmentsEntry(
 			_group.getGroupId());
 
-		LinkedHashMap<String, Object> params =
-			LinkedHashMapBuilder.<String, Object>put(
-				"excludedSegmentsEntryIds",
-				new long[] {segmentsEntry1.getSegmentsEntryId()}
-			).build();
-
 		BaseModelSearchResult<SegmentsEntry> baseModelSearchResult =
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				segmentsEntry1.getCompanyId(), segmentsEntry1.getGroupId(),
-				null, true, params, 0, 1, null);
+				null, true,
+				LinkedHashMapBuilder.<String, Object>put(
+					"excludedSegmentsEntryIds",
+					new long[] {segmentsEntry1.getSegmentsEntryId()}
+				).build(),
+				0, 1, null);
 
 		List<SegmentsEntry> segmentsEntries =
 			baseModelSearchResult.getBaseModels();
@@ -427,6 +429,7 @@ public class SegmentsEntryLocalServiceTest {
 
 		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
 			_group.getGroupId());
+
 		SegmentsTestUtil.addSegmentsEntry(
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(),
@@ -435,16 +438,17 @@ public class SegmentsEntryLocalServiceTest {
 			RandomTestUtil.randomString(),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
-		LinkedHashMap<String, Object> params =
-			LinkedHashMapBuilder.<String, Object>put(
-				"excludedSources",
-				new String[] {SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND}
-			).build();
-
 		BaseModelSearchResult<SegmentsEntry> baseModelSearchResult =
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				segmentsEntry.getCompanyId(), segmentsEntry.getGroupId(), null,
-				true, params, 0, 1, null);
+				true,
+				LinkedHashMapBuilder.<String, Object>put(
+					"excludedSources",
+					new String[] {
+						SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND
+					}
+				).build(),
+				0, 1, null);
 
 		List<SegmentsEntry> segmentsEntries =
 			baseModelSearchResult.getBaseModels();
@@ -463,15 +467,14 @@ public class SegmentsEntryLocalServiceTest {
 			segmentsEntry.getSegmentsEntryId(), _role.getRoleId(),
 			ServiceContextTestUtil.getServiceContext());
 
-		LinkedHashMap<String, Object> params =
-			LinkedHashMapBuilder.<String, Object>put(
-				"roleIds", new long[] {_role.getRoleId()}
-			).build();
-
 		BaseModelSearchResult<SegmentsEntry> baseModelSearchResult =
 			_segmentsEntryLocalService.searchSegmentsEntries(
 				segmentsEntry.getCompanyId(), segmentsEntry.getGroupId(), null,
-				true, params, 0, 1, null);
+				true,
+				LinkedHashMapBuilder.<String, Object>put(
+					"roleIds", new long[] {_role.getRoleId()}
+				).build(),
+				0, 1, null);
 
 		List<SegmentsEntry> segmentsEntries =
 			baseModelSearchResult.getBaseModels();
@@ -564,6 +567,35 @@ public class SegmentsEntryLocalServiceTest {
 			segmentsEntry.getNameMap(), segmentsEntry.getDescriptionMap(),
 			segmentsEntry.isActive(), segmentsEntry.getCriteria(),
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+	}
+
+	@Test
+	public void testUpdateSegmentsEntryWithOutdatedReferredSource()
+		throws PortalException {
+
+		Criteria criteria = new Criteria();
+
+		_segmentsEntrySegmentsCriteriaContributor.contribute(
+			criteria,
+			String.format(
+				"(segmentsEntryIds eq '%s')", RandomTestUtil.nextLong()),
+			Criteria.Conjunction.AND);
+
+		SegmentsEntry segmentsEntry = SegmentsTestUtil.addSegmentsEntry(
+			_group.getGroupId(), CriteriaSerializer.serialize(criteria),
+			User.class.getName());
+
+		SegmentsEntry updatedSegmentsEntry =
+			_segmentsEntryLocalService.updateSegmentsEntry(
+				segmentsEntry.getSegmentsEntryId(),
+				segmentsEntry.getSegmentsEntryKey(), segmentsEntry.getNameMap(),
+				segmentsEntry.getDescriptionMap(), false,
+				CriteriaSerializer.serialize(new Criteria()),
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		Assert.assertEquals(
+			SegmentsEntryConstants.SOURCE_DEFAULT,
+			updatedSegmentsEntry.getSource());
 	}
 
 	@Test

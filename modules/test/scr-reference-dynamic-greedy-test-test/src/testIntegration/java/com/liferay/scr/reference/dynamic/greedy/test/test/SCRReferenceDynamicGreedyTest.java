@@ -17,7 +17,7 @@ package com.liferay.scr.reference.dynamic.greedy.test.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.scr.reference.dynamic.greedy.test.ComponentController;
@@ -132,13 +132,14 @@ public class SCRReferenceDynamicGreedyTest {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("reference.cardinality", referenceCardinality);
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"reference.cardinality", referenceCardinality
+			).build();
 
 		_componentController.enabledComponent(name);
 
-		ServiceRegistration<?> serviceRegistration =
+		ServiceRegistration<?> serviceRegistration1 =
 			bundleContext.registerService(Object.class, _SERVICE_1, properties);
 
 		ServiceTracker<DynamicGreedyComponent, DynamicGreedyComponent>
@@ -171,7 +172,7 @@ public class SCRReferenceDynamicGreedyTest {
 
 			bindingCalls.add("step2");
 
-			serviceRegistration.unregister();
+			serviceRegistration1.unregister();
 
 			bindingCalls.add("step3");
 
@@ -210,13 +211,14 @@ public class SCRReferenceDynamicGreedyTest {
 
 		BundleContext bundleContext = bundle.getBundleContext();
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("field.option", fieldOption);
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"field.option", fieldOption
+			).build();
 
 		_componentController.enabledComponent(name);
 
-		ServiceRegistration<?> serviceRegistration =
+		ServiceRegistration<?> serviceRegistration1 =
 			bundleContext.registerService(String.class, _SERVICE_1, properties);
 
 		ServiceTracker<DynamicGreedyComponent, DynamicGreedyComponent>
@@ -261,7 +263,7 @@ public class SCRReferenceDynamicGreedyTest {
 			Assert.assertEquals(
 				Arrays.asList(_SERVICE_1, _SERVICE_2), bindingCalls);
 
-			serviceRegistration.unregister();
+			serviceRegistration1.unregister();
 
 			if (update) {
 				Assert.assertSame(
@@ -279,7 +281,7 @@ public class SCRReferenceDynamicGreedyTest {
 
 			properties.remove("service.ranking");
 
-			serviceRegistration = bundleContext.registerService(
+			serviceRegistration1 = bundleContext.registerService(
 				String.class, _SERVICE_1, properties);
 
 			if (update) {
@@ -302,7 +304,7 @@ public class SCRReferenceDynamicGreedyTest {
 					Arrays.asList(_SERVICE_1, _SERVICE_2), bindingCalls);
 			}
 
-			serviceRegistration.unregister();
+			serviceRegistration1.unregister();
 
 			serviceRegistration2.unregister();
 

@@ -319,7 +319,7 @@ public class UserAttributes {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		_businessAddress = businessAddress;
@@ -348,9 +348,7 @@ public class UserAttributes {
 			return _user.getFullName();
 		}
 		else if (name.equals(USER_BDATE)) {
-			Date birthday = _user.getBirthday();
-
-			return birthday.toString();
+			return String.valueOf(_user.getBirthday());
 		}
 		else if (name.equals(USER_BDATE_DAY)) {
 			Date birthday = _user.getBirthday();

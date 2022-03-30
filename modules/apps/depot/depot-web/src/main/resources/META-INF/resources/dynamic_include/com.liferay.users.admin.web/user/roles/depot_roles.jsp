@@ -27,7 +27,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 	cssClass="sheet-subtitle"
 >
 	<clay:content-col
-		expand="true"
+		expand="<%= true %>"
 	>
 		<span class="heading-text"><%= depotAdminRolesDisplayContext.getLabel() %></span>
 	</clay:content-col>
@@ -85,7 +85,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 		modelVar="userGroupRole"
 	>
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="title"
 		>
 			<liferay-ui:icon
@@ -96,7 +96,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 		</liferay-ui:search-container-column-text>
 
 		<liferay-ui:search-container-column-text
-			cssClass="table-cell-content"
+			cssClass="table-cell-expand"
 			name="<%= depotAdminRolesDisplayContext.getAssetLibraryLabel() %>"
 		>
 			<liferay-staging:descriptive-name
@@ -106,7 +106,7 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 
 		<c:if test="<%= depotAdminRolesDisplayContext.isDeletable() %>">
 			<liferay-ui:search-container-column-text>
-				<a class="modify-link" data-groupId="<%= userGroupRole.getGroupId() %>" data-rowId="<%= userGroupRole.getRoleId() %>" href="javascript:;"><%= removeDepotRoleIcon %></a>
+				<a class="modify-link" data-entityId="<%= userGroupRole.getGroupId() %>-<%= userGroupRole.getRoleId() %>" href="javascript:;"><%= removeDepotRoleIcon %></a>
 			</liferay-ui:search-container-column-text>
 		</c:if>
 	</liferay-ui:search-container-row>
@@ -117,216 +117,20 @@ DepotAdminRolesDisplayContext depotAdminRolesDisplayContext = (DepotAdminRolesDi
 </liferay-ui:search-container>
 
 <c:if test="<%= depotAdminRolesDisplayContext.isSelectable() %>">
-	<aui:script use="liferay-search-container">
-		var Util = Liferay.Util;
-
-		var searchContainer = Liferay.SearchContainer.get(
-			'<portlet:namespace />depotRolesSearchContainer'
-		);
-
-		var searchContainerContentBox = searchContainer.get('contentBox');
-
-		searchContainerContentBox.delegate(
-			'click',
-			function (event) {
-				var link = event.currentTarget;
-				var tr = link.ancestor('tr');
-
-				var groupId = link.getAttribute('data-groupId');
-				var rowId = link.getAttribute('data-rowId');
-
-				var selectDepotRole = Util.getWindow(
-					'<portlet:namespace />selectDepotRole'
-				);
-
-				if (selectDepotRole) {
-					var selectButton = selectDepotRole.iframe.node
-						.get('contentWindow.document')
-						.one(
-							'.selector-button[data-groupid="' +
-								groupId +
-								'"][data-roleid="' +
-								rowId +
-								'"]'
-						);
-
-					Util.toggleDisabled(selectButton, false);
-				}
-
-				searchContainer.deleteRow(tr, rowId);
-
-				<portlet:namespace />deleteDepotGroupRole(rowId, groupId);
-			},
-			'.modify-link'
-		);
-
-		var <portlet:namespace />addDepotGroupRolesGroupIds = [];
-		var <portlet:namespace />addDepotGroupRolesRoleIds = [];
-		var <portlet:namespace />deleteDepotGroupRolesGroupIds = [];
-		var <portlet:namespace />deleteDepotGroupRolesRoleIds = [];
-
-		function <portlet:namespace />deleteDepotGroupRole(roleId, groupId) {
-			for (
-				var i = 0;
-				i < <portlet:namespace />addDepotGroupRolesRoleIds.length;
-				i++
-			) {
-				if (
-					<portlet:namespace />addDepotGroupRolesGroupIds[i] == groupId &&
-					<portlet:namespace />addDepotGroupRolesRoleIds[i] == roleId
-				) {
-					<portlet:namespace />addDepotGroupRolesGroupIds.splice(i, 1);
-					<portlet:namespace />addDepotGroupRolesRoleIds.splice(i, 1);
-
-					break;
-				}
-			}
-
-			<portlet:namespace />deleteDepotGroupRolesGroupIds.push(groupId);
-			<portlet:namespace />deleteDepotGroupRolesRoleIds.push(roleId);
-
-			document.<portlet:namespace />fm.<portlet:namespace />addDepotGroupRolesGroupIds.value = <portlet:namespace />addDepotGroupRolesGroupIds.join(
-				','
-			);
-			document.<portlet:namespace />fm.<portlet:namespace />addDepotGroupRolesRoleIds.value = <portlet:namespace />addDepotGroupRolesRoleIds.join(
-				','
-			);
-			document.<portlet:namespace />fm.<portlet:namespace />deleteDepotGroupRolesGroupIds.value = <portlet:namespace />deleteDepotGroupRolesGroupIds.join(
-				','
-			);
-			document.<portlet:namespace />fm.<portlet:namespace />deleteDepotGroupRolesRoleIds.value = <portlet:namespace />deleteDepotGroupRolesRoleIds.join(
-				','
-			);
-		}
-
-		Liferay.on(
-			'<%= depotAdminRolesDisplayContext.getDepotRoleSyncEntitiesEventName() %>',
-			function (event) {
-				event.selectors.each(function (item, index, collection) {
-					var groupId = item.attr('data-groupid');
-					var roleId = item.attr('data-roleid');
-
-					for (
-						var k = 0;
-						k < <portlet:namespace />addDepotGroupRolesGroupIds.length;
-						k++
-					) {
-						if (
-							<portlet:namespace />addDepotGroupRolesGroupIds[k] ==
-								groupId &&
-							<portlet:namespace />addDepotGroupRolesRoleIds[k] == roleId
-						) {
-							Util.toggleDisabled(item, true);
-
-							break;
-						}
-					}
-
-					for (
-						var n = 0;
-						n < <portlet:namespace />deleteDepotGroupRolesGroupIds.length;
-						n++
-					) {
-						if (
-							<portlet:namespace />deleteDepotGroupRolesGroupIds[n] ==
-								groupId &&
-							<portlet:namespace />deleteDepotGroupRolesRoleIds[n] ==
-								roleId
-						) {
-							Util.toggleDisabled(item, false);
-
-							break;
-						}
-					}
-				});
-			}
-		);
-
-		A.one('#<portlet:namespace />selectDepotRoleLink').on('click', function (
-			event
-		) {
-			Util.selectEntity(
-				{
-					dialog: {
-						constrain: true,
-						modal: true,
-					},
-
-					id:
-						'<%= depotAdminRolesDisplayContext.getSelectDepotRolesEventName() %>',
-					selectedData: [],
-					title: '<liferay-ui:message arguments="role" key="select-x" />',
-					uri:
-						'<%= depotAdminRolesDisplayContext.getSelectDepotRolesURL() %>',
-				},
-				function (event) {
-					var A = AUI();
-					var LString = A.Lang.String;
-
-					var rowColumns = [];
-
-					rowColumns.push(
-						'<i class="' +
-							event.iconcssclass +
-							'"></i> ' +
-							LString.escapeHTML(event.rolename)
-					);
-
-					rowColumns.push(event.groupdescriptivename);
-
-					rowColumns.push(
-						'<a class="modify-link" data-groupId="' +
-							event.groupid +
-							'" data-rowId="' +
-							event.roleid +
-							'" href="javascript:;"><%= UnicodeFormatter.toString(removeDepotRoleIcon) %></a>'
-					);
-
-					for (
-						var i = 0;
-						i < <portlet:namespace />deleteDepotGroupRolesRoleIds.length;
-						i++
-					) {
-						if (
-							<portlet:namespace />deleteDepotGroupRolesGroupIds[i] ==
-								event.groupid &&
-							<portlet:namespace />deleteDepotGroupRolesRoleIds[i] ==
-								event.roleid
-						) {
-							<portlet:namespace />deleteDepotGroupRolesGroupIds.splice(
-								i,
-								1
-							);
-							<portlet:namespace />deleteDepotGroupRolesRoleIds.splice(
-								i,
-								1
-							);
-
-							break;
-						}
-					}
-
-					<portlet:namespace />addDepotGroupRolesGroupIds.push(event.groupid);
-					<portlet:namespace />addDepotGroupRolesRoleIds.push(event.roleid);
-
-					document.<portlet:namespace />fm.<portlet:namespace />addDepotGroupRolesGroupIds.value = <portlet:namespace />addDepotGroupRolesGroupIds.join(
-						','
-					);
-					document.<portlet:namespace />fm.<portlet:namespace />addDepotGroupRolesRoleIds.value = <portlet:namespace />addDepotGroupRolesRoleIds.join(
-						','
-					);
-					document.<portlet:namespace />fm.<portlet:namespace />deleteDepotGroupRolesGroupIds.value = <portlet:namespace />deleteDepotGroupRolesGroupIds.join(
-						','
-					);
-					document.<portlet:namespace />fm.<portlet:namespace />deleteDepotGroupRolesRoleIds.value = <portlet:namespace />deleteDepotGroupRolesRoleIds.join(
-						','
-					);
-
-					searchContainer.addRow(rowColumns, event.roleid);
-
-					searchContainer.updateDataStore();
-				}
-			);
-		});
-	</aui:script>
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"portletNamespace", liferayPortletResponse.getNamespace()
+			).put(
+				"removeDepotRoleIcon", removeDepotRoleIcon
+			).put(
+				"searchContainerId", "depotRolesSearchContainer"
+			).put(
+				"selectDepotRolesURL", depotAdminRolesDisplayContext.getSelectDepotRolesURL()
+			).put(
+				"selectEventName", depotAdminRolesDisplayContext.getSelectDepotRolesEventName()
+			).build()
+		%>'
+		module="js/DepotRoles"
+	/>
 </c:if>

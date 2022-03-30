@@ -19,10 +19,12 @@ const ConfigurationFieldPropTypes = {
 	defaultValue: PropTypes.oneOfType([
 		PropTypes.bool,
 		PropTypes.number,
+		PropTypes.object,
 		PropTypes.string,
 	]),
 	description: PropTypes.string,
 	label: PropTypes.string,
+	localizable: PropTypes.bool,
 	name: PropTypes.string.isRequired,
 	type: PropTypes.string,
 };

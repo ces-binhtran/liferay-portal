@@ -71,7 +71,7 @@ public interface PortletPreferencesFactory {
 		HttpServletRequest httpServletRequest);
 
 	public PortalPreferences getPortalPreferences(
-		HttpSession session, long userId, boolean signedIn);
+		HttpSession httpSession, long userId, boolean signedIn);
 
 	public PortalPreferences getPortalPreferences(
 		long userId, boolean signedIn);
@@ -96,6 +96,11 @@ public interface PortletPreferencesFactory {
 			long scopeGroupId, long userId, Layout layout, String portletId,
 			boolean modeEditGuest)
 		throws PortalException;
+
+	public PortletPreferencesIds getPortletPreferencesIds(
+			long companyId, long siteGroupId, long layoutGroupId, long plid,
+			String portletId)
+		throws IllegalArgumentException;
 
 	public PortletPreferencesIds getPortletPreferencesIds(
 		long companyId, long siteGroupId, long plid, String portletId,

@@ -36,6 +36,7 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 	const dispatch = useContext(DispatchContext);
 	const {errors, experiment, variants} = useContext(StateContext);
 	const {APIService, page} = useContext(SegmentsExperimentsContext);
+	const [creatingVariant, setCreatingVariant] = useState(false);
 
 	const {
 		observer: creatingVariantObserver,
@@ -43,14 +44,15 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 	} = useModal({
 		onClose: () => setCreatingVariant(false),
 	});
+
+	const [editingVariant, setEditingVariant] = useState({active: false});
+
 	const {
 		observer: editingVariantObserver,
 		onClose: editingVariantOnClose,
 	} = useModal({
 		onClose: () => setEditingVariant({active: false}),
 	});
-	const [creatingVariant, setCreatingVariant] = useState(false);
-	const [editingVariant, setEditingVariant] = useState({active: false});
 
 	const publishable =
 		experiment.status.value === STATUS_FINISHED_WINNER ||
@@ -60,8 +62,10 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 		<>
 			<h4 className="mb-3 mt-4 sheet-subtitle">
 				{Liferay.Language.get('variants')}
+
 				<ClayIcon
-					className="ml-1 reference-mark text-warning"
+					className="lexicon-icon-sm ml-1 reference-mark text-warning"
+					style={{verticalAlign: 'super'}}
 					symbol="asterisk"
 				/>
 			</h4>
@@ -79,11 +83,12 @@ function Variants({onVariantPublish, selectedSegmentsExperienceId}) {
 						{Liferay.Language.get('variants-help')}
 					</p>
 					{errors.variantsError && (
-						<div className="font-weight-bold mb-3 text-danger">
+						<div className="font-weight-semi-bold mb-3 text-danger">
 							<ClayIcon
 								className="mr-2"
 								symbol="exclamation-full"
 							/>
+
 							{Liferay.Language.get(
 								'a-variant-needs-to-be-created'
 							)}

@@ -17,18 +17,19 @@
 <%@ include file="/init.jsp" %>
 
 <%
-RedirectNotFoundEntriesDisplayContext redirectNotFoundEntriesDisplayContext = new RedirectNotFoundEntriesDisplayContext(request, liferayPortletRequest, liferayPortletResponse);
+RedirectNotFoundEntriesDisplayContext redirectNotFoundEntriesDisplayContext = (RedirectNotFoundEntriesDisplayContext)request.getAttribute(RedirectNotFoundEntriesDisplayContext.class.getName());
 
 SearchContainer<RedirectNotFoundEntry> redirectNotFoundEntriesSearchContainer = redirectNotFoundEntriesDisplayContext.searchContainer();
 
-RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesManagementToolbarDisplayContext = new RedirectNotFoundEntriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, redirectNotFoundEntriesSearchContainer);
+RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesManagementToolbarDisplayContext = redirectNotFoundEntriesDisplayContext.getRedirectNotFoundEntriesManagementToolbarDisplayContext();
 %>
 
 <clay:management-toolbar
-	displayContext="<%= redirectNotFoundEntriesManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= redirectNotFoundEntriesManagementToolbarDisplayContext %>"
+	propsTransformer="js/RedirectNotFoundEntriesManagementToolbarPropsTransformer"
 />
 
-<aui:form action="<%= redirectNotFoundEntriesSearchContainer.getIteratorURL() %>" cssClass="container-fluid-1280" name="fm">
+<aui:form action="<%= redirectNotFoundEntriesSearchContainer.getIteratorURL() %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
 
 	<%
 	List<RedirectNotFoundEntry> results = redirectNotFoundEntriesSearchContainer.getResults();
@@ -50,11 +51,14 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 				>
 
 					<%
-					row.setData(HashMapBuilder.<String, Object>put("actions", redirectNotFoundEntriesManagementToolbarDisplayContext.getAvailableActions(redirectNotFoundEntry)).build());
+					row.setData(
+						HashMapBuilder.<String, Object>put(
+							"actions", redirectNotFoundEntriesManagementToolbarDisplayContext.getAvailableActions(redirectNotFoundEntry)
+						).build());
 					%>
 
 					<liferay-ui:search-container-column-text
-						cssClass="table-cell-content"
+						cssClass="table-cell-expand"
 						name="not-found-urls"
 					>
 						<%= HtmlUtil.escape(RedirectUtil.getGroupBaseURL(themeDisplay) + StringPool.SLASH + redirectNotFoundEntry.getUrl()) %>
@@ -77,7 +81,7 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 						cssClass="table-cell-expand-smallest table-column-text-end"
 						name="requests"
 					>
-						<%= redirectNotFoundEntry.getHits() %>
+						<%= redirectNotFoundEntry.getRequestCount() %>
 					</liferay-ui:search-container-column-text>
 
 					<liferay-ui:search-container-column-text>
@@ -102,9 +106,3 @@ RedirectNotFoundEntriesManagementToolbarDisplayContext redirectNotFoundEntriesMa
 		</c:otherwise>
 	</c:choose>
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= redirectNotFoundEntriesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	context="<%= redirectNotFoundEntriesManagementToolbarDisplayContext.getComponentContext() %>"
-	module="js/RedirectNotFoundEntriesManagementToolbarDefaultEventHandler.es"
-/>

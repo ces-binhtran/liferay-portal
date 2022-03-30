@@ -12,132 +12,79 @@
  * details.
  */
 
-import {Editor} from 'frontend-editor-ckeditor-web';
-import React from 'react';
+import {ClassicEditor} from 'frontend-editor-ckeditor-web';
+import React, {useEffect, useMemo, useRef} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import {useSyncValue} from '../hooks/useSyncValue.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
-const CKEDITOR_CONFIG = {
-	toolbar: [
-		{items: ['Undo', 'Redo'], name: 'clipboard'},
-		'/',
-		{
-			items: [
-				'Bold',
-				'Italic',
-				'Underline',
-				'Strike',
-				'-',
-				'CopyFormatting',
-				'RemoveFormat',
-			],
-			name: 'basicstyles',
-		},
-		{
-			items: [
-				'NumberedList',
-				'BulletedList',
-				'-',
-				'Outdent',
-				'Indent',
-				'-',
-				'Blockquote',
-				'-',
-				'JustifyLeft',
-				'JustifyCenter',
-				'JustifyRight',
-				'JustifyBlock',
-			],
-			name: 'paragraph',
-		},
-		{items: ['Link', 'Unlink', 'Anchor'], name: 'links'},
-		{
-			items: ['Image', 'Table', 'HorizontalRule', 'SpecialChar'],
-			name: 'insert',
-		},
-		'/',
-		{items: ['Styles', 'Format', 'Font', 'FontSize'], name: 'styles'},
-		{items: ['TextColor', 'BGColor'], name: 'colors'},
-		{items: ['Maximize'], name: 'tools'},
-		{
-			items: ['Source'],
-			name: 'document',
-		},
-	],
-};
-
-const RichText = ({data, id, name, onChange, readOnly}) => {
-	const [currentValue, setCurrentValue] = useSyncValue(data);
-
-	const editorProps = {
-		config: CKEDITOR_CONFIG,
-		data: currentValue,
-	};
-
-	if (readOnly) {
-		editorProps.readOnly = true;
-		editorProps.style = {pointerEvents: 'none'};
-	}
-	else {
-		editorProps.onChange = (event) => {
-			const newValue = event.editor.getData();
-
-			setCurrentValue(newValue);
-
-			onChange({data: newValue, event});
-		};
-	}
-
-	return (
-		<>
-			<Editor {...editorProps} />
-
-			<input
-				defaultValue={currentValue}
-				id={id || name}
-				name={name}
-				type="hidden"
-			/>
-		</>
-	);
-};
-
-const Main = ({
+const RichText = ({
+	editable,
+	editingLanguageId,
+	editorConfig,
 	id,
 	name,
+	onBlur,
 	onChange,
-	predefinedValue,
+	onFocus,
+	predefinedValue = '',
 	readOnly,
 	value,
+	visible,
 	...otherProps
 }) => {
+	const editorRef = useRef();
+
+	const contents = useMemo(
+		() => (editable ? predefinedValue : value ?? predefinedValue),
+		[editable, predefinedValue, value]
+	);
+
+	useEffect(() => {
+		const editor = editorRef.current?.editor;
+
+		if (editor) {
+			editor.config.contentsLangDirection =
+				Liferay.Language.direction[editingLanguageId];
+
+			editor.config.contentsLanguage = editingLanguageId;
+
+			editor.setData(contents);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [editingLanguageId, predefinedValue]);
+
 	return (
-		<FieldBaseProxy {...otherProps} id={id} name={name} readOnly={readOnly}>
-			<RichText
-				data={value || predefinedValue}
-				id={id}
+		<FieldBase
+			{...otherProps}
+			id={id}
+			name={name}
+			readOnly={readOnly}
+			style={readOnly ? {pointerEvents: 'none'} : null}
+			visible={visible}
+		>
+			<ClassicEditor
+				contents={contents}
+				editorConfig={editorConfig}
 				name={name}
-				onChange={onChange}
+				onBlur={onBlur}
+				onChange={(content) => {
+					if (contents !== content) {
+						onChange({target: {value: content}});
+					}
+				}}
+				onFocus={onFocus}
+				onSetData={({data: {dataValue: value}, editor: {mode}}) => {
+					if (mode === 'source') {
+						onChange({target: {value}});
+					}
+				}}
 				readOnly={readOnly}
+				ref={editorRef}
 			/>
-		</FieldBaseProxy>
+
+			<input name={name} type="hidden" value={contents} />
+		</FieldBase>
 	);
 };
 
-const RichTextProxy = connectStore(({emit, ...otherProps}) => (
-	<Main
-		{...otherProps}
-		onChange={({data, event}) => emit('fieldEdited', event, data)}
-	/>
-));
-
-const ReactRichTextAdapter = getConnectedReactComponentAdapter(
-	RichTextProxy,
-	'rich_text'
-);
-
-export {ReactRichTextAdapter};
-export default ReactRichTextAdapter;
+export default RichText;

@@ -102,6 +102,10 @@ public class DefaultJSONWebServiceRegistrator
 			bean = beanLocator.locate(beanName);
 		}
 		catch (BeanLocatorException beanLocatorException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(beanLocatorException);
+			}
+
 			return;
 		}
 
@@ -118,7 +122,7 @@ public class DefaultJSONWebServiceRegistrator
 					contextName, contextPath, bean, jsonWebService);
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -143,7 +147,7 @@ public class DefaultJSONWebServiceRegistrator
 				contextName, contextPath, bean, jsonWebService);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
@@ -183,7 +187,7 @@ public class DefaultJSONWebServiceRegistrator
 						"Unable to handle proxy of type " + invocationHandler);
 				}
 
-				break;
+				return null;
 			}
 		}
 
@@ -271,6 +275,10 @@ public class DefaultJSONWebServiceRegistrator
 						method.getName(), method.getParameterTypes());
 				}
 				catch (NoSuchMethodException noSuchMethodException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(noSuchMethodException);
+					}
+
 					continue;
 				}
 			}

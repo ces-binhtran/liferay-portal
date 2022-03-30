@@ -12,9 +12,9 @@
  * details.
  */
 
-import {useMutation} from '@apollo/client';
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import {useMutation} from 'graphql-hooks';
 import React, {useEffect, useState} from 'react';
 
 import {
@@ -23,7 +23,13 @@ import {
 } from '../utils/client.es';
 import {normalize, normalizeRating} from '../utils/utils.es';
 
-export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
+export default function Rating({
+	aggregateRating,
+	disabled = false,
+	entityId,
+	myRating,
+	type,
+}) {
 	const [userRating, setUserRating] = useState(0);
 	const [rating, setRating] = useState(0);
 
@@ -35,27 +41,8 @@ export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
 		setUserRating(myRating === null ? 0 : normalize(myRating));
 	}, [myRating]);
 
-	const onCompleted = (data) => {
-		const {ratingValue} =
-			type === 'Thread'
-				? data.createMessageBoardThreadMyRating
-				: data.createMessageBoardMessageMyRating;
-
-		const denormalizedValue = normalize(ratingValue);
-
-		setRating(denormalizedValue);
-
-		if (ratingChange) {
-			ratingChange(denormalizedValue);
-		}
-	};
-
-	const [createVoteMessage] = useMutation(createVoteMessageQuery, {
-		onCompleted,
-	});
-	const [createVoteThread] = useMutation(createVoteThreadQuery, {
-		onCompleted,
-	});
+	const [createVoteMessage] = useMutation(createVoteMessageQuery);
+	const [createVoteThread] = useMutation(createVoteThreadQuery);
 
 	const voteChange = (value) => {
 		if (userRating === value) {
@@ -66,6 +53,7 @@ export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
 		const normalizedValue = (userRating + value + 1) / 2;
 
 		setUserRating(newUserRating);
+		setRating(rating - userRating + newUserRating);
 
 		if (type === 'Thread') {
 			createVoteThread({
@@ -88,9 +76,8 @@ export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
 	return (
 		<div className="align-items-center d-inline-flex flex-md-column justify-content-center text-secondary">
 			<ClayButton
-				className={
-					'text-reset' + (userRating === 1 ? ' text-primary' : '')
-				}
+				className={userRating === 1 ? ' text-primary' : 'text-reset'}
+				disabled={disabled || !Liferay.ThemeDisplay.isSignedIn()}
 				displayType="unstyled"
 				monospaced
 				onClick={() => voteChange(1)}
@@ -101,9 +88,8 @@ export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
 			<span className="c-px-2">{rating || 0}</span>
 
 			<ClayButton
-				className={
-					'text-reset' + (userRating === -1 ? ' text-primary' : '')
-				}
+				className={userRating === -1 ? ' text-primary' : 'text-reset'}
+				disabled={disabled || !Liferay.ThemeDisplay.isSignedIn()}
 				displayType="unstyled"
 				monospaced
 				onClick={() => voteChange(-1)}
@@ -112,4 +98,4 @@ export default ({aggregateRating, entityId, myRating, ratingChange, type}) => {
 			</ClayButton>
 		</div>
 	);
-};
+}

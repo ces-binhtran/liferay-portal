@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,16 +45,24 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentInlineValue")
+@GraphQLName(
+	description = "Represents a fragment inline value.",
+	value = "FragmentInlineValue"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentInlineValue")
-public class FragmentInlineValue {
+public class FragmentInlineValue implements Serializable {
 
 	public static FragmentInlineValue toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentInlineValue.class, json);
 	}
 
-	@Schema
+	public static FragmentInlineValue unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			FragmentInlineValue.class, json);
+	}
+
+	@Schema(description = "The fragment's inline value.")
 	public String getValue() {
 		return value;
 	}
@@ -75,11 +86,11 @@ public class FragmentInlineValue {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment's inline value.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String value;
 
-	@Schema
+	@Schema(description = "The localized fragment's inline values.")
 	@Valid
 	public Map<String, String> getValue_i18n() {
 		return value_i18n;
@@ -105,7 +116,7 @@ public class FragmentInlineValue {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized fragment's inline values.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> value_i18n;
 
@@ -166,15 +177,26 @@ public class FragmentInlineValue {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentInlineValue",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -190,14 +212,12 @@ public class FragmentInlineValue {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -224,7 +244,7 @@ public class FragmentInlineValue {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -232,7 +252,7 @@ public class FragmentInlineValue {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -240,5 +260,10 @@ public class FragmentInlineValue {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

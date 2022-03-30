@@ -297,11 +297,7 @@ public class Validator {
 	}
 
 	public static boolean isBlank(String s) {
-		if (s == null) {
-			return true;
-		}
-
-		if (s.length() == 0) {
+		if ((s == null) || (s.length() == 0)) {
 			return true;
 		}
 
@@ -439,15 +435,9 @@ public class Validator {
 		// See RFC-1034 (section 3), RFC-1123 (section 2.1), and RFC-952
 		// (section B. Lexical grammar)
 
-		if (isNull(domainName)) {
-			return false;
-		}
+		if (isNull(domainName) || (domainName.length() > 255) ||
+			domainName.startsWith(StringPool.PERIOD)) {
 
-		if (domainName.length() > 255) {
-			return false;
-		}
-
-		if (domainName.startsWith(StringPool.PERIOD)) {
 			return false;
 		}
 
@@ -550,11 +540,7 @@ public class Validator {
 	}
 
 	public static boolean isFilePath(String path, boolean parentDirAllowed) {
-		if (isNull(path)) {
-			return false;
-		}
-
-		if (path.contains(StringPool.NULL_CHAR)) {
+		if (isNull(path) || path.contains(StringPool.NULL_CHAR)) {
 			return false;
 		}
 
@@ -570,18 +556,10 @@ public class Validator {
 			path, CharPool.BACK_SLASH, CharPool.SLASH);
 
 		if (normalizedPath.startsWith(
-				StringPool.DOUBLE_PERIOD.concat(StringPool.SLASH))) {
-
-			return false;
-		}
-
-		if (normalizedPath.endsWith(
-				StringPool.SLASH.concat(StringPool.DOUBLE_PERIOD))) {
-
-			return false;
-		}
-
-		if (normalizedPath.contains(
+				StringPool.DOUBLE_PERIOD.concat(StringPool.SLASH)) ||
+			normalizedPath.endsWith(
+				StringPool.SLASH.concat(StringPool.DOUBLE_PERIOD)) ||
+			normalizedPath.contains(
 				StringBundler.concat(
 					StringPool.SLASH, StringPool.DOUBLE_PERIOD,
 					StringPool.SLASH))) {
@@ -872,12 +850,12 @@ public class Validator {
 	 * the rules from {@link #isNotNull(Long)} or {@link #isNotNull(String)} if
 	 * the object is one of these types.
 	 *
-	 * @param  obj the object to check
+	 * @param  object the object to check
 	 * @return <code>true</code> if the object is not <code>null</code>;
 	 *         <code>false</code> otherwise
 	 */
-	public static boolean isNotNull(Object obj) {
-		return !isNull(obj);
+	public static boolean isNotNull(Object object) {
+		return !isNull(object);
 	}
 
 	/**
@@ -915,18 +893,18 @@ public class Validator {
 	 * rules from {@link #isNull(Long)} or {@link #isNull(String)} if the object
 	 * is one of these types.
 	 *
-	 * @param  obj the object to check
+	 * @param  object the object to check
 	 * @return <code>true</code> if the object is <code>null</code>;
 	 *         <code>false</code> otherwise
 	 */
-	public static boolean isNull(Object obj) {
-		if (obj instanceof Long) {
-			return isNull((Long)obj);
+	public static boolean isNull(Object object) {
+		if (object instanceof Long) {
+			return isNull((Long)object);
 		}
-		else if (obj instanceof String) {
-			return isNull((String)obj);
+		else if (object instanceof String) {
+			return isNull((String)object);
 		}
-		else if (obj == null) {
+		else if (object == null) {
 			return true;
 		}
 
@@ -1018,11 +996,7 @@ public class Validator {
 	 *         <code>false</code> otherwise
 	 */
 	public static boolean isPassword(String password) {
-		if (isNull(password)) {
-			return false;
-		}
-
-		if (password.length() < 4) {
+		if (isNull(password) || (password.length() < 4)) {
 			return false;
 		}
 

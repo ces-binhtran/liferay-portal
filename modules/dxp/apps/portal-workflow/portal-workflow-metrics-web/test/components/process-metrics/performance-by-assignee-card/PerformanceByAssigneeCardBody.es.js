@@ -9,7 +9,8 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, waitForElement} from '@testing-library/react';
+import '@testing-library/jest-dom/extend-expect';
+import {act, cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import {AppContext} from '../../../../src/main/resources/META-INF/resources/js/components/AppContext.es';
@@ -23,7 +24,7 @@ const wrapper = ({children}) => (
 );
 
 describe('The performance by assignee body component with data should', () => {
-	let getAllByTestId;
+	let container;
 
 	const items = [
 		{
@@ -54,18 +55,22 @@ describe('The performance by assignee body component with data should', () => {
 
 	afterEach(cleanup);
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		const renderResult = render(
 			<PerformanceByAssigneeCard.Body {...data} />,
 			{wrapper}
 		);
 
-		getAllByTestId = renderResult.getAllByTestId;
+		container = renderResult.container;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered with user avatar or lexicon user icon', async () => {
-		const assigneeProfileInfo = await waitForElement(() =>
-			getAllByTestId('assigneeProfileInfo')
+	it('Be rendered with user avatar or lexicon user icon', () => {
+		const assigneeProfileInfo = container.querySelectorAll(
+			'.assignee-name'
 		);
 
 		expect(assigneeProfileInfo[0].children[0].innerHTML).toContain(
@@ -79,51 +84,48 @@ describe('The performance by assignee body component with data should', () => {
 		);
 	});
 
-	test('Be rendered with assignee name', async () => {
-		const assigneeName = await waitForElement(() =>
-			getAllByTestId('assigneeName')
-		);
+	it('Be rendered with assignee name', () => {
+		const assigneeName = container.querySelectorAll('.assignee-name');
 
-		expect(assigneeName[0].innerHTML).toEqual('User Test First');
-		expect(assigneeName[1].innerHTML).toEqual('User Test Second');
-		expect(assigneeName[2].innerHTML).toEqual('User Test Third');
+		expect(assigneeName[0]).toHaveTextContent('User Test First');
+		expect(assigneeName[1]).toHaveTextContent('User Test Second');
+		expect(assigneeName[2]).toHaveTextContent('User Test Third');
 	});
 
-	test('Be rendered with average completion time', async () => {
-		const durations = await waitForElement(() =>
-			getAllByTestId('durationTaskAvg')
-		);
+	it('Be rendered with average completion time', () => {
+		const durations = container.querySelectorAll('.task-count-value');
 
-		expect(durations[0].innerHTML).toEqual('3h');
-		expect(durations[1].innerHTML).toEqual('5d 12h');
-		expect(durations[2].innerHTML).toEqual('0min');
+		expect(durations[1].innerHTML).toEqual('3h');
+		expect(durations[3].innerHTML).toEqual('5d 12h');
+		expect(durations[5].innerHTML).toEqual('0min');
 	});
 });
 
 describe('The performance by assignee body component without data should', () => {
-	let getByTestId;
+	let getByText;
 
 	const items = [];
+
 	const data = {items, totalCount: 0};
 
 	afterEach(cleanup);
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		const renderResult = render(
 			<PerformanceByAssigneeCard.Body {...data} />,
 			{wrapper}
 		);
 
-		getByTestId = renderResult.getByTestId;
+		getByText = renderResult.getByText;
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Render empty state', async () => {
-		const emptyStateDiv = await waitForElement(() =>
-			getByTestId('emptyState')
-		);
+	it('Render empty state', () => {
+		const emptyStateMessage = getByText('there-is-no-data-at-the-moment');
 
-		expect(emptyStateDiv.children[0].children[0].innerHTML).toBe(
-			'there-is-no-data-at-the-moment'
-		);
+		expect(emptyStateMessage).toBeTruthy();
 	});
 });

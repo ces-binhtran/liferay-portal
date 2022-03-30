@@ -71,7 +71,7 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 					KBArticle kbArticle = (KBArticle)results.get(i);
 				%>
 
-					<div class='<%= (i == 0) ? "kb-article-title kb-article-title-first" : "kb-article-title" %>'>
+					<div class="<%= (i == 0) ? "kb-article-title kb-article-title-first" : "kb-article-title" %>">
 
 						<%
 						PortletURL viewKBArticleURL = kbArticleURLHelper.createViewWithRedirectURL(kbArticle, currentURL);
@@ -122,7 +122,7 @@ String kbArticleDisplayStyle = kbSectionPortletInstanceConfiguration.kbArticleDi
 		%>
 
 		<div class="alert alert-info">
-			<%= LanguageUtil.get(resourceBundle, "please-configure-the-list-of-available-sections-in-system-settings-collaboration-knowledge-base-to-enable-this-widget") %>
+			<%= LanguageUtil.get(resourceBundle, "please-configure-the-list-of-available-sections-in-system-settings-knowledge-base-knowledge-base-section-to-enable-this-widget") %>
 		</div>
 	</c:otherwise>
 </c:choose>

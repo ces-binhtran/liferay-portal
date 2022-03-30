@@ -16,11 +16,11 @@ package com.liferay.portal.workflow.web.internal.portlet.tab;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowDefinition;
@@ -30,7 +30,7 @@ import com.liferay.portal.workflow.constants.WorkflowWebKeys;
 import com.liferay.portal.workflow.portlet.tab.BaseWorkflowPortletTab;
 import com.liferay.portal.workflow.portlet.tab.WorkflowPortletTab;
 import com.liferay.portal.workflow.web.internal.display.context.WorkflowDefinitionDisplayContext;
-import com.liferay.portal.workflow.web.internal.request.prepocessor.WorkflowPreprocessorHelper;
+import com.liferay.portal.workflow.web.internal.request.preprocessor.helper.WorkflowPreprocessorHelper;
 
 import java.util.Map;
 import java.util.Objects;
@@ -80,9 +80,7 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 			WorkflowDefinitionDisplayContext displayContext =
 				new WorkflowDefinitionDisplayContext(
 					renderRequest,
-					ResourceBundleLoaderUtil.
-						getResourceBundleLoaderByBundleSymbolicName(
-							"com.liferay.portal.workflow.web"),
+					ResourceBundleLoaderUtil.getPortalResourceBundleLoader(),
 					userLocalService);
 
 			displayContext.setCompanyAdministratorCanPublish(
@@ -97,7 +95,7 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 				Objects.equals(
 					path, "/definition/view_workflow_definition.jsp")) {
 
-				setWorkflowDefinitionRenderRequestAttribute(renderRequest);
+				_setWorkflowDefinitionRenderRequestAttribute(renderRequest);
 			}
 		}
 		catch (Exception exception) {
@@ -138,18 +136,24 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 		super.setServletContext(servletContext);
 	}
 
-	protected void setWorkflowDefinitionRenderRequestAttribute(
+	@Reference
+	protected UserLocalService userLocalService;
+
+	@Reference
+	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
+
+	private void _setWorkflowDefinitionRenderRequestAttribute(
 			RenderRequest renderRequest)
 		throws PortalException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		String name = ParamUtil.getString(renderRequest, "name");
 
 		if (Validator.isNull(name)) {
 			return;
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)renderRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		int version = ParamUtil.getInteger(renderRequest, "version");
 
@@ -161,12 +165,6 @@ public class WorkflowDefinitionPortletTab extends BaseWorkflowPortletTab {
 			WebKeys.WORKFLOW_DEFINITION, workflowDefinition);
 	}
 
-	@Reference
-	protected UserLocalService userLocalService;
-
-	@Reference
-	protected WorkflowPreprocessorHelper workflowPreprocessorHelper;
-
-	private boolean _companyAdministratorCanPublish;
+	private volatile boolean _companyAdministratorCanPublish;
 
 }

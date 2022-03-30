@@ -28,6 +28,10 @@ public class DDMFormInstanceRecordServiceWrapper
 	implements DDMFormInstanceRecordService,
 			   ServiceWrapper<DDMFormInstanceRecordService> {
 
+	public DDMFormInstanceRecordServiceWrapper() {
+		this(null);
+	}
+
 	public DDMFormInstanceRecordServiceWrapper(
 		DDMFormInstanceRecordService ddmFormInstanceRecordService) {
 
@@ -109,6 +113,17 @@ public class DDMFormInstanceRecordServiceWrapper
 
 		_ddmFormInstanceRecordService.revertFormInstanceRecord(
 			ddmFormInstanceRecordId, version, serviceContext);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<DDMFormInstanceRecord> searchFormInstanceRecords(
+				long ddmFormInstanceId, String[] notEmptyFields, int status,
+				int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmFormInstanceRecordService.searchFormInstanceRecords(
+			ddmFormInstanceId, notEmptyFields, status, start, end, sort);
 	}
 
 	@Override

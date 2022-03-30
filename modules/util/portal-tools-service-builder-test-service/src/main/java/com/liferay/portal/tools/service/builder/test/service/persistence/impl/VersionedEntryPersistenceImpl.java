@@ -25,7 +25,10 @@ import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchVersionedEntryException;
@@ -34,9 +37,11 @@ import com.liferay.portal.tools.service.builder.test.model.VersionedEntryTable;
 import com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryImpl;
 import com.liferay.portal.tools.service.builder.test.model.impl.VersionedEntryModelImpl;
 import com.liferay.portal.tools.service.builder.test.service.persistence.VersionedEntryPersistence;
+import com.liferay.portal.tools.service.builder.test.service.persistence.VersionedEntryUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.List;
@@ -170,7 +175,7 @@ public class VersionedEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<VersionedEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (VersionedEntry versionedEntry : list) {
@@ -229,10 +234,6 @@ public class VersionedEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -533,7 +534,7 @@ public class VersionedEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -560,8 +561,6 @@ public class VersionedEntryPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -678,7 +677,7 @@ public class VersionedEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<VersionedEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (VersionedEntry versionedEntry : list) {
@@ -743,10 +742,6 @@ public class VersionedEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1072,7 +1067,7 @@ public class VersionedEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {groupId, head};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1103,8 +1098,6 @@ public class VersionedEntryPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1187,7 +1180,7 @@ public class VersionedEntryPersistenceImpl
 
 		if (useFinderCache) {
 			result = finderCache.getResult(
-				_finderPathFetchByHeadId, finderArgs, this);
+				_finderPathFetchByHeadId, finderArgs);
 		}
 
 		if (result instanceof VersionedEntry) {
@@ -1235,11 +1228,6 @@ public class VersionedEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(
-						_finderPathFetchByHeadId, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1282,7 +1270,7 @@ public class VersionedEntryPersistenceImpl
 
 		Object[] finderArgs = new Object[] {headId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1309,8 +1297,6 @@ public class VersionedEntryPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1329,7 +1315,6 @@ public class VersionedEntryPersistenceImpl
 
 		setModelImplClass(VersionedEntryImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(VersionedEntryModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(VersionedEntryTable.INSTANCE);
 	}
@@ -1342,16 +1327,15 @@ public class VersionedEntryPersistenceImpl
 	@Override
 	public void cacheResult(VersionedEntry versionedEntry) {
 		entityCache.putResult(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
 			VersionedEntryImpl.class, versionedEntry.getPrimaryKey(),
 			versionedEntry);
 
 		finderCache.putResult(
 			_finderPathFetchByHeadId, new Object[] {versionedEntry.getHeadId()},
 			versionedEntry);
-
-		versionedEntry.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the versioned entries in the entity cache if it is enabled.
@@ -1360,16 +1344,20 @@ public class VersionedEntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<VersionedEntry> versionedEntries) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (versionedEntries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (VersionedEntry versionedEntry : versionedEntries) {
 			if (entityCache.getResult(
-					VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
 					VersionedEntryImpl.class, versionedEntry.getPrimaryKey()) ==
 						null) {
 
 				cacheResult(versionedEntry);
-			}
-			else {
-				versionedEntry.resetOriginalValues();
 			}
 		}
 	}
@@ -1385,9 +1373,7 @@ public class VersionedEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(VersionedEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(VersionedEntryImpl.class);
 	}
 
 	/**
@@ -1399,41 +1385,22 @@ public class VersionedEntryPersistenceImpl
 	 */
 	@Override
 	public void clearCache(VersionedEntry versionedEntry) {
-		entityCache.removeResult(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryImpl.class, versionedEntry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache((VersionedEntryModelImpl)versionedEntry, true);
+		entityCache.removeResult(VersionedEntryImpl.class, versionedEntry);
 	}
 
 	@Override
 	public void clearCache(List<VersionedEntry> versionedEntries) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (VersionedEntry versionedEntry : versionedEntries) {
-			entityCache.removeResult(
-				VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-				VersionedEntryImpl.class, versionedEntry.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(VersionedEntryModelImpl)versionedEntry, true);
+			entityCache.removeResult(VersionedEntryImpl.class, versionedEntry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(VersionedEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-				VersionedEntryImpl.class, primaryKey);
+			entityCache.removeResult(VersionedEntryImpl.class, primaryKey);
 		}
 	}
 
@@ -1442,32 +1409,9 @@ public class VersionedEntryPersistenceImpl
 
 		Object[] args = new Object[] {versionedEntryModelImpl.getHeadId()};
 
+		finderCache.putResult(_finderPathCountByHeadId, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByHeadId, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByHeadId, args, versionedEntryModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		VersionedEntryModelImpl versionedEntryModelImpl, boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {versionedEntryModelImpl.getHeadId()};
-
-			finderCache.removeResult(_finderPathCountByHeadId, args);
-			finderCache.removeResult(_finderPathFetchByHeadId, args);
-		}
-
-		if ((versionedEntryModelImpl.getColumnBitmask() &
-			 _finderPathFetchByHeadId.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				versionedEntryModelImpl.getOriginalHeadId()
-			};
-
-			finderCache.removeResult(_finderPathCountByHeadId, args);
-			finderCache.removeResult(_finderPathFetchByHeadId, args);
-		}
+			_finderPathFetchByHeadId, args, versionedEntryModelImpl);
 	}
 
 	/**
@@ -1601,10 +1545,8 @@ public class VersionedEntryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (versionedEntry.isNew()) {
+			if (isNew) {
 				session.save(versionedEntry);
-
-				versionedEntry.setNew(false);
 			}
 			else {
 				versionedEntry = (VersionedEntry)session.merge(versionedEntry);
@@ -1617,82 +1559,14 @@ public class VersionedEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!VersionedEntryModelImpl.COLUMN_BITMASK_ENABLED) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {versionedEntryModelImpl.getGroupId()};
-
-			finderCache.removeResult(_finderPathCountByGroupId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId, args);
-
-			args = new Object[] {
-				versionedEntryModelImpl.getGroupId(),
-				versionedEntryModelImpl.isHead()
-			};
-
-			finderCache.removeResult(_finderPathCountByGroupId_Head, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByGroupId_Head, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((versionedEntryModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					versionedEntryModelImpl.getOriginalGroupId()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-
-				args = new Object[] {versionedEntryModelImpl.getGroupId()};
-
-				finderCache.removeResult(_finderPathCountByGroupId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId, args);
-			}
-
-			if ((versionedEntryModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByGroupId_Head.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					versionedEntryModelImpl.getOriginalGroupId(),
-					versionedEntryModelImpl.getOriginalHead()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId_Head, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId_Head, args);
-
-				args = new Object[] {
-					versionedEntryModelImpl.getGroupId(),
-					versionedEntryModelImpl.isHead()
-				};
-
-				finderCache.removeResult(_finderPathCountByGroupId_Head, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByGroupId_Head, args);
-			}
-		}
-
 		entityCache.putResult(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryImpl.class, versionedEntry.getPrimaryKey(),
-			versionedEntry, false);
+			VersionedEntryImpl.class, versionedEntryModelImpl, false, true);
 
-		clearUniqueFindersCache(versionedEntryModelImpl, false);
 		cacheUniqueFindersCache(versionedEntryModelImpl);
+
+		if (isNew) {
+			versionedEntry.setNew(false);
+		}
 
 		versionedEntry.resetOriginalValues();
 
@@ -1833,7 +1707,7 @@ public class VersionedEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<VersionedEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1874,10 +1748,6 @@ public class VersionedEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1907,7 +1777,7 @@ public class VersionedEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1923,9 +1793,6 @@ public class VersionedEntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1960,92 +1827,90 @@ public class VersionedEntryPersistenceImpl
 	 * Initializes the versioned entry persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByGroupId = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByGroupId",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByGroupId", new String[] {Long.class.getName()},
-			VersionedEntryModelImpl.GROUPID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId",
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			true);
 
 		_finderPathCountByGroupId = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"groupId"},
+			false);
 
 		_finderPathWithPaginationFindByGroupId_Head = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByGroupId_Head",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByGroupId_Head",
 			new String[] {
 				Long.class.getName(), Boolean.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"groupId", "head"}, true);
 
 		_finderPathWithoutPaginationFindByGroupId_Head = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"findByGroupId_Head",
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByGroupId_Head",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
-			VersionedEntryModelImpl.GROUPID_COLUMN_BITMASK |
-			VersionedEntryModelImpl.HEAD_COLUMN_BITMASK);
+			new String[] {"groupId", "head"}, true);
 
 		_finderPathCountByGroupId_Head = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByGroupId_Head",
-			new String[] {Long.class.getName(), Boolean.class.getName()});
+			new String[] {Long.class.getName(), Boolean.class.getName()},
+			new String[] {"groupId", "head"}, false);
 
 		_finderPathFetchByHeadId = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED,
-			VersionedEntryImpl.class, FINDER_CLASS_NAME_ENTITY, "fetchByHeadId",
-			new String[] {Long.class.getName()},
-			VersionedEntryModelImpl.HEADID_COLUMN_BITMASK);
+			FINDER_CLASS_NAME_ENTITY, "fetchByHeadId",
+			new String[] {Long.class.getName()}, new String[] {"headId"}, true);
 
 		_finderPathCountByHeadId = new FinderPath(
-			VersionedEntryModelImpl.ENTITY_CACHE_ENABLED,
-			VersionedEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByHeadId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"headId"},
+			false);
+
+		_setVersionedEntryUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setVersionedEntryUtilPersistence(null);
+
 		entityCache.removeCache(VersionedEntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setVersionedEntryUtilPersistence(
+		VersionedEntryPersistence versionedEntryPersistence) {
+
+		try {
+			Field field = VersionedEntryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, versionedEntryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@ServiceReference(type = EntityCache.class)
@@ -2076,5 +1941,10 @@ public class VersionedEntryPersistenceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		VersionedEntryPersistenceImpl.class);
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
+	}
 
 }

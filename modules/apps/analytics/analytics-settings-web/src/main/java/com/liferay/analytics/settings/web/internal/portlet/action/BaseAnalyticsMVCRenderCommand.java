@@ -21,7 +21,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
+import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -51,7 +51,7 @@ public abstract class BaseAnalyticsMVCRenderCommand
 			servletContext.getRequestDispatcher(getJspPath());
 
 		try {
-			setHttpServletRequestAttributes(
+			_setHttpServletRequestAttributes(
 				PortalUtil.getHttpServletRequest(renderRequest));
 
 			requestDispatcher.include(
@@ -72,7 +72,15 @@ public abstract class BaseAnalyticsMVCRenderCommand
 
 	protected abstract String getJspPath();
 
-	protected void setHttpServletRequestAttributes(
+	@Reference
+	protected AnalyticsUsersManager analyticsUsersManager;
+
+	@Reference
+	protected ConfigurationProvider configurationProvider;
+
+	protected volatile ServletContext servletContext;
+
+	private void _setHttpServletRequestAttributes(
 			HttpServletRequest httpServletRequest)
 		throws Exception {
 
@@ -89,14 +97,6 @@ public abstract class BaseAnalyticsMVCRenderCommand
 			AnalyticsSettingsWebKeys.ANALYTICS_USERS_MANAGER,
 			analyticsUsersManager);
 	}
-
-	@Reference
-	protected AnalyticsUsersManager analyticsUsersManager;
-
-	@Reference
-	protected ConfigurationProvider configurationProvider;
-
-	protected volatile ServletContext servletContext;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseAnalyticsMVCRenderCommand.class);

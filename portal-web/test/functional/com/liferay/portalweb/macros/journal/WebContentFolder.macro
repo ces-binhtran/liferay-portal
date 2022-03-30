@@ -5,7 +5,7 @@ definition {
 
 		LexiconEntry.gotoAdd();
 
-		if (IsElementPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "Folder")) {
+		if (IsElementPresent(key_menuItem = "Folder", locator1 = "MenuItem#ANY_MENU_ITEM")) {
 			MenuItem.click(menuItem = "Folder");
 		}
 
@@ -35,11 +35,11 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${folderName}");
+			value1 = "Web Content");
 
 		LexiconEntry.gotoAdd();
 
-		if (IsElementPresent(locator1 = "MenuItem#ANY_MENU_ITEM", key_menuItem = "Subfolder")) {
+		if (IsElementPresent(key_menuItem = "Subfolder", locator1 = "MenuItem#ANY_MENU_ITEM")) {
 			MenuItem.click(menuItem = "Subfolder");
 		}
 
@@ -71,7 +71,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${folderName}");
+			value1 = "Web Content");
 
 		MouseOver(locator1 = "Button#PLUS");
 
@@ -144,7 +144,7 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${folderName}");
+			value1 = "Web Content");
 	}
 
 	macro gotoEditCP {
@@ -176,18 +176,15 @@ definition {
 
 		AssertConfirm(value1 = "Are you sure you want to move this to the Recycle Bin?");
 
-		AssertElementPresent(locator1 = "Message#SUCCESS");
+		VerifyElementPresent(locator1 = "Message#SUCCESS");
 	}
 
 	macro selectFolderTreeNode {
 		Portlet.expandTree();
 
-		if (IsElementPresent(locator1 = "Treeview#NODE_UNSELECTED", key_nodeName = "${nodeName}")) {
-			AssertClick.assertPartialTextClickAt(
-				key_nodeName = "${nodeName}",
-				locator1 = "Treeview#NODE_UNSELECTED",
-				value1 = "${nodeName}");
-		}
+		Click(
+			key_nodeName = "${nodeName}",
+			locator1 = "Treeview#NODE_ITEM");
 	}
 
 	macro viewFolderWorkflow {
