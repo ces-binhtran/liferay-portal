@@ -45,9 +45,9 @@ public class ExportImportContentValidationException extends PortalException {
 	}
 
 	public ExportImportContentValidationException(
-		String className, Throwable cause) {
+		String className, Throwable throwable) {
 
-		super(cause);
+		super(throwable);
 
 		_className = className;
 	}
@@ -78,15 +78,6 @@ public class ExportImportContentValidationException extends PortalException {
 
 	public String getStagedModelClassName() {
 		return _stagedModelClassName;
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #getStagedModelPrimaryKeyObj()}
-	 */
-	@Deprecated
-	public long getStagedModelClassPK() {
-		return _stagedModelClassPK;
 	}
 
 	public Serializable getStagedModelPrimaryKeyObj() {
@@ -129,15 +120,6 @@ public class ExportImportContentValidationException extends PortalException {
 		_stagedModelClassName = stagedModelClassName;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #setStagedModelPrimaryKeyObj(Serializable)}
-	 */
-	@Deprecated
-	public void setStagedModelClassPK(long stagedModelClassPK) {
-		_stagedModelClassPK = stagedModelClassPK;
-	}
-
 	public void setStagedModelPrimaryKeyObj(
 		Serializable stagedModelPrimaryKeyObj) {
 
@@ -155,7 +137,6 @@ public class ExportImportContentValidationException extends PortalException {
 	private Map<String, String> _layoutReferenceParameters;
 	private String _layoutURL;
 	private String _stagedModelClassName;
-	private long _stagedModelClassPK;
 	private Serializable _stagedModelPrimaryKeyObj;
 	private int _type = DEFAULT;
 

@@ -17,11 +17,11 @@ package com.liferay.depot.web.internal.display.context;
 import com.liferay.admin.kernel.util.PortalMyAccountApplicationType;
 import com.liferay.depot.constants.DepotRolesConstants;
 import com.liferay.depot.web.internal.constants.DepotPortletKeys;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroupRole;
@@ -50,7 +50,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import javax.portlet.PortletURL;
 import javax.portlet.WindowStateException;
 
 /**
@@ -103,15 +102,16 @@ public class DepotAdminRolesDisplayContext {
 		return portletNamespace + "selectDepotRole";
 	}
 
-	public PortletURL getSelectDepotRolesURL() throws WindowStateException {
+	public String getSelectDepotRolesURL() throws WindowStateException {
 		RequestBackedPortletURLFactory requestBackedPortletURLFactory =
 			RequestBackedPortletURLFactoryUtil.create(_liferayPortletRequest);
 
-		PortletURL portletURL = requestBackedPortletURLFactory.createRenderURL(
-			DepotPortletKeys.DEPOT_ADMIN);
-
-		portletURL.setParameter("mvcRenderCommandName", "/depot/select_role");
-		portletURL.setParameter(
+		return PortletURLBuilder.create(
+			requestBackedPortletURLFactory.createRenderURL(
+				DepotPortletKeys.DEPOT_ADMIN)
+		).setMVCRenderCommandName(
+			"/depot/select_depot_role"
+		).setParameter(
 			"p_u_i_d",
 			Optional.ofNullable(
 				_user
@@ -121,19 +121,18 @@ public class DepotAdminRolesDisplayContext {
 				String::valueOf
 			).orElse(
 				"0"
-			));
-		portletURL.setParameter("step", "1");
-		portletURL.setWindowState(LiferayWindowState.POP_UP);
-
-		return portletURL;
+			)
+		).setParameter(
+			"step", "1"
+		).setWindowState(
+			LiferayWindowState.POP_UP
+		).buildString();
 	}
 
 	public List<UserGroupRole> getUserGroupRoles(int start, int end)
 		throws PortalException {
 
-		List<UserGroupRole> userGroupRoles = _getUserGroupRoles();
-
-		return ListUtil.subList(userGroupRoles, start, end);
+		return ListUtil.subList(_getUserGroupRoles(), start, end);
 	}
 
 	public int getUserGroupRolesCount() throws PortalException {
@@ -187,7 +186,7 @@ public class DepotAdminRolesDisplayContext {
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 
@@ -254,9 +253,7 @@ public class DepotAdminRolesDisplayContext {
 			Group group = userGroupRole.getGroup();
 			Role role = userGroupRole.getRole();
 
-			if ((group != null) &&
-				Objects.equals(group.getType(), GroupConstants.TYPE_DEPOT) &&
-				(role != null) &&
+			if ((group != null) && group.isDepot() && (role != null) &&
 				(role.getType() == RoleConstants.TYPE_DEPOT)) {
 
 				return true;
@@ -264,7 +261,7 @@ public class DepotAdminRolesDisplayContext {
 		}
 		catch (PortalException portalException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
+				_log.warn(portalException);
 			}
 		}
 

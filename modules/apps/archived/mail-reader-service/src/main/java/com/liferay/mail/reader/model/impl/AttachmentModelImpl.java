@@ -27,19 +27,24 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -104,16 +109,31 @@ public class AttachmentModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long MESSAGEID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ATTACHMENTID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public AttachmentModelImpl() {
@@ -166,9 +186,6 @@ public class AttachmentModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((Attachment)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -290,6 +307,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setAttachmentId(long attachmentId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_attachmentId = attachmentId;
 	}
 
@@ -300,6 +321,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -310,6 +335,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -336,6 +365,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setAccountId(long accountId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_accountId = accountId;
 	}
 
@@ -346,6 +379,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setFolderId(long folderId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_folderId = folderId;
 	}
 
@@ -356,19 +393,21 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setMessageId(long messageId) {
-		_columnBitmask |= MESSAGEID_COLUMN_BITMASK;
-
-		if (!_setOriginalMessageId) {
-			_setOriginalMessageId = true;
-
-			_originalMessageId = _messageId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_messageId = messageId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalMessageId() {
-		return _originalMessageId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("messageId"));
 	}
 
 	@Override
@@ -383,6 +422,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setContentPath(String contentPath) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_contentPath = contentPath;
 	}
 
@@ -398,6 +441,10 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setFileName(String fileName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_fileName = fileName;
 	}
 
@@ -408,10 +455,34 @@ public class AttachmentModelImpl
 
 	@Override
 	public void setSize(long size) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_size = size;
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -463,6 +534,30 @@ public class AttachmentModelImpl
 	}
 
 	@Override
+	public Attachment cloneWithOriginalValues() {
+		AttachmentImpl attachmentImpl = new AttachmentImpl();
+
+		attachmentImpl.setAttachmentId(
+			this.<Long>getColumnOriginalValue("attachmentId"));
+		attachmentImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		attachmentImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		attachmentImpl.setAccountId(
+			this.<Long>getColumnOriginalValue("accountId"));
+		attachmentImpl.setFolderId(
+			this.<Long>getColumnOriginalValue("folderId"));
+		attachmentImpl.setMessageId(
+			this.<Long>getColumnOriginalValue("messageId"));
+		attachmentImpl.setContentPath(
+			this.<String>getColumnOriginalValue("contentPath"));
+		attachmentImpl.setFileName(
+			this.<String>getColumnOriginalValue("fileName"));
+		attachmentImpl.setSize(this.<Long>getColumnOriginalValue("size_"));
+
+		return attachmentImpl;
+	}
+
+	@Override
 	public int compareTo(Attachment attachment) {
 		long primaryKey = attachment.getPrimaryKey();
 
@@ -478,16 +573,16 @@ public class AttachmentModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Attachment)) {
+		if (!(object instanceof Attachment)) {
 			return false;
 		}
 
-		Attachment attachment = (Attachment)obj;
+		Attachment attachment = (Attachment)object;
 
 		long primaryKey = attachment.getPrimaryKey();
 
@@ -504,25 +599,29 @@ public class AttachmentModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		AttachmentModelImpl attachmentModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		attachmentModelImpl._originalMessageId = attachmentModelImpl._messageId;
-
-		attachmentModelImpl._setOriginalMessageId = false;
-
-		attachmentModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -568,7 +667,7 @@ public class AttachmentModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -579,9 +678,26 @@ public class AttachmentModelImpl
 			Function<Attachment, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((Attachment)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((Attachment)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -600,7 +716,7 @@ public class AttachmentModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -632,20 +748,98 @@ public class AttachmentModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _attachmentId;
 	private long _companyId;
 	private long _userId;
 	private long _accountId;
 	private long _folderId;
 	private long _messageId;
-	private long _originalMessageId;
-	private boolean _setOriginalMessageId;
 	private String _contentPath;
 	private String _fileName;
 	private long _size;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<Attachment, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((Attachment)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("attachmentId", _attachmentId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("accountId", _accountId);
+		_columnOriginalValues.put("folderId", _folderId);
+		_columnOriginalValues.put("messageId", _messageId);
+		_columnOriginalValues.put("contentPath", _contentPath);
+		_columnOriginalValues.put("fileName", _fileName);
+		_columnOriginalValues.put("size_", _size);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("size_", "size");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("attachmentId", 1L);
+
+		columnBitmasks.put("companyId", 2L);
+
+		columnBitmasks.put("userId", 4L);
+
+		columnBitmasks.put("accountId", 8L);
+
+		columnBitmasks.put("folderId", 16L);
+
+		columnBitmasks.put("messageId", 32L);
+
+		columnBitmasks.put("contentPath", 64L);
+
+		columnBitmasks.put("fileName", 128L);
+
+		columnBitmasks.put("size_", 256L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private Attachment _escapedModel;
 

@@ -33,16 +33,16 @@ public class Capability implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Capability)) {
+		if (!(object instanceof Capability)) {
 			return false;
 		}
 
-		Capability capability = (Capability)obj;
+		Capability capability = (Capability)object;
 
 		if (Objects.equals(_name, capability._name) &&
 			Objects.equals(_value, capability._value)) {
@@ -70,15 +70,7 @@ public class Capability implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{name=");
-		sb.append(_name);
-		sb.append(", value=");
-		sb.append(_value);
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat("{name=", _name, ", value=", _value, "}");
 	}
 
 	private final String _name;

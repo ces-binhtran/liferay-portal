@@ -30,6 +30,10 @@ public class DDMFormInstanceReportLocalServiceWrapper
 	implements DDMFormInstanceReportLocalService,
 			   ServiceWrapper<DDMFormInstanceReportLocalService> {
 
+	public DDMFormInstanceReportLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DDMFormInstanceReportLocalServiceWrapper(
 		DDMFormInstanceReportLocalService ddmFormInstanceReportLocalService) {
 
@@ -38,6 +42,10 @@ public class DDMFormInstanceReportLocalServiceWrapper
 
 	/**
 	 * Adds the ddm form instance report to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was added
@@ -87,6 +95,10 @@ public class DDMFormInstanceReportLocalServiceWrapper
 	/**
 	 * Deletes the ddm form instance report from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was removed
 	 */
@@ -100,6 +112,10 @@ public class DDMFormInstanceReportLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm form instance report with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param formInstanceReportId the primary key of the ddm form instance report
 	 * @return the ddm form instance report that was removed
@@ -129,6 +145,13 @@ public class DDMFormInstanceReportLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmFormInstanceReportLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmFormInstanceReportLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -326,15 +349,19 @@ public class DDMFormInstanceReportLocalServiceWrapper
 	@Override
 	public void processFormInstanceReportEvent(
 		long formInstanceReportId, long formInstanceRecordVersionId,
-		String formInstanceReportEvent) {
+		String ddmFormInstanceReportEvent) {
 
 		_ddmFormInstanceReportLocalService.processFormInstanceReportEvent(
 			formInstanceReportId, formInstanceRecordVersionId,
-			formInstanceReportEvent);
+			ddmFormInstanceReportEvent);
 	}
 
 	/**
 	 * Updates the ddm form instance report in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was updated
@@ -350,12 +377,12 @@ public class DDMFormInstanceReportLocalServiceWrapper
 	@Override
 	public DDMFormInstanceReport updateFormInstanceReport(
 			long formInstanceReportId, long formInstanceRecordVersionId,
-			String formInstanceReportEvent)
+			String ddmFormInstanceReportEvent)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ddmFormInstanceReportLocalService.updateFormInstanceReport(
 			formInstanceReportId, formInstanceRecordVersionId,
-			formInstanceReportEvent);
+			ddmFormInstanceReportEvent);
 	}
 
 	@Override

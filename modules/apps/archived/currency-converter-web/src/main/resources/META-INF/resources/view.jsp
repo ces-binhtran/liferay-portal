@@ -49,10 +49,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 			<%
 			for (Map.Entry<String, String> entry : allSymbols.entrySet()) {
 				String symbol = entry.getValue();
-				String currencyValue = entry.getKey();
 			%>
 
-				<aui:option label="<%= currencyValue %>" selected="<%= symbol.equals(from) %>" value="<%= symbol %>" />
+				<aui:option label="<%= entry.getKey() %>" selected="<%= symbol.equals(from) %>" value="<%= symbol %>" />
 
 			<%
 			}
@@ -67,10 +66,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 			<%
 			for (Map.Entry<String, String> entry : allSymbols.entrySet()) {
 				String symbol = entry.getValue();
-				String currencyValue = entry.getKey();
 			%>
 
-				<aui:option label="<%= currencyValue %>" selected="<%= symbol.equals(to) %>" value="<%= symbol %>" />
+				<aui:option label="<%= entry.getKey() %>" selected="<%= symbol.equals(to) %>" value="<%= symbol %>" />
 
 			<%
 			}
@@ -128,10 +126,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 										String symbol2 = symbols[j];
 
 										currencyConverter = CurrencyConverterUtil.getCurrencyConverter(symbol2 + symbol);
-
-										if (currencyConverter != null) {
 									%>
 
+										<c:if test="<%= currencyConverter != null %>">
 											<td>
 												<c:if test="<%= i != j %>">
 													<%= decimalFormat.format(currencyConverter.getRate()) %>
@@ -141,9 +138,9 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 													1
 												</c:if>
 											</td>
+										</c:if>
 
 									<%
-										}
 									}
 									%>
 
@@ -158,7 +155,7 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 				</c:when>
 				<c:otherwise>
 					<div class="alert alert-info">
-						<a href='<portlet:renderURL portletMode="<%= PortletMode.EDIT.toString() %>" />'><liferay-ui:message key="please-select-a-currency" /></a>
+						<a href="<portlet:renderURL portletMode="<%= PortletMode.EDIT.toString() %>" />"><liferay-ui:message key="please-select-a-currency" /></a>
 					</div>
 				</c:otherwise>
 			</c:choose>
@@ -185,11 +182,15 @@ NumberFormat decimalFormat = NumberFormat.getNumberInstance(locale);
 							<span class="currency-header"><liferay-ui:message key="historical-charts" /></span>
 
 							<%
-							PortletURL portletURL = renderResponse.createRenderURL();
-
-							portletURL.setParameter("number", String.valueOf(number));
-							portletURL.setParameter("from", currencyConverter.getFromSymbol());
-							portletURL.setParameter("to", currencyConverter.getToSymbol());
+							PortletURL portletURL = PortletURLBuilder.createRenderURL(
+								renderResponse
+							).setParameter(
+								"from", currencyConverter.getFromSymbol()
+							).setParameter(
+								"number", number
+							).setParameter(
+								"to", currencyConverter.getToSymbol()
+							).buildPortletURL();
 							%>
 
 							<c:choose>

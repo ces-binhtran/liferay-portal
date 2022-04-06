@@ -33,26 +33,26 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.reports.engine.console.model.Source;
 import com.liferay.portal.reports.engine.console.model.SourceModel;
-import com.liferay.portal.reports.engine.console.model.SourceSoap;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.BiConsumer;
@@ -126,71 +126,43 @@ public class SourceModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long SOURCEID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static Source toModel(SourceSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		Source model = new SourceImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setSourceId(soapModel.getSourceId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-		model.setName(soapModel.getName());
-		model.setDriverClassName(soapModel.getDriverClassName());
-		model.setDriverUrl(soapModel.getDriverUrl());
-		model.setDriverUserName(soapModel.getDriverUserName());
-		model.setDriverPassword(soapModel.getDriverPassword());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<Source> toModels(SourceSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<Source> models = new ArrayList<Source>(soapModels.length);
-
-		for (SourceSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public SourceModelImpl() {
@@ -242,9 +214,6 @@ public class SourceModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((Source)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -385,17 +354,20 @@ public class SourceModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -406,6 +378,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setSourceId(long sourceId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sourceId = sourceId;
 	}
 
@@ -417,19 +393,20 @@ public class SourceModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -440,19 +417,21 @@ public class SourceModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -463,6 +442,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -495,6 +478,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -506,6 +493,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -523,6 +514,10 @@ public class SourceModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -534,6 +529,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -593,6 +592,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setName(String name) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_name = name;
 	}
 
@@ -653,6 +656,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setDriverClassName(String driverClassName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_driverClassName = driverClassName;
 	}
 
@@ -669,6 +676,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setDriverUrl(String driverUrl) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_driverUrl = driverUrl;
 	}
 
@@ -685,6 +696,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setDriverUserName(String driverUserName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_driverUserName = driverUserName;
 	}
 
@@ -701,6 +716,10 @@ public class SourceModelImpl
 
 	@Override
 	public void setDriverPassword(String driverPassword) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_driverPassword = driverPassword;
 	}
 
@@ -711,6 +730,26 @@ public class SourceModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -833,6 +872,35 @@ public class SourceModelImpl
 	}
 
 	@Override
+	public Source cloneWithOriginalValues() {
+		SourceImpl sourceImpl = new SourceImpl();
+
+		sourceImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		sourceImpl.setSourceId(this.<Long>getColumnOriginalValue("sourceId"));
+		sourceImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		sourceImpl.setCompanyId(this.<Long>getColumnOriginalValue("companyId"));
+		sourceImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		sourceImpl.setUserName(this.<String>getColumnOriginalValue("userName"));
+		sourceImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		sourceImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		sourceImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+		sourceImpl.setName(this.<String>getColumnOriginalValue("name"));
+		sourceImpl.setDriverClassName(
+			this.<String>getColumnOriginalValue("driverClassName"));
+		sourceImpl.setDriverUrl(
+			this.<String>getColumnOriginalValue("driverUrl"));
+		sourceImpl.setDriverUserName(
+			this.<String>getColumnOriginalValue("driverUserName"));
+		sourceImpl.setDriverPassword(
+			this.<String>getColumnOriginalValue("driverPassword"));
+
+		return sourceImpl;
+	}
+
+	@Override
 	public int compareTo(Source source) {
 		long primaryKey = source.getPrimaryKey();
 
@@ -848,16 +916,16 @@ public class SourceModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Source)) {
+		if (!(object instanceof Source)) {
 			return false;
 		}
 
-		Source source = (Source)obj;
+		Source source = (Source)object;
 
 		long primaryKey = source.getPrimaryKey();
 
@@ -874,33 +942,31 @@ public class SourceModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		SourceModelImpl sourceModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		sourceModelImpl._originalUuid = sourceModelImpl._uuid;
+		_setModifiedDate = false;
 
-		sourceModelImpl._originalGroupId = sourceModelImpl._groupId;
-
-		sourceModelImpl._setOriginalGroupId = false;
-
-		sourceModelImpl._originalCompanyId = sourceModelImpl._companyId;
-
-		sourceModelImpl._setOriginalCompanyId = false;
-
-		sourceModelImpl._setModifiedDate = false;
-
-		sourceModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -1007,7 +1073,7 @@ public class SourceModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1017,9 +1083,26 @@ public class SourceModelImpl
 			String attributeName = entry.getKey();
 			Function<Source, Object> attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((Source)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((Source)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1038,7 +1121,7 @@ public class SourceModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1069,18 +1152,10 @@ public class SourceModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private String _uuid;
-	private String _originalUuid;
 	private long _sourceId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
@@ -1093,6 +1168,104 @@ public class SourceModelImpl
 	private String _driverUrl;
 	private String _driverUserName;
 	private String _driverPassword;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<Source, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((Source)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("sourceId", _sourceId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("driverClassName", _driverClassName);
+		_columnOriginalValues.put("driverUrl", _driverUrl);
+		_columnOriginalValues.put("driverUserName", _driverUserName);
+		_columnOriginalValues.put("driverPassword", _driverPassword);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("uuid_", 1L);
+
+		columnBitmasks.put("sourceId", 2L);
+
+		columnBitmasks.put("groupId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userId", 16L);
+
+		columnBitmasks.put("userName", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("modifiedDate", 128L);
+
+		columnBitmasks.put("lastPublishDate", 256L);
+
+		columnBitmasks.put("name", 512L);
+
+		columnBitmasks.put("driverClassName", 1024L);
+
+		columnBitmasks.put("driverUrl", 2048L);
+
+		columnBitmasks.put("driverUserName", 4096L);
+
+		columnBitmasks.put("driverPassword", 8192L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private Source _escapedModel;
 

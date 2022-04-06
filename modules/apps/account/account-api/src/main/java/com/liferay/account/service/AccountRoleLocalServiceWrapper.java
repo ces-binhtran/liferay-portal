@@ -27,6 +27,10 @@ public class AccountRoleLocalServiceWrapper
 	implements AccountRoleLocalService,
 			   ServiceWrapper<AccountRoleLocalService> {
 
+	public AccountRoleLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AccountRoleLocalServiceWrapper(
 		AccountRoleLocalService accountRoleLocalService) {
 
@@ -35,6 +39,10 @@ public class AccountRoleLocalServiceWrapper
 
 	/**
 	 * Adds the account role to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountRole the account role
 	 * @return the account role that was added
@@ -66,6 +74,22 @@ public class AccountRoleLocalServiceWrapper
 			accountEntryId, accountRoleId, userId);
 	}
 
+	@Override
+	public void associateUser(
+			long accountEntryId, long[] accountRoleIds, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_accountRoleLocalService.associateUser(
+			accountEntryId, accountRoleIds, userId);
+	}
+
+	@Override
+	public void checkCompanyAccountRoles(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_accountRoleLocalService.checkCompanyAccountRoles(companyId);
+	}
+
 	/**
 	 * Creates a new account role with the primary key. Does not add the account role to the database.
 	 *
@@ -93,6 +117,10 @@ public class AccountRoleLocalServiceWrapper
 	/**
 	 * Deletes the account role from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountRole the account role
 	 * @return the account role that was removed
 	 * @throws PortalException
@@ -108,6 +136,10 @@ public class AccountRoleLocalServiceWrapper
 	/**
 	 * Deletes the account role with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountRoleId the primary key of the account role
 	 * @return the account role that was removed
 	 * @throws PortalException if a account role with the primary key could not be found
@@ -121,7 +153,9 @@ public class AccountRoleLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteAccountRolesByCompanyId(long companyId) {
+	public void deleteAccountRolesByCompanyId(long companyId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_accountRoleLocalService.deleteAccountRolesByCompanyId(companyId);
 	}
 
@@ -139,6 +173,13 @@ public class AccountRoleLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _accountRoleLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _accountRoleLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -296,6 +337,15 @@ public class AccountRoleLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.account.model.AccountRole>
+		getAccountRolesByAccountEntryIds(
+			long companyId, long[] accountEntryIds) {
+
+		return _accountRoleLocalService.getAccountRolesByAccountEntryIds(
+			companyId, accountEntryIds);
+	}
+
+	@Override
+	public java.util.List<com.liferay.account.model.AccountRole>
 		getAccountRolesByAccountEntryIds(long[] accountEntryIds) {
 
 		return _accountRoleLocalService.getAccountRolesByAccountEntryIds(
@@ -348,23 +398,34 @@ public class AccountRoleLocalServiceWrapper
 	}
 
 	@Override
-	public com.liferay.portal.kernel.search.BaseModelSearchResult
-		<com.liferay.account.model.AccountRole> searchAccountRoles(
-			long accountEntryId, String keywords, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator<?> obc) {
+	public boolean hasUserAccountRole(
+			long accountEntryId, long accountRoleId, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _accountRoleLocalService.searchAccountRoles(
-			accountEntryId, keywords, start, end, obc);
+		return _accountRoleLocalService.hasUserAccountRole(
+			accountEntryId, accountRoleId, userId);
 	}
 
 	@Override
 	public com.liferay.portal.kernel.search.BaseModelSearchResult
 		<com.liferay.account.model.AccountRole> searchAccountRoles(
-			long[] accountEntryIds, String keywords, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator<?> obc) {
+			long companyId, long[] accountEntryIds, String keywords,
+			java.util.LinkedHashMap<String, Object> params, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<?>
+				orderByComparator) {
 
 		return _accountRoleLocalService.searchAccountRoles(
-			accountEntryIds, keywords, start, end, obc);
+			companyId, accountEntryIds, keywords, params, start, end,
+			orderByComparator);
+	}
+
+	@Override
+	public void setUserAccountRoles(
+			long accountEntryId, long[] accountRoleIds, long userId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_accountRoleLocalService.setUserAccountRoles(
+			accountEntryId, accountRoleIds, userId);
 	}
 
 	@Override
@@ -378,6 +439,10 @@ public class AccountRoleLocalServiceWrapper
 
 	/**
 	 * Updates the account role in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountRole the account role
 	 * @return the account role that was updated

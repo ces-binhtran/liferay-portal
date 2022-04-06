@@ -18,6 +18,7 @@ import com.liferay.asset.auto.tagger.AssetAutoTagProvider;
 import com.liferay.asset.auto.tagger.AssetAutoTagger;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfiguration;
 import com.liferay.asset.auto.tagger.configuration.AssetAutoTaggerConfigurationFactory;
+import com.liferay.asset.auto.tagger.internal.helper.AssetAutoTaggerHelper;
 import com.liferay.asset.auto.tagger.model.AssetAutoTaggerEntry;
 import com.liferay.asset.auto.tagger.service.AssetAutoTaggerEntryLocalService;
 import com.liferay.asset.kernel.exception.AssetTagException;
@@ -134,8 +135,11 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 
 		Set<String> assetTagNamesSet = new LinkedHashSet<>();
 
-		for (AssetAutoTagProvider assetEntryAssetAutoTagProvider :
+		for (AssetAutoTagProvider<?> assetAutoTagProvider :
 				_assetAutoTaggerHelper.getAssetEntryAssetAutoTagProviders()) {
+
+			AssetAutoTagProvider<AssetEntry> assetEntryAssetAutoTagProvider =
+				(AssetAutoTagProvider<AssetEntry>)assetAutoTagProvider;
 
 			assetTagNamesSet.addAll(
 				assetEntryAssetAutoTagProvider.getTagNames(assetEntry));
@@ -146,11 +150,14 @@ public class AssetAutoTaggerImpl implements AopService, AssetAutoTagger {
 				_assetAutoTaggerHelper.getAssetAutoTagProviders(
 					assetEntry.getClassName());
 
-			for (AssetAutoTagProvider assetAutoTagProvider :
+			for (AssetAutoTagProvider<?> assetAutoTagProvider :
 					assetAutoTagProviders) {
 
+				AssetAutoTagProvider<Object> objectAssetAutoTagProvider =
+					(AssetAutoTagProvider<Object>)assetAutoTagProvider;
+
 				assetTagNamesSet.addAll(
-					assetAutoTagProvider.getTagNames(
+					objectAssetAutoTagProvider.getTagNames(
 						assetRenderer.getAssetObject()));
 			}
 		}

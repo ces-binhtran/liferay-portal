@@ -24,6 +24,10 @@ package com.liferay.portal.kernel.service;
 public class LayoutPrototypeServiceWrapper
 	implements LayoutPrototypeService, ServiceWrapper<LayoutPrototypeService> {
 
+	public LayoutPrototypeServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutPrototypeServiceWrapper(
 		LayoutPrototypeService layoutPrototypeService) {
 
@@ -79,10 +83,12 @@ public class LayoutPrototypeServiceWrapper
 			search(
 				long companyId, java.lang.Boolean active,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.portal.kernel.model.LayoutPrototype> obc)
+					<com.liferay.portal.kernel.model.LayoutPrototype>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
-		return _layoutPrototypeService.search(companyId, active, obc);
+		return _layoutPrototypeService.search(
+			companyId, active, orderByComparator);
 	}
 
 	@Override

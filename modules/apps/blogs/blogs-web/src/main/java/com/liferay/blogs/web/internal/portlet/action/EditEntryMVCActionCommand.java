@@ -31,16 +31,16 @@ import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.service.BlogsEntryLocalService;
 import com.liferay.blogs.service.BlogsEntryService;
 import com.liferay.blogs.web.internal.bulk.selection.BlogsEntryBulkSelectionFactory;
-import com.liferay.blogs.web.internal.util.BlogsEntryImageSelectorHelper;
+import com.liferay.blogs.web.internal.helper.BlogsEntryImageSelectorHelper;
 import com.liferay.bulk.selection.BulkSelection;
 import com.liferay.document.library.kernel.exception.FileSizeException;
 import com.liferay.friendly.url.exception.DuplicateFriendlyURLEntryException;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.editor.EditorConstants;
+import com.liferay.portal.kernel.change.tracking.CTTransactionException;
+import com.liferay.portal.kernel.editor.constants.EditorConstants;
 import com.liferay.portal.kernel.exception.ImageResolutionException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -81,7 +81,6 @@ import com.liferay.upload.AttachmentContentUpdater;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -128,21 +127,21 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 					WebKeys.UPLOAD_EXCEPTION);
 
 			if (uploadException != null) {
-				Throwable cause = uploadException.getCause();
+				Throwable throwable = uploadException.getCause();
 
 				if (uploadException.isExceededFileSizeLimit()) {
-					throw new FileSizeException(cause);
+					throw new FileSizeException(throwable);
 				}
 
 				if (uploadException.isExceededLiferayFileItemSizeLimit()) {
-					throw new LiferayFileItemException(cause);
+					throw new LiferayFileItemException(throwable);
 				}
 
 				if (uploadException.isExceededUploadRequestSizeLimit()) {
-					throw new UploadRequestSizeException(cause);
+					throw new UploadRequestSizeException(throwable);
 				}
 
-				throw new PortalException(cause);
+				throw new PortalException(throwable);
 			}
 			else if (cmd.equals(Constants.ADD) ||
 					 cmd.equals(Constants.UPDATE)) {
@@ -172,19 +171,21 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			boolean ajax = ParamUtil.getBoolean(actionRequest, "ajax");
 
 			if (ajax) {
-				JSONObject jsonObject = JSONUtil.put(
-					"attributeDataImageId",
-					EditorConstants.ATTRIBUTE_DATA_IMAGE_ID
-				).put(
-					"content", entry.getContent()
-				).put(
-					"coverImageFileEntryId", entry.getCoverImageFileEntryId()
-				).put(
-					"entryId", entry.getEntryId()
-				);
-
 				JSONPortletResponseUtil.writeJSON(
-					actionRequest, actionResponse, jsonObject);
+					actionRequest, actionResponse,
+					JSONUtil.put(
+						"attributeDataImageId",
+						EditorConstants.ATTRIBUTE_DATA_IMAGE_ID
+					).put(
+						"content", entry.getContent()
+					).put(
+						"coverImageFileEntryId",
+						entry.getCoverImageFileEntryId()
+					).put(
+						"entryId", entry.getEntryId()
+					).put(
+						"urlTitle", entry.getUrlTitle()
+					));
 
 				return;
 			}
@@ -231,6 +232,9 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			hideDefaultSuccessMessage(actionRequest);
 		}
+		catch (CTTransactionException ctTransactionException) {
+			throw ctTransactionException;
+		}
 		catch (DuplicateFriendlyURLEntryException | EntryContentException |
 			   EntryCoverImageCropException | EntryDescriptionException |
 			   EntryDisplayDateException | EntrySmallImageNameException |
@@ -253,8 +257,10 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 
 			hideDefaultSuccessMessage(actionRequest);
 		}
-		catch (Throwable t) {
-			_log.error(t, t);
+		catch (Throwable throwable) {
+			_log.error(throwable, throwable);
+
+			SessionErrors.add(actionRequest, throwable.getClass());
 
 			actionResponse.setRenderParameter("mvcPath", "/blogs/error.jsp");
 
@@ -276,11 +282,11 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			blogsEntry -> _deleteEntry(blogsEntry, moveToTrash, trashedModels));
 
 		if (moveToTrash && !trashedModels.isEmpty()) {
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"trashedModels", trashedModels
-			).build();
-
-			addDeleteSuccessData(actionRequest, data);
+			addDeleteSuccessData(
+				actionRequest,
+				HashMapBuilder.<String, Object>put(
+					"trashedModels", trashedModels
+				).build());
 		}
 	}
 
@@ -305,16 +311,14 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 	private Map<String, String[]> _getParameterMap(ActionRequest actionRequest)
 		throws Exception {
 
-		Map<String, String[]> parameterMap = new HashMap<>(
-			actionRequest.getParameterMap());
-
-		parameterMap.put(
+		return HashMapBuilder.create(
+			actionRequest.getParameterMap()
+		).put(
 			"groupId",
 			new String[] {
 				String.valueOf(_portal.getScopeGroupId(actionRequest))
-			});
-
-		return parameterMap;
+			}
+		).build();
 	}
 
 	private String _getSaveAndContinueRedirect(
@@ -430,15 +434,6 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 	private BlogsEntry _updateEntry(ActionRequest actionRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		long entryId = ParamUtil.getLong(actionRequest, "entryId");
-
-		String title = ParamUtil.getString(actionRequest, "title");
-		String subtitle = ParamUtil.getString(actionRequest, "subtitle");
-		String urlTitle = ParamUtil.getString(actionRequest, "urlTitle");
-
 		String description = StringPool.BLANK;
 
 		boolean customAbstract = ParamUtil.getBoolean(
@@ -452,7 +447,14 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			}
 		}
 
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
 		String content = ParamUtil.getString(actionRequest, "content");
+		long entryId = ParamUtil.getLong(actionRequest, "entryId");
+		String subtitle = ParamUtil.getString(actionRequest, "subtitle");
+		String title = ParamUtil.getString(actionRequest, "title");
+		String urlTitle = ParamUtil.getString(actionRequest, "urlTitle");
 
 		int displayDateMonth = ParamUtil.getInteger(
 			actionRequest, "displayDateMonth");
@@ -536,7 +538,7 @@ public class EditEntryMVCActionCommand extends BaseMVCActionCommand {
 			// Add entry
 
 			entry = _blogsEntryService.addEntry(
-				title, subtitle, urlTitle, description, content,
+				null, title, subtitle, urlTitle, description, content,
 				displayDateMonth, displayDateDay, displayDateYear,
 				displayDateHour, displayDateMinute, allowPingbacks,
 				allowTrackbacks, trackbacks, coverImageCaption,

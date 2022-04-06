@@ -15,6 +15,7 @@
 package com.liferay.asset.categories.internal.search.spi.model.index.contributor;
 
 import com.liferay.asset.kernel.model.AssetCategory;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
@@ -55,7 +56,7 @@ public class AssetCategoryModelDocumentContributor
 		document.addKeyword(
 			Field.ASSET_CATEGORY_ID, assetCategory.getCategoryId());
 
-		addSearchAssetCategoryTitles(
+		_addSearchAssetCategoryTitles(
 			document, Field.ASSET_CATEGORY_TITLE,
 			Collections.singletonList(assetCategory));
 
@@ -87,7 +88,19 @@ public class AssetCategoryModelDocumentContributor
 			true, true);
 	}
 
-	protected void addSearchAssetCategoryTitles(
+	protected Locale getSiteDefaultLocale(AssetCategory assetCategory) {
+		try {
+			return portal.getSiteDefaultLocale(assetCategory.getGroupId());
+		}
+		catch (PortalException portalException) {
+			throw new SystemException(portalException);
+		}
+	}
+
+	@Reference
+	protected Portal portal;
+
+	private void _addSearchAssetCategoryTitles(
 		Document document, String field, List<AssetCategory> assetCategories) {
 
 		Map<Locale, List<String>> assetCategoryTitles = new HashMap<>();
@@ -132,26 +145,11 @@ public class AssetCategoryModelDocumentContributor
 			}
 
 			document.addText(
-				field.concat(
-					StringPool.UNDERLINE
-				).concat(
-					locale.toString()
-				),
+				StringBundler.concat(
+					field, StringPool.UNDERLINE, locale.toString()),
 				titlesArray);
 		}
 	}
-
-	protected Locale getSiteDefaultLocale(AssetCategory assetCategory) {
-		try {
-			return portal.getSiteDefaultLocale(assetCategory.getGroupId());
-		}
-		catch (PortalException portalException) {
-			throw new SystemException(portalException);
-		}
-	}
-
-	@Reference
-	protected Portal portal;
 
 	@Reference
 	private SearchLocalizationHelper _searchLocalizationHelper;

@@ -14,8 +14,8 @@
 
 package com.liferay.portal.workflow.kaleo.runtime.form.internal;
 
+import com.liferay.dynamic.data.lists.constants.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecord;
-import com.liferay.dynamic.data.lists.model.DDLRecordConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
 import com.liferay.dynamic.data.lists.service.DDLRecordLocalService;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
@@ -52,7 +52,7 @@ public class DDMFormValueProcessor implements FormValueProcessor {
 
 		DDMStructure ddmStructure = ddlRecordSet.getDDMStructure();
 
-		DDMFormValues ddmFormValues = deserialize(
+		DDMFormValues ddmFormValues = _deserialize(
 			formValues, ddmStructure.getDDMForm());
 
 		DDLRecord ddlRecord = _ddlRecordLocalService.addRecord(
@@ -68,7 +68,7 @@ public class DDMFormValueProcessor implements FormValueProcessor {
 		return kaleoTaskFormInstance;
 	}
 
-	protected DDMFormValues deserialize(String content, DDMForm ddmForm) {
+	private DDMFormValues _deserialize(String content, DDMForm ddmForm) {
 		DDMFormValuesDeserializerDeserializeRequest.Builder builder =
 			DDMFormValuesDeserializerDeserializeRequest.Builder.newBuilder(
 				content, ddmForm);

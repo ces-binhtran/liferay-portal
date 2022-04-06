@@ -16,7 +16,6 @@ package com.liferay.portlet.announcements.model.impl;
 
 import com.liferay.announcements.kernel.model.AnnouncementsDelivery;
 import com.liferay.announcements.kernel.model.AnnouncementsDeliveryModel;
-import com.liferay.announcements.kernel.model.AnnouncementsDeliverySoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
@@ -31,20 +30,22 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -110,78 +111,48 @@ public class AnnouncementsDeliveryModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.announcements.kernel.model.AnnouncementsDelivery"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.announcements.kernel.model.AnnouncementsDelivery"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.announcements.kernel.model.AnnouncementsDelivery"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DELIVERYID_COLUMN_BITMASK = 8L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static AnnouncementsDelivery toModel(
-		AnnouncementsDeliverySoap soapModel) {
-
-		if (soapModel == null) {
-			return null;
-		}
-
-		AnnouncementsDelivery model = new AnnouncementsDeliveryImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setDeliveryId(soapModel.getDeliveryId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setType(soapModel.getType());
-		model.setEmail(soapModel.isEmail());
-		model.setSms(soapModel.isSms());
-		model.setWebsite(soapModel.isWebsite());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<AnnouncementsDelivery> toModels(
-		AnnouncementsDeliverySoap[] soapModels) {
-
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<AnnouncementsDelivery> models =
-			new ArrayList<AnnouncementsDelivery>(soapModels.length);
-
-		for (AnnouncementsDeliverySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -238,9 +209,6 @@ public class AnnouncementsDeliveryModelImpl
 				attributeName,
 				attributeGetterFunction.apply((AnnouncementsDelivery)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -379,6 +347,10 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -390,6 +362,10 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setDeliveryId(long deliveryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_deliveryId = deliveryId;
 	}
 
@@ -401,19 +377,21 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -424,12 +402,8 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setUserId(long userId) {
-		_columnBitmask |= USERID_COLUMN_BITMASK;
-
-		if (!_setOriginalUserId) {
-			_setOriginalUserId = true;
-
-			_originalUserId = _userId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_userId = userId;
@@ -451,8 +425,13 @@ public class AnnouncementsDeliveryModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalUserId() {
-		return _originalUserId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
 	@JSON
@@ -468,17 +447,20 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setType(String type) {
-		_columnBitmask |= TYPE_COLUMN_BITMASK;
-
-		if (_originalType == null) {
-			_originalType = _type;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_type = type;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalType() {
-		return GetterUtil.getString(_originalType);
+		return getColumnOriginalValue("type_");
 	}
 
 	@JSON
@@ -495,6 +477,10 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setEmail(boolean email) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_email = email;
 	}
 
@@ -512,6 +498,10 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setSms(boolean sms) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sms = sms;
 	}
 
@@ -529,10 +519,34 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void setWebsite(boolean website) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_website = website;
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -585,6 +599,31 @@ public class AnnouncementsDeliveryModelImpl
 	}
 
 	@Override
+	public AnnouncementsDelivery cloneWithOriginalValues() {
+		AnnouncementsDeliveryImpl announcementsDeliveryImpl =
+			new AnnouncementsDeliveryImpl();
+
+		announcementsDeliveryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		announcementsDeliveryImpl.setDeliveryId(
+			this.<Long>getColumnOriginalValue("deliveryId"));
+		announcementsDeliveryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		announcementsDeliveryImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		announcementsDeliveryImpl.setType(
+			this.<String>getColumnOriginalValue("type_"));
+		announcementsDeliveryImpl.setEmail(
+			this.<Boolean>getColumnOriginalValue("email"));
+		announcementsDeliveryImpl.setSms(
+			this.<Boolean>getColumnOriginalValue("sms"));
+		announcementsDeliveryImpl.setWebsite(
+			this.<Boolean>getColumnOriginalValue("website"));
+
+		return announcementsDeliveryImpl;
+	}
+
+	@Override
 	public int compareTo(AnnouncementsDelivery announcementsDelivery) {
 		long primaryKey = announcementsDelivery.getPrimaryKey();
 
@@ -600,17 +639,17 @@ public class AnnouncementsDeliveryModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AnnouncementsDelivery)) {
+		if (!(object instanceof AnnouncementsDelivery)) {
 			return false;
 		}
 
 		AnnouncementsDelivery announcementsDelivery =
-			(AnnouncementsDelivery)obj;
+			(AnnouncementsDelivery)object;
 
 		long primaryKey = announcementsDelivery.getPrimaryKey();
 
@@ -627,11 +666,19 @@ public class AnnouncementsDeliveryModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -639,22 +686,9 @@ public class AnnouncementsDeliveryModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		AnnouncementsDeliveryModelImpl announcementsDeliveryModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		announcementsDeliveryModelImpl._originalCompanyId =
-			announcementsDeliveryModelImpl._companyId;
-
-		announcementsDeliveryModelImpl._setOriginalCompanyId = false;
-
-		announcementsDeliveryModelImpl._originalUserId =
-			announcementsDeliveryModelImpl._userId;
-
-		announcementsDeliveryModelImpl._setOriginalUserId = false;
-
-		announcementsDeliveryModelImpl._originalType =
-			announcementsDeliveryModelImpl._type;
-
-		announcementsDeliveryModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -693,7 +727,7 @@ public class AnnouncementsDeliveryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -704,10 +738,27 @@ public class AnnouncementsDeliveryModelImpl
 			Function<AnnouncementsDelivery, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((AnnouncementsDelivery)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(AnnouncementsDelivery)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -726,7 +777,7 @@ public class AnnouncementsDeliveryModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -762,16 +813,91 @@ public class AnnouncementsDeliveryModelImpl
 	private long _mvccVersion;
 	private long _deliveryId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
-	private long _originalUserId;
-	private boolean _setOriginalUserId;
 	private String _type;
-	private String _originalType;
 	private boolean _email;
 	private boolean _sms;
 	private boolean _website;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<AnnouncementsDelivery, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((AnnouncementsDelivery)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("deliveryId", _deliveryId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("type_", _type);
+		_columnOriginalValues.put("email", _email);
+		_columnOriginalValues.put("sms", _sms);
+		_columnOriginalValues.put("website", _website);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("type_", "type");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("deliveryId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("userId", 8L);
+
+		columnBitmasks.put("type_", 16L);
+
+		columnBitmasks.put("email", 32L);
+
+		columnBitmasks.put("sms", 64L);
+
+		columnBitmasks.put("website", 128L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private AnnouncementsDelivery _escapedModel;
 

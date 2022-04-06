@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DepotEntryServiceWrapper
 	implements DepotEntryService, ServiceWrapper<DepotEntryService> {
 
+	public DepotEntryServiceWrapper() {
+		this(null);
+	}
+
 	public DepotEntryServiceWrapper(DepotEntryService depotEntryService) {
 		_depotEntryService = depotEntryService;
 	}
@@ -54,6 +58,17 @@ public class DepotEntryServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _depotEntryService.getDepotEntry(depotEntryId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.depot.model.DepotEntry>
+			getGroupConnectedDepotEntries(
+				long groupId, boolean ddmStructuresAvailable, int start,
+				int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryService.getGroupConnectedDepotEntries(
+			groupId, ddmStructuresAvailable, start, end);
 	}
 
 	@Override

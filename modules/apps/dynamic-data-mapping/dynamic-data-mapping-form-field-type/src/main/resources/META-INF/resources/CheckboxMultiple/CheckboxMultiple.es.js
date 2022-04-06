@@ -14,11 +14,9 @@
 
 import {ClayCheckbox} from '@clayui/form';
 import classNames from 'classnames';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import {setJSONArrayValue} from '../util/setters.es';
 
 const Switcher = ({
@@ -49,9 +47,11 @@ const Switcher = ({
 				type="checkbox"
 				value={value}
 			/>
+
 			<span aria-hidden="true" className="toggle-switch-bar">
 				<span className="toggle-switch-handle"></span>
 			</span>
+
 			<span className="toggle-switch-label">{label}</span>
 		</label>
 	</div>
@@ -61,6 +61,7 @@ const CheckboxMultiple = ({
 	disabled,
 	inline,
 	isSwitcher,
+	localizedValueEdited,
 	name,
 	onBlur,
 	onChange,
@@ -71,7 +72,14 @@ const CheckboxMultiple = ({
 }) => {
 	const [value, setValue] = useState(initialValue);
 
-	const displayValues = value && value.length > 0 ? value : predefinedValue;
+	useEffect(() => {
+		setValue(initialValue);
+	}, [initialValue]);
+
+	const displayValues =
+		value?.length || (value?.length === 0 && localizedValueEdited)
+			? value
+			: predefinedValue;
 	const Toggle = isSwitcher ? Switcher : ClayCheckbox;
 
 	const handleChange = (event) => {
@@ -90,72 +98,66 @@ const CheckboxMultiple = ({
 
 	return (
 		<div className="lfr-ddm-checkbox-multiple">
-			{options.map((option) => (
+			{options.map((option, index) => (
 				<Toggle
 					checked={displayValues.includes(option.value)}
 					disabled={disabled}
 					inline={inline}
 					key={option.value}
 					label={option.label}
-					name={name}
+					name={`${name}_${index}`}
 					onBlur={onBlur}
 					onChange={handleChange}
 					onFocus={onFocus}
 					value={option.value}
 				/>
 			))}
+
+			<input name={name} type="hidden" value={value} />
 		</div>
 	);
 };
 
-const CheckboxMultipleProxy = connectStore(
-	({
-		dispatch,
-		emit,
-		inline,
-		name,
-		options = [
-			{
-				label: 'Option 1',
-			},
-			{
-				label: 'Option 2',
-			},
-		],
-		predefinedValue,
-		readOnly,
-		showAsSwitcher = true,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy
-			dispatch={dispatch}
+const Main = ({
+	inline,
+	name,
+	options = [
+		{
+			label: 'Option 1',
+			value: 'option1',
+		},
+		{
+			label: 'Option 2',
+			value: 'option2',
+		},
+	],
+	onBlur,
+	onChange,
+	onFocus,
+	predefinedValue,
+	readOnly,
+	showAsSwitcher = true,
+	value,
+	localizedValueEdited,
+	...otherProps
+}) => (
+	<FieldBase name={name} readOnly={readOnly} {...otherProps}>
+		<CheckboxMultiple
+			disabled={readOnly}
+			inline={inline}
+			isSwitcher={showAsSwitcher}
+			localizedValueEdited={localizedValueEdited}
 			name={name}
-			readOnly={readOnly}
-			{...otherProps}
-		>
-			<CheckboxMultiple
-				disabled={readOnly}
-				inline={inline}
-				isSwitcher={showAsSwitcher}
-				name={name}
-				onBlur={(event) =>
-					emit('fieldBlurred', event, event.target.value)
-				}
-				onChange={(event, value) => emit('fieldEdited', event, value)}
-				onFocus={(event) => emit('fieldFocused', event)}
-				options={options}
-				predefinedValue={setJSONArrayValue(predefinedValue)}
-				value={setJSONArrayValue(value)}
-			/>
-		</FieldBaseProxy>
-	)
+			onBlur={onBlur}
+			onChange={onChange}
+			onFocus={onFocus}
+			options={options}
+			predefinedValue={setJSONArrayValue(predefinedValue)}
+			value={setJSONArrayValue(value)}
+		/>
+	</FieldBase>
 );
 
-const ReactCheckboxMultipleAdapter = getConnectedReactComponentAdapter(
-	CheckboxMultipleProxy,
-	'checkbox_multiple'
-);
+Main.displayName = 'CheckboxMultiple';
 
-export {ReactCheckboxMultipleAdapter};
-export default ReactCheckboxMultipleAdapter;
+export default Main;

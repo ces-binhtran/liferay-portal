@@ -26,9 +26,12 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.view.count.exception.NoSuchEntryException;
 import com.liferay.view.count.model.ViewCountEntry;
@@ -37,9 +40,12 @@ import com.liferay.view.count.model.impl.ViewCountEntryImpl;
 import com.liferay.view.count.model.impl.ViewCountEntryModelImpl;
 import com.liferay.view.count.service.persistence.ViewCountEntryPK;
 import com.liferay.view.count.service.persistence.ViewCountEntryPersistence;
+import com.liferay.view.count.service.persistence.ViewCountEntryUtil;
 import com.liferay.view.count.service.persistence.impl.constants.ViewCountPersistenceConstants;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 import java.util.Map;
@@ -62,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
  * @author Preston Crary
  * @generated
  */
-@Component(service = ViewCountEntryPersistence.class)
+@Component(service = {ViewCountEntryPersistence.class, BasePersistence.class})
 public class ViewCountEntryPersistenceImpl
 	extends BasePersistenceImpl<ViewCountEntry>
 	implements ViewCountEntryPersistence {
@@ -102,11 +108,11 @@ public class ViewCountEntryPersistenceImpl
 	@Override
 	public void cacheResult(ViewCountEntry viewCountEntry) {
 		entityCache.putResult(
-			entityCacheEnabled, ViewCountEntryImpl.class,
-			viewCountEntry.getPrimaryKey(), viewCountEntry);
-
-		viewCountEntry.resetOriginalValues();
+			ViewCountEntryImpl.class, viewCountEntry.getPrimaryKey(),
+			viewCountEntry);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the view count entries in the entity cache if it is enabled.
@@ -115,15 +121,20 @@ public class ViewCountEntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<ViewCountEntry> viewCountEntries) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (viewCountEntries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (ViewCountEntry viewCountEntry : viewCountEntries) {
 			if (entityCache.getResult(
-					entityCacheEnabled, ViewCountEntryImpl.class,
-					viewCountEntry.getPrimaryKey()) == null) {
+					ViewCountEntryImpl.class, viewCountEntry.getPrimaryKey()) ==
+						null) {
 
 				cacheResult(viewCountEntry);
-			}
-			else {
-				viewCountEntry.resetOriginalValues();
 			}
 		}
 	}
@@ -139,9 +150,7 @@ public class ViewCountEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(ViewCountEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(ViewCountEntryImpl.class);
 	}
 
 	/**
@@ -153,35 +162,22 @@ public class ViewCountEntryPersistenceImpl
 	 */
 	@Override
 	public void clearCache(ViewCountEntry viewCountEntry) {
-		entityCache.removeResult(
-			entityCacheEnabled, ViewCountEntryImpl.class,
-			viewCountEntry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(ViewCountEntryImpl.class, viewCountEntry);
 	}
 
 	@Override
 	public void clearCache(List<ViewCountEntry> viewCountEntries) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (ViewCountEntry viewCountEntry : viewCountEntries) {
-			entityCache.removeResult(
-				entityCacheEnabled, ViewCountEntryImpl.class,
-				viewCountEntry.getPrimaryKey());
+			entityCache.removeResult(ViewCountEntryImpl.class, viewCountEntry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(ViewCountEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, ViewCountEntryImpl.class, primaryKey);
+			entityCache.removeResult(ViewCountEntryImpl.class, primaryKey);
 		}
 	}
 
@@ -298,10 +294,8 @@ public class ViewCountEntryPersistenceImpl
 		try {
 			session = openSession();
 
-			if (viewCountEntry.isNew()) {
+			if (isNew) {
 				session.save(viewCountEntry);
-
-				viewCountEntry.setNew(false);
 			}
 			else {
 				viewCountEntry = (ViewCountEntry)session.merge(viewCountEntry);
@@ -314,17 +308,12 @@ public class ViewCountEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		entityCache.putResult(
+			ViewCountEntryImpl.class, viewCountEntry, false, true);
 
 		if (isNew) {
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+			viewCountEntry.setNew(false);
 		}
-
-		entityCache.putResult(
-			entityCacheEnabled, ViewCountEntryImpl.class,
-			viewCountEntry.getPrimaryKey(), viewCountEntry, false);
 
 		viewCountEntry.resetOriginalValues();
 
@@ -465,7 +454,7 @@ public class ViewCountEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<ViewCountEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -506,10 +495,6 @@ public class ViewCountEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -539,7 +524,7 @@ public class ViewCountEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -555,9 +540,6 @@ public class ViewCountEntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -598,30 +580,45 @@ public class ViewCountEntryPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		ViewCountEntryModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		ViewCountEntryModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, ViewCountEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, ViewCountEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
+
+		_setViewCountEntryUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setViewCountEntryUtilPersistence(null);
+
 		entityCache.removeCache(ViewCountEntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setViewCountEntryUtilPersistence(
+		ViewCountEntryPersistence viewCountEntryPersistence) {
+
+		try {
+			Field field = ViewCountEntryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, viewCountEntryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -630,12 +627,6 @@ public class ViewCountEntryPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.view.count.model.ViewCountEntry"),
-			true);
 	}
 
 	@Override
@@ -655,8 +646,6 @@ public class ViewCountEntryPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -681,13 +670,13 @@ public class ViewCountEntryPersistenceImpl
 	private static final Set<String> _compoundPKColumnNames = SetUtil.fromArray(
 		new String[] {"companyId", "classNameId", "classPK"});
 
-	static {
-		try {
-			Class.forName(ViewCountPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private ViewCountEntryModelArgumentsResolver
+		_viewCountEntryModelArgumentsResolver;
 
 }

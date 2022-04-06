@@ -18,7 +18,7 @@ import com.liferay.osgi.util.service.OSGiServiceUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Dictionary;
@@ -135,14 +135,14 @@ public class ConfigurationTestUtil {
 			Configuration configuration, Dictionary<String, Object> dictionary)
 		throws Exception {
 
-		CountDownLatch eventCountdownLatch = new CountDownLatch(1);
+		CountDownLatch eventCountDownLatch = new CountDownLatch(1);
 		CountDownLatch updateCountDownLatch = new CountDownLatch(2);
 
 		String markerPID = ConfigurationTestUtil.class.getName();
 
 		ConfigurationListener configurationListener = configurationEvent -> {
 			if (markerPID.equals(configurationEvent.getPid())) {
-				eventCountdownLatch.countDown();
+				eventCountDownLatch.countDown();
 			}
 		};
 
@@ -153,7 +153,7 @@ public class ConfigurationTestUtil {
 
 		ManagedService managedService = properties -> {
 			try {
-				eventCountdownLatch.await();
+				eventCountDownLatch.await();
 			}
 			catch (InterruptedException interruptedException) {
 				ReflectionUtil.throwException(interruptedException);
@@ -162,13 +162,12 @@ public class ConfigurationTestUtil {
 			updateCountDownLatch.countDown();
 		};
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(Constants.SERVICE_PID, markerPID);
-
 		ServiceRegistration<ManagedService> managedServiceServiceRegistration =
 			_bundleContext.registerService(
-				ManagedService.class, managedService, properties);
+				ManagedService.class, managedService,
+				HashMapDictionaryBuilder.<String, Object>put(
+					Constants.SERVICE_PID, markerPID
+				).build());
 
 		try {
 			if (dictionary == null) {

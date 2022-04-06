@@ -28,9 +28,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONUtil;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -60,6 +58,11 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 	}
 
 	@Override
+	public JSONArray getDataAttributesJSONArray() {
+		return JSONUtil.put("lfr-priority");
+	}
+
+	@Override
 	public String processFragmentEntryLinkHTML(
 			FragmentEntryLink fragmentEntryLink, String html,
 			FragmentEntryProcessorContext fragmentEntryProcessorContext)
@@ -77,7 +80,7 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
 					fragmentEntryLink.getGroupId(),
-					fragmentEntryLink.getClassPK());
+					fragmentEntryLink.getPlid());
 
 		if (layoutPageTemplateStructure == null) {
 			return html;
@@ -114,19 +117,14 @@ public class DropZoneFragmentEntryProcessor implements FragmentEntryProcessor {
 			return bodyElement.html();
 		}
 
-		Optional<Map<String, Object>> fieldValuesOptional =
-			fragmentEntryProcessorContext.getFieldValuesOptional();
-
 		for (int i = 0; i < elements.size(); i++) {
 			Element element = elements.get(i);
 
 			String dropZoneHTML = _fragmentDropZoneRenderer.renderDropZone(
 				fragmentEntryProcessorContext.getHttpServletRequest(),
 				fragmentEntryProcessorContext.getHttpServletResponse(),
-				fieldValuesOptional.orElse(null),
-				fragmentEntryLink.getGroupId(), fragmentEntryLink.getClassPK(),
-				dropZoneItemIds.get(i), fragmentEntryProcessorContext.getMode(),
-				true);
+				fragmentEntryLink.getGroupId(), 0, dropZoneItemIds.get(i),
+				fragmentEntryProcessorContext.getMode(), true);
 
 			Element dropZoneElement = new Element("div");
 

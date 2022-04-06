@@ -16,10 +16,9 @@ package com.liferay.portlet.documentlibrary.service.base;
 
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
 import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalService;
+import com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServiceUtil;
 import com.liferay.document.library.kernel.service.persistence.DLFileEntryMetadataFinder;
 import com.liferay.document.library.kernel.service.persistence.DLFileEntryMetadataPersistence;
-import com.liferay.document.library.kernel.service.persistence.DLFileEntryTypeFinder;
-import com.liferay.document.library.kernel.service.persistence.DLFileEntryTypePersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.kernel.bean.BeanReference;
@@ -42,13 +41,14 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.ClassNamePersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -72,11 +72,15 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DLFileEntryMetadataLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.document.library.kernel.service.DLFileEntryMetadataLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DLFileEntryMetadataLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DLFileEntryMetadataLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the document library file entry metadata to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was added
@@ -108,6 +112,10 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	/**
 	 * Deletes the document library file entry metadata with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param fileEntryMetadataId the primary key of the document library file entry metadata
 	 * @return the document library file entry metadata that was removed
 	 * @throws PortalException if a document library file entry metadata with the primary key could not be found
@@ -124,6 +132,10 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	/**
 	 * Deletes the document library file entry metadata from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was removed
 	 */
@@ -138,6 +150,13 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return dlFileEntryMetadataPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -315,6 +334,7 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -333,6 +353,7 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 			(DLFileEntryMetadata)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DLFileEntryMetadata> getBasePersistence() {
 		return dlFileEntryMetadataPersistence;
 	}
@@ -394,6 +415,10 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 
 	/**
 	 * Updates the document library file entry metadata in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was updated
@@ -491,122 +516,19 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the class name local service.
-	 *
-	 * @return the class name local service
-	 */
-	public com.liferay.portal.kernel.service.ClassNameLocalService
-		getClassNameLocalService() {
-
-		return classNameLocalService;
-	}
-
-	/**
-	 * Sets the class name local service.
-	 *
-	 * @param classNameLocalService the class name local service
-	 */
-	public void setClassNameLocalService(
-		com.liferay.portal.kernel.service.ClassNameLocalService
-			classNameLocalService) {
-
-		this.classNameLocalService = classNameLocalService;
-	}
-
-	/**
-	 * Returns the class name persistence.
-	 *
-	 * @return the class name persistence
-	 */
-	public ClassNamePersistence getClassNamePersistence() {
-		return classNamePersistence;
-	}
-
-	/**
-	 * Sets the class name persistence.
-	 *
-	 * @param classNamePersistence the class name persistence
-	 */
-	public void setClassNamePersistence(
-		ClassNamePersistence classNamePersistence) {
-
-		this.classNamePersistence = classNamePersistence;
-	}
-
-	/**
-	 * Returns the document library file entry type local service.
-	 *
-	 * @return the document library file entry type local service
-	 */
-	public
-		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
-			getDLFileEntryTypeLocalService() {
-
-		return dlFileEntryTypeLocalService;
-	}
-
-	/**
-	 * Sets the document library file entry type local service.
-	 *
-	 * @param dlFileEntryTypeLocalService the document library file entry type local service
-	 */
-	public void setDLFileEntryTypeLocalService(
-		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
-			dlFileEntryTypeLocalService) {
-
-		this.dlFileEntryTypeLocalService = dlFileEntryTypeLocalService;
-	}
-
-	/**
-	 * Returns the document library file entry type persistence.
-	 *
-	 * @return the document library file entry type persistence
-	 */
-	public DLFileEntryTypePersistence getDLFileEntryTypePersistence() {
-		return dlFileEntryTypePersistence;
-	}
-
-	/**
-	 * Sets the document library file entry type persistence.
-	 *
-	 * @param dlFileEntryTypePersistence the document library file entry type persistence
-	 */
-	public void setDLFileEntryTypePersistence(
-		DLFileEntryTypePersistence dlFileEntryTypePersistence) {
-
-		this.dlFileEntryTypePersistence = dlFileEntryTypePersistence;
-	}
-
-	/**
-	 * Returns the document library file entry type finder.
-	 *
-	 * @return the document library file entry type finder
-	 */
-	public DLFileEntryTypeFinder getDLFileEntryTypeFinder() {
-		return dlFileEntryTypeFinder;
-	}
-
-	/**
-	 * Sets the document library file entry type finder.
-	 *
-	 * @param dlFileEntryTypeFinder the document library file entry type finder
-	 */
-	public void setDLFileEntryTypeFinder(
-		DLFileEntryTypeFinder dlFileEntryTypeFinder) {
-
-		this.dlFileEntryTypeFinder = dlFileEntryTypeFinder;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.document.library.kernel.model.DLFileEntryMetadata",
 			dlFileEntryMetadataLocalService);
+
+		_setLocalServiceUtilService(dlFileEntryMetadataLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.document.library.kernel.model.DLFileEntryMetadata");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -667,6 +589,23 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService) {
+
+		try {
+			Field field =
+				DLFileEntryMetadataLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, dlFileEntryMetadataLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = DLFileEntryMetadataLocalService.class)
 	protected DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService;
 
@@ -681,28 +620,6 @@ public abstract class DLFileEntryMetadataLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ClassNameLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@BeanReference(type = ClassNamePersistence.class)
-	protected ClassNamePersistence classNamePersistence;
-
-	@BeanReference(
-		type = com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService.class
-	)
-	protected
-		com.liferay.document.library.kernel.service.DLFileEntryTypeLocalService
-			dlFileEntryTypeLocalService;
-
-	@BeanReference(type = DLFileEntryTypePersistence.class)
-	protected DLFileEntryTypePersistence dlFileEntryTypePersistence;
-
-	@BeanReference(type = DLFileEntryTypeFinder.class)
-	protected DLFileEntryTypeFinder dlFileEntryTypeFinder;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

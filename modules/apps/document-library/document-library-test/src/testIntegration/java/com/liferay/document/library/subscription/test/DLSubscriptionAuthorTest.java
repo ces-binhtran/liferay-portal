@@ -22,10 +22,10 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -60,9 +60,9 @@ public class DLSubscriptionAuthorTest extends BaseSubscriptionAuthorTestCase {
 			serviceContext, Constants.ADD);
 
 		FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
-			userId, group.getGroupId(), containerModelId,
+			null, userId, group.getGroupId(), containerModelId,
 			RandomTestUtil.randomString() + ".txt", ContentTypes.TEXT_PLAIN,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 
 		return fileEntry.getFileEntryId();
 	}
@@ -105,8 +105,9 @@ public class DLSubscriptionAuthorTest extends BaseSubscriptionAuthorTestCase {
 		DLAppLocalServiceUtil.updateFileEntry(
 			userId, baseModelId, RandomTestUtil.randomString(),
 			ContentTypes.TEXT_PLAIN, RandomTestUtil.randomString(),
-			StringPool.BLANK, StringPool.BLANK, DLVersionNumberIncrease.MINOR,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+			DLVersionNumberIncrease.MINOR, TestDataConstants.TEST_BYTE_ARRAY,
+			null, null, serviceContext);
 	}
 
 }

@@ -15,6 +15,7 @@
 package com.liferay.segments.service;
 
 import com.liferay.portal.kernel.service.ServiceWrapper;
+import com.liferay.segments.model.SegmentsEntryRel;
 
 /**
  * Provides a wrapper for {@link SegmentsEntryRelService}.
@@ -27,54 +28,14 @@ public class SegmentsEntryRelServiceWrapper
 	implements SegmentsEntryRelService,
 			   ServiceWrapper<SegmentsEntryRelService> {
 
+	public SegmentsEntryRelServiceWrapper() {
+		this(null);
+	}
+
 	public SegmentsEntryRelServiceWrapper(
 		SegmentsEntryRelService segmentsEntryRelService) {
 
 		_segmentsEntryRelService = segmentsEntryRelService;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 SegmentsEntryService#addSegmentsEntryClassPKs(
-	 long, long[], ServiceContext)}
-	 */
-	@Deprecated
-	@Override
-	public com.liferay.segments.model.SegmentsEntryRel addSegmentsEntryRel(
-			long segmentsEntryId, long classNameId, long classPK,
-			com.liferay.portal.kernel.service.ServiceContext serviceContext)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _segmentsEntryRelService.addSegmentsEntryRel(
-			segmentsEntryId, classNameId, classPK, serviceContext);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 SegmentsEntryService#deleteSegmentsEntryClassPKs(
-	 long, long[])}
-	 */
-	@Deprecated
-	@Override
-	public void deleteSegmentsEntryRel(long segmentsEntryRelId)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_segmentsEntryRelService.deleteSegmentsEntryRel(segmentsEntryRelId);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 SegmentsEntryService#deleteSegmentsEntryClassPKs(
-	 long, long[])}
-	 */
-	@Deprecated
-	@Override
-	public void deleteSegmentsEntryRel(
-			long segmentsEntryId, long classNameId, long classPK)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		_segmentsEntryRelService.deleteSegmentsEntryRel(
-			segmentsEntryId, classNameId, classPK);
 	}
 
 	/**
@@ -88,20 +49,18 @@ public class SegmentsEntryRelServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.segments.model.SegmentsEntryRel>
-			getSegmentsEntryRels(long segmentsEntryId)
+	public java.util.List<SegmentsEntryRel> getSegmentsEntryRels(
+			long segmentsEntryId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsEntryRelService.getSegmentsEntryRels(segmentsEntryId);
 	}
 
 	@Override
-	public java.util.List<com.liferay.segments.model.SegmentsEntryRel>
-			getSegmentsEntryRels(
-				long segmentsEntryId, int start, int end,
-				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.segments.model.SegmentsEntryRel>
-						orderByComparator)
+	public java.util.List<SegmentsEntryRel> getSegmentsEntryRels(
+			long segmentsEntryId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator<SegmentsEntryRel>
+				orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsEntryRelService.getSegmentsEntryRels(
@@ -109,8 +68,8 @@ public class SegmentsEntryRelServiceWrapper
 	}
 
 	@Override
-	public java.util.List<com.liferay.segments.model.SegmentsEntryRel>
-			getSegmentsEntryRels(long groupId, long classNameId, long classPK)
+	public java.util.List<SegmentsEntryRel> getSegmentsEntryRels(
+			long groupId, long classNameId, long classPK)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _segmentsEntryRelService.getSegmentsEntryRels(

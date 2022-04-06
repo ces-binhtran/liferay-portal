@@ -18,14 +18,17 @@
 
 <%
 long fileEntryTypeId = ParamUtil.getLong(request, "fileEntryTypeId");
-String eventName = ParamUtil.getString(request, "eventName", renderResponse.getNamespace() + "selectFileEntryType");
+String eventName = ParamUtil.getString(request, "eventName", liferayPortletResponse.getNamespace() + "selectFileEntryType");
 
 long[] groupIds = PortalUtil.getCurrentAndAncestorSiteGroupIds(scopeGroupId);
 
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/document_library/select_file_entry_type.jsp");
-portletURL.setParameter("eventName", eventName);
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	renderResponse
+).setMVCPath(
+	"/document_library/select_file_entry_type.jsp"
+).setParameter(
+	"eventName", eventName
+).buildPortletURL();
 %>
 
 <clay:navigation-bar
@@ -35,14 +38,14 @@ portletURL.setParameter("eventName", eventName);
 				add(
 					navigationItem -> {
 						navigationItem.setActive(true);
-						navigationItem.setLabel(LanguageUtil.get(request, "document-types"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "document-types"));
 					});
 			}
 		}
 	%>'
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid-1280" method="post" name="selectFileEntryTypeFm">
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="selectFileEntryTypeFm">
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 	>
@@ -61,11 +64,10 @@ portletURL.setParameter("eventName", eventName);
 				row.setCssClass("select-action active");
 			}
 
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"fileEntryTypeId", fileEntryType.getFileEntryTypeId()
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-icon
@@ -75,7 +77,11 @@ portletURL.setParameter("eventName", eventName);
 			<liferay-ui:search-container-column-text
 				colspan="<%= 2 %>"
 			>
-				<h5><%= HtmlUtil.escape(fileEntryType.getName(locale)) %></h5>
+				<h5>
+					<aui:a href="#">
+						<%= HtmlUtil.escape(fileEntryType.getName(locale)) %>
+					</aui:a>
+				</h5>
 
 				<h6 class="text-default">
 					<span><%= fileEntryType.getDescription(locale) %></span>
@@ -95,7 +101,7 @@ portletURL.setParameter("eventName", eventName);
 
 	form.delegate(
 		'click',
-		function (event) {
+		(event) => {
 			event.preventDefault();
 
 			var currentTarget = event.currentTarget;
@@ -107,7 +113,9 @@ portletURL.setParameter("eventName", eventName);
 			Liferay.Util.getOpener().Liferay.fire(
 				'<%= HtmlUtil.escapeJS(eventName) %>',
 				{
-					data: currentTarget.attr('data-fileEntryTypeId'),
+					data: {
+						value: currentTarget.attr('data-fileEntryTypeId'),
+					},
 				}
 			);
 		},

@@ -16,6 +16,7 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMFormInstanceReport;
 import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMFormInstanceReportPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -47,10 +48,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +76,15 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMFormInstanceReportLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMFormInstanceReportLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMFormInstanceReportLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMFormInstanceReportLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ddm form instance report to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was added
@@ -108,6 +116,10 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm form instance report with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param formInstanceReportId the primary key of the ddm form instance report
 	 * @return the ddm form instance report that was removed
 	 * @throws PortalException if a ddm form instance report with the primary key could not be found
@@ -124,6 +136,10 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm form instance report from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was removed
 	 */
@@ -138,6 +154,13 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmFormInstanceReportPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -303,6 +326,7 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -321,6 +345,7 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 			(DDMFormInstanceReport)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DDMFormInstanceReport> getBasePersistence() {
 		return ddmFormInstanceReportPersistence;
 	}
@@ -366,6 +391,10 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	/**
 	 * Updates the ddm form instance report in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceReportLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceReport the ddm form instance report
 	 * @return the ddm form instance report that was updated
 	 */
@@ -375,6 +404,11 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 		DDMFormInstanceReport ddmFormInstanceReport) {
 
 		return ddmFormInstanceReportPersistence.update(ddmFormInstanceReport);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -390,6 +424,8 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		ddmFormInstanceReportLocalService =
 			(DDMFormInstanceReportLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmFormInstanceReportLocalService);
 	}
 
 	/**
@@ -447,6 +483,23 @@ public abstract class DDMFormInstanceReportLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		DDMFormInstanceReportLocalService ddmFormInstanceReportLocalService) {
+
+		try {
+			Field field =
+				DDMFormInstanceReportLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmFormInstanceReportLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

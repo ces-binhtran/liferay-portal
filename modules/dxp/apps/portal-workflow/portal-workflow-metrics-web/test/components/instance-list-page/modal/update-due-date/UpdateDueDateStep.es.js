@@ -9,40 +9,41 @@
  * distribution rights of the Software.
  */
 
+import '@testing-library/jest-dom/extend-expect';
 import {cleanup, fireEvent, render} from '@testing-library/react';
-import React, {cloneElement, useState} from 'react';
+import React, {useState} from 'react';
 
+import {AppContext} from '../../../../../src/main/resources/META-INF/resources/js/components/AppContext.es';
+import {ModalContext} from '../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/ModalProvider.es';
 import UpdateDueDateStep from '../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/update-due-date/UpdateDueDateStep.es';
 
-import '@testing-library/jest-dom/extend-expect';
+const MockModalContext = ({children}) => {
+	const [updateDueDate, setUpdateDueDate] = useState('');
 
-const ContainerMock = ({children}) => {
-	const [value, setValue] = useState('');
-
-	return cloneElement(children, {setValue, value});
+	return (
+		<ModalContext.Provider value={{setUpdateDueDate, updateDueDate}}>
+			{children}
+		</ModalContext.Provider>
+	);
 };
 
-const wrapperMock = {
-	wrapper: ContainerMock,
-};
-
-describe('The TimePickerInput component should be render with AM/PM format', () => {
+describe('The UpdateDueDateStep component should be rendered with TimePickerInput with AM/PM format', () => {
 	afterEach(cleanup);
 
 	test('Render with error state and select any option', () => {
-		const {getAllByTestId, getByTestId} = render(
-			<UpdateDueDateStep.TimePickerInput format="H:mm a" isAmPm />,
-			wrapperMock
+		const {getAllByRole, getByPlaceholderText} = render(
+			<AppContext.Provider value={{isAmPm: true, timeFormat: 'H:mm a'}}>
+				<MockModalContext>
+					<UpdateDueDateStep />
+				</MockModalContext>
+			</AppContext.Provider>
 		);
 
-		const timeInput = getByTestId('timeInput');
-
-		expect(timeInput.parentNode).toHaveClass('has-error');
-		expect(timeInput.value).toBe('');
+		const timeInput = getByPlaceholderText('HH:mm am/pm');
 
 		fireEvent.focus(timeInput);
 
-		const items = getAllByTestId('timeListItem');
+		const items = getAllByRole('listitem');
 
 		items.forEach((item) => {
 			expect(item.innerHTML).toMatch(/[0-9]{1,2}:[0-9]{2}\s(AM|PM)/);
@@ -68,22 +69,23 @@ describe('The TimePickerInput component should be render with AM/PM format', () 
 	});
 });
 
-describe('The TimePickerInput component should be render without AM/PM format', () => {
+describe('The UpdateDueDateStep component should be rendered with TimePickerInput with another time format', () => {
+	afterEach(cleanup);
+
 	test('Render with error state and select any option', () => {
-		const {getAllByTestId, getByTestId} = render(
-			<UpdateDueDateStep.TimePickerInput format="H:mm" />,
-			wrapperMock
+		const {getAllByRole, getByPlaceholderText} = render(
+			<AppContext.Provider value={{isAmPm: false, timeFormat: 'HH:mm'}}>
+				<MockModalContext>
+					<UpdateDueDateStep />
+				</MockModalContext>
+			</AppContext.Provider>
 		);
 
-		const timeInput = getByTestId('timeInput');
-		const timePicker = getByTestId('timePicker');
-
-		expect(timeInput.parentNode).toHaveClass('has-error');
-		expect(timeInput.value).toBe('');
+		const timeInput = getByPlaceholderText('HH:mm');
 
 		fireEvent.focus(timeInput);
 
-		const items = getAllByTestId('timeListItem');
+		const items = getAllByRole('listitem');
 
 		items.forEach((item) => {
 			expect(item.innerHTML).toMatch(/[0-9]{1,2}:[0-9]{2}/);
@@ -109,10 +111,14 @@ describe('The TimePickerInput component should be render without AM/PM format', 
 
 		fireEvent.focus(timeInput);
 
-		expect(timePicker.children.length).toBe(2);
+		let timePickerPopover = document.querySelector('.clay-popover-bottom');
+
+		expect(timePickerPopover).toBeTruthy();
 
 		fireEvent.blur(timeInput);
 
-		expect(timePicker.children.length).toBe(1);
+		timePickerPopover = document.querySelector('.clay-popover-bottom');
+
+		expect(timePickerPopover).toBeFalsy();
 	});
 });

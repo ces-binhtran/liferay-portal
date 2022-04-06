@@ -19,11 +19,13 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.search.facet.Facet;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.search.web.internal.facet.display.builder.FolderSearchFacetDisplayBuilder;
+import com.liferay.portal.search.searcher.SearchRequest;
+import com.liferay.portal.search.searcher.SearchResponse;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetDisplayContext;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderSearcher;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderTitleLookup;
 import com.liferay.portal.search.web.internal.facet.display.context.FolderTitleLookupImpl;
+import com.liferay.portal.search.web.internal.facet.display.context.builder.FolderSearchFacetDisplayContextBuilder;
 import com.liferay.portal.search.web.internal.folder.facet.constants.FolderFacetPortletKeys;
 import com.liferay.portal.search.web.internal.util.SearchOptionalUtil;
 import com.liferay.portal.search.web.portlet.shared.search.PortletSharedSearchRequest;
@@ -63,7 +65,8 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.init-param.view-template=/folder/facet/view.jsp",
 		"javax.portlet.name=" + FolderFacetPortletKeys.FOLDER_FACET,
 		"javax.portlet.resource-bundle=content.Language",
-		"javax.portlet.security-role-ref=guest,power-user,user"
+		"javax.portlet.security-role-ref=guest,power-user,user",
+		"javax.portlet.version=3.0"
 	},
 	service = Portlet.class
 )
@@ -78,7 +81,7 @@ public class FolderFacetPortlet extends MVCPortlet {
 			portletSharedSearchRequest.search(renderRequest);
 
 		FolderSearchFacetDisplayContext folderSearchFacetDisplayContext =
-			buildDisplayContext(portletSharedSearchResponse, renderRequest);
+			_buildDisplayContext(portletSharedSearchResponse, renderRequest);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, folderSearchFacetDisplayContext);
@@ -91,12 +94,18 @@ public class FolderFacetPortlet extends MVCPortlet {
 		super.render(renderRequest, renderResponse);
 	}
 
-	protected FolderSearchFacetDisplayContext buildDisplayContext(
+	@Reference
+	protected Portal portal;
+
+	@Reference
+	protected PortletSharedSearchRequest portletSharedSearchRequest;
+
+	private FolderSearchFacetDisplayContext _buildDisplayContext(
 		PortletSharedSearchResponse portletSharedSearchResponse,
 		RenderRequest renderRequest) {
 
 		Facet facet = portletSharedSearchResponse.getFacet(
-			getAggregationName(renderRequest));
+			_getAggregationName(renderRequest));
 
 		FolderTitleLookup folderTitleLookup = new FolderTitleLookupImpl(
 			new FolderSearcher(), portal.getHttpServletRequest(renderRequest));
@@ -109,49 +118,59 @@ public class FolderFacetPortlet extends MVCPortlet {
 				portletSharedSearchResponse.getPortletPreferences(
 					renderRequest));
 
-		FolderSearchFacetDisplayBuilder folderSearchFacetDisplayBuilder =
-			createFolderSearchFacetDisplayBuilder(renderRequest);
+		FolderSearchFacetDisplayContextBuilder
+			folderSearchFacetDisplayContextBuilder =
+				_createFolderSearchFacetDisplayContextBuilder(renderRequest);
 
-		folderSearchFacetDisplayBuilder.setFacet(facet);
-		folderSearchFacetDisplayBuilder.setFolderTitleLookup(folderTitleLookup);
-		folderSearchFacetDisplayBuilder.setFrequenciesVisible(
+		folderSearchFacetDisplayContextBuilder.setFacet(facet);
+		folderSearchFacetDisplayContextBuilder.setFolderTitleLookup(
+			folderTitleLookup);
+		folderSearchFacetDisplayContextBuilder.setFrequenciesVisible(
 			folderFacetPortletPreferences.isFrequenciesVisible());
-		folderSearchFacetDisplayBuilder.setFrequencyThreshold(
+		folderSearchFacetDisplayContextBuilder.setFrequencyThreshold(
 			folderFacetConfiguration.getFrequencyThreshold());
-		folderSearchFacetDisplayBuilder.setMaxTerms(
+		folderSearchFacetDisplayContextBuilder.setMaxTerms(
 			folderFacetConfiguration.getMaxTerms());
+		folderSearchFacetDisplayContextBuilder.setPaginationStartParameterName(
+			_getPaginationStartParameterName(portletSharedSearchResponse));
 
 		String parameterName = folderFacetPortletPreferences.getParameterName();
 
-		folderSearchFacetDisplayBuilder.setParameterName(parameterName);
+		folderSearchFacetDisplayContextBuilder.setParameterName(parameterName);
 
 		SearchOptionalUtil.copy(
 			() -> portletSharedSearchResponse.getParameterValues(
 				parameterName, renderRequest),
-			folderSearchFacetDisplayBuilder::setParameterValues);
+			folderSearchFacetDisplayContextBuilder::setParameterValues);
 
-		return folderSearchFacetDisplayBuilder.build();
+		return folderSearchFacetDisplayContextBuilder.build();
 	}
 
-	protected FolderSearchFacetDisplayBuilder
-		createFolderSearchFacetDisplayBuilder(RenderRequest renderRequest) {
+	private FolderSearchFacetDisplayContextBuilder
+		_createFolderSearchFacetDisplayContextBuilder(
+			RenderRequest renderRequest) {
 
 		try {
-			return new FolderSearchFacetDisplayBuilder(renderRequest);
+			return new FolderSearchFacetDisplayContextBuilder(renderRequest);
 		}
 		catch (ConfigurationException configurationException) {
 			throw new RuntimeException(configurationException);
 		}
 	}
 
-	protected String getAggregationName(RenderRequest renderRequest) {
+	private String _getAggregationName(RenderRequest renderRequest) {
 		return portal.getPortletId(renderRequest);
 	}
 
-	@Reference
-	protected Portal portal;
+	private String _getPaginationStartParameterName(
+		PortletSharedSearchResponse portletSharedSearchResponse) {
 
-	@Reference
-	protected PortletSharedSearchRequest portletSharedSearchRequest;
+		SearchResponse searchResponse =
+			portletSharedSearchResponse.getSearchResponse();
+
+		SearchRequest searchRequest = searchResponse.getRequest();
+
+		return searchRequest.getPaginationStartParameterName();
+	}
 
 }

@@ -23,10 +23,13 @@ String reportName = BeanParamUtil.getString(definition, request, "reportName");
 
 portletDisplay.setShowBackIcon(true);
 
-PortletURL searchDefinitionURL = reportsEngineDisplayContext.getPortletURL();
-
-searchDefinitionURL.setParameter("mvcPath", "/admin/view.jsp");
-searchDefinitionURL.setParameter("tabs1", "definitions");
+PortletURL searchDefinitionURL = PortletURLBuilder.create(
+	reportsEngineDisplayContext.getPortletURL()
+).setMVCPath(
+	"/admin/view.jsp"
+).setTabs1(
+	"definitions"
+).buildPortletURL();
 
 portletDisplay.setURLBack(searchDefinitionURL.toString());
 
@@ -38,12 +41,12 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-report-entry"));
 	<portlet:param name="tabs1" value="reports" />
 </portlet:renderURL>
 
-<portlet:actionURL name="generateReport" var="generateReportURL">
+<portlet:actionURL name="/reports_admin/generate_report" var="generateReportURL">
 	<portlet:param name="mvcPath" value="/admin/report/generate_report.jsp" />
 	<portlet:param name="redirect" value="<%= searchRequestsURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= generateReportURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= generateReportURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="definitionId" type="hidden" value="<%= definition.getDefinitionId() %>" />
 
 	<portlet:renderURL var="generatedReportsURL">
@@ -141,7 +144,7 @@ renderResponse.setTitle(LanguageUtil.get(request, "new-report-entry"));
 									md="9"
 								>
 									<span class="field field-text">
-										<input class="form-control" name='<portlet:namespace /><%= "parameterValue" + HtmlUtil.escapeAttribute(key) %>' type="text" value="<%= HtmlUtil.escapeAttribute(value) %>" />
+										<input class="form-control" name="<portlet:namespace /><%= "parameterValue" + HtmlUtil.escapeAttribute(key) %>" type="text" value="<%= HtmlUtil.escapeAttribute(value) %>" />
 									</span>
 								</clay:col>
 							</c:otherwise>

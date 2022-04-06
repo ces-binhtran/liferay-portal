@@ -19,168 +19,171 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 
 			JSONUser.tearDownNonAdminUsers();
 		}
 	}
 
-	// Ignored due to LPS-113623
-
-	@ignore = "true"
+	@description = "This is a use case for LPS-95157. Verify control menu on an admin page is styled correctly after refreshing page"
 	@priority = "5"
-	test CheckAUIPreloadConfiguration {
-		property test.name.skip.portal.instance = "UIInfrastructureUsecase#CheckAUIPreloadConfiguration";
-
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "System Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Third Party",
-			configurationName = "AUI",
-			configurationScope = "System Scope");
-
-		FormFields.viewCheckboxChecked(fieldName = "enableAUIPreload");
-
-		SystemSettings.configureSystemSetting(
-			enableSetting = "false",
-			settingFieldName = "Preload Widely Used AUI Modules");
-
-		ProductMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "System Settings");
-
-		SystemSettings.gotoConfiguration(
-			configurationCategory = "Third Party",
-			configurationName = "AUI",
-			configurationScope = "System Scope");
-
-		FormFields.viewCheckboxNotChecked(fieldName = "enableAUIPreload");
-
-		Navigator.gotoPage(pageName = "Home");
-
-		Portlet.viewTitle(portletName = "Hello World");
-	}
-
-	@description = "This is a use case for LPS-95157. It checks the nav-bar menu icons on guest page level after page refresh."
-	@priority = "5"
-	test RefreshHomePage {
-		property portal.acceptance = "true";
-
-		Navigator.gotoPage(pageName = "Home");
-
-		ProductMenuHelper.closeProductMenu();
-
-		Refresh();
-
-		SikuliAssertElementPresent(locator1 = "ControlMenu#HOME_HEADING_AND_PRODUCT_MENU_CLOSED_PNG");
-		SikuliAssertElementPresent(locator1 = "ControlMenu#HOME_ICONS_RIGHT_PNG");
-
-		takeScreenshot();
-
-		ProductMenuHelper.openProductMenu();
-
-		Refresh();
-
-		SikuliAssertElementPresent(locator1 = "ControlMenu#HOME_HEADING_AND_PRODUCT_MENU_OPENED_PNG");
-		SikuliAssertElementPresent(locator1 = "ControlMenu#HOME_ICONS_RIGHT_PNG");
-
-		takeScreenshot();
-	}
-
-	@description = "This is a use case for LPS-95157. It checks the nav-bar menu icons on admin page level after page refresh."
-	@priority = "5"
-	test RefreshWebContent {
+	@refactordone
+	test AdminPageCanDisplayStyleCorrectlyAfterPageRefresh {
+		property app.server.types = "tomcat";
+		property database.types = "mysql";
+		property environment.acceptance = "true";
 		property portal.acceptance = "true";
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Web Content");
 
 		Refresh();
 
-		SikuliAssertElementPresent(locator1 = "ControlMenu#WC_HEADING_AND_PRODUCT_MENU_OPENED_PNG");
-		SikuliAssertElementPresent(locator1 = "ControlMenu#WC_ICONS_RIGHT_PNG");
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "display",
+			value1 = "flex");
+
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "list-style",
+			value1 = "outside none none");
 
 		takeScreenshot();
 	}
 
-	@priority = "5"
-	test RightToLeftSmoke {
-		property portal.acceptance = "true";
-		property test.name.skip.portal.instance = "UIInfrastructureUsecase#RightToLeftSmoke";
+	@description = "This is a use case for LPS-70390."
+	@priority = "4"
+	@refactordone
+	test CanViewNonASCIICharactersWithSPADisabled {
+		property custom.properties = "javascript.single.page.application.enabled=false";
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		SitePages.addPublicPage(pageName = "RTL Test Page");
+		User.addCP(
+			userEmailAddress = "skandi@liferay.com",
+			userFirstName = "Skändi",
+			userLastName = "Ääkkönen",
+			userScreenName = "uskandi");
 
-		Navigator.gotoPage(pageName = "RTL Test Page");
+		ApplicationsMenu.gotoPortlet(
+			category = "Users",
+			panel = "Control Panel",
+			portlet = "Users and Organizations");
 
-		Portlet.addPG(portletName = "Language Selector");
-
-		LanguagePortlet.selectLanguagePG(
-			locale = "ar_SA",
-			textIcon = "العربية-السعودية");
-
-		ProductMenuHelper.openProductMenu();
-
-		Page.viewRTLLayout();
-
-		LanguagePortlet.selectLanguagePG(
-			locale = "en_US",
-			textIcon = "english-United States");
-
-		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
-			portlet = "Web Content");
-
-		WebContentNavigator.gotoAddCP();
-
-		Navigator.ensureLocaleURL(locale = "ar");
-
-		PortletEntry.changeLocale(locale = "ar_SA");
-
-		WebContent.addCP(webContentTitle = "WC Title");
-
-		WebContent.viewRTLLayout();
-
-		Navigator.openURL();
-
-		Navigator.ensureLocaleURL(locale = "en");
+		User.viewCP(
+			userEmailAddress = "skandi@liferay.com",
+			userFirstName = "Skändi",
+			userLastName = "Ääkkönen",
+			userScreenName = "uskandi");
 	}
 
-	@description = "Ensure that a user can access portlet options and drag and drop portlets."
-	@ignore = "true"
+	@description = "Verify portlets have defined boundaries in 3 column page layout."
 	@priority = "5"
-	test Smoke {
+	@refactordone
+	test PortletBoundariesAreContained {
+		property app.server.types = "tomcat";
+		property database.types = "mysql";
+		property environment.acceptance = "true";
+		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		JSONLayout.addPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page");
 
-		SitePages.addPublicPage(pageName = "Test Page");
+		JSONLayout.updateLayoutTemplateOfPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page",
+			layoutTemplate = "3 Columns");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page",
+			widgetName = "Message Boards");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page",
+			widgetName = "Clay Sample");
+
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Guest",
+			layoutName = "Test Page",
+			widgetName = "Documents and Media");
 
 		Navigator.gotoPage(pageName = "Test Page");
 
-		Portlet.addPG(portletName = "Hello World");
+		Portlet.dragAndDropPortletToColumnPG(
+			columnNumberFrom = "1",
+			columnNumberTo = "2",
+			portletName = "Clay Sample");
 
-		task ("Close the Add Panel") {
-			Click(locator1 = "ControlMenuAddPanel#CLOSE_ADD_PANEL");
+		Navigator.gotoPage(pageName = "Test Page");
+
+		Portlet.dragAndDropPortletToColumnPG(
+			columnNumberFrom = "1",
+			columnNumberTo = "3",
+			portletName = "Documents and Media");
+
+		MouseOver(
+			key_pageColumnNumber = "1",
+			key_portletName = "Message Boards",
+			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
+
+		Portlet.assertPortletHeader(portletName = "MBPortlet");
+
+		takeScreenshot();
+
+		MouseOver(
+			key_pageColumnNumber = "2",
+			key_portletName = "Clay Sample",
+			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
+
+		Portlet.assertPortletHeader(portletName = "ClaySamplePortlet");
+
+		takeScreenshot();
+
+		MouseOver(
+			key_pageColumnNumber = "3",
+			key_portletName = "Documents and Media",
+			locator1 = "Portlet#PORTLET_TITLE_INSIDE_PAGE_COLUMN");
+
+		Portlet.assertPortletHeader(portletName = "DLPortlet");
+
+		takeScreenshot();
+	}
+
+	@description = "Smoke test to verify portlet can be dragged and dropped, configuration is available, look and feel is available, and can be removed"
+	@priority = "5"
+	@refactordone
+	test PortletUISmoke {
+		property app.server.types = "jboss,tcserver,tomcat,weblogic,websphere,wildfly";
+		property database.types = "db2,hypersonic,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+		property environment.acceptance = "true";
+		property osgi.modules.includes = "frontend-taglib-clay-sample-web";
+		property portal.acceptance = "true";
+
+		task ("Add portlet to public page") {
+			JSONLayout.addPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Guest",
+				layoutName = "Test Page",
+				widgetName = "Clay Sample");
 		}
 
-		task ("Assert the 'Configuration' iframe of the Hello World portlet") {
+		task ("Assert the 'Configuration' iframe of the portlet") {
+			Navigator.gotoPage(pageName = "Test Page");
+
 			Portlet.gotoPortletOptions(
-				portletName = "Hello World",
+				portletName = "Clay Sample",
 				portletOption = "Configuration");
 
 			IFrame.selectConfigurationFrame();
@@ -193,11 +196,11 @@ definition {
 			IFrame.closeFrame();
 		}
 
-		Navigator.gotoPage(pageName = "Test Page");
+		task ("Assert the 'Look and Feel' iframe of the Clay Sample portlet") {
+			Navigator.gotoPage(pageName = "Test Page");
 
-		task ("Assert the 'Look and Feel' iframe of the Hello World portlet") {
 			Portlet.gotoPortletOptions(
-				portletName = "Hello World",
+				portletName = "Clay Sample",
 				portletOption = "Look and Feel Configuration");
 
 			IFrame.selectConfigurationFrame();
@@ -211,150 +214,71 @@ definition {
 			IFrame.closeFrame();
 		}
 
-		Portlet.dragAndDropPortletToColumnPG(
-			columnNumberFrom = "1",
-			columnNumberTo = "2",
-			portletName = "Hello World");
-
-		Portlet.dragAndDropPortletToColumnPG(
-			columnNumberFrom = "2",
-			columnNumberTo = "1",
-			portletName = "Hello World");
-
-		task ("Removes Hello World Portlet on Test Page") {
+		task ("Assert able to drag and drop portlet") {
 			Navigator.gotoPage(pageName = "Test Page");
 
-			Portlet.deletePG(portletName = "Hello World");
+			Portlet.dragAndDropPortletToColumnPG(
+				columnNumberFrom = "1",
+				columnNumberTo = "2",
+				portletName = "Clay Sample");
 
-			Portlet.viewNoSpecificPG(portletName = "Hello World");
+			Portlet.dragAndDropPortletToColumnPG(
+				columnNumberFrom = "2",
+				columnNumberTo = "1",
+				portletName = "Clay Sample");
+		}
+
+		task ("Removes Clay Sample Portlet on Test Page") {
+			Navigator.gotoPage(pageName = "Test Page");
+
+			Portlet.deletePG(portletName = "Clay Sample");
+
+			Portlet.viewNoSpecificPG(portletName = "Clay Sample");
 		}
 	}
 
-	@description = "This is a use case for LPS-70390."
-	@priority = "4"
-	test ViewNonASCIICharactersWithSPADisabled {
-		property custom.properties = "javascript.single.page.application.enabled=false";
-
-		GlobalMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.addCP(
-			userEmailAddress = "skandi@liferay.com",
-			userFirstName = "Skändi",
-			userLastName = "Ääkkönen",
-			userScreenName = "uskandi");
-
-		GlobalMenu.gotoPortlet(
-			category = "Users",
-			panel = "Control Panel",
-			portlet = "Users and Organizations");
-
-		User.viewCP(
-			userEmailAddress = "skandi@liferay.com",
-			userFirstName = "Skändi",
-			userLastName = "Ääkkönen",
-			userScreenName = "uskandi");
-	}
-
-	@description = "Checks for each portlet having defined boundaries."
+	@description = "This is a use case for LPS-95157. Verify control menu on home page is styled correctly after refreshing page."
 	@priority = "5"
-	test ViewPortletBoundaries {
+	@refactordone
+	test SitePageCanDisplayStyleCorrectlyAfterPageRefresh {
+		property app.server.types = "tomcat";
+		property database.types = "mysql";
+		property environment.acceptance = "true";
 		property portal.acceptance = "true";
 
-		ProductMenu.gotoPortlet(
-			category = "Site Builder",
-			panel = "Site Administration",
-			portlet = "Pages");
+		Navigator.gotoPage(pageName = "Home");
 
-		SitePages.addPublicPage(
-			pageName = "Test Page",
-			sitePageType = "Widget Page");
+		ProductMenuHelper.closeProductMenu();
 
-		SitePages.configurePage(
-			columnName = "3 Columns",
-			pageName = "Test Page",
-			privacy = "Public Pages",
-			sitePageType = "Widget Page");
+		Refresh();
 
-		Navigator.gotoPage(pageName = "Test Page");
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "display",
+			value1 = "flex");
 
-		Portlet.addPG(portletName = "Message Board");
-
-		Navigator.gotoPage(pageName = "Test Page");
-
-		Portlet.addPG(portletName = "Hello World");
-
-		Navigator.gotoPage(pageName = "Test Page");
-
-		Portlet.addPG(portletName = "Documents and Media");
-
-		Portlet.dragAndDropPortletToColumnPG(
-			columnNumberFrom = "1",
-			columnNumberTo = "2",
-			portletName = "Hello World");
-
-		Navigator.gotoPage(pageName = "Test Page");
-
-		Portlet.dragAndDropPortletToColumnPG(
-			columnNumberFrom = "1",
-			columnNumberTo = "3",
-			portletName = "Documents and Media");
-
-		MouseOver(
-			key_portletTitleName = "Message Boards",
-			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_1_PORTLET_TITLE");
-
-		Portlet.assertPortletHeader(portletName = "MBPortlet");
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "list-style",
+			value1 = "outside none none");
 
 		takeScreenshot();
 
-		MouseOver(
-			key_portletTitleName = "Hello World",
-			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_2_PORTLET_TITLE");
+		ProductMenuHelper.openProductMenu();
 
-		Portlet.assertPortletHeader(portletName = "HelloWorldPortlet");
+		Refresh();
 
-		takeScreenshot();
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "display",
+			value1 = "flex");
 
-		MouseOver(
-			key_portletTitleName = "Documents and Media",
-			locator1 = "Home#PAGE_COLUMN_PORTLET_COLUMN_3_PORTLET_TITLE");
-
-		Portlet.assertPortletHeader(portletName = "DLPortlet");
-
-		takeScreenshot();
-	}
-
-	@description = "This test validates sign in and sign out UI"
-	@priority = "5"
-	test ViewSignInSignOutUI {
-		property portal.acceptance = "false";
-
-		UserBar.signOut();
-
-		WaitForElementPresent(locator1 = "UserBar#USER_SIGN_IN");
-
-		SikuliAssertElementPresent(locator1 = "UserBar#USER_SIGN_IN_PNG");
+		AssertCssValue(
+			locator1 = "//ul[contains(@id,'controlMenu')]",
+			locator2 = "list-style",
+			value1 = "outside none none");
 
 		takeScreenshot();
-
-		Navigator.openSpecificURL(url = "http://localhost:8080/c/portal/login");
-
-		WaitForElementPresent(locator1 = "SignIn#PORTLET_TITLE");
-
-		SikuliAssertElementPresent(locator1 = "SignIn#LOGIN_PORTLET_PNG");
-
-		SignIn._signIn();
-
-		WaitForElementPresent(locator1 = "UserBar#USER_AVATAR_ICON");
-
-		takeScreenshot();
-
-		UserBar.signOut();
-
-		AssertElementPresent(locator1 = "UserBar#USER_SIGN_IN");
 	}
 
 }

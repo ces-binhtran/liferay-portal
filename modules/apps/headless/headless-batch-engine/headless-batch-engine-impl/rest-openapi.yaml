@@ -15,20 +15,25 @@ components:
                     type: string
                 endTime:
                     description:
-                        The end time of import task operation.
+                        The end time of export task operation.
                     example: 2019-27-09'T'08:33:33'Z'
                     format: date-time
                     type: string
                 errorMessage:
                     description:
-                        The error message in case of import task's failed execution.
+                        The error message in case of export task's failed execution.
                     example: File import failed
                     type: string
                 executeStatus:
                     description:
-                        The status of import task's execution.
+                        The status of export task's execution.
                     enum: [COMPLETED, FAILED, INITIAL, STARTED]
                     example: INITIALIZED
+                    type: string
+                externalReferenceCode:
+                    # @review
+                    description:
+                        The optional external key of this account.
                     type: string
                 id:
                     description:
@@ -37,13 +42,40 @@ components:
                     format: int64
                     minimum: 0
                     type: integer
+                processedItemsCount:
+                    description:
+                        Number of items processed by export task opeartion.
+                    example: 100
+                    minimum: 0
+                    type: integer
                 startTime:
                     description:
-                        The start time of import task operation.
+                        The start time of export task operation.
                     example: 2019-27-09'T'08:23:33'Z'
                     format: date-time
                     type: string
+                totalItemsCount:
+                    description:
+                        Total number of items that will be processed by export task operation.
+                    example: 1000
+                    minimum: 0
+                    type: integer
             type: object
+        FailedItem:
+            properties:
+                item:
+                    description:
+                        The item which failed to be imported.
+                    type: string
+                itemIndex:
+                    description:
+                        Position of the item in the import file. For CSV file it will represent a line number, for JSON
+                        file it will represent an array index etc.
+                    type: integer
+                message:
+                    description:
+                        Message describing the reason of import failure.
+                    type: string
         ImportTask:
             # @review
             properties:
@@ -74,6 +106,15 @@ components:
                     enum: [COMPLETED, FAILED, INITIAL, STARTED]
                     example: INITIALIZED
                     type: string
+                externalReferenceCode:
+                    # @review
+                    description:
+                        The optional external key of this account.
+                    type: string
+                failedItems:
+                    items:
+                        $ref: "#/components/schemas/FailedItem"
+                    type: array
                 id:
                     description:
                         The task's ID.
@@ -81,22 +122,37 @@ components:
                     format: int64
                     minimum: 0
                     type: integer
+                importStrategy:
+                    description:
+                        Defines if import task will fail when error occurs or continue importing rest of the items.
+                    enum: [ON_ERROR_CONTINUE, ON_ERROR_FAIL]
+                    type: string
                 operation:
                     description:
                         The operation of import task.
                     enum: [CREATE, DELETE, UPDATE]
                     example: CREATE
                     type: string
+                processedItemsCount:
+                    description:
+                        Number of items processed by import task opeartion.
+                    example: 100
+                    minimum: 0
+                    type: integer
                 startTime:
                     description:
                         The start time of import task operation.
                     example: 2019-27-09'T'08:23:33'Z'
                     format: date-time
                     type: string
+                totalItemsCount:
+                    description:
+                        Total number of items that will be processed by import task operation.
+                    example: 1000
+                    minimum: 0
+                    type: integer
             type: object
 info:
-    description:
-        ""
     license:
         name: "Apache 2.0"
         url: "http://www.apache.org/licenses/LICENSE-2.0.html"
@@ -123,6 +179,10 @@ paths:
                       type: string
                 - in: query
                   name: callbackURL
+                  schema:
+                      type: string
+                - in: query
+                  name: externalReferenceCode
                   schema:
                       type: string
                 - in: query
@@ -167,8 +227,6 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ExportTask"
-                    description:
-                        ""
             tags: ["ExportTask"]
     /export-task/{exportTaskId}/content:
         # @review
@@ -190,8 +248,6 @@ paths:
                             schema:
                                 format: binary
                                 type: string
-                    description:
-                        ""
             tags: ["ExportTask"]
     /import-task/{className}:
         # @review
@@ -208,6 +264,15 @@ paths:
                 - in: query
                   name: callbackURL
                   schema:
+                      type: string
+                - in: query
+                  name: externalReferenceCode
+                  schema:
+                      type: string
+                - in: query
+                  name: importStrategy
+                  schema:
+                      enum: [ON_ERROR_CONTINUE, ON_ERROR_FAIL]
                       type: string
                 - in: query
                   name: taskItemDelegateName
@@ -261,8 +326,17 @@ paths:
                   schema:
                       type: string
                 - in: query
+                  name: externalReferenceCode
+                  schema:
+                      type: string
+                - in: query
                   name: fieldNameMapping
                   schema:
+                      type: string
+                - in: query
+                  name: importStrategy
+                  schema:
+                      enum: [ON_ERROR_CONTINUE, ON_ERROR_FAIL]
                       type: string
                 - in: query
                   name: taskItemDelegateName
@@ -314,6 +388,15 @@ paths:
                 - in: query
                   name: callbackURL
                   schema:
+                      type: string
+                - in: query
+                  name: externalReferenceCode
+                  schema:
+                      type: string
+                - in: query
+                  name: importStrategy
+                  schema:
+                      enum: [ON_ERROR_CONTINUE, ON_ERROR_FAIL]
                       type: string
                 - in: query
                   name: taskItemDelegateName
@@ -374,6 +457,42 @@ paths:
                         application/xml:
                             schema:
                                 $ref: "#/components/schemas/ImportTask"
-                    description:
-                        ""
+            tags: ["ImportTask"]
+    /import-task/{importTaskId}/content:
+        get:
+            description:
+                Retrieves the exported content.
+            operationId: getImportTaskContent
+            parameters:
+                - in: path
+                  name: importTaskId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/octet-stream:
+                            schema:
+                                format: binary
+                                type: string
+            tags: ["ImportTask"]
+    /import-task/{importTaskId}/failed-items/report:
+        get:
+            operationId: getImportTaskFailedItemReport
+            parameters:
+                - in: path
+                  name: importTaskId
+                  required: true
+                  schema:
+                      format: int64
+                      type: integer
+            responses:
+                200:
+                    content:
+                        application/octet-stream:
+                            schema:
+                                format: binary
+                                type: string
             tags: ["ImportTask"]

@@ -30,16 +30,17 @@ public abstract class IncreasableEntry<K, V> {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof IncreasableEntry<?, ?>)) {
+		if (!(object instanceof IncreasableEntry<?, ?>)) {
 			return false;
 		}
 
-		IncreasableEntry<K, V> increasableEntry = (IncreasableEntry<K, V>)obj;
+		IncreasableEntry<K, V> increasableEntry =
+			(IncreasableEntry<K, V>)object;
 
 		if (Objects.equals(key, increasableEntry.key) &&
 			Objects.equals(value, increasableEntry.value)) {
@@ -69,15 +70,7 @@ public abstract class IncreasableEntry<K, V> {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{key=");
-		sb.append(key);
-		sb.append(", value=");
-		sb.append(value);
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat("{key=", key, ", value=", value, "}");
 	}
 
 	protected final K key;

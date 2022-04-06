@@ -15,9 +15,9 @@
 package com.liferay.layout.page.template.admin.web.internal.portlet.action.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
+import com.liferay.info.item.InfoItemFormVariation;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporter;
 import com.liferay.layout.page.template.importer.LayoutPageTemplatesImporterResultEntry;
@@ -47,18 +47,21 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.io.File;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -97,21 +100,24 @@ public class ExportImportDisplayPagesTest {
 
 		long classNameId = _portal.getClassNameId(className);
 
-		InfoDisplayContributor<?> infoDisplayContributor =
-			_infoDisplayContributorTracker.getInfoDisplayContributor(className);
+		InfoItemFormVariationsProvider<?> infoItemFormVariationsProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormVariationsProvider.class, className);
 
-		long classTypeId = 0;
+		Collection<InfoItemFormVariation> infoItemFormVariations =
+			infoItemFormVariationsProvider.getInfoItemFormVariations(
+				_serviceContext1.getScopeGroupId());
 
-		List<ClassType> classTypes = infoDisplayContributor.getClassTypes(
-			_group1.getGroupId(), LocaleUtil.getSiteDefault());
+		Assert.assertTrue(!infoItemFormVariations.isEmpty());
 
-		for (ClassType classType : classTypes) {
-			if (Objects.equals(classType.getName(), "Basic Web Content")) {
-				classTypeId = classType.getClassTypeId();
-			}
-		}
+		Stream<InfoItemFormVariation> stream = infoItemFormVariations.stream();
 
-		Assert.assertNotEquals(0, classTypeId);
+		InfoItemFormVariation infoItemFormVariation = stream.sorted(
+			Comparator.comparing(InfoItemFormVariation::getKey)
+		).findFirst(
+		).get();
+
+		long classTypeId = GetterUtil.getLong(infoItemFormVariation.getKey());
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry1 =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
@@ -124,11 +130,13 @@ public class ExportImportDisplayPagesTest {
 		Layout layout1 = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry1.getPlid());
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			TestPropsValues.getUserId(), _group1.getGroupId(),
-			layoutPageTemplateEntry1.getPlid(),
-			_read("export_import_display_page_layout_data.json"),
-			_serviceContext1);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				_group1.getGroupId(), layoutPageTemplateEntry1.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(
+						layoutPageTemplateEntry1.getPlid()),
+				_read("export_import_display_page_layout_data.json"));
 
 		Repository repository = PortletFileRepositoryUtil.addPortletRepository(
 			_group1.getGroupId(), RandomTestUtil.randomString(),
@@ -148,13 +156,11 @@ public class ExportImportDisplayPagesTest {
 			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
 			fileEntry.getFileEntryId());
 
-		long[] layoutPageTemplateEntryIds = {
-			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId()
-		};
-
 		File file = ReflectionTestUtil.invoke(
 			_mvcResourceCommand, "getFile", new Class<?>[] {long[].class},
-			layoutPageTemplateEntryIds);
+			new long[] {
+				layoutPageTemplateEntry1.getLayoutPageTemplateEntryId()
+			});
 
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
@@ -223,9 +229,9 @@ public class ExportImportDisplayPagesTest {
 					layoutPageTemplateEntry2.getPlid());
 
 		LayoutStructure layoutStructure1 = LayoutStructure.of(
-			layoutPageTemplateStructure1.getData(0));
+			layoutPageTemplateStructure1.getDefaultSegmentsExperienceData());
 		LayoutStructure layoutStructure2 = LayoutStructure.of(
-			layoutPageTemplateStructure2.getData(0));
+			layoutPageTemplateStructure2.getDefaultSegmentsExperienceData());
 
 		_validateRootLayoutStructureItem(
 			(RootLayoutStructureItem)
@@ -271,7 +277,7 @@ public class ExportImportDisplayPagesTest {
 	private Group _group2;
 
 	@Inject
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Inject
 	private LayoutLocalService _layoutLocalService;
@@ -288,12 +294,15 @@ public class ExportImportDisplayPagesTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/layout_page_template/export_display_page"
+		filter = "mvc.command.name=/layout_page_template_admin/export_display_pages"
 	)
 	private MVCResourceCommand _mvcResourceCommand;
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext1;
 	private ServiceContext _serviceContext2;

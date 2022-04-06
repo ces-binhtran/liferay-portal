@@ -48,7 +48,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 
 			List<String> fields = ufe.getFields();
 
-			StringBundler sb = new StringBundler(2 * fields.size() - 1);
+			StringBundler sb = new StringBundler((2 * fields.size()) - 1);
 
 			for (int i = 0; i < fields.size(); i++) {
 				String field = fields.get(i);
@@ -149,11 +149,6 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 			<c:if test="<%= selUser != null %>">
 				<c:choose>
 					<c:when test='<%= UsersAdminUtil.hasUpdateFieldPermission(permissionChecker, user, selUser, "portrait") %>'>
-
-						<%
-						UserFileUploadsConfiguration userFileUploadsConfiguration = ConfigurationProviderUtil.getSystemConfiguration(UserFileUploadsConfiguration.class);
-						%>
-
 						<label class="control-label"></label>
 
 						<liferay-ui:logo-selector
@@ -162,16 +157,63 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 							defaultLogo="<%= selUser.getPortraitId() == 0 %>"
 							defaultLogoURL="<%= UserConstants.getPortraitURL(themeDisplay.getPathImage(), selUser.isMale(), 0, null) %>"
 							logoDisplaySelector=".user-logo"
-							maxFileSize="<%= userFileUploadsConfiguration.imageMaxSize() %>"
 							preserveRatio="<%= true %>"
 							tempImageFileName="<%= String.valueOf(selUser.getUserId()) %>"
 						/>
 					</c:when>
 					<c:otherwise>
-						<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="portrait" />' src="<%= selUser.getPortraitURL(themeDisplay) %>" />
+						<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="portrait" />" src="<%= selUser.getPortraitURL(themeDisplay) %>" />
 					</c:otherwise>
 				</c:choose>
 			</c:if>
 		</div>
 	</clay:col>
 </clay:row>
+
+<portlet:renderURL var="verifyPasswordURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/user/password_verification.jsp" />
+</portlet:renderURL>
+
+<c:if test="<%= (selUser != null) && company.isUpdatePasswordRequired() %>">
+	<aui:script use="liferay-form">
+		Liferay.once('<portlet:namespace />formReady', () => {
+			var form = Liferay.Form.get('<portlet:namespace />fm');
+
+			form.set('onSubmit', (event) => {
+				event.preventDefault();
+
+				var emailAddressInput = document.getElementById(
+					'<portlet:namespace />emailAddress'
+				);
+				var screenNameInput = document.getElementById(
+					'<portlet:namespace />screenName'
+				);
+
+				if (
+					emailAddressInput.value != '<%= selUser.getEmailAddress() %>' ||
+					screenNameInput.value != '<%= selUser.getScreenName() %>'
+				) {
+					Liferay.Util.openModal({
+						customEvents: [
+							{
+								name:
+									'<%= liferayPortletResponse.getNamespace() + "verifyPassword" %>',
+								onEvent: function (event) {
+									submitForm(form.form);
+								},
+							},
+						],
+						height: '320px',
+						id: 'password-verification-dialog',
+						size: 'md',
+						title: '<%= LanguageUtil.get(request, "confirm-password") %>',
+						url: '<%= verifyPasswordURL %>',
+					});
+				}
+				else {
+					submitForm(form.form);
+				}
+			});
+		});
+	</aui:script>
+</c:if>

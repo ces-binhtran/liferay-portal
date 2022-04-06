@@ -25,6 +25,10 @@ public class UserTrackerLocalServiceWrapper
 	implements ServiceWrapper<UserTrackerLocalService>,
 			   UserTrackerLocalService {
 
+	public UserTrackerLocalServiceWrapper() {
+		this(null);
+	}
+
 	public UserTrackerLocalServiceWrapper(
 		UserTrackerLocalService userTrackerLocalService) {
 
@@ -46,6 +50,10 @@ public class UserTrackerLocalServiceWrapper
 
 	/**
 	 * Adds the user tracker to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was added
@@ -95,6 +103,10 @@ public class UserTrackerLocalServiceWrapper
 	/**
 	 * Deletes the user tracker with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTrackerId the primary key of the user tracker
 	 * @return the user tracker that was removed
 	 * @throws PortalException if a user tracker with the primary key could not be found
@@ -110,6 +122,10 @@ public class UserTrackerLocalServiceWrapper
 	/**
 	 * Deletes the user tracker from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was removed
 	 */
@@ -123,6 +139,13 @@ public class UserTrackerLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _userTrackerLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _userTrackerLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -309,6 +332,10 @@ public class UserTrackerLocalServiceWrapper
 
 	/**
 	 * Updates the user tracker in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was updated

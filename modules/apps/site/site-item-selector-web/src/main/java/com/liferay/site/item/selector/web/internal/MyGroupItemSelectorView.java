@@ -20,6 +20,7 @@ import com.liferay.item.selector.criteria.GroupItemSelectorReturnType;
 import com.liferay.item.selector.criteria.URLItemSelectorReturnType;
 import com.liferay.item.selector.criteria.UUIDItemSelectorReturnType;
 import com.liferay.item.selector.criteria.group.criterion.GroupItemSelectorCriterion;
+import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -72,26 +73,38 @@ public class MyGroupItemSelectorView
 	}
 
 	@Override
+	public boolean isVisible(
+		GroupItemSelectorCriterion groupItemSelectorCriterion,
+		ThemeDisplay themeDisplay) {
+
+		if (groupItemSelectorCriterion.isIncludeRecentSites()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
 	public void renderHTML(
 			ServletRequest servletRequest, ServletResponse servletResponse,
 			GroupItemSelectorCriterion groupItemSelectorCriterion,
 			PortletURL portletURL, String itemSelectedEventName, boolean search)
 		throws IOException, ServletException {
 
-		_myGroupItemSelectorViewRender.renderHTML(
+		_myGroupItemSelectorViewRenderer.renderHTML(
 			servletRequest, servletResponse, groupItemSelectorCriterion,
 			portletURL, itemSelectedEventName, search);
 	}
 
 	@Activate
 	protected void activate() {
-		_myGroupItemSelectorViewRender = new MyGroupItemSelectorViewRenderer(
+		_myGroupItemSelectorViewRenderer = new MyGroupItemSelectorViewRenderer(
 			_groupSearchProvider, _groupURLProvider, _servletContext);
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_myGroupItemSelectorViewRender = null;
+		_myGroupItemSelectorViewRenderer = null;
 	}
 
 	private static final List<ItemSelectorReturnType>
@@ -107,7 +120,7 @@ public class MyGroupItemSelectorView
 	@Reference
 	private GroupURLProvider _groupURLProvider;
 
-	private MyGroupItemSelectorViewRenderer _myGroupItemSelectorViewRender;
+	private MyGroupItemSelectorViewRenderer _myGroupItemSelectorViewRenderer;
 
 	@Reference
 	private Portal _portal;

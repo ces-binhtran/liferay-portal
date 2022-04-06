@@ -27,10 +27,7 @@ final WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 		<clay:row>
 
 			<%
-			List<FileEntry> attachmentsFileEntries = wikiPage.getAttachmentsFileEntries();
-
-			for (FileEntry fileEntry : attachmentsFileEntries) {
-				String rowURL = PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, "status=" + WorkflowConstants.STATUS_APPROVED);
+			for (FileEntry fileEntry : wikiPage.getAttachmentsFileEntries()) {
 			%>
 
 				<clay:col
@@ -38,7 +35,7 @@ final WikiPage wikiPage = (WikiPage)request.getAttribute(WikiWebKeys.WIKI_PAGE);
 				>
 					<liferay-frontend:horizontal-card
 						text="<%= fileEntry.getTitle() %>"
-						url="<%= rowURL %>"
+						url='<%= PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, "status=" + WorkflowConstants.STATUS_APPROVED) %>'
 					>
 						<liferay-frontend:horizontal-card-col>
 							<liferay-document-library:mime-type-sticker

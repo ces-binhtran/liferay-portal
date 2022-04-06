@@ -126,13 +126,6 @@ public abstract class BaseCSSBuilderTestCase {
 		Assert.assertEquals(
 			expectedTestRtlContent, actualTestPartialRtlContent);
 
-		String expectedUnicodeContent = FileTestUtil.read(
-			_dependenciesDirPath.resolve("expected/test_unicode.css"));
-		String actualTestUnicodeContent = FileTestUtil.read(
-			baseDirPath.resolve("css/.sass-cache/test_unicode.css"));
-
-		Assert.assertEquals(expectedUnicodeContent, actualTestUnicodeContent);
-
 		return output;
 	}
 
@@ -143,7 +136,7 @@ public abstract class BaseCSSBuilderTestCase {
 
 	protected Path baseDirPath;
 
-	private static void _assertMatchesCount(
+	private void _assertMatchesCount(
 		Pattern pattern, String s, int expectedCount) {
 
 		int count = 0;

@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.servlet.SharedSessionServletRequest;
+import com.liferay.portal.struts.constants.ActionConstants;
 import com.liferay.portal.struts.model.ActionForward;
 import com.liferay.portal.struts.model.ActionMapping;
 import com.liferay.portal.util.PropsValues;
@@ -74,19 +75,13 @@ public abstract class JSONAction implements Action {
 			json = getJSON(httpServletRequest, httpServletResponse);
 
 			if (Validator.isNotNull(callback)) {
-				StringBundler sb = new StringBundler(5);
-
-				sb.append("/**/");
-				sb.append(callback);
-				sb.append(StringPool.OPEN_PARENTHESIS);
-				sb.append(json);
-				sb.append(StringPool.CLOSE_PARENTHESIS);
-
-				json = sb.toString();
+				json = StringBundler.concat(
+					"/**/", callback, StringPool.OPEN_PARENTHESIS, json,
+					StringPool.CLOSE_PARENTHESIS);
 			}
 		}
 		catch (PrincipalException principalException) {
-			_log.error(principalException.getMessage());
+			_log.error(principalException);
 
 			PortalUtil.sendError(
 				HttpServletResponse.SC_FORBIDDEN, principalException,
@@ -96,13 +91,22 @@ public abstract class JSONAction implements Action {
 		}
 		catch (SecurityException securityException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(securityException.getMessage());
+				_log.warn(securityException);
 			}
 
-			json = JSONFactoryUtil.serializeThrowable(securityException);
+			if (PropsValues.JSON_SERVICE_SERIALIZE_THROWABLE) {
+				json = JSONFactoryUtil.serializeThrowable(securityException);
+			}
+			else {
+				PortalUtil.sendError(
+					HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+					securityException, httpServletRequest, httpServletResponse);
+
+				return null;
+			}
 		}
 		catch (Exception exception) {
-			_log.error(exception.getMessage());
+			_log.error(exception);
 
 			PortalUtil.sendError(
 				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, exception,
@@ -127,9 +131,7 @@ public abstract class JSONAction implements Action {
 			try (OutputStream outputStream =
 					httpServletResponse.getOutputStream()) {
 
-				byte[] bytes = json.getBytes(StringPool.UTF8);
-
-				outputStream.write(bytes);
+				outputStream.write(json.getBytes(StringPool.UTF8));
 			}
 		}
 

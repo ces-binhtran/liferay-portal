@@ -18,25 +18,29 @@
 
 <%
 AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarDisplayContext = new AssetCategoriesManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, assetCategoriesDisplayContext);
+AssetCategoryActionDropdownItemsProvider assetCategoryActionDropdownItemsProvider = new AssetCategoryActionDropdownItemsProvider(assetCategoriesDisplayContext, request, renderResponse);
 %>
 
-<clay:navigation-bar
-	inverted="<%= true %>"
-	navigationItems="<%= assetCategoriesDisplayContext.getAssetCategoriesNavigationItems() %>"
-/>
-
 <clay:management-toolbar
-	displayContext="<%= assetCategoriesManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= assetCategoriesManagementToolbarDisplayContext %>"
+	propsTransformer="js/AssetCategoriesManagementToolbarPropsTransformer"
 />
 
 <portlet:actionURL name="deleteCategory" var="deleteCategoryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteCategoryURL %>" cssClass="container-fluid-1280" name="fm">
-	<liferay-site-navigation:breadcrumb
-		breadcrumbEntries="<%= AssetCategoryUtil.getAssetCategoriesBreadcrumbEntries(assetCategoriesDisplayContext.getVocabulary(), assetCategoriesDisplayContext.getCategory(), request, renderResponse) %>"
-	/>
+<aui:form action="<%= deleteCategoryURL %>" cssClass="container-fluid container-fluid-max-xl" name="fm">
+
+	<%
+	List<BreadcrumbEntry> breadcrumbEntries = AssetCategoryUtil.getAssetCategoriesBreadcrumbEntries(assetCategoriesDisplayContext.getVocabulary(), assetCategoriesDisplayContext.getCategory(), request, renderResponse);
+	%>
+
+	<c:if test="<%= ListUtil.isNotEmpty(breadcrumbEntries) %>">
+		<liferay-site-navigation:breadcrumb
+			breadcrumbEntries="<%= breadcrumbEntries %>"
+		/>
+	</c:if>
 
 	<liferay-ui:search-container
 		id="assetCategories"
@@ -48,7 +52,7 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 			modelVar="curCategory"
 		>
 			<portlet:renderURL var="rowURL">
-				<portlet:param name="mvcPath" value="/view_categories.jsp" />
+				<portlet:param name="mvcPath" value="/view.jsp" />
 				<portlet:param name="categoryId" value="<%= String.valueOf(curCategory.getCategoryId()) %>" />
 				<portlet:param name="vocabularyId" value="<%= String.valueOf(curCategory.getVocabularyId()) %>" />
 			</portlet:renderURL>
@@ -56,11 +60,10 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 			<%
 			int subcategoriesCount = AssetCategoryLocalServiceUtil.getChildCategoriesCount(curCategory.getCategoryId());
 
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", assetCategoriesManagementToolbarDisplayContext.getAvailableActions(curCategory)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", assetCategoriesManagementToolbarDisplayContext.getAvailableActions(curCategory)
+				).build());
 			%>
 
 			<c:choose>
@@ -89,9 +92,12 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 						</span>
 					</liferay-ui:search-container-column-text>
 
-					<liferay-ui:search-container-column-jsp
-						path="/category_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= assetCategoryActionDropdownItemsProvider.getActionDropdownItems(curCategory) %>"
+							propsTransformer="js/CategoryActionDropdownPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 				<c:when test='<%= Objects.equals(assetCategoriesDisplayContext.getDisplayStyle(), "list") %>'>
 					<c:choose>
@@ -137,9 +143,12 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 						property="createDate"
 					/>
 
-					<liferay-ui:search-container-column-jsp
-						path="/category_action.jsp"
-					/>
+					<liferay-ui:search-container-column-text>
+						<clay:dropdown-actions
+							dropdownItems="<%= assetCategoryActionDropdownItemsProvider.getActionDropdownItems(curCategory) %>"
+							propsTransformer="js/CategoryActionDropdownPropsTransformer"
+						/>
+					</liferay-ui:search-container-column-text>
 				</c:when>
 			</c:choose>
 		</liferay-ui:search-container-row>
@@ -153,7 +162,7 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 
 <portlet:actionURL name="moveCategory" var="moveCategoryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
-	<portlet:param name="mvcPath" value="/view_categories.jsp" />
+	<portlet:param name="mvcPath" value="/view.jsp" />
 </portlet:actionURL>
 
 <aui:form action="<%= moveCategoryURL %>" name="moveCategoryFm">
@@ -161,8 +170,3 @@ AssetCategoriesManagementToolbarDisplayContext assetCategoriesManagementToolbarD
 	<aui:input name="parentCategoryId" type="hidden" />
 	<aui:input name="vocabularyId" type="hidden" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= assetCategoriesManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/AssetCategoriesManagementToolbarDefaultEventHandler.es"
-/>

@@ -17,18 +17,17 @@ import {useFilterStatic} from '../../shared/components/filter/hooks/useFilterSta
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 import {getVelocityUnits} from './util/velocityUnitUtil.es';
 
-const VelocityUnitFilter = ({
+export default function VelocityUnitFilter({
 	disabled,
 	className,
 	filterKey = filterConstants.velocityUnit.key,
 	options = {},
 	prefixKey = '',
 	timeRange,
-}) => {
+}) {
 	options = {
 		hideControl: true,
 		multiple: false,
-		position: 'right',
 		withSelectionTitle: true,
 		withoutRouteParams: false,
 		...options,
@@ -62,7 +61,6 @@ const VelocityUnitFilter = ({
 
 	return (
 		<Filter
-			data-testid="velocityUnitFilter"
 			defaultItem={defaultItem}
 			disabled={disabled}
 			elementClasses={className}
@@ -73,6 +71,4 @@ const VelocityUnitFilter = ({
 			{...options}
 		/>
 	);
-};
-
-export default VelocityUnitFilter;
+}

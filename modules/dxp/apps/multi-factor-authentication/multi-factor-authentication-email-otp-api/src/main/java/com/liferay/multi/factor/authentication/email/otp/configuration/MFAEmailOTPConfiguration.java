@@ -59,8 +59,8 @@ public interface MFAEmailOTPConfiguration {
 
 	@Meta.AD(
 		deflt = "${server-property://com.liferay.portal/admin.email.from.address}",
-		description = "email-from-address-description",
-		name = "email-from-address", required = false
+		description = "set-the-sender-address-on-the-one-time-password-email",
+		name = "email-from-field[template]", required = false
 	)
 	public String emailFromAddress();
 
@@ -93,11 +93,5 @@ public interface MFAEmailOTPConfiguration {
 		name = "retry-timeout", required = false
 	)
 	public long retryTimeout();
-
-	@Meta.AD(
-		deflt = "-1", description = "validation-expiration-time-description",
-		name = "validation-expiration-time", required = false
-	)
-	public long validationExpirationTime();
 
 }

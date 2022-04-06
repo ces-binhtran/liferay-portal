@@ -33,8 +33,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.CHANGE_LISTS,
-		"mvc.command.name=/change_lists/delete_ct_auto_resolution_info"
+		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"mvc.command.name=/change_tracking/delete_ct_auto_resolution_info"
 	},
 	service = MVCActionCommand.class
 )

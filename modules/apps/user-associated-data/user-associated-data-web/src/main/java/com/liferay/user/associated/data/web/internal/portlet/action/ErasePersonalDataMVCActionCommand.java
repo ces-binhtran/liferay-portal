@@ -28,8 +28,8 @@ import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.user.associated.data.constants.UserAssociatedDataPortletKeys;
-import com.liferay.user.associated.data.web.internal.util.SelectedUserHelper;
-import com.liferay.user.associated.data.web.internal.util.UADApplicationSummaryHelper;
+import com.liferay.user.associated.data.web.internal.helper.SelectedUserHelper;
+import com.liferay.user.associated.data.web.internal.helper.UADApplicationSummaryHelper;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/erase_personal_data"
+		"mvc.command.name=/user_associated_data/erase_personal_data"
 	},
 	service = MVCActionCommand.class
 )
@@ -87,7 +87,7 @@ public class ErasePersonalDataMVCActionCommand
 		redirectURL.setParameter(
 			"p_u_i_d", String.valueOf(selectedUser.getUserId()));
 
-		String mvcRenderCommandName = "/review_uad_data";
+		String mvcRenderCommandName = "/user_associated_data/review_uad_data";
 
 		int totalReviewableUADEntitiesCount =
 			_uadApplicationSummaryHelper.getTotalReviewableUADEntitiesCount(
@@ -100,10 +100,12 @@ public class ErasePersonalDataMVCActionCommand
 						selectedUser.getUserId());
 
 			if (totalNonreviewableUADEntitiesCount == 0) {
-				mvcRenderCommandName = "/completed_data_erasure";
+				mvcRenderCommandName =
+					"/user_associated_data/completed_data_erasure";
 			}
 			else {
-				mvcRenderCommandName = "/anonymize_nonreviewable_uad_data";
+				mvcRenderCommandName =
+					"/user_associated_data/anonymize_nonreviewable_uad_data";
 			}
 		}
 

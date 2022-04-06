@@ -14,8 +14,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useReducer, useState} from 'react';
 
@@ -97,6 +97,25 @@ const RatingsThumbs = ({
 		setAnimatedButtonDown(false);
 	};
 
+	const handleSendVoteRequest = useCallback(
+		(score) => {
+			sendVoteRequest(score).then(({totalEntries, totalScore} = {}) => {
+				if (isMounted() && totalEntries && totalScore) {
+					const positiveVotes = Math.round(totalScore);
+
+					dispatch({
+						payload: {
+							negativeVotes: totalEntries - positiveVotes,
+							positiveVotes,
+						},
+						type: UPDATE_VOTES,
+					});
+				}
+			});
+		},
+		[isMounted, sendVoteRequest]
+	);
+
 	const voteUp = useCallback(() => {
 		if (pressed !== PRESSED_UP) {
 			setAnimatedButtonUp(true);
@@ -145,27 +164,8 @@ const RatingsThumbs = ({
 		}
 	}, [inititalTitle, pressed]);
 
-	const handleSendVoteRequest = useCallback(
-		(score) => {
-			sendVoteRequest(score).then(({totalEntries, totalScore} = {}) => {
-				if (isMounted() && totalEntries && totalScore) {
-					const positiveVotes = Math.round(totalScore);
-
-					dispatch({
-						payload: {
-							negativeVotes: totalEntries - positiveVotes,
-							positiveVotes,
-						},
-						type: UPDATE_VOTES,
-					});
-				}
-			});
-		},
-		[isMounted, sendVoteRequest]
-	);
-
 	return (
-		<div className="ratings ratings-thumbs">
+		<div className="ratings-thumbs">
 			<ClayButton
 				aria-pressed={pressed === PRESSED_UP}
 				borderless
@@ -179,18 +179,26 @@ const RatingsThumbs = ({
 				title={getTitleThumbsUp()}
 				value={positiveVotes}
 			>
-				<span className="inline-item inline-item-before">
-					<span className="off">
-						<ClayIcon symbol="thumbs-up" />
+				<span className="c-inner" tabIndex="-1">
+					<span className="inline-item inline-item-before">
+						<span className="off">
+							<ClayIcon symbol="thumbs-up" />
+						</span>
+
+						<span
+							className="on"
+							onAnimationEnd={handleAnimationEndUp}
+						>
+							<ClayIcon symbol="thumbs-up-full" />
+						</span>
 					</span>
-					<span className="on" onAnimationEnd={handleAnimationEndUp}>
-						<ClayIcon symbol="thumbs-up-full" />
+
+					<span className="inline-item">
+						<AnimatedCounter counter={positiveVotes} />
 					</span>
-				</span>
-				<span className="inline-item">
-					<AnimatedCounter counter={positiveVotes} />
 				</span>
 			</ClayButton>
+
 			<ClayButton
 				aria-pressed={pressed === PRESSED_DOWN}
 				borderless
@@ -204,19 +212,23 @@ const RatingsThumbs = ({
 				title={getTitleThumbsDown()}
 				value={negativeVotes}
 			>
-				<span className="inline-item inline-item-before">
-					<span className="off">
-						<ClayIcon symbol="thumbs-down" />
+				<span className="c-inner" tabIndex="-1">
+					<span className="inline-item inline-item-before">
+						<span className="off">
+							<ClayIcon symbol="thumbs-down" />
+						</span>
+
+						<span
+							className="on"
+							onAnimationEnd={handleAnimationEndDown}
+						>
+							<ClayIcon symbol="thumbs-down-full" />
+						</span>
 					</span>
-					<span
-						className="on"
-						onAnimationEnd={handleAnimationEndDown}
-					>
-						<ClayIcon symbol="thumbs-down-full" />
+
+					<span className="inline-item">
+						<AnimatedCounter counter={negativeVotes} />
 					</span>
-				</span>
-				<span className="inline-item">
-					<AnimatedCounter counter={negativeVotes} />
 				</span>
 			</ClayButton>
 		</div>

@@ -15,6 +15,12 @@
 import {config} from '../config/index';
 import serviceFetch from './serviceFetch';
 
+const layoutServiceFetch = (url, options, onNetworkStatus) => {
+	return serviceFetch(url, options, onNetworkStatus, {
+		requestGenerateDraft: true,
+	});
+};
+
 export default {
 
 	/**
@@ -49,20 +55,18 @@ export default {
 	},
 
 	/**
-	 * Remove an item inside layoutData
+	 * Change the master layout associated to the page
 	 * @param {object} options
-	 * @param {object} options.itemId id of the item to be removed
+	 * @param {object} options.masterLayoutPlid id of the master page
 	 * @param {function} options.onNetworkStatus
-	 * @param {object} options.segmentsExperienceId
 	 * @return {Promise<object>}
 	 */
-	deleteItem({itemId, onNetworkStatus, segmentsExperienceId}) {
+	changeMasterLayout({masterLayoutPlid, onNetworkStatus}) {
 		return layoutServiceFetch(
-			config.deleteItemURL,
+			config.changeMasterLayoutURL,
 			{
 				body: {
-					itemId,
-					segmentsExperienceId,
+					masterLayoutPlid,
 				},
 			},
 			onNetworkStatus
@@ -70,10 +74,70 @@ export default {
 	},
 
 	/**
+	 * Change the style book entry associated to the page
+	 * @param {object} options
+	 * @param {object} options.styleBookEntryId id of the style book entry
+	 * @param {function} options.onNetworkStatus
+	 * @return {Promise<object>}
+	 */
+	changeStyleBookEntry({onNetworkStatus, styleBookEntryId}) {
+		return layoutServiceFetch(
+			config.changeStyleBookEntryURL,
+			{
+				body: {
+					styleBookEntryId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	createLayoutPageTemplateEntry(
+		layoutPageTemplateCollectionId,
+		name,
+		segmentsExperienceId
+	) {
+		return layoutServiceFetch(
+			config.createLayoutPageTemplateEntryURL,
+			{
+				body: {
+					layoutPageTemplateCollectionId,
+					name,
+					segmentsExperienceId,
+				},
+			},
+			() => {}
+		);
+	},
+
+	/**
+	 * @param {object} layout
+	 * @returns {Promise<{error: Error, friendlyURL: string}>}
+	 */
+	getLayoutFriendlyURL(layout) {
+		return layoutServiceFetch(
+			config.getLayoutFriendlyURL,
+			{
+				body: layout,
+			},
+			() => {}
+		);
+	},
+
+	getLayoutPageTemplateCollections() {
+		return layoutServiceFetch(
+			config.getLayoutPageTemplateCollectionsURL,
+			{},
+			() => {}
+		);
+	},
+
+	/**
 	 * Marks an item for deletion
 	 * @param {object} options
-	 * @param {object} options.itemConfig Updated item config
 	 * @param {string} options.itemId id of the item to be updated
+	 * @param {string} options.portletIds the list of non instanceable portlets Ids
+	 * contained in the item
 	 * @param {string} options.segmentsExperienceId Segments experience id
 	 * @param {function} options.onNetworkStatus
 	 * @return {Promise<void>}
@@ -81,7 +145,7 @@ export default {
 	markItemForDeletion({
 		itemId,
 		onNetworkStatus,
-		portletIds,
+		portletIds = [],
 		segmentsExperienceId,
 	}) {
 		return layoutServiceFetch(
@@ -121,6 +185,91 @@ export default {
 					itemId,
 					parentItemId,
 					position,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	/**
+	 * Updates a config into an item
+	 * @param {object} options
+	 * @param {Array<{fragmentEntryLinkId: string, editableValues: object}>} filterFragmentEntryLinks
+	 * @param {object} options.itemConfig Updated item config
+	 * @param {string} options.itemId id of the collection display to be updated
+	 * @param {string} options.segmentsExperienceId Language id
+	 * @param {function} options.onNetworkStatus
+	 * @return {Promise<void>}
+	 */
+	restoreCollectionDisplayConfig({
+		filterFragmentEntryLinks,
+		itemConfig,
+		itemId,
+		onNetworkStatus,
+		segmentsExperienceId,
+	}) {
+		return layoutServiceFetch(
+			config.restoreCollectionDisplayConfigURL,
+			{
+				body: {
+					filterFragmentEntryLinks: JSON.stringify(
+						filterFragmentEntryLinks
+					),
+					itemConfig: JSON.stringify(itemConfig),
+					itemId,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	/**
+	 * Unmarks an item for deletion
+	 * @param {object} options
+	 * @param {string} options.itemId id of the item to be updated
+	 * @param {string} options.segmentsExperienceId Segments experience id
+	 * @param {function} options.onNetworkStatus
+	 * @return {Promise<void>}
+	 */
+	unmarkItemForDeletion({itemId, onNetworkStatus, segmentsExperienceId}) {
+		return layoutServiceFetch(
+			config.unmarkItemForDeletionURL,
+			{
+				body: {
+					itemId,
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	/**
+	 * Updates a config into an item
+	 * @param {object} options
+	 * @param {object} options.itemConfig Updated item config
+	 * @param {string} options.itemId id of the collection display to be updated
+	 * @param {string} options.languageId Language id
+	 * @param {string} options.segmentsExperienceId Segments experience id
+	 * @param {function} options.onNetworkStatus
+	 * @return {Promise<void>}
+	 */
+	updateCollectionDisplayConfig({
+		itemConfig,
+		itemId,
+		languageId,
+		onNetworkStatus,
+		segmentsExperienceId,
+	}) {
+		return layoutServiceFetch(
+			config.updateCollectionDisplayConfigURL,
+			{
+				body: {
+					itemConfig: JSON.stringify(itemConfig),
+					itemId,
+					languageId,
 					segmentsExperienceId,
 				},
 			},
@@ -204,10 +353,4 @@ export default {
 			onNetworkStatus
 		);
 	},
-};
-
-const layoutServiceFetch = (url, options, onNetworkStatus) => {
-	return serviceFetch(url, options, onNetworkStatus, {
-		requestGenerateDraft: true,
-	});
 };

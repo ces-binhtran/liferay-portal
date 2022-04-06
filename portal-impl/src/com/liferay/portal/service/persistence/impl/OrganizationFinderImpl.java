@@ -336,16 +336,12 @@ public class OrganizationFinderImpl
 		try {
 			session = openSession();
 
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(CustomSQLUtil.get(COUNT_O_BY_C_PO));
-			sb.append(") UNION ALL (");
-			sb.append(getUsersSQL(COUNT_U_BY_C_S_O, queryDefinition));
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(
-				sb.toString());
+				StringBundler.concat(
+					StringPool.OPEN_PARENTHESIS,
+					CustomSQLUtil.get(COUNT_O_BY_C_PO), ") UNION ALL (",
+					getUsersSQL(COUNT_U_BY_C_S_O, queryDefinition),
+					StringPool.CLOSE_PARENTHESIS));
 
 			sqlQuery.addScalar(COUNT_COLUMN_NAME, Type.LONG);
 
@@ -390,7 +386,7 @@ public class OrganizationFinderImpl
 		long companyId, long parentOrganizationId,
 		String parentOrganizationIdComparator, String keywords, String type,
 		Long regionId, Long countryId, LinkedHashMap<String, Object> params,
-		int start, int end, OrderByComparator<Organization> obc) {
+		int start, int end, OrderByComparator<Organization> orderByComparator) {
 
 		String[] names = null;
 		String[] streets = null;
@@ -411,7 +407,7 @@ public class OrganizationFinderImpl
 		return findO_ByC_PO_N_T_S_C_Z_R_C(
 			companyId, parentOrganizationId, parentOrganizationIdComparator,
 			names, type, streets, cities, zips, regionId, countryId, params,
-			andOperator, start, end, obc);
+			andOperator, start, end, orderByComparator);
 	}
 
 	@Override
@@ -488,7 +484,7 @@ public class OrganizationFinderImpl
 		String parentOrganizationIdComparator, String name, String type,
 		String street, String city, String zip, Long regionId, Long countryId,
 		LinkedHashMap<String, Object> params, boolean andOperator, int start,
-		int end, OrderByComparator<Organization> obc) {
+		int end, OrderByComparator<Organization> orderByComparator) {
 
 		String[] names = CustomSQLUtil.keywords(name);
 		String[] streets = CustomSQLUtil.keywords(street);
@@ -498,7 +494,7 @@ public class OrganizationFinderImpl
 		return findO_ByC_PO_N_T_S_C_Z_R_C(
 			companyId, parentOrganizationId, parentOrganizationIdComparator,
 			names, type, streets, cities, zips, regionId, countryId, params,
-			andOperator, start, end, obc);
+			andOperator, start, end, orderByComparator);
 	}
 
 	@Override
@@ -508,7 +504,7 @@ public class OrganizationFinderImpl
 		String[] streets, String[] cities, String[] zips, Long regionId,
 		Long countryId, LinkedHashMap<String, Object> params,
 		boolean andOperator, int start, int end,
-		OrderByComparator<Organization> obc) {
+		OrderByComparator<Organization> orderByComparator) {
 
 		names = CustomSQLUtil.keywords(names);
 		streets = CustomSQLUtil.keywords(streets);
@@ -576,7 +572,7 @@ public class OrganizationFinderImpl
 		}
 
 		sql = CustomSQLUtil.replaceAndOperator(sql, andOperator);
-		sql = CustomSQLUtil.replaceOrderBy(sql, obc);
+		sql = CustomSQLUtil.replaceOrderBy(sql, orderByComparator);
 
 		Session session = null;
 
@@ -652,16 +648,13 @@ public class OrganizationFinderImpl
 		try {
 			session = openSession();
 
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(CustomSQLUtil.get(FIND_O_BY_C_PO));
-			sb.append(") UNION ALL (");
-			sb.append(getUsersSQL(FIND_U_BY_C_S_O, queryDefinition));
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
 			String sql = CustomSQLUtil.replaceOrderBy(
-				sb.toString(), queryDefinition.getOrderByComparator());
+				StringBundler.concat(
+					StringPool.OPEN_PARENTHESIS,
+					CustomSQLUtil.get(FIND_O_BY_C_PO), ") UNION ALL (",
+					getUsersSQL(FIND_U_BY_C_S_O, queryDefinition),
+					StringPool.CLOSE_PARENTHESIS),
+				queryDefinition.getOrderByComparator());
 
 			SQLQuery sqlQuery = session.createSynchronizedSQLQuery(sql);
 
@@ -693,18 +686,18 @@ public class OrganizationFinderImpl
 
 				long organizationId = (Long)array[0];
 
-				Object obj = null;
+				Object object = null;
 
 				if (organizationId > 0) {
-					obj = OrganizationUtil.findByPrimaryKey(organizationId);
+					object = OrganizationUtil.findByPrimaryKey(organizationId);
 				}
 				else {
 					long userId = (Long)array[1];
 
-					obj = UserUtil.findByPrimaryKey(userId);
+					object = UserUtil.findByPrimaryKey(userId);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -855,7 +848,7 @@ public class OrganizationFinderImpl
 			}
 			else {
 				StringBundler sb = new StringBundler(
-					organizationIds.length * 2 + 1);
+					(organizationIds.length * 2) + 1);
 
 				sb.append("WHERE (");
 
@@ -884,7 +877,7 @@ public class OrganizationFinderImpl
 				}
 				else {
 					StringBundler sb = new StringBundler(
-						organizationGroupIds.length * 2 + 1);
+						(organizationGroupIds.length * 2) + 1);
 
 					sb.append("WHERE (");
 
@@ -917,7 +910,7 @@ public class OrganizationFinderImpl
 				join = "WHERE (Organization_.treePath = '')";
 			}
 			else {
-				StringBundler sb = new StringBundler(size * 2 + 1);
+				StringBundler sb = new StringBundler((size * 2) + 1);
 
 				sb.append("WHERE (");
 
@@ -980,10 +973,10 @@ public class OrganizationFinderImpl
 				List<Organization> organizationsTree =
 					(List<Organization>)value;
 
-				PermissionChecker permissionChecker =
-					PermissionThreadLocal.getPermissionChecker();
-
 				if (!organizationsTree.isEmpty()) {
+					PermissionChecker permissionChecker =
+						PermissionThreadLocal.getPermissionChecker();
+
 					for (Organization organization : organizationsTree) {
 						StringBundler sb = new StringBundler(5);
 

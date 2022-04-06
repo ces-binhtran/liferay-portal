@@ -74,22 +74,19 @@ if (Validator.isNotNull(structureAvailableFields)) {
 }
 
 boolean showBackURL = ParamUtil.getBoolean(request, "showBackURL", true);
-boolean showCacheableInput = ParamUtil.getBoolean(request, "showCacheableInput");
 boolean showHeader = ParamUtil.getBoolean(request, "showHeader", true);
-
-DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 %>
 
-<portlet:actionURL name="addTemplate" var="addTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/add_template" var="addTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
-<portlet:actionURL name="updateTemplate" var="updateTemplateURL">
+<portlet:actionURL name="/dynamic_data_mapping/update_template" var="updateTemplateURL">
 	<portlet:param name="mvcPath" value="/edit_template.jsp" />
 </portlet:actionURL>
 
 <clay:container-fluid>
-	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data" method="post" name="fm" onSubmit='<%= "event.preventDefault();" %>'>
+	<aui:form action="<%= (template == null) ? addTemplateURL : updateTemplateURL %>" cssClass="container-fluid container-fluid-max-xl" enctype="multipart/form-data" method="post" name="fm" onSubmit="event.preventDefault();">
 		<aui:input name="redirect" type="hidden" value="<%= ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource) %>" />
 		<aui:input name="closeRedirect" type="hidden" value="<%= closeRedirect %>" />
 		<aui:input name="portletResource" type="hidden" value="<%= portletResource %>" />
@@ -223,39 +220,22 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 							persistState="<%= true %>"
 							title="details"
 						>
-							<c:if test="<%= ddmDisplay.isShowStructureSelector() %>">
-								<div class="form-group">
-									<aui:input helpMessage="structure-help" name="structure" type="resource" value="<%= (structure != null) ? structure.getName(locale) : StringPool.BLANK %>" />
-
-									<c:if test="<%= ddmNavigationHelper.isNavigationStartsOnViewTemplates(liferayPortletRequest) && ((template == null) || (template.getClassPK() == 0)) %>">
-										<liferay-ui:icon
-											icon="search"
-											label="<%= true %>"
-											linkCssClass="btn btn-secondary"
-											markupView="lexicon"
-											message="select"
-											url='<%= "javascript:" + renderResponse.getNamespace() + "openDDMStructureSelector();" %>'
-										/>
-									</c:if>
-								</div>
-							</c:if>
-
 							<c:if test="<%= type.equals(DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY) %>">
 								<aui:select changesContext="<%= true %>" helpMessage='<%= (template == null) ? StringPool.BLANK : "changing-the-language-does-not-automatically-translate-the-existing-template-script" %>' label="language" name="language">
 
 									<%
-									for (String curLangType : ddmDisplay.getTemplateLanguageTypes()) {
+									for (String languageType : ddmDisplay.getTemplateLanguageTypes()) {
 										StringBundler sb = new StringBundler(6);
 
-										sb.append(LanguageUtil.get(request, curLangType + "[stands-for]"));
+										sb.append(LanguageUtil.get(request, languageType + "[stands-for]"));
 										sb.append(StringPool.SPACE);
 										sb.append(StringPool.OPEN_PARENTHESIS);
 										sb.append(StringPool.PERIOD);
-										sb.append(curLangType);
+										sb.append(languageType);
 										sb.append(StringPool.CLOSE_PARENTHESIS);
 									%>
 
-										<aui:option label="<%= sb.toString() %>" selected="<%= language.equals(curLangType) %>" value="<%= curLangType %>" />
+										<aui:option label="<%= sb.toString() %>" selected="<%= language.equals(languageType) %>" value="<%= languageType %>" />
 
 									<%
 									}
@@ -273,7 +253,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 							<c:if test="<%= template != null %>">
 								<aui:input helpMessage="template-key-help" name="templateKey" type="resource" value="<%= template.getTemplateKey() %>" />
 
-								<portlet:resourceURL id="getTemplate" var="getTemplateURL">
+								<portlet:resourceURL id="/dynamic_data_mapping/get_template" var="getTemplateURL">
 									<portlet:param name="templateId" value="<%= String.valueOf(templateId) %>" />
 								</portlet:resourceURL>
 
@@ -292,7 +272,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 									</aui:select>
 								</c:when>
 								<c:otherwise>
-									<c:if test="<%= showCacheableInput %>">
+									<c:if test='<%= ParamUtil.getBoolean(request, "showCacheableInput") %>'>
 										<aui:input helpMessage="journal-template-cacheable-help" name="cacheable" value="<%= cacheable %>" />
 									</c:if>
 
@@ -307,7 +287,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 													<clay:col
 														md="6"
 													>
-														<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />' class="lfr-ddm-small-image-preview" src="<%= HtmlUtil.escapeAttribute(template.getTemplateImageURL(themeDisplay)) %>" />
+														<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="lfr-ddm-small-image-preview" src="<%= HtmlUtil.escapeAttribute(template.getTemplateImageURL(themeDisplay)) %>" />
 													</clay:col>
 												</c:if>
 
@@ -366,7 +346,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 			container.delegate(
 				'change',
-				function (event) {
+				(event) => {
 					var index = types.indexOf(event.currentTarget);
 
 					selectSmallImageType(index);
@@ -390,7 +370,7 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 						A.one('#<portlet:namespace />smallImage').attr('checked', expanded);
 
 						if (expanded) {
-							types.each(function (item, index) {
+							types.each((item, index) => {
 								if (item.get('checked')) {
 									values.item(index).attr('disabled', false);
 								}
@@ -409,41 +389,9 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 		</aui:script>
 	</c:if>
 
-	<c:if test="<%= ddmDisplay.isShowStructureSelector() && ((template == null) || (template.getClassPK() == 0)) %>">
-		<aui:script>
-			function <portlet:namespace />openDDMStructureSelector() {
-				Liferay.Util.openDDMPortlet(
-					{
-						basePortletURL:
-							'<%= PortletURLFactoryUtil.create(request, DDMPortletKeys.DYNAMIC_DATA_MAPPING, PortletRequest.RENDER_PHASE) %>',
-						classNameId: '<%= PortalUtil.getClassNameId(DDMStructure.class) %>',
-						classPK: 0,
-						eventName: '<portlet:namespace />selectStructure',
-						groupId: <%= groupId %>,
-						mvcPath: '/select_structure.jsp',
-						navigationStartsOn: '<%= DDMNavigationHelper.SELECT_STRUCTURE %>',
-						showAncestorScopes: true,
-						title: '<%= UnicodeLanguageUtil.get(request, "structures") %>',
-					},
-					function (event) {
-						if (
-							document.<portlet:namespace />fm.<portlet:namespace />classPK
-								.value != event.ddmstructureid
-						) {
-							document.<portlet:namespace />fm.<portlet:namespace />classPK.value =
-								event.ddmstructureid;
-
-							Liferay.fire('<portlet:namespace />refreshEditor');
-						}
-					}
-				);
-			}
-		</aui:script>
-	</c:if>
-
 	<aui:button-row>
 		<aui:script>
-			Liferay.after('<portlet:namespace />saveTemplate', function () {
+			Liferay.after('<portlet:namespace />saveTemplate', () => {
 				submitForm(document.<portlet:namespace />fm);
 			});
 
@@ -458,7 +406,9 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 					});
 				}
 
-				Liferay.fire('<%= renderResponse.getNamespace() + "saveTemplate" %>');
+				Liferay.fire(
+					'<%= liferayPortletResponse.getNamespace() + "saveTemplate" %>'
+				);
 			}
 
 			function <portlet:namespace />saveAndContinueTemplate() {
@@ -482,10 +432,10 @@ DDMNavigationHelper ddmNavigationHelper = ddmDisplay.getDDMNavigationHelper();
 
 		<aui:button onClick="<%= taglibOnClick %>" primary="<%= true %>" value='<%= LanguageUtil.get(request, "save") %>' />
 
-		<aui:button onClick='<%= renderResponse.getNamespace() + "saveAndContinueTemplate();" %>' value='<%= LanguageUtil.get(resourceBundle, "save-and-continue") %>' />
+		<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "saveAndContinueTemplate();" %>' value='<%= LanguageUtil.get(resourceBundle, "save-and-continue") %>' />
 
 		<c:if test="<%= ddmDisplay.isVersioningEnabled() %>">
-			<aui:button onClick='<%= renderResponse.getNamespace() + "saveDraftTemplate();" %>' value='<%= LanguageUtil.get(request, "save-draft") %>' />
+			<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "saveDraftTemplate();" %>' value='<%= LanguageUtil.get(request, "save-draft") %>' />
 		</c:if>
 
 		<aui:button href="<%= ddmDisplay.getEditTemplateBackURL(liferayPortletRequest, liferayPortletResponse, classNameId, classPK, resourceClassNameId, portletResource) %>" type="cancel" />

@@ -24,12 +24,12 @@ import com.liferay.asset.test.util.AssetTestUtil;
 import com.liferay.fragment.model.FragmentEntryLink;
 import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
-import com.liferay.layout.page.template.util.LayoutPageTemplateStructureHelperUtil;
 import com.liferay.layout.test.constants.LayoutPortletKeys;
 import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.layout.util.LayoutCopyHelper;
+import com.liferay.layout.util.structure.LayoutStructure;
+import com.liferay.layout.util.structure.LayoutStructureItem;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Image;
 import com.liferay.portal.kernel.model.Layout;
@@ -44,17 +44,17 @@ import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.util.ListUtil;
-import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.awt.image.BufferedImage;
 
 import java.io.ByteArrayOutputStream;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -94,10 +94,10 @@ public class LayoutCopyHelperTest {
 
 	@Test
 	public void testCopyAssetCategoryIdsAndAssetTagNames() throws Exception {
-		Layout sourceLayout = LayoutTestUtil.addLayout(
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
-		Layout targetLayout = LayoutTestUtil.addLayout(
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		AssetVocabulary assetVocabulary = AssetTestUtil.addVocabulary(
@@ -128,53 +128,59 @@ public class LayoutCopyHelperTest {
 
 	@Test
 	public void testCopyContentLayoutStructure() throws Exception {
-		Layout sourceLayout = LayoutTestUtil.addLayout(
-			_group.getGroupId(), StringPool.BLANK);
+		Layout sourceLayout = LayoutTestUtil.addTypeContentLayout(_group);
 
-		List<FragmentEntryLink> fragmentEntryLinks = new ArrayList<>();
+		LayoutStructure layoutStructure = new LayoutStructure();
 
-		FragmentEntryLink fragmentEntryLink1 =
+		layoutStructure.addRootLayoutStructureItem();
+
+		LayoutStructureItem containerLayoutStructureItem =
+			layoutStructure.addContainerStyledLayoutStructureItem(
+				layoutStructure.getMainItemId(), 0);
+
+		long defaultSegmentsExperienceId =
+			_segmentsExperienceLocalService.fetchDefaultSegmentsExperienceId(
+				sourceLayout.getPlid());
+
+		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				sourceLayout.getUserId(), sourceLayout.getGroupId(), 0, 0, 0,
-				_portal.getClassNameId(Layout.class), sourceLayout.getPlid(),
+				sourceLayout.getUserId(), sourceLayout.getGroupId(), 0, 0,
+				defaultSegmentsExperienceId, sourceLayout.getPlid(),
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, 0, null,
 				_serviceContext);
 
-		fragmentEntryLinks.add(fragmentEntryLink1);
+		layoutStructure.addFragmentStyledLayoutStructureItem(
+			fragmentEntryLink.getFragmentEntryLinkId(),
+			containerLayoutStructureItem.getItemId(), 0);
 
-		FragmentEntryLink fragmentEntryLink2 =
-			_fragmentEntryLinkLocalService.addFragmentEntryLink(
-				sourceLayout.getUserId(), sourceLayout.getGroupId(), 0, 0, 0,
-				_portal.getClassNameId(Layout.class), sourceLayout.getPlid(),
-				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, 0, null,
-				_serviceContext);
+		fragmentEntryLink = _fragmentEntryLinkLocalService.addFragmentEntryLink(
+			sourceLayout.getUserId(), sourceLayout.getGroupId(), 0, 0,
+			defaultSegmentsExperienceId, sourceLayout.getPlid(),
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, 0, null,
+			_serviceContext);
 
-		fragmentEntryLinks.add(fragmentEntryLink2);
+		layoutStructure.addFragmentStyledLayoutStructureItem(
+			fragmentEntryLink.getFragmentEntryLinkId(),
+			containerLayoutStructureItem.getItemId(), 0);
 
-		JSONObject jsonObject =
-			LayoutPageTemplateStructureHelperUtil.
-				generateContentLayoutStructure(fragmentEntryLinks);
+		_layoutPageTemplateStructureLocalService.
+			updateLayoutPageTemplateStructureData(
+				sourceLayout.getGroupId(), sourceLayout.getPlid(),
+				defaultSegmentsExperienceId, layoutStructure.toString());
 
-		_layoutPageTemplateStructureLocalService.addLayoutPageTemplateStructure(
-			sourceLayout.getUserId(), sourceLayout.getGroupId(),
-			sourceLayout.getPlid(), jsonObject.toString(), _serviceContext);
-
-		Layout targetLayout = LayoutTestUtil.addLayout(
-			_group.getGroupId(), StringPool.BLANK);
+		Layout targetLayout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		Assert.assertTrue(
 			ListUtil.isNotEmpty(
-				_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-					_group.getGroupId(), _portal.getClassNameId(Layout.class),
-					sourceLayout.getPlid())));
+				_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+					_group.getGroupId(), sourceLayout.getPlid())));
 
 		Assert.assertFalse(
 			ListUtil.isNotEmpty(
-				_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-					_group.getGroupId(), _portal.getClassNameId(Layout.class),
-					targetLayout.getPlid())));
+				_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+					_group.getGroupId(), targetLayout.getPlid())));
 
 		_layoutCopyHelper.copyLayout(sourceLayout, targetLayout);
 
@@ -185,29 +191,29 @@ public class LayoutCopyHelperTest {
 
 		Assert.assertTrue(
 			ListUtil.isNotEmpty(
-				_fragmentEntryLinkLocalService.getFragmentEntryLinks(
-					_group.getGroupId(), _portal.getClassNameId(Layout.class),
-					targetLayout.getPlid())));
+				_fragmentEntryLinkLocalService.getFragmentEntryLinksByPlid(
+					_group.getGroupId(), targetLayout.getPlid())));
 	}
 
 	@Test
 	public void testCopyLayoutIcon() throws Exception {
-		Layout sourceLayout = LayoutTestUtil.addLayout(
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		BufferedImage bufferedImage = new BufferedImage(
 			1, 1, BufferedImage.TYPE_INT_RGB);
 
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		ByteArrayOutputStream byteArrayOutputStream =
+			new ByteArrayOutputStream();
 
-		ImageIO.write(bufferedImage, "jpg", outputStream);
+		ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
 
-		outputStream.flush();
+		byteArrayOutputStream.flush();
 
 		sourceLayout = LayoutLocalServiceUtil.updateIconImage(
-			sourceLayout.getPlid(), outputStream.toByteArray());
+			sourceLayout.getPlid(), byteArrayOutputStream.toByteArray());
 
-		Layout targetLayout = LayoutTestUtil.addLayout(
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		Assert.assertTrue(sourceLayout.isIconImage());
@@ -233,7 +239,7 @@ public class LayoutCopyHelperTest {
 
 	@Test
 	public void testCopyLayoutLookAndFeel() throws Exception {
-		Layout sourceLayout = LayoutTestUtil.addLayout(
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		sourceLayout.setThemeId("l1-theme");
@@ -241,7 +247,7 @@ public class LayoutCopyHelperTest {
 
 		LayoutLocalServiceUtil.updateLayout(sourceLayout);
 
-		Layout targetLayout = LayoutTestUtil.addLayout(
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		Assert.assertNotEquals(
@@ -261,15 +267,16 @@ public class LayoutCopyHelperTest {
 	public void testCopyLayoutPortletPreferences() throws Exception {
 		String portletId = LayoutPortletKeys.LAYOUT_TEST_PORTLET;
 
-		Layout sourceLayout = LayoutTestUtil.addLayout(
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), "column-1=" + portletId);
 
 		PortletPreferences sourcePortletPreferences =
 			PortletPreferencesFactoryUtil.getLayoutPortletSetup(
 				sourceLayout, portletId,
-				"<portlet-preferences><layout1/></portlet-preferences>");
+				"<portlet-preferences><preference><name>layout</name><value>1" +
+					"</value></preference></portlet-preferences>");
 
-		Layout targetLayout = LayoutTestUtil.addLayout(
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
 		PortletPreferences targetPortletPreferences =
@@ -295,22 +302,21 @@ public class LayoutCopyHelperTest {
 
 	@Test
 	public void testCopyTypeSettings() throws Exception {
-		UnicodeProperties sourceUnicodeProperties = new UnicodeProperties();
+		Layout sourceLayout = LayoutTestUtil.addTypePortletLayout(
+			_group.getGroupId(),
+			UnicodePropertiesBuilder.put(
+				"lfr-theme:regular:show-footer", Boolean.TRUE.toString()
+			).put(
+				"lfr-theme:regular:show-header", Boolean.TRUE.toString()
+			).buildString());
 
-		sourceUnicodeProperties.setProperty(
-			"lfr-theme:regular:show-footer", Boolean.TRUE.toString());
-		sourceUnicodeProperties.setProperty(
-			"lfr-theme:regular:show-header", Boolean.TRUE.toString());
-
-		Layout sourceLayout = LayoutTestUtil.addLayout(
-			_group.getGroupId(), sourceUnicodeProperties.toString());
-
-		Layout targetLayout = LayoutTestUtil.addLayout(
+		Layout targetLayout = LayoutTestUtil.addTypePortletLayout(
 			_group.getGroupId(), StringPool.BLANK);
 
-		UnicodeProperties targetUnicodeProperties = new UnicodeProperties();
-
-		targetUnicodeProperties.fastLoad(targetLayout.getTypeSettings());
+		UnicodeProperties targetUnicodeProperties =
+			UnicodePropertiesBuilder.fastLoad(
+				targetLayout.getTypeSettings()
+			).build();
 
 		Assert.assertNull(
 			targetUnicodeProperties.getProperty(
@@ -360,13 +366,13 @@ public class LayoutCopyHelperTest {
 	private LayoutPageTemplateStructureLocalService
 		_layoutPageTemplateStructureLocalService;
 
-	@Inject
-	private Portal _portal;
-
 	@Inject(
 		filter = "javax.portlet.name=" + LayoutPortletKeys.LAYOUT_TEST_PORTLET
 	)
 	private final Portlet _portlet = null;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 

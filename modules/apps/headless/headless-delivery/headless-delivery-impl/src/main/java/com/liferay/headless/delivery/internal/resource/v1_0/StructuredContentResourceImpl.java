@@ -16,76 +16,90 @@ package com.liferay.headless.delivery.internal.resource.v1_0;
 
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializer;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeRequest;
-import com.liferay.dynamic.data.mapping.io.DDMFormValuesSerializerSerializeResponse;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.service.DDMStructureService;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
 import com.liferay.dynamic.data.mapping.storage.Fields;
 import com.liferay.dynamic.data.mapping.util.DDM;
-import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
+import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidator;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
 import com.liferay.headless.common.spi.resource.SPIRatingResource;
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.ContentField;
 import com.liferay.headless.delivery.dto.v1_0.Rating;
 import com.liferay.headless.delivery.dto.v1_0.StructuredContent;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.DDMFormValuesUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.DDMValueUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.StructuredContentUtil;
+import com.liferay.headless.delivery.dynamic.data.mapping.DDMFormFieldUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.converter.StructuredContentDTOConverter;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.DDMFormValuesUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.DDMValueUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.util.DisplayPageRendererUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.EntityFieldsUtil;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.RatingUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.util.RenderedContentValueUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.EntityFieldsProvider;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.StructuredContentEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.StructuredContentResource;
+import com.liferay.headless.delivery.search.aggregation.AggregationUtil;
+import com.liferay.headless.delivery.search.filter.FilterUtil;
+import com.liferay.headless.delivery.search.sort.SortUtil;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.journal.constants.JournalConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
+import com.liferay.journal.exception.NoSuchFolderException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleDisplay;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalService;
 import com.liferay.journal.service.JournalArticleService;
 import com.liferay.journal.service.JournalFolderService;
 import com.liferay.journal.util.JournalContent;
 import com.liferay.journal.util.JournalConverter;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
+import com.liferay.layout.page.template.service.LayoutPageTemplateEntryService;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.events.ServicePreAction;
-import com.liferay.portal.events.ThemeServicePreAction;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.search.BooleanClauseOccur;
 import com.liferay.portal.kernel.search.BooleanQuery;
+import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.servlet.DummyHttpServletResponse;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
 import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
@@ -95,27 +109,25 @@ import com.liferay.portal.vulcan.util.ContentLanguageUtil;
 import com.liferay.portal.vulcan.util.LocalDateTimeUtil;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
+import com.liferay.portal.vulcan.util.TransformUtil;
 import com.liferay.ratings.kernel.service.RatingsEntryLocalService;
 
 import java.io.Serializable;
 
-import java.net.URI;
-
 import java.time.LocalDateTime;
 
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-
-import javax.servlet.http.HttpServletResponse;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.ws.rs.BadRequestException;
-import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.UriBuilder;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -130,6 +142,20 @@ import org.osgi.service.component.annotations.ServiceScope;
 )
 public class StructuredContentResourceImpl
 	extends BaseStructuredContentResourceImpl implements EntityModelResource {
+
+	@Override
+	public void deleteSiteStructuredContentByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		JournalArticle journalArticle =
+			_journalArticleLocalService.getLatestArticleByExternalReferenceCode(
+				siteId, externalReferenceCode);
+
+		_journalArticleService.deleteArticle(
+			journalArticle.getGroupId(), journalArticle.getArticleId(),
+			journalArticle.getArticleResourceUuid(), new ServiceContext());
+	}
 
 	@Override
 	public void deleteStructuredContent(Long structuredContentId)
@@ -153,37 +179,57 @@ public class StructuredContentResourceImpl
 	}
 
 	@Override
+	public Page<StructuredContent> getAssetLibraryStructuredContentsPage(
+			Long assetLibraryId, Boolean flatten, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
+		throws Exception {
+
+		return _getStructuredContentsPage(
+			HashMapBuilder.put(
+				"create",
+				addAction(
+					ActionKeys.ADD_ARTICLE, "postAssetLibraryStructuredContent",
+					JournalConstants.RESOURCE_NAME, assetLibraryId)
+			).put(
+				"get",
+				addAction(
+					ActionKeys.VIEW, "getAssetLibraryStructuredContentsPage",
+					JournalConstants.RESOURCE_NAME, assetLibraryId)
+			).build(),
+			_createStructuredContentsPageBooleanQueryUnsafeConsumer(flatten),
+			assetLibraryId, search, aggregation, filter, pagination, sorts);
+	}
+
+	@Override
 	public Page<StructuredContent> getContentStructureStructuredContentsPage(
-			Long contentStructureId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long contentStructureId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		DDMStructure ddmStructure = _ddmStructureService.getStructure(
 			contentStructureId);
 
 		return _getStructuredContentsPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"get",
 				addAction(
-					"VIEW", ddmStructure.getStructureId(),
+					ActionKeys.VIEW, ddmStructure.getStructureId(),
 					"getContentStructureStructuredContentsPage",
-					ddmStructure.getUserId(), "com.liferay.journal",
+					ddmStructure.getUserId(), JournalConstants.RESOURCE_NAME,
 					ddmStructure.getGroupId())
 			).build(),
 			booleanQuery -> {
-				if (contentStructureId != null) {
-					BooleanFilter booleanFilter =
-						booleanQuery.getPreBooleanFilter();
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
 
-					booleanFilter.add(
-						new TermFilter(
-							com.liferay.portal.kernel.search.Field.
-								CLASS_TYPE_ID,
-							contentStructureId.toString()),
-						BooleanClauseOccur.MUST);
-				}
+				booleanFilter.add(
+					new TermFilter(
+						com.liferay.portal.kernel.search.Field.CLASS_TYPE_ID,
+						contentStructureId.toString()),
+					BooleanClauseOccur.MUST);
 			},
-			ddmStructure.getGroupId(), filter, search, pagination, sorts);
+			null, search, aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -192,7 +238,7 @@ public class StructuredContentResourceImpl
 
 		List<EntityField> entityFields = null;
 
-		Long contentStructureId = GetterUtil.getLong(
+		long contentStructureId = GetterUtil.getLong(
 			(String)multivaluedMap.getFirst("contentStructureId"));
 
 		if (contentStructureId > 0) {
@@ -208,6 +254,16 @@ public class StructuredContentResourceImpl
 				_portal.getClassNameId(JournalArticle.class.getName()),
 				contextCompany.getCompanyId(), _expandoColumnLocalService,
 				_expandoTableLocalService));
+	}
+
+	@Override
+	public StructuredContent getSiteStructuredContentByExternalReferenceCode(
+			Long siteId, String externalReferenceCode)
+		throws Exception {
+
+		return _getStructuredContent(
+			_journalArticleService.getLatestArticleByExternalReferenceCode(
+				siteId, externalReferenceCode));
 	}
 
 	@Override
@@ -239,37 +295,25 @@ public class StructuredContentResourceImpl
 
 	@Override
 	public Page<StructuredContent> getSiteStructuredContentsPage(
-			Long siteId, Boolean flatten, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long siteId, Boolean flatten, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		return _getStructuredContentsPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
-					"ADD_ARTICLE", "postSiteStructuredContent",
-					"com.liferay.journal", siteId)
+					ActionKeys.ADD_ARTICLE, "postSiteStructuredContent",
+					JournalConstants.RESOURCE_NAME, siteId)
 			).put(
 				"get",
 				addAction(
-					"VIEW", "getSiteStructuredContentsPage",
-					"com.liferay.journal", siteId)
+					ActionKeys.VIEW, "getSiteStructuredContentsPage",
+					JournalConstants.RESOURCE_NAME, siteId)
 			).build(),
-			booleanQuery -> {
-				BooleanFilter booleanFilter =
-					booleanQuery.getPreBooleanFilter();
-
-				if (!GetterUtil.getBoolean(flatten)) {
-					booleanFilter.add(
-						new TermFilter(
-							com.liferay.portal.kernel.search.Field.FOLDER_ID,
-							String.valueOf(
-								JournalFolderConstants.
-									DEFAULT_PARENT_FOLDER_ID)),
-						BooleanClauseOccur.MUST);
-				}
-			},
-			siteId, filter, search, pagination, sorts);
+			_createStructuredContentsPageBooleanQueryUnsafeConsumer(flatten),
+			siteId, search, aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -286,47 +330,45 @@ public class StructuredContentResourceImpl
 	public Page<StructuredContent>
 			getStructuredContentFolderStructuredContentsPage(
 				Long structuredContentFolderId, Boolean flatten, String search,
-				Filter filter, Pagination pagination, Sort[] sorts)
+				Aggregation aggregation, Filter filter, Pagination pagination,
+				Sort[] sorts)
 		throws Exception {
 
 		JournalFolder journalFolder = _journalFolderService.getFolder(
 			structuredContentFolderId);
 
 		return _getStructuredContentsPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
-					"ADD_ARTICLE", journalFolder.getFolderId(),
+					ActionKeys.ADD_ARTICLE, journalFolder.getFolderId(),
 					"postStructuredContentFolderStructuredContent",
-					journalFolder.getUserId(), "com.liferay.journal",
+					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
 					journalFolder.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", journalFolder.getFolderId(),
+					ActionKeys.VIEW, journalFolder.getFolderId(),
 					"getStructuredContentFolderStructuredContentsPage",
-					journalFolder.getUserId(), "com.liferay.journal",
+					journalFolder.getUserId(), JournalConstants.RESOURCE_NAME,
 					journalFolder.getGroupId())
 			).build(),
 			booleanQuery -> {
-				if (structuredContentFolderId != null) {
-					BooleanFilter booleanFilter =
-						booleanQuery.getPreBooleanFilter();
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
 
-					String field =
-						com.liferay.portal.kernel.search.Field.FOLDER_ID;
+				String field = com.liferay.portal.kernel.search.Field.FOLDER_ID;
 
-					if (GetterUtil.getBoolean(flatten)) {
-						field = "treePath";
-					}
-
-					booleanFilter.add(
-						new TermFilter(
-							field, structuredContentFolderId.toString()),
-						BooleanClauseOccur.MUST);
+				if (GetterUtil.getBoolean(flatten)) {
+					field = com.liferay.portal.kernel.search.Field.TREE_PATH;
 				}
+
+				booleanFilter.add(
+					new TermFilter(field, structuredContentFolderId.toString()),
+					BooleanClauseOccur.MUST);
 			},
-			journalFolder.getGroupId(), filter, search, pagination, sorts);
+			journalFolder.getGroupId(), search, aggregation, filter, pagination,
+			sorts);
 	}
 
 	@Override
@@ -339,36 +381,36 @@ public class StructuredContentResourceImpl
 	}
 
 	@Override
-	public String getStructuredContentRenderedContentTemplate(
-			Long structuredContentId, Long templateId)
+	public String
+			getStructuredContentRenderedContentByDisplayPageDisplayPageKey(
+				Long structuredContentId, String displayPageKey)
 		throws Exception {
 
 		JournalArticle journalArticle = _journalArticleService.getLatestArticle(
 			structuredContentId);
 
-		DDMTemplate ddmTemplate = _ddmTemplateLocalService.getTemplate(
-			templateId);
+		DDMStructure ddmStructure = journalArticle.getDDMStructure();
 
-		JournalArticleDisplay journalArticleDisplay =
-			_journalContent.getDisplay(
-				journalArticle.getGroupId(), journalArticle.getArticleId(),
-				ddmTemplate.getTemplateKey(), null,
-				contextAcceptLanguage.getPreferredLanguageId(),
-				_getThemeDisplay(journalArticle));
+		return DisplayPageRendererUtil.toHTML(
+			JournalArticle.class.getName(), ddmStructure.getStructureId(),
+			displayPageKey, journalArticle.getGroupId(),
+			contextHttpServletRequest, contextHttpServletResponse,
+			journalArticle, _infoItemServiceTracker,
+			_layoutDisplayPageProviderTracker, _layoutLocalService,
+			_layoutPageTemplateEntryService);
+	}
 
-		String content = journalArticleDisplay.getContent();
+	@Override
+	public String getStructuredContentRenderedContentContentTemplate(
+			Long structuredContentId, String templateId)
+		throws Exception {
 
-		UriBuilder uriBuilder = contextUriInfo.getBaseUriBuilder();
-
-		URI uri = uriBuilder.replacePath(
-			"/"
-		).build();
-
-		content = content.replaceAll(
-			" srcset=\"/o/", " srcset=\"" + uri + "o/");
-		content = content.replaceAll(" src=\"/", " src=\"" + uri);
-
-		return content.replaceAll("[\\t\\n]", "");
+		return RenderedContentValueUtil.renderTemplate(
+			_classNameLocalService, _ddmTemplateLocalService,
+			_groupLocalService, contextHttpServletRequest,
+			_journalArticleService, _journalContent,
+			contextAcceptLanguage.getPreferredLocale(), structuredContentId,
+			templateId, contextUriInfo);
 	}
 
 	@Override
@@ -424,7 +466,8 @@ public class StructuredContentResourceImpl
 				_journalConverter.getContent(
 					ddmStructure,
 					_toPatchedFields(
-						structuredContent.getContentFields(), journalArticle)),
+						structuredContent.getContentFields(), journalArticle),
+					journalArticle.getGroupId()),
 				journalArticle.getDDMStructureKey(),
 				_getDDMTemplateKey(ddmStructure),
 				journalArticle.getLayoutUuid(),
@@ -433,12 +476,16 @@ public class StructuredContentResourceImpl
 				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
 				null,
-				ServiceContextUtil.createServiceContext(
-					structuredContent.getTaxonomyCategoryIds(),
-					structuredContent.getKeywords(),
-					_getExpandoBridgeAttributes(structuredContent),
-					journalArticle.getGroupId(),
-					structuredContent.getViewableByAsString())));
+				_createServiceContext(
+					journalArticle.getGroupId(), structuredContent)));
+	}
+
+	@Override
+	public StructuredContent postAssetLibraryStructuredContent(
+			Long assetLibraryId, StructuredContent structuredContent)
+		throws Exception {
+
+		return postSiteStructuredContent(assetLibraryId, structuredContent);
 	}
 
 	@Override
@@ -447,8 +494,8 @@ public class StructuredContentResourceImpl
 		throws Exception {
 
 		return _addStructuredContent(
-			siteId, JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
-			structuredContent);
+			structuredContent.getExternalReferenceCode(), siteId,
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, structuredContent);
 	}
 
 	@Override
@@ -460,6 +507,7 @@ public class StructuredContentResourceImpl
 			structuredContentFolderId);
 
 		return _addStructuredContent(
+			structuredContent.getExternalReferenceCode(),
 			journalFolder.getGroupId(), structuredContentFolderId,
 			structuredContent);
 	}
@@ -476,6 +524,26 @@ public class StructuredContentResourceImpl
 	}
 
 	@Override
+	public StructuredContent putSiteStructuredContentByExternalReferenceCode(
+			Long siteId, String externalReferenceCode,
+			StructuredContent structuredContent)
+		throws Exception {
+
+		JournalArticle journalArticle =
+			_journalArticleLocalService.
+				fetchLatestArticleByExternalReferenceCode(
+					siteId, externalReferenceCode);
+
+		if (journalArticle != null) {
+			return _updateStructuredContent(journalArticle, structuredContent);
+		}
+
+		return _addStructuredContent(
+			externalReferenceCode, siteId,
+			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, structuredContent);
+	}
+
+	@Override
 	public StructuredContent putStructuredContent(
 			Long structuredContentId, StructuredContent structuredContent)
 		throws Exception {
@@ -483,63 +551,7 @@ public class StructuredContentResourceImpl
 		JournalArticle journalArticle = _journalArticleService.getLatestArticle(
 			structuredContentId);
 
-		DDMStructure ddmStructure = journalArticle.getDDMStructure();
-
-		Map<Locale, String> titleMap = LocalizedMapUtil.getLocalizedMap(
-			contextAcceptLanguage.getPreferredLocale(),
-			structuredContent.getTitle(), structuredContent.getTitle_i18n(),
-			journalArticle.getTitleMap());
-
-		Map<Locale, String> descriptionMap = LocalizedMapUtil.getLocalizedMap(
-			contextAcceptLanguage.getPreferredLocale(),
-			structuredContent.getDescription(),
-			structuredContent.getDescription_i18n(),
-			journalArticle.getDescriptionMap());
-
-		Set<Locale> notFoundLocales = new HashSet<>(descriptionMap.keySet());
-
-		Map<Locale, String> friendlyUrlMap = LocalizedMapUtil.getLocalizedMap(
-			contextAcceptLanguage.getPreferredLocale(),
-			structuredContent.getFriendlyUrlPath(),
-			structuredContent.getFriendlyUrlPath_i18n(),
-			journalArticle.getFriendlyURLMap());
-
-		notFoundLocales.addAll(friendlyUrlMap.keySet());
-
-		LocalizedMapUtil.validateI18n(
-			false, LocaleUtil.getSiteDefault(), "Structured content", titleMap,
-			notFoundLocales);
-
-		_validateContentFields(
-			structuredContent.getContentFields(), ddmStructure);
-
-		LocalDateTime localDateTime = LocalDateTimeUtil.toLocalDateTime(
-			structuredContent.getDatePublished(),
-			journalArticle.getDisplayDate());
-
-		return _toStructuredContent(
-			_journalArticleService.updateArticle(
-				journalArticle.getGroupId(), journalArticle.getFolderId(),
-				journalArticle.getArticleId(), journalArticle.getVersion(),
-				titleMap, descriptionMap, friendlyUrlMap,
-				_journalConverter.getContent(
-					ddmStructure,
-					_toFields(
-						structuredContent.getContentFields(), journalArticle)),
-				journalArticle.getDDMStructureKey(),
-				_getDDMTemplateKey(ddmStructure),
-				journalArticle.getLayoutUuid(),
-				localDateTime.getMonthValue() - 1,
-				localDateTime.getDayOfMonth(), localDateTime.getYear(),
-				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
-				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
-				null,
-				ServiceContextUtil.createServiceContext(
-					structuredContent.getTaxonomyCategoryIds(),
-					structuredContent.getKeywords(),
-					_getExpandoBridgeAttributes(structuredContent),
-					journalArticle.getGroupId(),
-					structuredContent.getViewableByAsString())));
+		return _updateStructuredContent(journalArticle, structuredContent);
 	}
 
 	@Override
@@ -585,7 +597,7 @@ public class StructuredContentResourceImpl
 
 	@Override
 	protected String getPermissionCheckerPortletName(Object id) {
-		return "com.liferay.journal";
+		return JournalConstants.RESOURCE_NAME;
 	}
 
 	@Override
@@ -594,12 +606,13 @@ public class StructuredContentResourceImpl
 	}
 
 	private StructuredContent _addStructuredContent(
-			Long siteId, Long parentStructuredContentFolderId,
+			String externalReferenceCode, Long groupId,
+			Long parentStructuredContentFolderId,
 			StructuredContent structuredContent)
 		throws Exception {
 
-		DDMStructure ddmStructure = _checkDDMStructurePermission(
-			structuredContent);
+		DDMStructure ddmStructure = _ddmStructureService.getStructure(
+			structuredContent.getContentStructureId());
 
 		LocalDateTime localDateTime = LocalDateTimeUtil.toLocalDateTime(
 			structuredContent.getDatePublished());
@@ -631,98 +644,64 @@ public class StructuredContentResourceImpl
 
 		return _toStructuredContent(
 			_journalArticleService.addArticle(
-				siteId, parentStructuredContentFolderId, 0, 0, null, true,
-				titleMap, descriptionMap, friendlyUrlMap,
-				_createJournalArticleContent(
+				externalReferenceCode, groupId, parentStructuredContentFolderId,
+				0, 0, null, true, titleMap, descriptionMap, friendlyUrlMap,
+				StructuredContentUtil.getJournalArticleContent(
+					_ddm,
 					DDMFormValuesUtil.toDDMFormValues(
 						structuredContent.getContentFields(),
-						ddmStructure.getDDMForm(), _dlAppService, siteId,
+						ddmStructure.getDDMForm(), _dlAppService, groupId,
 						_journalArticleService, _layoutLocalService,
 						contextAcceptLanguage.getPreferredLocale(),
 						_getRootDDMFormFields(ddmStructure)),
-					ddmStructure),
+					_jsonDDMFormValuesSerializer, _ddmFormValuesValidator,
+					ddmStructure, _journalConverter),
 				ddmStructure.getStructureKey(),
 				_getDDMTemplateKey(ddmStructure), null,
 				localDateTime.getMonthValue() - 1,
 				localDateTime.getDayOfMonth(), localDateTime.getYear(),
 				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
 				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
-				null,
-				ServiceContextUtil.createServiceContext(
-					structuredContent.getTaxonomyCategoryIds(),
-					structuredContent.getKeywords(),
-					_getExpandoBridgeAttributes(structuredContent), siteId,
-					structuredContent.getViewableByAsString())));
+				null, _createServiceContext(groupId, structuredContent)));
 	}
 
-	private DDMStructure _checkDDMStructurePermission(
-			StructuredContent structuredContent)
-		throws Exception {
+	private ServiceContext _createServiceContext(
+		long groupId, StructuredContent structuredContent) {
 
-		try {
-			return _ddmStructureService.getStructure(
-				structuredContent.getContentStructureId());
-		}
-		catch (PrincipalException.MustHavePermission principalException) {
-			throw new ForbiddenException(
-				"You do not have permission to create a structured content " +
-					"using the content structure ID " +
-						structuredContent.getContentStructureId(),
-				principalException);
-		}
+		ServiceContext serviceContext =
+			ServiceContextRequestUtil.createServiceContext(
+				structuredContent.getTaxonomyCategoryIds(),
+				structuredContent.getKeywords(),
+				_getExpandoBridgeAttributes(structuredContent), groupId,
+				contextHttpServletRequest,
+				structuredContent.getViewableByAsString());
+
+		Optional.ofNullable(
+			structuredContent.getPriority()
+		).ifPresent(
+			serviceContext::setAssetPriority
+		);
+
+		return serviceContext;
 	}
 
-	private String _createJournalArticleContent(
-			DDMFormValues ddmFormValues, DDMStructure ddmStructure)
-		throws Exception {
+	private UnsafeConsumer<BooleanQuery, Exception>
+		_createStructuredContentsPageBooleanQueryUnsafeConsumer(
+			Boolean flatten) {
 
-		_validateDDMFormValues(ddmFormValues);
+		return booleanQuery -> {
+			if (!GetterUtil.getBoolean(flatten)) {
+				BooleanFilter booleanFilter =
+					booleanQuery.getPreBooleanFilter();
 
-		Locale originalSiteDefaultLocale =
-			LocaleThreadLocal.getSiteDefaultLocale();
-
-		try {
-			LocaleThreadLocal.setSiteDefaultLocale(
-				LocaleUtil.fromLanguageId(ddmStructure.getDefaultLanguageId()));
-
-			ServiceContext serviceContext = new ServiceContext();
-
-			DDMForm ddmForm = ddmStructure.getDDMForm();
-
-			serviceContext.setAttribute(
-				"ddmFormValues",
-				_toString(
-					new DDMFormValues(ddmForm) {
-						{
-							setAvailableLocales(ddmForm.getAvailableLocales());
-							setDDMFormFieldValues(
-								ddmFormValues.getDDMFormFieldValues());
-							setDefaultLocale(ddmForm.getDefaultLocale());
-						}
-					}));
-
-			return _journalConverter.getContent(
-				ddmStructure,
-				_ddm.getFields(ddmStructure.getStructureId(), serviceContext));
-		}
-		finally {
-			LocaleThreadLocal.setSiteDefaultLocale(originalSiteDefaultLocale);
-		}
-	}
-
-	private DDMFormField _getDDMFormField(
-		DDMStructure ddmStructure, String name) {
-
-		try {
-			return ddmStructure.getDDMFormField(name);
-		}
-		catch (Exception exception) {
-			throw new BadRequestException(
-				StringBundler.concat(
-					"Unable to get content field value for \"", name,
-					"\" for content structure ", ddmStructure.getStructureId()),
-				exception);
-		}
+				booleanFilter.add(
+					new TermFilter(
+						com.liferay.portal.kernel.search.Field.FOLDER_ID,
+						String.valueOf(
+							JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID)),
+					BooleanClauseOccur.MUST);
+			}
+		};
 	}
 
 	private String _getDDMTemplateKey(DDMStructure ddmStructure) {
@@ -749,9 +728,10 @@ public class StructuredContentResourceImpl
 	private List<DDMFormField> _getRootDDMFormFields(
 		DDMStructure ddmStructure) {
 
-		return transform(
+		return TransformUtil.transform(
 			ddmStructure.getRootFieldNames(),
-			fieldName -> _getDDMFormField(ddmStructure, fieldName));
+			fieldName -> DDMFormFieldUtil.getDDMFormField(
+				_ddmStructureService, ddmStructure, fieldName));
 	}
 
 	private SPIRatingResource<Rating> _getSPIRatingResource() {
@@ -763,10 +743,11 @@ public class StructuredContentResourceImpl
 						ratingsEntry.getClassPK());
 
 				return RatingUtil.toRating(
-					HashMapBuilder.<String, Map<String, String>>put(
+					HashMapBuilder.put(
 						"create",
 						addAction(
-							"UPDATE", journalArticle.getResourcePrimKey(),
+							ActionKeys.VIEW,
+							journalArticle.getResourcePrimKey(),
 							"postStructuredContentMyRating",
 							journalArticle.getUserId(),
 							JournalArticle.class.getName(),
@@ -774,7 +755,8 @@ public class StructuredContentResourceImpl
 					).put(
 						"delete",
 						addAction(
-							"UPDATE", journalArticle.getResourcePrimKey(),
+							ActionKeys.VIEW,
+							journalArticle.getResourcePrimKey(),
 							"deleteStructuredContentMyRating",
 							journalArticle.getUserId(),
 							JournalArticle.class.getName(),
@@ -782,7 +764,8 @@ public class StructuredContentResourceImpl
 					).put(
 						"get",
 						addAction(
-							"VIEW", journalArticle.getResourcePrimKey(),
+							ActionKeys.VIEW,
+							journalArticle.getResourcePrimKey(),
 							"getStructuredContentMyRating",
 							journalArticle.getUserId(),
 							JournalArticle.class.getName(),
@@ -790,7 +773,8 @@ public class StructuredContentResourceImpl
 					).put(
 						"replace",
 						addAction(
-							"UPDATE", journalArticle.getResourcePrimKey(),
+							ActionKeys.VIEW,
+							journalArticle.getResourcePrimKey(),
 							"putStructuredContentMyRating",
 							journalArticle.getUserId(),
 							JournalArticle.class.getName(),
@@ -816,17 +800,19 @@ public class StructuredContentResourceImpl
 	private Page<StructuredContent> _getStructuredContentsPage(
 			Map<String, Map<String, String>> actions,
 			UnsafeConsumer<BooleanQuery, Exception> booleanQueryUnsafeConsumer,
-			Long siteId, Filter filter, String keywords, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String keywords, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
-			actions, booleanQueryUnsafeConsumer, filter, JournalArticle.class,
-			keywords, pagination,
+			actions, booleanQueryUnsafeConsumer,
+			FilterUtil.processFilter(_ddmIndexer, filter),
+			JournalArticle.class.getName(), keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				com.liferay.portal.kernel.search.Field.ARTICLE_ID,
 				com.liferay.portal.kernel.search.Field.SCOPE_GROUP_ID),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute(
 					com.liferay.portal.kernel.search.Field.STATUS,
 					WorkflowConstants.STATUS_APPROVED);
@@ -836,44 +822,19 @@ public class StructuredContentResourceImpl
 				if (siteId != null) {
 					searchContext.setGroupIds(new long[] {siteId});
 				}
+
+				SearchRequestBuilder searchRequestBuilder =
+					_searchRequestBuilderFactory.builder(searchContext);
+
+				AggregationUtil.processVulcanAggregation(
+					_aggregations, _ddmIndexer, _queries, searchRequestBuilder,
+					aggregation);
+
+				SortUtil.processSorts(
+					_ddmIndexer, searchRequestBuilder, searchContext.getSorts(),
+					_queries, _sorts);
 			},
-			sorts,
-			document -> _toStructuredContent(
-				_journalArticleService.getLatestArticle(
-					GetterUtil.getLong(
-						document.get(
-							com.liferay.portal.kernel.search.Field.
-								SCOPE_GROUP_ID)),
-					document.get(
-						com.liferay.portal.kernel.search.Field.ARTICLE_ID),
-					WorkflowConstants.STATUS_APPROVED)));
-	}
-
-	private ThemeDisplay _getThemeDisplay(JournalArticle journalArticle)
-		throws Exception {
-
-		ServicePreAction servicePreAction = new ServicePreAction();
-
-		HttpServletResponse httpServletResponse =
-			new DummyHttpServletResponse();
-
-		servicePreAction.servicePre(
-			contextHttpServletRequest, httpServletResponse, false);
-
-		ThemeServicePreAction themeServicePreAction =
-			new ThemeServicePreAction();
-
-		themeServicePreAction.run(
-			contextHttpServletRequest, httpServletResponse);
-
-		ThemeDisplay themeDisplay =
-			(ThemeDisplay)contextHttpServletRequest.getAttribute(
-				WebKeys.THEME_DISPLAY);
-
-		themeDisplay.setScopeGroupId(journalArticle.getGroupId());
-		themeDisplay.setSiteGroupId(journalArticle.getGroupId());
-
-		return themeDisplay;
+			sorts, this::_toStructuredContent);
 	}
 
 	private Fields _toFields(
@@ -881,9 +842,6 @@ public class StructuredContentResourceImpl
 		throws Exception {
 
 		DDMStructure ddmStructure = journalArticle.getDDMStructure();
-
-		Fields fields = _journalConverter.getDDMFields(
-			ddmStructure, journalArticle.getContent());
 
 		ServiceContext serviceContext = new ServiceContext();
 
@@ -893,24 +851,13 @@ public class StructuredContentResourceImpl
 			_layoutLocalService, contextAcceptLanguage.getPreferredLocale(),
 			_getRootDDMFormFields(ddmStructure));
 
-		serviceContext.setAttribute("ddmFormValues", _toString(ddmFormValues));
+		serviceContext.setAttribute(
+			"ddmFormValues",
+			DDMFormValuesUtil.getContent(
+				_jsonDDMFormValuesSerializer, ddmStructure.getDDMForm(),
+				ddmFormValues.getDDMFormFieldValues()));
 
-		Fields newFields = _ddm.getFields(
-			ddmStructure.getStructureId(), serviceContext);
-
-		Iterator<Field> iterator = fields.iterator();
-
-		while (iterator.hasNext()) {
-			Field field = iterator.next();
-
-			Field newField = newFields.get(field.getName());
-
-			field.setValues(
-				contextAcceptLanguage.getPreferredLocale(),
-				newField.getValues(contextAcceptLanguage.getPreferredLocale()));
-		}
-
-		return fields;
+		return _ddm.getFields(ddmStructure.getStructureId(), serviceContext);
 	}
 
 	private Fields _toPatchedFields(
@@ -926,11 +873,7 @@ public class StructuredContentResourceImpl
 			return fields;
 		}
 
-		Iterator<Field> iterator = fields.iterator();
-
-		while (iterator.hasNext()) {
-			Field field = iterator.next();
-
+		for (Field field : fields) {
 			if (field.isRepeatable()) {
 				throw new BadRequestException(
 					"Unable to patch a structured content with a repeatable " +
@@ -938,12 +881,35 @@ public class StructuredContentResourceImpl
 			}
 		}
 
+		DDMFormValues ddmFormValues = DDMFormValuesUtil.toDDMFormValues(
+			contentFields, ddmStructure.getDDMForm(), _dlAppService,
+			journalArticle.getGroupId(), _journalArticleService,
+			_layoutLocalService, contextAcceptLanguage.getPreferredLocale(),
+			_getRootDDMFormFields(ddmStructure));
+
+		List<DDMFormFieldValue> ddmFormFieldValues =
+			ddmFormValues.getDDMFormFieldValues();
+
+		Stream<DDMFormFieldValue> stream = ddmFormFieldValues.stream();
+
+		Map<String, DDMFormFieldValue> ddmFormFieldValuesMap = stream.collect(
+			Collectors.toMap(
+				DDMFormFieldValue::getFieldReference, Function.identity()));
+
 		for (ContentField contentField : contentFields) {
-			Field field = fields.get(contentField.getName());
+			DDMFormFieldValue ddmFormFieldValue = ddmFormFieldValuesMap.get(
+				contentField.getName());
+
+			if (ddmFormFieldValue == null) {
+				continue;
+			}
+
+			Field field = fields.get(ddmFormFieldValue.getName());
 
 			Value value = DDMValueUtil.toDDMValue(
 				contentField,
-				_getDDMFormField(ddmStructure, contentField.getName()),
+				DDMFormFieldUtil.getDDMFormField(
+					_ddmStructureService, ddmStructure, contentField.getName()),
 				_dlAppService, journalArticle.getGroupId(),
 				_journalArticleService, _layoutLocalService,
 				contextAcceptLanguage.getPreferredLocale());
@@ -960,24 +926,35 @@ public class StructuredContentResourceImpl
 			}
 		}
 
-		DDMFormValues ddmFormValues = _journalConverter.getDDMFormValues(
+		ddmFormValues = _fieldsToDDMFormValuesConverter.convert(
 			ddmStructure, fields);
 
-		_validateDDMFormValues(ddmFormValues);
+		_ddmFormValuesValidator.validate(ddmFormValues);
 
 		return fields;
 	}
 
-	private String _toString(DDMFormValues ddmFormValues) {
-		DDMFormValuesSerializerSerializeRequest.Builder builder =
-			DDMFormValuesSerializerSerializeRequest.Builder.newBuilder(
-				ddmFormValues);
+	private StructuredContent _toStructuredContent(Document document)
+		throws Exception {
 
-		DDMFormValuesSerializerSerializeResponse
-			ddmFormValuesSerializerSerializeResponse =
-				_jsonDDMFormValuesSerializer.serialize(builder.build());
+		try {
+			return _toStructuredContent(
+				_journalArticleService.getLatestArticle(
+					GetterUtil.getLong(
+						document.get(
+							com.liferay.portal.kernel.search.Field.
+								SCOPE_GROUP_ID)),
+					document.get(
+						com.liferay.portal.kernel.search.Field.ARTICLE_ID),
+					WorkflowConstants.STATUS_APPROVED));
+		}
+		catch (NoSuchFolderException noSuchFolderException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchFolderException);
+			}
 
-		return ddmFormValuesSerializerSerializeResponse.getContent();
+			return null;
+		}
 	}
 
 	private StructuredContent _toStructuredContent(
@@ -987,39 +964,49 @@ public class StructuredContentResourceImpl
 		return _structuredContentDTOConverter.toDTO(
 			new DefaultDTOConverterContext(
 				contextAcceptLanguage.isAcceptAllLanguages(),
-				HashMapBuilder.<String, Map<String, String>>put(
+				HashMapBuilder.put(
 					"delete",
 					addAction(
-						"DELETE", journalArticle.getResourcePrimKey(),
+						ActionKeys.DELETE, journalArticle.getResourcePrimKey(),
 						"deleteStructuredContent", journalArticle.getUserId(),
 						JournalArticle.class.getName(),
 						journalArticle.getGroupId())
 				).put(
 					"get",
 					addAction(
-						"VIEW", journalArticle.getResourcePrimKey(),
+						ActionKeys.VIEW, journalArticle.getResourcePrimKey(),
 						"getStructuredContent", journalArticle.getUserId(),
 						JournalArticle.class.getName(),
 						journalArticle.getGroupId())
 				).put(
 					"get-rendered-content",
 					addAction(
-						"VIEW", journalArticle.getResourcePrimKey(),
-						"getStructuredContentRenderedContentTemplate",
+						ActionKeys.VIEW, journalArticle.getResourcePrimKey(),
+						"getStructuredContentRenderedContentContentTemplate",
+						journalArticle.getUserId(),
+						JournalArticle.class.getName(),
+						journalArticle.getGroupId())
+				).put(
+					"get-rendered-content-by-display-page",
+					addAction(
+						ActionKeys.VIEW, journalArticle.getResourcePrimKey(),
+						"getStructuredContentRenderedContentByDisplayPage" +
+							"DisplayPageKey",
 						journalArticle.getUserId(),
 						JournalArticle.class.getName(),
 						journalArticle.getGroupId())
 				).put(
 					"replace",
 					addAction(
-						"UPDATE", journalArticle.getResourcePrimKey(),
+						ActionKeys.UPDATE, journalArticle.getResourcePrimKey(),
 						"putStructuredContent", journalArticle.getUserId(),
 						JournalArticle.class.getName(),
 						journalArticle.getGroupId())
 				).put(
 					"subscribe",
 					addAction(
-						"SUBSCRIBE", journalArticle.getResourcePrimKey(),
+						ActionKeys.SUBSCRIBE,
+						journalArticle.getResourcePrimKey(),
 						"putStructuredContentSubscribe",
 						journalArticle.getUserId(),
 						JournalArticle.class.getName(),
@@ -1027,7 +1014,8 @@ public class StructuredContentResourceImpl
 				).put(
 					"unsubscribe",
 					addAction(
-						"SUBSCRIBE", journalArticle.getResourcePrimKey(),
+						ActionKeys.SUBSCRIBE,
+						journalArticle.getResourcePrimKey(),
 						"putStructuredContentUnsubscribe",
 						journalArticle.getUserId(),
 						JournalArticle.class.getName(),
@@ -1035,14 +1023,80 @@ public class StructuredContentResourceImpl
 				).put(
 					"update",
 					addAction(
-						"UPDATE", journalArticle.getResourcePrimKey(),
+						ActionKeys.UPDATE, journalArticle.getResourcePrimKey(),
 						"patchStructuredContent", journalArticle.getUserId(),
 						JournalArticle.class.getName(),
 						journalArticle.getGroupId())
 				).build(),
-				_dtoConverterRegistry, journalArticle.getResourcePrimKey(),
+				_dtoConverterRegistry, contextHttpServletRequest,
+				journalArticle.getResourcePrimKey(),
 				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
-				contextUser));
+				contextUser),
+			journalArticle);
+	}
+
+	private StructuredContent _updateStructuredContent(
+			JournalArticle journalArticle, StructuredContent structuredContent)
+		throws Exception {
+
+		DDMStructure ddmStructure = journalArticle.getDDMStructure();
+
+		Map<Locale, String> titleMap = LocalizedMapUtil.getLocalizedMap(
+			contextAcceptLanguage.getPreferredLocale(),
+			structuredContent.getTitle(), structuredContent.getTitle_i18n(),
+			journalArticle.getTitleMap());
+
+		Map<Locale, String> descriptionMap = LocalizedMapUtil.getLocalizedMap(
+			contextAcceptLanguage.getPreferredLocale(),
+			structuredContent.getDescription(),
+			structuredContent.getDescription_i18n(),
+			journalArticle.getDescriptionMap());
+
+		Set<Locale> notFoundLocales = new HashSet<>(descriptionMap.keySet());
+
+		Map<Locale, String> friendlyUrlMap = LocalizedMapUtil.getLocalizedMap(
+			contextAcceptLanguage.getPreferredLocale(),
+			structuredContent.getFriendlyUrlPath(),
+			structuredContent.getFriendlyUrlPath_i18n(),
+			journalArticle.getFriendlyURLMap());
+
+		friendlyUrlMap =
+			friendlyUrlMap.isEmpty() ? journalArticle.getFriendlyURLMap() :
+				friendlyUrlMap;
+
+		notFoundLocales.addAll(friendlyUrlMap.keySet());
+
+		LocalizedMapUtil.validateI18n(
+			false, LocaleUtil.getSiteDefault(), "Structured content", titleMap,
+			notFoundLocales);
+
+		_validateContentFields(
+			structuredContent.getContentFields(), ddmStructure);
+
+		LocalDateTime localDateTime = LocalDateTimeUtil.toLocalDateTime(
+			structuredContent.getDatePublished(),
+			journalArticle.getDisplayDate());
+
+		return _toStructuredContent(
+			_journalArticleService.updateArticle(
+				journalArticle.getGroupId(), journalArticle.getFolderId(),
+				journalArticle.getArticleId(), journalArticle.getVersion(),
+				titleMap, descriptionMap, friendlyUrlMap,
+				_journalConverter.getContent(
+					ddmStructure,
+					_toFields(
+						structuredContent.getContentFields(), journalArticle),
+					journalArticle.getGroupId()),
+				journalArticle.getDDMStructureKey(),
+				_getDDMTemplateKey(ddmStructure),
+				journalArticle.getLayoutUuid(),
+				localDateTime.getMonthValue() - 1,
+				localDateTime.getDayOfMonth(), localDateTime.getYear(),
+				localDateTime.getHour(), localDateTime.getMinute(), 0, 0, 0, 0,
+				0, true, 0, 0, 0, 0, 0, true, true, false, null, null, null,
+				null,
+				_createServiceContext(
+					journalArticle.getGroupId(), structuredContent)));
 	}
 
 	private void _validateContentFields(
@@ -1053,8 +1107,8 @@ public class StructuredContentResourceImpl
 		}
 
 		for (ContentField contentField : contentFields) {
-			DDMFormField ddmFormField = _getDDMFormField(
-				ddmStructure, contentField.getName());
+			DDMFormField ddmFormField = DDMFormFieldUtil.getDDMFormField(
+				_ddmStructureService, ddmStructure, contentField.getName());
 
 			if (ddmFormField == null) {
 				throw new BadRequestException(
@@ -1069,25 +1123,23 @@ public class StructuredContentResourceImpl
 		}
 	}
 
-	private void _validateDDMFormValues(DDMFormValues ddmFormValues) {
-		try {
-			_ddmFormValuesValidator.validate(ddmFormValues);
-		}
-		catch (DDMFormValuesValidationException
-					ddmFormValuesValidationException) {
+	private static final Log _log = LogFactoryUtil.getLog(
+		StructuredContentResourceImpl.class);
 
-			throw new BadRequestException(
-				"Validation error: " +
-					ddmFormValuesValidationException.getMessage(),
-				ddmFormValuesValidationException);
-		}
-	}
+	@Reference
+	private Aggregations _aggregations;
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 	@Reference
 	private DDM _ddm;
 
 	@Reference
 	private DDMFormValuesValidator _ddmFormValuesValidator;
+
+	@Reference
+	private DDMIndexer _ddmIndexer;
 
 	@Reference
 	private DDMStructureService _ddmStructureService;
@@ -1109,6 +1161,15 @@ public class StructuredContentResourceImpl
 
 	@Reference
 	private ExpandoTableLocalService _expandoTableLocalService;
+
+	@Reference
+	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
 	private JournalArticleLocalService _journalArticleLocalService;
@@ -1135,13 +1196,28 @@ public class StructuredContentResourceImpl
 	private DDMFormValuesSerializer _jsonDDMFormValuesSerializer;
 
 	@Reference
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
+
+	@Reference
 	private LayoutLocalService _layoutLocalService;
+
+	@Reference
+	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
 
 	@Reference
 	private Portal _portal;
 
 	@Reference
+	private Queries _queries;
+
+	@Reference
 	private RatingsEntryLocalService _ratingsEntryLocalService;
+
+	@Reference
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Reference
+	private Sorts _sorts;
 
 	@Reference
 	private StructuredContentDTOConverter _structuredContentDTOConverter;

@@ -13,7 +13,7 @@ import React, {createContext, useState} from 'react';
 
 const ModalContext = createContext();
 
-const ModalProvider = ({children, processId}) => {
+export default function ModalProvider({children, processId}) {
 	const [bulkReassign, setBulkReassign] = useState({
 		reassignedTasks: [],
 		reassigning: false,
@@ -24,6 +24,7 @@ const ModalProvider = ({children, processId}) => {
 		transition: {errors: {}, onGoing: false},
 		transitionTasks: [],
 	});
+	const [fetchOnClose, setFetchOnClose] = useState(false);
 	const [selectTasks, setSelectTasks] = useState({
 		selectAll: false,
 		tasks: [],
@@ -38,9 +39,17 @@ const ModalProvider = ({children, processId}) => {
 	});
 	const [visibleModal, setVisibleModal] = useState('');
 
+	const closeModal = (refetch) => {
+		setFetchOnClose(refetch);
+		setVisibleModal('');
+	};
+
 	const modalState = {
 		bulkReassign,
 		bulkTransition,
+		closeModal,
+		fetchOnClose,
+		openModal: setVisibleModal,
 		processId,
 		selectTasks,
 		setBulkReassign,
@@ -48,7 +57,6 @@ const ModalProvider = ({children, processId}) => {
 		setSelectTasks,
 		setSingleTransition,
 		setUpdateDueDate,
-		setVisibleModal,
 		singleTransition,
 		updateDueDate,
 		visibleModal,
@@ -59,7 +67,6 @@ const ModalProvider = ({children, processId}) => {
 			{children}
 		</ModalContext.Provider>
 	);
-};
+}
 
 export {ModalContext};
-export default ModalProvider;

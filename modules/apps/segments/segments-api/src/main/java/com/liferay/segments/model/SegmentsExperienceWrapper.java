@@ -21,6 +21,8 @@ import com.liferay.portal.kernel.model.wrapper.BaseModelWrapper;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * <p>
@@ -44,6 +46,7 @@ public class SegmentsExperienceWrapper
 		Map<String, Object> attributes = new HashMap<String, Object>();
 
 		attributes.put("mvccVersion", getMvccVersion());
+		attributes.put("ctCollectionId", getCtCollectionId());
 		attributes.put("uuid", getUuid());
 		attributes.put("segmentsExperienceId", getSegmentsExperienceId());
 		attributes.put("groupId", getGroupId());
@@ -59,6 +62,7 @@ public class SegmentsExperienceWrapper
 		attributes.put("name", getName());
 		attributes.put("priority", getPriority());
 		attributes.put("active", isActive());
+		attributes.put("typeSettings", getTypeSettings());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
@@ -70,6 +74,12 @@ public class SegmentsExperienceWrapper
 
 		if (mvccVersion != null) {
 			setMvccVersion(mvccVersion);
+		}
+
+		Long ctCollectionId = (Long)attributes.get("ctCollectionId");
+
+		if (ctCollectionId != null) {
+			setCtCollectionId(ctCollectionId);
 		}
 
 		String uuid = (String)attributes.get("uuid");
@@ -164,11 +174,22 @@ public class SegmentsExperienceWrapper
 			setActive(active);
 		}
 
+		String typeSettings = (String)attributes.get("typeSettings");
+
+		if (typeSettings != null) {
+			setTypeSettings(typeSettings);
+		}
+
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
 
 		if (lastPublishDate != null) {
 			setLastPublishDate(lastPublishDate);
 		}
+	}
+
+	@Override
+	public SegmentsExperience cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	/**
@@ -234,6 +255,16 @@ public class SegmentsExperienceWrapper
 	@Override
 	public Date getCreateDate() {
 		return model.getCreateDate();
+	}
+
+	/**
+	 * Returns the ct collection ID of this segments experience.
+	 *
+	 * @return the ct collection ID of this segments experience
+	 */
+	@Override
+	public long getCtCollectionId() {
+		return model.getCtCollectionId();
 	}
 
 	@Override
@@ -408,6 +439,23 @@ public class SegmentsExperienceWrapper
 	}
 
 	/**
+	 * Returns the type settings of this segments experience.
+	 *
+	 * @return the type settings of this segments experience
+	 */
+	@Override
+	public String getTypeSettings() {
+		return model.getTypeSettings();
+	}
+
+	@Override
+	public com.liferay.portal.kernel.util.UnicodeProperties
+		getTypeSettingsUnicodeProperties() {
+
+		return model.getTypeSettingsUnicodeProperties();
+	}
+
+	/**
 	 * Returns the user ID of this segments experience.
 	 *
 	 * @return the user ID of this segments experience
@@ -535,6 +583,16 @@ public class SegmentsExperienceWrapper
 	@Override
 	public void setCreateDate(Date createDate) {
 		model.setCreateDate(createDate);
+	}
+
+	/**
+	 * Sets the ct collection ID of this segments experience.
+	 *
+	 * @param ctCollectionId the ct collection ID of this segments experience
+	 */
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		model.setCtCollectionId(ctCollectionId);
 	}
 
 	/**
@@ -691,6 +749,24 @@ public class SegmentsExperienceWrapper
 	}
 
 	/**
+	 * Sets the type settings of this segments experience.
+	 *
+	 * @param typeSettings the type settings of this segments experience
+	 */
+	@Override
+	public void setTypeSettings(String typeSettings) {
+		model.setTypeSettings(typeSettings);
+	}
+
+	@Override
+	public void setTypeSettingsUnicodeProperties(
+		com.liferay.portal.kernel.util.UnicodeProperties
+			typeSettingsUnicodeProperties) {
+
+		model.setTypeSettingsUnicodeProperties(typeSettingsUnicodeProperties);
+	}
+
+	/**
 	 * Sets the user ID of this segments experience.
 	 *
 	 * @param userId the user ID of this segments experience
@@ -728,6 +804,20 @@ public class SegmentsExperienceWrapper
 	@Override
 	public void setUuid(String uuid) {
 		model.setUuid(uuid);
+	}
+
+	@Override
+	public Map<String, Function<SegmentsExperience, Object>>
+		getAttributeGetterFunctions() {
+
+		return model.getAttributeGetterFunctions();
+	}
+
+	@Override
+	public Map<String, BiConsumer<SegmentsExperience, Object>>
+		getAttributeSetterBiConsumers() {
+
+		return model.getAttributeSetterBiConsumers();
 	}
 
 	@Override

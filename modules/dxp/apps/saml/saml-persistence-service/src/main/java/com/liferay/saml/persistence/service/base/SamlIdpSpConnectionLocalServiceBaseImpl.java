@@ -40,9 +40,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.saml.persistence.model.SamlIdpSpConnection;
 import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalService;
+import com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalServiceUtil;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpSessionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSsoSessionPersistence;
+import com.liferay.saml.persistence.service.persistence.SamlPeerBindingPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpAuthRequestPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpIdpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpMessagePersistence;
@@ -50,10 +52,13 @@ import com.liferay.saml.persistence.service.persistence.SamlSpSessionPersistence
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -75,11 +80,15 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SamlIdpSpConnectionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.saml.persistence.service.SamlIdpSpConnectionLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SamlIdpSpConnectionLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SamlIdpSpConnectionLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the saml idp sp connection to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlIdpSpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlIdpSpConnection the saml idp sp connection
 	 * @return the saml idp sp connection that was added
@@ -111,6 +120,10 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	/**
 	 * Deletes the saml idp sp connection with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlIdpSpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlIdpSpConnectionId the primary key of the saml idp sp connection
 	 * @return the saml idp sp connection that was removed
 	 * @throws PortalException if a saml idp sp connection with the primary key could not be found
@@ -127,6 +140,10 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	/**
 	 * Deletes the saml idp sp connection from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlIdpSpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlIdpSpConnection the saml idp sp connection
 	 * @return the saml idp sp connection that was removed
 	 */
@@ -141,6 +158,13 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return samlIdpSpConnectionPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -306,6 +330,7 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -324,6 +349,7 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 			(SamlIdpSpConnection)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SamlIdpSpConnection> getBasePersistence() {
 		return samlIdpSpConnectionPersistence;
 	}
@@ -369,6 +395,10 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	/**
 	 * Updates the saml idp sp connection in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlIdpSpConnectionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlIdpSpConnection the saml idp sp connection
 	 * @return the saml idp sp connection that was updated
 	 */
@@ -378,6 +408,11 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 		SamlIdpSpConnection samlIdpSpConnection) {
 
 		return samlIdpSpConnectionPersistence.update(samlIdpSpConnection);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -392,6 +427,8 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		samlIdpSpConnectionLocalService =
 			(SamlIdpSpConnectionLocalService)aopProxy;
+
+		_setLocalServiceUtilService(samlIdpSpConnectionLocalService);
 	}
 
 	/**
@@ -437,6 +474,23 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SamlIdpSpConnectionLocalService samlIdpSpConnectionLocalService) {
+
+		try {
+			Field field =
+				SamlIdpSpConnectionLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, samlIdpSpConnectionLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected SamlIdpSpConnectionLocalService samlIdpSpConnectionLocalService;
 
 	@Reference
@@ -447,6 +501,9 @@ public abstract class SamlIdpSpConnectionLocalServiceBaseImpl
 
 	@Reference
 	protected SamlIdpSsoSessionPersistence samlIdpSsoSessionPersistence;
+
+	@Reference
+	protected SamlPeerBindingPersistence samlPeerBindingPersistence;
 
 	@Reference
 	protected SamlSpAuthRequestPersistence samlSpAuthRequestPersistence;

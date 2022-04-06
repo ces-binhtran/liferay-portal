@@ -12,152 +12,155 @@
  * details.
  */
 
-import {useModal} from '@clayui/modal';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
-import React, {useCallback, useState} from 'react';
+import React, {useState} from 'react';
 
 import useSetRef from '../../../core/hooks/useSetRef';
-import {
-	LayoutDataPropTypes,
-	getLayoutDataItemPropTypes,
-} from '../../../prop-types/index';
-import {LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS} from '../../config/constants/layoutDataFloatingToolbarButtons';
-import {useDispatch, useSelector} from '../../store/index';
-import duplicateItem from '../../thunks/duplicateItem';
+import {getLayoutDataItemPropTypes} from '../../../prop-types/index';
+import {config} from '../../config/index';
+import {ResizeContextProvider} from '../../contexts/ResizeContext';
+import {useSelector} from '../../contexts/StoreContext';
+import selectCanUpdateItemConfiguration from '../../selectors/selectCanUpdateItemConfiguration';
+import getLayoutDataItemTopperClassName from '../../utils/getLayoutDataItemTopperClassName';
+import {getResponsiveColumnSize} from '../../utils/getResponsiveColumnSize';
 import {getResponsiveConfig} from '../../utils/getResponsiveConfig';
-import {ResizeContextProvider} from '../ResizeContext';
-import Topper from '../Topper';
-import FloatingToolbar from '../floating-toolbar/FloatingToolbar';
-import SaveFragmentCompositionModal from '../floating-toolbar/SaveFragmentCompositionModal';
+import isItemEmpty from '../../utils/isItemEmpty';
+import {isValidSpacingOption} from '../../utils/isValidSpacingOption';
+import Topper from '../topper/Topper';
 import Row from './Row';
-import hasDropZoneChild from './hasDropZoneChild';
 
-const RowWithControls = React.forwardRef(
-	({children, item, layoutData}, ref) => {
-		const {config} = layoutData.items[item.itemId];
-		const dispatch = useDispatch();
-		const isMounted = useIsMounted();
-		const [resizing, setResizing] = useState(false);
-		const [updatedLayoutData, setUpdatedLayoutData] = useState(null);
-		const [customRow, setCustomRow] = useState(false);
+const ROW_SIZE = 12;
 
-		const [
-			openSaveFragmentCompositionModal,
-			setOpenSaveFragmentCompositionModal,
-		] = useState(false);
+const RowWithControls = React.forwardRef(({children, item}, ref) => {
+	const [resizing, setResizing] = useState(false);
+	const [nextColumnSizes, setNextColumnSizes] = useState(null);
 
-		const {observer, onClose} = useModal({
-			onClose: () => {
-				if (isMounted()) {
-					setOpenSaveFragmentCompositionModal(false);
-				}
-			},
-		});
+	const canUpdateItemConfiguration = useSelector(
+		selectCanUpdateItemConfiguration
+	);
 
-		const segmentsExperienceId = useSelector(
-			(state) => state.segmentsExperienceId
-		);
-		const selectedViewportSize = useSelector(
-			(state) => state.selectedViewportSize
-		);
+	const layoutData = useSelector((state) => state.layoutData);
 
-		const rowConfig = getResponsiveConfig(config, selectedViewportSize);
+	const selectedViewportSize = useSelector(
+		(state) => state.selectedViewportSize
+	);
 
-		const [setRef, itemElement] = useSetRef(ref);
+	const rowResponsiveConfig = getResponsiveConfig(
+		item.config,
+		selectedViewportSize
+	);
 
-		const handleButtonClick = useCallback(
-			(id) => {
-				if (
-					id === LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem.id
-				) {
-					dispatch(
-						duplicateItem({
-							itemId: item.itemId,
-							segmentsExperienceId,
-						})
-					);
-				}
-				else if (
-					id ===
-					LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition
-						.id
-				) {
-					setOpenSaveFragmentCompositionModal(true);
-				}
-			},
-			[dispatch, item.itemId, segmentsExperienceId]
-		);
+	const [setRef, itemElement] = useSetRef(ref);
+	const {verticalAlignment} = rowResponsiveConfig;
 
-		const buttons = [];
+	const {
+		display,
+		height,
+		marginBottom,
+		marginLeft,
+		marginRight,
+		marginTop,
+		maxWidth,
+		minWidth,
+		width,
+	} = rowResponsiveConfig.styles;
 
-		if (!hasDropZoneChild(item, layoutData)) {
-			buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.duplicateItem);
-			buttons.push(
-				LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.saveFragmentComposition
-			);
-		}
-
-		buttons.push(LAYOUT_DATA_FLOATING_TOOLBAR_BUTTONS.rowConfiguration);
-
-		const {verticalAlignment} = rowConfig;
-
-		return (
-			<Topper
+	return (
+		<Topper
+			className={classNames({
+				[getLayoutDataItemTopperClassName(
+					item.itemId
+				)]: config.featureFlagLps132571,
+				[`mb-${marginBottom}`]: isValidSpacingOption(marginBottom),
+				[`ml-${marginLeft}`]: isValidSpacingOption(marginLeft),
+				[`mr-${marginRight}`]: isValidSpacingOption(marginRight),
+				[`mt-${marginTop}`]: isValidSpacingOption(marginTop),
+			})}
+			item={item}
+			itemElement={itemElement}
+			style={{
+				display,
+				maxWidth,
+				minWidth,
+				width,
+			}}
+		>
+			<Row
+				className={classNames({
+					'align-bottom': verticalAlignment === 'bottom',
+					'align-middle': verticalAlignment === 'middle',
+					'empty':
+						isSomeRowEmpty(
+							item,
+							layoutData,
+							selectedViewportSize
+						) && !height,
+					'page-editor__row': canUpdateItemConfiguration,
+					'page-editor__row-overlay-grid': resizing,
+				})}
 				item={item}
-				itemElement={itemElement}
-				layoutData={layoutData}
+				ref={setRef}
 			>
-				<Row
-					className={classNames('page-editor__row', {
-						'align-bottom': verticalAlignment === 'bottom',
-						'align-middle': verticalAlignment === 'middle',
-						'page-editor__row-overlay-grid': resizing,
-					})}
-					item={item}
-					layoutData={layoutData}
-					ref={setRef}
+				<ResizeContextProvider
+					value={{
+						nextColumnSizes,
+						resizing,
+						setNextColumnSizes,
+						setResizing,
+					}}
 				>
-					<ResizeContextProvider
-						value={{
-							customRow,
-							resizing,
-							setCustomRow,
-							setResizing,
-							setUpdatedLayoutData,
-							updatedLayoutData,
-						}}
-					>
-						<FloatingToolbar
-							buttons={buttons}
-							item={item}
-							itemElement={itemElement}
-							onButtonClick={handleButtonClick}
-						/>
-						{children}
-					</ResizeContextProvider>
+					{children}
+				</ResizeContextProvider>
+			</Row>
+		</Topper>
+	);
+});
 
-					{openSaveFragmentCompositionModal && (
-						<SaveFragmentCompositionModal
-							errorMessage={''}
-							itemId={item.itemId}
-							observer={observer}
-							onClose={onClose}
-							onErrorDismiss={() => true}
-						/>
-					)}
-				</Row>
-			</Topper>
+/**
+ * Group children item by row and then check that if some row is empty
+ */
+function isSomeRowEmpty(item, layoutData, selectedViewportSize) {
+	const rows = groupItemsByRow(item, layoutData, selectedViewportSize);
+
+	return rows.some((row) =>
+		row.every((column) =>
+			isItemEmpty(column, layoutData, selectedViewportSize)
+		)
+	);
+}
+
+function groupItemsByRow(item, layoutData, selectedViewportSize) {
+	const rows = [];
+	let row = [];
+	let columnSum = 0;
+
+	item.children.forEach((childId) => {
+		const child = layoutData.items[childId];
+
+		const columnSize = getResponsiveColumnSize(
+			child.config,
+			selectedViewportSize
 		);
-	}
-);
+
+		columnSum = columnSum + columnSize;
+
+		row.push(child);
+
+		if (columnSum === ROW_SIZE) {
+			rows.push(row);
+			row = [];
+			columnSum = 0;
+		}
+	});
+
+	return rows;
+}
 
 RowWithControls.propTypes = {
 	item: getLayoutDataItemPropTypes({
 		config: PropTypes.shape({gutters: PropTypes.bool}),
 	}).isRequired,
-	layoutData: LayoutDataPropTypes.isRequired,
 };
 
 export default RowWithControls;

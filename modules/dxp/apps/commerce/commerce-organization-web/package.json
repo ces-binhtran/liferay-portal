@@ -1,0 +1,20 @@
+{
+	"dependencies": {
+	},
+	"jest": {
+		"testPathIgnorePatterns": [
+			"<rootDir>/test/dev/"
+		]
+	},
+	"name": "commerce-organization-web",
+	"private": true,
+	"scripts": {
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"format": "liferay-npm-scripts fix",
+		"test": "liferay-npm-scripts test",
+		"test:watch": "liferay-npm-scripts test --watch",
+		"watch": "liferay-npm-scripts webpack --watch"
+	},
+	"version": "5.0.27"
+}

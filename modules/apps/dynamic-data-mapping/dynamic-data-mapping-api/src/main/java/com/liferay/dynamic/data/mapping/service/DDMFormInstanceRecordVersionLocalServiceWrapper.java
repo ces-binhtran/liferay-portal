@@ -30,6 +30,10 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 	implements DDMFormInstanceRecordVersionLocalService,
 			   ServiceWrapper<DDMFormInstanceRecordVersionLocalService> {
 
+	public DDMFormInstanceRecordVersionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DDMFormInstanceRecordVersionLocalServiceWrapper(
 		DDMFormInstanceRecordVersionLocalService
 			ddmFormInstanceRecordVersionLocalService) {
@@ -40,6 +44,10 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 
 	/**
 	 * Adds the ddm form instance record version to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was added
@@ -81,6 +89,10 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 	/**
 	 * Deletes the ddm form instance record version from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was removed
 	 */
@@ -94,6 +106,10 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm form instance record version with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param formInstanceRecordVersionId the primary key of the ddm form instance record version
 	 * @return the ddm form instance record version that was removed
@@ -123,6 +139,14 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmFormInstanceRecordVersionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmFormInstanceRecordVersionLocalService.dslQueryCount(
+			dslQuery);
 	}
 
 	@Override
@@ -321,6 +345,14 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 	}
 
 	@Override
+	public java.util.List<DDMFormInstanceRecordVersion>
+		getFormInstanceRecordVersions(long userId, long formInstanceId) {
+
+		return _ddmFormInstanceRecordVersionLocalService.
+			getFormInstanceRecordVersions(userId, formInstanceId);
+	}
+
+	@Override
 	public int getFormInstanceRecordVersionsCount(
 		long ddmFormInstanceRecordId) {
 
@@ -379,6 +411,10 @@ public class DDMFormInstanceRecordVersionLocalServiceWrapper
 
 	/**
 	 * Updates the ddm form instance record version in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordVersionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceRecordVersion the ddm form instance record version
 	 * @return the ddm form instance record version that was updated

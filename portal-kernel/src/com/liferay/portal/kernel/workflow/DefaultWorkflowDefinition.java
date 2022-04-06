@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,6 +40,11 @@ public class DefaultWorkflowDefinition
 	@Override
 	public String getContent() {
 		return _content;
+	}
+
+	@Override
+	public Date getCreateDate() {
+		return _createDate;
 	}
 
 	@Override
@@ -71,6 +77,11 @@ public class DefaultWorkflowDefinition
 	}
 
 	@Override
+	public String getScope() {
+		return _scope;
+	}
+
+	@Override
 	public String getTitle() {
 		if (_title == null) {
 			return StringPool.BLANK;
@@ -100,6 +111,16 @@ public class DefaultWorkflowDefinition
 	}
 
 	@Override
+	public List<WorkflowNode> getWorkflowNodes() {
+		return _workflowNodes;
+	}
+
+	@Override
+	public List<WorkflowTransition> getWorkflowTransitions() {
+		return _workflowTransitions;
+	}
+
+	@Override
 	public boolean isActive() {
 		return _active;
 	}
@@ -114,6 +135,10 @@ public class DefaultWorkflowDefinition
 
 	public void setContent(String content) {
 		_content = content;
+	}
+
+	public void setCreateDate(Date createDate) {
+		_createDate = createDate;
 	}
 
 	public void setDescription(String description) {
@@ -136,6 +161,10 @@ public class DefaultWorkflowDefinition
 		_optionalAttributes = optionalAttributes;
 	}
 
+	public void setScope(String scope) {
+		_scope = scope;
+	}
+
 	public void setTitle(String title) {
 		_title = title;
 	}
@@ -152,17 +181,31 @@ public class DefaultWorkflowDefinition
 		_workflowDefinitionId = workflowDefinitionId;
 	}
 
+	public void setWorkflowNodes(List<WorkflowNode> workflowNodes) {
+		_workflowNodes = workflowNodes;
+	}
+
+	public void setWorkflowTransitions(
+		List<WorkflowTransition> workflowTransitions) {
+
+		_workflowTransitions = workflowTransitions;
+	}
+
 	private boolean _active;
 	private long _companyId;
 	private String _content;
+	private Date _createDate;
 	private String _description;
 	private InputStream _inputStream;
 	private Date _modifiedDate;
 	private String _name;
 	private Map<String, Object> _optionalAttributes;
+	private String _scope;
 	private String _title;
 	private long _userId;
 	private int _version;
 	private long _workflowDefinitionId;
+	private List<WorkflowNode> _workflowNodes;
+	private List<WorkflowTransition> _workflowTransitions;
 
 }

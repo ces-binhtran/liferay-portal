@@ -14,6 +14,7 @@
 
 package com.liferay.journal.web.internal.upload;
 
+import com.liferay.item.selector.ItemSelectorUploadResponseHandler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -42,21 +43,23 @@ public class ImageJournalUploadResponseHandler
 			PortletRequest portletRequest, PortalException portalException)
 		throws PortalException {
 
-		JSONObject jsonObject = _defaultUploadResponseHandler.onFailure(
-			portletRequest, portalException);
+		return _itemSelectorUploadResponseHandler.onFailure(
+			portletRequest, portalException
+		).put(
+			"error",
+			() -> {
+				if (portalException instanceof ImageTypeException) {
+					return JSONUtil.put(
+						"errorType",
+						ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION
+					).put(
+						"message", StringPool.BLANK
+					);
+				}
 
-		if (portalException instanceof ImageTypeException) {
-			JSONObject errorJSONObject = JSONUtil.put(
-				"errorType",
-				ServletResponseConstants.SC_FILE_EXTENSION_EXCEPTION
-			).put(
-				"message", StringPool.BLANK
-			);
-
-			jsonObject.put("error", errorJSONObject);
-		}
-
-		return jsonObject;
+				return null;
+			}
+		);
 	}
 
 	@Override
@@ -64,7 +67,7 @@ public class ImageJournalUploadResponseHandler
 			UploadPortletRequest uploadPortletRequest, FileEntry fileEntry)
 		throws PortalException {
 
-		JSONObject jsonObject = _defaultUploadResponseHandler.onSuccess(
+		JSONObject jsonObject = _itemSelectorUploadResponseHandler.onSuccess(
 			uploadPortletRequest, fileEntry);
 
 		JSONObject fileJSONObject = jsonObject.getJSONObject("file");
@@ -74,7 +77,8 @@ public class ImageJournalUploadResponseHandler
 		return jsonObject;
 	}
 
-	@Reference(target = "(upload.response.handler.system.default=true)")
-	private UploadResponseHandler _defaultUploadResponseHandler;
+	@Reference
+	private ItemSelectorUploadResponseHandler
+		_itemSelectorUploadResponseHandler;
 
 }

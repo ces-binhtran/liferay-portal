@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 /**
@@ -364,6 +365,15 @@ public class MapUtil {
 		return !isEmpty(map);
 	}
 
+	public static <K, V> void isNotEmptyForEach(
+		Map<? extends K, ? extends V> map,
+		BiConsumer<? super K, ? super V> biConsumer) {
+
+		if (!isEmpty(map)) {
+			map.forEach(biConsumer);
+		}
+	}
+
 	public static <K, V> void merge(
 		Map<? extends K, ? extends V> master, Map<? super K, ? super V> copy) {
 
@@ -436,7 +446,7 @@ public class MapUtil {
 						map.put(kvp[0], constructor.newInstance(kvp[1]));
 					}
 					catch (Exception exception) {
-						_log.error(exception.getMessage(), exception);
+						_log.error(exception);
 					}
 				}
 			}
@@ -456,7 +466,7 @@ public class MapUtil {
 			return StringPool.OPEN_CURLY_BRACE + StringPool.CLOSE_CURLY_BRACE;
 		}
 
-		StringBundler sb = new StringBundler(map.size() * 4 + 1);
+		StringBundler sb = new StringBundler((map.size() * 4) + 1);
 
 		sb.append(StringPool.OPEN_CURLY_BRACE);
 
@@ -488,11 +498,9 @@ public class MapUtil {
 					(String[])value, StringPool.COMMA_AND_SPACE);
 
 				sb.append(
-					StringPool.OPEN_BRACKET.concat(
-						valueString
-					).concat(
-						StringPool.CLOSE_BRACKET
-					));
+					StringBundler.concat(
+						StringPool.OPEN_BRACKET, valueString,
+						StringPool.CLOSE_BRACKET));
 			}
 			else {
 				sb.append(value);

@@ -16,6 +16,7 @@ package com.liferay.change.tracking.web.internal.portlet.action;
 
 import com.liferay.change.tracking.constants.CTPortletKeys;
 import com.liferay.change.tracking.service.CTCollectionService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
@@ -31,7 +32,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
 import javax.portlet.PortletRequest;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -42,8 +42,8 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	immediate = true,
 	property = {
-		"javax.portlet.name=" + CTPortletKeys.CHANGE_LISTS,
-		"mvc.command.name=/change_lists/publish_ct_collection"
+		"javax.portlet.name=" + CTPortletKeys.PUBLICATIONS,
+		"mvc.command.name=/change_tracking/publish_ct_collection"
 	},
 	service = MVCActionCommand.class
 )
@@ -77,14 +77,15 @@ public class PublishCTCollectionMVCActionCommand extends BaseMVCActionCommand {
 				"publishing-x-has-started-successfully", new Object[] {name},
 				false));
 
-		PortletURL redirectURL = PortletURLFactoryUtil.create(
-			actionRequest, CTPortletKeys.CHANGE_LISTS,
-			PortletRequest.RENDER_PHASE);
-
-		redirectURL.setParameter(
-			"mvcRenderCommandName", "/change_lists/view_history");
-
-		sendRedirect(actionRequest, actionResponse, redirectURL.toString());
+		sendRedirect(
+			actionRequest, actionResponse,
+			PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					actionRequest, CTPortletKeys.PUBLICATIONS,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/change_tracking/view_history"
+			).buildString());
 	}
 
 	@Reference

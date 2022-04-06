@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
-<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.3.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_3_0.dtd">
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 7.4.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_7_4_0.dtd">
 
-<service-builder auto-import-default-references="false" auto-namespace-tables="false" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.journal">
+<service-builder auto-import-default-references="false" auto-namespace-tables="false" change-tracking-enabled="true" dependency-injector="ds" mvcc-enabled="true" package-path="com.liferay.journal">
 	<namespace>Journal</namespace>
-	<entity change-tracking-enabled="true" local-service="true" name="JournalArticle" remote-service="true" trash-enabled="true" uuid="true">
+	<entity local-service="true" name="JournalArticle" remote-service="true" trash-enabled="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -21,20 +21,20 @@
 
 		<column name="companyId" type="long" />
 		<column name="userId" type="long" />
-		<column name="userName" type="String" />
+		<column name="userName" type="String" uad-anonymize-field-name="fullName" />
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 
 		<!-- Other fields -->
 
+		<column name="externalReferenceCode" type="String" />
 		<column name="folderId" type="long" />
 		<column name="classNameId" type="long" />
 		<column name="classPK" type="long" />
 		<column name="treePath" type="String" />
 		<column accessor="true" name="articleId" type="String" />
 		<column name="version" type="double" />
-		<column name="urlTitle" type="String" />
-		<column name="content" type="String" />
+		<column name="urlTitle" type="String" uad-nonanonymizable="true" />
 		<column name="DDMStructureKey" type="String" />
 		<column name="DDMTemplateKey" type="String" />
 		<column name="defaultLanguageId" type="String" />
@@ -49,7 +49,7 @@
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
-		<column name="statusByUserName" type="String" />
+		<column name="statusByUserName" type="String" uad-anonymize-field-name="fullName" />
 		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
@@ -90,6 +90,10 @@
 		<finder name="G_U" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="userId" />
+		</finder>
+		<finder name="G_ERC" return-type="Collection">
+			<finder-column name="groupId" />
+			<finder-column name="externalReferenceCode" />
 		</finder>
 		<finder name="G_F" return-type="Collection">
 			<finder-column name="groupId" />
@@ -135,10 +139,6 @@
 			<finder-column name="companyId" />
 			<finder-column comparator="!=" name="status" />
 		</finder>
-		<finder name="C_DDMTK" return-type="Collection">
-			<finder-column name="classNameId" />
-			<finder-column name="DDMTemplateKey" />
-		</finder>
 		<finder name="LtD_S" return-type="Collection">
 			<finder-column comparator="&lt;" name="displayDate" />
 			<finder-column name="status" />
@@ -152,6 +152,11 @@
 			<finder-column name="groupId" />
 			<finder-column name="userId" />
 			<finder-column name="classNameId" />
+		</finder>
+		<finder name="G_ERC_V" return-type="WikiPage">
+			<finder-column name="groupId" />
+			<finder-column name="externalReferenceCode" />
+			<finder-column name="version" />
 		</finder>
 		<finder name="G_F_ST" return-type="Collection">
 			<finder-column name="groupId" />
@@ -203,40 +208,14 @@
 			<finder-column name="version" />
 			<finder-column name="status" />
 		</finder>
-		<finder name="C_ED_ST" return-type="Collection">
-			<finder-column name="classNameId" />
-			<finder-column name="expirationDate" />
-			<finder-column name="status" />
-		</finder>
 		<finder name="G_F_C_NotST" return-type="Collection">
 			<finder-column name="groupId" />
 			<finder-column name="folderId" />
 			<finder-column name="classNameId" />
 			<finder-column comparator="!=" name="status" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="JournalArticleLocalization" package-path="com.liferay.journal" />
-		<reference entity="JournalArticleResource" package-path="com.liferay.journal" />
-		<reference entity="JournalFolder" package-path="com.liferay.journal" />
-		<reference entity="ClassName" package-path="com.liferay.portal" />
-		<reference entity="Company" package-path="com.liferay.portal" />
-		<reference entity="Group" package-path="com.liferay.portal" />
-		<reference entity="Image" package-path="com.liferay.portal" />
-		<reference entity="Resource" package-path="com.liferay.portal" />
-		<reference entity="SystemEvent" package-path="com.liferay.portal" />
-		<reference entity="User" package-path="com.liferay.portal" />
-		<reference entity="WorkflowInstanceLink" package-path="com.liferay.portal" />
-		<reference entity="AssetCategory" package-path="com.liferay.portlet.asset" />
-		<reference entity="AssetEntry" package-path="com.liferay.portlet.asset" />
-		<reference entity="AssetLink" package-path="com.liferay.portlet.asset" />
-		<reference entity="AssetTag" package-path="com.liferay.portlet.asset" />
-		<reference entity="DLApp" package-path="com.liferay.portlet.documentlibrary" />
-		<reference entity="ExpandoRow" package-path="com.liferay.portlet.expando" />
-		<reference entity="RatingsStats" package-path="com.liferay.portlet.ratings" />
 	</entity>
-	<entity change-tracking-enabled="true" local-service="false" name="JournalArticleLocalization" remote-service="false">
+	<entity local-service="false" name="JournalArticleLocalization" remote-service="false">
 
 		<!-- PK fields -->
 
@@ -258,6 +237,10 @@
 		<finder name="ArticlePK" return-type="Collection">
 			<finder-column name="articlePK" />
 		</finder>
+		<finder name="C_A" return-type="JournalArticleLocalization">
+			<finder-column name="companyId" />
+			<finder-column name="articlePK" />
+		</finder>
 		<finder name="A_L" return-type="JournalArticleLocalization" unique="true">
 			<finder-column name="articlePK" />
 			<finder-column name="languageId" />
@@ -274,7 +257,7 @@
 			<finder-column name="languageId" />
 		</finder>
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="JournalArticleResource" remote-service="false" uuid="true">
+	<entity local-service="true" name="JournalArticleResource" remote-service="false" uuid="true">
 
 		<!-- PK fields -->
 
@@ -365,12 +348,6 @@
 			<finder-column name="portletId" />
 			<finder-column name="articleId" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="Group" package-path="com.liferay.portal" />
-		<reference entity="Layout" package-path="com.liferay.portal" />
-		<reference entity="PortletPreferences" package-path="com.liferay.portal" />
 	</entity>
 	<entity local-service="true" name="JournalFeed" remote-service="true" uuid="true">
 
@@ -386,15 +363,15 @@
 
 		<column name="companyId" type="long" />
 		<column name="userId" type="long" />
-		<column name="userName" type="String" />
+		<column name="userName" type="String" uad-anonymize-field-name="fullName" />
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 
 		<!-- Other fields -->
 
 		<column name="feedId" type="String" />
-		<column name="name" type="String" />
-		<column name="description" type="String" />
+		<column name="name" type="String" uad-nonanonymizable="true" />
+		<column name="description" type="String" uad-nonanonymizable="true" />
 		<column name="DDMStructureKey" type="String" />
 		<column name="DDMTemplateKey" type="String" />
 		<column name="DDMRendererTemplateKey" type="String" />
@@ -423,15 +400,8 @@
 			<finder-column name="groupId" />
 			<finder-column name="feedId" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="ClassName" package-path="com.liferay.portal" />
-		<reference entity="Resource" package-path="com.liferay.portal" />
-		<reference entity="User" package-path="com.liferay.portal" />
-		<reference entity="ExpandoValue" package-path="com.liferay.portlet.expando" />
 	</entity>
-	<entity change-tracking-enabled="true" local-service="true" name="JournalFolder" remote-service="true" trash-enabled="true" uuid="true">
+	<entity local-service="true" name="JournalFolder" remote-service="true" trash-enabled="true" uuid="true">
 
 		<!-- PK fields -->
 
@@ -445,7 +415,7 @@
 
 		<column name="companyId" type="long" />
 		<column name="userId" type="long" />
-		<column name="userName" type="String" />
+		<column name="userName" type="String" uad-anonymize-field-name="fullName" />
 		<column name="createDate" type="Date" />
 		<column name="modifiedDate" type="Date" />
 
@@ -453,13 +423,13 @@
 
 		<column name="parentFolderId" parent-container-model="true" type="long" />
 		<column name="treePath" type="String" />
-		<column name="name" type="String" />
-		<column name="description" type="String" />
+		<column name="name" type="String" uad-nonanonymizable="true" />
+		<column name="description" type="String" uad-nonanonymizable="true" />
 		<column name="restrictionType" type="int" />
 		<column name="lastPublishDate" type="Date" />
 		<column name="status" type="int" />
 		<column name="statusByUserId" type="long" />
-		<column name="statusByUserName" type="String" />
+		<column name="statusByUserName" type="String" uad-anonymize-field-name="fullName" />
 		<column name="statusDate" type="Date" />
 
 		<!-- Order -->
@@ -504,25 +474,12 @@
 			<finder-column name="parentFolderId" />
 			<finder-column comparator="!=" name="status" />
 		</finder>
-		<finder db-index="false" name="F_C_P_NotS" return-type="Collection">
+		<finder db-index="false" name="GtF_C_P_NotS" return-type="Collection">
 			<finder-column comparator="&gt;" name="folderId" />
 			<finder-column name="companyId" />
 			<finder-column name="parentFolderId" />
 			<finder-column comparator="!=" name="status" />
 		</finder>
-
-		<!-- References -->
-
-		<reference entity="JournalArticle" package-path="com.liferay.journal" />
-		<reference entity="ClassName" package-path="com.liferay.portal" />
-		<reference entity="Resource" package-path="com.liferay.portal" />
-		<reference entity="User" package-path="com.liferay.portal" />
-		<reference entity="WorkflowDefinitionLink" package-path="com.liferay.portal" />
-		<reference entity="WorkflowInstanceLink" package-path="com.liferay.portal" />
-		<reference entity="AssetEntry" package-path="com.liferay.portlet.asset" />
-		<reference entity="AssetLink" package-path="com.liferay.portlet.asset" />
-		<reference entity="ExpandoValue" package-path="com.liferay.portlet.expando" />
-		<reference entity="RatingsStats" package-path="com.liferay.portlet.ratings" />
 	</entity>
 	<exceptions>
 		<exception>ArticleContent</exception>
@@ -535,6 +492,7 @@
 		<exception>ArticleSmallImageSize</exception>
 		<exception>ArticleTitle</exception>
 		<exception>ArticleVersion</exception>
+		<exception>DuplicateArticleExternalReferenceCode</exception>
 		<exception>DuplicateArticleId</exception>
 		<exception>DuplicateFeedId</exception>
 		<exception>DuplicateFolderName</exception>
@@ -545,6 +503,7 @@
 		<exception>FeedTargetPortletId</exception>
 		<exception>FolderName</exception>
 		<exception>InvalidDDMStructure</exception>
+		<exception>InvalidDDMStructureFieldName</exception>
 		<exception>InvalidFolder</exception>
 	</exceptions>
 </service-builder>

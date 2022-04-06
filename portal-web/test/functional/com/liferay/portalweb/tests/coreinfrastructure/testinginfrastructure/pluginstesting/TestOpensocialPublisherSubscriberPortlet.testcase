@@ -3,25 +3,24 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Test Plugins";
 	property portlet.plugins.includes = "test-opensocial-pubsub-portlet";
+	property testray.main.component.name = "Test Plugins";
 
 	setUp {
 		User.firstLoginPG();
 	}
 
 	tearDown {
-		Page.tearDownCP();
+		PagesAdmin.tearDownCP();
 	}
 
 	@priority = "4"
 	test ViewPublisherSubscriber {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Publisher Subscriber Page");
+		PagesAdmin.addPublicPage(pageName = "Test Publisher Subscriber Page");
 
 		Navigator.gotoPage(pageName = "Test Publisher Subscriber Page");
 

@@ -19,6 +19,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.LabelItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -60,27 +61,30 @@ public class UADExportProcessManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("navigation", (String)null);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setNavigation(
+			(String)null
+		).buildString();
 	}
 
 	@Override
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
-				User selectedUser = PortalUtil.getSelectedUser(request);
+				User selectedUser = PortalUtil.getSelectedUser(
+					httpServletRequest);
 
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(),
-					"mvcRenderCommandName", "/add_uad_export_processes",
-					"backURL", PortalUtil.getCurrentURL(request), "p_u_i_d",
+					"mvcRenderCommandName",
+					"/user_associated_data/add_uad_export_processes", "backURL",
+					PortalUtil.getCurrentURL(httpServletRequest), "p_u_i_d",
 					String.valueOf(selectedUser.getUserId()));
 
 				dropdownItem.setLabel(
-					LanguageUtil.get(request, "add-export-processes"));
+					LanguageUtil.get(
+						httpServletRequest, "add-export-processes"));
 			}
 		).build();
 	}
@@ -92,17 +96,19 @@ public class UADExportProcessManagementToolbarDisplayContext
 		return LabelItemListBuilder.add(
 			() -> !navigation.equals("all"),
 			labelItem -> {
-				PortletURL removeLabelURL = getPortletURL();
-
-				removeLabelURL.setParameter("navigation", (String)null);
-
-				labelItem.putData("removeLabelURL", removeLabelURL.toString());
+				labelItem.putData(
+					"removeLabelURL",
+					PortletURLBuilder.create(
+						getPortletURL()
+					).setNavigation(
+						(String)null
+					).buildString());
 
 				labelItem.setCloseable(true);
 
 				String label = String.format(
-					"%s: %s", LanguageUtil.get(request, "status"),
-					LanguageUtil.get(request, navigation));
+					"%s: %s", LanguageUtil.get(httpServletRequest, "status"),
+					LanguageUtil.get(httpServletRequest, navigation));
 
 				labelItem.setLabel(label);
 			}
@@ -121,7 +127,7 @@ public class UADExportProcessManagementToolbarDisplayContext
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 
 			return _liferayPortletResponse.createRenderURL();

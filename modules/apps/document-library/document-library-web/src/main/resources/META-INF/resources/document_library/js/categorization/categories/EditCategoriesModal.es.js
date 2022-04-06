@@ -17,8 +17,8 @@ import ClayButton from '@clayui/button';
 import {ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {AssetCategoriesSelector} from 'asset-taglib';
-import {useIsMounted} from 'frontend-js-react-web';
 import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
@@ -110,6 +110,27 @@ const EditCategoriesModal = ({
 		setVocabularies(newVocabularies);
 	};
 
+	const fetchCategories = useCallback(
+		(url, method, bodyData) => {
+			const init = {
+				body: JSON.stringify(bodyData),
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				method,
+			};
+
+			return fetch(`${pathModule}${url}`, init)
+				.then((response) =>
+					response.status === 204 ? '' : response.json()
+				)
+				.catch(() => {
+					onModalClose();
+				});
+		},
+		[onModalClose, pathModule]
+	);
+
 	const handleSubmit = (event) => {
 		event.preventDefault();
 
@@ -122,12 +143,12 @@ const EditCategoriesModal = ({
 		}
 		else {
 			addedCategories = finalCategories.filter(
-				(categoryId) => initialCategories.indexOf(categoryId) == -1
+				(categoryId) => initialCategories.indexOf(categoryId) === -1
 			);
 		}
 
 		const removedCategories = initialCategories.filter(
-			(category) => finalCategories.indexOf(category) == -1
+			(category) => finalCategories.indexOf(category) === -1
 		);
 
 		fetchCategories(URL_UPDATE_CATEGORIES, append ? 'PATCH' : 'PUT', {
@@ -173,7 +194,7 @@ const EditCategoriesModal = ({
 
 			const categoryIds = categories.map((item) => item.value);
 
-			const obj = {
+			const object = {
 				id: vocabulary.taxonomyVocabularyId.toString(),
 				required: vocabulary.required,
 				selectedCategoryIds: categoryIds.join(','),
@@ -182,10 +203,10 @@ const EditCategoriesModal = ({
 				title: vocabulary.name,
 			};
 
-			vocabulariesList.push(obj);
+			vocabulariesList.push(object);
 
 			if (vocabulary.required) {
-				requiredVocabularies.push(obj);
+				requiredVocabularies.push(object);
 			}
 
 			initialCategories = initialCategories.concat(categoryIds);
@@ -235,25 +256,6 @@ const EditCategoriesModal = ({
 		selectAll,
 	]);
 
-	const fetchCategories = useCallback(
-		(url, method, bodyData) => {
-			const init = {
-				body: JSON.stringify(bodyData),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				method,
-			};
-
-			return fetch(`${pathModule}${url}`, init)
-				.then((response) => response.json())
-				.catch(() => {
-					onModalClose();
-				});
-		},
-		[onModalClose, pathModule]
-	);
-
 	return (
 		<ClayModal observer={observer} size="md">
 			<ClayModal.Header>
@@ -289,7 +291,7 @@ const EditCategoriesModal = ({
 							>
 								<div className="form-text">
 									{Liferay.Language.get(
-										'these-categories-replace-all-existing-categories'
+										'add-new-categories-or-remove-common-categories'
 									)}
 								</div>
 							</ClayRadio>
@@ -330,6 +332,7 @@ const EditCategoriesModal = ({
 							>
 								{Liferay.Language.get('cancel')}
 							</ClayButton>
+
 							<ClayButton
 								disabled={!isValid}
 								displayType="primary"

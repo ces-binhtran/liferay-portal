@@ -24,6 +24,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.User;
@@ -47,6 +48,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -61,6 +63,7 @@ import java.util.function.Function;
  * @see BatchEngineExportTaskImpl
  * @generated
  */
+@JSON(strict = true)
 public class BatchEngineExportTaskModelImpl
 	extends BaseModelImpl<BatchEngineExportTask>
 	implements BatchEngineExportTaskModel {
@@ -74,14 +77,17 @@ public class BatchEngineExportTaskModelImpl
 
 	public static final Object[][] TABLE_COLUMNS = {
 		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"externalReferenceCode", Types.VARCHAR},
 		{"batchEngineExportTaskId", Types.BIGINT}, {"companyId", Types.BIGINT},
 		{"userId", Types.BIGINT}, {"createDate", Types.TIMESTAMP},
 		{"modifiedDate", Types.TIMESTAMP}, {"callbackURL", Types.VARCHAR},
 		{"className", Types.VARCHAR}, {"content", Types.BLOB},
 		{"contentType", Types.VARCHAR}, {"endTime", Types.TIMESTAMP},
-		{"errorMessage", Types.VARCHAR}, {"fieldNames", Types.VARCHAR},
+		{"errorMessage", Types.CLOB}, {"fieldNames", Types.VARCHAR},
 		{"executeStatus", Types.VARCHAR}, {"parameters", Types.CLOB},
-		{"startTime", Types.TIMESTAMP}, {"taskItemDelegateName", Types.VARCHAR}
+		{"processedItemsCount", Types.INTEGER}, {"startTime", Types.TIMESTAMP},
+		{"taskItemDelegateName", Types.VARCHAR},
+		{"totalItemsCount", Types.INTEGER}
 	};
 
 	public static final Map<String, Integer> TABLE_COLUMNS_MAP =
@@ -90,6 +96,7 @@ public class BatchEngineExportTaskModelImpl
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("batchEngineExportTaskId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("userId", Types.BIGINT);
@@ -100,16 +107,18 @@ public class BatchEngineExportTaskModelImpl
 		TABLE_COLUMNS_MAP.put("content", Types.BLOB);
 		TABLE_COLUMNS_MAP.put("contentType", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("endTime", Types.TIMESTAMP);
-		TABLE_COLUMNS_MAP.put("errorMessage", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("errorMessage", Types.CLOB);
 		TABLE_COLUMNS_MAP.put("fieldNames", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("executeStatus", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("parameters", Types.CLOB);
+		TABLE_COLUMNS_MAP.put("processedItemsCount", Types.INTEGER);
 		TABLE_COLUMNS_MAP.put("startTime", Types.TIMESTAMP);
 		TABLE_COLUMNS_MAP.put("taskItemDelegateName", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("totalItemsCount", Types.INTEGER);
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table BatchEngineExportTask (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,batchEngineExportTaskId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,callbackURL VARCHAR(75) null,className VARCHAR(255) null,content BLOB,contentType VARCHAR(75) null,endTime DATE null,errorMessage VARCHAR(1000) null,fieldNames VARCHAR(75) null,executeStatus VARCHAR(75) null,parameters TEXT null,startTime DATE null,taskItemDelegateName VARCHAR(75) null)";
+		"create table BatchEngineExportTask (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,batchEngineExportTaskId LONG not null primary key,companyId LONG,userId LONG,createDate DATE null,modifiedDate DATE null,callbackURL VARCHAR(75) null,className VARCHAR(255) null,content BLOB,contentType VARCHAR(75) null,endTime DATE null,errorMessage TEXT null,fieldNames VARCHAR(1000) null,executeStatus VARCHAR(75) null,parameters TEXT null,processedItemsCount INTEGER,startTime DATE null,taskItemDelegateName VARCHAR(75) null,totalItemsCount INTEGER)";
 
 	public static final String TABLE_SQL_DROP =
 		"drop table BatchEngineExportTask";
@@ -126,20 +135,49 @@ public class BatchEngineExportTaskModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long EXECUTESTATUS_COLUMN_BITMASK = 2L;
 
-	public static final long UUID_COLUMN_BITMASK = 4L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
 
-	public static final long BATCHENGINEEXPORTTASKID_COLUMN_BITMASK = 8L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long BATCHENGINEEXPORTTASKID_COLUMN_BITMASK = 16L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public BatchEngineExportTaskModelImpl() {
@@ -193,9 +231,6 @@ public class BatchEngineExportTaskModelImpl
 				attributeName,
 				attributeGetterFunction.apply((BatchEngineExportTask)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -286,6 +321,13 @@ public class BatchEngineExportTaskModelImpl
 			(BiConsumer<BatchEngineExportTask, String>)
 				BatchEngineExportTask::setUuid);
 		attributeGetterFunctions.put(
+			"externalReferenceCode",
+			BatchEngineExportTask::getExternalReferenceCode);
+		attributeSetterBiConsumers.put(
+			"externalReferenceCode",
+			(BiConsumer<BatchEngineExportTask, String>)
+				BatchEngineExportTask::setExternalReferenceCode);
+		attributeGetterFunctions.put(
 			"batchEngineExportTaskId",
 			BatchEngineExportTask::getBatchEngineExportTaskId);
 		attributeSetterBiConsumers.put(
@@ -371,6 +413,13 @@ public class BatchEngineExportTaskModelImpl
 			(BiConsumer<BatchEngineExportTask, Map<String, Serializable>>)
 				BatchEngineExportTask::setParameters);
 		attributeGetterFunctions.put(
+			"processedItemsCount",
+			BatchEngineExportTask::getProcessedItemsCount);
+		attributeSetterBiConsumers.put(
+			"processedItemsCount",
+			(BiConsumer<BatchEngineExportTask, Integer>)
+				BatchEngineExportTask::setProcessedItemsCount);
+		attributeGetterFunctions.put(
 			"startTime", BatchEngineExportTask::getStartTime);
 		attributeSetterBiConsumers.put(
 			"startTime",
@@ -383,6 +432,12 @@ public class BatchEngineExportTaskModelImpl
 			"taskItemDelegateName",
 			(BiConsumer<BatchEngineExportTask, String>)
 				BatchEngineExportTask::setTaskItemDelegateName);
+		attributeGetterFunctions.put(
+			"totalItemsCount", BatchEngineExportTask::getTotalItemsCount);
+		attributeSetterBiConsumers.put(
+			"totalItemsCount",
+			(BiConsumer<BatchEngineExportTask, Integer>)
+				BatchEngineExportTask::setTotalItemsCount);
 
 		_attributeGetterFunctions = Collections.unmodifiableMap(
 			attributeGetterFunctions);
@@ -390,6 +445,7 @@ public class BatchEngineExportTaskModelImpl
 			(Map)attributeSetterBiConsumers);
 	}
 
+	@JSON
 	@Override
 	public long getMvccVersion() {
 		return _mvccVersion;
@@ -397,9 +453,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
+	@JSON
 	@Override
 	public String getUuid() {
 		if (_uuid == null) {
@@ -412,19 +473,52 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
+	}
+
+	@JSON
 	@Override
 	public long getBatchEngineExportTaskId() {
 		return _batchEngineExportTaskId;
@@ -432,9 +526,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setBatchEngineExportTaskId(long batchEngineExportTaskId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_batchEngineExportTaskId = batchEngineExportTaskId;
 	}
 
+	@JSON
 	@Override
 	public long getCompanyId() {
 		return _companyId;
@@ -442,21 +541,24 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
+	@JSON
 	@Override
 	public long getUserId() {
 		return _userId;
@@ -464,6 +566,10 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -483,6 +589,7 @@ public class BatchEngineExportTaskModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
+	@JSON
 	@Override
 	public Date getCreateDate() {
 		return _createDate;
@@ -490,9 +597,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
+	@JSON
 	@Override
 	public Date getModifiedDate() {
 		return _modifiedDate;
@@ -506,9 +618,14 @@ public class BatchEngineExportTaskModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
+	@JSON
 	@Override
 	public String getCallbackURL() {
 		if (_callbackURL == null) {
@@ -521,9 +638,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setCallbackURL(String callbackURL) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_callbackURL = callbackURL;
 	}
 
+	@JSON
 	@Override
 	public String getClassName() {
 		if (_className == null) {
@@ -536,9 +658,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setClassName(String className) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_className = className;
 	}
 
+	@JSON
 	@Override
 	public Blob getContent() {
 		if (_contentBlobModel == null) {
@@ -562,6 +689,10 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setContent(Blob content) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		if (_contentBlobModel == null) {
 			_contentBlobModel = new BatchEngineExportTaskContentBlobModel(
 				getPrimaryKey(), content);
@@ -571,6 +702,7 @@ public class BatchEngineExportTaskModelImpl
 		}
 	}
 
+	@JSON
 	@Override
 	public String getContentType() {
 		if (_contentType == null) {
@@ -583,9 +715,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setContentType(String contentType) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_contentType = contentType;
 	}
 
+	@JSON
 	@Override
 	public Date getEndTime() {
 		return _endTime;
@@ -593,9 +730,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setEndTime(Date endTime) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_endTime = endTime;
 	}
 
+	@JSON
 	@Override
 	public String getErrorMessage() {
 		if (_errorMessage == null) {
@@ -608,9 +750,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setErrorMessage(String errorMessage) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_errorMessage = errorMessage;
 	}
 
+	@JSON
 	@Override
 	public String getFieldNames() {
 		if (_fieldNames == null) {
@@ -623,9 +770,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setFieldNames(String fieldNames) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_fieldNames = fieldNames;
 	}
 
+	@JSON
 	@Override
 	public String getExecuteStatus() {
 		if (_executeStatus == null) {
@@ -638,19 +790,23 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setExecuteStatus(String executeStatus) {
-		_columnBitmask |= EXECUTESTATUS_COLUMN_BITMASK;
-
-		if (_originalExecuteStatus == null) {
-			_originalExecuteStatus = _executeStatus;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_executeStatus = executeStatus;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalExecuteStatus() {
-		return GetterUtil.getString(_originalExecuteStatus);
+		return getColumnOriginalValue("executeStatus");
 	}
 
+	@JSON
 	@Override
 	public Map<String, Serializable> getParameters() {
 		return _parameters;
@@ -658,9 +814,29 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setParameters(Map<String, Serializable> parameters) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_parameters = parameters;
 	}
 
+	@JSON
+	@Override
+	public int getProcessedItemsCount() {
+		return _processedItemsCount;
+	}
+
+	@Override
+	public void setProcessedItemsCount(int processedItemsCount) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_processedItemsCount = processedItemsCount;
+	}
+
+	@JSON
 	@Override
 	public Date getStartTime() {
 		return _startTime;
@@ -668,9 +844,14 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setStartTime(Date startTime) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_startTime = startTime;
 	}
 
+	@JSON
 	@Override
 	public String getTaskItemDelegateName() {
 		if (_taskItemDelegateName == null) {
@@ -683,7 +864,26 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public void setTaskItemDelegateName(String taskItemDelegateName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_taskItemDelegateName = taskItemDelegateName;
+	}
+
+	@JSON
+	@Override
+	public int getTotalItemsCount() {
+		return _totalItemsCount;
+	}
+
+	@Override
+	public void setTotalItemsCount(int totalItemsCount) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_totalItemsCount = totalItemsCount;
 	}
 
 	@Override
@@ -693,6 +893,26 @@ public class BatchEngineExportTaskModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -732,6 +952,8 @@ public class BatchEngineExportTaskModelImpl
 
 		batchEngineExportTaskImpl.setMvccVersion(getMvccVersion());
 		batchEngineExportTaskImpl.setUuid(getUuid());
+		batchEngineExportTaskImpl.setExternalReferenceCode(
+			getExternalReferenceCode());
 		batchEngineExportTaskImpl.setBatchEngineExportTaskId(
 			getBatchEngineExportTaskId());
 		batchEngineExportTaskImpl.setCompanyId(getCompanyId());
@@ -746,11 +968,63 @@ public class BatchEngineExportTaskModelImpl
 		batchEngineExportTaskImpl.setFieldNames(getFieldNames());
 		batchEngineExportTaskImpl.setExecuteStatus(getExecuteStatus());
 		batchEngineExportTaskImpl.setParameters(getParameters());
+		batchEngineExportTaskImpl.setProcessedItemsCount(
+			getProcessedItemsCount());
 		batchEngineExportTaskImpl.setStartTime(getStartTime());
 		batchEngineExportTaskImpl.setTaskItemDelegateName(
 			getTaskItemDelegateName());
+		batchEngineExportTaskImpl.setTotalItemsCount(getTotalItemsCount());
 
 		batchEngineExportTaskImpl.resetOriginalValues();
+
+		return batchEngineExportTaskImpl;
+	}
+
+	@Override
+	public BatchEngineExportTask cloneWithOriginalValues() {
+		BatchEngineExportTaskImpl batchEngineExportTaskImpl =
+			new BatchEngineExportTaskImpl();
+
+		batchEngineExportTaskImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		batchEngineExportTaskImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		batchEngineExportTaskImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		batchEngineExportTaskImpl.setBatchEngineExportTaskId(
+			this.<Long>getColumnOriginalValue("batchEngineExportTaskId"));
+		batchEngineExportTaskImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		batchEngineExportTaskImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		batchEngineExportTaskImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		batchEngineExportTaskImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		batchEngineExportTaskImpl.setCallbackURL(
+			this.<String>getColumnOriginalValue("callbackURL"));
+		batchEngineExportTaskImpl.setClassName(
+			this.<String>getColumnOriginalValue("className"));
+		batchEngineExportTaskImpl.setContentType(
+			this.<String>getColumnOriginalValue("contentType"));
+		batchEngineExportTaskImpl.setEndTime(
+			this.<Date>getColumnOriginalValue("endTime"));
+		batchEngineExportTaskImpl.setErrorMessage(
+			this.<String>getColumnOriginalValue("errorMessage"));
+		batchEngineExportTaskImpl.setFieldNames(
+			this.<String>getColumnOriginalValue("fieldNames"));
+		batchEngineExportTaskImpl.setExecuteStatus(
+			this.<String>getColumnOriginalValue("executeStatus"));
+		batchEngineExportTaskImpl.setParameters(
+			this.<Map>getColumnOriginalValue("parameters"));
+		batchEngineExportTaskImpl.setProcessedItemsCount(
+			this.<Integer>getColumnOriginalValue("processedItemsCount"));
+		batchEngineExportTaskImpl.setStartTime(
+			this.<Date>getColumnOriginalValue("startTime"));
+		batchEngineExportTaskImpl.setTaskItemDelegateName(
+			this.<String>getColumnOriginalValue("taskItemDelegateName"));
+		batchEngineExportTaskImpl.setTotalItemsCount(
+			this.<Integer>getColumnOriginalValue("totalItemsCount"));
 
 		return batchEngineExportTaskImpl;
 	}
@@ -771,17 +1045,17 @@ public class BatchEngineExportTaskModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof BatchEngineExportTask)) {
+		if (!(object instanceof BatchEngineExportTask)) {
 			return false;
 		}
 
 		BatchEngineExportTask batchEngineExportTask =
-			(BatchEngineExportTask)obj;
+			(BatchEngineExportTask)object;
 
 		long primaryKey = batchEngineExportTask.getPrimaryKey();
 
@@ -798,36 +1072,33 @@ public class BatchEngineExportTaskModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		BatchEngineExportTaskModelImpl batchEngineExportTaskModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		batchEngineExportTaskModelImpl._originalUuid =
-			batchEngineExportTaskModelImpl._uuid;
+		_setModifiedDate = false;
 
-		batchEngineExportTaskModelImpl._originalCompanyId =
-			batchEngineExportTaskModelImpl._companyId;
+		_contentBlobModel = null;
 
-		batchEngineExportTaskModelImpl._setOriginalCompanyId = false;
-
-		batchEngineExportTaskModelImpl._setModifiedDate = false;
-
-		batchEngineExportTaskModelImpl._contentBlobModel = null;
-
-		batchEngineExportTaskModelImpl._originalExecuteStatus =
-			batchEngineExportTaskModelImpl._executeStatus;
-
-		batchEngineExportTaskModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -843,6 +1114,18 @@ public class BatchEngineExportTaskModelImpl
 
 		if ((uuid != null) && (uuid.length() == 0)) {
 			batchEngineExportTaskCacheModel.uuid = null;
+		}
+
+		batchEngineExportTaskCacheModel.externalReferenceCode =
+			getExternalReferenceCode();
+
+		String externalReferenceCode =
+			batchEngineExportTaskCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			batchEngineExportTaskCacheModel.externalReferenceCode = null;
 		}
 
 		batchEngineExportTaskCacheModel.batchEngineExportTaskId =
@@ -930,6 +1213,9 @@ public class BatchEngineExportTaskModelImpl
 
 		batchEngineExportTaskCacheModel.parameters = getParameters();
 
+		batchEngineExportTaskCacheModel.processedItemsCount =
+			getProcessedItemsCount();
+
 		Date startTime = getStartTime();
 
 		if (startTime != null) {
@@ -951,47 +1237,95 @@ public class BatchEngineExportTaskModelImpl
 			batchEngineExportTaskCacheModel.taskItemDelegateName = null;
 		}
 
+		batchEngineExportTaskCacheModel.totalItemsCount = getTotalItemsCount();
+
 		return batchEngineExportTaskCacheModel;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(37);
+		StringBundler sb = new StringBundler(43);
 
-		sb.append("{mvccVersion=");
+		sb.append("{\"mvccVersion\": ");
+
 		sb.append(getMvccVersion());
-		sb.append(", uuid=");
-		sb.append(getUuid());
-		sb.append(", batchEngineExportTaskId=");
+
+		sb.append(", \"uuid\": ");
+
+		sb.append("\"" + getUuid() + "\"");
+
+		sb.append(", \"externalReferenceCode\": ");
+
+		sb.append("\"" + getExternalReferenceCode() + "\"");
+
+		sb.append(", \"batchEngineExportTaskId\": ");
+
 		sb.append(getBatchEngineExportTaskId());
-		sb.append(", companyId=");
+
+		sb.append(", \"companyId\": ");
+
 		sb.append(getCompanyId());
-		sb.append(", userId=");
+
+		sb.append(", \"userId\": ");
+
 		sb.append(getUserId());
-		sb.append(", createDate=");
-		sb.append(getCreateDate());
-		sb.append(", modifiedDate=");
-		sb.append(getModifiedDate());
-		sb.append(", callbackURL=");
-		sb.append(getCallbackURL());
-		sb.append(", className=");
-		sb.append(getClassName());
-		sb.append(", contentType=");
-		sb.append(getContentType());
-		sb.append(", endTime=");
-		sb.append(getEndTime());
-		sb.append(", errorMessage=");
-		sb.append(getErrorMessage());
-		sb.append(", fieldNames=");
-		sb.append(getFieldNames());
-		sb.append(", executeStatus=");
-		sb.append(getExecuteStatus());
-		sb.append(", parameters=");
-		sb.append(getParameters());
-		sb.append(", startTime=");
-		sb.append(getStartTime());
-		sb.append(", taskItemDelegateName=");
-		sb.append(getTaskItemDelegateName());
+
+		sb.append(", \"createDate\": ");
+
+		sb.append("\"" + getCreateDate() + "\"");
+
+		sb.append(", \"modifiedDate\": ");
+
+		sb.append("\"" + getModifiedDate() + "\"");
+
+		sb.append(", \"callbackURL\": ");
+
+		sb.append("\"" + getCallbackURL() + "\"");
+
+		sb.append(", \"className\": ");
+
+		sb.append("\"" + getClassName() + "\"");
+
+		sb.append(", \"contentType\": ");
+
+		sb.append("\"" + getContentType() + "\"");
+
+		sb.append(", \"endTime\": ");
+
+		sb.append("\"" + getEndTime() + "\"");
+
+		sb.append(", \"errorMessage\": ");
+
+		sb.append("\"" + getErrorMessage() + "\"");
+
+		sb.append(", \"fieldNames\": ");
+
+		sb.append("\"" + getFieldNames() + "\"");
+
+		sb.append(", \"executeStatus\": ");
+
+		sb.append("\"" + getExecuteStatus() + "\"");
+
+		sb.append(", \"parameters\": ");
+
+		sb.append("\"" + getParameters() + "\"");
+
+		sb.append(", \"processedItemsCount\": ");
+
+		sb.append(getProcessedItemsCount());
+
+		sb.append(", \"startTime\": ");
+
+		sb.append("\"" + getStartTime() + "\"");
+
+		sb.append(", \"taskItemDelegateName\": ");
+
+		sb.append("\"" + getTaskItemDelegateName() + "\"");
+
+		sb.append(", \"totalItemsCount\": ");
+
+		sb.append(getTotalItemsCount());
+
 		sb.append("}");
 
 		return sb.toString();
@@ -999,7 +1333,7 @@ public class BatchEngineExportTaskModelImpl
 
 	@Override
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(58);
+		StringBundler sb = new StringBundler(67);
 
 		sb.append("<model><model-name>");
 		sb.append("com.liferay.batch.engine.model.BatchEngineExportTask");
@@ -1007,71 +1341,123 @@ public class BatchEngineExportTaskModelImpl
 
 		sb.append(
 			"<column><column-name>mvccVersion</column-name><column-value><![CDATA[");
+
 		sb.append(getMvccVersion());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>uuid</column-name><column-value><![CDATA[");
+
 		sb.append(getUuid());
+
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>externalReferenceCode</column-name><column-value><![CDATA[");
+
+		sb.append(getExternalReferenceCode());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>batchEngineExportTaskId</column-name><column-value><![CDATA[");
+
 		sb.append(getBatchEngineExportTaskId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>companyId</column-name><column-value><![CDATA[");
+
 		sb.append(getCompanyId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userId</column-name><column-value><![CDATA[");
+
 		sb.append(getUserId());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>createDate</column-name><column-value><![CDATA[");
+
 		sb.append(getCreateDate());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>modifiedDate</column-name><column-value><![CDATA[");
+
 		sb.append(getModifiedDate());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>callbackURL</column-name><column-value><![CDATA[");
+
 		sb.append(getCallbackURL());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>className</column-name><column-value><![CDATA[");
+
 		sb.append(getClassName());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>contentType</column-name><column-value><![CDATA[");
+
 		sb.append(getContentType());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>endTime</column-name><column-value><![CDATA[");
+
 		sb.append(getEndTime());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>errorMessage</column-name><column-value><![CDATA[");
+
 		sb.append(getErrorMessage());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>fieldNames</column-name><column-value><![CDATA[");
+
 		sb.append(getFieldNames());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>executeStatus</column-name><column-value><![CDATA[");
+
 		sb.append(getExecuteStatus());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>parameters</column-name><column-value><![CDATA[");
+
 		sb.append(getParameters());
+
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>processedItemsCount</column-name><column-value><![CDATA[");
+
+		sb.append(getProcessedItemsCount());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>startTime</column-name><column-value><![CDATA[");
+
 		sb.append(getStartTime());
+
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>taskItemDelegateName</column-name><column-value><![CDATA[");
+
 		sb.append(getTaskItemDelegateName());
+
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>totalItemsCount</column-name><column-value><![CDATA[");
+
+		sb.append(getTotalItemsCount());
+
 		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
@@ -1086,16 +1472,11 @@ public class BatchEngineExportTaskModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private String _uuid;
-	private String _originalUuid;
+	private String _externalReferenceCode;
 	private long _batchEngineExportTaskId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private Date _createDate;
 	private Date _modifiedDate;
@@ -1108,10 +1489,132 @@ public class BatchEngineExportTaskModelImpl
 	private String _errorMessage;
 	private String _fieldNames;
 	private String _executeStatus;
-	private String _originalExecuteStatus;
 	private Map<String, Serializable> _parameters;
+	private int _processedItemsCount;
 	private Date _startTime;
 	private String _taskItemDelegateName;
+	private int _totalItemsCount;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<BatchEngineExportTask, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((BatchEngineExportTask)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
+		_columnOriginalValues.put(
+			"batchEngineExportTaskId", _batchEngineExportTaskId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("callbackURL", _callbackURL);
+		_columnOriginalValues.put("className", _className);
+		_columnOriginalValues.put("contentType", _contentType);
+		_columnOriginalValues.put("endTime", _endTime);
+		_columnOriginalValues.put("errorMessage", _errorMessage);
+		_columnOriginalValues.put("fieldNames", _fieldNames);
+		_columnOriginalValues.put("executeStatus", _executeStatus);
+		_columnOriginalValues.put("parameters", _parameters);
+		_columnOriginalValues.put("processedItemsCount", _processedItemsCount);
+		_columnOriginalValues.put("startTime", _startTime);
+		_columnOriginalValues.put(
+			"taskItemDelegateName", _taskItemDelegateName);
+		_columnOriginalValues.put("totalItemsCount", _totalItemsCount);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("uuid_", 2L);
+
+		columnBitmasks.put("externalReferenceCode", 4L);
+
+		columnBitmasks.put("batchEngineExportTaskId", 8L);
+
+		columnBitmasks.put("companyId", 16L);
+
+		columnBitmasks.put("userId", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("modifiedDate", 128L);
+
+		columnBitmasks.put("callbackURL", 256L);
+
+		columnBitmasks.put("className", 512L);
+
+		columnBitmasks.put("content", 1024L);
+
+		columnBitmasks.put("contentType", 2048L);
+
+		columnBitmasks.put("endTime", 4096L);
+
+		columnBitmasks.put("errorMessage", 8192L);
+
+		columnBitmasks.put("fieldNames", 16384L);
+
+		columnBitmasks.put("executeStatus", 32768L);
+
+		columnBitmasks.put("parameters", 65536L);
+
+		columnBitmasks.put("processedItemsCount", 131072L);
+
+		columnBitmasks.put("startTime", 262144L);
+
+		columnBitmasks.put("taskItemDelegateName", 524288L);
+
+		columnBitmasks.put("totalItemsCount", 1048576L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private BatchEngineExportTask _escapedModel;
 

@@ -26,9 +26,10 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.workflow.kaleo.definition.Definition;
 import com.liferay.portal.workflow.kaleo.definition.Node;
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.definition.export.DefinitionExporter;
 import com.liferay.portal.workflow.kaleo.definition.export.NodeExporter;
-import com.liferay.portal.workflow.kaleo.definition.internal.export.builder.DefinitionBuilder;
+import com.liferay.portal.workflow.kaleo.definition.export.builder.DefinitionBuilder;
 
 import java.io.IOException;
 
@@ -46,11 +47,16 @@ import org.osgi.service.component.annotations.Reference;
 public class XMLDefinitionExporter implements DefinitionExporter {
 
 	@Override
+	public String export(Definition definition) throws PortalException {
+		return _export(definition);
+	}
+
+	@Override
 	public String export(long kaleoDefinitionId) throws PortalException {
 		Definition definition = _definitionBuilder.buildDefinition(
 			kaleoDefinitionId);
 
-		return doExport(definition);
+		return _export(definition);
 	}
 
 	@Override
@@ -60,7 +66,7 @@ public class XMLDefinitionExporter implements DefinitionExporter {
 		Definition definition = _definitionBuilder.buildDefinition(
 			companyId, name, version);
 
-		return doExport(definition);
+		return _export(definition);
 	}
 
 	public void setVersion(String version) {
@@ -74,7 +80,9 @@ public class XMLDefinitionExporter implements DefinitionExporter {
 			_version, CharPool.PERIOD, CharPool.UNDERLINE);
 	}
 
-	protected String doExport(Definition definition) {
+	private String _export(Definition definition)
+		throws KaleoDefinitionValidationException {
+
 		try {
 			Document document = SAXReaderUtil.createDocument();
 

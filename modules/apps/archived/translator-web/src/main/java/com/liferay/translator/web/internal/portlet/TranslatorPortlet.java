@@ -24,7 +24,6 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.webcache.WebCacheException;
 import com.liferay.translator.web.internal.configuration.TranslatorConfiguration;
 import com.liferay.translator.web.internal.constants.TranslatorPortletKeys;
-import com.liferay.translator.web.internal.model.Translation;
 import com.liferay.translator.web.internal.util.TranslatorUtil;
 
 import java.io.IOException;
@@ -99,19 +98,18 @@ public class TranslatorPortlet extends MVCPortlet {
 				String toLanguageId = ParamUtil.getString(
 					actionRequest, "toLanguageId");
 
-				Translation translation = TranslatorUtil.getTranslation(
-					fromLanguageId, toLanguageId, fromText);
-
 				actionRequest.setAttribute(
 					TranslatorConfiguration.TRANSLATOR_TRANSLATION,
-					translation);
+					TranslatorUtil.getTranslation(
+						fromLanguageId, toLanguageId, fromText));
 			}
 		}
 		catch (WebCacheException webCacheException) {
-			Throwable cause = webCacheException.getCause();
+			Throwable throwable = webCacheException.getCause();
 
-			if (cause instanceof MicrosoftTranslatorException) {
-				SessionErrors.add(actionRequest, cause.getClass(), cause);
+			if (throwable instanceof MicrosoftTranslatorException) {
+				SessionErrors.add(
+					actionRequest, throwable.getClass(), throwable);
 			}
 			else {
 				throw new PortletException(webCacheException);

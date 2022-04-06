@@ -61,7 +61,17 @@ public class InstanceSerDes {
 		sb.append("{");
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (instance.getActive() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"active\": ");
+
+			sb.append(instance.getActive());
+		}
 
 		if (instance.getAssetTitle() != null) {
 			if (sb.length() > 1) {
@@ -361,7 +371,14 @@ public class InstanceSerDes {
 		Map<String, String> map = new TreeMap<>();
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+			"yyyy-MM-dd'T'HH:mm:ssXX");
+
+		if (instance.getActive() == null) {
+			map.put("active", null);
+		}
+		else {
+			map.put("active", String.valueOf(instance.getActive()));
+		}
 
 		if (instance.getAssetTitle() == null) {
 			map.put("assetTitle", null);
@@ -533,7 +550,12 @@ public class InstanceSerDes {
 			Instance instance, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "assetTitle")) {
+			if (Objects.equals(jsonParserFieldName, "active")) {
+				if (jsonParserFieldValue != null) {
+					instance.setActive((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "assetTitle")) {
 				if (jsonParserFieldValue != null) {
 					instance.setAssetTitle((String)jsonParserFieldValue);
 				}
@@ -668,10 +690,6 @@ public class InstanceSerDes {
 						));
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -700,7 +718,7 @@ public class InstanceSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -736,7 +754,7 @@ public class InstanceSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

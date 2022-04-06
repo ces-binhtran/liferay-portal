@@ -33,8 +33,8 @@ public class IndexerDocumentBuilderImpl implements IndexerDocumentBuilder {
 
 	public IndexerDocumentBuilderImpl(
 		BaseModelDocumentFactory baseModelDocumentFactory,
-		Iterable<ModelDocumentContributor> modelDocumentContributors,
-		Iterable<DocumentContributor> documentContributors,
+		Iterable<ModelDocumentContributor<?>> modelDocumentContributors,
+		Iterable<DocumentContributor<?>> documentContributors,
 		IndexerPostProcessorsHolder indexerPostProcessorsHolder,
 		SearchPermissionDocumentContributor
 			searchPermissionDocumentContributor) {
@@ -62,7 +62,7 @@ public class IndexerDocumentBuilderImpl implements IndexerDocumentBuilder {
 		_searchPermissionDocumentContributor.addPermissionFields(
 			GetterUtil.getLong(document.get(Field.COMPANY_ID)), document);
 
-		postProcessDocument(document, baseModel);
+		_postProcessDocument(document, baseModel);
 
 		return document;
 	}
@@ -74,7 +74,7 @@ public class IndexerDocumentBuilderImpl implements IndexerDocumentBuilder {
 		return document.get(Field.UID);
 	}
 
-	protected <T extends BaseModel<?>> void postProcessDocument(
+	private <T extends BaseModel<?>> void _postProcessDocument(
 		Document document, T baseModel) {
 
 		_indexerPostProcessorsHolder.forEach(
@@ -97,9 +97,10 @@ public class IndexerDocumentBuilderImpl implements IndexerDocumentBuilder {
 		IndexerDocumentBuilderImpl.class);
 
 	private final BaseModelDocumentFactory _baseModelDocumentFactory;
-	private final Iterable<DocumentContributor> _documentContributors;
+	private final Iterable<DocumentContributor<?>> _documentContributors;
 	private final IndexerPostProcessorsHolder _indexerPostProcessorsHolder;
-	private final Iterable<ModelDocumentContributor> _modelDocumentContributors;
+	private final Iterable<ModelDocumentContributor<?>>
+		_modelDocumentContributors;
 	private final SearchPermissionDocumentContributor
 		_searchPermissionDocumentContributor;
 

@@ -22,6 +22,7 @@ import com.liferay.marketplace.app.manager.web.internal.util.AppDisplayFactoryUt
 import com.liferay.marketplace.app.manager.web.internal.util.BundleManagerUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.BundleUtil;
 import com.liferay.marketplace.app.manager.web.internal.util.comparator.BundleComparator;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.dao.search.SearchContainer;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
@@ -56,24 +57,23 @@ public class ViewModulesManagementToolbarDisplayContext
 	}
 
 	public String getApp() {
-		return ParamUtil.getString(request, "app");
+		return ParamUtil.getString(httpServletRequest, "app");
 	}
 
 	public AppDisplay getAppDisplay() {
-		String app = ParamUtil.getString(request, "app");
+		String app = ParamUtil.getString(httpServletRequest, "app");
 
 		AppDisplay appDisplay = null;
 
-		List<Bundle> allBundles = BundleManagerUtil.getBundles();
-
 		if (Validator.isNumber(app)) {
 			appDisplay = AppDisplayFactoryUtil.getAppDisplay(
-				allBundles, GetterUtil.getLong(app));
+				BundleManagerUtil.getBundles(), GetterUtil.getLong(app));
 		}
 
 		if (appDisplay == null) {
 			appDisplay = AppDisplayFactoryUtil.getAppDisplay(
-				allBundles, app, request.getLocale());
+				BundleManagerUtil.getBundles(), app,
+				httpServletRequest.getLocale());
 		}
 
 		return appDisplay;
@@ -84,25 +84,31 @@ public class ViewModulesManagementToolbarDisplayContext
 		return DropdownItemListBuilder.addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(getStatusDropdownItems());
-				dropdownGroupItem.setLabel(LanguageUtil.get(request, "status"));
+				dropdownGroupItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "status"));
 			}
 		).addGroup(
 			dropdownGroupItem -> {
 				dropdownGroupItem.setDropdownItems(getOrderByDropdownItems());
 				dropdownGroupItem.setLabel(
-					LanguageUtil.get(request, "order-by"));
+					LanguageUtil.get(httpServletRequest, "order-by"));
 			}
 		).build();
 	}
 
 	@Override
 	public PortletURL getPortletURL() {
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-		portletURL.setParameter("mvcPath", "/view_modules.jsp");
-		portletURL.setParameter("app", getApp());
-		portletURL.setParameter("state", getState());
-		portletURL.setParameter("orderByType", getOrderByType());
+		PortletURL portletURL = PortletURLBuilder.createRenderURL(
+			liferayPortletResponse
+		).setMVCPath(
+			"/view_modules.jsp"
+		).setParameter(
+			"app", getApp()
+		).setParameter(
+			"orderByType", getOrderByType()
+		).setParameter(
+			"state", getState()
+		).buildPortletURL();
 
 		if (_searchContainer != null) {
 			portletURL.setParameter(
@@ -136,21 +142,13 @@ public class ViewModulesManagementToolbarDisplayContext
 		BundleUtil.filterBundles(
 			bundles, BundleStateConstants.getState(getState()));
 
-		bundles = ListUtil.sort(
-			bundles, new BundleComparator(getOrderByType()));
+		List<Object> results = new ArrayList<>(
+			ListUtil.sort(bundles, new BundleComparator(getOrderByType())));
 
-		int end = searchContainer.getEnd();
-
-		if (end > bundles.size()) {
-			end = bundles.size();
-		}
-
-		List<Object> results = new ArrayList<>(bundles);
-
-		searchContainer.setResults(
-			results.subList(searchContainer.getStart(), end));
-
-		searchContainer.setTotal(bundles.size());
+		searchContainer.setResultsAndTotal(
+			() -> results.subList(
+				searchContainer.getStart(), searchContainer.getResultEnd()),
+			bundles.size());
 
 		_searchContainer = searchContainer;
 

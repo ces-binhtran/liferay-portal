@@ -46,12 +46,11 @@ long accountEntryId = accountEntryDisplay.getAccountEntryId();
 		/>
 	</c:if>
 
-	<c:if test="<%= AccountEntryPermission.contains(permissionChecker, accountEntryId, ActionKeys.MANAGE_USERS) %>">
+	<c:if test="<%= Objects.equals(AccountConstants.ACCOUNT_ENTRY_TYPE_BUSINESS, accountEntryDisplay.getType()) && AccountEntryPermission.contains(permissionChecker, accountEntryId, ActionKeys.MANAGE_USERS) %>">
 		<portlet:renderURL var="manageUsersURL">
 			<portlet:param name="mvcRenderCommandName" value="/account_admin/edit_account_entry" />
-			<portlet:param name="backURL" value="<%= currentURL %>" />
-			<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
 			<portlet:param name="screenNavigationCategoryKey" value="<%= AccountScreenNavigationEntryConstants.CATEGORY_KEY_USERS %>" />
+			<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
 		</portlet:renderURL>
 
 		<liferay-ui:icon
@@ -60,12 +59,24 @@ long accountEntryId = accountEntryDisplay.getAccountEntryId();
 		/>
 	</c:if>
 
+	<c:if test="<%= portletName.equals(AccountPortletKeys.ACCOUNT_ENTRIES_MANAGEMENT) && accountEntryDisplay.isActive() && !accountEntryDisplay.isSelectedAccountEntry(themeDisplay.getScopeGroupId(), user.getUserId()) %>">
+		<portlet:actionURL name="/account_admin/select_account_entry" var="selectAccountURL">
+			<portlet:param name="redirect" value="<%= currentURL %>" />
+			<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
+		</portlet:actionURL>
+
+		<liferay-ui:icon
+			message="select-account"
+			url="<%= selectAccountURL %>"
+		/>
+	</c:if>
+
 	<c:if test="<%= AccountEntryPermission.contains(permissionChecker, accountEntryId, AccountActionKeys.MANAGE_ORGANIZATIONS) %>">
 		<portlet:renderURL var="manageOrganizationsURL">
 			<portlet:param name="mvcRenderCommandName" value="/account_admin/edit_account_entry" />
+			<portlet:param name="screenNavigationCategoryKey" value="<%= AccountScreenNavigationEntryConstants.CATEGORY_KEY_ORGANIZATIONS %>" />
 			<portlet:param name="backURL" value="<%= currentURL %>" />
 			<portlet:param name="accountEntryId" value="<%= String.valueOf(accountEntryId) %>" />
-			<portlet:param name="screenNavigationCategoryKey" value="<%= AccountScreenNavigationEntryConstants.CATEGORY_KEY_ORGANIZATIONS %>" />
 		</portlet:renderURL>
 
 		<liferay-ui:icon
@@ -78,6 +89,7 @@ long accountEntryId = accountEntryDisplay.getAccountEntryId();
 		<c:if test='<%= Objects.equals(accountEntryDisplay.getStatusLabel(), "active") %>'>
 			<portlet:actionURL name="/account_admin/update_account_entry_status" var="deactivateAccountURL">
 				<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.DEACTIVATE %>" />
+				<portlet:param name="redirect" value="<%= currentURL %>" />
 				<portlet:param name="navigation" value="<%= navigation %>" />
 				<portlet:param name="accountEntryIds" value="<%= String.valueOf(accountEntryId) %>" />
 			</portlet:actionURL>

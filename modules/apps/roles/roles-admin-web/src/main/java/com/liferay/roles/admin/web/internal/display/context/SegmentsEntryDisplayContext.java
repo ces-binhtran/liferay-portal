@@ -14,12 +14,16 @@
 
 package com.liferay.roles.admin.web.internal.display.context;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
+import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 
@@ -62,9 +66,28 @@ public class SegmentsEntryDisplayContext {
 			segmentsEntryId);
 	}
 
+	public static boolean isRoleSegmentationEnabled(long companyId) {
+		try {
+			return _segmentsConfigurationProvider.isRoleSegmentationEnabled(
+				companyId);
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+		}
+
+		return false;
+	}
+
 	@Reference(unbind = "-")
 	protected void setGroupLocalService(GroupLocalService groupLocalService) {
 		_groupLocalService = groupLocalService;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSegmentsConfigurationProvider(
+		SegmentsConfigurationProvider segmentsConfigurationProvider) {
+
+		_segmentsConfigurationProvider = segmentsConfigurationProvider;
 	}
 
 	@Reference(unbind = "-")
@@ -79,7 +102,11 @@ public class SegmentsEntryDisplayContext {
 		_userLocalService = userLocalService;
 	}
 
+	private static final Log _log = LogFactoryUtil.getLog(
+		SegmentsEntryDisplayContext.class);
+
 	private static GroupLocalService _groupLocalService;
+	private static SegmentsConfigurationProvider _segmentsConfigurationProvider;
 	private static SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;
 	private static UserLocalService _userLocalService;
 

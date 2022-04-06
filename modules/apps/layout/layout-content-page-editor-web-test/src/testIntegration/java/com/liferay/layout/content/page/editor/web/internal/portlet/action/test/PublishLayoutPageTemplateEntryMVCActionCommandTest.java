@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.Collections;
 import java.util.List;
@@ -94,28 +95,26 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 				layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				RandomTestUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
 		Layout layout = _layoutLocalService.fetchLayout(
 			layoutPageTemplateEntry.getPlid());
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class.getName()),
-			layoutPageTemplateEntry.getPlid());
+		Layout draftLayout = layout.fetchDraftLayout();
 
 		LayoutStructure layoutStructure = _getLayoutStructure(draftLayout);
 
 		LayoutStructureItem layoutStructureItem1 =
-			layoutStructure.addContainerLayoutStructureItem(
+			layoutStructure.addContainerStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 0);
 
 		LayoutStructureItem layoutStructureItem2 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		LayoutStructureItem layoutStructureItem3 =
-			layoutStructure.addRowLayoutStructureItem(
+			layoutStructure.addRowStyledLayoutStructureItem(
 				layoutStructure.getMainItemId(), 1, 3);
 
 		layoutStructure.markLayoutStructureItemForDeletion(
@@ -126,7 +125,9 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 
 		_layoutPageTemplateStructureLocalService.
 			updateLayoutPageTemplateStructureData(
-				_group.getGroupId(), draftLayout.getPlid(), 0,
+				_group.getGroupId(), draftLayout.getPlid(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid()),
 				layoutStructure.toString());
 
 		ReflectionTestUtil.invoke(
@@ -159,9 +160,10 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
 				fetchLayoutPageTemplateStructure(
-					_group.getGroupId(), layout.getPlid(), true);
+					_group.getGroupId(), layout.getPlid());
 
-		return LayoutStructure.of(layoutPageTemplateStructure.getData(0));
+		return LayoutStructure.of(
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 	}
 
 	@DeleteAfterTestRun
@@ -182,12 +184,15 @@ public class PublishLayoutPageTemplateEntryMVCActionCommandTest {
 		_layoutPageTemplateStructureLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/content_layout/publish_layout_page_template_entry"
+		filter = "mvc.command.name=/layout_content_page_editor/publish_layout_page_template_entry"
 	)
 	private MVCActionCommand _mvcActionCommand;
 
 	@Inject
 	private Portal _portal;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 

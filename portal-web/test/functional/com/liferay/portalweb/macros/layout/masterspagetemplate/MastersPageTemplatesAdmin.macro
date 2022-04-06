@@ -8,8 +8,6 @@ definition {
 		Button.clickSave();
 
 		PageEditor.assertFragmentSidebarLoaded();
-
-		Button.click(button = "Publish Master");
 	}
 
 	macro deleteMasters {
@@ -21,7 +19,7 @@ definition {
 	}
 
 	macro gotoMasters {
-		LexiconCard.clickCardTitle(card = "${masterLayoutName}");
+		LexiconCard.clickCardTitleLink(card = "${masterLayoutName}");
 
 		PageEditor.assertFragmentSidebarLoaded();
 	}
@@ -37,7 +35,7 @@ definition {
 
 		MenuItem.click(menuItem = "Import");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var mastersZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "master-page-*.zip");
 
@@ -45,7 +43,7 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${mastersZipFileName}");
 
-		Click(locator1 = "Button#IMPORT");
+		Button.clickImport();
 
 		Alert.viewSuccessMessage();
 
@@ -53,7 +51,7 @@ definition {
 	}
 
 	macro openMastersAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&amp;_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=master-layouts");
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=master-layouts");
 	}
 
 	macro selectMasters {
@@ -61,7 +59,7 @@ definition {
 
 		Check.checkNotVisible(
 			key_card = "${masterLayoutName}",
-			locator1 = "LexiconCard#CARD_CHECKBOX");
+			locator1 = "Card#CARD_CHECKBOX");
 	}
 
 	macro viewMastersPresent {

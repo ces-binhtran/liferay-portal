@@ -14,8 +14,13 @@
 
 import PropTypes from 'prop-types';
 
+export const ExperimentStatusType = {
+	label: PropTypes.string.isRequired,
+	value: PropTypes.number.isRequired,
+};
+
 export const ExperienceType = {
-	hasLockedSegmentsExperiment: PropTypes.bool,
+	hasLockedSegmentsExperiment: PropTypes.bool.isRequired,
 	name: PropTypes.string.isRequired,
 	priority: PropTypes.number.isRequired,
 	segmentsEntryId: PropTypes.string.isRequired,
@@ -28,9 +33,4 @@ export const ExperienceType = {
 export const SegmentType = {
 	name: PropTypes.string.isRequired,
 	segmentsEntryId: PropTypes.string.isRequired,
-};
-
-export const ExperimentStatusType = {
-	label: PropTypes.string.isRequired,
-	value: PropTypes.number.isRequired,
 };

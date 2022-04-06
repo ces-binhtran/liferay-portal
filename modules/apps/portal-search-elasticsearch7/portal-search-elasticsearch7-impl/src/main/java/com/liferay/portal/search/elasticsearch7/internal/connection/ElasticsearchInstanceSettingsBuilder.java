@@ -17,7 +17,7 @@ package com.liferay.portal.search.elasticsearch7.internal.connection;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.util.PortalRunMode;
 import com.liferay.portal.kernel.util.Validator;
-import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.elasticsearch7.internal.settings.SettingsBuilder;
 import com.liferay.portal.search.elasticsearch7.internal.util.ResourceUtil;
 import com.liferay.portal.search.elasticsearch7.settings.ClientSettingsHelper;
@@ -39,9 +39,6 @@ public class ElasticsearchInstanceSettingsBuilder {
 
 	public static ElasticsearchInstanceSettingsBuilder builder() {
 		return new ElasticsearchInstanceSettingsBuilder();
-	}
-
-	public ElasticsearchInstanceSettingsBuilder() {
 	}
 
 	public Settings build() {
@@ -76,10 +73,20 @@ public class ElasticsearchInstanceSettingsBuilder {
 		return this;
 	}
 
-	public ElasticsearchInstanceSettingsBuilder elasticsearchConfiguration(
-		ElasticsearchConfiguration elasticsearchConfiguration) {
+	public ElasticsearchInstanceSettingsBuilder discoveryTypeSingleNode(
+		boolean discoveryTypeSingleNode) {
 
-		_elasticsearchConfiguration = elasticsearchConfiguration;
+		_discoveryTypeSingleNode = discoveryTypeSingleNode;
+
+		return this;
+	}
+
+	public ElasticsearchInstanceSettingsBuilder
+		elasticsearchConfigurationWrapper(
+			ElasticsearchConfigurationWrapper
+				elasticsearchConfigurationWrapper) {
+
+		_elasticsearchConfigurationWrapper = elasticsearchConfigurationWrapper;
 
 		return this;
 	}
@@ -92,8 +99,10 @@ public class ElasticsearchInstanceSettingsBuilder {
 		return this;
 	}
 
-	public ElasticsearchInstanceSettingsBuilder httpPort(String httpPort) {
-		_httpPort = httpPort;
+	public ElasticsearchInstanceSettingsBuilder httpPortRange(
+		HttpPortRange httpPortRange) {
+
+		_httpPortRange = httpPortRange;
 
 		return this;
 	}
@@ -132,40 +141,81 @@ public class ElasticsearchInstanceSettingsBuilder {
 		extends Supplier<InetAddress> {
 	}
 
-	protected void configureClustering() {
+	protected Path getHomePath() {
+		Path homePath = _elasticsearchInstancePaths.getHomePath();
+
+		if (homePath != null) {
+			return homePath;
+		}
+
+		Path workPath = _elasticsearchInstancePaths.getWorkPath();
+
+		return workPath.resolve("data/elasticsearch7");
+	}
+
+	protected void load() {
+		_loadDefaultConfigurations();
+
+		_loadSidecarConfigurations();
+
+		_loadAdditionalConfigurations();
+
+		_loadSettingsContributors();
+	}
+
+	protected void put(String key, boolean value) {
+		_settingsBuilder.put(key, value);
+	}
+
+	protected void put(String key, String value) {
+		_settingsBuilder.put(key, value);
+	}
+
+	private void _configureClustering() {
 		put("cluster.name", _clusterName);
 		put("cluster.routing.allocation.disk.threshold_enabled", false);
 
-		if (Validator.isBlank(_clusterInitialMasterNodes)) {
+		if (!Validator.isBlank(_clusterInitialMasterNodes)) {
+			put("cluster.initial_master_nodes", _clusterInitialMasterNodes);
+		}
+
+		if (!Validator.isBlank(_discoverySeedHosts)) {
+			put("discovery.seed_hosts", _discoverySeedHosts);
+		}
+
+		if (_discoveryTypeSingleNode) {
 			put("discovery.type", "single-node");
 		}
 	}
 
-	protected void configureHttp() {
-		put("http.port", _httpPort);
+	private void _configureHttp() {
+		put("http.port", _httpPortRange.toSettingsString());
 
-		put("http.cors.enabled", _elasticsearchConfiguration.httpCORSEnabled());
+		put(
+			"http.cors.enabled",
+			_elasticsearchConfigurationWrapper.httpCORSEnabled());
 
-		if (!_elasticsearchConfiguration.httpCORSEnabled()) {
+		if (!_elasticsearchConfigurationWrapper.httpCORSEnabled()) {
 			return;
 		}
 
 		put(
 			"http.cors.allow-origin",
-			_elasticsearchConfiguration.httpCORSAllowOrigin());
+			_elasticsearchConfigurationWrapper.httpCORSAllowOrigin());
 
 		_settingsBuilder.loadFromSource(
-			_elasticsearchConfiguration.httpCORSConfigurations());
+			_elasticsearchConfigurationWrapper.httpCORSConfigurations());
 	}
 
-	protected void configureNetworking() {
-		String networkBindHost = _elasticsearchConfiguration.networkBindHost();
-		String networkHost = _elasticsearchConfiguration.networkHost();
+	private void _configureNetworking() {
+		String networkBindHost =
+			_elasticsearchConfigurationWrapper.networkBindHost();
+		String networkHost = _elasticsearchConfigurationWrapper.networkHost();
 		String networkPublishHost =
-			_elasticsearchConfiguration.networkPublishHost();
+			_elasticsearchConfigurationWrapper.networkPublishHost();
 
 		if (Validator.isNotNull(networkBindHost)) {
-			put("network.bind.host", networkBindHost);
+			put("network.bind_host", networkBindHost);
 		}
 
 		if (!Validator.isBlank(_networkHost)) {
@@ -193,16 +243,14 @@ public class ElasticsearchInstanceSettingsBuilder {
 		}
 
 		String transportTcpPort =
-			_elasticsearchConfiguration.transportTcpPort();
+			_elasticsearchConfigurationWrapper.transportTcpPort();
 
 		if (Validator.isNotNull(transportTcpPort)) {
-			put("transport.tcp.port", transportTcpPort);
+			put("transport.port", transportTcpPort);
 		}
-
-		put("transport.type", "netty4");
 	}
 
-	protected void configurePaths() {
+	private void _configurePaths() {
 		Path workPath = _elasticsearchInstancePaths.getWorkPath();
 
 		Path dataParentPath = workPath.resolve("data/elasticsearch7");
@@ -218,7 +266,7 @@ public class ElasticsearchInstanceSettingsBuilder {
 		put("path.repo", String.valueOf(dataParentPath.resolve("repo")));
 	}
 
-	protected void configureTestMode() {
+	private void _configureTestMode() {
 		if (!PortalRunMode.isTestMode()) {
 			return;
 		}
@@ -226,34 +274,24 @@ public class ElasticsearchInstanceSettingsBuilder {
 		put("monitor.jvm.gc.enabled", StringPool.FALSE);
 	}
 
-	protected Path getHomePath() {
-		Path homePath = _elasticsearchInstancePaths.getHomePath();
-
-		if (homePath != null) {
-			return homePath;
-		}
-
-		Path workPath = _elasticsearchInstancePaths.getWorkPath();
-
-		return workPath.resolve("data/elasticsearch7");
+	private void _disableGeoipDownloader() {
+		put("ingest.geoip.downloader.enabled", false);
 	}
 
-	protected void load() {
-		loadDefaultConfigurations();
-
-		loadSidecarConfigurations();
-
-		loadAdditionalConfigurations();
-
-		loadSettingsContributors();
+	private void _disableXpack() {
+		put("xpack.ml.enabled", false);
+		put("xpack.monitoring.enabled", false);
+		put("xpack.security.enabled", false);
+		put("xpack.sql.enabled", false);
+		put("xpack.watcher.enabled", false);
 	}
 
-	protected void loadAdditionalConfigurations() {
+	private void _loadAdditionalConfigurations() {
 		_settingsBuilder.loadFromSource(
-			_elasticsearchConfiguration.additionalConfigurations());
+			_elasticsearchConfigurationWrapper.additionalConfigurations());
 	}
 
-	protected void loadDefaultConfigurations() {
+	private void _loadDefaultConfigurations() {
 		String defaultConfigurations = ResourceUtil.getResourceAsString(
 			getClass(), "/META-INF/elasticsearch-optional-defaults.yml");
 
@@ -262,25 +300,29 @@ public class ElasticsearchInstanceSettingsBuilder {
 		put("action.auto_create_index", false);
 		put(
 			"bootstrap.memory_lock",
-			_elasticsearchConfiguration.bootstrapMlockAll());
+			_elasticsearchConfigurationWrapper.bootstrapMlockAll());
 
-		configureClustering();
+		_configureClustering();
 
-		configureHttp();
+		_configureHttp();
 
-		configureNetworking();
+		_configureNetworking();
 
 		put("node.data", true);
 		put("node.ingest", true);
 		put("node.master", true);
 		put("node.name", _nodeName);
 
-		configurePaths();
+		_configurePaths();
 
-		configureTestMode();
+		_configureTestMode();
+
+		_disableGeoipDownloader();
+
+		_disableXpack();
 	}
 
-	protected void loadSettingsContributors() {
+	private void _loadSettingsContributors() {
 		ClientSettingsHelper clientSettingsHelper = new ClientSettingsHelper() {
 
 			@Override
@@ -300,33 +342,19 @@ public class ElasticsearchInstanceSettingsBuilder {
 		}
 	}
 
-	protected void loadSidecarConfigurations() {
+	private void _loadSidecarConfigurations() {
 		put("bootstrap.system_call_filter", false);
 		put("node.store.allow_mmap", false);
-
-		if (!Validator.isBlank(_clusterInitialMasterNodes)) {
-			put("cluster.initial_master_nodes", _clusterInitialMasterNodes);
-		}
-
-		if (!Validator.isBlank(_discoverySeedHosts)) {
-			put("discovery.seed_hosts", _discoverySeedHosts);
-		}
-	}
-
-	protected void put(String key, boolean value) {
-		_settingsBuilder.put(key, value);
-	}
-
-	protected void put(String key, String value) {
-		_settingsBuilder.put(key, value);
 	}
 
 	private String _clusterInitialMasterNodes;
 	private String _clusterName;
 	private String _discoverySeedHosts;
-	private ElasticsearchConfiguration _elasticsearchConfiguration;
+	private boolean _discoveryTypeSingleNode;
+	private ElasticsearchConfigurationWrapper
+		_elasticsearchConfigurationWrapper;
 	private ElasticsearchInstancePaths _elasticsearchInstancePaths;
-	private String _httpPort;
+	private HttpPortRange _httpPortRange;
 	private Supplier<InetAddress> _localBindInetAddressSupplier;
 	private String _networkHost;
 	private String _nodeName;

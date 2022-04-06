@@ -19,15 +19,62 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 /**
  * Provides a wrapper for {@link DispatchLogService}.
  *
- * @author Alessio Antonio Rendina
+ * @author Matija Petanjek
  * @see DispatchLogService
  * @generated
  */
 public class DispatchLogServiceWrapper
 	implements DispatchLogService, ServiceWrapper<DispatchLogService> {
 
+	public DispatchLogServiceWrapper() {
+		this(null);
+	}
+
 	public DispatchLogServiceWrapper(DispatchLogService dispatchLogService) {
 		_dispatchLogService = dispatchLogService;
+	}
+
+	@Override
+	public void deleteDispatchLog(long dispatchLogId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_dispatchLogService.deleteDispatchLog(dispatchLogId);
+	}
+
+	@Override
+	public com.liferay.dispatch.model.DispatchLog getDispatchLog(
+			long dispatchLogId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchLogService.getDispatchLog(dispatchLogId);
+	}
+
+	@Override
+	public java.util.List<com.liferay.dispatch.model.DispatchLog>
+			getDispatchLogs(long dispatchTriggerId, int start, int end)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchLogService.getDispatchLogs(
+			dispatchTriggerId, start, end);
+	}
+
+	@Override
+	public java.util.List<com.liferay.dispatch.model.DispatchLog>
+			getDispatchLogs(
+				long dispatchTriggerId, int start, int end,
+				com.liferay.portal.kernel.util.OrderByComparator
+					<com.liferay.dispatch.model.DispatchLog> orderByComparator)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchLogService.getDispatchLogs(
+			dispatchTriggerId, start, end, orderByComparator);
+	}
+
+	@Override
+	public int getDispatchLogsCount(long dispatchTriggerId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _dispatchLogService.getDispatchLogsCount(dispatchTriggerId);
 	}
 
 	/**

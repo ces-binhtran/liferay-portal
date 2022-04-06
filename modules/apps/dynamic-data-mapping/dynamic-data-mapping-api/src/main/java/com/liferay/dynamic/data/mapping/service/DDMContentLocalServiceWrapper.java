@@ -24,10 +24,17 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
  *
  * @author Brian Wing Shun Chan
  * @see DDMContentLocalService
+ * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+ DDMFieldLocalServiceImpl}
  * @generated
  */
+@Deprecated
 public class DDMContentLocalServiceWrapper
 	implements DDMContentLocalService, ServiceWrapper<DDMContentLocalService> {
+
+	public DDMContentLocalServiceWrapper() {
+		this(null);
+	}
 
 	public DDMContentLocalServiceWrapper(
 		DDMContentLocalService ddmContentLocalService) {
@@ -48,6 +55,10 @@ public class DDMContentLocalServiceWrapper
 
 	/**
 	 * Adds the ddm content to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was added
@@ -92,6 +103,10 @@ public class DDMContentLocalServiceWrapper
 	/**
 	 * Deletes the ddm content from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was removed
 	 */
@@ -102,6 +117,10 @@ public class DDMContentLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm content with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param contentId the primary key of the ddm content
 	 * @return the ddm content that was removed
@@ -128,6 +147,13 @@ public class DDMContentLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmContentLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmContentLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -417,6 +443,10 @@ public class DDMContentLocalServiceWrapper
 
 	/**
 	 * Updates the ddm content in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmContent the ddm content
 	 * @return the ddm content that was updated

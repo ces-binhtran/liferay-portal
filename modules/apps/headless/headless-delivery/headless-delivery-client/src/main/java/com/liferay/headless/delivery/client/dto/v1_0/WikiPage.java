@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.WikiPageSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +30,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class WikiPage implements Cloneable {
+public class WikiPage implements Cloneable, Serializable {
 
 	public static WikiPage toDTO(String json) {
 		return WikiPageSerDes.toDTO(json);
@@ -224,6 +226,27 @@ public class WikiPage implements Cloneable {
 	}
 
 	protected String encodingFormat;
+
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String externalReferenceCode;
 
 	public String getHeadline() {
 		return headline;
@@ -487,6 +510,27 @@ public class WikiPage implements Cloneable {
 
 	protected ViewableBy viewableBy;
 
+	public Long getWikiNodeId() {
+		return wikiNodeId;
+	}
+
+	public void setWikiNodeId(Long wikiNodeId) {
+		this.wikiNodeId = wikiNodeId;
+	}
+
+	public void setWikiNodeId(
+		UnsafeSupplier<Long, Exception> wikiNodeIdUnsafeSupplier) {
+
+		try {
+			wikiNodeId = wikiNodeIdUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Long wikiNodeId;
+
 	@Override
 	public WikiPage clone() throws CloneNotSupportedException {
 		return (WikiPage)super.clone();
@@ -524,7 +568,9 @@ public class WikiPage implements Cloneable {
 
 		public static ViewableBy create(String value) {
 			for (ViewableBy viewableBy : values()) {
-				if (Objects.equals(viewableBy.getValue(), value)) {
+				if (Objects.equals(viewableBy.getValue(), value) ||
+					Objects.equals(viewableBy.name(), value)) {
+
 					return viewableBy;
 				}
 			}

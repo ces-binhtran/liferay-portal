@@ -9,62 +9,74 @@
  * distribution rights of the Software.
  */
 
-import React from 'react';
+import {useEventListener} from '@liferay/frontend-js-react-web';
+import PropTypes from 'prop-types';
+import React, {useEffect, useState} from 'react';
 
-import Navigation from './components/Navigation';
-import ConnectionContext from './context/ConnectionContext';
-import {StoreContextProvider} from './context/store';
-import APIService from './utils/APIService';
+import AnalyticsReports from './components/AnalyticsReports';
 
-export default function ({context, props}) {
-	const {languageTag, namespace, page} = context;
-	const {defaultTimeRange, defaultTimeSpanKey, timeSpans} = context;
-	const {validAnalyticsConnection} = context;
-	const {readsEnabled} = context;
+const setInitialOpenPanelState = async (stateCallback) => {
+	const ANALYTICS_REPORTS_OPEN_PANEL_VALUE = 'open';
+	const ANALYTICS_REPORTS_PANEL_ID =
+		'com.liferay.analytics.reports.web_panelState';
 
-	const {authorName, publishDate, title} = props;
-	const {trafficSources} = props;
+	const _panelState = await Liferay.Util.Session.get(
+		ANALYTICS_REPORTS_PANEL_ID
+	);
 
-	const {
-		getAnalyticsReportsHistoricalReadsURL,
-		getAnalyticsReportsHistoricalViewsURL,
-		getAnalyticsReportsTotalReadsURL,
-		getAnalyticsReportsTotalViewsURL,
-	} = context.endpoints;
+	stateCallback(_panelState === ANALYTICS_REPORTS_OPEN_PANEL_VALUE);
+};
 
-	const api = APIService({
-		endpoints: {
-			getAnalyticsReportsHistoricalReadsURL,
-			getAnalyticsReportsHistoricalViewsURL,
-			getAnalyticsReportsTotalReadsURL,
-			getAnalyticsReportsTotalViewsURL,
-		},
-		namespace,
-		page,
-	});
+const useInitialPanelState = () => {
+	const [isPanelStateOpen, setIsPanelStateOpen] = useState(false);
 
-	const publishedToday =
-		new Date().toDateString() === new Date(publishDate).toDateString();
+	useEffect(() => {
+		setInitialOpenPanelState(setIsPanelStateOpen);
+	}, []);
+
+	return [isPanelStateOpen];
+};
+
+export default function AnalyticsReportsApp({context, portletNamespace}) {
+	const {analyticsReportsDataURL} = context;
+
+	const [
+		hoverOrFocusEventTriggered,
+		setHoverOrFocusEventTriggered,
+	] = useState(false);
+
+	const analyticsReportsPanelToggle = document.getElementById(
+		`${portletNamespace}analyticsReportsPanelToggleId`
+	);
+
+	const [isPanelStateOpen] = useInitialPanelState();
+
+	useEventListener(
+		'mouseenter',
+		() => setHoverOrFocusEventTriggered(true),
+		{once: true},
+		analyticsReportsPanelToggle
+	);
+
+	useEventListener(
+		'focus',
+		() => setHoverOrFocusEventTriggered(true),
+		{once: true},
+		analyticsReportsPanelToggle
+	);
 
 	return (
-		<ConnectionContext.Provider
-			value={{
-				validAnalyticsConnection,
-			}}
-		>
-			<StoreContextProvider value={{publishedToday, readsEnabled}}>
-				<Navigation
-					api={api}
-					authorName={authorName}
-					defaultTimeRange={defaultTimeRange}
-					defaultTimeSpanKey={defaultTimeSpanKey}
-					languageTag={languageTag}
-					pagePublishDate={publishDate}
-					pageTitle={title}
-					timeSpanOptions={timeSpans}
-					trafficSources={trafficSources}
-				/>
-			</StoreContextProvider>
-		</ConnectionContext.Provider>
+		<AnalyticsReports
+			analyticsReportsDataURL={analyticsReportsDataURL}
+			hoverOrFocusEventTriggered={hoverOrFocusEventTriggered}
+			isPanelStateOpen={isPanelStateOpen}
+		/>
 	);
 }
+
+AnalyticsReportsApp.propTypes = {
+	context: PropTypes.shape({
+		analyticsReportsDataURL: PropTypes.string.isRequired,
+	}).isRequired,
+	portletNamespace: PropTypes.string.isRequired,
+};

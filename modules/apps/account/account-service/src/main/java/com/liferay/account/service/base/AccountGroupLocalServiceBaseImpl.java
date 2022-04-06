@@ -16,6 +16,7 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountGroup;
 import com.liferay.account.service.AccountGroupLocalService;
+import com.liferay.account.service.AccountGroupLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountGroupPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
@@ -44,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -68,11 +72,15 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountGroupLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountGroupLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountGroupLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountGroupLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the account group to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was added
@@ -100,6 +108,10 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	/**
 	 * Deletes the account group with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountGroupId the primary key of the account group
 	 * @return the account group that was removed
 	 * @throws PortalException if a account group with the primary key could not be found
@@ -115,18 +127,32 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	/**
 	 * Deletes the account group from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was removed
+	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
 	@Override
-	public AccountGroup deleteAccountGroup(AccountGroup accountGroup) {
+	public AccountGroup deleteAccountGroup(AccountGroup accountGroup)
+		throws PortalException {
+
 		return accountGroupPersistence.remove(accountGroup);
 	}
 
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountGroupPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -229,10 +255,39 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	 * @return the matching account group, or <code>null</code> if a matching account group could not be found
 	 */
 	@Override
-	public AccountGroup fetchAccountGroupByReferenceCode(
+	public AccountGroup fetchAccountGroupByExternalReferenceCode(
 		long companyId, String externalReferenceCode) {
 
 		return accountGroupPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAccountGroupByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public AccountGroup fetchAccountGroupByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchAccountGroupByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the account group with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the account group's external reference code
+	 * @return the matching account group
+	 * @throws PortalException if a matching account group could not be found
+	 */
+	@Override
+	public AccountGroup getAccountGroupByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return accountGroupPersistence.findByC_ERC(
 			companyId, externalReferenceCode);
 	}
 
@@ -295,6 +350,7 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -313,6 +369,7 @@ public abstract class AccountGroupLocalServiceBaseImpl
 			(AccountGroup)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AccountGroup> getBasePersistence() {
 		return accountGroupPersistence;
 	}
@@ -356,6 +413,10 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	/**
 	 * Updates the account group in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountGroup the account group
 	 * @return the account group that was updated
 	 */
@@ -363,6 +424,11 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	@Override
 	public AccountGroup updateAccountGroup(AccountGroup accountGroup) {
 		return accountGroupPersistence.update(accountGroup);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -376,6 +442,8 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		accountGroupLocalService = (AccountGroupLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountGroupLocalService);
 	}
 
 	/**
@@ -420,6 +488,22 @@ public abstract class AccountGroupLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountGroupLocalService accountGroupLocalService) {
+
+		try {
+			Field field = AccountGroupLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountGroupLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountGroupLocalService accountGroupLocalService;
 
 	@Reference
@@ -428,9 +512,5 @@ public abstract class AccountGroupLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
 
 }

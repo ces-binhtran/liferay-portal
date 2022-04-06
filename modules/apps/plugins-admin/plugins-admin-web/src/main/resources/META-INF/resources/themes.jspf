@@ -17,7 +17,7 @@
 <c:if test="<%= marketplaceURL != null %>">
 
 	<%
-	String taglibOnClick = "submitForm(document." + renderResponse.getNamespace() + "fm , '" + marketplaceURL.toString() + "');";
+	String taglibOnClick = "submitForm(document." + liferayPortletResponse.getNamespace() + "fm , '" + marketplaceURL.toString() + "');";
 	%>
 
 	<aui:button onClick="<%= taglibOnClick %>" value="install-more-themes" />
@@ -30,6 +30,13 @@ List<Theme> themes = ThemeLocalServiceUtil.getThemes(company.getCompanyId());
 %>
 
 <div class="container-fluid container-max-xl container-view">
+	<div class="float-right">
+		<liferay-learn:message
+			key="general"
+			resource="plugins-admin-web"
+		/>
+	</div>
+
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 		total="<%= themes.size() %>"
@@ -47,10 +54,13 @@ List<Theme> themes = ThemeLocalServiceUtil.getThemes(company.getCompanyId());
 			PluginPackage pluginPackage = curTheme.getPluginPackage();
 			PluginSetting pluginSetting = PluginSettingLocalServiceUtil.getPluginSetting(company.getCompanyId(), curTheme.getThemeId(), Plugin.TYPE_THEME);
 
-			PortletURL rowURL = renderResponse.createRenderURL();
-
-			rowURL.setParameter("mvcRenderCommandName", "/plugins_admin/edit_plugin");
-			rowURL.setParameter("redirect", currentURL);
+			PortletURL rowURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/plugins_admin/edit_plugin"
+			).setRedirect(
+				currentURL
+			).buildPortletURL();
 
 			if (pluginPackage != null) {
 				rowURL.setParameter("moduleId", pluginPackage.getModuleId());
@@ -66,7 +76,7 @@ List<Theme> themes = ThemeLocalServiceUtil.getThemes(company.getCompanyId());
 				name="themes"
 			>
 				<aui:a href="<%= showEditPluginHREF ? rowURL.toString() : null %>">
-					<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />' class="plugin-thumbnail" src="<%= curTheme.getStaticResourcePath() + HtmlUtil.escapeAttribute(curTheme.getImagesPath()) %>/thumbnail.png" />
+					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="plugin-thumbnail" src="<%= curTheme.getStaticResourcePath() + HtmlUtil.escapeAttribute(curTheme.getImagesPath()) %>/thumbnail.png" />
 
 					<strong><%= curTheme.getName() %></strong>
 				</aui:a>

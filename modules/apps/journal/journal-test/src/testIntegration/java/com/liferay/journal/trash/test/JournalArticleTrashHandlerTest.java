@@ -19,22 +19,20 @@ import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
-import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalArticleResource;
 import com.liferay.journal.model.JournalFolder;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleResourceLocalServiceUtil;
 import com.liferay.journal.service.JournalArticleServiceUtil;
 import com.liferay.journal.service.JournalFolderServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ClassedModel;
@@ -60,9 +58,6 @@ import com.liferay.portal.kernel.xml.Element;
 import com.liferay.portal.kernel.xml.SAXReaderUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceTracker;
 import com.liferay.trash.TrashHelper;
 import com.liferay.trash.test.util.BaseTrashHandlerTestCase;
 import com.liferay.trash.test.util.DefaultWhenIsAssetable;
@@ -86,10 +81,8 @@ import java.io.InputStream;
 
 import java.util.List;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -113,20 +106,6 @@ public class JournalArticleTrashHandlerTest
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
-
-	@BeforeClass
-	public static void setUpClass() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_serviceTracker = registry.trackServices(TrashHelper.class.getName());
-
-		_serviceTracker.open();
-	}
-
-	@AfterClass
-	public static void tearDownClass() {
-		_serviceTracker.close();
-	}
 
 	@Override
 	public BaseModel<?> addDraftBaseModelWithWorkflow(
@@ -259,8 +238,6 @@ public class JournalArticleTrashHandlerTest
 	public void setUp() throws Exception {
 		UserTestUtil.setUser(TestPropsValues.getUser());
 
-		_trashHelper = _serviceTracker.getService();
-
 		super.setUp();
 	}
 
@@ -286,11 +263,9 @@ public class JournalArticleTrashHandlerTest
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
-
 		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
 			serviceContext.getScopeGroupId(), JournalArticle.class.getName(),
-			ddmForm);
+			ddmFormDeserializerDeserializeResponse.getDDMForm());
 
 		DDMTemplate ddmTemplate = DDMTemplateTestUtil.addTemplate(
 			serviceContext.getScopeGroupId(), ddmStructure.getStructureId(),
@@ -314,21 +289,20 @@ public class JournalArticleTrashHandlerTest
 		Element dynamicContent = (Element)document.selectSingleNode(
 			"//dynamic-content");
 
-		JSONObject jsonObject = JSONUtil.put(
-			"groupId", group.getGroupId()
-		).put(
-			"name", "liferay.png"
-		).put(
-			"tempFile", Boolean.TRUE.toString()
-		).put(
-			"title", "liferay.png"
-		).put(
-			"type", "journal"
-		).put(
-			"uuid", tempFileEntry.getUuid()
-		);
-
-		dynamicContent.setText(jsonObject.toString());
+		dynamicContent.setText(
+			JSONUtil.put(
+				"groupId", group.getGroupId()
+			).put(
+				"name", "liferay.png"
+			).put(
+				"tempFile", Boolean.TRUE.toString()
+			).put(
+				"title", "liferay.png"
+			).put(
+				"type", "journal"
+			).put(
+				"uuid", tempFileEntry.getUuid()
+			).toString());
 
 		baseModel = JournalTestUtil.addArticleWithXMLContent(
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID, document.asXML(),
@@ -486,9 +460,7 @@ public class JournalArticleTrashHandlerTest
 	protected String getUniqueTitle(BaseModel<?> baseModel) {
 		JournalArticle article = (JournalArticle)baseModel;
 
-		String articleId = article.getArticleId();
-
-		return _trashHelper.getOriginalTitle(articleId);
+		return _trashHelper.getOriginalTitle(article.getArticleId());
 	}
 
 	@Override
@@ -502,12 +474,12 @@ public class JournalArticleTrashHandlerTest
 
 	private static final int _FOLDER_NAME_MAX_LENGTH = 100;
 
-	private static ServiceTracker<TrashHelper, TrashHelper> _serviceTracker;
-
 	@Inject(filter = "ddm.form.deserializer.type=xsd")
 	private DDMFormDeserializer _ddmFormDeserializer;
 
+	@Inject
 	private TrashHelper _trashHelper;
+
 	private final WhenIsAssetable _whenIsAssetable =
 		new DefaultWhenIsAssetable();
 	private final WhenIsIndexableBaseModel _whenIsIndexableBaseModel =

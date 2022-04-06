@@ -44,11 +44,9 @@ public class PanelCategoryHelper {
 				_panelCategoryRegistry.getChildPanelCategories(
 					panelCategoryKey)) {
 
-			if (hasPortlet(portletId, curPanelCategory.getKey())) {
-				return true;
-			}
+			if (hasPortlet(portletId, curPanelCategory.getKey()) ||
+				containsPortlet(portletId, curPanelCategory.getKey())) {
 
-			if (containsPortlet(portletId, curPanelCategory.getKey())) {
 				return true;
 			}
 		}
@@ -66,12 +64,8 @@ public class PanelCategoryHelper {
 
 			if (hasPortlet(
 					portletId, curPanelCategory.getKey(), permissionChecker,
-					group)) {
-
-				return true;
-			}
-
-			if (containsPortlet(
+					group) ||
+				containsPortlet(
 					portletId, curPanelCategory.getKey(), permissionChecker,
 					group)) {
 
@@ -144,15 +138,21 @@ public class PanelCategoryHelper {
 	}
 
 	public boolean hasPanelApp(String portletId) {
-		return containsPortlet(portletId, PanelCategoryKeys.ROOT);
+		if (containsPortlet(portletId, PanelCategoryKeys.APPLICATIONS_MENU) ||
+			containsPortlet(portletId, PanelCategoryKeys.ROOT)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean isApplicationsMenuApp(String portletId) {
+		return containsPortlet(portletId, PanelCategoryKeys.APPLICATIONS_MENU);
 	}
 
 	public boolean isControlPanelApp(String portletId) {
 		return containsPortlet(portletId, PanelCategoryKeys.CONTROL_PANEL);
-	}
-
-	public boolean isGlobalMenuApp(String portletId) {
-		return containsPortlet(portletId, PanelCategoryKeys.GLOBAL_MENU);
 	}
 
 	protected boolean hasPortlet(String portletId, String panelCategoryKey) {

@@ -19,6 +19,7 @@ import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLFileEntryLocalService;
 import com.liferay.document.library.kernel.service.DLFolderLocalService;
+import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.document.library.uad.test.DLFileEntryUADTestUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
@@ -74,6 +75,23 @@ public class DLFileEntryUADExporterTest
 		List<String> entries = zipReader.getEntries();
 
 		Assert.assertEquals(entries.toString(), 2, entries.size());
+	}
+
+	@Test
+	public void testExportAllWithMissingBinary() throws Exception {
+		DLFileEntry dlFileEntry = addBaseModel(user.getUserId());
+
+		DLStoreUtil.deleteFile(
+			dlFileEntry.getCompanyId(), dlFileEntry.getDataRepositoryId(),
+			dlFileEntry.getName());
+
+		File file = _uadExporter.exportAll(user.getUserId());
+
+		ZipReader zipReader = ZipReaderFactoryUtil.getZipReader(file);
+
+		List<String> entries = zipReader.getEntries();
+
+		Assert.assertEquals(entries.toString(), 1, entries.size());
 	}
 
 	@Override

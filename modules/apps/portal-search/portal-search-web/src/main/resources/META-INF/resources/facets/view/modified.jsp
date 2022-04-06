@@ -66,7 +66,7 @@ JSONArray rangesJSONArray = dataJSONObject.getJSONArray("ranges");
 int index = 0;
 %>
 
-<div class="panel panel-default">
+<div class="panel panel-secondary">
 	<div class="panel-heading">
 		<div class="panel-title">
 			<liferay-ui:message key="time" />
@@ -183,7 +183,7 @@ int index = 0;
 					}
 					%>
 
-					<div class='<%= !fieldParamSelection.equals(String.valueOf(index + 1)) ? "hide" : StringPool.BLANK %> modified-custom-range' id="<%= randomNamespace %>customRange">
+					<div class="<%= !fieldParamSelection.equals(String.valueOf(index + 1)) ? "hide" : StringPool.BLANK %> modified-custom-range" id="<%= randomNamespace %>customRange">
 						<clay:col
 							id='<%= randomNamespace + "customRangeFrom" %>'
 							md="6"
@@ -223,7 +223,7 @@ int index = 0;
 						</clay:col>
 
 						<%
-						String taglibSearchCustomRange = "window['" + renderResponse.getNamespace() + HtmlUtil.escapeJS(facet.getFieldId()) + "searchCustomRange'](" + (index + 1) + ");";
+						String taglibSearchCustomRange = "window['" + liferayPortletResponse.getNamespace() + HtmlUtil.escapeJS(facet.getFieldId()) + "searchCustomRange'](" + (index + 1) + ");";
 						%>
 
 						<aui:button disabled="<%= toCalendar.getTimeInMillis() < fromCalendar.getTimeInMillis() %>" name="searchCustomRangeButton" onClick="<%= taglibSearchCustomRange %>" value="search" />
@@ -321,10 +321,10 @@ int index = 0;
 	var Util = Liferay.Util;
 
 	var customRangeFrom = Liferay.component(
-		'<%= renderResponse.getNamespace() %>modifiedfromDatePicker'
+		'<%= liferayPortletResponse.getNamespace() %>modifiedfromDatePicker'
 	);
 	var customRangeTo = Liferay.component(
-		'<%= renderResponse.getNamespace() %>modifiedtoDatePicker'
+		'<%= liferayPortletResponse.getNamespace() %>modifiedtoDatePicker'
 	);
 	var searchButton = A.one('#<portlet:namespace />searchCustomRangeButton');
 
@@ -393,9 +393,7 @@ int index = 0;
 	customRangeFrom.on('selectionChange', onRangeSelectionChange);
 	customRangeTo.on('selectionChange', onRangeSelectionChange);
 
-	A.one('.<%= randomNamespace %>custom-range-toggle').on('click', function (
-		event
-	) {
+	A.one('.<%= randomNamespace %>custom-range-toggle').on('click', (event) => {
 		event.halt();
 
 		A.one('#<%= randomNamespace + "customRange" %>').toggle();

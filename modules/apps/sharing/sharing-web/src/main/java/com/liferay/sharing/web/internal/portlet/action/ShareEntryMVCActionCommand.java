@@ -32,14 +32,12 @@ import com.liferay.portal.kernel.transaction.TransactionInvokerUtil;
 import com.liferay.portal.kernel.util.DateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.sharing.constants.SharingPortletKeys;
 import com.liferay.sharing.service.SharingEntryService;
 import com.liferay.sharing.web.internal.display.SharingEntryPermissionDisplayAction;
 
 import java.util.Date;
-import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -55,7 +53,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + SharingPortletKeys.SHARING,
-		"mvc.command.name=/sharing/share"
+		"mvc.command.name=/sharing/share_entry"
 	},
 	service = MVCActionCommand.class
 )
@@ -91,9 +89,6 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
 			actionRequest);
 
-		ResourceBundle resourceBundle =
-			_resourceBundleLoader.loadResourceBundle(themeDisplay.getLocale());
-
 		try {
 			TransactionInvokerUtil.invoke(
 				_transactionConfig,
@@ -122,12 +117,13 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 			JSONObject jsonObject = JSONUtil.put(
 				"successMessage",
 				LanguageUtil.get(
-					resourceBundle, "the-item-was-shared-successfully"));
+					themeDisplay.getLocale(),
+					"the-item-was-shared-successfully"));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
 
@@ -136,12 +132,13 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 			String errorMessage =
 				"an-unexpected-error-occurred-while-sharing-the-item";
 
-			if (t instanceof PrincipalException) {
+			if (throwable instanceof PrincipalException) {
 				errorMessage = "you-do-not-have-permission-to-share-this-item";
 			}
 
 			JSONObject jsonObject = JSONUtil.put(
-				"errorMessage", LanguageUtil.get(resourceBundle, errorMessage));
+				"errorMessage",
+				LanguageUtil.get(themeDisplay.getLocale(), errorMessage));
 
 			JSONPortletResponseUtil.writeJSON(
 				actionRequest, actionResponse, jsonObject);
@@ -154,9 +151,6 @@ public class ShareEntryMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private Portal _portal;
-
-	@Reference(target = "(bundle.symbolic.name=com.liferay.sharing.web)")
-	private ResourceBundleLoader _resourceBundleLoader;
 
 	@Reference
 	private SharingEntryService _sharingEntryService;

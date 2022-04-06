@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.model.Team;
 public class TeamServiceWrapper
 	implements ServiceWrapper<TeamService>, TeamService {
 
+	public TeamServiceWrapper() {
+		this(null);
+	}
+
 	public TeamServiceWrapper(TeamService teamService) {
 		_teamService = teamService;
 	}
@@ -102,10 +106,11 @@ public class TeamServiceWrapper
 	public java.util.List<Team> search(
 		long groupId, String name, String description,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Team> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Team>
+			orderByComparator) {
 
 		return _teamService.search(
-			groupId, name, description, params, start, end, obc);
+			groupId, name, description, params, start, end, orderByComparator);
 	}
 
 	@Override

@@ -29,16 +29,16 @@
 						<c:when test="<%= (infoItemRenderer instanceof InfoItemTemplatedRenderer) && Validator.isNotNull(templateKey) %>">
 
 							<%
-							InfoItemTemplatedRenderer infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
+							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
 
-							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, response);
+							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
 
 						</c:when>
 						<c:otherwise>
 
 							<%
-							infoItemRenderer.render(infoListObject, request, response);
+							infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
 
 						</c:otherwise>
@@ -63,16 +63,16 @@
 						<c:when test="<%= (infoItemRenderer instanceof InfoItemTemplatedRenderer) && Validator.isNotNull(templateKey) %>">
 
 							<%
-							InfoItemTemplatedRenderer infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
+							InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer = (InfoItemTemplatedRenderer)infoItemRenderer;
 
-							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, response);
+							infoItemTemplatedRenderer.render(infoListObject, templateKey, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
 
 						</c:when>
 						<c:otherwise>
 
 							<%
-							infoItemRenderer.render(infoListObject, request, response);
+							infoItemRenderer.render(infoListObject, request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 							%>
 
 						</c:otherwise>

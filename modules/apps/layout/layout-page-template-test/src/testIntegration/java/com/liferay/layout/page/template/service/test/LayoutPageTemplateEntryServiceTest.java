@@ -15,13 +15,6 @@
 package com.liferay.layout.page.template.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.fragment.constants.FragmentConstants;
-import com.liferay.fragment.model.FragmentCollection;
-import com.liferay.fragment.model.FragmentEntry;
-import com.liferay.fragment.model.FragmentEntryLink;
-import com.liferay.fragment.service.FragmentCollectionServiceUtil;
-import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
-import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
 import com.liferay.layout.page.template.exception.LayoutPageTemplateEntryNameException;
 import com.liferay.layout.page.template.model.LayoutPageTemplateCollection;
@@ -33,17 +26,14 @@ import com.liferay.layout.page.template.service.test.util.LayoutPageTemplateTest
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.model.LayoutPrototype;
+import com.liferay.portal.kernel.service.LayoutPrototypeLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.transaction.Propagation;
-import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -109,20 +99,30 @@ public class LayoutPageTemplateEntryServiceTest {
 	}
 
 	@Test
+	public void testAddLayoutPageTemplateEntriesOfDifferentTypesWithTheSameName()
+		throws Exception {
+
+		String name = RandomTestUtil.randomString();
+
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(),
+			name, LayoutPageTemplateEntryTypeConstants.TYPE_BASIC,
+			WorkflowConstants.STATUS_APPROVED);
+		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(),
+			name, LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE,
+			WorkflowConstants.STATUS_APPROVED);
+	}
+
+	@Test
 	public void testAddLayoutPageTemplateEntry() throws PortalException {
 		String name = RandomTestUtil.randomString();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), TestPropsValues.getUserId());
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				_group.getGroupId(),
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
 				_layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
-				name, LayoutPageTemplateEntryTypeConstants.TYPE_BASIC,
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
+				name);
 
 		LayoutPageTemplateEntry persistedLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryPersistence.fetchByPrimaryKey(
@@ -137,17 +137,12 @@ public class LayoutPageTemplateEntryServiceTest {
 
 		String name = RandomTestUtil.randomString();
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), TestPropsValues.getUserId());
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryService.addLayoutPageTemplateEntry(
-				_group.getGroupId(),
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
 				_layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId(),
 				name, LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE,
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
+				WorkflowConstants.STATUS_DRAFT);
 
 		Assert.assertEquals(name, layoutPageTemplateEntry.getName());
 		Assert.assertEquals(
@@ -163,6 +158,39 @@ public class LayoutPageTemplateEntryServiceTest {
 		LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
 			_layoutPageTemplateCollection.getLayoutPageTemplateCollectionId(),
 			StringPool.BLANK);
+	}
+
+	@Test
+	public void testAddLayoutPageTemplateEntryWithLayoutPrototype()
+		throws PortalException {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
+				_layoutPageTemplateCollection.
+					getLayoutPageTemplateCollectionId(),
+				RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE,
+				WorkflowConstants.STATUS_APPROVED);
+
+		LayoutPageTemplateEntry persistedLayoutPageTemplateEntry =
+			_layoutPageTemplateEntryPersistence.fetchByPrimaryKey(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
+
+		Assert.assertEquals(
+			layoutPageTemplateEntry.getName(),
+			persistedLayoutPageTemplateEntry.getName());
+
+		Assert.assertNotEquals(
+			0, layoutPageTemplateEntry.getLayoutPrototypeId());
+
+		LayoutPrototype layoutPrototype =
+			_layoutPrototypeLocalService.fetchLayoutPrototype(
+				layoutPageTemplateEntry.getLayoutPrototypeId());
+
+		Assert.assertNotNull(layoutPrototype);
+		Assert.assertEquals(
+			layoutPageTemplateEntry.getName(),
+			layoutPrototype.getName(LocaleUtil.getMostRelevantLocale()));
 	}
 
 	@Test(expected = LayoutPageTemplateEntryNameException.class)
@@ -223,13 +251,11 @@ public class LayoutPageTemplateEntryServiceTest {
 				_layoutPageTemplateCollection.
 					getLayoutPageTemplateCollectionId());
 
-		long[] layoutPageTemplateEntries = {
-			layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
-			layoutPageTemplateEntry2.getLayoutPageTemplateEntryId()
-		};
-
 		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntries(
-			layoutPageTemplateEntries);
+			new long[] {
+				layoutPageTemplateEntry1.getLayoutPageTemplateEntryId(),
+				layoutPageTemplateEntry2.getLayoutPageTemplateEntryId()
+			});
 
 		Assert.assertNull(
 			_layoutPageTemplateEntryPersistence.fetchByPrimaryKey(
@@ -256,65 +282,26 @@ public class LayoutPageTemplateEntryServiceTest {
 	}
 
 	@Test
-	public void testUpdateLayoutPageTemplateEntryByRemovingFragmentEntryIds()
-		throws PortalException {
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), TestPropsValues.getUserId());
+	public void testDeleteLayoutPageTemplateEntryWithLayoutPrototype()
+		throws Exception {
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
 				_layoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId());
+					getLayoutPageTemplateCollectionId(),
+				RandomTestUtil.randomString(),
+				LayoutPageTemplateEntryTypeConstants.TYPE_WIDGET_PAGE,
+				WorkflowConstants.STATUS_APPROVED);
 
-		FragmentCollection fragmentCollection =
-			FragmentCollectionServiceUtil.addFragmentCollection(
-				_group.getGroupId(), RandomTestUtil.randomString(),
-				StringPool.BLANK, serviceContext);
+		_layoutPageTemplateEntryService.deleteLayoutPageTemplateEntry(
+			layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 
-		FragmentEntry fragmentEntry1 =
-			FragmentEntryLocalServiceUtil.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				fragmentCollection.getFragmentCollectionId(),
-				StringUtil.randomString(), StringUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), "{fieldSets: []}", 0,
-				FragmentConstants.TYPE_SECTION,
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		FragmentEntry fragmentEntry2 =
-			FragmentEntryLocalServiceUtil.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				fragmentCollection.getFragmentCollectionId(),
-				StringUtil.randomString(), StringUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), "{fieldSets: []}", 0,
-				FragmentConstants.TYPE_SECTION,
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		long[] fragmentEntryIds = {
-			fragmentEntry1.getFragmentEntryId(),
-			fragmentEntry2.getFragmentEntryId()
-		};
-
-		_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-			RandomTestUtil.randomString(), fragmentEntryIds, serviceContext);
-
-		_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-			RandomTestUtil.randomString(), null, serviceContext);
-
-		List<FragmentEntryLink> fragmentEntryLinks =
-			FragmentEntryLinkLocalServiceUtil.getFragmentEntryLinks(
-				_group.getGroupId(),
-				PortalUtil.getClassNameId(
-					LayoutPageTemplateEntry.class.getName()),
-				layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
-
-		Assert.assertEquals(
-			fragmentEntryLinks.toString(), 0, fragmentEntryLinks.size());
+		Assert.assertNull(
+			_layoutPageTemplateEntryPersistence.fetchByPrimaryKey(
+				layoutPageTemplateEntry.getLayoutPageTemplateEntryId()));
+		Assert.assertNull(
+			_layoutPrototypeLocalService.fetchLayoutPrototype(
+				layoutPageTemplateEntry.getLayoutPrototypeId()));
 	}
 
 	@Test
@@ -334,64 +321,6 @@ public class LayoutPageTemplateEntryServiceTest {
 				layoutPageTemplateEntry.getLayoutPageTemplateEntryId());
 
 		Assert.assertTrue(persistedLayoutPageTemplateEntry.isDefaultTemplate());
-	}
-
-	@Test
-	public void testUpdateLayoutPageTemplateEntryFragmentEntryIds()
-		throws PortalException {
-
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), TestPropsValues.getUserId());
-
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			LayoutPageTemplateTestUtil.addLayoutPageTemplateEntry(
-				_layoutPageTemplateCollection.
-					getLayoutPageTemplateCollectionId());
-
-		FragmentCollection fragmentCollection =
-			FragmentCollectionServiceUtil.addFragmentCollection(
-				_group.getGroupId(), RandomTestUtil.randomString(),
-				StringPool.BLANK, serviceContext);
-
-		FragmentEntry fragmentEntry1 =
-			FragmentEntryLocalServiceUtil.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				fragmentCollection.getFragmentCollectionId(),
-				StringUtil.randomString(), StringUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), "{fieldSets: []}", 0,
-				FragmentConstants.TYPE_SECTION,
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		FragmentEntry fragmentEntry2 =
-			FragmentEntryLocalServiceUtil.addFragmentEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
-				fragmentCollection.getFragmentCollectionId(),
-				StringUtil.randomString(), StringUtil.randomString(),
-				RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-				RandomTestUtil.randomString(), "{fieldSets: []}", 0,
-				FragmentConstants.TYPE_SECTION,
-				WorkflowConstants.STATUS_APPROVED, serviceContext);
-
-		long[] fragmentEntryIds = {
-			fragmentEntry1.getFragmentEntryId(),
-			fragmentEntry2.getFragmentEntryId()
-		};
-
-		_layoutPageTemplateEntryService.updateLayoutPageTemplateEntry(
-			layoutPageTemplateEntry.getLayoutPageTemplateEntryId(),
-			layoutPageTemplateEntry.getName(), fragmentEntryIds,
-			serviceContext);
-
-		List<FragmentEntryLink> fragmentEntryLinks =
-			FragmentEntryLinkLocalServiceUtil.getFragmentEntryLinks(
-				_group.getGroupId(),
-				PortalUtil.getClassNameId(Layout.class.getName()),
-				layoutPageTemplateEntry.getPlid());
-
-		Assert.assertEquals(
-			fragmentEntryLinks.toString(), 2, fragmentEntryLinks.size());
 	}
 
 	@Test
@@ -448,5 +377,8 @@ public class LayoutPageTemplateEntryServiceTest {
 
 	@Inject
 	private LayoutPageTemplateEntryService _layoutPageTemplateEntryService;
+
+	@Inject
+	private LayoutPrototypeLocalService _layoutPrototypeLocalService;
 
 }

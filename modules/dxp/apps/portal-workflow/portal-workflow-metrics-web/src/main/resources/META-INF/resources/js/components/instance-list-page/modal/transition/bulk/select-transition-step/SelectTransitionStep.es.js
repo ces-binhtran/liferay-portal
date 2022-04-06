@@ -12,19 +12,20 @@
 import React, {useContext, useMemo, useState} from 'react';
 
 import PromisesResolver from '../../../../../../shared/components/promises-resolver/PromisesResolver.es';
-import {useFetch} from '../../../../../../shared/hooks/useFetch.es';
+import {usePost} from '../../../../../../shared/hooks/usePost.es';
 import {ModalContext} from '../../../ModalProvider.es';
-import {Body} from './SelectTransitionStepBody.es';
+import Body from './SelectTransitionStepBody.es';
 
-const SelectTransitionStep = ({setErrorToast}) => {
+function SelectTransitionStep({setErrorToast}) {
 	const {
 		selectTasks: {tasks},
 	} = useContext(ModalContext);
+
 	const [retry, setRetry] = useState(0);
 
-	const {data, fetchData} = useFetch({
+	const {data, postData} = usePost({
 		admin: true,
-		params: {
+		body: {
 			workflowTaskIds: tasks.map((task) => task.id),
 		},
 		url: '/workflow-tasks/next-transitions',
@@ -33,19 +34,22 @@ const SelectTransitionStep = ({setErrorToast}) => {
 	const promises = useMemo(() => {
 		setErrorToast(false);
 
-		if (tasks.length > 0) {
-			const promise = fetchData().catch((err) => {
-				setErrorToast(Liferay.Language.get('your-request-has-failed'));
+		if (tasks.length) {
+			return [
+				postData().catch((error) => {
+					setErrorToast(
+						Liferay.Language.get('your-request-has-failed')
+					);
 
-				return Promise.reject(err);
-			});
-
-			return [promise];
+					return Promise.reject(error);
+				}),
+			];
 		}
 
 		return [];
+
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [fetchData, retry]);
+	}, [retry]);
 
 	return (
 		<div className="fixed-height modal-metrics-content">
@@ -58,7 +62,7 @@ const SelectTransitionStep = ({setErrorToast}) => {
 			</PromisesResolver>
 		</div>
 	);
-};
+}
 
 SelectTransitionStep.Body = Body;
 

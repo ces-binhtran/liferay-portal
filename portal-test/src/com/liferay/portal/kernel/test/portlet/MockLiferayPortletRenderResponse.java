@@ -18,6 +18,7 @@ import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.LiferayPortletURL;
 import com.liferay.portal.kernel.servlet.URLEncoder;
+import com.liferay.portlet.test.MockActionURL;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -49,10 +50,6 @@ import org.w3c.dom.Element;
 public class MockLiferayPortletRenderResponse
 	implements LiferayPortletResponse, RenderResponse {
 
-	public MockLiferayPortletRenderResponse() {
-		_mockHttpServletResponse = new MockHttpServletResponse();
-	}
-
 	@Override
 	public void addDateHeader(String name, long date) {
 	}
@@ -79,22 +76,22 @@ public class MockLiferayPortletRenderResponse
 
 	@Override
 	public <T extends PortletURL & ActionURL> T createActionURL() {
-		return null;
+		return (T)new MockActionURL();
 	}
 
 	@Override
 	public ActionURL createActionURL(Copy copy) {
-		return null;
+		return new MockActionURL();
 	}
 
 	@Override
 	public LiferayPortletURL createActionURL(String portletName) {
-		return null;
+		return new MockActionURL();
 	}
 
 	@Override
 	public LiferayPortletURL createActionURL(String portletName, Copy copy) {
-		return null;
+		return new MockLiferayPortletURL();
 	}
 
 	@Override
@@ -173,12 +170,12 @@ public class MockLiferayPortletRenderResponse
 
 	@Override
 	public ResourceURL createResourceURL() {
-		return null;
+		return new MockLiferayPortletURL();
 	}
 
 	@Override
 	public LiferayPortletURL createResourceURL(String portletName) {
-		return null;
+		return new MockLiferayPortletURL();
 	}
 
 	@Override
@@ -323,6 +320,7 @@ public class MockLiferayPortletRenderResponse
 	public void transferMarkupHeadElements() {
 	}
 
-	private final MockHttpServletResponse _mockHttpServletResponse;
+	private final MockHttpServletResponse _mockHttpServletResponse =
+		new MockHttpServletResponse();
 
 }

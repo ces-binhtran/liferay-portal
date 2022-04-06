@@ -31,10 +31,13 @@ import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
+import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.util.HtmlParser;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -109,12 +112,12 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 
 	@Override
 	public BlogsEntry addEntry(
-			String title, String subtitle, String urlTitle, String description,
-			String content, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			boolean allowPingbacks, boolean allowTrackbacks,
-			String[] trackbacks, String coverImageCaption,
-			ImageSelector coverImageImageSelector,
+			String externalReferenceCode, String title, String subtitle,
+			String urlTitle, String description, String content,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, boolean allowPingbacks,
+			boolean allowTrackbacks, String[] trackbacks,
+			String coverImageCaption, ImageSelector coverImageImageSelector,
 			ImageSelector smallImageImageSelector,
 			ServiceContext serviceContext)
 		throws PortalException {
@@ -124,11 +127,11 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 			ActionKeys.ADD_ENTRY);
 
 		return blogsEntryLocalService.addEntry(
-			getUserId(), title, subtitle, urlTitle, description, content,
-			displayDateMonth, displayDateDay, displayDateYear, displayDateHour,
-			displayDateMinute, allowPingbacks, allowTrackbacks, trackbacks,
-			coverImageCaption, coverImageImageSelector, smallImageImageSelector,
-			serviceContext);
+			externalReferenceCode, getUserId(), title, subtitle, urlTitle,
+			description, content, displayDateMonth, displayDateDay,
+			displayDateYear, displayDateHour, displayDateMinute, allowPingbacks,
+			allowTrackbacks, trackbacks, coverImageCaption,
+			coverImageImageSelector, smallImageImageSelector, serviceContext);
 	}
 
 	@Override
@@ -189,7 +192,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 			String entryURL, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		Company company = companyLocalService.getCompany(companyId);
+		Company company = _companyLocalService.getCompany(companyId);
 
 		String name = company.getName();
 
@@ -310,15 +313,16 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 	@Override
 	public List<BlogsEntry> getGroupEntries(
 		long groupId, int status, int start, int end,
-		OrderByComparator<BlogsEntry> obc) {
+		OrderByComparator<BlogsEntry> orderByComparator) {
 
 		if (status == WorkflowConstants.STATUS_ANY) {
 			return blogsEntryPersistence.filterFindByG_NotS(
-				groupId, WorkflowConstants.STATUS_IN_TRASH, start, end, obc);
+				groupId, WorkflowConstants.STATUS_IN_TRASH, start, end,
+				orderByComparator);
 		}
 
 		return blogsEntryPersistence.filterFindByG_S(
-			groupId, status, start, end, obc);
+			groupId, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -351,7 +355,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 			String entryURL, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		Group group = groupLocalService.getGroup(groupId);
+		Group group = _groupLocalService.getGroup(groupId);
 
 		String name = group.getDescriptiveName();
 
@@ -409,25 +413,25 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 	@Override
 	public List<BlogsEntry> getGroupUserEntries(
 		long groupId, long userId, int status, int start, int end,
-		OrderByComparator<BlogsEntry> obc) {
+		OrderByComparator<BlogsEntry> orderByComparator) {
 
 		if (status == WorkflowConstants.STATUS_ANY) {
 			return blogsEntryPersistence.filterFindByG_U_NotS(
 				groupId, userId, WorkflowConstants.STATUS_IN_TRASH, start, end,
-				obc);
+				orderByComparator);
 		}
 
 		return blogsEntryPersistence.filterFindByG_U_S(
-			groupId, userId, status, start, end, obc);
+			groupId, userId, status, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<BlogsEntry> getGroupUserEntries(
 		long groupId, long userId, int[] statuses, int start, int end,
-		OrderByComparator<BlogsEntry> obc) {
+		OrderByComparator<BlogsEntry> orderByComparator) {
 
 		return blogsEntryPersistence.filterFindByG_U_S(
-			groupId, userId, statuses, start, end, obc);
+			groupId, userId, statuses, start, end, orderByComparator);
 	}
 
 	@Override
@@ -498,7 +502,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 			String entryURL, ThemeDisplay themeDisplay)
 		throws PortalException {
 
-		Organization organization = organizationLocalService.getOrganization(
+		Organization organization = _organizationLocalService.getOrganization(
 			organizationId);
 
 		String name = organization.getName();
@@ -602,9 +606,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 		for (BlogsEntry entry : blogsEntries) {
 			SyndEntry syndEntry = _syndModelFactory.createSyndEntry();
 
-			String author = _portal.getUserName(entry);
-
-			syndEntry.setAuthor(author);
+			syndEntry.setAuthor(_portal.getUserName(entry));
 
 			SyndContent syndContent = _syndModelFactory.createSyndContent();
 
@@ -620,7 +622,7 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 				}
 
 				value = StringUtil.shorten(
-					HtmlUtil.extractText(summary),
+					_htmlParser.extractText(summary),
 					PropsValues.BLOGS_RSS_ABSTRACT_LENGTH, StringPool.BLANK);
 			}
 			else if (displayStyle.equals(RSSUtil.DISPLAY_STYLE_TITLE)) {
@@ -689,6 +691,18 @@ public class BlogsEntryServiceImpl extends BlogsEntryServiceBaseImpl {
 	)
 	private volatile ModelResourcePermission<BlogsEntry>
 		_blogsEntryModelResourcePermission;
+
+	@Reference
+	private CompanyLocalService _companyLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private HtmlParser _htmlParser;
+
+	@Reference
+	private OrganizationLocalService _organizationLocalService;
 
 	@Reference
 	private Portal _portal;

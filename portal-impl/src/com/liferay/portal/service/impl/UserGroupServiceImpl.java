@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.SortFactoryUtil;
 import com.liferay.portal.kernel.security.membershippolicy.UserGroupMembershipPolicyUtil;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
 import com.liferay.portal.kernel.service.permission.PortalPermissionUtil;
@@ -66,6 +67,34 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 			getPermissionChecker(), groupId, ActionKeys.ASSIGN_MEMBERS);
 
 		userGroupLocalService.addGroupUserGroups(groupId, userGroupIds);
+	}
+
+	@Override
+	public UserGroup addOrUpdateUserGroup(
+			String externalReferenceCode, String name, String description,
+			ServiceContext serviceContext)
+		throws PortalException {
+
+		PermissionChecker permissionChecker = getPermissionChecker();
+
+		UserGroup userGroup =
+			userGroupLocalService.fetchUserGroupByExternalReferenceCode(
+				permissionChecker.getCompanyId(), externalReferenceCode);
+
+		if (userGroup == null) {
+			PortalPermissionUtil.check(
+				permissionChecker, ActionKeys.ADD_USER_GROUP);
+		}
+		else {
+			UserGroupPermissionUtil.check(
+				permissionChecker, userGroup.getUserGroupId(),
+				ActionKeys.UPDATE);
+		}
+
+		return userGroupLocalService.addOrUpdateUserGroup(
+			externalReferenceCode, permissionChecker.getUserId(),
+			permissionChecker.getCompanyId(), name, description,
+			serviceContext);
 	}
 
 	/**
@@ -150,10 +179,28 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	}
 
 	@Override
+	public UserGroup fetchUserGroupByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		UserGroup userGroup =
+			userGroupLocalService.fetchUserGroupByExternalReferenceCode(
+				companyId, externalReferenceCode);
+
+		if (userGroup != null) {
+			UserGroupPermissionUtil.check(
+				getPermissionChecker(), userGroup.getUserGroupId(),
+				ActionKeys.VIEW);
+		}
+
+		return userGroup;
+	}
+
+	@Override
 	public List<UserGroup> getGtUserGroups(
 		long gtUserGroupId, long companyId, long parentUserGroupId, int size) {
 
-		return userGroupPersistence.filterFindByU_C_P(
+		return userGroupPersistence.filterFindByGtU_C_P(
 			gtUserGroupId, companyId, parentUserGroupId, 0, size,
 			new UserGroupIdComparator(true));
 	}
@@ -166,10 +213,12 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 */
 	@Override
 	public UserGroup getUserGroup(long userGroupId) throws PortalException {
+		UserGroup userGroup = userGroupLocalService.getUserGroup(userGroupId);
+
 		UserGroupPermissionUtil.check(
 			getPermissionChecker(), userGroupId, ActionKeys.VIEW);
 
-		return userGroupLocalService.getUserGroup(userGroupId);
+		return userGroup;
 	}
 
 	/**
@@ -261,26 +310,27 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 * @param  start the lower bound of the range of user groups to return
 	 * @param  end the upper bound of the range of user groups to return (not
 	 *         inclusive)
-	 * @param  obc the comparator to order the user groups (optionally
-	 *         <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param  orderByComparator the comparator to order the user groups
+	 *         (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 *         <code>orderByComparator</code>
 	 * @see    com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Override
 	public List<UserGroup> search(
 		long companyId, String keywords, LinkedHashMap<String, Object> params,
-		int start, int end, OrderByComparator<UserGroup> obc) {
+		int start, int end, OrderByComparator<UserGroup> orderByComparator) {
 
 		if (isUseCustomSQL(params)) {
 			return userGroupFinder.filterFindByKeywords(
-				companyId, keywords, params, start, end, obc);
+				companyId, keywords, params, start, end, orderByComparator);
 		}
 
-		String orderByCol = obc.getOrderByFields()[0];
+		String orderByCol = orderByComparator.getOrderByFields()[0];
 
 		String orderByType = "asc";
 
-		if (!obc.isAscending()) {
+		if (!orderByComparator.isAscending()) {
 			orderByType = "desc";
 		}
 
@@ -322,28 +372,29 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 	 * @param  start the lower bound of the range of user groups to return
 	 * @param  end the upper bound of the range of user groups to return (not
 	 *         inclusive)
-	 * @param  obc the comparator to order the user groups (optionally
-	 *         <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param  orderByComparator the comparator to order the user groups
+	 *         (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 *         <code>orderByComparator</code>
 	 * @see    com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Override
 	public List<UserGroup> search(
 		long companyId, String name, String description,
 		LinkedHashMap<String, Object> params, boolean andOperator, int start,
-		int end, OrderByComparator<UserGroup> obc) {
+		int end, OrderByComparator<UserGroup> orderByComparator) {
 
 		if (isUseCustomSQL(params)) {
 			return userGroupFinder.filterFindByC_N_D(
 				companyId, name, description, params, andOperator, start, end,
-				obc);
+				orderByComparator);
 		}
 
-		String orderByCol = obc.getOrderByFields()[0];
+		String orderByCol = orderByComparator.getOrderByFields()[0];
 
 		String orderByType = "asc";
 
-		if (!obc.isAscending()) {
+		if (!orderByComparator.isAscending()) {
 			orderByType = "desc";
 		}
 
@@ -444,6 +495,19 @@ public class UserGroupServiceImpl extends UserGroupServiceBaseImpl {
 			getPermissionChecker(), teamId, ActionKeys.ASSIGN_MEMBERS);
 
 		userGroupLocalService.unsetTeamUserGroups(teamId, userGroupIds);
+	}
+
+	@Override
+	public UserGroup updateExternalReferenceCode(
+			UserGroup userGroup, String externalReferenceCode)
+		throws PortalException {
+
+		UserGroupPermissionUtil.check(
+			getPermissionChecker(), userGroup.getUserGroupId(),
+			ActionKeys.UPDATE);
+
+		return userGroupLocalService.updateExternalReferenceCode(
+			userGroup, externalReferenceCode);
 	}
 
 	/**

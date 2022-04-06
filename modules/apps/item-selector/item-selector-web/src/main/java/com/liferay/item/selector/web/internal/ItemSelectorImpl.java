@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.portlet.PortletMode;
 import javax.portlet.PortletModeException;
@@ -80,6 +82,12 @@ public class ItemSelectorImpl implements ItemSelector {
 
 	@Override
 	public String getItemSelectedEventName(String itemSelectorURL) {
+		Matcher matcher = _itemSelectorURLPattern.matcher(itemSelectorURL);
+
+		if (matcher.find()) {
+			return matcher.group(2);
+		}
+
 		String namespace = _portal.getPortletNamespace(
 			ItemSelectorPortletKeys.ITEM_SELECTOR);
 
@@ -93,7 +101,7 @@ public class ItemSelectorImpl implements ItemSelector {
 		Map<String, String[]> parameters) {
 
 		List<Class<? extends ItemSelectorCriterion>>
-			itemSelectorCriterionClasses = getItemSelectorCriterionClasses(
+			itemSelectorCriterionClasses = _getItemSelectorCriterionClasses(
 				parameters);
 
 		List<ItemSelectorCriterion> itemSelectorCriteria = new ArrayList<>(
@@ -117,7 +125,7 @@ public class ItemSelectorImpl implements ItemSelector {
 		String itemSelectorURL) {
 
 		Map<String, String[]> parameters = _http.getParameterMap(
-			itemSelectorURL);
+			_http.getQueryString(itemSelectorURL));
 
 		Map<String, String[]> itemSelectorURLParameterMap = new HashMap<>();
 
@@ -133,6 +141,17 @@ public class ItemSelectorImpl implements ItemSelector {
 
 				itemSelectorURLParameterMap.put(key, entry.getValue());
 			}
+		}
+
+		Matcher matcher = _itemSelectorURLPattern.matcher(itemSelectorURL);
+
+		if (matcher.matches()) {
+			itemSelectorURLParameterMap.put(
+				PARAMETER_CRITERIA,
+				new String[] {_http.decodePath(matcher.group(1))});
+			itemSelectorURLParameterMap.put(
+				PARAMETER_ITEM_SELECTED_EVENT_NAME,
+				new String[] {matcher.group(2)});
 		}
 
 		return getItemSelectorCriteria(itemSelectorURLParameterMap);
@@ -190,7 +209,7 @@ public class ItemSelectorImpl implements ItemSelector {
 					_applyCustomizations(
 						new ItemSelectorViewRendererImpl(
 							itemSelectorView, itemSelectorCriterion, portletURL,
-							itemSelectedEventName, isSearch(parameters))));
+							itemSelectedEventName, _isSearch(parameters))));
 			}
 		}
 
@@ -266,55 +285,31 @@ public class ItemSelectorImpl implements ItemSelector {
 		_serviceTrackerMap.close();
 	}
 
-	protected List<Class<? extends ItemSelectorCriterion>>
-		getItemSelectorCriterionClasses(Map<String, String[]> parameters) {
-
-		String criteria = getValue(parameters, PARAMETER_CRITERIA);
-
-		String[] itemSelectorCriterionClassNames = criteria.split(",");
-
-		List<Class<? extends ItemSelectorCriterion>>
-			itemSelectorCriterionClasses = new ArrayList<>(
-				itemSelectorCriterionClassNames.length);
-
-		for (String itemSelectorCriterionClassName :
-				itemSelectorCriterionClassNames) {
-
-			ItemSelectorCriterionHandler<?> itemSelectorCriterionHandler =
-				_itemSelectionCriterionHandlers.get(
-					itemSelectorCriterionClassName);
-
-			if (itemSelectorCriterionHandler != null) {
-				itemSelectorCriterionClasses.add(
-					itemSelectorCriterionHandler.
-						getItemSelectorCriterionClass());
-			}
-		}
-
-		return itemSelectorCriterionClasses;
-	}
-
 	protected Map<String, String[]> getItemSelectorParameters(
 		String itemSelectedEventName,
 		ItemSelectorCriterion... itemSelectorCriteria) {
 
-		StringBundler sb = new StringBundler(itemSelectorCriteria.length * 2);
-
-		for (ItemSelectorCriterion itemSelectorCriterion :
-				itemSelectorCriteria) {
-
-			sb.append(
-				ItemSelectorKeyUtil.getItemSelectorCriterionKey(
-					itemSelectorCriterion.getClass()));
-			sb.append(StringPool.COMMA);
-		}
-
-		if (itemSelectorCriteria.length > 0) {
-			sb.setIndex(sb.index() - 1);
-		}
-
 		Map<String, String[]> parameters = HashMapBuilder.put(
-			PARAMETER_CRITERIA, new String[] {sb.toString()}
+			PARAMETER_CRITERIA,
+			() -> {
+				StringBundler sb = new StringBundler(
+					itemSelectorCriteria.length * 2);
+
+				for (ItemSelectorCriterion itemSelectorCriterion :
+						itemSelectorCriteria) {
+
+					sb.append(
+						ItemSelectorKeyUtil.getItemSelectorCriterionKey(
+							itemSelectorCriterion.getClass()));
+					sb.append(StringPool.COMMA);
+				}
+
+				if (itemSelectorCriteria.length > 0) {
+					sb.setIndex(sb.index() - 1);
+				}
+
+				return new String[] {sb.toString()};
+			}
 		).put(
 			PARAMETER_ITEM_SELECTED_EVENT_NAME,
 			new String[] {itemSelectedEventName}
@@ -376,16 +371,6 @@ public class ItemSelectorImpl implements ItemSelector {
 		}
 
 		return values[0];
-	}
-
-	protected boolean isSearch(Map<String, String[]> parameters) {
-		String keywords = getValue(parameters, "keywords");
-
-		if (Validator.isNotNull(keywords)) {
-			return true;
-		}
-
-		return false;
 	}
 
 	@Reference(
@@ -460,6 +445,47 @@ public class ItemSelectorImpl implements ItemSelector {
 
 		return itemSelectorViewRenderer;
 	}
+
+	private List<Class<? extends ItemSelectorCriterion>>
+		_getItemSelectorCriterionClasses(Map<String, String[]> parameters) {
+
+		String criteria = getValue(parameters, PARAMETER_CRITERIA);
+
+		String[] itemSelectorCriterionClassNames = criteria.split(",");
+
+		List<Class<? extends ItemSelectorCriterion>>
+			itemSelectorCriterionClasses = new ArrayList<>(
+				itemSelectorCriterionClassNames.length);
+
+		for (String itemSelectorCriterionClassName :
+				itemSelectorCriterionClassNames) {
+
+			ItemSelectorCriterionHandler<?> itemSelectorCriterionHandler =
+				_itemSelectionCriterionHandlers.get(
+					itemSelectorCriterionClassName);
+
+			if (itemSelectorCriterionHandler != null) {
+				itemSelectorCriterionClasses.add(
+					itemSelectorCriterionHandler.
+						getItemSelectorCriterionClass());
+			}
+		}
+
+		return itemSelectorCriterionClasses;
+	}
+
+	private boolean _isSearch(Map<String, String[]> parameters) {
+		String keywords = getValue(parameters, "keywords");
+
+		if (Validator.isNotNull(keywords)) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private static final Pattern _itemSelectorURLPattern = Pattern.compile(
+		".*select\\/([^/]+)\\/([^$?/]+).*");
 
 	@Reference
 	private Http _http;

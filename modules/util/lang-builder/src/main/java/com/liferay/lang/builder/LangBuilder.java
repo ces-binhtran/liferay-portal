@@ -20,8 +20,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
 import com.liferay.portal.kernel.io.unsync.UnsyncStringReader;
-import com.liferay.portal.kernel.language.LanguageConstants;
+import com.liferay.portal.kernel.language.LanguageBuilderUtil;
 import com.liferay.portal.kernel.language.LanguageValidator;
+import com.liferay.portal.kernel.language.constants.LanguageConstants;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.NaturalOrderStringComparator;
@@ -44,6 +45,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,14 +61,9 @@ import org.apache.commons.io.FileUtils;
  */
 public class LangBuilder {
 
-	public static final String AUTOMATIC_COPY =
-		com.liferay.portal.tools.LangBuilder.AUTOMATIC_COPY;
-
-	public static final String AUTOMATIC_TRANSLATION =
-		com.liferay.portal.tools.LangBuilder.AUTOMATIC_TRANSLATION;
-
 	public static void main(String[] args) throws Exception {
-		Map<String, String> arguments = ArgumentsUtil.parseArguments(args);
+		Map<String, String> arguments = new HashMap<>(
+			ArgumentsUtil.parseArguments(args));
 
 		System.setProperty("line.separator", StringPool.NEW_LINE);
 
@@ -182,6 +179,7 @@ public class LangBuilder {
 		_createProperties(content, "ko"); // Korean
 		_createProperties(content, "lo"); // Lao
 		_createProperties(content, "lt"); // Lithuanian
+		_createProperties(content, "ms"); // Malay
 		_createProperties(content, "nb"); // Norwegian Bokmål
 		_createProperties(content, "fa"); // Persian
 		_createProperties(content, "pl"); // Polish
@@ -200,20 +198,6 @@ public class LangBuilder {
 		_createProperties(content, "tr"); // Turkish
 		_createProperties(content, "uk"); // Ukrainian
 		_createProperties(content, "vi"); // Vietnamese
-	}
-
-	private static String _getSpecialPropertyValue(String key) {
-		if (key.equals(LanguageConstants.KEY_DIR)) {
-			return LanguageConstants.VALUE_LTR;
-		}
-		else if (key.equals(LanguageConstants.KEY_LINE_BEGIN)) {
-			return LanguageConstants.VALUE_LEFT;
-		}
-		else if (key.equals(LanguageConstants.KEY_LINE_END)) {
-			return LanguageConstants.VALUE_RIGHT;
-		}
-
-		return StringPool.BLANK;
 	}
 
 	private static void _processCurrentBranch(
@@ -364,9 +348,13 @@ public class LangBuilder {
 					}
 				}
 
-				if ((translatedText != null) &&
-					translatedText.endsWith(AUTOMATIC_COPY)) {
+				boolean automaticCopy = false;
 
+				if ((translatedText != null) &&
+					translatedText.endsWith(
+						LanguageBuilderUtil.AUTOMATIC_COPY)) {
+
+					automaticCopy = true;
 					translatedText = "";
 				}
 
@@ -380,7 +368,8 @@ public class LangBuilder {
 							 ArrayUtil.contains(
 								 _AUTOMATIC_COPY_LANGUAGE_IDS, languageId)) {
 
-						translatedText = value + AUTOMATIC_COPY;
+						translatedText =
+							value + LanguageBuilderUtil.AUTOMATIC_COPY;
 					}
 					else if (line.contains("[")) {
 						int pos = line.indexOf("[");
@@ -394,8 +383,12 @@ public class LangBuilder {
 							translatedText = translatedBaseKey;
 						}
 						else {
-							translatedText = value + AUTOMATIC_COPY;
+							translatedText =
+								value + LanguageBuilderUtil.AUTOMATIC_COPY;
 						}
+					}
+					else if (!automaticCopy && key.endsWith("-delimiter")) {
+						translatedText = "";
 					}
 					else if (languageId.equals("el") &&
 							 (key.equals("enabled") || key.equals("on") ||
@@ -429,18 +422,22 @@ public class LangBuilder {
 							"en", languageId, key, value, 0);
 
 						if (Validator.isNull(translatedText)) {
-							translatedText = value + AUTOMATIC_COPY;
+							translatedText =
+								value + LanguageBuilderUtil.AUTOMATIC_COPY;
 						}
 						else if (!key.startsWith("country.") &&
 								 !key.startsWith("language.")) {
 
 							translatedText =
-								translatedText + AUTOMATIC_TRANSLATION;
+								translatedText +
+									LanguageBuilderUtil.AUTOMATIC_TRANSLATION;
 						}
 					}
 				}
 
-				if (Validator.isNotNull(translatedText)) {
+				if (Validator.isNotNull(translatedText) ||
+					key.endsWith("-delimiter")) {
+
 					translatedText = _fixTranslation(translatedText);
 
 					sb.append(key);
@@ -456,6 +453,22 @@ public class LangBuilder {
 		content = sb.toString();
 
 		_write(propertiesFile, content);
+	}
+
+	private String _fixContraction(
+		String s, String contraction, String replacement) {
+
+		int i = s.indexOf(contraction);
+
+		if ((i == -1) ||
+			((i > 0) && Character.isLetterOrDigit(s.charAt(i - 1))) ||
+			(((i + contraction.length()) < s.length()) &&
+			 Character.isLetterOrDigit(s.charAt(i + contraction.length())))) {
+
+			return s;
+		}
+
+		return StringUtil.replaceFirst(s, contraction, replacement, i);
 	}
 
 	private String _fixEnglishTranslation(String key, String value) {
@@ -484,6 +497,8 @@ public class LangBuilder {
 
 	private String _fixTranslation(String value) {
 		value = StringUtil.replace(value, "\n", "\\n");
+		value = StringUtil.replace(
+			value, CharPool.NO_BREAK_SPACE, CharPool.SPACE);
 
 		value = StringUtil.replace(
 			value.trim(),
@@ -502,6 +517,22 @@ public class LangBuilder {
 				'\u201e', '\u201f'
 			},
 			new char[] {'\'', '\'', '\'', '\'', '\"', '\"', '\"', '\"'});
+
+		for (String[] contractionArray : _CONTRACTIONS) {
+			String contraction = contractionArray[0];
+			String replacement = contractionArray[1];
+
+			value = _fixContraction(value, contraction, replacement);
+
+			if (!contraction.startsWith("I'")) {
+				value = _fixContraction(
+					value,
+					Character.toLowerCase(contraction.charAt(0)) +
+						contraction.substring(1),
+					Character.toLowerCase(replacement.charAt(0)) +
+						replacement.substring(1));
+			}
+		}
 
 		return value;
 	}
@@ -552,6 +583,20 @@ public class LangBuilder {
 		}
 
 		return languageId;
+	}
+
+	private String _getSpecialPropertyValue(String key) {
+		if (key.equals(LanguageConstants.KEY_DIR)) {
+			return LanguageConstants.VALUE_LTR;
+		}
+		else if (key.equals(LanguageConstants.KEY_LINE_BEGIN)) {
+			return LanguageConstants.VALUE_LEFT;
+		}
+		else if (key.equals(LanguageConstants.KEY_LINE_END)) {
+			return LanguageConstants.VALUE_RIGHT;
+		}
+
+		return StringPool.BLANK;
 	}
 
 	private void _initKeysWithUpdatedValues() throws Exception {
@@ -713,9 +758,6 @@ public class LangBuilder {
 			return null;
 		}
 
-		Language fromLanguage = Language.fromString(
-			_getMicrosoftLanguageId(fromLanguageId));
-
 		Language toLanguage = Language.fromString(
 			_getMicrosoftLanguageId(toLanguageId));
 
@@ -723,21 +765,16 @@ public class LangBuilder {
 			return null;
 		}
 
+		Language fromLanguage = Language.fromString(
+			_getMicrosoftLanguageId(fromLanguageId));
+
 		String toText = null;
 
 		try {
-			StringBundler sb = new StringBundler(8);
-
-			sb.append("Translating ");
-			sb.append(fromLanguageId);
-			sb.append("_");
-			sb.append(toLanguageId);
-			sb.append(" ");
-			sb.append(key);
-			sb.append(" ");
-			sb.append(fromText);
-
-			System.out.println(sb.toString());
+			System.out.println(
+				StringBundler.concat(
+					"Translating ", fromLanguageId, "_", toLanguageId, " ", key,
+					" ", fromText));
 
 			toText = Translate.execute(fromText, fromLanguage, toLanguage);
 		}
@@ -761,6 +798,22 @@ public class LangBuilder {
 
 	private static final String[] _AUTOMATIC_COPY_LANGUAGE_IDS = {
 		"en_AU", "en_GB", "fr_CA"
+	};
+
+	private static final String[][] _CONTRACTIONS = {
+		{"Aren't", "Are not"}, {"Can't", "Cannot"}, {"Could've", "Could have"},
+		{"Couldn't", "Could not"}, {"Didn't", "Did not"},
+		{"Doesn't", "Does not"}, {"Don't", "Do not"}, {"Hadn't", "Had not"},
+		{"Hasn't", "Has not"}, {"Haven't", "Have not"}, {"How's", "How is"},
+		{"I'd", "I would"}, {"I'll", "I will"}, {"I've", "I have"},
+		{"Isn't", "Is not"}, {"It's", "It is"}, {"Let's", "Let us"},
+		{"Shouldn't", "Should not"}, {"That's", "That is"},
+		{"There's", "There is"}, {"Wasn't", "Was not"}, {"We'd", "We would"},
+		{"We'll", "We will"}, {"We're", "We are"}, {"We've", "We have"},
+		{"Weren't", "Were not"}, {"What's", "What is"}, {"Where's", "Where is"},
+		{"Would've", "Would have"}, {"Wouldn't", "Would not"},
+		{"You'd", "You would"}, {"You'll", "You will"}, {"You're", "You are"},
+		{"You've", "You have"}
 	};
 
 	private final String[] _excludedLanguageIds;

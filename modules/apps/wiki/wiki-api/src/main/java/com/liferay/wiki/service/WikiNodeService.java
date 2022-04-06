@@ -54,10 +54,21 @@ public interface WikiNodeService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link WikiNodeServiceUtil} to access the wiki node remote service. Add custom service methods to <code>com.liferay.wiki.service.impl.WikiNodeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.wiki.service.impl.WikiNodeServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the wiki node remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link WikiNodeServiceUtil} if injection and service tracking are not available.
 	 */
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addNode(String, String, String, ServiceContext)}
+	 */
+	@Deprecated
 	public WikiNode addNode(
 			String name, String description, ServiceContext serviceContext)
+		throws PortalException;
+
+	public WikiNode addNode(
+			String externalReferenceCode, String name, String description,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	public void deleteNode(long nodeId) throws PortalException;
@@ -85,7 +96,7 @@ public interface WikiNodeService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<WikiNode> getNodes(
 		long groupId, int status, int start, int end,
-		OrderByComparator<WikiNode> obc);
+		OrderByComparator<WikiNode> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getNodesCount(long groupId);

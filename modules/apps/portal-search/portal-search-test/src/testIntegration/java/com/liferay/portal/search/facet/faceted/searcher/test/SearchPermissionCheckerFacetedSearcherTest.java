@@ -32,6 +32,7 @@ import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
+import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -126,7 +127,7 @@ public class SearchPermissionCheckerFacetedSearcherTest
 		String content = DDMStructureTestUtil.getSampleStructuredContent();
 
 		JournalArticle article = journalArticleLocalService.addArticle(
-			user.getUserId(), group.getGroupId(), 0,
+			null, user.getUserId(), group.getGroupId(), 0,
 			Collections.singletonMap(LocaleUtil.US, title), null, content,
 			"BASIC-WEB-CONTENT", "BASIC-WEB-CONTENT", serviceContext);
 
@@ -134,7 +135,8 @@ public class SearchPermissionCheckerFacetedSearcherTest
 	}
 
 	protected ModelPermissions createModelPermissions() {
-		ModelPermissions modelPermissions = new ModelPermissions();
+		ModelPermissions modelPermissions =
+			ModelPermissionsFactory.createForAllResources();
 
 		modelPermissions.addRolePermissions(
 			RoleConstants.OWNER, ActionKeys.VIEW);

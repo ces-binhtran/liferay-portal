@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.wiki.configuration.WikiGroupServiceConfiguration;
+import com.liferay.wiki.constants.WikiPageConstants;
 import com.liferay.wiki.constants.WikiPortletKeys;
 import com.liferay.wiki.constants.WikiWebKeys;
 import com.liferay.wiki.engine.WikiEngineRenderer;
@@ -35,7 +36,6 @@ import com.liferay.wiki.exception.NoSuchPageException;
 import com.liferay.wiki.exception.PageTitleException;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
-import com.liferay.wiki.model.WikiPageConstants;
 import com.liferay.wiki.service.WikiPageService;
 import com.liferay.wiki.validator.WikiPageTitleValidator;
 import com.liferay.wiki.web.internal.util.WikiWebComponentProvider;
@@ -155,11 +155,9 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 						wikiGroupServiceConfiguration.frontPageName()) &&
 					(version == 0)) {
 
-					ServiceContext serviceContext = new ServiceContext();
-
 					page = _wikiPageService.addPage(
 						nodeId, title, null, WikiPageConstants.NEW, true,
-						serviceContext);
+						new ServiceContext());
 				}
 				else {
 					throw noSuchPageException2;
@@ -181,25 +179,7 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 		renderRequest.setAttribute(WikiWebKeys.WIKI_PAGE, page);
 	}
 
-	@Reference(unbind = "-")
-	protected void setWikiEngineRenderer(
-		WikiEngineRenderer wikiEngineRenderer) {
-
-		_wikiEngineRenderer = wikiEngineRenderer;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageService(WikiPageService wikiPageService) {
-		_wikiPageService = wikiPageService;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageTitleValidator(
-		WikiPageTitleValidator wikiPageTitleValidator) {
-
-		_wikiPageTitleValidator = wikiPageTitleValidator;
-	}
-
+	@Reference
 	private WikiEngineRenderer _wikiEngineRenderer;
 
 	@Reference(target = "(model.class.name=com.liferay.wiki.model.WikiNode)")
@@ -210,7 +190,10 @@ public class EditPageMVCRenderCommand implements MVCRenderCommand {
 	private volatile ModelResourcePermission<WikiPage>
 		_wikiPageModelResourcePermission;
 
+	@Reference
 	private WikiPageService _wikiPageService;
+
+	@Reference
 	private WikiPageTitleValidator _wikiPageTitleValidator;
 
 }

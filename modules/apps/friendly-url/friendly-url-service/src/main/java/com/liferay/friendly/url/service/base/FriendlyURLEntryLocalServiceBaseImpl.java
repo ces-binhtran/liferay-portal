@@ -22,6 +22,7 @@ import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.model.FriendlyURLEntryLocalization;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
+import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryLocalizationPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryMappingPersistence;
 import com.liferay.friendly.url.service.persistence.FriendlyURLEntryPersistence;
@@ -58,6 +59,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +68,7 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -86,11 +90,15 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>FriendlyURLEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>FriendlyURLEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>FriendlyURLEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the friendly url entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was added
@@ -120,6 +128,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the friendly url entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntryId the primary key of the friendly url entry
 	 * @return the friendly url entry that was removed
 	 * @throws PortalException if a friendly url entry with the primary key could not be found
@@ -135,6 +147,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the friendly url entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was removed
 	 */
@@ -149,6 +165,13 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return friendlyURLEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -410,6 +433,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -428,6 +452,7 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			(FriendlyURLEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<FriendlyURLEntry> getBasePersistence() {
 		return friendlyURLEntryPersistence;
 	}
@@ -519,6 +544,10 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 
 	/**
 	 * Updates the friendly url entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was updated
@@ -712,6 +741,11 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 			friendlyURLEntryLocalization);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -723,6 +757,8 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		friendlyURLEntryLocalService = (FriendlyURLEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(friendlyURLEntryLocalService);
 	}
 
 	/**
@@ -779,6 +815,23 @@ public abstract class FriendlyURLEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
+
+		try {
+			Field field =
+				FriendlyURLEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, friendlyURLEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

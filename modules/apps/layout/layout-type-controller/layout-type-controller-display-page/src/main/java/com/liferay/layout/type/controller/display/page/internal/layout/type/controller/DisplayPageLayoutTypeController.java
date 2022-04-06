@@ -16,13 +16,14 @@ package com.liferay.layout.type.controller.display.page.internal.layout.type.con
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.kernel.model.AssetEntry;
-import com.liferay.fragment.constants.FragmentActionKeys;
-import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.info.display.request.attributes.contributor.InfoDisplayRequestAttributesContributor;
+import com.liferay.info.item.InfoItemServiceTracker;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.type.controller.BaseLayoutTypeControllerImpl;
+import com.liferay.layout.type.controller.display.page.internal.constants.DisplayPageLayoutTypeControllerWebKeys;
+import com.liferay.layout.type.controller.display.page.internal.display.context.DisplayPageLayoutTypeControllerDisplayContext;
 import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -36,13 +37,14 @@ import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
-import com.liferay.portal.kernel.servlet.TransferHeadersHelperUtil;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
+import com.liferay.portal.kernel.servlet.TransferHeadersHelper;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
+import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.servlet.PipingServletResponse;
 
 import java.util.List;
 
@@ -71,7 +73,7 @@ public class DisplayPageLayoutTypeController
 			HttpServletRequest httpServletRequest, Layout layout)
 		throws PortalException {
 
-		if (layout.getClassNameId() == _portal.getClassNameId(Layout.class)) {
+		if (layout.isDraftLayout()) {
 			return null;
 		}
 
@@ -121,7 +123,7 @@ public class DisplayPageLayoutTypeController
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (layout.getClassNameId() == _portal.getClassNameId(Layout.class)) {
+		if (layout.isDraftLayout()) {
 			Layout curLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
 
@@ -144,9 +146,15 @@ public class DisplayPageLayoutTypeController
 			layoutMode = Constants.VIEW;
 		}
 
+		DisplayPageLayoutTypeControllerDisplayContext
+			displayPageLayoutTypeControllerDisplayContext =
+				new DisplayPageLayoutTypeControllerDisplayContext(
+					httpServletRequest, _infoItemServiceTracker);
+
 		httpServletRequest.setAttribute(
-			FragmentActionKeys.FRAGMENT_RENDERER_CONTROLLER,
-			_fragmentRendererController);
+			DisplayPageLayoutTypeControllerWebKeys.
+				DISPLAY_PAGE_LAYOUT_TYPE_CONTROLLER_DISPLAY_CONTEXT,
+			displayPageLayoutTypeControllerDisplayContext);
 
 		String page = getViewPage();
 
@@ -155,15 +163,13 @@ public class DisplayPageLayoutTypeController
 		}
 
 		RequestDispatcher requestDispatcher =
-			TransferHeadersHelperUtil.getTransferHeadersRequestDispatcher(
+			_transferHeadersHelper.getTransferHeadersRequestDispatcher(
 				servletContext.getRequestDispatcher(page));
 
 		UnsyncStringWriter unsyncStringWriter = new UnsyncStringWriter();
 
 		ServletResponse servletResponse = createServletResponse(
 			httpServletResponse, unsyncStringWriter);
-
-		String contentType = servletResponse.getContentType();
 
 		String includeServletPath = (String)httpServletRequest.getAttribute(
 			RequestDispatcher.INCLUDE_SERVLET_PATH);
@@ -193,12 +199,29 @@ public class DisplayPageLayoutTypeController
 				RequestDispatcher.INCLUDE_SERVLET_PATH, includeServletPath);
 		}
 
+		httpServletRequest.setAttribute(
+			WebKeys.LAYOUT_CONTENT, unsyncStringWriter.getStringBundler());
+
+		String contentType = servletResponse.getContentType();
+
 		if (contentType != null) {
 			httpServletResponse.setContentType(contentType);
 		}
 
-		httpServletRequest.setAttribute(
-			WebKeys.LAYOUT_CONTENT, unsyncStringWriter.getStringBundler());
+		if (!displayPageLayoutTypeControllerDisplayContext.hasPermission(
+				themeDisplay.getPermissionChecker(), ActionKeys.VIEW)) {
+
+			if (themeDisplay.isSignedIn()) {
+				httpServletResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			}
+			else {
+				String signInURL = themeDisplay.getURLSignIn();
+
+				httpServletResponse.sendRedirect(
+					_http.setParameter(
+						signInURL, "redirect", themeDisplay.getURLCurrent()));
+			}
+		}
 
 		return false;
 	}
@@ -244,21 +267,6 @@ public class DisplayPageLayoutTypeController
 		}
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *			 #createServletResponse(HttpServletResponse, UnsyncStringWriter)}
-	 */
-	@Deprecated
-	@Override
-	protected ServletResponse createServletResponse(
-		HttpServletResponse httpServletResponse,
-		com.liferay.portal.kernel.io.unsync.UnsyncStringWriter
-			unsyncStringWriter) {
-
-		return new PipingServletResponse(
-			httpServletResponse, unsyncStringWriter);
-	}
-
 	@Override
 	protected ServletResponse createServletResponse(
 		HttpServletResponse httpServletResponse,
@@ -297,7 +305,7 @@ public class DisplayPageLayoutTypeController
 			return layoutPageTemplateEntry;
 		}
 
-		if (layout.getClassNameId() == _portal.getClassNameId(Layout.class)) {
+		if (layout.isDraftLayout()) {
 			Layout publishedLayout = _layoutLocalService.fetchLayout(
 				layout.getClassPK());
 
@@ -323,7 +331,7 @@ public class DisplayPageLayoutTypeController
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -346,11 +354,14 @@ public class DisplayPageLayoutTypeController
 		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
-	private FragmentRendererController _fragmentRendererController;
+	private Http _http;
 
 	@Reference
 	private volatile List<InfoDisplayRequestAttributesContributor>
 		_infoDisplayRequestAttributesContributors;
+
+	@Reference
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -361,5 +372,8 @@ public class DisplayPageLayoutTypeController
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private TransferHeadersHelper _transferHeadersHelper;
 
 }

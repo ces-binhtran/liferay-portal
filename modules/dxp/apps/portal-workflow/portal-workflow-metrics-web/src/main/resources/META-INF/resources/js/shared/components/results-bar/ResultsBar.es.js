@@ -11,6 +11,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
+import ClayList from '@clayui/list';
 import React, {useCallback} from 'react';
 
 import {useFilter} from '../../hooks/useFilter.es';
@@ -25,9 +27,11 @@ import {
 const ResultsBar = ({children}) => {
 	return (
 		<nav className="mt-0 subnav-tbar subnav-tbar-primary tbar tbar-inline-xs-down">
-			<div className="container-fluid container-fluid-max-xl">
-				<ul className="tbar-nav tbar-nav-wrap">{children}</ul>
-			</div>
+			<ClayLayout.ContainerFluid>
+				<ClayList.ItemText className="tbar-nav tbar-nav-wrap">
+					{children}
+				</ClayList.ItemText>
+			</ClayLayout.ContainerFluid>
 		</nav>
 	);
 };
@@ -58,11 +62,10 @@ const Clear = ({filters = [], filterKeys = [], withoutRouteParams}) => {
 	}, [filterState, routerProps, withoutRouteParams]);
 
 	return (
-		<li className="tbar-item tbar-item-expand">
+		<ClayList.ItemText className="tbar-item tbar-item-expand">
 			<div className="tbar-section text-right">
 				<ClayButton
 					className="component-link tbar-link"
-					data-testid="clearAll"
 					displayType="link"
 					onClick={handleClearAll}
 					small
@@ -70,7 +73,7 @@ const Clear = ({filters = [], filterKeys = [], withoutRouteParams}) => {
 					{Liferay.Language.get('clear-all')}
 				</ClayButton>
 			</div>
-		</li>
+		</ClayList.ItemText>
 	);
 };
 
@@ -100,7 +103,7 @@ const FilterItem = ({filter, item, withoutRouteParams}) => {
 	}, [filterState, routerProps, withoutRouteParams]);
 
 	return (
-		<li className="tbar-item">
+		<ClayList.ItemText className="tbar-item">
 			<div className="tbar-section">
 				<span className="component-label label label-dismissible tbar-label">
 					<span className="label-item label-item-expand">
@@ -119,7 +122,6 @@ const FilterItem = ({filter, item, withoutRouteParams}) => {
 						<span className="label-item label-item-after">
 							<ClayButton
 								className="text-dark"
-								data-testid="removeFilter"
 								displayType="unstyled"
 								onClick={removeFilter}
 							>
@@ -129,16 +131,26 @@ const FilterItem = ({filter, item, withoutRouteParams}) => {
 					)}
 				</span>
 			</div>
-		</li>
+		</ClayList.ItemText>
 	);
 };
 
-const FilterItems = ({filters = [], ...props}) => {
-	return filters.map((filter) =>
-		filter.items.map((item, index) => (
-			<FilterItem filter={filter} item={item} key={index} {...props} />
-		))
-	);
+const FilterItems = ({filters = [], hideFilters = [], ...props}) => {
+	return filters
+		.filter(
+			(filterItem) =>
+				!hideFilters.find((hideItem) => filterItem.key === hideItem)
+		)
+		.map((filter) =>
+			filter.items.map((item, index) => (
+				<FilterItem
+					filter={filter}
+					item={item}
+					key={index}
+					{...props}
+				/>
+			))
+		);
 };
 
 const TotalCount = ({search, totalCount}) => {
@@ -149,15 +161,15 @@ const TotalCount = ({search, totalCount}) => {
 	}
 
 	return (
-		<li className="tbar-item">
+		<ClayList.ItemText className="tbar-item">
 			<div className="tbar-section">
 				<span className="component-text text-truncate-inline">
-					<span className="text-truncate" data-testid="totalCount">
+					<span className="text-truncate">
 						{sub(resultText, [totalCount, search])}
 					</span>
 				</span>
 			</div>
-		</li>
+		</ClayList.ItemText>
 	);
 };
 

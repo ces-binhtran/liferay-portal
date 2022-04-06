@@ -29,6 +29,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class DLFolderLocalServiceWrapper
 	implements DLFolderLocalService, ServiceWrapper<DLFolderLocalService> {
 
+	public DLFolderLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DLFolderLocalServiceWrapper(
 		DLFolderLocalService dlFolderLocalService) {
 
@@ -69,6 +73,10 @@ public class DLFolderLocalServiceWrapper
 
 	/**
 	 * Adds the document library folder to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFolder the document library folder
 	 * @return the document library folder that was added
@@ -167,6 +175,10 @@ public class DLFolderLocalServiceWrapper
 	/**
 	 * Deletes the document library folder from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFolder the document library folder
 	 * @return the document library folder that was removed
 	 */
@@ -177,6 +189,10 @@ public class DLFolderLocalServiceWrapper
 
 	/**
 	 * Deletes the document library folder with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param folderId the primary key of the document library folder
 	 * @return the document library folder that was removed
@@ -243,6 +259,13 @@ public class DLFolderLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _dlFolderLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _dlFolderLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -588,47 +611,34 @@ public class DLFolderLocalServiceWrapper
 	public java.util.List<DLFolder> getFolders(
 		long groupId, long parentFolderId, boolean includeMountfolders,
 		int status, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DLFolder> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<DLFolder>
+			orderByComparator) {
 
 		return _dlFolderLocalService.getFolders(
 			groupId, parentFolderId, includeMountfolders, status, start, end,
-			obc);
+			orderByComparator);
 	}
 
 	@Override
 	public java.util.List<DLFolder> getFolders(
 		long groupId, long parentFolderId, boolean includeMountfolders,
 		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DLFolder> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<DLFolder>
+			orderByComparator) {
 
 		return _dlFolderLocalService.getFolders(
-			groupId, parentFolderId, includeMountfolders, start, end, obc);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getFolders(long, long, boolean, int, int,
-	 OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	public java.util.List<DLFolder> getFolders(
-		long groupId, long parentFolderId, int status,
-		boolean includeMountfolders, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DLFolder> obc) {
-
-		return _dlFolderLocalService.getFolders(
-			groupId, parentFolderId, status, includeMountfolders, start, end,
-			obc);
+			groupId, parentFolderId, includeMountfolders, start, end,
+			orderByComparator);
 	}
 
 	@Override
 	public java.util.List<DLFolder> getFolders(
 		long groupId, long parentFolderId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DLFolder> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<DLFolder>
+			orderByComparator) {
 
 		return _dlFolderLocalService.getFolders(
-			groupId, parentFolderId, start, end, obc);
+			groupId, parentFolderId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -721,10 +731,11 @@ public class DLFolderLocalServiceWrapper
 	@Override
 	public java.util.List<DLFolder> getMountFolders(
 		long groupId, long parentFolderId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<DLFolder> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<DLFolder>
+			orderByComparator) {
 
 		return _dlFolderLocalService.getMountFolders(
-			groupId, parentFolderId, start, end, obc);
+			groupId, parentFolderId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -892,6 +903,10 @@ public class DLFolderLocalServiceWrapper
 
 	/**
 	 * Updates the document library folder in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFolder the document library folder
 	 * @return the document library folder that was updated

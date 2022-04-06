@@ -17,12 +17,11 @@ package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
-import com.liferay.portal.search.elasticsearch7.internal.util.SearchLogHelperUtil;
+import com.liferay.portal.search.elasticsearch7.internal.helper.SearchLogHelperUtil;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentItemResponse;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.BulkDocumentResponse;
 import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequest;
-import com.liferay.portal.search.engine.adapter.document.BulkableDocumentRequestTranslator;
 import com.liferay.portal.search.engine.adapter.document.DeleteDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.IndexDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
@@ -38,7 +37,7 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.rest.RestStatus;
 
 import org.osgi.service.component.annotations.Component;
@@ -57,7 +56,7 @@ public class BulkDocumentRequestExecutorImpl
 
 		BulkRequest bulkRequest = createBulkRequest(bulkDocumentRequest);
 
-		BulkResponse bulkResponse = getBulkResponse(
+		BulkResponse bulkResponse = _getBulkResponse(
 			bulkRequest, bulkDocumentRequest);
 
 		SearchLogHelperUtil.logActionResponse(_log, bulkResponse);
@@ -118,22 +117,22 @@ public class BulkDocumentRequestExecutorImpl
 				request -> {
 					if (request instanceof DeleteDocumentRequest) {
 						DeleteRequest deleteRequest =
-							_bulkableDocumentRequestTranslator.translate(
-								(DeleteDocumentRequest)request);
+							_elasticsearchBulkableDocumentRequestTranslator.
+								translate((DeleteDocumentRequest)request);
 
 						bulkRequest.add(deleteRequest);
 					}
 					else if (request instanceof IndexDocumentRequest) {
 						IndexRequest indexRequest =
-							_bulkableDocumentRequestTranslator.translate(
-								(IndexDocumentRequest)request);
+							_elasticsearchBulkableDocumentRequestTranslator.
+								translate((IndexDocumentRequest)request);
 
 						bulkRequest.add(indexRequest);
 					}
 					else if (request instanceof UpdateDocumentRequest) {
 						UpdateRequest updateRequest =
-							_bulkableDocumentRequestTranslator.translate(
-								(UpdateDocumentRequest)request);
+							_elasticsearchBulkableDocumentRequestTranslator.
+								translate((UpdateDocumentRequest)request);
 
 						bulkRequest.add(updateRequest);
 					}
@@ -147,12 +146,29 @@ public class BulkDocumentRequestExecutorImpl
 		return bulkRequest;
 	}
 
-	protected BulkResponse getBulkResponse(
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setElasticsearchBulkableDocumentRequestTranslator(
+		ElasticsearchBulkableDocumentRequestTranslator
+			elasticsearchBulkableDocumentRequestTranslator) {
+
+		_elasticsearchBulkableDocumentRequestTranslator =
+			elasticsearchBulkableDocumentRequestTranslator;
+	}
+
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private BulkResponse _getBulkResponse(
 		BulkRequest bulkRequest, BulkDocumentRequest bulkDocumentRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				bulkDocumentRequest.getConnectionId(), false);
+				bulkDocumentRequest.getConnectionId(),
+				bulkDocumentRequest.isPreferLocalCluster());
 
 		try {
 			return restHighLevelClient.bulk(
@@ -163,25 +179,11 @@ public class BulkDocumentRequestExecutorImpl
 		}
 	}
 
-	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
-	protected void setBulkableDocumentRequestTranslator(
-		BulkableDocumentRequestTranslator bulkableDocumentRequestTranslator) {
-
-		_bulkableDocumentRequestTranslator = bulkableDocumentRequestTranslator;
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
-	}
-
 	private static final Log _log = LogFactoryUtil.getLog(
 		BulkDocumentRequestExecutorImpl.class);
 
-	private BulkableDocumentRequestTranslator
-		_bulkableDocumentRequestTranslator;
+	private ElasticsearchBulkableDocumentRequestTranslator
+		_elasticsearchBulkableDocumentRequestTranslator;
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
 
 }

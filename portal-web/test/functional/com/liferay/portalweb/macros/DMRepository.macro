@@ -50,6 +50,22 @@ definition {
 				locator1 = "DocumentsAndMediaEditRepository#LIBRARY_NAME_FIELD",
 				value1 = "${dmRepositoryLibraryName}");
 		}
+
+		if (isSet(permissionDefinitionKey)) {
+			Panel.expandPanel(panel = "Permissions");
+
+			if (IsNotVisible(key_text = "Hide Options", locator1 = "Button#ANY")) {
+				AssertClick(
+					key_text = "More Options",
+					locator1 = "Button#ANY",
+					value1 = "More Options");
+			}
+
+			var key_permissionDefinitionKey = "${permissionDefinitionKey}";
+			var key_roleTitle = "${roleTitle}";
+
+			Check(locator1 = "AssetPermissions#PERMISSIONS_CHECKBOX");
+		}
 	}
 
 	macro cleanRepository {
@@ -92,15 +108,14 @@ definition {
 
 		AssertTextEquals(
 			locator1 = "Portlet#HEADER",
-			value1 = "${dmRepositoryName}");
+			value1 = "Documents and Media");
 	}
 
 	macro tearDownCP {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Documents and Media");
 
 		while (IsElementPresent(locator1 = "DocumentsAndMedia#FILTER_REPOSITORY_GENERIC")) {
@@ -109,13 +124,11 @@ definition {
 			Pause(locator1 = "1000");
 
 			if (IsElementPresent(locator1 = "DocumentsAndMedia#ICON_DOCUMENT_GENERIC")) {
-				Check(locator1 = "DocumentsAndMedia#TOOLBAR_SELECT_ALL_CHECKBOX");
+				Click.clickNoMouseOverNoWaitForVisible(locator1 = "DocumentsAndMedia#TOOLBAR_SELECT_ALL_CHECKBOX");
 
 				Pause(locator1 = "1000");
 
-				AssertClick.waitForDMHomeAssertTextEqualsClick(
-					locator1 = "DocumentsAndMedia#TOOLBAR_ACTIONS",
-					value1 = "Actions");
+				Click(locator1 = "DocumentsAndMedia#TOOLBAR_ACTIONS");
 
 				MenuItem.clickNoError(menuItem = "Delete");
 

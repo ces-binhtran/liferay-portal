@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,16 +49,55 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("NavigationMenuItem")
+@GraphQLName(
+	description = "Represents a navigation menu item.",
+	value = "NavigationMenuItem"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "NavigationMenuItem")
-public class NavigationMenuItem {
+public class NavigationMenuItem implements Serializable {
 
 	public static NavigationMenuItem toDTO(String json) {
 		return ObjectMapperUtil.readValue(NavigationMenuItem.class, json);
 	}
 
-	@Schema
+	public static NavigationMenuItem unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(NavigationMenuItem.class, json);
+	}
+
+	@Schema(
+		description = "The list of languages the navigation menu item has a translation for."
+	)
+	public String[] getAvailableLanguages() {
+		return availableLanguages;
+	}
+
+	public void setAvailableLanguages(String[] availableLanguages) {
+		this.availableLanguages = availableLanguages;
+	}
+
+	@JsonIgnore
+	public void setAvailableLanguages(
+		UnsafeSupplier<String[], Exception> availableLanguagesUnsafeSupplier) {
+
+		try {
+			availableLanguages = availableLanguagesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The list of languages the navigation menu item has a translation for."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String[] availableLanguages;
+
+	@Schema(description = "The navigation menu item's creator.")
 	@Valid
 	public Creator getCreator() {
 		return creator;
@@ -80,11 +122,11 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's creator.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Creator creator;
 
-	@Schema
+	@Schema(description = "The navigation menu item's creation date.")
 	public Date getDateCreated() {
 		return dateCreated;
 	}
@@ -108,11 +150,11 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's creation date.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateCreated;
 
-	@Schema
+	@Schema(description = "The last time the navigation menu item changed.")
 	public Date getDateModified() {
 		return dateModified;
 	}
@@ -136,11 +178,13 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The last time the navigation menu item changed."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
 
-	@Schema
+	@Schema(description = "The navigation menu item's ID.")
 	public Long getId() {
 		return id;
 	}
@@ -162,11 +206,11 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema(description = "A link to a page on the server.")
+	@Schema(description = "The link to a page on the server.")
 	public String getLink() {
 		return link;
 	}
@@ -188,11 +232,41 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField(description = "A link to a page on the server.")
+	@GraphQLField(description = "The link to a page on the server.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String link;
 
-	@Schema
+	@Schema(description = "The localized links to a page on the server.")
+	@Valid
+	public Map<String, String> getLink_i18n() {
+		return link_i18n;
+	}
+
+	public void setLink_i18n(Map<String, String> link_i18n) {
+		this.link_i18n = link_i18n;
+	}
+
+	@JsonIgnore
+	public void setLink_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			link_i18nUnsafeSupplier) {
+
+		try {
+			link_i18n = link_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The localized links to a page on the server.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> link_i18n;
+
+	@Schema(description = "The navigation menu item's name.")
 	public String getName() {
 		return name;
 	}
@@ -214,11 +288,11 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
-	@Schema
+	@Schema(description = "The localized navigation menu item's names.")
 	@Valid
 	public Map<String, String> getName_i18n() {
 		return name_i18n;
@@ -244,11 +318,13 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The localized navigation menu item's names.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Map<String, String> name_i18n;
 
-	@Schema
+	@Schema(
+		description = "The navigation menu items this navigation menu item has."
+	)
 	@Valid
 	public NavigationMenuItem[] getNavigationMenuItems() {
 		return navigationMenuItems;
@@ -276,11 +352,13 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The navigation menu items this navigation menu item has."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected NavigationMenuItem[] navigationMenuItems;
 
-	@Schema
+	@Schema(description = "The ID of the navigation menu item's parent.")
 	public Long getParentNavigationMenuId() {
 		return parentNavigationMenuId;
 	}
@@ -304,11 +382,41 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The ID of the navigation menu item's parent.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long parentNavigationMenuId;
 
-	@Schema
+	@Schema(description = "The navigation menu item's linked site page URL.")
+	public String getSitePageURL() {
+		return sitePageURL;
+	}
+
+	public void setSitePageURL(String sitePageURL) {
+		this.sitePageURL = sitePageURL;
+	}
+
+	@JsonIgnore
+	public void setSitePageURL(
+		UnsafeSupplier<String, Exception> sitePageURLUnsafeSupplier) {
+
+		try {
+			sitePageURL = sitePageURLUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The navigation menu item's linked site page URL."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String sitePageURL;
+
+	@Schema(description = "The navigation menu item's type.")
 	public String getType() {
 		return type;
 	}
@@ -330,11 +438,11 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's type.")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String type;
 
-	@Schema
+	@Schema(description = "The navigation menu item's linked URL.")
 	public String getUrl() {
 		return url;
 	}
@@ -356,9 +464,37 @@ public class NavigationMenuItem {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The navigation menu item's linked URL.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String url;
+
+	@Schema
+	public Boolean getUseCustomName() {
+		return useCustomName;
+	}
+
+	public void setUseCustomName(Boolean useCustomName) {
+		this.useCustomName = useCustomName;
+	}
+
+	@JsonIgnore
+	public void setUseCustomName(
+		UnsafeSupplier<Boolean, Exception> useCustomNameUnsafeSupplier) {
+
+		try {
+			useCustomName = useCustomNameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean useCustomName;
 
 	@Override
 	public boolean equals(Object object) {
@@ -389,6 +525,30 @@ public class NavigationMenuItem {
 
 		DateFormat liferayToJSONDateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+		if (availableLanguages != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"availableLanguages\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < availableLanguages.length; i++) {
+				sb.append("\"");
+
+				sb.append(_escape(availableLanguages[i]));
+
+				sb.append("\"");
+
+				if ((i + 1) < availableLanguages.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
 
 		if (creator != null) {
 			if (sb.length() > 1) {
@@ -452,6 +612,16 @@ public class NavigationMenuItem {
 			sb.append("\"");
 		}
 
+		if (link_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"link_i18n\": ");
+
+			sb.append(_toJSON(link_i18n));
+		}
+
 		if (name != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -506,6 +676,20 @@ public class NavigationMenuItem {
 			sb.append(parentNavigationMenuId);
 		}
 
+		if (sitePageURL != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"sitePageURL\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(sitePageURL));
+
+			sb.append("\"");
+		}
+
 		if (type != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -534,21 +718,42 @@ public class NavigationMenuItem {
 			sb.append("\"");
 		}
 
+		if (useCustomName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"useCustomName\": ");
+
+			sb.append(useCustomName);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.NavigationMenuItem",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -564,14 +769,12 @@ public class NavigationMenuItem {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -598,7 +801,7 @@ public class NavigationMenuItem {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -606,7 +809,7 @@ public class NavigationMenuItem {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -614,5 +817,10 @@ public class NavigationMenuItem {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

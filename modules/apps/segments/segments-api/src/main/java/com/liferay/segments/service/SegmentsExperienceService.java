@@ -14,6 +14,7 @@
 
 package com.liferay.segments.service;
 
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -24,6 +25,7 @@ import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.segments.model.SegmentsExperience;
 
 import java.util.List;
@@ -42,6 +44,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -53,11 +56,25 @@ public interface SegmentsExperienceService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SegmentsExperienceServiceUtil} to access the segments experience remote service. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.segments.service.impl.SegmentsExperienceServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the segments experience remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SegmentsExperienceServiceUtil} if injection and service tracking are not available.
 	 */
 	public SegmentsExperience addSegmentsExperience(
-			long segmentsEntryId, long classNameId, long classPK,
+			long groupId, long segmentsEntryId, long classNameId, long classPK,
 			Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience appendSegmentsExperience(
+			long groupId, long segmentsEntryId, long classNameId, long classPK,
+			Map<Locale, String> nameMap, boolean active,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public SegmentsExperience appendSegmentsExperience(
+			long groupId, long segmentsEntryId, long classNameId, long classPK,
+			Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties,
 			ServiceContext serviceContext)
 		throws PortalException;
 
@@ -67,7 +84,8 @@ public interface SegmentsExperienceService extends BaseService {
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public SegmentsExperience fetchSegmentsExperience(
-			long groupId, String segmentsExperienceKey)
+			long groupId, String segmentsExperienceKey, long classNameId,
+			long classPK)
 		throws PortalException;
 
 	/**
@@ -101,6 +119,12 @@ public interface SegmentsExperienceService extends BaseService {
 	public SegmentsExperience updateSegmentsExperience(
 			long segmentsExperienceId, long segmentsEntryId,
 			Map<Locale, String> nameMap, boolean active)
+		throws PortalException;
+
+	public SegmentsExperience updateSegmentsExperience(
+			long segmentsExperienceId, long segmentsEntryId,
+			Map<Locale, String> nameMap, boolean active,
+			UnicodeProperties typeSettingsUnicodeProperties)
 		throws PortalException;
 
 	public void updateSegmentsExperiencePriority(

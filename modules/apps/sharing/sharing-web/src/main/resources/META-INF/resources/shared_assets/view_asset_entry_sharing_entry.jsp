@@ -23,8 +23,6 @@ AssetRendererFactory<?> assetRendererFactory = assetRenderer.getAssetRendererFac
 
 AssetEntry assetEntry = assetRendererFactory.getAssetEntry(assetRendererFactory.getClassName(), assetRenderer.getClassPK());
 
-SharedAssetsViewDisplayContext sharedAssetsViewDisplayContext = (SharedAssetsViewDisplayContext)renderRequest.getAttribute(SharedAssetsViewDisplayContext.class.getName());
-
 SharingEntry sharingEntry = (SharingEntry)renderRequest.getAttribute(SharingEntry.class.getName());
 
 String redirect = ParamUtil.getString(request, "redirect");
@@ -53,9 +51,14 @@ else {
 			<c:if test="<%= !scopeGroup.equals(themeDisplay.getControlPanelGroup()) %>">
 				<li class="d-none d-sm-flex tbar-item">
 					<clay:link
-						elementClasses="btn btn-monospaced btn-outline-borderless btn-outline-secondary btn-sm"
+						borderless="<%= true %>"
+						displayType="secondary"
 						href="<%= redirect %>"
 						icon="angle-left"
+						monospaced="<%= true %>"
+						outline="<%= true %>"
+						small="<%= true %>"
+						type="button"
 					/>
 				</li>
 			</c:if>
@@ -68,8 +71,13 @@ else {
 				</div>
 			</li>
 			<li class="tbar-item">
+
+				<%
+				ViewSharedAssetsDisplayContext viewSharedAssetsDisplayContext = (ViewSharedAssetsDisplayContext)renderRequest.getAttribute(ViewSharedAssetsDisplayContext.class.getName());
+				%>
+
 				<liferay-ui:menu
-					menu="<%= sharedAssetsViewDisplayContext.getSharingEntryMenu(sharingEntry) %>"
+					menu="<%= viewSharedAssetsDisplayContext.getSharingEntryMenu(sharingEntry) %>"
 				/>
 			</li>
 		</ul>
@@ -81,6 +89,7 @@ else {
 >
 	<liferay-asset:asset-display
 		renderer="<%= assetRenderer %>"
+		showComments="<%= false %>"
 	/>
 
 	<c:if test="<%= assetRenderer.isCommentable() %>">

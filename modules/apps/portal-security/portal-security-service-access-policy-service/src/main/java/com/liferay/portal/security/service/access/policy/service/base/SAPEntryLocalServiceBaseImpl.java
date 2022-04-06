@@ -46,14 +46,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
+import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalServiceUtil;
 import com.liferay.portal.security.service.access.policy.service.persistence.SAPEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -74,11 +78,15 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SAPEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.security.service.access.policy.service.SAPEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SAPEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SAPEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the sap entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SAPEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sapEntry the sap entry
 	 * @return the sap entry that was added
@@ -106,6 +114,10 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the sap entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SAPEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sapEntryId the primary key of the sap entry
 	 * @return the sap entry that was removed
 	 * @throws PortalException if a sap entry with the primary key could not be found
@@ -118,6 +130,10 @@ public abstract class SAPEntryLocalServiceBaseImpl
 
 	/**
 	 * Deletes the sap entry from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SAPEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sapEntry the sap entry
 	 * @return the sap entry that was removed
@@ -132,6 +148,13 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return sapEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -362,6 +385,7 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -378,6 +402,7 @@ public abstract class SAPEntryLocalServiceBaseImpl
 		return sapEntryLocalService.deleteSAPEntry((SAPEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SAPEntry> getBasePersistence() {
 		return sapEntryPersistence;
 	}
@@ -436,6 +461,10 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	/**
 	 * Updates the sap entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SAPEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sapEntry the sap entry
 	 * @return the sap entry that was updated
 	 */
@@ -443,6 +472,11 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	@Override
 	public SAPEntry updateSAPEntry(SAPEntry sapEntry) {
 		return sapEntryPersistence.update(sapEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -456,6 +490,8 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		sapEntryLocalService = (SAPEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(sapEntryLocalService);
 	}
 
 	/**
@@ -500,6 +536,22 @@ public abstract class SAPEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SAPEntryLocalService sapEntryLocalService) {
+
+		try {
+			Field field = SAPEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, sapEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected SAPEntryLocalService sapEntryLocalService;
 
 	@Reference
@@ -516,14 +568,6 @@ public abstract class SAPEntryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService
 		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourcePermissionLocalService
-		resourcePermissionLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.RoleLocalService
-		roleLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.UserLocalService

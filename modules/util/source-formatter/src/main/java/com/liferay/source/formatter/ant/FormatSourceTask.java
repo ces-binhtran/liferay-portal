@@ -76,6 +76,26 @@ public class FormatSourceTask extends Task {
 		_sourceFormatterArgs.setBaseDirName(baseDirName);
 	}
 
+	public void setCheckCategoryNames(List<String> checkCategoryNames) {
+		_sourceFormatterArgs.setCheckCategoryNames(checkCategoryNames);
+	}
+
+	public void setCheckNames(List<String> checkNames) {
+		_sourceFormatterArgs.setCheckNames(checkNames);
+	}
+
+	public void setFailOnAutoFix(boolean failOnAutoFix) {
+		_sourceFormatterArgs.setFailOnAutoFix(failOnAutoFix);
+	}
+
+	public void setFailOnHasWarning(boolean failOnHasWarning) {
+		_sourceFormatterArgs.setFailOnHasWarning(failOnHasWarning);
+	}
+
+	public void setFileExtensions(List<String> fileExtensions) {
+		_sourceFormatterArgs.setFileExtensions(fileExtensions);
+	}
+
 	public void setFileNames(String fileNames) {
 		_sourceFormatterArgs.setFileNames(
 			Arrays.asList(StringUtil.split(fileNames)));
@@ -105,6 +125,10 @@ public class FormatSourceTask extends Task {
 		_sourceFormatterArgs.setMaxLineLength(maxLineLength);
 	}
 
+	public void setOutputFileName(String outputFileName) {
+		_sourceFormatterArgs.setOutputFileName(outputFileName);
+	}
+
 	public void setPrintErrors(boolean printErrors) {
 		_sourceFormatterArgs.setPrintErrors(printErrors);
 	}
@@ -117,16 +141,8 @@ public class FormatSourceTask extends Task {
 		_sourceFormatterArgs.setShowDebugInformation(showDebugInformation);
 	}
 
-	public void setShowDocumentation(boolean showDocumentation) {
-		_sourceFormatterArgs.setShowDocumentation(showDocumentation);
-	}
-
-	public void setShowStatusUpdates(boolean showStatusUpdates) {
-		_sourceFormatterArgs.setShowStatusUpdates(showStatusUpdates);
-	}
-
-	public void setThrowException(boolean throwException) {
-		_sourceFormatterArgs.setThrowException(throwException);
+	public void setValidateCommitMessages(boolean validateCommitMessages) {
+		_sourceFormatterArgs.setValidateCommitMessages(validateCommitMessages);
 	}
 
 	private void _collectFromFileSets() {

@@ -3,6 +3,7 @@ definition {
 
 	property app.server.bundles.size = "1";
 	property cluster.enabled = "true";
+	property minimum.slave.ram = "24";
 	property portal.release = "true";
 	property portal.upstream = "quarantine";
 	property remote.elasticsearch.enabled = "true";
@@ -22,7 +23,7 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 
 			BlogsEntry.tearDownCP();
 		}
@@ -30,7 +31,9 @@ definition {
 
 	@priority = "5"
 	test StartupJDBCPING {
+		property app.server.types = "tomcat";
 		property cluster.jdbc.ping = "true";
+		property database.types = "mysql";
 		property portal.acceptance = "true";
 		property test.name.skip.portal.instance = "ClusteringConfigs#StartupJDBCPING";
 

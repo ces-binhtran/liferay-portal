@@ -20,6 +20,7 @@ import com.liferay.dispatch.model.DispatchLogTable;
 import com.liferay.dispatch.model.impl.DispatchLogImpl;
 import com.liferay.dispatch.model.impl.DispatchLogModelImpl;
 import com.liferay.dispatch.service.persistence.DispatchLogPersistence;
+import com.liferay.dispatch.service.persistence.DispatchLogUtil;
 import com.liferay.dispatch.service.persistence.impl.constants.DispatchPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Configuration;
@@ -36,14 +37,18 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -66,10 +71,10 @@ import org.osgi.service.component.annotations.Reference;
  * Caching information and settings can be found in <code>portal.properties</code>
  * </p>
  *
- * @author Alessio Antonio Rendina
+ * @author Matija Petanjek
  * @generated
  */
-@Component(service = DispatchLogPersistence.class)
+@Component(service = {DispatchLogPersistence.class, BasePersistence.class})
 public class DispatchLogPersistenceImpl
 	extends BasePersistenceImpl<DispatchLog> implements DispatchLogPersistence {
 
@@ -190,7 +195,7 @@ public class DispatchLogPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DispatchLog>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DispatchLog dispatchLog : list) {
@@ -251,10 +256,6 @@ public class DispatchLogPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -561,7 +562,7 @@ public class DispatchLogPersistenceImpl
 
 		Object[] finderArgs = new Object[] {dispatchTriggerId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -588,8 +589,6 @@ public class DispatchLogPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -708,7 +707,7 @@ public class DispatchLogPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DispatchLog>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DispatchLog dispatchLog : list) {
@@ -774,10 +773,6 @@ public class DispatchLogPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1102,7 +1097,7 @@ public class DispatchLogPersistenceImpl
 
 		Object[] finderArgs = new Object[] {dispatchTriggerId, status};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1133,8 +1128,6 @@ public class DispatchLogPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1174,11 +1167,10 @@ public class DispatchLogPersistenceImpl
 	@Override
 	public void cacheResult(DispatchLog dispatchLog) {
 		entityCache.putResult(
-			entityCacheEnabled, DispatchLogImpl.class,
-			dispatchLog.getPrimaryKey(), dispatchLog);
-
-		dispatchLog.resetOriginalValues();
+			DispatchLogImpl.class, dispatchLog.getPrimaryKey(), dispatchLog);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the dispatch logs in the entity cache if it is enabled.
@@ -1187,15 +1179,19 @@ public class DispatchLogPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<DispatchLog> dispatchLogs) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (dispatchLogs.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (DispatchLog dispatchLog : dispatchLogs) {
 			if (entityCache.getResult(
-					entityCacheEnabled, DispatchLogImpl.class,
-					dispatchLog.getPrimaryKey()) == null) {
+					DispatchLogImpl.class, dispatchLog.getPrimaryKey()) ==
+						null) {
 
 				cacheResult(dispatchLog);
-			}
-			else {
-				dispatchLog.resetOriginalValues();
 			}
 		}
 	}
@@ -1211,9 +1207,7 @@ public class DispatchLogPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(DispatchLogImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DispatchLogImpl.class);
 	}
 
 	/**
@@ -1225,35 +1219,22 @@ public class DispatchLogPersistenceImpl
 	 */
 	@Override
 	public void clearCache(DispatchLog dispatchLog) {
-		entityCache.removeResult(
-			entityCacheEnabled, DispatchLogImpl.class,
-			dispatchLog.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		entityCache.removeResult(DispatchLogImpl.class, dispatchLog);
 	}
 
 	@Override
 	public void clearCache(List<DispatchLog> dispatchLogs) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (DispatchLog dispatchLog : dispatchLogs) {
-			entityCache.removeResult(
-				entityCacheEnabled, DispatchLogImpl.class,
-				dispatchLog.getPrimaryKey());
+			entityCache.removeResult(DispatchLogImpl.class, dispatchLog);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DispatchLogImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				entityCacheEnabled, DispatchLogImpl.class, primaryKey);
+			entityCache.removeResult(DispatchLogImpl.class, primaryKey);
 		}
 	}
 
@@ -1384,24 +1365,24 @@ public class DispatchLogPersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (dispatchLog.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				dispatchLog.setCreateDate(now);
+				dispatchLog.setCreateDate(date);
 			}
 			else {
-				dispatchLog.setCreateDate(serviceContext.getCreateDate(now));
+				dispatchLog.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!dispatchLogModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				dispatchLog.setModifiedDate(now);
+				dispatchLog.setModifiedDate(date);
 			}
 			else {
 				dispatchLog.setModifiedDate(
-					serviceContext.getModifiedDate(now));
+					serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -1410,10 +1391,8 @@ public class DispatchLogPersistenceImpl
 		try {
 			session = openSession();
 
-			if (dispatchLog.isNew()) {
+			if (isNew) {
 				session.save(dispatchLog);
-
-				dispatchLog.setNew(false);
 			}
 			else {
 				dispatchLog = (DispatchLog)session.merge(dispatchLog);
@@ -1426,84 +1405,12 @@ public class DispatchLogPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				dispatchLogModelImpl.getDispatchTriggerId()
-			};
-
-			finderCache.removeResult(_finderPathCountByDispatchTriggerId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByDispatchTriggerId, args);
-
-			args = new Object[] {
-				dispatchLogModelImpl.getDispatchTriggerId(),
-				dispatchLogModelImpl.getStatus()
-			};
-
-			finderCache.removeResult(_finderPathCountByDTI_S, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByDTI_S, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((dispatchLogModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByDispatchTriggerId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					dispatchLogModelImpl.getOriginalDispatchTriggerId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByDispatchTriggerId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDispatchTriggerId, args);
-
-				args = new Object[] {
-					dispatchLogModelImpl.getDispatchTriggerId()
-				};
-
-				finderCache.removeResult(
-					_finderPathCountByDispatchTriggerId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDispatchTriggerId, args);
-			}
-
-			if ((dispatchLogModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByDTI_S.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					dispatchLogModelImpl.getOriginalDispatchTriggerId(),
-					dispatchLogModelImpl.getOriginalStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByDTI_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDTI_S, args);
-
-				args = new Object[] {
-					dispatchLogModelImpl.getDispatchTriggerId(),
-					dispatchLogModelImpl.getStatus()
-				};
-
-				finderCache.removeResult(_finderPathCountByDTI_S, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDTI_S, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, DispatchLogImpl.class,
-			dispatchLog.getPrimaryKey(), dispatchLog, false);
+			DispatchLogImpl.class, dispatchLogModelImpl, false, true);
+
+		if (isNew) {
+			dispatchLog.setNew(false);
+		}
 
 		dispatchLog.resetOriginalValues();
 
@@ -1643,7 +1550,7 @@ public class DispatchLogPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DispatchLog>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1684,10 +1591,6 @@ public class DispatchLogPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1717,7 +1620,7 @@ public class DispatchLogPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1733,9 +1636,6 @@ public class DispatchLogPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1776,72 +1676,82 @@ public class DispatchLogPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		DispatchLogModelImpl.setEntityCacheEnabled(entityCacheEnabled);
-		DispatchLogModelImpl.setFinderCacheEnabled(finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByDispatchTriggerId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByDispatchTriggerId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"dispatchTriggerId"}, true);
 
 		_finderPathWithoutPaginationFindByDispatchTriggerId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
 			"findByDispatchTriggerId", new String[] {Long.class.getName()},
-			DispatchLogModelImpl.DISPATCHTRIGGERID_COLUMN_BITMASK |
-			DispatchLogModelImpl.MODIFIEDDATE_COLUMN_BITMASK);
+			new String[] {"dispatchTriggerId"}, true);
 
 		_finderPathCountByDispatchTriggerId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION,
-			"countByDispatchTriggerId", new String[] {Long.class.getName()});
+			"countByDispatchTriggerId", new String[] {Long.class.getName()},
+			new String[] {"dispatchTriggerId"}, false);
 
 		_finderPathWithPaginationFindByDTI_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByDTI_S",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"dispatchTriggerId", "status"}, true);
 
 		_finderPathWithoutPaginationFindByDTI_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, DispatchLogImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByDTI_S",
 			new String[] {Long.class.getName(), Integer.class.getName()},
-			DispatchLogModelImpl.DISPATCHTRIGGERID_COLUMN_BITMASK |
-			DispatchLogModelImpl.STATUS_COLUMN_BITMASK |
-			DispatchLogModelImpl.MODIFIEDDATE_COLUMN_BITMASK);
+			new String[] {"dispatchTriggerId", "status"}, true);
 
 		_finderPathCountByDTI_S = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByDTI_S",
-			new String[] {Long.class.getName(), Integer.class.getName()});
+			new String[] {Long.class.getName(), Integer.class.getName()},
+			new String[] {"dispatchTriggerId", "status"}, false);
+
+		_setDispatchLogUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setDispatchLogUtilPersistence(null);
+
 		entityCache.removeCache(DispatchLogImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setDispatchLogUtilPersistence(
+		DispatchLogPersistence dispatchLogPersistence) {
+
+		try {
+			Field field = DispatchLogUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, dispatchLogPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -1850,12 +1760,6 @@ public class DispatchLogPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.dispatch.model.DispatchLog"),
-			true);
 	}
 
 	@Override
@@ -1875,8 +1779,6 @@ public class DispatchLogPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -1910,13 +1812,13 @@ public class DispatchLogPersistenceImpl
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"output"});
 
-	static {
-		try {
-			Class.forName(DispatchPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private DispatchLogModelArgumentsResolver
+		_dispatchLogModelArgumentsResolver;
 
 }

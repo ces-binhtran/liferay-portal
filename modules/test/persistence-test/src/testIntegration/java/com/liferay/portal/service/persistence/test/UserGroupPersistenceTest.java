@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchUserGroupException;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.service.UserGroupLocalServiceUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -242,12 +242,12 @@ public class UserGroupPersistenceTest {
 	}
 
 	@Test
-	public void testCountByU_C_P() throws Exception {
-		_persistence.countByU_C_P(
+	public void testCountByGtU_C_P() throws Exception {
+		_persistence.countByGtU_C_P(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
 			RandomTestUtil.nextLong());
 
-		_persistence.countByU_C_P(0L, 0L, 0L);
+		_persistence.countByGtU_C_P(0L, 0L, 0L);
 	}
 
 	@Test
@@ -506,29 +506,72 @@ public class UserGroupPersistenceTest {
 
 		_persistence.clearCache();
 
-		UserGroup existingUserGroup = _persistence.findByPrimaryKey(
-			newUserGroup.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newUserGroup.getPrimaryKey()));
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		UserGroup newUserGroup = addUserGroup();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			UserGroup.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"userGroupId", newUserGroup.getUserGroupId()));
+
+		List<UserGroup> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(UserGroup userGroup) {
+		Assert.assertEquals(
+			Long.valueOf(userGroup.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				userGroup, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			userGroup.getName(),
+			ReflectionTestUtil.invoke(
+				userGroup, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "name"));
 
 		Assert.assertEquals(
-			Long.valueOf(existingUserGroup.getCompanyId()),
+			Long.valueOf(userGroup.getCompanyId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingUserGroup, "getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingUserGroup.getName(),
-				ReflectionTestUtil.invoke(
-					existingUserGroup, "getOriginalName", new Class<?>[0])));
-
+				userGroup, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
 		Assert.assertEquals(
-			Long.valueOf(existingUserGroup.getCompanyId()),
-			ReflectionTestUtil.<Long>invoke(
-				existingUserGroup, "getOriginalCompanyId", new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingUserGroup.getExternalReferenceCode(),
-				ReflectionTestUtil.invoke(
-					existingUserGroup, "getOriginalExternalReferenceCode",
-					new Class<?>[0])));
+			userGroup.getExternalReferenceCode(),
+			ReflectionTestUtil.invoke(
+				userGroup, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "externalReferenceCode"));
 	}
 
 	protected UserGroup addUserGroup() throws Exception {

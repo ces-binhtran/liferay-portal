@@ -3,14 +3,18 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Layout Page Templates";
+	property testray.main.component.name = "Display Pages";
 
 	setUp {
-		TestCase.setUpPortalInstance();
+		task ("Set up instance and sign in") {
+			TestCase.setUpPortalInstance();
 
-		User.firstLoginPG();
+			User.firstLoginPG();
+		}
 
-		JSONGroup.addGroup(groupName = "Test Site Name");
+		task ("Add a site") {
+			JSONGroup.addGroup(groupName = "Test Site Name");
+		}
 	}
 
 	tearDown {
@@ -125,11 +129,13 @@ definition {
 				key_type = "dark",
 				locator1 = "PageEditor#FOOTERS");
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 		}
 	}
@@ -147,15 +153,11 @@ definition {
 		}
 
 		task ("Add a dynamic Collections and select Web Content Article as Asset Entry Type") {
-			JSONAssetlist.addDynamicAssetListEntry(
+			JSONAssetlist.addDynamicAssetListEntryWithItemType(
 				groupName = "Test Site Name",
+				itemSubtype = "Basic Web Content",
+				itemType = "Web Content Article",
 				title = "Dynamic Collection");
-
-			AssetListsAdmin.openAssetListsAdmin(siteURLKey = "test-site-name");
-
-			AssetListsAdmin.editAssetList(assetListTitle = "Dynamic Collection");
-
-			AssetListsAdmin.configureAssetEntryType(selectedAsset = "Web Content Article");
 		}
 
 		task ("Add a display page template with Web Content Article type and Basic Web Content subtype") {
@@ -183,26 +185,18 @@ definition {
 		}
 
 		task ("Assert the title of three Web Content Articles are respectively shown in each cell") {
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "Third Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+			var n = "1";
 
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "Second Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "2",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+			for (var title : list "Third,Second,First") {
+				AssertVisible(
+					key_colPosition = "1",
+					key_entryTitle = "${title} Web Content",
+					key_fragmentName = "Collection Display",
+					key_rowPosition = "${n}",
+					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "First Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "3",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+				var n = ${n} + 1;
+			}
 
 			PageEditor.clickPublish();
 		}
@@ -230,30 +224,20 @@ definition {
 		task ("Assert the Collection Display containing mapping content is imported") {
 			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
-			AssertElementPresent(
-				key_fragmentName = "Collection Display",
-				locator1 = "Fragment#FRAGMENT_HEADER");
+			PageEditor.clickConfigurableField(fragmentName = "Collection Display");
 
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "Third Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "1",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+			var n = "1";
 
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "Second Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "2",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+			for (var title : list "Third,Second,First") {
+				AssertVisible(
+					key_colPosition = "1",
+					key_entryTitle = "${title} Web Content",
+					key_fragmentName = "Collection Display",
+					key_rowPosition = "${n}",
+					locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
 
-			AssertVisible(
-				key_colPosition = "1",
-				key_entryTitle = "First Web Content",
-				key_fragmentName = "Collection Display",
-				key_rowPosition = "3",
-				locator1 = "PageEditor#COLLECTION_ITEM_TITLE");
+				var n = ${n} + 1;
+			}
 		}
 	}
 

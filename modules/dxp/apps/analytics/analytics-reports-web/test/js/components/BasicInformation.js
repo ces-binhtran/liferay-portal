@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import BasicInformation from '../../../src/main/resources/META-INF/resources/js/components/BasicInformation';
@@ -17,33 +17,51 @@ import BasicInformation from '../../../src/main/resources/META-INF/resources/js/
 import '@testing-library/jest-dom/extend-expect';
 
 describe('BasicInformation', () => {
-	afterEach(cleanup);
-
 	it('renders author, publish date and title', () => {
 		const testProps = {
-			authorName: 'John Tester',
-			publishDate: 1581957977840,
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
+			onSelectedLanguageClick: () => {},
+			publishDate: 'Thu Sep 20 08:17:57 GMT 2021',
 			title: 'A testing page',
+			viewURLs: [
+				{
+					default: true,
+					languageId: 'en-US',
+					languageLabel: 'English (United States)',
+					selected: true,
+					viewURL:
+						'http://localhost:8080/en/web/guest/-/basic-web-content',
+				},
+				{
+					default: false,
+					languageId: 'es-ES',
+					languageLabel: 'Spanish (Spain)',
+					selected: false,
+					viewURL:
+						'http://localhost:8080/es/web/guest/-/contenido-web-basico',
+				},
+			],
 		};
 
-		const {getByText} = render(
-			<BasicInformation
-				authorName={testProps.authorName}
-				publishDate={testProps.publishDate}
-				title={testProps.title}
-			/>
-		);
+		const {getByText} = render(<BasicInformation {...testProps} />);
 
 		expect(getByText(testProps.title)).toBeInTheDocument();
 
-		expect(
-			getByText('authored-by-' + testProps.authorName)
-		).toBeInTheDocument();
+		expect(getByText(testProps.canonicalURL)).toBeInTheDocument();
 
-		const formattedPublishDate = 'February 17, 2020';
-
+		const formattedPublishDate = 'September 20, 2021';
 		expect(
 			getByText('published-on-' + formattedPublishDate)
+		).toBeInTheDocument();
+
+		expect(
+			getByText('authored-by-' + testProps.author.name)
 		).toBeInTheDocument();
 	});
 });

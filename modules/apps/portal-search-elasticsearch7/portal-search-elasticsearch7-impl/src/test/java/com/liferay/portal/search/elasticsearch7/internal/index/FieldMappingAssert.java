@@ -25,7 +25,7 @@ import org.elasticsearch.client.IndicesClient;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.GetFieldMappingsRequest;
 import org.elasticsearch.client.indices.GetFieldMappingsResponse;
-import org.elasticsearch.client.indices.GetFieldMappingsResponse.FieldMappingMetaData;
+import org.elasticsearch.client.indices.GetFieldMappingsResponse.FieldMappingMetadata;
 
 import org.junit.Assert;
 
@@ -40,20 +40,19 @@ public class FieldMappingAssert {
 			IndicesClient indicesClient)
 		throws Exception {
 
-		assertFieldMappingMetaData(
+		assertFieldMappingMetadata(
 			expectedValue, "analyzer", field, type, index, indicesClient);
 	}
 
-	public static void assertFieldMappingMetaData(
-			final String expectedValue, final String key, final String field,
-			final String type, final String index,
-			final IndicesClient indicesClient)
+	public static void assertFieldMappingMetadata(
+			String expectedValue, String key, String field, String type,
+			String index, IndicesClient indicesClient)
 		throws Exception {
 
 		IdempotentRetryAssert.retryAssert(
 			10, TimeUnit.SECONDS,
-			() -> doAssertFieldMappingMetaData(
-				expectedValue, key, field, type, index, indicesClient));
+			() -> _assertFieldMappingMetadata(
+				expectedValue, key, field, index, indicesClient));
 	}
 
 	public static void assertType(
@@ -61,25 +60,25 @@ public class FieldMappingAssert {
 			IndicesClient indicesClient)
 		throws Exception {
 
-		assertFieldMappingMetaData(
+		assertFieldMappingMetadata(
 			expectedValue, "type", field, type, index, indicesClient);
 	}
 
-	protected static void doAssertFieldMappingMetaData(
-		String expectedValue, String key, String field, String type,
-		String index, IndicesClient indicesClient) {
+	private static void _assertFieldMappingMetadata(
+		String expectedValue, String key, String field, String index,
+		IndicesClient indicesClient) {
 
-		FieldMappingMetaData fieldMappingMetaData = getFieldMapping(
-			field, type, index, indicesClient);
+		FieldMappingMetadata fieldMappingMetadata = _getFieldMapping(
+			field, index, indicesClient);
 
-		String value = getFieldMappingMetaDataValue(
-			fieldMappingMetaData, field, key);
+		String value = _getFieldMappingMetadataValue(
+			fieldMappingMetadata, field, key);
 
 		Assert.assertEquals(expectedValue, value);
 	}
 
-	protected static FieldMappingMetaData getFieldMapping(
-		String field, String type, String index, IndicesClient indicesClient) {
+	private static FieldMappingMetadata _getFieldMapping(
+		String field, String index, IndicesClient indicesClient) {
 
 		GetFieldMappingsRequest getFieldMappingsRequest =
 			new GetFieldMappingsRequest();
@@ -99,10 +98,10 @@ public class FieldMappingAssert {
 		}
 	}
 
-	protected static String getFieldMappingMetaDataValue(
-		FieldMappingMetaData fieldMappingMetaData, String field, String key) {
+	private static String _getFieldMappingMetadataValue(
+		FieldMappingMetadata fieldMappingMetadata, String field, String key) {
 
-		Map<String, Object> mappings = fieldMappingMetaData.sourceAsMap();
+		Map<String, Object> mappings = fieldMappingMetadata.sourceAsMap();
 
 		Map<String, Object> mapping = (Map<String, Object>)mappings.get(field);
 

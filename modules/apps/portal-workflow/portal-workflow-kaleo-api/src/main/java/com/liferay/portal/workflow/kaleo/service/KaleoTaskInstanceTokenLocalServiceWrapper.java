@@ -27,6 +27,10 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 	implements KaleoTaskInstanceTokenLocalService,
 			   ServiceWrapper<KaleoTaskInstanceTokenLocalService> {
 
+	public KaleoTaskInstanceTokenLocalServiceWrapper() {
+		this(null);
+	}
+
 	public KaleoTaskInstanceTokenLocalServiceWrapper(
 		KaleoTaskInstanceTokenLocalService kaleoTaskInstanceTokenLocalService) {
 
@@ -36,6 +40,10 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Adds the kaleo task instance token to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskInstanceToken the kaleo task instance token
 	 * @return the kaleo task instance token that was added
@@ -162,6 +170,10 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 	/**
 	 * Deletes the kaleo task instance token from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoTaskInstanceToken the kaleo task instance token
 	 * @return the kaleo task instance token that was removed
 	 */
@@ -177,6 +189,10 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Deletes the kaleo task instance token with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskInstanceTokenId the primary key of the kaleo task instance token
 	 * @return the kaleo task instance token that was removed
@@ -206,6 +222,13 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kaleoTaskInstanceTokenLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kaleoTaskInstanceTokenLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -754,6 +777,7 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 					Long[] assigneeClassPKs, java.util.Date dueDateGT,
 					java.util.Date dueDateLT, Boolean completed,
 					Long kaleoDefinitionId, Long[] kaleoInstanceIds,
+					boolean searchByActiveWorkflowHandlers,
 					Boolean searchByUserRoles, boolean andOperator, int start,
 					int end,
 					com.liferay.portal.kernel.util.OrderByComparator
@@ -768,8 +792,8 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 				assetTitle, taskNames, assetTypes, assetPrimaryKeys,
 				assigneeClassName, assigneeClassPKs, dueDateGT, dueDateLT,
 				completed, kaleoDefinitionId, kaleoInstanceIds,
-				searchByUserRoles, andOperator, start, end, orderByComparator,
-				serviceContext);
+				searchByActiveWorkflowHandlers, searchByUserRoles, andOperator,
+				start, end, orderByComparator, serviceContext);
 	}
 
 	@Override
@@ -785,6 +809,10 @@ public class KaleoTaskInstanceTokenLocalServiceWrapper
 
 	/**
 	 * Updates the kaleo task instance token in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoTaskInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoTaskInstanceToken the kaleo task instance token
 	 * @return the kaleo task instance token that was updated

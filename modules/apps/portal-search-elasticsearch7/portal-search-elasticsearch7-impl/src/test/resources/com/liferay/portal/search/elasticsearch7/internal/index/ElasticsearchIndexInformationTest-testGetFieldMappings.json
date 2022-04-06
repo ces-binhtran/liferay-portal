@@ -4,6 +4,16 @@
 			"date_detection": false,
 			"dynamic_templates": [
 				{
+					"template_ddmFieldArray_ddmFieldValue_Number_sortable": {
+						"mapping": {
+							"scaling_factor": 1000,
+							"store": true,
+							"type": "scaled_float"
+						},
+						"path_match": "ddmFieldArray.ddmFieldValue*Number_sortable"
+					}
+				},
+				{
 					"template_long_sortable": {
 						"mapping": {
 							"store": true,
@@ -36,6 +46,16 @@
 							"type": "geo_point"
 						},
 						"match": "*_geolocation"
+					}
+				},
+				{
+					"template_ddmFieldArray_ddmFieldValueKeyword": {
+						"mapping": {
+							"store": true,
+							"type": "keyword"
+						},
+						"match_mapping_type": "string",
+						"path_match": "ddmFieldArray.ddmFieldValueKeyword*"
 					}
 				},
 				{
@@ -184,6 +204,19 @@
 					}
 				},
 				{
+					"template_et": {
+						"mapping": {
+							"analyzer": "estonian",
+							"store": true,
+							"term_vector": "with_positions_offsets",
+							"type": "text"
+						},
+						"match": "\\w+_et\\b|\\w+_et_[A-Z]{2}\\b",
+						"match_mapping_type": "string",
+						"match_pattern": "regex"
+					}
+				},
+				{
 					"template_eu": {
 						"mapping": {
 							"analyzer": "basque",
@@ -192,6 +225,19 @@
 							"type": "text"
 						},
 						"match": "\\w+_eu\\b|\\w+_eu_[A-Z]{2}\\b",
+						"match_mapping_type": "string",
+						"match_pattern": "regex"
+					}
+				},
+				{
+					"template_fa": {
+						"mapping": {
+							"analyzer": "persian",
+							"store": true,
+							"term_vector": "with_positions_offsets",
+							"type": "text"
+						},
+						"match": "\\w+_fa\\b|\\w+_fa_[A-Z]{2}\\b",
 						"match_mapping_type": "string",
 						"match_pattern": "regex"
 					}
@@ -218,6 +264,19 @@
 							"type": "text"
 						},
 						"match": "\\w+_fr\\b|\\w+_fr_[A-Z]{2}\\b",
+						"match_mapping_type": "string",
+						"match_pattern": "regex"
+					}
+				},
+				{
+					"template_gl": {
+						"mapping": {
+							"analyzer": "galician",
+							"store": true,
+							"term_vector": "with_positions_offsets",
+							"type": "text"
+						},
+						"match": "\\w+_gl\\b|\\w+_gl_[A-Z]{2}\\b",
 						"match_mapping_type": "string",
 						"match_pattern": "regex"
 					}
@@ -262,14 +321,14 @@
 					}
 				},
 				{
-					"template_id": {
+					"template_in": {
 						"mapping": {
 							"analyzer": "indonesian",
 							"store": true,
 							"term_vector": "with_positions_offsets",
 							"type": "text"
 						},
-						"match": "\\w+_id\\b|\\w+_id_[A-Z]{2}\\b",
+						"match": "\\w+_in\\b|\\w+_in_[A-Z]{2}\\b",
 						"match_mapping_type": "string",
 						"match_pattern": "regex"
 					}
@@ -309,6 +368,19 @@
 							"type": "text"
 						},
 						"match": "\\w+_ko\\b|\\w+_ko_[A-Z]{2}\\b",
+						"match_mapping_type": "string",
+						"match_pattern": "regex"
+					}
+				},
+				{
+					"template_lt": {
+						"mapping": {
+							"analyzer": "lithuanian",
+							"store": true,
+							"term_vector": "with_positions_offsets",
+							"type": "text"
+						},
+						"match": "\\w+_lt\\b|\\w+_lt_[A-Z]{2}\\b",
 						"match_mapping_type": "string",
 						"match_pattern": "regex"
 					}
@@ -456,6 +528,16 @@
 					}
 				},
 				{
+					"template_ddmFieldArray_ddmFieldValueText": {
+						"mapping": {
+							"store": true,
+							"type": "text"
+						},
+						"match_mapping_type": "string",
+						"path_match": "ddmFieldArray.ddmFieldValueText*"
+					}
+				},
+				{
 					"template_ddm": {
 						"mapping": {
 							"store": true,
@@ -501,6 +583,14 @@
 					"type": "keyword"
 				},
 				"assetCategoryIds": {
+					"store": true,
+					"type": "keyword"
+				},
+				"assetInternalCategoryId": {
+					"store": true,
+					"type": "keyword"
+				},
+				"assetInternalCategoryIds": {
 					"store": true,
 					"type": "keyword"
 				},
@@ -569,6 +659,17 @@
 					"term_vector": "with_positions_offsets",
 					"type": "text"
 				},
+				"ddmFieldArray": {
+					"properties": {
+						"ddmFieldName": {
+							"type": "keyword"
+						},
+						"ddmValueFieldName": {
+							"type": "keyword"
+						}
+					},
+					"type": "nested"
+				},
 				"ddmStructureKey": {
 					"store": true,
 					"type": "keyword"
@@ -628,6 +729,10 @@
 					"store": true,
 					"type": "keyword"
 				},
+				"fileExtension": {
+					"store": true,
+					"type": "text"
+				},
 				"folderId": {
 					"store": true,
 					"type": "keyword"
@@ -686,6 +791,46 @@
 					"format": "yyyyMMddHHmmss",
 					"store": true,
 					"type": "date"
+				},
+				"nestedFieldArray": {
+					"properties": {
+						"fieldName": {
+							"type": "keyword"
+						},
+						"valueFieldName": {
+							"type": "keyword"
+						},
+						"value_binary": {
+							"type": "binary"
+						},
+						"value_boolean": {
+							"type": "boolean"
+						},
+						"value_date": {
+							"format": "yyyyMMddHHmmss",
+							"type": "date"
+						},
+						"value_double": {
+							"type": "double"
+						},
+						"value_integer": {
+							"type": "integer"
+						},
+						"value_keyword": {
+							"type": "keyword"
+						},
+						"value_keyword_lowercase": {
+							"normalizer": "lowercase",
+							"type": "keyword"
+						},
+						"value_long": {
+							"type": "long"
+						},
+						"value_text": {
+							"type": "text"
+						}
+					},
+					"type": "nested"
 				},
 				"nodeId": {
 					"store": true,
@@ -822,6 +967,11 @@
 					"type": "keyword"
 				},
 				"userName": {
+					"fields": {
+						"text": {
+							"type": "text"
+						}
+					},
 					"store": true,
 					"type": "keyword"
 				},

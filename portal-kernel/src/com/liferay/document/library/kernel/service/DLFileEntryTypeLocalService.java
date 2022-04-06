@@ -21,6 +21,7 @@ import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -62,6 +63,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see DLFileEntryTypeLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -74,13 +76,17 @@ public interface DLFileEntryTypeLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DLFileEntryTypeLocalServiceUtil} to access the document library file entry type local service. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryTypeLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portlet.documentlibrary.service.impl.DLFileEntryTypeLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the document library file entry type local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DLFileEntryTypeLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addDDMStructureLinks(
 		long fileEntryTypeId, Set<Long> ddmStructureIds);
 
 	/**
 	 * Adds the document library file entry type to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryTypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntryType the document library file entry type
 	 * @return the document library file entry type that was added
@@ -100,11 +106,42 @@ public interface DLFileEntryTypeLocalService
 		long folderId, long[] fileEntryTypeIds);
 
 	public DLFileEntryType addFileEntryType(
+			long userId, long groupId, long dataDefinitionId,
+			String fileEntryTypeKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, int scope,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addFileEntryType(long, long, long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
+	public DLFileEntryType addFileEntryType(
+			long userId, long groupId, long dataDefinitionId,
+			String fileEntryTypeKey, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
+	public DLFileEntryType addFileEntryType(
 			long userId, long groupId, String fileEntryTypeKey,
 			Map<Locale, String> nameMap, Map<Locale, String> descriptionMap,
 			long[] ddmStructureIds, ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #addFileEntryType(long, long, String, Map, Map, long,
+	 ServiceContext)}
+	 */
+	@Deprecated
 	public DLFileEntryType addFileEntryType(
 			long userId, long groupId, String name, String description,
 			long[] ddmStructureIds, ServiceContext serviceContext)
@@ -135,6 +172,10 @@ public interface DLFileEntryTypeLocalService
 	/**
 	 * Deletes the document library file entry type from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryTypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntryType the document library file entry type
 	 * @return the document library file entry type that was removed
 	 */
@@ -144,6 +185,10 @@ public interface DLFileEntryTypeLocalService
 
 	/**
 	 * Deletes the document library file entry type with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryTypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fileEntryTypeId the primary key of the document library file entry type
 	 * @return the document library file entry type that was removed
@@ -186,6 +231,9 @@ public interface DLFileEntryTypeLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -252,6 +300,10 @@ public interface DLFileEntryTypeLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public long dynamicQueryCount(
 		DynamicQuery dynamicQuery, Projection projection);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public DLFileEntryType fetchDataDefinitionFileEntryType(
+		long groupId, long dataDefinitionId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DLFileEntryType fetchDLFileEntryType(long fileEntryTypeId);
@@ -394,10 +446,6 @@ public interface DLFileEntryTypeLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<DLFileEntryType> getFileEntryTypes(long ddmStructureId)
-		throws PortalException;
-
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<DLFileEntryType> getFileEntryTypes(long[] groupIds);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -453,6 +501,10 @@ public interface DLFileEntryTypeLocalService
 	/**
 	 * Updates the document library file entry type in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryTypeLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntryType the document library file entry type
 	 * @return the document library file entry type that was updated
 	 */
@@ -464,15 +516,30 @@ public interface DLFileEntryTypeLocalService
 			DLFileEntry dlFileEntry, ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
 	public void updateFileEntryType(
 			long userId, long fileEntryTypeId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, long[] ddmStructureIds,
 			ServiceContext serviceContext)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #updateFileEntryType(long, Map, Map)}
+	 */
+	@Deprecated
 	public void updateFileEntryType(
 			long userId, long fileEntryTypeId, String name, String description,
 			long[] ddmStructureIds, ServiceContext serviceContext)
+		throws PortalException;
+
+	public DLFileEntryType updateFileEntryType(
+			long fileEntryTypeId, Map<Locale, String> nameMap,
+			Map<Locale, String> descriptionMap)
 		throws PortalException;
 
 	public void updateFolderFileEntryTypes(

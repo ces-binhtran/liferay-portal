@@ -70,7 +70,7 @@ public class BeanFilterInvokerPortletFilter
 			_invokeMethod(_destroyMethod);
 		}
 		catch (PortletException portletException) {
-			_log.error(portletException, portletException);
+			_log.error(portletException);
 		}
 	}
 
@@ -168,13 +168,13 @@ public class BeanFilterInvokerPortletFilter
 			beanFilterMethod.invoke(arguments);
 		}
 		catch (ReflectiveOperationException reflectiveOperationException) {
-			Throwable cause = reflectiveOperationException.getCause();
+			Throwable throwable = reflectiveOperationException.getCause();
 
-			if (cause instanceof PortletException) {
-				throw (PortletException)cause;
+			if (throwable instanceof PortletException) {
+				throw (PortletException)throwable;
 			}
 
-			throw new PortletException(cause);
+			throw new PortletException(throwable);
 		}
 	}
 

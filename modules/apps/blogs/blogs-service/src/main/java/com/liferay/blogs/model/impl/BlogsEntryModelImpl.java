@@ -16,7 +16,6 @@ package com.liferay.blogs.model.impl;
 
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.model.BlogsEntryModel;
-import com.liferay.blogs.model.BlogsEntrySoap;
 import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
@@ -37,6 +36,7 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
@@ -45,15 +45,15 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -80,7 +80,8 @@ public class BlogsEntryModelImpl
 	public static final String TABLE_NAME = "BlogsEntry";
 
 	public static final Object[][] TABLE_COLUMNS = {
-		{"mvccVersion", Types.BIGINT}, {"uuid_", Types.VARCHAR},
+		{"mvccVersion", Types.BIGINT}, {"ctCollectionId", Types.BIGINT},
+		{"uuid_", Types.VARCHAR}, {"externalReferenceCode", Types.VARCHAR},
 		{"entryId", Types.BIGINT}, {"groupId", Types.BIGINT},
 		{"companyId", Types.BIGINT}, {"userId", Types.BIGINT},
 		{"userName", Types.VARCHAR}, {"createDate", Types.TIMESTAMP},
@@ -103,7 +104,9 @@ public class BlogsEntryModelImpl
 
 	static {
 		TABLE_COLUMNS_MAP.put("mvccVersion", Types.BIGINT);
+		TABLE_COLUMNS_MAP.put("ctCollectionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("uuid_", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("externalReferenceCode", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("entryId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("groupId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("companyId", Types.BIGINT);
@@ -135,7 +138,7 @@ public class BlogsEntryModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table BlogsEntry (mvccVersion LONG default 0 not null,uuid_ VARCHAR(75) null,entryId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,title VARCHAR(150) null,subtitle STRING null,urlTitle VARCHAR(255) null,description STRING null,content TEXT null,displayDate DATE null,allowPingbacks BOOLEAN,allowTrackbacks BOOLEAN,trackbacks TEXT null,coverImageCaption STRING null,coverImageFileEntryId LONG,coverImageURL STRING null,smallImage BOOLEAN,smallImageFileEntryId LONG,smallImageId LONG,smallImageURL STRING null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null)";
+		"create table BlogsEntry (mvccVersion LONG default 0 not null,ctCollectionId LONG default 0 not null,uuid_ VARCHAR(75) null,externalReferenceCode VARCHAR(75) null,entryId LONG not null,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,title VARCHAR(255) null,subtitle STRING null,urlTitle VARCHAR(255) null,description STRING null,content TEXT null,displayDate DATE null,allowPingbacks BOOLEAN,allowTrackbacks BOOLEAN,trackbacks TEXT null,coverImageCaption STRING null,coverImageFileEntryId LONG,coverImageURL STRING null,smallImage BOOLEAN,smallImageFileEntryId LONG,smallImageId LONG,smallImageURL STRING null,lastPublishDate DATE null,status INTEGER,statusByUserId LONG,statusByUserName VARCHAR(75) null,statusDate DATE null,primary key (entryId, ctCollectionId))";
 
 	public static final String TABLE_SQL_DROP = "drop table BlogsEntry";
 
@@ -151,95 +154,73 @@ public class BlogsEntryModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DISPLAYDATE_COLUMN_BITMASK = 2L;
 
-	public static final long GROUPID_COLUMN_BITMASK = 4L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long EXTERNALREFERENCECODE_COLUMN_BITMASK = 4L;
 
-	public static final long STATUS_COLUMN_BITMASK = 8L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long GROUPID_COLUMN_BITMASK = 8L;
 
-	public static final long URLTITLE_COLUMN_BITMASK = 16L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long STATUS_COLUMN_BITMASK = 16L;
 
-	public static final long USERID_COLUMN_BITMASK = 32L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long URLTITLE_COLUMN_BITMASK = 32L;
 
-	public static final long UUID_COLUMN_BITMASK = 64L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long USERID_COLUMN_BITMASK = 64L;
 
-	public static final long CREATEDATE_COLUMN_BITMASK = 128L;
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long UUID_COLUMN_BITMASK = 128L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
+	public static final long CREATEDATE_COLUMN_BITMASK = 256L;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static BlogsEntry toModel(BlogsEntrySoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		BlogsEntry model = new BlogsEntryImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setUuid(soapModel.getUuid());
-		model.setEntryId(soapModel.getEntryId());
-		model.setGroupId(soapModel.getGroupId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setTitle(soapModel.getTitle());
-		model.setSubtitle(soapModel.getSubtitle());
-		model.setUrlTitle(soapModel.getUrlTitle());
-		model.setDescription(soapModel.getDescription());
-		model.setContent(soapModel.getContent());
-		model.setDisplayDate(soapModel.getDisplayDate());
-		model.setAllowPingbacks(soapModel.isAllowPingbacks());
-		model.setAllowTrackbacks(soapModel.isAllowTrackbacks());
-		model.setTrackbacks(soapModel.getTrackbacks());
-		model.setCoverImageCaption(soapModel.getCoverImageCaption());
-		model.setCoverImageFileEntryId(soapModel.getCoverImageFileEntryId());
-		model.setCoverImageURL(soapModel.getCoverImageURL());
-		model.setSmallImage(soapModel.isSmallImage());
-		model.setSmallImageFileEntryId(soapModel.getSmallImageFileEntryId());
-		model.setSmallImageId(soapModel.getSmallImageId());
-		model.setSmallImageURL(soapModel.getSmallImageURL());
-		model.setLastPublishDate(soapModel.getLastPublishDate());
-		model.setStatus(soapModel.getStatus());
-		model.setStatusByUserId(soapModel.getStatusByUserId());
-		model.setStatusByUserName(soapModel.getStatusByUserName());
-		model.setStatusDate(soapModel.getStatusDate());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<BlogsEntry> toModels(BlogsEntrySoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<BlogsEntry> models = new ArrayList<BlogsEntry>(soapModels.length);
-
-		for (BlogsEntrySoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public BlogsEntryModelImpl() {
@@ -292,9 +273,6 @@ public class BlogsEntryModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((BlogsEntry)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -372,9 +350,20 @@ public class BlogsEntryModelImpl
 		attributeSetterBiConsumers.put(
 			"mvccVersion",
 			(BiConsumer<BlogsEntry, Long>)BlogsEntry::setMvccVersion);
+		attributeGetterFunctions.put(
+			"ctCollectionId", BlogsEntry::getCtCollectionId);
+		attributeSetterBiConsumers.put(
+			"ctCollectionId",
+			(BiConsumer<BlogsEntry, Long>)BlogsEntry::setCtCollectionId);
 		attributeGetterFunctions.put("uuid", BlogsEntry::getUuid);
 		attributeSetterBiConsumers.put(
 			"uuid", (BiConsumer<BlogsEntry, String>)BlogsEntry::setUuid);
+		attributeGetterFunctions.put(
+			"externalReferenceCode", BlogsEntry::getExternalReferenceCode);
+		attributeSetterBiConsumers.put(
+			"externalReferenceCode",
+			(BiConsumer<BlogsEntry, String>)
+				BlogsEntry::setExternalReferenceCode);
 		attributeGetterFunctions.put("entryId", BlogsEntry::getEntryId);
 		attributeSetterBiConsumers.put(
 			"entryId", (BiConsumer<BlogsEntry, Long>)BlogsEntry::setEntryId);
@@ -508,7 +497,26 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
+	}
+
+	@JSON
+	@Override
+	public long getCtCollectionId() {
+		return _ctCollectionId;
+	}
+
+	@Override
+	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_ctCollectionId = ctCollectionId;
 	}
 
 	@JSON
@@ -524,17 +532,49 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
+	}
+
+	@JSON
+	@Override
+	public String getExternalReferenceCode() {
+		if (_externalReferenceCode == null) {
+			return "";
+		}
+		else {
+			return _externalReferenceCode;
+		}
+	}
+
+	@Override
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_externalReferenceCode = externalReferenceCode;
+	}
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
+	public String getOriginalExternalReferenceCode() {
+		return getColumnOriginalValue("externalReferenceCode");
 	}
 
 	@JSON
@@ -545,6 +585,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setEntryId(long entryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_entryId = entryId;
 	}
 
@@ -556,19 +600,20 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@JSON
@@ -579,19 +624,21 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -602,12 +649,8 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setUserId(long userId) {
-		_columnBitmask |= USERID_COLUMN_BITMASK;
-
-		if (!_setOriginalUserId) {
-			_setOriginalUserId = true;
-
-			_originalUserId = _userId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_userId = userId;
@@ -629,8 +672,13 @@ public class BlogsEntryModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalUserId() {
-		return _originalUserId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
 	@JSON
@@ -646,6 +694,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -657,7 +709,9 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_createDate = createDate;
 	}
@@ -676,6 +730,10 @@ public class BlogsEntryModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -692,6 +750,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setTitle(String title) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_title = title;
 	}
 
@@ -708,6 +770,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setSubtitle(String subtitle) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_subtitle = subtitle;
 	}
 
@@ -724,17 +790,20 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setUrlTitle(String urlTitle) {
-		_columnBitmask |= URLTITLE_COLUMN_BITMASK;
-
-		if (_originalUrlTitle == null) {
-			_originalUrlTitle = _urlTitle;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_urlTitle = urlTitle;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUrlTitle() {
-		return GetterUtil.getString(_originalUrlTitle);
+		return getColumnOriginalValue("urlTitle");
 	}
 
 	@JSON
@@ -750,6 +819,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_description = description;
 	}
 
@@ -766,6 +839,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setContent(String content) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_content = content;
 	}
 
@@ -777,17 +854,20 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setDisplayDate(Date displayDate) {
-		_columnBitmask = -1L;
-
-		if (_originalDisplayDate == null) {
-			_originalDisplayDate = _displayDate;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_displayDate = displayDate;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public Date getOriginalDisplayDate() {
-		return _originalDisplayDate;
+		return getColumnOriginalValue("displayDate");
 	}
 
 	@JSON
@@ -804,6 +884,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setAllowPingbacks(boolean allowPingbacks) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_allowPingbacks = allowPingbacks;
 	}
 
@@ -821,6 +905,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setAllowTrackbacks(boolean allowTrackbacks) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_allowTrackbacks = allowTrackbacks;
 	}
 
@@ -837,6 +925,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setTrackbacks(String trackbacks) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_trackbacks = trackbacks;
 	}
 
@@ -853,6 +945,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setCoverImageCaption(String coverImageCaption) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_coverImageCaption = coverImageCaption;
 	}
 
@@ -864,6 +960,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setCoverImageFileEntryId(long coverImageFileEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_coverImageFileEntryId = coverImageFileEntryId;
 	}
 
@@ -880,6 +980,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setCoverImageURL(String coverImageURL) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_coverImageURL = coverImageURL;
 	}
 
@@ -897,6 +1001,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setSmallImage(boolean smallImage) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_smallImage = smallImage;
 	}
 
@@ -908,6 +1016,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setSmallImageFileEntryId(long smallImageFileEntryId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_smallImageFileEntryId = smallImageFileEntryId;
 	}
 
@@ -919,6 +1031,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setSmallImageId(long smallImageId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_smallImageId = smallImageId;
 	}
 
@@ -935,6 +1051,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setSmallImageURL(String smallImageURL) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_smallImageURL = smallImageURL;
 	}
 
@@ -946,6 +1066,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setLastPublishDate(Date lastPublishDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_lastPublishDate = lastPublishDate;
 	}
 
@@ -957,19 +1081,21 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setStatus(int status) {
-		_columnBitmask |= STATUS_COLUMN_BITMASK;
-
-		if (!_setOriginalStatus) {
-			_setOriginalStatus = true;
-
-			_originalStatus = _status;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_status = status;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public int getOriginalStatus() {
-		return _originalStatus;
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("status"));
 	}
 
 	@JSON
@@ -980,6 +1106,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setStatusByUserId(long statusByUserId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusByUserId = statusByUserId;
 	}
 
@@ -1012,6 +1142,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setStatusByUserName(String statusByUserName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusByUserName = statusByUserName;
 	}
 
@@ -1023,6 +1157,10 @@ public class BlogsEntryModelImpl
 
 	@Override
 	public void setStatusDate(Date statusDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_statusDate = statusDate;
 	}
 
@@ -1258,6 +1396,26 @@ public class BlogsEntryModelImpl
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -1294,7 +1452,9 @@ public class BlogsEntryModelImpl
 		BlogsEntryImpl blogsEntryImpl = new BlogsEntryImpl();
 
 		blogsEntryImpl.setMvccVersion(getMvccVersion());
+		blogsEntryImpl.setCtCollectionId(getCtCollectionId());
 		blogsEntryImpl.setUuid(getUuid());
+		blogsEntryImpl.setExternalReferenceCode(getExternalReferenceCode());
 		blogsEntryImpl.setEntryId(getEntryId());
 		blogsEntryImpl.setGroupId(getGroupId());
 		blogsEntryImpl.setCompanyId(getCompanyId());
@@ -1330,6 +1490,73 @@ public class BlogsEntryModelImpl
 	}
 
 	@Override
+	public BlogsEntry cloneWithOriginalValues() {
+		BlogsEntryImpl blogsEntryImpl = new BlogsEntryImpl();
+
+		blogsEntryImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		blogsEntryImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		blogsEntryImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		blogsEntryImpl.setExternalReferenceCode(
+			this.<String>getColumnOriginalValue("externalReferenceCode"));
+		blogsEntryImpl.setEntryId(this.<Long>getColumnOriginalValue("entryId"));
+		blogsEntryImpl.setGroupId(this.<Long>getColumnOriginalValue("groupId"));
+		blogsEntryImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		blogsEntryImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		blogsEntryImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		blogsEntryImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		blogsEntryImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		blogsEntryImpl.setTitle(this.<String>getColumnOriginalValue("title"));
+		blogsEntryImpl.setSubtitle(
+			this.<String>getColumnOriginalValue("subtitle"));
+		blogsEntryImpl.setUrlTitle(
+			this.<String>getColumnOriginalValue("urlTitle"));
+		blogsEntryImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		blogsEntryImpl.setContent(
+			this.<String>getColumnOriginalValue("content"));
+		blogsEntryImpl.setDisplayDate(
+			this.<Date>getColumnOriginalValue("displayDate"));
+		blogsEntryImpl.setAllowPingbacks(
+			this.<Boolean>getColumnOriginalValue("allowPingbacks"));
+		blogsEntryImpl.setAllowTrackbacks(
+			this.<Boolean>getColumnOriginalValue("allowTrackbacks"));
+		blogsEntryImpl.setTrackbacks(
+			this.<String>getColumnOriginalValue("trackbacks"));
+		blogsEntryImpl.setCoverImageCaption(
+			this.<String>getColumnOriginalValue("coverImageCaption"));
+		blogsEntryImpl.setCoverImageFileEntryId(
+			this.<Long>getColumnOriginalValue("coverImageFileEntryId"));
+		blogsEntryImpl.setCoverImageURL(
+			this.<String>getColumnOriginalValue("coverImageURL"));
+		blogsEntryImpl.setSmallImage(
+			this.<Boolean>getColumnOriginalValue("smallImage"));
+		blogsEntryImpl.setSmallImageFileEntryId(
+			this.<Long>getColumnOriginalValue("smallImageFileEntryId"));
+		blogsEntryImpl.setSmallImageId(
+			this.<Long>getColumnOriginalValue("smallImageId"));
+		blogsEntryImpl.setSmallImageURL(
+			this.<String>getColumnOriginalValue("smallImageURL"));
+		blogsEntryImpl.setLastPublishDate(
+			this.<Date>getColumnOriginalValue("lastPublishDate"));
+		blogsEntryImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
+		blogsEntryImpl.setStatusByUserId(
+			this.<Long>getColumnOriginalValue("statusByUserId"));
+		blogsEntryImpl.setStatusByUserName(
+			this.<String>getColumnOriginalValue("statusByUserName"));
+		blogsEntryImpl.setStatusDate(
+			this.<Date>getColumnOriginalValue("statusDate"));
+
+		return blogsEntryImpl;
+	}
+
+	@Override
 	public int compareTo(BlogsEntry blogsEntry) {
 		int value = 0;
 
@@ -1354,16 +1581,16 @@ public class BlogsEntryModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof BlogsEntry)) {
+		if (!(object instanceof BlogsEntry)) {
 			return false;
 		}
 
-		BlogsEntry blogsEntry = (BlogsEntry)obj;
+		BlogsEntry blogsEntry = (BlogsEntry)object;
 
 		long primaryKey = blogsEntry.getPrimaryKey();
 
@@ -1380,46 +1607,31 @@ public class BlogsEntryModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		BlogsEntryModelImpl blogsEntryModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		blogsEntryModelImpl._originalUuid = blogsEntryModelImpl._uuid;
+		_setModifiedDate = false;
 
-		blogsEntryModelImpl._originalGroupId = blogsEntryModelImpl._groupId;
-
-		blogsEntryModelImpl._setOriginalGroupId = false;
-
-		blogsEntryModelImpl._originalCompanyId = blogsEntryModelImpl._companyId;
-
-		blogsEntryModelImpl._setOriginalCompanyId = false;
-
-		blogsEntryModelImpl._originalUserId = blogsEntryModelImpl._userId;
-
-		blogsEntryModelImpl._setOriginalUserId = false;
-
-		blogsEntryModelImpl._setModifiedDate = false;
-
-		blogsEntryModelImpl._originalUrlTitle = blogsEntryModelImpl._urlTitle;
-
-		blogsEntryModelImpl._originalDisplayDate =
-			blogsEntryModelImpl._displayDate;
-
-		blogsEntryModelImpl._originalStatus = blogsEntryModelImpl._status;
-
-		blogsEntryModelImpl._setOriginalStatus = false;
-
-		blogsEntryModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -1428,12 +1640,25 @@ public class BlogsEntryModelImpl
 
 		blogsEntryCacheModel.mvccVersion = getMvccVersion();
 
+		blogsEntryCacheModel.ctCollectionId = getCtCollectionId();
+
 		blogsEntryCacheModel.uuid = getUuid();
 
 		String uuid = blogsEntryCacheModel.uuid;
 
 		if ((uuid != null) && (uuid.length() == 0)) {
 			blogsEntryCacheModel.uuid = null;
+		}
+
+		blogsEntryCacheModel.externalReferenceCode = getExternalReferenceCode();
+
+		String externalReferenceCode =
+			blogsEntryCacheModel.externalReferenceCode;
+
+		if ((externalReferenceCode != null) &&
+			(externalReferenceCode.length() == 0)) {
+
+			blogsEntryCacheModel.externalReferenceCode = null;
 		}
 
 		blogsEntryCacheModel.entryId = getEntryId();
@@ -1602,7 +1827,7 @@ public class BlogsEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -1613,9 +1838,26 @@ public class BlogsEntryModelImpl
 			Function<BlogsEntry, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((BlogsEntry)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((BlogsEntry)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -1634,7 +1876,7 @@ public class BlogsEntryModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -1666,22 +1908,14 @@ public class BlogsEntryModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
+	private long _ctCollectionId;
 	private String _uuid;
-	private String _originalUuid;
+	private String _externalReferenceCode;
 	private long _entryId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
-	private long _originalUserId;
-	private boolean _setOriginalUserId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
@@ -1689,11 +1923,9 @@ public class BlogsEntryModelImpl
 	private String _title;
 	private String _subtitle;
 	private String _urlTitle;
-	private String _originalUrlTitle;
 	private String _description;
 	private String _content;
 	private Date _displayDate;
-	private Date _originalDisplayDate;
 	private boolean _allowPingbacks;
 	private boolean _allowTrackbacks;
 	private String _trackbacks;
@@ -1706,11 +1938,164 @@ public class BlogsEntryModelImpl
 	private String _smallImageURL;
 	private Date _lastPublishDate;
 	private int _status;
-	private int _originalStatus;
-	private boolean _setOriginalStatus;
 	private long _statusByUserId;
 	private String _statusByUserName;
 	private Date _statusDate;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<BlogsEntry, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((BlogsEntry)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"externalReferenceCode", _externalReferenceCode);
+		_columnOriginalValues.put("entryId", _entryId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("title", _title);
+		_columnOriginalValues.put("subtitle", _subtitle);
+		_columnOriginalValues.put("urlTitle", _urlTitle);
+		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("content", _content);
+		_columnOriginalValues.put("displayDate", _displayDate);
+		_columnOriginalValues.put("allowPingbacks", _allowPingbacks);
+		_columnOriginalValues.put("allowTrackbacks", _allowTrackbacks);
+		_columnOriginalValues.put("trackbacks", _trackbacks);
+		_columnOriginalValues.put("coverImageCaption", _coverImageCaption);
+		_columnOriginalValues.put(
+			"coverImageFileEntryId", _coverImageFileEntryId);
+		_columnOriginalValues.put("coverImageURL", _coverImageURL);
+		_columnOriginalValues.put("smallImage", _smallImage);
+		_columnOriginalValues.put(
+			"smallImageFileEntryId", _smallImageFileEntryId);
+		_columnOriginalValues.put("smallImageId", _smallImageId);
+		_columnOriginalValues.put("smallImageURL", _smallImageURL);
+		_columnOriginalValues.put("lastPublishDate", _lastPublishDate);
+		_columnOriginalValues.put("status", _status);
+		_columnOriginalValues.put("statusByUserId", _statusByUserId);
+		_columnOriginalValues.put("statusByUserName", _statusByUserName);
+		_columnOriginalValues.put("statusDate", _statusDate);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("uuid_", 4L);
+
+		columnBitmasks.put("externalReferenceCode", 8L);
+
+		columnBitmasks.put("entryId", 16L);
+
+		columnBitmasks.put("groupId", 32L);
+
+		columnBitmasks.put("companyId", 64L);
+
+		columnBitmasks.put("userId", 128L);
+
+		columnBitmasks.put("userName", 256L);
+
+		columnBitmasks.put("createDate", 512L);
+
+		columnBitmasks.put("modifiedDate", 1024L);
+
+		columnBitmasks.put("title", 2048L);
+
+		columnBitmasks.put("subtitle", 4096L);
+
+		columnBitmasks.put("urlTitle", 8192L);
+
+		columnBitmasks.put("description", 16384L);
+
+		columnBitmasks.put("content", 32768L);
+
+		columnBitmasks.put("displayDate", 65536L);
+
+		columnBitmasks.put("allowPingbacks", 131072L);
+
+		columnBitmasks.put("allowTrackbacks", 262144L);
+
+		columnBitmasks.put("trackbacks", 524288L);
+
+		columnBitmasks.put("coverImageCaption", 1048576L);
+
+		columnBitmasks.put("coverImageFileEntryId", 2097152L);
+
+		columnBitmasks.put("coverImageURL", 4194304L);
+
+		columnBitmasks.put("smallImage", 8388608L);
+
+		columnBitmasks.put("smallImageFileEntryId", 16777216L);
+
+		columnBitmasks.put("smallImageId", 33554432L);
+
+		columnBitmasks.put("smallImageURL", 67108864L);
+
+		columnBitmasks.put("lastPublishDate", 134217728L);
+
+		columnBitmasks.put("status", 268435456L);
+
+		columnBitmasks.put("statusByUserId", 536870912L);
+
+		columnBitmasks.put("statusByUserName", 1073741824L);
+
+		columnBitmasks.put("statusDate", 2147483648L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private BlogsEntry _escapedModel;
 

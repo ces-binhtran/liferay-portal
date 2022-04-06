@@ -35,8 +35,8 @@ public class DDMTemplateRowChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		DDMTemplate template = (DDMTemplate)obj;
+	public boolean isDisabled(Object object) {
+		DDMTemplate template = (DDMTemplate)object;
 
 		PermissionChecker permissionChecker =
 			PermissionThreadLocal.getPermissionChecker();
@@ -49,10 +49,10 @@ public class DDMTemplateRowChecker extends EmptyOnClickRowChecker {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
-		return super.isDisabled(obj);
+		return super.isDisabled(object);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

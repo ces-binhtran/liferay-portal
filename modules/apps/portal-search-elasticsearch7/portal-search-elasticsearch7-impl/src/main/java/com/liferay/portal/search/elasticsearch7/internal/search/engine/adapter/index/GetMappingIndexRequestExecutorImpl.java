@@ -28,7 +28,7 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.GetMappingsResponse;
-import org.elasticsearch.cluster.metadata.MappingMetaData;
+import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.compress.CompressedXContent;
 
 import org.osgi.service.component.annotations.Component;
@@ -48,17 +48,17 @@ public class GetMappingIndexRequestExecutorImpl
 		GetMappingsRequest getMappingsRequest = createGetMappingsRequest(
 			getMappingIndexRequest);
 
-		GetMappingsResponse getMappingsResponse = getGetMappingsResponse(
+		GetMappingsResponse getMappingsResponse = _getGetMappingsResponse(
 			getMappingsRequest, getMappingIndexRequest);
 
-		Map<String, MappingMetaData> mappings = getMappingsResponse.mappings();
+		Map<String, MappingMetadata> mappings = getMappingsResponse.mappings();
 
 		Map<String, String> indexMappings = new HashMap<>();
 
 		for (String indexName : getMappingIndexRequest.getIndexNames()) {
-			MappingMetaData mappingMetaData = mappings.get(indexName);
+			MappingMetadata mappingMetadata = mappings.get(indexName);
 
-			CompressedXContent mappingContent = mappingMetaData.source();
+			CompressedXContent mappingContent = mappingMetadata.source();
 
 			indexMappings.put(indexName, mappingContent.toString());
 		}
@@ -76,13 +76,21 @@ public class GetMappingIndexRequestExecutorImpl
 		return getMappingsRequest;
 	}
 
-	protected GetMappingsResponse getGetMappingsResponse(
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private GetMappingsResponse _getGetMappingsResponse(
 		GetMappingsRequest getMappingsRequest,
 		GetMappingIndexRequest getMappingIndexRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				getMappingIndexRequest.getConnectionId(), true);
+				getMappingIndexRequest.getConnectionId(),
+				getMappingIndexRequest.isPreferLocalCluster());
 
 		IndicesClient indicesClient = restHighLevelClient.indices();
 
@@ -93,13 +101,6 @@ public class GetMappingIndexRequestExecutorImpl
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

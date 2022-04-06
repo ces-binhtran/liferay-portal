@@ -54,8 +54,8 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
-	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveEntry();" %>'>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl\"" : StringPool.BLANK %>>
+	<aui:form method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveEntry();" %>'>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="entryId" type="hidden" value="<%= entryId %>" />
@@ -78,7 +78,9 @@ if (portletTitleBasedNavigation) {
 
 		<aui:fieldset-group markupView="lexicon">
 			<aui:fieldset>
-				<aui:input autocomplete="off" id="titleEditor" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" title="" type="text" value="<%= HtmlUtil.escape(title) %>" />
+				<aui:input autocomplete="off" id="titleEditor" label='<%= LanguageUtil.get(request, "title") %>' name="title" required="<%= true %>" title="" type="text" value="<%= HtmlUtil.escape(title) %>">
+					<aui:validator name="maxLength"><%= ModelHintsUtil.getMaxLength(AnnouncementsEntry.class.getName(), "title") %></aui:validator>
+				</aui:input>
 
 				<liferay-editor:editor
 					contents="<%= content %>"
@@ -151,13 +153,13 @@ if (portletTitleBasedNavigation) {
 
 				<aui:input name="expirationDate" />
 			</aui:fieldset>
+
+			<div class="sheet-footer">
+				<aui:button primary="<%= true %>" type="submit" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button primary="<%= true %>" type="submit" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </div>
 

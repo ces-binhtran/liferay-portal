@@ -30,8 +30,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.kaleo.definition.Node;
 import com.liferay.portal.workflow.kaleo.definition.Task;
@@ -63,8 +61,6 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Level;
-
 import org.junit.Before;
 
 /**
@@ -89,19 +85,14 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 	}
 
 	protected BlogsEntry addBlogsEntry() throws PortalException {
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"com.liferay.petra.mail.MailEngine", Level.OFF)) {
+		BlogsEntry blogsEntry = _blogsEntryLocalService.addEntry(
+			TestPropsValues.getUserId(), StringUtil.randomString(),
+			StringUtil.randomString(), new Date(),
+			ServiceContextTestUtil.getServiceContext());
 
-			BlogsEntry blogsEntry = _blogsEntryLocalService.addEntry(
-				TestPropsValues.getUserId(), StringUtil.randomString(),
-				StringUtil.randomString(), new Date(),
-				ServiceContextTestUtil.getServiceContext());
+		_blogsEntries.add(blogsEntry);
 
-			_blogsEntries.add(blogsEntry);
-
-			return blogsEntry;
-		}
+		return blogsEntry;
 	}
 
 	protected KaleoInstance addKaleoInstance() throws Exception {
@@ -233,6 +224,26 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		);
 
 		assertSLAReindex(indexNamesMap, indexTypes, parameters);
+	}
+
+	protected KaleoTaskInstanceToken assignKaleoTaskInstanceToken(
+			KaleoInstance kaleoInstance, long userId)
+		throws PortalException {
+
+		List<KaleoTaskInstanceToken> kaleoTaskInstanceTokens =
+			_kaleoTaskInstanceTokenLocalService.getKaleoTaskInstanceTokens(
+				kaleoInstance.getKaleoInstanceId(), false, 0, 1, null,
+				ServiceContextTestUtil.getServiceContext(
+					TestPropsValues.getGroupId(), 0L));
+
+		KaleoTaskInstanceToken kaleoTaskInstanceToken =
+			kaleoTaskInstanceTokens.get(0);
+
+		return _kaleoTaskInstanceTokenLocalService.assignKaleoTaskInstanceToken(
+			kaleoTaskInstanceToken.getKaleoTaskInstanceTokenId(),
+			User.class.getName(), userId,
+			WorkflowContextUtil.convert(kaleoInstance.getWorkflowContext()),
+			ServiceContextTestUtil.getServiceContext());
 	}
 
 	protected KaleoTaskInstanceToken assignKaleoTaskInstanceToken(
@@ -383,7 +394,7 @@ public abstract class BaseWorkflowMetricsIndexerTestCase
 		String[] indexNames = ArrayUtil.toStringArray(indexNamesMap.keySet());
 
 		for (int i = 0; i < indexNames.length; i++) {
-			retryAssertCount(
+			assertCount(
 				indexNamesMap.get(indexNames[i]), indexNames[i], indexTypes[i],
 				ArrayUtil.append(new Object[] {"deleted", false}, parameters));
 		}

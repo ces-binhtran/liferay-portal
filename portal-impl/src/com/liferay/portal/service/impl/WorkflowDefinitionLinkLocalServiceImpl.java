@@ -17,14 +17,17 @@ package com.liferay.portal.service.impl;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.bean.BeanReference;
 import com.liferay.portal.kernel.exception.NoSuchWorkflowDefinitionLinkException;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.WorkflowDefinitionLink;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
+import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ObjectValuePair;
+import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -51,7 +54,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 			int workflowDefinitionVersion)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		User user = _userPersistence.findByPrimaryKey(userId);
 
 		long workflowDefinitionLinkId = counterLocalService.increment();
 
@@ -63,7 +66,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		workflowDefinitionLink.setUserId(userId);
 		workflowDefinitionLink.setUserName(user.getFullName());
 		workflowDefinitionLink.setClassNameId(
-			classNameLocalService.getClassNameId(className));
+			_classNameLocalService.getClassNameId(className));
 		workflowDefinitionLink.setClassPK(classPK);
 		workflowDefinitionLink.setTypePK(typePK);
 		workflowDefinitionLink.setWorkflowDefinitionName(
@@ -98,7 +101,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		return workflowDefinitionLinkPersistence.fetchByG_C_C_C_T(
 			WorkflowConstants.DEFAULT_GROUP_ID, companyId,
-			classNameLocalService.getClassNameId(className), classPK, typePK);
+			_classNameLocalService.getClassNameId(className), classPK, typePK);
 	}
 
 	@Override
@@ -122,15 +125,23 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		WorkflowDefinitionLink workflowDefinitionLink =
 			workflowDefinitionLinkPersistence.fetchByG_C_C_C_T(
 				StagingUtil.getLiveGroupId(groupId), companyId,
-				classNameLocalService.getClassNameId(className), classPK,
+				_classNameLocalService.getClassNameId(className), classPK,
 				typePK);
 
 		if (!strict && (workflowDefinitionLink == null)) {
 			workflowDefinitionLink =
 				workflowDefinitionLinkPersistence.fetchByG_C_C_C_T(
-					WorkflowConstants.DEFAULT_GROUP_ID, companyId,
-					classNameLocalService.getClassNameId(className), classPK,
+					PortalUtil.getSiteGroupId(groupId), companyId,
+					_classNameLocalService.getClassNameId(className), classPK,
 					typePK);
+
+			if (workflowDefinitionLink == null) {
+				workflowDefinitionLink =
+					workflowDefinitionLinkPersistence.fetchByG_C_C_C_T(
+						WorkflowConstants.DEFAULT_GROUP_ID, companyId,
+						_classNameLocalService.getClassNameId(className),
+						classPK, typePK);
+			}
 		}
 
 		return workflowDefinitionLink;
@@ -146,7 +157,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		return workflowDefinitionLinkPersistence.findByG_C_C_C(
 			StagingUtil.getLiveGroupId(groupId), companyId,
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -160,7 +171,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		return workflowDefinitionLinkPersistence.findByG_C_C_C_T(
 			WorkflowConstants.DEFAULT_GROUP_ID, companyId,
-			classNameLocalService.getClassNameId(className), classPK, typePK);
+			_classNameLocalService.getClassNameId(className), classPK, typePK);
 	}
 
 	@Override
@@ -200,6 +211,19 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 	@Override
 	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
+			long companyId, long groupId, long classPK)
+		throws PortalException {
+
+		if (!WorkflowEngineManagerUtil.isDeployed()) {
+			throw new NoSuchWorkflowDefinitionLinkException();
+		}
+
+		return workflowDefinitionLinkPersistence.findByG_C_CPK(
+			groupId, companyId, classPK);
+	}
+
+	@Override
+	public List<WorkflowDefinitionLink> getWorkflowDefinitionLinks(
 			long companyId, long groupId, String className, long classPK)
 		throws PortalException {
 
@@ -209,7 +233,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		return workflowDefinitionLinkPersistence.findByG_C_C_C(
 			companyId, StagingUtil.getLiveGroupId(groupId),
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 	}
 
 	@Override
@@ -236,7 +260,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		return workflowDefinitionLinkPersistence.countByG_C_C(
 			StagingUtil.getLiveGroupId(groupId), companyId,
-			classNameLocalService.getClassNameId(className));
+			_classNameLocalService.getClassNameId(className));
 	}
 
 	@Override
@@ -263,7 +287,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		int count =
 			workflowDefinitionLinkLocalService.getWorkflowDefinitionLinksCount(
-				companyId, groupId, className);
+				companyId, StagingUtil.getLiveGroupId(groupId), className);
 
 		if (count > 0) {
 			return true;
@@ -271,7 +295,15 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		count =
 			workflowDefinitionLinkLocalService.getWorkflowDefinitionLinksCount(
-				companyId, GroupConstants.DEFAULT_LIVE_GROUP_ID, className);
+				companyId, PortalUtil.getSiteGroupId(groupId), className);
+
+		if (count > 0) {
+			return true;
+		}
+
+		count =
+			workflowDefinitionLinkLocalService.getWorkflowDefinitionLinksCount(
+				companyId, WorkflowConstants.DEFAULT_GROUP_ID, className);
 
 		if (count > 0) {
 			return true;
@@ -290,15 +322,23 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		int count = workflowDefinitionLinkPersistence.countByG_C_C_C(
 			StagingUtil.getLiveGroupId(groupId), companyId,
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 
 		if (count > 0) {
 			return true;
 		}
 
 		count = workflowDefinitionLinkPersistence.countByG_C_C_C(
-			GroupConstants.DEFAULT_LIVE_GROUP_ID, companyId,
-			classNameLocalService.getClassNameId(className), classPK);
+			PortalUtil.getSiteGroupId(groupId), companyId,
+			_classNameLocalService.getClassNameId(className), classPK);
+
+		if (count > 0) {
+			return true;
+		}
+
+		count = workflowDefinitionLinkPersistence.countByG_C_C_C(
+			WorkflowConstants.DEFAULT_GROUP_ID, companyId,
+			_classNameLocalService.getClassNameId(className), classPK);
 
 		if (count > 0) {
 			return true;
@@ -318,7 +358,15 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		int count = workflowDefinitionLinkPersistence.countByG_C_C_C_T(
 			StagingUtil.getLiveGroupId(groupId), companyId,
-			classNameLocalService.getClassNameId(className), classPK, typePK);
+			_classNameLocalService.getClassNameId(className), classPK, typePK);
+
+		if (count > 0) {
+			return true;
+		}
+
+		count = workflowDefinitionLinkPersistence.countByG_C_C_C_T(
+			PortalUtil.getSiteGroupId(groupId), companyId,
+			_classNameLocalService.getClassNameId(className), classPK, typePK);
 
 		if (count > 0) {
 			return true;
@@ -326,7 +374,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 
 		count = workflowDefinitionLinkPersistence.countByG_C_C_C_T(
 			WorkflowConstants.DEFAULT_GROUP_ID, companyId,
-			classNameLocalService.getClassNameId(className), classPK, typePK);
+			_classNameLocalService.getClassNameId(className), classPK, typePK);
 
 		if (count > 0) {
 			return true;
@@ -366,12 +414,12 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 			int workflowDefinitionVersion)
 		throws PortalException {
 
-		User user = userPersistence.findByPrimaryKey(userId);
+		User user = _userPersistence.findByPrimaryKey(userId);
 
 		WorkflowDefinitionLink workflowDefinitionLink =
 			workflowDefinitionLinkPersistence.fetchByG_C_C_C_T(
 				StagingUtil.getLiveGroupId(groupId), companyId,
-				classNameLocalService.getClassNameId(className), classPK,
+				_classNameLocalService.getClassNameId(className), classPK,
 				typePK);
 
 		if (workflowDefinitionLink == null) {
@@ -386,7 +434,7 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 		workflowDefinitionLink.setUserId(userId);
 		workflowDefinitionLink.setUserName(user.getFullName());
 		workflowDefinitionLink.setClassNameId(
-			classNameLocalService.getClassNameId(className));
+			_classNameLocalService.getClassNameId(className));
 		workflowDefinitionLink.setClassPK(classPK);
 		workflowDefinitionLink.setTypePK(typePK);
 		workflowDefinitionLink.setWorkflowDefinitionName(
@@ -421,5 +469,11 @@ public class WorkflowDefinitionLinkLocalServiceImpl
 			}
 		}
 	}
+
+	@BeanReference(type = ClassNameLocalService.class)
+	private ClassNameLocalService _classNameLocalService;
+
+	@BeanReference(type = UserPersistence.class)
+	private UserPersistence _userPersistence;
 
 }

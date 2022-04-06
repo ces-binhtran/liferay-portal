@@ -16,9 +16,9 @@ package com.liferay.taglib.ui;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.language.UnicodeLanguageUtil;
+import com.liferay.portal.kernel.servlet.FileAvailabilityUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.Http;
-import com.liferay.taglib.FileAvailabilityUtil;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
 /**
@@ -42,30 +42,18 @@ public class IconDeactivateTag extends IconTag {
 		if (url.startsWith(Http.HTTP_WITH_SLASH) ||
 			url.startsWith(Http.HTTPS_WITH_SLASH)) {
 
-			url = "submitForm(document.hrefFm, '".concat(
-				HtmlUtil.escapeJS(url)
-			).concat(
-				"');"
-			);
+			url = StringBundler.concat(
+				"submitForm(document.hrefFm, '", HtmlUtil.escapeJS(url), "');");
 		}
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("javascript:if (confirm('");
-
-		sb.append(
-			UnicodeLanguageUtil.get(
-				TagResourceBundleUtil.getResourceBundle(pageContext),
-				"are-you-sure-you-want-to-deactivate-this"));
-
-		sb.append("')) { ");
-		sb.append(url);
-		sb.append(" } else { self.focus(); }");
-
-		url = sb.toString();
-
 		setMessage("deactivate");
-		setUrl(url);
+		setUrl(
+			StringBundler.concat(
+				"javascript:if (confirm('",
+				UnicodeLanguageUtil.get(
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					"are-you-sure-you-want-to-deactivate-this"),
+				"')) { ", url, " } else { self.focus(); }"));
 
 		return super.getPage();
 	}

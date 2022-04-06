@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.ImageSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Image implements Cloneable {
+public class Image implements Cloneable, Serializable {
 
 	public static Image toDTO(String json) {
 		return ImageSerDes.toDTO(json);
@@ -73,6 +75,27 @@ public class Image implements Cloneable {
 	}
 
 	protected String contentUrl;
+
+	public String getContentValue() {
+		return contentValue;
+	}
+
+	public void setContentValue(String contentValue) {
+		this.contentValue = contentValue;
+	}
+
+	public void setContentValue(
+		UnsafeSupplier<String, Exception> contentValueUnsafeSupplier) {
+
+		try {
+			contentValue = contentValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String contentValue;
 
 	public Long getImageId() {
 		return imageId;

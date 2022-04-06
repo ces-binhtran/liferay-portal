@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.model.impl;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
 import com.liferay.fragment.constants.FragmentPortletKeys;
 import com.liferay.fragment.model.FragmentComposition;
@@ -24,8 +25,9 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Repository;
 import com.liferay.portal.kernel.model.User;
@@ -102,6 +104,10 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 				String.valueOf(getFragmentCollectionId()));
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			if (createIfAbsent) {
 				ServiceContext serviceContext = new ServiceContext();
 
@@ -147,16 +153,14 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 
 		path = path + StringPool.SLASH + getFragmentCollectionKey();
 
-		JSONObject jsonObject = JSONUtil.put(
-			"description", getDescription()
-		).put(
-			"name", getName()
-		);
-
 		zipWriter.addEntry(
 			path + StringPool.SLASH +
 				FragmentExportImportConstants.FILE_NAME_COLLECTION,
-			jsonObject.toString());
+			JSONUtil.put(
+				"description", getDescription()
+			).put(
+				"name", getName()
+			).toString());
 
 		List<FragmentComposition> fragmentCompositions =
 			FragmentCompositionLocalServiceUtil.getFragmentCompositions(
@@ -173,6 +177,10 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 				QueryUtil.ALL_POS);
 
 		for (FragmentEntry fragmentEntry : fragmentEntries) {
+			if (fragmentEntry.getType() == FragmentConstants.TYPE_REACT) {
+				continue;
+			}
+
 			fragmentEntry.populateZipWriter(zipWriter, path + "/fragments");
 		}
 
@@ -181,16 +189,15 @@ public class FragmentCollectionImpl extends FragmentCollectionBaseImpl {
 		}
 
 		for (FileEntry fileEntry : getResources()) {
-			StringBundler sb = new StringBundler(4);
-
-			sb.append(path);
-			sb.append(StringPool.SLASH);
-			sb.append("resources/");
-			sb.append(fileEntry.getFileName());
-
-			zipWriter.addEntry(sb.toString(), fileEntry.getContentStream());
+			zipWriter.addEntry(
+				StringBundler.concat(
+					path, "/resources/", fileEntry.getFileName()),
+				fileEntry.getContentStream());
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FragmentCollectionImpl.class);
 
 	private long _resourcesFolderId;
 

@@ -19,7 +19,7 @@
 <%
 SearchContainer<?> searchContainer = (SearchContainer<?>)request.getAttribute("liferay-ui:search:searchContainer");
 
-String redirect = searchContainer.getIteratorURL().toString();
+String redirect = String.valueOf(searchContainer.getIteratorURL());
 
 ResultRow row = (ResultRow)request.getAttribute(WebKeys.SEARCH_CONTAINER_RESULT_ROW);
 
@@ -50,8 +50,13 @@ DDLRecordVersion ddlRecordVersion = ddlRecord.getLatestRecordVersion();
 		url="<%= viewDDLRecordURL %>"
 	/>
 
+	<liferay-ui:icon
+		message="track-workflow"
+		url="<%= WorkflowInstanceTrackerURLProviderUtil.getURL(ddlRecord, request, KaleoProcess.class, true) %>"
+	/>
+
 	<c:if test="<%= KaleoProcessPermission.contains(permissionChecker, kaleoProcessId, ActionKeys.UPDATE) %>">
-		<portlet:actionURL name="deleteDDLRecord" var="deleteDDLRecordURL">
+		<portlet:actionURL name="/kaleo_forms_admin/delete_record" var="deleteDDLRecordURL">
 			<portlet:param name="redirect" value="<%= redirect %>" />
 			<portlet:param name="ddlRecordId" value="<%= String.valueOf(ddlRecord.getRecordId()) %>" />
 			<portlet:param name="kaleoProcessId" value="<%= String.valueOf(kaleoProcessId) %>" />

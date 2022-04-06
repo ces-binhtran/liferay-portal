@@ -24,7 +24,7 @@
 			<c:if test="<%= required && showRequiredLabel %>">
 				<aui:icon cssClass="reference-mark text-warning" image="asterisk" markupView="lexicon" />
 
-				<span class="hide-accessible"><liferay-ui:message key="required" /></span>
+				<span class="hide-accessible sr-only"><liferay-ui:message key="required" /></span>
 			</c:if>
 
 			<c:if test="<%= Validator.isNotNull(helpMessage) %>">
@@ -32,7 +32,7 @@
 			</c:if>
 
 			<c:if test="<%= changesContext %>">
-				<span class="hide-accessible">(<liferay-ui:message key="changing-the-value-of-this-field-reloads-the-page" />)</span>
+				<span class="hide-accessible sr-only">(<liferay-ui:message key="changing-the-value-of-this-field-reloads-the-page" />)</span>
 			</c:if>
 		</label>
 	</c:if>
@@ -84,36 +84,8 @@
 			</c:if>
 
 			<c:if test="<%= changesContext %>">
-				<span class="hide-accessible"><liferay-ui:message key="changing-the-value-of-this-field-reloads-the-page" />)</span>
+				<span class="hide-accessible sr-only"><liferay-ui:message key="changing-the-value-of-this-field-reloads-the-page" />)</span>
 			</c:if>
 		</label>
 	</c:if>
 </div>
-
-<script>
-	(function() {
-		var select = document.getElementById('<%= namespace + id %>');
-
-		if (select) {
-			<c:if test="<%= BrowserSnifferUtil.isEdge(request) || BrowserSnifferUtil.isIe(request) %>">
-				select.addEventListener(
-					'keydown',
-					function(event) {
-						if (event.which === 27) {
-							event.stopPropagation();
-						}
-					}
-				);
-			</c:if>
-
-			<c:if test="<%= BrowserSnifferUtil.isIe(request) && (BrowserSnifferUtil.getMajorVersion(request) == 11.0) %>">
-				select.addEventListener(
-					'mousedown',
-					function(event) {
-						event.currentTarget.focus();
-					}
-				);
-			</c:if>
-		}
-	})();
-</script>

@@ -68,30 +68,37 @@ public class WikiPageSearchTest extends BaseSearchTestCase {
 	}
 
 	@Override
+	@Test
 	public void testLocalizedSearch() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchByDDMStructureField() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchByKeywordsInsideParentBaseModel() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchMyEntries() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchRecentEntries() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchStatus() throws Exception {
 	}
 
 	@Override
+	@Test
 	public void testSearchWithinDDMStructure() throws Exception {
 	}
 
@@ -126,7 +133,9 @@ public class WikiPageSearchTest extends BaseSearchTestCase {
 
 	@Override
 	protected void deleteBaseModel(long primaryKey) throws Exception {
-		WikiPageLocalServiceUtil.deleteWikiPage(primaryKey);
+		WikiPage page = WikiPageLocalServiceUtil.getPageByPageId(primaryKey);
+
+		WikiPageLocalServiceUtil.deletePage(page);
 	}
 
 	@Override

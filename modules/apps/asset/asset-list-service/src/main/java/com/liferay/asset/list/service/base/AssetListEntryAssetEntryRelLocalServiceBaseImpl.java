@@ -16,6 +16,7 @@ package com.liferay.asset.list.service.base;
 
 import com.liferay.asset.list.model.AssetListEntryAssetEntryRel;
 import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalService;
+import com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalServiceUtil;
 import com.liferay.asset.list.service.persistence.AssetListEntryAssetEntryRelFinder;
 import com.liferay.asset.list.service.persistence.AssetListEntryAssetEntryRelPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
@@ -54,10 +55,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -79,11 +83,15 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AssetListEntryAssetEntryRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.asset.list.service.AssetListEntryAssetEntryRelLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AssetListEntryAssetEntryRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AssetListEntryAssetEntryRelLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the asset list entry asset entry rel to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryAssetEntryRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetListEntryAssetEntryRel the asset list entry asset entry rel
 	 * @return the asset list entry asset entry rel that was added
@@ -117,6 +125,10 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	/**
 	 * Deletes the asset list entry asset entry rel with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryAssetEntryRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetListEntryAssetEntryRelId the primary key of the asset list entry asset entry rel
 	 * @return the asset list entry asset entry rel that was removed
 	 * @throws PortalException if a asset list entry asset entry rel with the primary key could not be found
@@ -134,6 +146,10 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	/**
 	 * Deletes the asset list entry asset entry rel from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryAssetEntryRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetListEntryAssetEntryRel the asset list entry asset entry rel
 	 * @return the asset list entry asset entry rel that was removed
 	 */
@@ -149,6 +165,13 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return assetListEntryAssetEntryRelPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -402,6 +425,7 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -421,6 +445,7 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 				(AssetListEntryAssetEntryRel)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AssetListEntryAssetEntryRel> getBasePersistence() {
 		return assetListEntryAssetEntryRelPersistence;
 	}
@@ -521,6 +546,10 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	/**
 	 * Updates the asset list entry asset entry rel in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetListEntryAssetEntryRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetListEntryAssetEntryRel the asset list entry asset entry rel
 	 * @return the asset list entry asset entry rel that was updated
 	 */
@@ -531,6 +560,11 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 
 		return assetListEntryAssetEntryRelPersistence.update(
 			assetListEntryAssetEntryRel);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -546,6 +580,8 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		assetListEntryAssetEntryRelLocalService =
 			(AssetListEntryAssetEntryRelLocalService)aopProxy;
+
+		_setLocalServiceUtilService(assetListEntryAssetEntryRelLocalService);
 	}
 
 	/**
@@ -607,6 +643,24 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AssetListEntryAssetEntryRelLocalService
+			assetListEntryAssetEntryRelLocalService) {
+
+		try {
+			Field field =
+				AssetListEntryAssetEntryRelLocalServiceUtil.class.
+					getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, assetListEntryAssetEntryRelLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AssetListEntryAssetEntryRelLocalService
 		assetListEntryAssetEntryRelLocalService;
 
@@ -621,9 +675,5 @@ public abstract class AssetListEntryAssetEntryRelLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
 
 }

@@ -30,6 +30,10 @@ public class DLFileEntryMetadataLocalServiceWrapper
 	implements DLFileEntryMetadataLocalService,
 			   ServiceWrapper<DLFileEntryMetadataLocalService> {
 
+	public DLFileEntryMetadataLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DLFileEntryMetadataLocalServiceWrapper(
 		DLFileEntryMetadataLocalService dlFileEntryMetadataLocalService) {
 
@@ -38,6 +42,10 @@ public class DLFileEntryMetadataLocalServiceWrapper
 
 	/**
 	 * Adds the document library file entry metadata to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was added
@@ -79,6 +87,10 @@ public class DLFileEntryMetadataLocalServiceWrapper
 	/**
 	 * Deletes the document library file entry metadata from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was removed
 	 */
@@ -92,6 +104,10 @@ public class DLFileEntryMetadataLocalServiceWrapper
 
 	/**
 	 * Deletes the document library file entry metadata with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param fileEntryMetadataId the primary key of the document library file entry metadata
 	 * @return the document library file entry metadata that was removed
@@ -144,6 +160,13 @@ public class DLFileEntryMetadataLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _dlFileEntryMetadataLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _dlFileEntryMetadataLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -423,6 +446,10 @@ public class DLFileEntryMetadataLocalServiceWrapper
 
 	/**
 	 * Updates the document library file entry metadata in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DLFileEntryMetadataLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dlFileEntryMetadata the document library file entry metadata
 	 * @return the document library file entry metadata that was updated

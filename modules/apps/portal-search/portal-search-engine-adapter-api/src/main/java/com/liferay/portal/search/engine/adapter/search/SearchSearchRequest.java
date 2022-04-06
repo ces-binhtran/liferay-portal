@@ -34,6 +34,10 @@ import java.util.Map;
 public class SearchSearchRequest
 	extends BaseSearchRequest implements SearchRequest<SearchSearchResponse> {
 
+	public SearchSearchRequest() {
+		setPreferLocalCluster(true);
+	}
+
 	@Override
 	public SearchSearchResponse accept(
 		SearchRequestExecutor searchRequestExecutor) {
@@ -73,6 +77,7 @@ public class SearchSearchRequest
 		return Collections.unmodifiableList(_groupByRequests);
 	}
 
+	@Override
 	public Highlight getHighlight() {
 		return _highlight;
 	}
@@ -202,6 +207,7 @@ public class SearchSearchRequest
 		_groupByRequests = new ArrayList<>(groupByRequests);
 	}
 
+	@Override
 	public void setHighlight(Highlight highlight) {
 		_highlight = highlight;
 	}

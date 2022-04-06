@@ -14,7 +14,9 @@
 
 package com.liferay.portal.reports.engine.console.service.impl;
 
+import com.liferay.document.library.kernel.store.DLStoreRequest;
 import com.liferay.document.library.kernel.store.DLStoreUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -65,7 +67,7 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 		// Definition
 
 		User user = userLocalService.getUser(userId);
-		Date now = new Date();
+		Date date = new Date();
 
 		validate(nameMap);
 
@@ -78,8 +80,8 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 		definition.setCompanyId(user.getCompanyId());
 		definition.setUserId(user.getUserId());
 		definition.setUserName(user.getFullName());
-		definition.setCreateDate(serviceContext.getCreateDate(now));
-		definition.setModifiedDate(serviceContext.getModifiedDate(now));
+		definition.setCreateDate(serviceContext.getCreateDate(date));
+		definition.setModifiedDate(serviceContext.getModifiedDate(date));
 		definition.setNameMap(nameMap);
 		definition.setDescriptionMap(descriptionMap);
 		definition.setSourceId(sourceId);
@@ -163,7 +165,7 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 	public List<Definition> getDefinitions(
 		long groupId, String definitionName, String description,
 		String sourceId, String reportName, boolean andSearch, int start,
-		int end, OrderByComparator orderByComparator) {
+		int end, OrderByComparator<Definition> orderByComparator) {
 
 		return definitionFinder.findByG_S_N_D_RN(
 			groupId, definitionName, description, GetterUtil.getLong(sourceId),
@@ -260,14 +262,15 @@ public class DefinitionLocalServiceImpl extends DefinitionLocalServiceBaseImpl {
 
 		String directoryName = definition.getAttachmentsDir();
 
-		String fileLocation = directoryName.concat(
-			StringPool.SLASH
-		).concat(
-			fileName
-		);
+		String fileLocation = StringBundler.concat(
+			directoryName, StringPool.SLASH, fileName);
 
 		DLStoreUtil.addFile(
-			companyId, CompanyConstants.SYSTEM, fileLocation, false,
+			DLStoreRequest.builder(
+				companyId, CompanyConstants.SYSTEM, fileLocation
+			).className(
+				this
+			).build(),
 			inputStream);
 	}
 

@@ -66,13 +66,20 @@ public class PageCollectionItemDefinitionSerDes {
 
 			sb.append("\"collectionItemConfig\": ");
 
-			sb.append("\"");
+			if (
+					pageCollectionItemDefinition.
+						getCollectionItemConfig() instanceof String) {
 
-			sb.append(
-				_escape(
-					pageCollectionItemDefinition.getCollectionItemConfig()));
-
-			sb.append("\"");
+				sb.append("\"");
+				sb.append(
+					(String)
+						pageCollectionItemDefinition.getCollectionItemConfig());
+				sb.append("\"");
+			}
+			else {
+				sb.append(
+					pageCollectionItemDefinition.getCollectionItemConfig());
+			}
 		}
 
 		sb.append("}");
@@ -134,10 +141,6 @@ public class PageCollectionItemDefinitionSerDes {
 						(Object)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -166,7 +169,7 @@ public class PageCollectionItemDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -202,7 +205,7 @@ public class PageCollectionItemDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

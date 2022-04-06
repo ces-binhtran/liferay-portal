@@ -23,8 +23,10 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryLocalService;
+import com.liferay.message.boards.service.MBCategoryLocalServiceUtil;
 import com.liferay.message.boards.service.persistence.MBCategoryFinder;
 import com.liferay.message.boards.service.persistence.MBCategoryPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -52,7 +54,9 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -60,10 +64,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -84,11 +91,15 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MBCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.message.boards.service.MBCategoryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MBCategoryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MBCategoryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the message boards category to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param mbCategory the message boards category
 	 * @return the message boards category that was added
@@ -116,6 +127,10 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/**
 	 * Deletes the message boards category with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param categoryId the primary key of the message boards category
 	 * @return the message boards category that was removed
 	 * @throws PortalException if a message boards category with the primary key could not be found
@@ -129,6 +144,10 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/**
 	 * Deletes the message boards category from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param mbCategory the message boards category
 	 * @return the message boards category that was removed
 	 */
@@ -141,6 +160,13 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mbCategoryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -432,6 +458,7 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -449,6 +476,7 @@ public abstract class MBCategoryLocalServiceBaseImpl
 			(MBCategory)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<MBCategory> getBasePersistence() {
 		return mbCategoryPersistence;
 	}
@@ -540,6 +568,10 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	/**
 	 * Updates the message boards category in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param mbCategory the message boards category
 	 * @return the message boards category that was updated
 	 */
@@ -549,17 +581,24 @@ public abstract class MBCategoryLocalServiceBaseImpl
 		return mbCategoryPersistence.update(mbCategory);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			MBCategoryLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mbCategoryLocalService = (MBCategoryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mbCategoryLocalService);
 	}
 
 	/**
@@ -572,8 +611,23 @@ public abstract class MBCategoryLocalServiceBaseImpl
 		return MBCategoryLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<MBCategory> getCTPersistence() {
+		return mbCategoryPersistence;
+	}
+
+	@Override
+	public Class<MBCategory> getModelClass() {
 		return MBCategory.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<MBCategory>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(mbCategoryPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -604,6 +658,22 @@ public abstract class MBCategoryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MBCategoryLocalService mbCategoryLocalService) {
+
+		try {
+			Field field = MBCategoryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mbCategoryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MBCategoryLocalService mbCategoryLocalService;
 
 	@Reference
@@ -615,21 +685,5 @@ public abstract class MBCategoryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
 
 }

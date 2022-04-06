@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.model.UserGroup;
 public class UserGroupServiceWrapper
 	implements ServiceWrapper<UserGroupService>, UserGroupService {
 
+	public UserGroupServiceWrapper() {
+		this(null);
+	}
+
 	public UserGroupServiceWrapper(UserGroupService userGroupService) {
 		_userGroupService = userGroupService;
 	}
@@ -41,6 +45,16 @@ public class UserGroupServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_userGroupService.addGroupUserGroups(groupId, userGroupIds);
+	}
+
+	@Override
+	public UserGroup addOrUpdateUserGroup(
+			String externalReferenceCode, String name, String description,
+			ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userGroupService.addOrUpdateUserGroup(
+			externalReferenceCode, name, description, serviceContext);
 	}
 
 	/**
@@ -103,6 +117,15 @@ public class UserGroupServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _userGroupService.fetchUserGroup(userGroupId);
+	}
+
+	@Override
+	public UserGroup fetchUserGroupByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userGroupService.fetchUserGroupByExternalReferenceCode(
+			companyId, externalReferenceCode);
 	}
 
 	@Override
@@ -202,19 +225,21 @@ public class UserGroupServiceWrapper
 	 * @param start the lower bound of the range of user groups to return
 	 * @param end the upper bound of the range of user groups to return (not
 	 inclusive)
-	 * @param obc the comparator to order the user groups (optionally
-	 <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the user groups
+	 (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Override
 	public java.util.List<UserGroup> search(
 		long companyId, String keywords,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<UserGroup> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<UserGroup>
+			orderByComparator) {
 
 		return _userGroupService.search(
-			companyId, keywords, params, start, end, obc);
+			companyId, keywords, params, start, end, orderByComparator);
 	}
 
 	/**
@@ -242,9 +267,10 @@ public class UserGroupServiceWrapper
 	 * @param start the lower bound of the range of user groups to return
 	 * @param end the upper bound of the range of user groups to return (not
 	 inclusive)
-	 * @param obc the comparator to order the user groups (optionally
-	 <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the user groups
+	 (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Override
@@ -252,10 +278,12 @@ public class UserGroupServiceWrapper
 		long companyId, String name, String description,
 		java.util.LinkedHashMap<String, Object> params, boolean andOperator,
 		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<UserGroup> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<UserGroup>
+			orderByComparator) {
 
 		return _userGroupService.search(
-			companyId, name, description, params, andOperator, start, end, obc);
+			companyId, name, description, params, andOperator, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -326,6 +354,15 @@ public class UserGroupServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_userGroupService.unsetTeamUserGroups(teamId, userGroupIds);
+	}
+
+	@Override
+	public UserGroup updateExternalReferenceCode(
+			UserGroup userGroup, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _userGroupService.updateExternalReferenceCode(
+			userGroup, externalReferenceCode);
 	}
 
 	/**

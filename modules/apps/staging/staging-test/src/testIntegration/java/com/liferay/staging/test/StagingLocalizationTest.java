@@ -15,9 +15,9 @@
 package com.liferay.staging.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationParameterMapFactoryUtil;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactoryUtil;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.service.ExportImportConfigurationLocalServiceUtil;
@@ -44,10 +44,14 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.util.LocaleThreadLocal;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LoggerTestUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
 
 import java.io.File;
 import java.io.Serializable;
@@ -79,7 +83,9 @@ public class StagingLocalizationTest {
 	@ClassRule
 	@Rule
 	public static final AggregateTestRule aggregateTestRule =
-		new LiferayIntegrationTestRule();
+		new AggregateTestRule(
+			new LiferayIntegrationTestRule(),
+			PermissionCheckerMethodTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -102,6 +108,8 @@ public class StagingLocalizationTest {
 
 		CompanyTestUtil.resetCompanyLocales(
 			TestPropsValues.getCompanyId(), _locales, LocaleUtil.US);
+
+		UserTestUtil.setUser(TestPropsValues.getUser());
 
 		_sourceGroup = GroupTestUtil.addGroup();
 		_targetGroup = GroupTestUtil.addGroup();
@@ -132,7 +140,13 @@ public class StagingLocalizationTest {
 
 	@Test(expected = LocaleException.class)
 	public void testRemoveSupportedLocale() throws Exception {
-		testUpdateLocales("es_ES", "de_DE,es_ES", "en_US");
+		try (LogCapture logCapture = LoggerTestUtil.configureLog4JLogger(
+				"com.liferay.exportimport.internal.lifecycle." +
+					"LoggerExportImportLifecycleListener",
+				LoggerTestUtil.ERROR)) {
+
+			testUpdateLocales("es_ES", "de_DE,es_ES", "en_US");
+		}
 	}
 
 	@Test
@@ -157,7 +171,8 @@ public class StagingLocalizationTest {
 			String defaultContentLanguageId)
 		throws Exception {
 
-		GroupTestUtil.enableLocalStaging(_sourceGroup);
+		GroupTestUtil.enableLocalStaging(
+			_sourceGroup, TestPropsValues.getUserId());
 
 		JournalArticle article = JournalTestUtil.addArticle(
 			_sourceGroup.getGroupId(), "Title", "content",

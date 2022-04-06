@@ -37,17 +37,17 @@ public class AccountEntryCacheModel
 	implements CacheModel<AccountEntry>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AccountEntryCacheModel)) {
+		if (!(object instanceof AccountEntryCacheModel)) {
 			return false;
 		}
 
 		AccountEntryCacheModel accountEntryCacheModel =
-			(AccountEntryCacheModel)obj;
+			(AccountEntryCacheModel)object;
 
 		if ((accountEntryId == accountEntryCacheModel.accountEntryId) &&
 			(mvccVersion == accountEntryCacheModel.mvccVersion)) {
@@ -77,7 +77,7 @@ public class AccountEntryCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(33);
+		StringBundler sb = new StringBundler(47);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
@@ -95,16 +95,30 @@ public class AccountEntryCacheModel
 		sb.append(createDate);
 		sb.append(", modifiedDate=");
 		sb.append(modifiedDate);
+		sb.append(", defaultBillingAddressId=");
+		sb.append(defaultBillingAddressId);
+		sb.append(", defaultCPaymentMethodKey=");
+		sb.append(defaultCPaymentMethodKey);
+		sb.append(", defaultDeliveryCTermEntryId=");
+		sb.append(defaultDeliveryCTermEntryId);
+		sb.append(", defaultPaymentCTermEntryId=");
+		sb.append(defaultPaymentCTermEntryId);
+		sb.append(", defaultShippingAddressId=");
+		sb.append(defaultShippingAddressId);
 		sb.append(", parentAccountEntryId=");
 		sb.append(parentAccountEntryId);
-		sb.append(", name=");
-		sb.append(name);
 		sb.append(", description=");
 		sb.append(description);
 		sb.append(", domains=");
 		sb.append(domains);
+		sb.append(", emailAddress=");
+		sb.append(emailAddress);
 		sb.append(", logoId=");
 		sb.append(logoId);
+		sb.append(", name=");
+		sb.append(name);
+		sb.append(", taxExemptionCode=");
+		sb.append(taxExemptionCode);
 		sb.append(", taxIdNumber=");
 		sb.append(taxIdNumber);
 		sb.append(", type=");
@@ -154,14 +168,22 @@ public class AccountEntryCacheModel
 			accountEntryImpl.setModifiedDate(new Date(modifiedDate));
 		}
 
-		accountEntryImpl.setParentAccountEntryId(parentAccountEntryId);
+		accountEntryImpl.setDefaultBillingAddressId(defaultBillingAddressId);
 
-		if (name == null) {
-			accountEntryImpl.setName("");
+		if (defaultCPaymentMethodKey == null) {
+			accountEntryImpl.setDefaultCPaymentMethodKey("");
 		}
 		else {
-			accountEntryImpl.setName(name);
+			accountEntryImpl.setDefaultCPaymentMethodKey(
+				defaultCPaymentMethodKey);
 		}
+
+		accountEntryImpl.setDefaultDeliveryCTermEntryId(
+			defaultDeliveryCTermEntryId);
+		accountEntryImpl.setDefaultPaymentCTermEntryId(
+			defaultPaymentCTermEntryId);
+		accountEntryImpl.setDefaultShippingAddressId(defaultShippingAddressId);
+		accountEntryImpl.setParentAccountEntryId(parentAccountEntryId);
 
 		if (description == null) {
 			accountEntryImpl.setDescription("");
@@ -177,7 +199,28 @@ public class AccountEntryCacheModel
 			accountEntryImpl.setDomains(domains);
 		}
 
+		if (emailAddress == null) {
+			accountEntryImpl.setEmailAddress("");
+		}
+		else {
+			accountEntryImpl.setEmailAddress(emailAddress);
+		}
+
 		accountEntryImpl.setLogoId(logoId);
+
+		if (name == null) {
+			accountEntryImpl.setName("");
+		}
+		else {
+			accountEntryImpl.setName(name);
+		}
+
+		if (taxExemptionCode == null) {
+			accountEntryImpl.setTaxExemptionCode("");
+		}
+		else {
+			accountEntryImpl.setTaxExemptionCode(taxExemptionCode);
+		}
 
 		if (taxIdNumber == null) {
 			accountEntryImpl.setTaxIdNumber("");
@@ -214,12 +257,23 @@ public class AccountEntryCacheModel
 		createDate = objectInput.readLong();
 		modifiedDate = objectInput.readLong();
 
+		defaultBillingAddressId = objectInput.readLong();
+		defaultCPaymentMethodKey = objectInput.readUTF();
+
+		defaultDeliveryCTermEntryId = objectInput.readLong();
+
+		defaultPaymentCTermEntryId = objectInput.readLong();
+
+		defaultShippingAddressId = objectInput.readLong();
+
 		parentAccountEntryId = objectInput.readLong();
-		name = objectInput.readUTF();
 		description = objectInput.readUTF();
 		domains = objectInput.readUTF();
+		emailAddress = objectInput.readUTF();
 
 		logoId = objectInput.readLong();
+		name = objectInput.readUTF();
+		taxExemptionCode = objectInput.readUTF();
 		taxIdNumber = objectInput.readUTF();
 		type = objectInput.readUTF();
 
@@ -253,14 +307,22 @@ public class AccountEntryCacheModel
 		objectOutput.writeLong(createDate);
 		objectOutput.writeLong(modifiedDate);
 
-		objectOutput.writeLong(parentAccountEntryId);
+		objectOutput.writeLong(defaultBillingAddressId);
 
-		if (name == null) {
+		if (defaultCPaymentMethodKey == null) {
 			objectOutput.writeUTF("");
 		}
 		else {
-			objectOutput.writeUTF(name);
+			objectOutput.writeUTF(defaultCPaymentMethodKey);
 		}
+
+		objectOutput.writeLong(defaultDeliveryCTermEntryId);
+
+		objectOutput.writeLong(defaultPaymentCTermEntryId);
+
+		objectOutput.writeLong(defaultShippingAddressId);
+
+		objectOutput.writeLong(parentAccountEntryId);
 
 		if (description == null) {
 			objectOutput.writeUTF("");
@@ -276,7 +338,28 @@ public class AccountEntryCacheModel
 			objectOutput.writeUTF(domains);
 		}
 
+		if (emailAddress == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(emailAddress);
+		}
+
 		objectOutput.writeLong(logoId);
+
+		if (name == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(name);
+		}
+
+		if (taxExemptionCode == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(taxExemptionCode);
+		}
 
 		if (taxIdNumber == null) {
 			objectOutput.writeUTF("");
@@ -303,11 +386,18 @@ public class AccountEntryCacheModel
 	public String userName;
 	public long createDate;
 	public long modifiedDate;
+	public long defaultBillingAddressId;
+	public String defaultCPaymentMethodKey;
+	public long defaultDeliveryCTermEntryId;
+	public long defaultPaymentCTermEntryId;
+	public long defaultShippingAddressId;
 	public long parentAccountEntryId;
-	public String name;
 	public String description;
 	public String domains;
+	public String emailAddress;
 	public long logoId;
+	public String name;
+	public String taxExemptionCode;
 	public String taxIdNumber;
 	public String type;
 	public int status;

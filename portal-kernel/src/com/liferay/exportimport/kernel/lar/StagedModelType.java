@@ -16,7 +16,10 @@ package com.liferay.exportimport.kernel.lar;
 
 import com.liferay.petra.lang.HashUtil;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -59,6 +62,10 @@ public class StagedModelType {
 			return new StagedModelType(className, referrerClassName);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -91,16 +98,16 @@ public class StagedModelType {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if ((obj == null) || !(obj instanceof StagedModelType)) {
+		if ((object == null) || !(object instanceof StagedModelType)) {
 			return false;
 		}
 
-		StagedModelType stagedModelType = (StagedModelType)obj;
+		StagedModelType stagedModelType = (StagedModelType)object;
 
 		if ((stagedModelType._classNameId != _classNameId) ||
 			(stagedModelType._referrerClassNameId != _referrerClassNameId)) {
@@ -144,11 +151,8 @@ public class StagedModelType {
 			return _className;
 		}
 
-		return _className.concat(
-			StringPool.POUND
-		).concat(
-			_referrerClassName
-		);
+		return StringBundler.concat(
+			_className, StringPool.POUND, _referrerClassName);
 	}
 
 	protected String getSimpleName(String className) {
@@ -229,6 +233,9 @@ public class StagedModelType {
 			_referrerClassName = PortalUtil.getClassName(referrerClassNameId);
 		}
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		StagedModelType.class);
 
 	private String _className;
 	private long _classNameId;

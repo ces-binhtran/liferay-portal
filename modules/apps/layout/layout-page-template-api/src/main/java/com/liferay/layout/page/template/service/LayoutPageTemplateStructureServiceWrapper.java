@@ -14,6 +14,7 @@
 
 package com.liferay.layout.page.template.service;
 
+import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -26,6 +27,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class LayoutPageTemplateStructureServiceWrapper
 	implements LayoutPageTemplateStructureService,
 			   ServiceWrapper<LayoutPageTemplateStructureService> {
+
+	public LayoutPageTemplateStructureServiceWrapper() {
+		this(null);
+	}
 
 	public LayoutPageTemplateStructureServiceWrapper(
 		LayoutPageTemplateStructureService layoutPageTemplateStructureService) {
@@ -44,28 +49,9 @@ public class LayoutPageTemplateStructureServiceWrapper
 		return _layoutPageTemplateStructureService.getOSGiServiceIdentifier();
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #updateLayoutPageTemplateStructureData(long, long, long,
-	 String)}
-	 */
-	@Deprecated
 	@Override
-	public com.liferay.layout.page.template.model.LayoutPageTemplateStructure
-			updateLayoutPageTemplateStructure(
-				long groupId, long classNameId, long classPK,
-				long segmentsExperienceId, String data)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _layoutPageTemplateStructureService.
-			updateLayoutPageTemplateStructure(
-				groupId, classNameId, classPK, segmentsExperienceId, data);
-	}
-
-	@Override
-	public com.liferay.layout.page.template.model.LayoutPageTemplateStructure
-			updateLayoutPageTemplateStructureData(
-				long groupId, long plid, long segmentsExperienceId, String data)
+	public LayoutPageTemplateStructure updateLayoutPageTemplateStructureData(
+			long groupId, long plid, long segmentsExperienceId, String data)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutPageTemplateStructureService.

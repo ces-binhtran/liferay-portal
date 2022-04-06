@@ -738,22 +738,23 @@ public class DLFolderFinderImpl
 				long fileShortcutId = (Long)array[3];
 				long modelFolder = (Long)array[4];
 
-				Object obj = null;
+				Object object = null;
 
 				if (modelFolder == 1) {
-					obj = DLFolderUtil.findByPrimaryKey(curFolderId);
+					object = DLFolderUtil.findByPrimaryKey(curFolderId);
 				}
 				else if (fileShortcutId > 0) {
-					obj = DLFileShortcutUtil.findByPrimaryKey(fileShortcutId);
+					object = DLFileShortcutUtil.findByPrimaryKey(
+						fileShortcutId);
 				}
 				else {
 					String name = (String)array[1];
 
-					obj = DLFileEntryUtil.findByG_F_N(
+					object = DLFileEntryUtil.findByG_F_N(
 						groupId, curFolderId, name);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -891,22 +892,23 @@ public class DLFolderFinderImpl
 				long fileShortcutId = (Long)array[3];
 				long modelFolder = (Long)array[4];
 
-				Object obj = null;
+				Object object = null;
 
 				if (modelFolder == 1) {
-					obj = DLFolderUtil.findByPrimaryKey(curFolderId);
+					object = DLFolderUtil.findByPrimaryKey(curFolderId);
 				}
 				else if (fileShortcutId > 0) {
-					obj = DLFileShortcutUtil.findByPrimaryKey(fileShortcutId);
+					object = DLFileShortcutUtil.findByPrimaryKey(
+						fileShortcutId);
 				}
 				else {
 					String name = (String)array[1];
 
-					obj = DLFileEntryUtil.findByG_F_N(
+					object = DLFileEntryUtil.findByG_F_N(
 						groupId, curFolderId, name);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -943,7 +945,7 @@ public class DLFolderFinderImpl
 			}
 
 			sb.append(sql);
-			sb.append(" UNION ALL ");
+			sb.append(" UNION ");
 
 			sql = getFileEntriesSQL(
 				FIND_FE_BY_G_F_RC, groupId, mimeTypes, queryDefinition,
@@ -951,7 +953,7 @@ public class DLFolderFinderImpl
 
 			sb.append(sql);
 
-			sb.append(" UNION ALL ");
+			sb.append(" UNION ");
 
 			sql = getFileShortcutsSQL(
 				FIND_FS_BY_G_F_A_RC, groupId, mimeTypes, queryDefinition,
@@ -1037,22 +1039,23 @@ public class DLFolderFinderImpl
 				long fileShortcutId = (Long)array[3];
 				long modelFolder = (Long)array[4];
 
-				Object obj = null;
+				Object object = null;
 
 				if (modelFolder == 1) {
-					obj = DLFolderUtil.findByPrimaryKey(curFolderId);
+					object = DLFolderUtil.findByPrimaryKey(curFolderId);
 				}
 				else if (fileShortcutId > 0) {
-					obj = DLFileShortcutUtil.findByPrimaryKey(fileShortcutId);
+					object = DLFileShortcutUtil.findByPrimaryKey(
+						fileShortcutId);
 				}
 				else {
 					String name = (String)array[1];
 
-					obj = DLFileEntryUtil.findByG_F_N(
+					object = DLFileEntryUtil.findByG_F_N(
 						groupId, curFolderId, name);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -1185,22 +1188,23 @@ public class DLFolderFinderImpl
 				long fileShortcutId = (Long)array[3];
 				long modelFolder = (Long)array[4];
 
-				Object obj = null;
+				Object object = null;
 
 				if (modelFolder == 1) {
-					obj = DLFolderUtil.findByPrimaryKey(curFolderId);
+					object = DLFolderUtil.findByPrimaryKey(curFolderId);
 				}
 				else if (fileShortcutId > 0) {
-					obj = DLFileShortcutUtil.findByPrimaryKey(fileShortcutId);
+					object = DLFileShortcutUtil.findByPrimaryKey(
+						fileShortcutId);
 				}
 				else {
 					String name = (String)array[1];
 
-					obj = DLFileEntryUtil.findByG_F_N(
+					object = DLFileEntryUtil.findByG_F_N(
 						groupId, curFolderId, name);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -1274,20 +1278,22 @@ public class DLFolderFinderImpl
 
 				long fileShortcutId = (Long)array[3];
 
-				Object obj = null;
+				Object object = null;
 
 				if (fileShortcutId > 0) {
-					obj = DLFileShortcutUtil.findByPrimaryKey(fileShortcutId);
+					object = DLFileShortcutUtil.findByPrimaryKey(
+						fileShortcutId);
 				}
 				else {
 					long folderId2 = (Long)array[0];
 					String name = (String)array[1];
 					//String title = (String)array[2];
 
-					obj = DLFileEntryUtil.findByG_F_N(groupId, folderId2, name);
+					object = DLFileEntryUtil.findByG_F_N(
+						groupId, folderId2, name);
 				}
 
-				models.add(obj);
+				models.add(object);
 			}
 
 			return models;
@@ -1337,15 +1343,10 @@ public class DLFolderFinderImpl
 		}
 
 		if (ArrayUtil.isNotEmpty(mimeTypes)) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(sql);
-			sb.append(WHERE_AND);
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(getMimeTypes(mimeTypes, DLFileEntryImpl.TABLE_NAME));
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
-			sql = sb.toString();
+			sql = StringBundler.concat(
+				sql, WHERE_AND, StringPool.OPEN_PARENTHESIS,
+				getMimeTypes(mimeTypes, DLFileEntryImpl.TABLE_NAME),
+				StringPool.CLOSE_PARENTHESIS);
 		}
 
 		return sql;
@@ -1365,19 +1366,13 @@ public class DLFolderFinderImpl
 		}
 
 		if (ArrayUtil.isNotEmpty(mimeTypes)) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(
+			sql = StringBundler.concat(
 				StringUtil.replace(
 					sql, "[$JOIN$]",
-					CustomSQLUtil.get(JOIN_FS_BY_DL_FILE_ENTRY)));
-
-			sb.append(WHERE_AND);
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(getMimeTypes(mimeTypes, DLFileEntryImpl.TABLE_NAME));
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
-			sql = sb.toString();
+					CustomSQLUtil.get(JOIN_FS_BY_DL_FILE_ENTRY)),
+				WHERE_AND, StringPool.OPEN_PARENTHESIS,
+				getMimeTypes(mimeTypes, DLFileEntryImpl.TABLE_NAME),
+				StringPool.CLOSE_PARENTHESIS);
 		}
 		else {
 			sql = StringUtil.removeSubstring(sql, "[$JOIN$]");
@@ -1400,15 +1395,10 @@ public class DLFolderFinderImpl
 		}
 
 		if (ArrayUtil.isNotEmpty(mimeTypes)) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append(sql);
-			sb.append(WHERE_AND);
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(getMimeTypes(mimeTypes, DLFileVersionImpl.TABLE_NAME));
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
-			sql = sb.toString();
+			sql = StringBundler.concat(
+				sql, WHERE_AND, StringPool.OPEN_PARENTHESIS,
+				getMimeTypes(mimeTypes, DLFileVersionImpl.TABLE_NAME),
+				StringPool.CLOSE_PARENTHESIS);
 		}
 
 		return sql;
@@ -1437,7 +1427,7 @@ public class DLFolderFinderImpl
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(mimeTypes.length * 3 - 1);
+		StringBundler sb = new StringBundler((mimeTypes.length * 3) - 1);
 
 		for (int i = 0; i < mimeTypes.length; i++) {
 			sb.append(tableName);
@@ -1463,7 +1453,7 @@ public class DLFolderFinderImpl
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 

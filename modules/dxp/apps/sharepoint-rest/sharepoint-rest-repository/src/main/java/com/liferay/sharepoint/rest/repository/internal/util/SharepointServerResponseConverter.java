@@ -34,6 +34,7 @@ import com.liferay.sharepoint.rest.repository.internal.document.library.reposito
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointFileVersion;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointFolder;
 import com.liferay.sharepoint.rest.repository.internal.document.library.repository.external.model.SharepointModel;
+import com.liferay.sharepoint.rest.repository.internal.helper.SharepointURLHelper;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -128,7 +129,7 @@ public class SharepointServerResponseConverter {
 	}
 
 	public <T extends ExtRepositoryObject> T getExtRepositoryObject(
-		ExtRepositoryObjectType extRepositoryObjectType,
+		ExtRepositoryObjectType<?> extRepositoryObjectType,
 		JSONObject jsonObject) {
 
 		if (extRepositoryObjectType == ExtRepositoryObjectType.FILE) {
@@ -183,8 +184,8 @@ public class SharepointServerResponseConverter {
 			JSONArray cellsResultsJSONArray = cellsJSONObject.getJSONArray(
 				"results");
 
-			ExtRepositoryObjectType extRepositoryObjectType =
-				ExtRepositoryObjectType.OBJECT;
+			ExtRepositoryObjectType<? extends ExtRepositoryObject>
+				extRepositoryObjectType = ExtRepositoryObjectType.OBJECT;
 
 			String extension = null;
 			String parentLink = null;
@@ -382,7 +383,7 @@ public class SharepointServerResponseConverter {
 			return StringPool.BLANK;
 		}
 
-		StringBundler sb = new StringBundler(strings.length * 2 - 1);
+		StringBundler sb = new StringBundler((strings.length * 2) - 1);
 
 		sb.append(strings[0]);
 

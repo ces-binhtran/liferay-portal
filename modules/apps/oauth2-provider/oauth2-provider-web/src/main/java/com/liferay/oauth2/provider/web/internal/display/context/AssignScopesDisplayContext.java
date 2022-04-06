@@ -81,13 +81,14 @@ public class AssignScopesDisplayContext
 			portletRequest, themeDisplay);
 
 		_applicationDescriptorLocator = applicationDescriptorLocator;
+
 		_companyId = themeDisplay.getCompanyId();
 		_locale = themeDisplay.getLocale();
 
 		OAuth2Application oAuth2Application = getOAuth2Application();
 
 		Map<String, AssignableScopes> assignedScopeAliasesAssignableScopes =
-			getAssignableScopesByScopeAlias(
+			_getAssignableScopesByScopeAlias(
 				oAuth2Application.getOAuth2ApplicationScopeAliasesId(),
 				applicationDescriptorLocator, oAuth2ScopeGrantLocalService,
 				scopeDescriptorLocator, scopeLocator, themeDisplay);
@@ -113,7 +114,7 @@ public class AssignScopesDisplayContext
 				assignedAssignableScopes =
 					assignedScopeAliasesAssignableScopes.remove(scopeAlias);
 
-				relations = getRelations(null, assignedAssignableScopes);
+				relations = _getRelations(null, assignedAssignableScopes);
 
 				assignableScopes = assignedAssignableScopes;
 				applicationNames =
@@ -122,7 +123,7 @@ public class AssignScopesDisplayContext
 			else {
 				assignableScopes.addLiferayOAuth2Scopes(liferayOAuth2Scopes);
 
-				relations = getRelations(scopeAlias, assignableScopes);
+				relations = _getRelations(scopeAlias, assignableScopes);
 
 				assignedAssignableScopes =
 					assignedScopeAliasesAssignableScopes.remove(scopeAlias);
@@ -338,16 +339,16 @@ public class AssignScopesDisplayContext
 		}
 
 		@Override
-		public boolean equals(Object o) {
-			if (this == o) {
+		public boolean equals(Object object) {
+			if (this == object) {
 				return true;
 			}
 
-			if ((o == null) || (getClass() != o.getClass())) {
+			if ((object == null) || (getClass() != object.getClass())) {
 				return false;
 			}
 
-			Relations relations = (Relations)o;
+			Relations relations = (Relations)object;
 
 			if (Objects.equals(
 					_globalAssignableScopes,
@@ -411,7 +412,21 @@ public class AssignScopesDisplayContext
 
 	}
 
-	protected Map<String, AssignableScopes> getAssignableScopesByScopeAlias(
+	protected Map<AssignableScopes, Relations> getAssignableScopesRelations(
+		Set<AssignableScopes> assignableScopes) {
+
+		Stream<AssignableScopes> assignableScopesStream =
+			assignableScopes.stream();
+
+		return assignableScopesStream.filter(
+			_assignableScopesRelations::containsKey
+		).collect(
+			Collectors.toMap(
+				Function.identity(), _assignableScopesRelations::get)
+		);
+	}
+
+	private Map<String, AssignableScopes> _getAssignableScopesByScopeAlias(
 		long oAuth2ApplicationScopeAliasesId,
 		ApplicationDescriptorLocator applicationDescriptorLocator,
 		OAuth2ScopeGrantLocalService oAuth2ScopeGrantLocalService,
@@ -446,21 +461,7 @@ public class AssignScopesDisplayContext
 		return scopeAliasesAssignableScopes;
 	}
 
-	protected Map<AssignableScopes, Relations> getAssignableScopesRelations(
-		Set<AssignableScopes> assignableScopes) {
-
-		Stream<AssignableScopes> assignableScopesStream =
-			assignableScopes.stream();
-
-		return assignableScopesStream.filter(
-			_assignableScopesRelations::containsKey
-		).collect(
-			Collectors.toMap(
-				Function.identity(), _assignableScopesRelations::get)
-		);
-	}
-
-	protected Relations getRelations(
+	private Relations _getRelations(
 		String scopeAlias, AssignableScopes assignableScopes) {
 
 		return _assignableScopesRelations.compute(
@@ -480,16 +481,6 @@ public class AssignScopesDisplayContext
 
 				return new Relations(Collections.emptySet());
 			});
-	}
-
-	private static <K, V> Map<V, K> _invertMap(Map<K, V> map) {
-		Map<V, K> ret = new HashMap<>();
-
-		for (Map.Entry<K, V> entry : map.entrySet()) {
-			ret.put(entry.getValue(), entry.getKey());
-		}
-
-		return ret;
 	}
 
 	private void _indexAssignableScopes(
@@ -524,6 +515,16 @@ public class AssignScopesDisplayContext
 
 			assignableScopesSet.add(assignableScopes);
 		}
+	}
+
+	private <K, V> Map<V, K> _invertMap(Map<K, V> map) {
+		Map<V, K> ret = new HashMap<>();
+
+		for (Map.Entry<K, V> entry : map.entrySet()) {
+			ret.put(entry.getValue(), entry.getKey());
+		}
+
+		return ret;
 	}
 
 	private Map<AssignableScopes, Relations> _normalize(
@@ -595,12 +596,12 @@ public class AssignScopesDisplayContext
 	}
 
 	private final ApplicationDescriptorLocator _applicationDescriptorLocator;
-	private Map<AssignableScopes, Relations> _assignableScopesRelations =
+	private final Map<AssignableScopes, Relations> _assignableScopesRelations =
 		new HashMap<>();
 	private final long _companyId;
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_globalAssignableScopesByApplicationName = new HashMap<>();
-	private Map<String, Set<AssignableScopes>>
+	private final Map<String, Set<AssignableScopes>>
 		_localAssignableScopesByApplicationName = new HashMap<>();
 	private final Locale _locale;
 

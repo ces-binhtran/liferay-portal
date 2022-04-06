@@ -42,10 +42,8 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.X500NameBuilder;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
-import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.X509v1CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
 import org.osgi.service.component.annotations.Component;
@@ -73,8 +71,9 @@ public class CertificateToolImpl implements CertificateTool {
 			ASN1InputStream asn1InputStream = new ASN1InputStream(
 				byteArrayInputStream)) {
 
-			X500Name issuerX500Name = createX500Name(issuerCertificateEntityId);
-			X500Name subjectX500Name = createX500Name(
+			X500Name issuerX500Name = _createX500Name(
+				issuerCertificateEntityId);
+			X500Name subjectX500Name = _createX500Name(
 				subjectCertificateEntityId);
 
 			X509v1CertificateBuilder x509v1CertificateBuilder =
@@ -88,14 +87,9 @@ public class CertificateToolImpl implements CertificateTool {
 			JcaContentSignerBuilder jcaContentSignerBuilder =
 				new JcaContentSignerBuilder(signatureAlgorithm);
 
-			ContentSigner contentSigner = jcaContentSignerBuilder.build(
-				keyPair.getPrivate());
-
-			X509CertificateHolder x509CertificateHolder =
-				x509v1CertificateBuilder.build(contentSigner);
-
 			return jcaX509CertificateConverter.getCertificate(
-				x509CertificateHolder);
+				x509v1CertificateBuilder.build(
+					jcaContentSignerBuilder.build(keyPair.getPrivate())));
 		}
 		catch (Exception exception) {
 			throw new CertificateException(exception);
@@ -125,7 +119,7 @@ public class CertificateToolImpl implements CertificateTool {
 
 		byte[] digest = messageDigest.digest();
 
-		StringBundler sb = new StringBundler(digest.length * 2 - 1);
+		StringBundler sb = new StringBundler((digest.length * 2) - 1);
 
 		for (int i = 0; i < digest.length; i++) {
 			String hex = String.format("%02X", digest[i]);
@@ -170,7 +164,7 @@ public class CertificateToolImpl implements CertificateTool {
 		return Optional.empty();
 	}
 
-	protected X500Name createX500Name(CertificateEntityId certificateEntityId) {
+	private X500Name _createX500Name(CertificateEntityId certificateEntityId) {
 		X500NameBuilder x500NameBuilder = new X500NameBuilder(BCStyle.INSTANCE);
 
 		if (Validator.isNotNull(certificateEntityId.getCommonName())) {

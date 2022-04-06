@@ -22,7 +22,7 @@
 		md="4"
 	>
 		<aui:fieldset label="border-width">
-			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderWidth") %>' data-inputselector=".same-border-width" label="same-for-all" name="useForAllWidth" type="toggle-switch" />
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderWidth") %>' data-inputselector=".same-border-width" inlineLabel="right" label="same-for-all" labelCssClass="simple-toggle-switch" name="useForAllWidth" type="toggle-switch" />
 
 			<span class="field-row">
 				<aui:input inlineField="<%= true %>" label="top" name="borderWidthTop" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderWidthProperty("top", "value") %>' />
@@ -68,7 +68,7 @@
 		md="4"
 	>
 		<aui:fieldset label="border-style">
-			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderStyle") %>' data-inputselector=".same-border-style" label="same-for-all" name="useForAllStyle" type="toggle-switch" />
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderStyle") %>' data-inputselector=".same-border-style" inlineLabel="right" label="same-for-all" labelCssClass="simple-toggle-switch" name="useForAllStyle" type="toggle-switch" />
 
 			<aui:select label="top" name="borderStyleTop" showEmptyOption="<%= true %>" wrapperCssClass="field-row">
 				<aui:option label="dashed" selected='<%= Objects.equals(portletConfigurationCSSPortletDisplayContext.getBorderProperty("top", "borderStyle"), "dashed") %>' />
@@ -125,31 +125,31 @@
 		md="4"
 	>
 		<aui:fieldset label="border-color">
-			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor") %>' data-inputselector=".same-border-color" label="same-for-all" name="useForAllColor" type="toggle-switch" />
+			<aui:input checked='<%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor") %>' data-inputselector=".same-border-color" inlineLabel="right" label="same-for-all" labelCssClass="simple-toggle-switch" name="useForAllColor" type="toggle-switch" />
 
 			<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
 				<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("top", "borderColor") %>' />
 				<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "top") %>' />
-				<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorTop" %>' />
+				<liferay-util:param name="name" value='<%= liferayPortletResponse.getNamespace() + "borderColorTop" %>' />
 			</liferay-util:include>
 
 			<fieldset class="same-border-color" <%= portletConfigurationCSSPortletDisplayContext.isBorderSameForAll("borderColor") ? "disabled" : StringPool.BLANK %>>
 				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
 					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("right", "borderColor") %>' />
 					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "right") %>' />
-					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorRight" %>' />
+					<liferay-util:param name="name" value='<%= liferayPortletResponse.getNamespace() + "borderColorRight" %>' />
 				</liferay-util:include>
 
 				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
 					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("bottom", "borderColor") %>' />
 					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "bottom") %>' />
-					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorBottom" %>' />
+					<liferay-util:param name="name" value='<%= liferayPortletResponse.getNamespace() + "borderColorBottom" %>' />
 				</liferay-util:include>
 
 				<liferay-util:include page="/color_picker_input.jsp" servletContext="<%= application %>">
 					<liferay-util:param name="color" value='<%= portletConfigurationCSSPortletDisplayContext.getBorderProperty("left", "borderColor") %>' />
 					<liferay-util:param name="label" value='<%= LanguageUtil.get(request, "left") %>' />
-					<liferay-util:param name="name" value='<%= renderResponse.getNamespace() + "borderColorLeft" %>' />
+					<liferay-util:param name="name" value='<%= liferayPortletResponse.getNamespace() + "borderColorLeft" %>' />
 				</liferay-util:include>
 			</fieldset>
 		</aui:fieldset>

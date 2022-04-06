@@ -16,6 +16,8 @@ package com.liferay.portal.tools;
 
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.io.unsync.UnsyncBufferedReader;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -63,7 +65,7 @@ public class PluginsGitSvnSyncer {
 			}
 		}
 		catch (Exception exception) {
-			exception.printStackTrace();
+			_log.error(exception);
 		}
 	}
 
@@ -75,7 +77,7 @@ public class PluginsGitSvnSyncer {
 		String[] stderr = _getExecOutput(process.getErrorStream());
 
 		if (stderr.length > 0) {
-			StringBundler sb = new StringBundler(stderr.length * 3 + 3);
+			StringBundler sb = new StringBundler((stderr.length * 3) + 3);
 
 			sb.append("Received errors in executing '");
 			sb.append(cmd);
@@ -93,14 +95,14 @@ public class PluginsGitSvnSyncer {
 		return _getExecOutput(process.getInputStream());
 	}
 
-	private String[] _getExecOutput(InputStream is) throws Exception {
+	private String[] _getExecOutput(InputStream inputStream) throws Exception {
 		List<String> list = new ArrayList<>();
 
 		UnsyncBufferedReader unsyncBufferedReader = null;
 
 		try {
 			unsyncBufferedReader = new UnsyncBufferedReader(
-				new InputStreamReader(is));
+				new InputStreamReader(inputStream));
 
 			String line = unsyncBufferedReader.readLine();
 
@@ -120,6 +122,9 @@ public class PluginsGitSvnSyncer {
 					unsyncBufferedReader.close();
 				}
 				catch (Exception exception) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(exception);
+					}
 				}
 			}
 		}
@@ -321,6 +326,9 @@ public class PluginsGitSvnSyncer {
 	private static final String _SVN_GET_IGNORES = "svn propget svn:ignore ";
 
 	private static final String _SVN_SET_IGNORES = "svn propset svn:ignore ";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PluginsGitSvnSyncer.class);
 
 	private static final FileImpl _fileImpl = FileImpl.getInstance();
 

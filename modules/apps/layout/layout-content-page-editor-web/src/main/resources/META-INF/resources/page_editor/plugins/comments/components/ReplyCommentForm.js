@@ -17,7 +17,7 @@ import {openToast} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
-import {useDispatch} from '../../../app/store/index';
+import {useDispatch} from '../../../app/contexts/StoreContext';
 import addFragmentComment from '../../../app/thunks/addFragmentComment';
 import CommentForm from './CommentForm';
 
@@ -51,7 +51,6 @@ export default function ReplyCommentForm({
 					message: Liferay.Language.get(
 						'the-reply-could-not-be-saved'
 					),
-					title: Liferay.Language.get('error'),
 					type: 'danger',
 				});
 

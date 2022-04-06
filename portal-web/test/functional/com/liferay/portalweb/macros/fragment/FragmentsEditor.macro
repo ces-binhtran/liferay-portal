@@ -19,8 +19,6 @@ definition {
 	macro autocompleteFragmentHTML {
 		FragmentsEditor.typeHtmlEditor(content = "");
 
-		var htmlSnippet = '''<lfr-''';
-
 		Type.sendKeysAceEditor(
 			locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
 			value1 = "${htmlSnippet}");
@@ -31,7 +29,7 @@ definition {
 
 		AssertTextEquals.assertPartialText(
 			locator1 = "FragmentEditor#HTML_EDITOR_CONTENT",
-			value1 = "${fragmentHTML}");
+			value1 = "${fragmentHtml}");
 	}
 
 	macro gotoCodeTab {
@@ -59,7 +57,9 @@ definition {
 	}
 
 	macro typeFileContent {
-		var content = TestCase.getFileContent(fileName = "${fileName}");
+		var dependencyFilePath = TestCase.getDependenciesDirPath(fileName = "${fileName}");
+
+		var content = FileUtil.read("${dependencyFilePath}");
 
 		var fileExtension = File.getFileExtension(fileName = "${fileName}");
 
@@ -90,6 +90,14 @@ definition {
 		Type.typeCodeMirrorEditorNoError(
 			locator1 = "FragmentEditor#JS_EDITOR",
 			value1 = "${content}");
+	}
+
+	macro waitForAutoSave {
+		Pause(locator1 = "1000");
+
+		AssertTextEquals(
+			locator1 = "FragmentEditor#AUTOSAVE_MESSAGE",
+			value1 = "Changes Saved");
 	}
 
 }

@@ -22,6 +22,7 @@ long classPK = GetterUtil.getLong((String)request.getAttribute("liferay-asset:as
 String displayStyle = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-categories-summary:displayStyle"), "default");
 String paramName = GetterUtil.getString((String)request.getAttribute("liferay-asset:asset-categories-summary:paramName"), "categoryId");
 PortletURL portletURL = (PortletURL)request.getAttribute("liferay-asset:asset-categories-summary:portletURL");
+int[] visibleTypes = (int[])request.getAttribute("liferay-asset:asset-categories-summary:visibleTypes");
 
 List<AssetCategory> categories = (List<AssetCategory>)request.getAttribute("liferay-asset:asset-categories-summary:assetCategories");
 
@@ -31,10 +32,10 @@ if (ListUtil.isEmpty(categories)) {
 
 AssetEntry assetEntry = AssetEntryLocalServiceUtil.fetchEntry(className, classPK);
 
-List<AssetVocabulary> vocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(PortalUtil.getCurrentAndAncestorSiteGroupIds((assetEntry != null) ? assetEntry.getGroupId() : scopeGroupId));
+List<AssetVocabulary> vocabularies = AssetVocabularyServiceUtil.getGroupVocabularies(SiteConnectedGroupGroupProviderUtil.getCurrentAndAncestorSiteAndDepotGroupIds((assetEntry != null) ? assetEntry.getGroupId() : scopeGroupId));
 
 for (AssetVocabulary vocabulary : vocabularies) {
-	List<AssetCategory> curCategories = _filterCategories(categories, vocabulary);
+	List<AssetCategory> curCategories = _filterCategories(categories, vocabulary, visibleTypes);
 %>
 
 	<c:if test="<%= !curCategories.isEmpty() %>">
@@ -65,7 +66,8 @@ for (AssetVocabulary vocabulary : vocabularies) {
 								<clay:label
 									displayType="dark"
 									label="<%= HtmlUtil.escape(category.getTitle(themeDisplay.getLocale())) %>"
-									large="true"
+									large="<%= true %>"
+									translated="<%= false %>"
 								/>
 
 							<%
@@ -88,7 +90,7 @@ for (AssetVocabulary vocabulary : vocabularies) {
 								portletURL.setParameter(paramName, String.valueOf(category.getCategoryId()));
 							%>
 
-								<a class="asset-category text-uppercase" href="<%= HtmlUtil.escape(portletURL.toString()) %>"><%= _buildCategoryPath(category, themeDisplay) %></a>
+								<a class="asset-category mb-1 mr-1 pr-2 text-uppercase" href="<%= HtmlUtil.escape(portletURL.toString()) %>"><%= _buildCategoryPath(category, themeDisplay) %></a>
 
 							<%
 							}
@@ -101,7 +103,7 @@ for (AssetVocabulary vocabulary : vocabularies) {
 							for (AssetCategory category : curCategories) {
 							%>
 
-								<span class="asset-category text-uppercase">
+								<span class="asset-category mb-1 mr-1 pr-2 text-uppercase">
 									<%= _buildCategoryPath(category, themeDisplay) %>
 								</span>
 
@@ -142,11 +144,11 @@ private String _buildCategoryPath(AssetCategory category, ThemeDisplay themeDisp
 	return sb.toString();
 }
 
-private List<AssetCategory> _filterCategories(List<AssetCategory> categories, AssetVocabulary vocabulary) {
+private List<AssetCategory> _filterCategories(List<AssetCategory> categories, AssetVocabulary vocabulary, int[] visibleTypes) {
 	List<AssetCategory> filteredCategories = new ArrayList<AssetCategory>();
 
 	for (AssetCategory category : categories) {
-		if (category.getVocabularyId() == vocabulary.getVocabularyId()) {
+		if ((category.getVocabularyId() == vocabulary.getVocabularyId()) && ArrayUtil.contains(visibleTypes, vocabulary.getVisibilityType())) {
 			filteredCategories.add(category);
 		}
 	}

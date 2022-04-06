@@ -30,6 +30,10 @@ public class SocialActivityAchievementLocalServiceWrapper
 	implements ServiceWrapper<SocialActivityAchievementLocalService>,
 			   SocialActivityAchievementLocalService {
 
+	public SocialActivityAchievementLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SocialActivityAchievementLocalServiceWrapper(
 		SocialActivityAchievementLocalService
 			socialActivityAchievementLocalService) {
@@ -50,6 +54,10 @@ public class SocialActivityAchievementLocalServiceWrapper
 
 	/**
 	 * Adds the social activity achievement to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityAchievementLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityAchievement the social activity achievement
 	 * @return the social activity achievement that was added
@@ -103,6 +111,10 @@ public class SocialActivityAchievementLocalServiceWrapper
 	/**
 	 * Deletes the social activity achievement with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityAchievementLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param activityAchievementId the primary key of the social activity achievement
 	 * @return the social activity achievement that was removed
 	 * @throws PortalException if a social activity achievement with the primary key could not be found
@@ -119,6 +131,10 @@ public class SocialActivityAchievementLocalServiceWrapper
 	/**
 	 * Deletes the social activity achievement from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityAchievementLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param socialActivityAchievement the social activity achievement
 	 * @return the social activity achievement that was removed
 	 */
@@ -133,6 +149,13 @@ public class SocialActivityAchievementLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _socialActivityAchievementLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _socialActivityAchievementLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -387,6 +410,10 @@ public class SocialActivityAchievementLocalServiceWrapper
 
 	/**
 	 * Updates the social activity achievement in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivityAchievementLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivityAchievement the social activity achievement
 	 * @return the social activity achievement that was updated

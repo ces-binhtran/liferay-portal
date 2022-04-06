@@ -17,7 +17,8 @@
 <%@ include file="/init.jsp" %>
 
 <%@ page import="com.liferay.info.taglib.internal.list.renderer.BasicListInfoListStyle" %><%@
-page import="com.liferay.portal.kernel.util.Validator" %>
+page import="com.liferay.portal.kernel.util.Validator" %><%@
+page import="com.liferay.taglib.servlet.PipingServletResponseFactory" %>
 
 <%@ page import="java.util.Objects" %>
 
@@ -32,8 +33,8 @@ if (Objects.equals(infoListStyleKey, BasicListInfoListStyle.BORDERED.getKey())) 
 	listItemCssClass = "list-group-item";
 }
 else if (Objects.equals(infoListStyleKey, BasicListInfoListStyle.INLINE.getKey())) {
-	listCssClass = "list-inline";
-	listItemCssClass = "list-inline-item";
+	listCssClass = "d-flex list-inline";
+	listItemCssClass = "flex-grow-1";
 }
 else if (Objects.equals(infoListStyleKey, BasicListInfoListStyle.UNSTYLED.getKey())) {
 	listCssClass = "list-unstyled";

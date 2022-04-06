@@ -15,7 +15,12 @@ import {Cell, Pie, PieChart} from 'recharts';
 
 const EMPTY_PIE_CHART_FILL_COLOR = '#f1f2f5';
 
-export default function EmptyPieChart({height, innerRadius, radius, width}) {
+export default function EmptyPieChart({
+	height,
+	innerRadius,
+	outerRadius,
+	width,
+}) {
 	return (
 		<div className="pie-chart-wrapper--chart">
 			<PieChart height={height} width={width}>
@@ -25,8 +30,9 @@ export default function EmptyPieChart({height, innerRadius, radius, width}) {
 					data={[{value: 100}]}
 					dataKey="value"
 					innerRadius={innerRadius}
-					nameKey={'name'}
-					outerRadius={radius}
+					isAnimationActive={false}
+					nameKey="name"
+					outerRadius={outerRadius}
 					paddingAngle={1}
 				>
 					<Cell fill={EMPTY_PIE_CHART_FILL_COLOR} />
@@ -36,9 +42,9 @@ export default function EmptyPieChart({height, innerRadius, radius, width}) {
 	);
 }
 
-EmptyPieChart.proptypes = {
+EmptyPieChart.propTypes = {
 	height: PropTypes.number.isRequired,
 	innerRadius: PropTypes.number.isRequired,
-	radius: PropTypes.number.isRequired,
+	outerRadius: PropTypes.number.isRequired,
 	width: PropTypes.number.isRequired,
 };

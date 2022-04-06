@@ -19,42 +19,46 @@ import ProcessStepFilter from '../filter/ProcessStepFilter.es';
 import RoleFilter from '../filter/RoleFilter.es';
 import TimeRangeFilter from '../filter/TimeRangeFilter.es';
 
-const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
+export default function Header({
+	filterKeys,
+	routeParams,
+	selectedFilters,
+	totalCount,
+}) {
 	const showFiltersResult = routeParams.search || selectedFilters.length > 0;
 
 	return (
 		<>
 			<ClayManagementToolbar className="mb-0">
-				<ClayManagementToolbar.Item>
-					<strong className="ml-0 mr-0 navbar-text">
-						{Liferay.Language.get('filter-by')}
-					</strong>
-				</ClayManagementToolbar.Item>
+				<ClayManagementToolbar.ItemList>
+					<ClayManagementToolbar.Item>
+						<strong className="ml-0 mr-0 navbar-text">
+							{Liferay.Language.get('filter-by')}
+						</strong>
+					</ClayManagementToolbar.Item>
 
-				<RoleFilter
-					completed={true}
-					filterKey={filterConstants.roles.key}
-					processId={routeParams.processId}
-				/>
-
-				<ProcessStepFilter
-					filterKey={filterConstants.processStep.key}
-					processId={routeParams.processId}
-				/>
-
-				<div className="navbar-form-autofit">
-					<SearchField
-						disabled={false}
-						placeholder={Liferay.Language.get(
-							'search-for-assignee-name'
-						)}
+					<RoleFilter
+						completed={true}
+						filterKey={filterConstants.roles.key}
+						processId={routeParams.processId}
 					/>
-				</div>
 
-				<TimeRangeFilter
-					buttonClassName="btn-flat btn-sm"
-					options={{position: 'right'}}
+					<ProcessStepFilter
+						filterKey={filterConstants.processStep.key}
+						processId={routeParams.processId}
+					/>
+				</ClayManagementToolbar.ItemList>
+
+				<SearchField
+					disabled={false}
+					placeholder={Liferay.Language.get(
+						'search-for-assignee-name'
+					)}
 				/>
+
+				<ClayManagementToolbar.ItemList>
+					<TimeRangeFilter />
+				</ClayManagementToolbar.ItemList>
 			</ClayManagementToolbar>
 
 			{showFiltersResult && (
@@ -78,6 +82,4 @@ const Header = ({filterKeys, routeParams, selectedFilters, totalCount}) => {
 			)}
 		</>
 	);
-};
-
-export {Header};
+}

@@ -17,6 +17,7 @@ package com.liferay.alloy.mvc;
 import com.liferay.alloy.mvc.internal.json.web.service.AlloyControllerInvokerManager;
 import com.liferay.alloy.mvc.internal.json.web.service.AlloyMockUtil;
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.bean.BeanPropertiesUtil;
@@ -26,6 +27,7 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONSerializable;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -49,8 +51,6 @@ import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServic
 import com.liferay.portal.kernel.module.framework.service.IdentifiableOSGiServiceUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletConfig;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.portlet.PortletBag;
-import com.liferay.portal.kernel.portlet.PortletBagPool;
 import com.liferay.portal.kernel.portlet.PortletConfigFactoryUtil;
 import com.liferay.portal.kernel.portlet.PortletURLFactoryUtil;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
@@ -99,7 +99,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -276,7 +275,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			!viewPath.equals(VIEW_PATH_ERROR)) {
 
 			alloyNotificationEventHelper.addUserNotificationEvents(
-				request, controllerPath, actionPath,
+				httpServletRequest, controllerPath, actionPath,
 				alloyNotificationEventHelperPayloadJSONObject);
 		}
 	}
@@ -297,7 +296,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 	@Override
 	public HttpServletRequest getRequest() {
-		return request;
+		return httpServletRequest;
 	}
 
 	@Override
@@ -393,7 +392,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	public void updateModel(BaseModel<?> baseModel, Object... properties)
 		throws Exception {
 
-		BeanPropertiesUtil.setProperties(baseModel, request);
+		BeanPropertiesUtil.setProperties(baseModel, httpServletRequest);
 
 		setLocalizedProperties(baseModel);
 
@@ -412,7 +411,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 	protected void addOpenerSuccessMessage() {
 		Map<String, String> data = (Map<String, String>)SessionMessages.get(
-			request,
+			httpServletRequest,
 			portlet.getPortletId() +
 				SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA);
 
@@ -427,7 +426,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		data.put("addSuccessMessage", StringPool.FALSE);
 
 		SessionMessages.add(
-			request,
+			httpServletRequest,
 			portlet.getPortletId() +
 				SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA,
 			data);
@@ -474,32 +473,33 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		String responseContent = StringPool.BLANK;
 
 		if (isRespondingTo("json")) {
-			JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+			responseContent = JSONUtil.put(
+				"data",
+				() -> {
+					if (data instanceof Exception) {
+						return getStackTrace((Exception)data);
+					}
 
-			if (data instanceof Exception) {
-				String stackTrace = getStackTrace((Exception)data);
+					if (data instanceof JSONArray) {
+						return (JSONArray)data;
+					}
 
-				jsonObject.put("data", stackTrace);
-			}
-			else if (data instanceof JSONArray) {
-				jsonObject.put("data", (JSONArray)data);
-			}
-			else if (data instanceof JSONObject) {
-				jsonObject.put("data", (JSONObject)data);
-			}
-			else if (data != null) {
-				jsonObject.put(
-					"data",
-					JSONFactoryUtil.createJSONObject(String.valueOf(data)));
-			}
+					if (data instanceof JSONObject) {
+						return (JSONObject)data;
+					}
 
-			jsonObject.put(
+					if (data != null) {
+						return JSONFactoryUtil.createJSONObject(
+							String.valueOf(data));
+					}
+
+					return null;
+				}
+			).put(
 				"message", message
 			).put(
 				"status", status
-			);
-
-			responseContent = jsonObject.toString();
+			).toString();
 		}
 
 		return responseContent;
@@ -527,7 +527,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 	protected void executeRender(Method method) throws Exception {
 		boolean calledProcessAction = GetterUtil.getBoolean(
-			(String)request.getAttribute(CALLED_PROCESS_ACTION));
+			(String)httpServletRequest.getAttribute(CALLED_PROCESS_ACTION));
 
 		if (!calledProcessAction) {
 			executeResource(method);
@@ -555,33 +555,34 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 					_transactionConfig, () -> method.invoke(this));
 			}
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			Exception exception = null;
 
-			if (t instanceof Exception) {
-				exception = (Exception)t;
+			if (throwable instanceof Exception) {
+				exception = (Exception)throwable;
 			}
 			else {
-				exception = new Exception(t);
+				exception = new Exception(throwable);
 			}
 
 			Object[] arguments = null;
 			String message = "an-unexpected-system-error-occurred";
 
-			Throwable rootCause = getRootCause(exception);
+			Throwable rootCauseThrowable = getRootCause(exception);
 
-			if (rootCause instanceof AlloyException) {
-				AlloyException alloyException = (AlloyException)rootCause;
+			if (rootCauseThrowable instanceof AlloyException) {
+				AlloyException alloyException =
+					(AlloyException)rootCauseThrowable;
 
 				if (alloyException.log) {
-					log.error(rootCause, rootCause);
+					log.error(rootCauseThrowable, rootCauseThrowable);
 				}
 
 				if (ArrayUtil.isNotEmpty(alloyException.arguments)) {
 					arguments = alloyException.arguments;
 				}
 
-				message = rootCause.getMessage();
+				message = rootCauseThrowable.getMessage();
 			}
 			else {
 				log.error(exception, exception);
@@ -593,7 +594,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 		finally {
 			if (isRespondingTo()) {
-				String contentType = response.getContentType();
+				String contentType = httpServletResponse.getContentType();
 
 				if (isRespondingTo("json")) {
 					contentType = ContentTypes.APPLICATION_JSON;
@@ -614,25 +615,18 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected String getMessageListenerGroupName() {
-		String rootPortletId = portlet.getRootPortletId();
-
-		return rootPortletId.concat(
-			StringPool.SLASH
-		).concat(
-			controllerPath
-		);
+		return StringBundler.concat(
+			portlet.getRootPortletId(), StringPool.SLASH, controllerPath);
 	}
 
 	protected Method getMethod(String methodName, Class<?>... parameterTypes) {
-		String methodKey = getMethodKey(methodName, parameterTypes);
-
-		return methodsMap.get(methodKey);
+		return methodsMap.get(getMethodKey(methodName, parameterTypes));
 	}
 
 	protected String getMethodKey(
 		String methodName, Class<?>... parameterTypes) {
 
-		StringBundler sb = new StringBundler(parameterTypes.length * 2 + 2);
+		StringBundler sb = new StringBundler((parameterTypes.length * 2) + 2);
 
 		sb.append(methodName);
 		sb.append(StringPool.POUND);
@@ -679,14 +673,19 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			String lifecycle, WindowState windowState, Object... parameters)
 		throws Exception {
 
-		PortletURL portletURL = PortletURLFactoryUtil.create(
-			request, portlet, themeDisplay.getLayout(), lifecycle);
-
-		portletURL.setParameter("action", action);
-		portletURL.setParameter("controller", controller);
-
-		portletURL.setPortletMode(portletMode);
-		portletURL.setWindowState(windowState);
+		PortletURL portletURL = PortletURLBuilder.create(
+			PortletURLFactoryUtil.create(
+				httpServletRequest, portlet, themeDisplay.getLayout(),
+				lifecycle)
+		).setParameter(
+			"action", action
+		).setParameter(
+			"controller", controller
+		).setPortletMode(
+			portletMode
+		).setWindowState(
+			windowState
+		).buildPortletURL();
 
 		if (parameters == null) {
 			return portletURL;
@@ -739,11 +738,11 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			Object... attributes)
 		throws Exception {
 
-		Map<String, Serializable> attributesMap = new HashMap<>();
-
 		if ((attributes.length == 0) || ((attributes.length % 2) != 0)) {
 			throw new Exception("Arguments length is not an even number");
 		}
+
+		Map<String, Serializable> attributesMap = new HashMap<>();
 
 		for (int i = 0; i < attributes.length; i += 2) {
 			String name = String.valueOf(attributes[i]);
@@ -827,19 +826,20 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		baseAlloyIndexer.setAlloyServiceInvoker(alloyServiceInvoker);
 		baseAlloyIndexer.setClassName(portlet.getModelClassName());
 
-		PortletBag portletBag = PortletBagPool.get(portlet.getPortletId());
-
-		List<Indexer<?>> indexerInstances = portletBag.getIndexerInstances();
-
 		if (existingIndexer != null) {
 			IndexerRegistryUtil.unregister(existingIndexer);
-
-			indexerInstances.remove(existingIndexer);
 		}
 
 		IndexerRegistryUtil.register(indexer);
 
-		indexerInstances.add(indexer);
+		Bundle bundle = FrameworkUtil.getBundle(getClass());
+
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		bundleContext.registerService(
+			Indexer.class, indexer,
+			MapUtil.singletonDictionary(
+				"javax.portlet.name", portlet.getPortletName()));
 	}
 
 	protected void initMessageListener(
@@ -957,15 +957,14 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		Method[] methods = clazz.getMethods();
 
 		for (Method method : methods) {
-			String methodKey = getMethodKey(
-				method.getName(), method.getParameterTypes());
-
-			methodsMap.put(methodKey, method);
+			methodsMap.put(
+				getMethodKey(method.getName(), method.getParameterTypes()),
+				method);
 		}
 	}
 
 	protected void initPaths() {
-		controllerPath = ParamUtil.getString(request, "controller");
+		controllerPath = ParamUtil.getString(httpServletRequest, "controller");
 
 		if (Validator.isNull(controllerPath)) {
 			Map<String, String> defaultRouteParameters =
@@ -978,7 +977,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			log.debug("Controller path " + controllerPath);
 		}
 
-		actionPath = ParamUtil.getString(request, "action");
+		actionPath = ParamUtil.getString(httpServletRequest, "action");
 
 		if (Validator.isNull(actionPath)) {
 			Map<String, String> defaultRouteParameters =
@@ -992,15 +991,15 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 
 		viewPath = GetterUtil.getString(
-			(String)request.getAttribute(VIEW_PATH));
+			(String)httpServletRequest.getAttribute(VIEW_PATH));
 
-		request.removeAttribute(VIEW_PATH);
+		httpServletRequest.removeAttribute(VIEW_PATH);
 
 		if (log.isDebugEnabled()) {
 			log.debug("View path " + viewPath);
 		}
 
-		format = ParamUtil.getString(request, "format");
+		format = ParamUtil.getString(httpServletRequest, "format");
 
 		if (Validator.isNull(format)) {
 			Map<String, String> defaultRouteParameters =
@@ -1014,10 +1013,13 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		}
 
 		if (mimeResponse != null) {
-			portletURL = mimeResponse.createRenderURL();
-
-			portletURL.setParameter("action", actionPath);
-			portletURL.setParameter("controller", controllerPath);
+			portletURL = PortletURLBuilder.createRenderURL(
+				mimeResponse
+			).setParameter(
+				"action", actionPath
+			).setParameter(
+				"controller", controllerPath
+			).buildPortletURL();
 
 			if (Validator.isNotNull(format)) {
 				portletURL.setParameter("format", format);
@@ -1030,27 +1032,29 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	}
 
 	protected void initPortletVariables() {
-		liferayPortletConfig = (LiferayPortletConfig)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_CONFIG);
+		liferayPortletConfig =
+			(LiferayPortletConfig)httpServletRequest.getAttribute(
+				JavaConstants.JAVAX_PORTLET_CONFIG);
 
 		portletContext = liferayPortletConfig.getPortletContext();
 
 		portlet = liferayPortletConfig.getPortlet();
 
-		alloyPortlet = (AlloyPortlet)request.getAttribute(
+		alloyPortlet = (AlloyPortlet)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_PORTLET);
 
-		portletRequest = (PortletRequest)request.getAttribute(
+		portletRequest = (PortletRequest)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_REQUEST);
 
-		portletResponse = (PortletResponse)request.getAttribute(
+		portletResponse = (PortletResponse)httpServletRequest.getAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE);
 
 		liferayPortletResponse = PortalUtil.getLiferayPortletResponse(
 			portletResponse);
 
 		lifecycle = GetterUtil.getString(
-			(String)request.getAttribute(PortletRequest.LIFECYCLE_PHASE));
+			(String)httpServletRequest.getAttribute(
+				PortletRequest.LIFECYCLE_PHASE));
 
 		if (log.isDebugEnabled()) {
 			log.debug("Lifecycle " + lifecycle);
@@ -1079,12 +1083,12 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected void initServletVariables() {
 		servletConfig = pageContext.getServletConfig();
 		servletContext = pageContext.getServletContext();
-		request = (HttpServletRequest)pageContext.getRequest();
-		response = (HttpServletResponse)pageContext.getResponse();
+		httpServletRequest = (HttpServletRequest)pageContext.getRequest();
+		httpServletResponse = (HttpServletResponse)pageContext.getResponse();
 	}
 
 	protected void initThemeDisplayVariables() {
-		themeDisplay = (ThemeDisplay)request.getAttribute(
+		themeDisplay = (ThemeDisplay)httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
 		company = themeDisplay.getCompany();
@@ -1159,20 +1163,19 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			Object... arguments)
 		throws Exception {
 
-		Throwable rootCause = getRootCause(exception);
+		Throwable rootCauseThrowable = getRootCause(exception);
 
 		if (isRespondingTo()) {
 			responseContent = buildResponseContent(
-				rootCause, translate(pattern, arguments), status);
+				rootCauseThrowable, translate(pattern, arguments), status);
 
 			return;
 		}
 
 		portletRequest.setAttribute("arguments", arguments);
 
-		String stackTrace = getStackTrace((Exception)rootCause);
-
-		portletRequest.setAttribute("data", stackTrace);
+		portletRequest.setAttribute(
+			"data", getStackTrace((Exception)rootCauseThrowable));
 
 		portletRequest.setAttribute("pattern", pattern);
 		portletRequest.setAttribute("status", status);
@@ -1357,9 +1360,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 		searchContext.setStart(start);
 
-		Hits hits = indexer.search(searchContext);
-
-		alloySearchResult.setHits(hits);
+		alloySearchResult.setHits(indexer.search(searchContext));
 
 		if (portletURL != null) {
 			alloySearchResult.setPortletURL(
@@ -1401,7 +1402,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			Map<String, Serializable> attributes, String keywords, Sort[] sorts)
 		throws Exception {
 
-		return search(request, portletRequest, attributes, keywords, sorts);
+		return search(
+			httpServletRequest, portletRequest, attributes, keywords, sorts);
 	}
 
 	protected AlloySearchResult search(
@@ -1410,8 +1412,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		throws Exception {
 
 		return search(
-			indexer, alloyServiceInvoker, request, portletRequest, attributes,
-			keywords, sorts, start, end);
+			indexer, alloyServiceInvoker, httpServletRequest, portletRequest,
+			attributes, keywords, sorts, start, end);
 	}
 
 	protected AlloySearchResult search(String keywords) throws Exception {
@@ -1451,7 +1453,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 
 		long classNameId = 0;
 
-		String className = ParamUtil.getString(request, "className");
+		String className = ParamUtil.getString(httpServletRequest, "className");
 
 		if (Validator.isNotNull(className)) {
 			classNameId = PortalUtil.getClassNameId(className);
@@ -1461,7 +1463,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			attachedModel.setClassNameId(classNameId);
 		}
 
-		long classPK = ParamUtil.getLong(request, "classPK");
+		long classPK = ParamUtil.getLong(httpServletRequest, "classPK");
 
 		if (classPK > 0) {
 			attachedModel.setClassPK(classPK);
@@ -1485,13 +1487,14 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected void setLocalizedProperties(BaseModel<?> baseModel)
 		throws Exception {
 
-		setLocalizedProperties(baseModel, request, request.getLocale());
+		setLocalizedProperties(
+			baseModel, httpServletRequest, httpServletRequest.getLocale());
 	}
 
 	protected void setLocalizedProperties(BaseModel<?> baseModel, Locale locale)
 		throws Exception {
 
-		setLocalizedProperties(baseModel, request, locale);
+		setLocalizedProperties(baseModel, httpServletRequest, locale);
 	}
 
 	protected void setOpenerSuccessMessage() {
@@ -1500,15 +1503,13 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 			portlet.getPortletId() + SessionMessages.KEY_SUFFIX_REFRESH_PORTLET,
 			portlet.getPortletId());
 
-		Map<String, String> data = HashMapBuilder.put(
-			"addSuccessMessage", StringPool.TRUE
-		).build();
-
 		SessionMessages.add(
-			request,
+			httpServletRequest,
 			portlet.getPortletId() +
 				SessionMessages.KEY_SUFFIX_REFRESH_PORTLET_DATA,
-			data);
+			HashMapBuilder.put(
+				"addSuccessMessage", StringPool.TRUE
+			).build());
 	}
 
 	protected void setPermissioned(boolean permissioned) {
@@ -1531,30 +1532,37 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 		Map<String, Object> modelAttributes = baseModel.getModelAttributes();
 
 		for (Map.Entry<String, Object> entry : modelAttributes.entrySet()) {
-			String key = entry.getKey();
-			Object value = entry.getValue();
+			jsonObject.put(
+				String.valueOf(entry.getKey()),
+				() -> {
+					Object value = entry.getValue();
 
-			if (value instanceof Boolean) {
-				jsonObject.put(String.valueOf(key), (Boolean)value);
-			}
-			else if (value instanceof Date) {
-				jsonObject.put(String.valueOf(key), (Date)value);
-			}
-			else if (value instanceof Double) {
-				jsonObject.put(String.valueOf(key), (Double)value);
-			}
-			else if (value instanceof Integer) {
-				jsonObject.put(String.valueOf(key), (Integer)value);
-			}
-			else if (value instanceof Long) {
-				jsonObject.put(String.valueOf(key), (Long)value);
-			}
-			else if (value instanceof Short) {
-				jsonObject.put(String.valueOf(key), (Short)value);
-			}
-			else {
-				jsonObject.put(String.valueOf(key), String.valueOf(value));
-			}
+					if (value instanceof Boolean) {
+						return (Boolean)value;
+					}
+
+					if (value instanceof Date) {
+						return (Date)value;
+					}
+
+					if (value instanceof Double) {
+						return (Double)value;
+					}
+
+					if (value instanceof Integer) {
+						return (Integer)value;
+					}
+
+					if (value instanceof Long) {
+						return (Long)value;
+					}
+
+					if (value instanceof Short) {
+						return (Short)value;
+					}
+
+					return String.valueOf(value);
+				});
 		}
 
 		return jsonObject;
@@ -1617,7 +1625,7 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected void writeResponse(Object content, String contentType)
 		throws Exception {
 
-		HttpServletResponse httpServletResponse = response;
+		HttpServletResponse httpServletResponse = this.httpServletResponse;
 
 		if (!(httpServletResponse instanceof
 				AlloyMockUtil.MockHttpServletResponse)) {
@@ -1656,6 +1664,8 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected EventRequest eventRequest;
 	protected EventResponse eventResponse;
 	protected String format;
+	protected HttpServletRequest httpServletRequest;
+	protected HttpServletResponse httpServletResponse;
 	protected Indexer<BaseModel<?>> indexer;
 	protected String indexerClassName;
 	protected String lifecycle;
@@ -1674,10 +1684,24 @@ public abstract class BaseAlloyControllerImpl implements AlloyController {
 	protected String redirect;
 	protected RenderRequest renderRequest;
 	protected RenderResponse renderResponse;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #httpServletRequest}
+	 */
+	@Deprecated
 	protected HttpServletRequest request;
+
 	protected ResourceRequest resourceRequest;
 	protected ResourceResponse resourceResponse;
+
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #httpServletResponse}
+	 */
+	@Deprecated
 	protected HttpServletResponse response;
+
 	protected String responseContent = StringPool.BLANK;
 	protected MessageListener schedulerMessageListener;
 	protected ServletConfig servletConfig;

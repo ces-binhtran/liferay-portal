@@ -167,6 +167,11 @@ public class PortletWrapper
 		return new PortletWrapper((Portlet)model.clone());
 	}
 
+	@Override
+	public Portlet cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
+	}
+
 	/**
 	 * Compares this portlet to the specified object.
 	 *
@@ -184,12 +189,12 @@ public class PortletWrapper
 	/**
 	 * Checks whether this portlet is equal to the specified object.
 	 *
-	 * @param obj the object to compare this portlet against
+	 * @param object the object to compare this portlet against
 	 * @return <code>true</code> if the portlet is equal to the specified object
 	 */
 	@Override
-	public boolean equals(Object obj) {
-		return model.equals(obj);
+	public boolean equals(Object object) {
+		return model.equals(object);
 	}
 
 	/**
@@ -302,31 +307,6 @@ public class PortletWrapper
 			getAssetRendererFactoryInstances() {
 
 		return model.getAssetRendererFactoryInstances();
-	}
-
-	/**
-	 * Returns the names of the classes that represent atom collection adapters
-	 * associated with the portlet.
-	 *
-	 * @return the names of the classes that represent atom collection adapters
-	 associated with the portlet
-	 */
-	@Override
-	public java.util.List<String> getAtomCollectionAdapterClasses() {
-		return model.getAtomCollectionAdapterClasses();
-	}
-
-	/**
-	 * Returns the atom collection adapter instances of the portlet.
-	 *
-	 * @return the atom collection adapter instances of the portlet
-	 */
-	@Override
-	public java.util.List
-		<com.liferay.portal.kernel.atom.AtomCollectionAdapter<?>>
-			getAtomCollectionAdapterInstances() {
-
-		return model.getAtomCollectionAdapterInstances();
 	}
 
 	/**
@@ -2479,20 +2459,6 @@ public class PortletWrapper
 	@Override
 	public void setAsyncSupported(boolean asyncSupported) {
 		model.setAsyncSupported(asyncSupported);
-	}
-
-	/**
-	 * Sets the names of the classes that represent atom collection adapters
-	 * associated with the portlet.
-	 *
-	 * @param atomCollectionAdapterClasses the names of the classes that
-	 represent atom collection adapters associated with the portlet
-	 */
-	@Override
-	public void setAtomCollectionAdapterClasses(
-		java.util.List<String> atomCollectionAdapterClasses) {
-
-		model.setAtomCollectionAdapterClasses(atomCollectionAdapterClasses);
 	}
 
 	/**

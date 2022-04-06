@@ -398,17 +398,11 @@ AUI.add(
 				_showError(message) {
 					var instance = this;
 
-					new Liferay.Alert({
-						closeable: true,
-						delay: {
-							hide: 5000,
-							show: 0,
-						},
-						duration: 250,
-						icon: 'exclamation-full',
+					Liferay.Util.openToast({
+						container: instance.rootNode,
 						message,
 						type: 'danger',
-					}).render(instance.rootNode);
+					});
 				},
 
 				_showFile(file, preview) {
@@ -462,7 +456,7 @@ AUI.add(
 
 					if (
 						validExtensions === '*' ||
-						validExtensions.indexOf(fileExtension) != -1
+						validExtensions.indexOf(fileExtension) !== -1
 					) {
 						var maxFileSize = instance.get('maxFileSize');
 
@@ -545,7 +539,6 @@ AUI.add(
 	'',
 	{
 		requires: [
-			'liferay-alert',
 			'liferay-item-selector-uploader',
 			'liferay-item-viewer',
 			'liferay-portlet-base',

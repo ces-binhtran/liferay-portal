@@ -19,6 +19,7 @@ import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -42,12 +43,15 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperience;
 import com.liferay.segments.service.SegmentsExperienceLocalService;
+import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
 import com.liferay.segments.service.persistence.SegmentsEntryRelPersistence;
 import com.liferay.segments.service.persistence.SegmentsEntryRolePersistence;
@@ -58,10 +62,13 @@ import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -83,11 +90,15 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SegmentsExperienceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.segments.service.SegmentsExperienceLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SegmentsExperienceLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SegmentsExperienceLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the segments experience to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was added
@@ -119,6 +130,10 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	/**
 	 * Deletes the segments experience with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param segmentsExperienceId the primary key of the segments experience
 	 * @return the segments experience that was removed
 	 * @throws PortalException if a segments experience with the primary key could not be found
@@ -134,6 +149,10 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 
 	/**
 	 * Deletes the segments experience from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was removed
@@ -151,6 +170,13 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return segmentsExperiencePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -422,6 +448,7 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -440,6 +467,7 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 			(SegmentsExperience)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SegmentsExperience> getBasePersistence() {
 		return segmentsExperiencePersistence;
 	}
@@ -532,6 +560,10 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	/**
 	 * Updates the segments experience in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperienceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param segmentsExperience the segments experience
 	 * @return the segments experience that was updated
 	 */
@@ -543,11 +575,16 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		return segmentsExperiencePersistence.update(segmentsExperience);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			SegmentsExperienceLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
@@ -555,6 +592,8 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		segmentsExperienceLocalService =
 			(SegmentsExperienceLocalService)aopProxy;
+
+		_setLocalServiceUtilService(segmentsExperienceLocalService);
 	}
 
 	/**
@@ -567,8 +606,23 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		return SegmentsExperienceLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<SegmentsExperience> getCTPersistence() {
+		return segmentsExperiencePersistence;
+	}
+
+	@Override
+	public Class<SegmentsExperience> getModelClass() {
 		return SegmentsExperience.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<SegmentsExperience>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(segmentsExperiencePersistence);
 	}
 
 	protected String getModelClassName() {
@@ -597,6 +651,23 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		SegmentsExperienceLocalService segmentsExperienceLocalService) {
+
+		try {
+			Field field =
+				SegmentsExperienceLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, segmentsExperienceLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 
@@ -630,10 +701,6 @@ public abstract class SegmentsExperienceLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.portal.kernel.service.ClassNameLocalService
 		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.LayoutLocalService
-		layoutLocalService;
 
 	@Reference
 	protected com.liferay.portal.kernel.service.ResourceLocalService

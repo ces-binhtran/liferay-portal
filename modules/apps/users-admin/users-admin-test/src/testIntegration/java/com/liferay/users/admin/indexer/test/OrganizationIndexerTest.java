@@ -129,12 +129,11 @@ public class OrganizationIndexerTest {
 	public SearchTestRule searchTestRule = new SearchTestRule();
 
 	protected Organization addOrganization(String name) throws Exception {
-		long userId = TestPropsValues.getUserId();
 		long parentOrganizationId = 0;
 		boolean site = false;
 
 		Organization organization = organizationLocalService.addOrganization(
-			userId, parentOrganizationId, name, site);
+			TestPropsValues.getUserId(), parentOrganizationId, name, site);
 
 		_organizations.add(organization);
 
@@ -171,12 +170,10 @@ public class OrganizationIndexerTest {
 	}
 
 	protected SearchResponse search(String keywords) throws Exception {
-		long companyId = TestPropsValues.getCompanyId();
-
 		return searcher.search(
 			searchRequestBuilderFactory.builder(
 			).companyId(
-				companyId
+				TestPropsValues.getCompanyId()
 			).fields(
 				Field.NAME
 			).modelIndexerClasses(

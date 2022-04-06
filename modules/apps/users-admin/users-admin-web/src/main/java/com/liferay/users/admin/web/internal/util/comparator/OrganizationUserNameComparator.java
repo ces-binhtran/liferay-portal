@@ -39,8 +39,8 @@ public class OrganizationUserNameComparator extends OrderByComparator<Object> {
 
 	@Override
 	public int compare(Object object1, Object object2) {
-		String name1 = getName(object1);
-		String name2 = getName(object2);
+		String name1 = _getName(object1);
+		String name2 = _getName(object2);
 
 		int value = name1.compareTo(name2);
 
@@ -70,14 +70,14 @@ public class OrganizationUserNameComparator extends OrderByComparator<Object> {
 		return _ascending;
 	}
 
-	protected String getName(Object obj) {
-		if (obj instanceof Organization) {
-			Organization organization = (Organization)obj;
+	private String _getName(Object object) {
+		if (object instanceof Organization) {
+			Organization organization = (Organization)object;
 
 			return organization.getName();
 		}
 
-		User user = (User)obj;
+		User user = (User)object;
 
 		return user.getLastName();
 	}

@@ -36,10 +36,10 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.List;
 import java.util.Map;
@@ -68,7 +68,7 @@ public class FragmentEntryStagedModelDataHandlerTest
 	public void setUp() throws Exception {
 		super.setUp();
 
-		LayoutTestUtil.addLayout(stagingGroup);
+		_layout = LayoutTestUtil.addTypeContentLayout(stagingGroup);
 	}
 
 	@Test
@@ -90,8 +90,9 @@ public class FragmentEntryStagedModelDataHandlerTest
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				TestPropsValues.getUserId(), stagingGroup.getGroupId(), 0,
-				fragmentEntry.getFragmentEntryId(), 0,
-				PortalUtil.getClassNameId(Layout.class),
+				fragmentEntry.getFragmentEntryId(),
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(_layout.getPlid()),
 				stagingGroup.getDefaultPublicPlid(), fragmentEntry.getCss(),
 				fragmentEntry.getHtml(), fragmentEntry.getJs(),
 				fragmentEntry.getConfiguration(), StringPool.BLANK,
@@ -145,7 +146,7 @@ public class FragmentEntryStagedModelDataHandlerTest
 			fragmentCollection.getFragmentCollectionId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			RandomTestUtil.randomString(), configuration, 0,
+			RandomTestUtil.randomString(), false, configuration, null, 0,
 			FragmentConstants.TYPE_COMPONENT, WorkflowConstants.STATUS_APPROVED,
 			serviceContext);
 	}
@@ -193,5 +194,10 @@ public class FragmentEntryStagedModelDataHandlerTest
 
 	@Inject
 	private FragmentEntryLocalService _fragmentEntryLocalService;
+
+	private Layout _layout;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 }

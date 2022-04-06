@@ -23,16 +23,21 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.LayoutTypeController;
+import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.ParamUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.util.LayoutTypeControllerTracker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,12 +48,46 @@ import javax.servlet.http.HttpServletRequest;
 public class SelectLayoutPageTemplateEntryDisplayContext {
 
 	public SelectLayoutPageTemplateEntryDisplayContext(
-		HttpServletRequest httpServletRequest) {
+		HttpServletRequest httpServletRequest,
+		LiferayPortletResponse liferayPortletResponse) {
 
 		_httpServletRequest = httpServletRequest;
+		_liferayPortletResponse = liferayPortletResponse;
 
 		_themeDisplay = (ThemeDisplay)_httpServletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
+	}
+
+	public String getBackURL() {
+		if (_backURL != null) {
+			return _backURL;
+		}
+
+		String backURL = ParamUtil.getString(_httpServletRequest, "backURL");
+
+		if (Validator.isNull(backURL)) {
+			backURL = getRedirect();
+		}
+
+		_backURL = backURL;
+
+		return _backURL;
+	}
+
+	public Map<String, Object> getComponentContext() {
+		return HashMapBuilder.<String, Object>put(
+			"eventName",
+			() -> {
+				String eventName = ParamUtil.getString(
+					_httpServletRequest, "eventName",
+					_liferayPortletResponse.getNamespace() +
+						"selectMasterLayout");
+
+				return HtmlUtil.escape(eventName);
+			}
+		).put(
+			"selector", ".select-master-layout-option"
+		).build();
 	}
 
 	public List<LayoutPageTemplateEntry> getGlobalLayoutPageTemplateEntries() {
@@ -181,11 +220,9 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 	}
 
 	public boolean isBasicTemplates() {
-		if (getLayoutPageTemplateCollectionId() != 0) {
-			return false;
-		}
+		if ((getLayoutPageTemplateCollectionId() != 0) ||
+			!Objects.equals(getSelectedTab(), "basic-templates")) {
 
-		if (!Objects.equals(getSelectedTab(), "basic-templates")) {
 			return false;
 		}
 
@@ -201,19 +238,19 @@ public class SelectLayoutPageTemplateEntryDisplayContext {
 	}
 
 	public boolean isGlobalTemplates() {
-		if (getLayoutPageTemplateCollectionId() != 0) {
-			return false;
-		}
+		if ((getLayoutPageTemplateCollectionId() != 0) ||
+			!Objects.equals(getSelectedTab(), "global-templates")) {
 
-		if (!Objects.equals(getSelectedTab(), "global-templates")) {
 			return false;
 		}
 
 		return true;
 	}
 
+	private String _backURL;
 	private final HttpServletRequest _httpServletRequest;
 	private Long _layoutPageTemplateCollectionId;
+	private final LiferayPortletResponse _liferayPortletResponse;
 	private String _redirect;
 	private String _selectedTab;
 	private final ThemeDisplay _themeDisplay;

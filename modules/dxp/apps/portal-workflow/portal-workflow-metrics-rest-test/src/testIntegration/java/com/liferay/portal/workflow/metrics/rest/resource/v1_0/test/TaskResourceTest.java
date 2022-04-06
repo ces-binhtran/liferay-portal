@@ -15,9 +15,8 @@
 package com.liferay.portal.workflow.metrics.rest.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
-import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.test.rule.DataGuard;
-import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
@@ -56,8 +55,6 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 
 		_instance = _workflowMetricsRESTTestHelper.addInstance(
 			testGroup.getCompanyId(), false, _process.getId());
-
-		_user = UserTestUtil.addUser();
 	}
 
 	@After
@@ -78,8 +75,8 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 
 	@Override
 	@Test
-	public void testPostProcessTasksPage() throws Exception {
-		Page<Task> page = taskResource.postProcessTasksPage(
+	public void testPostTasksPage() throws Exception {
+		Page<Task> page = taskResource.postTasksPage(
 			Pagination.of(1, 10),
 			new TaskBulkSelection() {
 				{
@@ -93,36 +90,15 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 
 		Task task2 = testGetProcessTask_addTask();
 
-		page = taskResource.postProcessTasksPage(
+		Task task3 = _workflowMetricsRESTTestHelper.addTask(
+			null, testGroup.getCompanyId(), _instance,
+			TestPropsValues.getUser());
+
+		page = taskResource.postTasksPage(
 			Pagination.of(1, 10),
 			new TaskBulkSelection() {
 				{
-					assigneeIds = new Long[] {_user.getUserId()};
-				}
-			});
-
-		Assert.assertEquals(2, page.getTotalCount());
-
-		assertEqualsIgnoringOrder(
-			Arrays.asList(task1, task2), (List<Task>)page.getItems());
-
-		page = taskResource.postProcessTasksPage(
-			Pagination.of(1, 10),
-			new TaskBulkSelection() {
-				{
-					instanceIds = new Long[] {_instance.getId()};
-				}
-			});
-
-		Assert.assertEquals(2, page.getTotalCount());
-
-		assertEqualsIgnoringOrder(
-			Arrays.asList(task1, task2), (List<Task>)page.getItems());
-
-		page = taskResource.postProcessTasksPage(
-			Pagination.of(1, 10),
-			new TaskBulkSelection() {
-				{
+					assigneeIds = new Long[] {TestPropsValues.getUserId()};
 					processId = _process.getId();
 				}
 			});
@@ -132,7 +108,47 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task1, task2), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
+			Pagination.of(1, 10),
+			new TaskBulkSelection() {
+				{
+					assigneeIds = new Long[] {-1L};
+					processId = _process.getId();
+				}
+			});
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(task3), (List<Task>)page.getItems());
+
+		page = taskResource.postTasksPage(
+			Pagination.of(1, 10),
+			new TaskBulkSelection() {
+				{
+					instanceIds = new Long[] {_instance.getId()};
+				}
+			});
+
+		Assert.assertEquals(3, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(task1, task2, task3), (List<Task>)page.getItems());
+
+		page = taskResource.postTasksPage(
+			Pagination.of(1, 10),
+			new TaskBulkSelection() {
+				{
+					processId = _process.getId();
+				}
+			});
+
+		Assert.assertEquals(3, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(task1, task2, task3), (List<Task>)page.getItems());
+
+		page = taskResource.postTasksPage(
 			Pagination.of(1, 10),
 			new TaskBulkSelection() {
 				{
@@ -145,7 +161,7 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task1), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(1, 10),
 			new TaskBulkSelection() {
 				{
@@ -158,7 +174,7 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task2), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(1, 10),
 			new TaskBulkSelection() {
 				{
@@ -172,11 +188,12 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task2), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
-					assigneeIds = new Long[] {_user.getUserId()};
+					assigneeIds = new Long[] {TestPropsValues.getUserId()};
+					processId = _process.getId();
 				}
 			});
 
@@ -185,7 +202,21 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task1, task2), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
+			Pagination.of(0, 0),
+			new TaskBulkSelection() {
+				{
+					assigneeIds = new Long[] {-1L};
+					processId = _process.getId();
+				}
+			});
+
+		Assert.assertEquals(1, page.getTotalCount());
+
+		assertEqualsIgnoringOrder(
+			Arrays.asList(task3), (List<Task>)page.getItems());
+
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
@@ -193,12 +224,12 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 				}
 			});
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(3, page.getTotalCount());
 
 		assertEqualsIgnoringOrder(
-			Arrays.asList(task1, task2), (List<Task>)page.getItems());
+			Arrays.asList(task1, task2, task3), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
@@ -206,12 +237,12 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 				}
 			});
 
-		Assert.assertEquals(2, page.getTotalCount());
+		Assert.assertEquals(3, page.getTotalCount());
 
 		assertEqualsIgnoringOrder(
-			Arrays.asList(task1, task2), (List<Task>)page.getItems());
+			Arrays.asList(task1, task2, task3), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
@@ -224,7 +255,7 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task1), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
@@ -237,7 +268,7 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		assertEqualsIgnoringOrder(
 			Arrays.asList(task2), (List<Task>)page.getItems());
 
-		page = taskResource.postProcessTasksPage(
+		page = taskResource.postTasksPage(
 			Pagination.of(0, 0),
 			new TaskBulkSelection() {
 				{
@@ -281,10 +312,10 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 		return _workflowMetricsRESTTestHelper.addTask(
 			new Assignee() {
 				{
-					id = _user.getUserId();
+					id = TestPropsValues.getUserId();
 				}
 			},
-			testGroup.getCompanyId(), _instance);
+			testGroup.getCompanyId(), _instance, TestPropsValues.getUser());
 	}
 
 	@Override
@@ -305,12 +336,12 @@ public class TaskResourceTest extends BaseTaskResourceTestCase {
 	@Override
 	protected Task testPatchProcessTaskComplete_addTask() throws Exception {
 		return _workflowMetricsRESTTestHelper.addTask(
-			testGroup.getCompanyId(), _instance, randomPatchTask());
+			testGroup.getCompanyId(), _instance, randomPatchTask(),
+			TestPropsValues.getUser());
 	}
 
 	private Instance _instance;
 	private Process _process;
-	private User _user;
 
 	@Inject
 	private WorkflowMetricsRESTTestHelper _workflowMetricsRESTTestHelper;

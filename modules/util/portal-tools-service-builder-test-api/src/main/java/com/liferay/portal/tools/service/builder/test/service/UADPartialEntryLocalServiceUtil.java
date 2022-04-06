@@ -14,9 +14,16 @@
 
 package com.liferay.portal.tools.service.builder.test.service;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.util.tracker.ServiceTracker;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.tools.service.builder.test.model.UADPartialEntry;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for UADPartialEntry. This utility wraps
@@ -41,14 +48,15 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * Adds the uad partial entry to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UADPartialEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param uadPartialEntry the uad partial entry
 	 * @return the uad partial entry that was added
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-			addUADPartialEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					UADPartialEntry uadPartialEntry) {
+	public static UADPartialEntry addUADPartialEntry(
+		UADPartialEntry uadPartialEntry) {
 
 		return getService().addUADPartialEntry(uadPartialEntry);
 	}
@@ -56,9 +64,9 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -69,9 +77,8 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param uadPartialEntryId the primary key for the new uad partial entry
 	 * @return the new uad partial entry
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-			createUADPartialEntry(long uadPartialEntryId) {
+	public static UADPartialEntry createUADPartialEntry(
+		long uadPartialEntryId) {
 
 		return getService().createUADPartialEntry(uadPartialEntryId);
 	}
@@ -79,10 +86,9 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
@@ -90,14 +96,16 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * Deletes the uad partial entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UADPartialEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param uadPartialEntryId the primary key of the uad partial entry
 	 * @return the uad partial entry that was removed
 	 * @throws PortalException if a uad partial entry with the primary key could not be found
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-				deleteUADPartialEntry(long uadPartialEntryId)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static UADPartialEntry deleteUADPartialEntry(long uadPartialEntryId)
+		throws PortalException {
 
 		return getService().deleteUADPartialEntry(uadPartialEntryId);
 	}
@@ -105,27 +113,28 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * Deletes the uad partial entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UADPartialEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param uadPartialEntry the uad partial entry
 	 * @return the uad partial entry that was removed
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-			deleteUADPartialEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					UADPartialEntry uadPartialEntry) {
+	public static UADPartialEntry deleteUADPartialEntry(
+		UADPartialEntry uadPartialEntry) {
 
 		return getService().deleteUADPartialEntry(uadPartialEntry);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -135,9 +144,7 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -153,9 +160,8 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -173,10 +179,9 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -188,9 +193,7 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -202,16 +205,13 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-			fetchUADPartialEntry(long uadPartialEntryId) {
-
+	public static UADPartialEntry fetchUADPartialEntry(long uadPartialEntryId) {
 		return getService().fetchUADPartialEntry(uadPartialEntryId);
 	}
 
@@ -240,9 +240,8 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -258,9 +257,8 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @param end the upper bound of the range of uad partial entries (not inclusive)
 	 * @return the range of uad partial entries
 	 */
-	public static java.util.List
-		<com.liferay.portal.tools.service.builder.test.model.UADPartialEntry>
-			getUADPartialEntries(int start, int end) {
+	public static List<UADPartialEntry> getUADPartialEntries(
+		int start, int end) {
 
 		return getService().getUADPartialEntries(start, end);
 	}
@@ -281,10 +279,8 @@ public class UADPartialEntryLocalServiceUtil {
 	 * @return the uad partial entry
 	 * @throws PortalException if a uad partial entry with the primary key could not be found
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-				getUADPartialEntry(long uadPartialEntryId)
-			throws com.liferay.portal.kernel.exception.PortalException {
+	public static UADPartialEntry getUADPartialEntry(long uadPartialEntryId)
+		throws PortalException {
 
 		return getService().getUADPartialEntry(uadPartialEntryId);
 	}
@@ -292,40 +288,23 @@ public class UADPartialEntryLocalServiceUtil {
 	/**
 	 * Updates the uad partial entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UADPartialEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param uadPartialEntry the uad partial entry
 	 * @return the uad partial entry that was updated
 	 */
-	public static
-		com.liferay.portal.tools.service.builder.test.model.UADPartialEntry
-			updateUADPartialEntry(
-				com.liferay.portal.tools.service.builder.test.model.
-					UADPartialEntry uadPartialEntry) {
+	public static UADPartialEntry updateUADPartialEntry(
+		UADPartialEntry uadPartialEntry) {
 
 		return getService().updateUADPartialEntry(uadPartialEntry);
 	}
 
 	public static UADPartialEntryLocalService getService() {
-		return _serviceTracker.getService();
+		return _service;
 	}
 
-	private static ServiceTracker
-		<UADPartialEntryLocalService, UADPartialEntryLocalService>
-			_serviceTracker;
-
-	static {
-		Bundle bundle = FrameworkUtil.getBundle(
-			UADPartialEntryLocalService.class);
-
-		ServiceTracker<UADPartialEntryLocalService, UADPartialEntryLocalService>
-			serviceTracker =
-				new ServiceTracker
-					<UADPartialEntryLocalService, UADPartialEntryLocalService>(
-						bundle.getBundleContext(),
-						UADPartialEntryLocalService.class, null);
-
-		serviceTracker.open();
-
-		_serviceTracker = serviceTracker;
-	}
+	private static volatile UADPartialEntryLocalService _service;
 
 }

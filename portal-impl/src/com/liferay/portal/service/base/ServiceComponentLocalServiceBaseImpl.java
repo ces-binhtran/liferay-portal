@@ -36,8 +36,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.ServiceComponentLocalService;
+import com.liferay.portal.kernel.service.ServiceComponentLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.ReleasePersistence;
 import com.liferay.portal.kernel.service.persistence.ServiceComponentFinder;
 import com.liferay.portal.kernel.service.persistence.ServiceComponentPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -45,6 +45,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -68,11 +70,15 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ServiceComponentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.ServiceComponentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ServiceComponentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ServiceComponentLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the service component to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ServiceComponentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param serviceComponent the service component
 	 * @return the service component that was added
@@ -102,6 +108,10 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	/**
 	 * Deletes the service component with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ServiceComponentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param serviceComponentId the primary key of the service component
 	 * @return the service component that was removed
 	 * @throws PortalException if a service component with the primary key could not be found
@@ -117,6 +127,10 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	/**
 	 * Deletes the service component from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ServiceComponentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param serviceComponent the service component
 	 * @return the service component that was removed
 	 */
@@ -131,6 +145,13 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return serviceComponentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -287,6 +308,7 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -305,6 +327,7 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 			(ServiceComponent)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<ServiceComponent> getBasePersistence() {
 		return serviceComponentPersistence;
 	}
@@ -347,6 +370,10 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 
 	/**
 	 * Updates the service component in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ServiceComponentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param serviceComponent the service component
 	 * @return the service component that was updated
@@ -442,56 +469,19 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the release local service.
-	 *
-	 * @return the release local service
-	 */
-	public com.liferay.portal.kernel.service.ReleaseLocalService
-		getReleaseLocalService() {
-
-		return releaseLocalService;
-	}
-
-	/**
-	 * Sets the release local service.
-	 *
-	 * @param releaseLocalService the release local service
-	 */
-	public void setReleaseLocalService(
-		com.liferay.portal.kernel.service.ReleaseLocalService
-			releaseLocalService) {
-
-		this.releaseLocalService = releaseLocalService;
-	}
-
-	/**
-	 * Returns the release persistence.
-	 *
-	 * @return the release persistence
-	 */
-	public ReleasePersistence getReleasePersistence() {
-		return releasePersistence;
-	}
-
-	/**
-	 * Sets the release persistence.
-	 *
-	 * @param releasePersistence the release persistence
-	 */
-	public void setReleasePersistence(ReleasePersistence releasePersistence) {
-		this.releasePersistence = releasePersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.ServiceComponent",
 			serviceComponentLocalService);
+
+		_setLocalServiceUtilService(serviceComponentLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.ServiceComponent");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -536,6 +526,23 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		ServiceComponentLocalService serviceComponentLocalService) {
+
+		try {
+			Field field =
+				ServiceComponentLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, serviceComponentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = ServiceComponentLocalService.class)
 	protected ServiceComponentLocalService serviceComponentLocalService;
 
@@ -550,15 +557,6 @@ public abstract class ServiceComponentLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ReleaseLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ReleaseLocalService
-		releaseLocalService;
-
-	@BeanReference(type = ReleasePersistence.class)
-	protected ReleasePersistence releasePersistence;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

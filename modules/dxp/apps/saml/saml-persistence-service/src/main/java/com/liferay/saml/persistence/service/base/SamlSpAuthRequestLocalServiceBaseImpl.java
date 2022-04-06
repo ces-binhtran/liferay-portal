@@ -40,9 +40,11 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.saml.persistence.model.SamlSpAuthRequest;
 import com.liferay.saml.persistence.service.SamlSpAuthRequestLocalService;
+import com.liferay.saml.persistence.service.SamlSpAuthRequestLocalServiceUtil;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSpSessionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlIdpSsoSessionPersistence;
+import com.liferay.saml.persistence.service.persistence.SamlPeerBindingPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpAuthRequestPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpIdpConnectionPersistence;
 import com.liferay.saml.persistence.service.persistence.SamlSpMessagePersistence;
@@ -50,10 +52,13 @@ import com.liferay.saml.persistence.service.persistence.SamlSpSessionPersistence
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -75,11 +80,15 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SamlSpAuthRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.saml.persistence.service.SamlSpAuthRequestLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SamlSpAuthRequestLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SamlSpAuthRequestLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the saml sp auth request to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpAuthRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlSpAuthRequest the saml sp auth request
 	 * @return the saml sp auth request that was added
@@ -111,6 +120,10 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/**
 	 * Deletes the saml sp auth request with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpAuthRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpAuthnRequestId the primary key of the saml sp auth request
 	 * @return the saml sp auth request that was removed
 	 * @throws PortalException if a saml sp auth request with the primary key could not be found
@@ -126,6 +139,10 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/**
 	 * Deletes the saml sp auth request from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpAuthRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpAuthRequest the saml sp auth request
 	 * @return the saml sp auth request that was removed
 	 */
@@ -140,6 +157,13 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return samlSpAuthRequestPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -299,6 +323,7 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -317,6 +342,7 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 			(SamlSpAuthRequest)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SamlSpAuthRequest> getBasePersistence() {
 		return samlSpAuthRequestPersistence;
 	}
@@ -360,6 +386,10 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	/**
 	 * Updates the saml sp auth request in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpAuthRequestLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpAuthRequest the saml sp auth request
 	 * @return the saml sp auth request that was updated
 	 */
@@ -369,6 +399,11 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 		SamlSpAuthRequest samlSpAuthRequest) {
 
 		return samlSpAuthRequestPersistence.update(samlSpAuthRequest);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -382,6 +417,8 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		samlSpAuthRequestLocalService = (SamlSpAuthRequestLocalService)aopProxy;
+
+		_setLocalServiceUtilService(samlSpAuthRequestLocalService);
 	}
 
 	/**
@@ -427,6 +464,23 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SamlSpAuthRequestLocalService samlSpAuthRequestLocalService) {
+
+		try {
+			Field field =
+				SamlSpAuthRequestLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, samlSpAuthRequestLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@Reference
 	protected SamlIdpSpConnectionPersistence samlIdpSpConnectionPersistence;
 
@@ -435,6 +489,9 @@ public abstract class SamlSpAuthRequestLocalServiceBaseImpl
 
 	@Reference
 	protected SamlIdpSsoSessionPersistence samlIdpSsoSessionPersistence;
+
+	@Reference
+	protected SamlPeerBindingPersistence samlPeerBindingPersistence;
 
 	protected SamlSpAuthRequestLocalService samlSpAuthRequestLocalService;
 

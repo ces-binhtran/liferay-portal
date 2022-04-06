@@ -14,6 +14,7 @@
 
 package com.liferay.journal.service;
 
+import com.liferay.journal.model.JournalFeed;
 import com.liferay.portal.kernel.service.ServiceWrapper;
 
 /**
@@ -26,12 +27,16 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class JournalFeedServiceWrapper
 	implements JournalFeedService, ServiceWrapper<JournalFeedService> {
 
+	public JournalFeedServiceWrapper() {
+		this(null);
+	}
+
 	public JournalFeedServiceWrapper(JournalFeedService journalFeedService) {
 		_journalFeedService = journalFeedService;
 	}
 
 	@Override
-	public com.liferay.journal.model.JournalFeed addFeed(
+	public JournalFeed addFeed(
 			long groupId, String feedId, boolean autoFeedId, String name,
 			String description, String ddmStructureKey, String ddmTemplateKey,
 			String ddmRendererTemplateKey, int delta, String orderByCol,
@@ -63,15 +68,14 @@ public class JournalFeedServiceWrapper
 	}
 
 	@Override
-	public com.liferay.journal.model.JournalFeed getFeed(long feedId)
+	public JournalFeed getFeed(long feedId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _journalFeedService.getFeed(feedId);
 	}
 
 	@Override
-	public com.liferay.journal.model.JournalFeed getFeed(
-			long groupId, String feedId)
+	public JournalFeed getFeed(long groupId, String feedId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _journalFeedService.getFeed(groupId, feedId);
@@ -88,7 +92,7 @@ public class JournalFeedServiceWrapper
 	}
 
 	@Override
-	public com.liferay.journal.model.JournalFeed updateFeed(
+	public JournalFeed updateFeed(
 			long groupId, String feedId, String name, String description,
 			String ddmStructureKey, String ddmTemplateKey,
 			String ddmRendererTemplateKey, int delta, String orderByCol,

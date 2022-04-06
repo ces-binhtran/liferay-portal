@@ -18,7 +18,7 @@ import com.liferay.calendar.constants.CalendarPortletKeys;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarLocalService;
-import com.liferay.exportimport.kernel.lar.BaseStagedModelDataHandler;
+import com.liferay.exportimport.data.handler.base.BaseStagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.ExportImportPathUtil;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
@@ -50,7 +50,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	immediate = true,
-	property = "javax.portlet.name=" + CalendarPortletKeys.CALENDAR,
+	property = "javax.portlet.name=" + CalendarPortletKeys.CALENDAR_ADMIN,
 	service = StagedModelDataHandler.class
 )
 public class CalendarStagedModelDataHandler
@@ -124,7 +124,7 @@ public class CalendarStagedModelDataHandler
 
 		String displayName = referenceElement.attributeValue("display-name");
 
-		return validateMissingReference(companyId, uuid, groupId, displayName);
+		return _validateMissingReference(companyId, uuid, groupId, displayName);
 	}
 
 	@Override
@@ -190,7 +190,7 @@ public class CalendarStagedModelDataHandler
 			calendarResourceIds, calendar.getCalendarResourceId(),
 			calendar.getCalendarResourceId());
 
-		Map<Locale, String> calendarNameMap = getCalendarNameMap(
+		Map<Locale, String> calendarNameMap = _getCalendarNameMap(
 			portletDataContext, calendar);
 
 		ServiceContext serviceContext = portletDataContext.createServiceContext(
@@ -235,14 +235,14 @@ public class CalendarStagedModelDataHandler
 		portletDataContext.importClassedModel(calendar, importedCalendar);
 	}
 
-	protected Calendar fetchExistingCalendar(
+	private Calendar _fetchExistingCalendar(
 		long companyId, long groupId, String name) {
 
 		return _calendarLocalService.fetchGroupCalendar(
 			companyId, groupId, name);
 	}
 
-	protected Map<Locale, String> getCalendarNameMap(
+	private Map<Locale, String> _getCalendarNameMap(
 			PortletDataContext portletDataContext, Calendar calendar)
 		throws Exception {
 
@@ -259,23 +259,21 @@ public class CalendarStagedModelDataHandler
 		Group scopeGroup = _groupLocalService.getGroup(
 			portletDataContext.getScopeGroupId());
 
-		Map<Locale, String> calendarNameMap = HashMapBuilder.put(
-			LocaleUtil.getSiteDefault(), scopeGroup.getDescriptiveName()
-		).build();
-
 		return LocalizationUtil.populateLocalizationMap(
-			calendarNameMap,
+			HashMapBuilder.put(
+				LocaleUtil.getSiteDefault(), scopeGroup.getDescriptiveName()
+			).build(),
 			LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
 			scopeGroup.getGroupId());
 	}
 
-	protected boolean validateMissingReference(
+	private boolean _validateMissingReference(
 		long companyId, String uuid, long groupId, String name) {
 
 		Calendar existingStagedModel = fetchMissingReference(uuid, groupId);
 
 		if (existingStagedModel == null) {
-			existingStagedModel = fetchExistingCalendar(
+			existingStagedModel = _fetchExistingCalendar(
 				companyId, groupId, name);
 		}
 

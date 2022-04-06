@@ -14,7 +14,16 @@
 
 package com.liferay.portal.kernel.service;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.UserTracker;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for UserTracker. This utility wraps
@@ -35,11 +44,11 @@ public class UserTrackerLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.service.impl.UserTrackerLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker addUserTracker(
+	public static UserTracker addUserTracker(
 		long companyId, long userId, java.util.Date modifiedDate,
 		String sessionId, String remoteAddr, String remoteHost,
 		String userAgent,
-		java.util.List<com.liferay.portal.kernel.model.UserTrackerPath>
+		List<com.liferay.portal.kernel.model.UserTrackerPath>
 			userTrackerPaths) {
 
 		return getService().addUserTracker(
@@ -50,21 +59,23 @@ public class UserTrackerLocalServiceUtil {
 	/**
 	 * Adds the user tracker to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was added
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker addUserTracker(
-		com.liferay.portal.kernel.model.UserTracker userTracker) {
-
+	public static UserTracker addUserTracker(UserTracker userTracker) {
 		return getService().addUserTracker(userTracker);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -75,19 +86,16 @@ public class UserTrackerLocalServiceUtil {
 	 * @param userTrackerId the primary key for the new user tracker
 	 * @return the new user tracker
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker createUserTracker(
-		long userTrackerId) {
-
+	public static UserTracker createUserTracker(long userTrackerId) {
 		return getService().createUserTracker(userTrackerId);
 	}
 
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
@@ -95,13 +103,16 @@ public class UserTrackerLocalServiceUtil {
 	/**
 	 * Deletes the user tracker with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTrackerId the primary key of the user tracker
 	 * @return the user tracker that was removed
 	 * @throws PortalException if a user tracker with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker deleteUserTracker(
-			long userTrackerId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static UserTracker deleteUserTracker(long userTrackerId)
+		throws PortalException {
 
 		return getService().deleteUserTracker(userTrackerId);
 	}
@@ -109,24 +120,26 @@ public class UserTrackerLocalServiceUtil {
 	/**
 	 * Deletes the user tracker from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was removed
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker deleteUserTracker(
-		com.liferay.portal.kernel.model.UserTracker userTracker) {
-
+	public static UserTracker deleteUserTracker(UserTracker userTracker) {
 		return getService().deleteUserTracker(userTracker);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -136,9 +149,7 @@ public class UserTrackerLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -154,9 +165,8 @@ public class UserTrackerLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -174,10 +184,9 @@ public class UserTrackerLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -189,9 +198,7 @@ public class UserTrackerLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -203,15 +210,13 @@ public class UserTrackerLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.portal.kernel.model.UserTracker fetchUserTracker(
-		long userTrackerId) {
-
+	public static UserTracker fetchUserTracker(long userTrackerId) {
 		return getService().fetchUserTracker(userTrackerId);
 	}
 
@@ -240,9 +245,8 @@ public class UserTrackerLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -254,9 +258,8 @@ public class UserTrackerLocalServiceUtil {
 	 * @return the user tracker
 	 * @throws PortalException if a user tracker with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker getUserTracker(
-			long userTrackerId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static UserTracker getUserTracker(long userTrackerId)
+		throws PortalException {
 
 		return getService().getUserTracker(userTrackerId);
 	}
@@ -272,14 +275,12 @@ public class UserTrackerLocalServiceUtil {
 	 * @param end the upper bound of the range of user trackers (not inclusive)
 	 * @return the range of user trackers
 	 */
-	public static java.util.List<com.liferay.portal.kernel.model.UserTracker>
-		getUserTrackers(int start, int end) {
-
+	public static List<UserTracker> getUserTrackers(int start, int end) {
 		return getService().getUserTrackers(start, end);
 	}
 
-	public static java.util.List<com.liferay.portal.kernel.model.UserTracker>
-		getUserTrackers(long companyId, int start, int end) {
+	public static List<UserTracker> getUserTrackers(
+		long companyId, int start, int end) {
 
 		return getService().getUserTrackers(companyId, start, end);
 	}
@@ -296,24 +297,21 @@ public class UserTrackerLocalServiceUtil {
 	/**
 	 * Updates the user tracker in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserTrackerLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userTracker the user tracker
 	 * @return the user tracker that was updated
 	 */
-	public static com.liferay.portal.kernel.model.UserTracker updateUserTracker(
-		com.liferay.portal.kernel.model.UserTracker userTracker) {
-
+	public static UserTracker updateUserTracker(UserTracker userTracker) {
 		return getService().updateUserTracker(userTracker);
 	}
 
 	public static UserTrackerLocalService getService() {
-		if (_service == null) {
-			_service = (UserTrackerLocalService)PortalBeanLocatorUtil.locate(
-				UserTrackerLocalService.class.getName());
-		}
-
 		return _service;
 	}
 
-	private static UserTrackerLocalService _service;
+	private static volatile UserTrackerLocalService _service;
 
 }

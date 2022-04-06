@@ -538,7 +538,7 @@ public interface ${entity.name}Model extends ${entity.getModelBaseInterfaceNames
 		public Object clone();
 
 		@Override
-		public int compareTo(${apiPackagePath}.model.${entity.name} ${entity.varName});
+		public int compareTo(${apiPackagePath}.model.${entity.name} ${entity.variableName});
 
 		@Override
 		public int hashCode();
@@ -557,6 +557,11 @@ public interface ${entity.name}Model extends ${entity.getModelBaseInterfaceNames
 
 		@Override
 		public String toXmlString();
+	</#if>
+
+	<#if serviceBuilder.isVersionGTE_7_4_0()>
+		@Override
+		public ${entity.name} cloneWithOriginalValues();
 	</#if>
 
 }

@@ -15,6 +15,7 @@
 package com.liferay.blogs.service;
 
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -44,6 +45,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @generated
  */
 @AccessControlled
+@CTAware
 @JSONWebService
 @ProviderType
 @Transactional(
@@ -55,7 +57,7 @@ public interface BlogsEntryService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link BlogsEntryServiceUtil} to access the blogs entry remote service. Add custom service methods to <code>com.liferay.blogs.service.impl.BlogsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.blogs.service.impl.BlogsEntryServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the blogs entry remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link BlogsEntryServiceUtil} if injection and service tracking are not available.
 	 */
 	public Folder addAttachmentsFolder(long groupId) throws PortalException;
 
@@ -70,12 +72,12 @@ public interface BlogsEntryService extends BaseService {
 		throws PortalException;
 
 	public BlogsEntry addEntry(
-			String title, String subtitle, String urlTitle, String description,
-			String content, int displayDateMonth, int displayDateDay,
-			int displayDateYear, int displayDateHour, int displayDateMinute,
-			boolean allowPingbacks, boolean allowTrackbacks,
-			String[] trackbacks, String coverImageCaption,
-			ImageSelector coverImageImageSelector,
+			String externalReferenceCode, String title, String subtitle,
+			String urlTitle, String description, String content,
+			int displayDateMonth, int displayDateDay, int displayDateYear,
+			int displayDateHour, int displayDateMinute, boolean allowPingbacks,
+			boolean allowTrackbacks, String[] trackbacks,
+			String coverImageCaption, ImageSelector coverImageImageSelector,
 			ImageSelector smallImageImageSelector,
 			ServiceContext serviceContext)
 		throws PortalException;
@@ -123,7 +125,7 @@ public interface BlogsEntryService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<BlogsEntry> getGroupEntries(
 		long groupId, int status, int start, int end,
-		OrderByComparator<BlogsEntry> obc);
+		OrderByComparator<BlogsEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupEntriesCount(long groupId, Date displayDate, int status);
@@ -146,12 +148,12 @@ public interface BlogsEntryService extends BaseService {
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<BlogsEntry> getGroupUserEntries(
 		long groupId, long userId, int status, int start, int end,
-		OrderByComparator<BlogsEntry> obc);
+		OrderByComparator<BlogsEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<BlogsEntry> getGroupUserEntries(
 		long groupId, long userId, int[] statuses, int start, int end,
-		OrderByComparator<BlogsEntry> obc);
+		OrderByComparator<BlogsEntry> orderByComparator);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getGroupUserEntriesCount(long groupId, long userId, int status);

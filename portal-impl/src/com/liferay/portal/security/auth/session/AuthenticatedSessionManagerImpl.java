@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserTracker;
 import com.liferay.portal.kernel.security.auth.AuthException;
-import com.liferay.portal.kernel.security.auth.AuthenticatedUserUUIDStoreUtil;
 import com.liferay.portal.kernel.security.auth.Authenticator;
 import com.liferay.portal.kernel.security.auth.session.AuthenticatedSessionManager;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
@@ -42,6 +41,7 @@ import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.CookieKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -89,7 +89,7 @@ public class AuthenticatedSessionManagerImpl
 		httpServletRequest = PortalUtil.getOriginalServletRequest(
 			httpServletRequest);
 
-		String queryString = httpServletRequest.getQueryString();
+		String queryString = HttpUtil.getQueryString(httpServletRequest);
 
 		if (Validator.isNotNull(queryString) &&
 			queryString.contains("password=")) {
@@ -114,14 +114,11 @@ public class AuthenticatedSessionManagerImpl
 					String referer = httpServletRequest.getHeader(
 						HttpHeaders.REFERER);
 
-					StringBundler sb = new StringBundler(4);
-
-					sb.append("Ignoring login attempt because the password ");
-					sb.append("parameter was found for the request with the ");
-					sb.append("referer header: ");
-					sb.append(referer);
-
-					_log.warn(sb.toString());
+					_log.warn(
+						StringBundler.concat(
+							"Ignoring login attempt because the password ",
+							"parameter was found for the request with the ",
+							"referer header: ", referer));
 				}
 
 				return;
@@ -130,7 +127,7 @@ public class AuthenticatedSessionManagerImpl
 
 		CookieKeys.validateSupportCookie(httpServletRequest);
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		Company company = PortalUtil.getCompany(httpServletRequest);
 
@@ -142,7 +139,7 @@ public class AuthenticatedSessionManagerImpl
 		}
 
 		if (PropsValues.SESSION_ENABLE_PHISHING_PROTECTION) {
-			session = renewSession(httpServletRequest, session);
+			httpSession = renewSession(httpServletRequest, httpSession);
 		}
 
 		// Set cookies
@@ -155,19 +152,19 @@ public class AuthenticatedSessionManagerImpl
 
 		String userIdString = String.valueOf(user.getUserId());
 
-		session.setAttribute("j_username", userIdString);
+		httpSession.setAttribute("j_username", userIdString);
 
 		if (PropsValues.PORTAL_JAAS_PLAIN_PASSWORD) {
-			session.setAttribute("j_password", password);
+			httpSession.setAttribute("j_password", password);
 		}
 		else {
-			session.setAttribute("j_password", user.getPassword());
+			httpSession.setAttribute("j_password", user.getPassword());
 		}
 
-		session.setAttribute("j_remoteuser", userIdString);
+		httpSession.setAttribute("j_remoteuser", userIdString);
 
 		if (PropsValues.SESSION_STORE_PASSWORD) {
-			session.setAttribute(WebKeys.USER_PASSWORD, password);
+			httpSession.setAttribute(WebKeys.USER_PASSWORD, password);
 		}
 
 		Cookie companyIdCookie = new Cookie(
@@ -191,10 +188,6 @@ public class AuthenticatedSessionManagerImpl
 
 		int loginMaxAge = PropsValues.COMPANY_SECURITY_AUTO_LOGIN_MAX_AGE;
 
-		if (PropsValues.SESSION_DISABLED) {
-			rememberMe = true;
-		}
-
 		if (rememberMe) {
 			companyIdCookie.setMaxAge(loginMaxAge);
 			idCookie.setMaxAge(loginMaxAge);
@@ -217,7 +210,7 @@ public class AuthenticatedSessionManagerImpl
 			!StringUtil.equalsIgnoreCase(
 				Http.HTTPS, PropsValues.WEB_SERVER_PROTOCOL)) {
 
-			Boolean httpsInitial = (Boolean)session.getAttribute(
+			Boolean httpsInitial = (Boolean)httpSession.getAttribute(
 				WebKeys.HTTPS_INITIAL);
 
 			if ((httpsInitial == null) || !httpsInitial.booleanValue()) {
@@ -271,52 +264,7 @@ public class AuthenticatedSessionManagerImpl
 			CookieKeys.addCookie(
 				httpServletRequest, httpServletResponse, rememberMeCookie,
 				secure);
-
-			Cookie screenNameCookie = new Cookie(
-				CookieKeys.SCREEN_NAME,
-				Encryptor.encrypt(company.getKeyObj(), user.getScreenName()));
-
-			if (domain != null) {
-				screenNameCookie.setDomain(domain);
-			}
-
-			screenNameCookie.setMaxAge(loginMaxAge);
-			screenNameCookie.setPath(StringPool.SLASH);
-
-			CookieKeys.addCookie(
-				httpServletRequest, httpServletResponse, screenNameCookie,
-				secure);
 		}
-
-		if (!PropsValues.AUTH_USER_UUID_STORE_ENABLED) {
-			return;
-		}
-
-		String userUUID = userIdString.concat(
-			StringPool.PERIOD
-		).concat(
-			String.valueOf(System.nanoTime())
-		);
-
-		Cookie userUUIDCookie = new Cookie(
-			CookieKeys.USER_UUID,
-			Encryptor.encrypt(company.getKeyObj(), userUUID));
-
-		userUUIDCookie.setPath(StringPool.SLASH);
-
-		session.setAttribute(CookieKeys.USER_UUID, userUUID);
-
-		if (rememberMe) {
-			userUUIDCookie.setMaxAge(loginMaxAge);
-		}
-		else {
-			userUUIDCookie.setMaxAge(-1);
-		}
-
-		CookieKeys.addCookie(
-			httpServletRequest, httpServletResponse, userUUIDCookie, secure);
-
-		AuthenticatedUserUUIDStoreUtil.register(userUUID);
 	}
 
 	@Override
@@ -325,7 +273,7 @@ public class AuthenticatedSessionManagerImpl
 			HttpServletResponse httpServletResponse)
 		throws Exception {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		EventsProcessorUtil.process(
 			PropsKeys.LOGOUT_EVENTS_PRE, PropsValues.LOGOUT_EVENTS_PRE,
@@ -353,9 +301,12 @@ public class AuthenticatedSessionManagerImpl
 		}
 
 		try {
-			session.invalidate();
+			httpSession.invalidate();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		EventsProcessorUtil.process(
@@ -365,7 +316,7 @@ public class AuthenticatedSessionManagerImpl
 
 	@Override
 	public HttpSession renewSession(
-			HttpServletRequest httpServletRequest, HttpSession session)
+			HttpServletRequest httpServletRequest, HttpSession httpSession)
 		throws Exception {
 
 		// Invalidate the previous session to prevent session fixation attacks
@@ -376,7 +327,7 @@ public class AuthenticatedSessionManagerImpl
 		Map<String, Object> protectedAttributes = new HashMap<>();
 
 		for (String protectedAttributeName : protectedAttributeNames) {
-			Object protectedAttributeValue = session.getAttribute(
+			Object protectedAttributeValue = httpSession.getAttribute(
 				protectedAttributeName);
 
 			if (protectedAttributeValue == null) {
@@ -387,9 +338,9 @@ public class AuthenticatedSessionManagerImpl
 				protectedAttributeName, protectedAttributeValue);
 		}
 
-		session.invalidate();
+		httpSession.invalidate();
 
-		session = httpServletRequest.getSession(true);
+		httpSession = httpServletRequest.getSession(true);
 
 		for (String protectedAttributeName : protectedAttributeNames) {
 			Object protectedAttributeValue = protectedAttributes.get(
@@ -399,11 +350,11 @@ public class AuthenticatedSessionManagerImpl
 				continue;
 			}
 
-			session.setAttribute(
+			httpSession.setAttribute(
 				protectedAttributeName, protectedAttributeValue);
 		}
 
-		return session;
+		return httpSession;
 	}
 
 	@Override

@@ -9,11 +9,13 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, findByTestId, render} from '@testing-library/react';
+import {cleanup, render} from '@testing-library/react';
 import React from 'react';
 
 import VelocityUnitFilter from '../../../src/main/resources/META-INF/resources/js/components/filter/VelocityUnitFilter.es';
 import {MockRouter} from '../../mock/MockRouter.es';
+
+import '@testing-library/jest-dom/extend-expect';
 
 const query = '?filters.velocityUnit%5B0%5D=weeks';
 
@@ -22,12 +24,10 @@ const wrapper = ({children}) => (
 );
 
 describe('The velocity unit filter component should', () => {
-	let getAllByTestId;
-
 	afterEach(cleanup);
 
 	beforeEach(() => {
-		const renderResult = render(
+		render(
 			<VelocityUnitFilter
 				processId={12345}
 				timeRange={{
@@ -37,26 +37,19 @@ describe('The velocity unit filter component should', () => {
 			/>,
 			{wrapper}
 		);
-
-		getAllByTestId = renderResult.getAllByTestId;
 	});
 
-	test('Be rendered with filter item names', async () => {
-		const filterItems = await getAllByTestId('filterItem');
+	test('Be rendered with filter item names', () => {
+		const filterItems = document.querySelectorAll('.dropdown-item');
 
-		expect(filterItems[0].innerHTML).toContain('inst-day');
-		expect(filterItems[1].innerHTML).toContain('inst-week');
-		expect(filterItems[2].innerHTML).toContain('inst-month');
+		expect(filterItems[0]).toHaveTextContent('inst-day');
+		expect(filterItems[1]).toHaveTextContent('inst-week');
+		expect(filterItems[2]).toHaveTextContent('inst-month');
 	});
 
 	test('Be rendered with active option "Weeks"', async () => {
-		const filterItems = getAllByTestId('filterItem');
+		const activeItem = document.querySelector('.active');
 
-		const activeItem = filterItems.find((item) =>
-			item.className.includes('active')
-		);
-		const activeItemName = await findByTestId(activeItem, 'filterItemName');
-
-		expect(activeItemName.innerHTML).toBe('inst-week');
+		expect(activeItem).toHaveTextContent('inst-week');
 	});
 });

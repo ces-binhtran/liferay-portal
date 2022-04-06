@@ -20,13 +20,30 @@ import com.liferay.dynamic.data.mapping.annotations.DDMFormLayout;
 import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutColumn;
 import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutPage;
 import com.liferay.dynamic.data.mapping.annotations.DDMFormLayoutRow;
+import com.liferay.dynamic.data.mapping.annotations.DDMFormRule;
 import com.liferay.dynamic.data.mapping.form.field.type.DefaultDDMFormFieldTypeSettings;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 
 /**
  * @author Carlos Lancha
  */
-@DDMForm
+@DDMForm(
+	rules = {
+		@DDMFormRule(
+			actions = "setValue('required', isRequiredObjectField(getValue('objectFieldName')))",
+			condition = "hasObjectField(getValue('objectFieldName'))"
+		),
+		@DDMFormRule(
+			actions = {
+				"setEnabled('required', not(hasObjectField(getValue('objectFieldName'))))",
+				"setVisible('dataType', FALSE)",
+				"setVisible('requiredDescription', getValue('required'))",
+				"setVisible('requiredErrorMessage', getValue('required'))"
+			},
+			condition = "TRUE"
+		)
+	}
+)
 @DDMFormLayout(
 	paginationMode = com.liferay.dynamic.data.mapping.model.DDMFormLayout.TABBED_MODE,
 	value = {
@@ -36,24 +53,29 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 				@DDMFormLayoutRow(
 					{
 						@DDMFormLayoutColumn(
-							size = 12, value = {"label", "tip", "required"}
+							size = 12,
+							value = {
+								"label", "tip", "required",
+								"requiredDescription", "requiredErrorMessage"
+							}
 						)
 					}
 				)
 			}
 		),
 		@DDMFormLayoutPage(
-			title = "%properties",
+			title = "%advanced",
 			value = {
 				@DDMFormLayoutRow(
 					{
 						@DDMFormLayoutColumn(
 							size = 12,
 							value = {
-								"name", "predefinedValue",
-								"visibilityExpression", "fieldNamespace",
-								"indexType", "localizable", "readOnly",
-								"dataType", "type", "showLabel", "repeatable"
+								"name", "fieldReference", "predefinedValue",
+								"objectFieldName", "visibilityExpression",
+								"fieldNamespace", "indexType", "localizable",
+								"readOnly", "dataType", "type", "showLabel",
+								"repeatable"
 							}
 						)
 					}
@@ -65,10 +87,32 @@ import com.liferay.dynamic.data.mapping.model.LocalizedValue;
 public interface ImageDDMFormFieldTypeSettings
 	extends DefaultDDMFormFieldTypeSettings {
 
+	@DDMFormField(predefinedValue = "image", required = true)
+	@Override
+	public String dataType();
+
+	@DDMFormField(
+		label = "%searchable", optionLabels = {"%disable", "%keyword", "%text"},
+		optionValues = {"none", "keyword", "text"}, predefinedValue = "text",
+		type = "radio"
+	)
+	@Override
+	public String indexType();
+
 	@DDMFormField(
 		dataType = "string", label = "%predefined-value", type = "image"
 	)
 	@Override
 	public LocalizedValue predefinedValue();
+
+	@DDMFormField(
+		label = "%required-description", predefinedValue = "true",
+		properties = {
+			"showAsSwitcher=true",
+			"tooltip=%an-image-description-will-be-required",
+			"visualProperty=true"
+		}
+	)
+	public boolean requiredDescription();
 
 }

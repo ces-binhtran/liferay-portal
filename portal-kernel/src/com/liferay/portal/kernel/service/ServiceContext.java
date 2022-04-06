@@ -30,6 +30,7 @@ import com.liferay.portal.kernel.portlet.PortletIdCodec;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.permission.ModelPermissions;
+import com.liferay.portal.kernel.service.permission.ModelPermissionsFactory;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
@@ -79,17 +80,6 @@ import javax.servlet.http.HttpServletResponse;
 public class ServiceContext implements Cloneable, Serializable {
 
 	/**
-	 * Creates a new service context object with an attributes map and an
-	 * expando bridge attributes map. The attributes map contains standard
-	 * service context parameters and the expando bridge attributes map contains
-	 * optional service context parameters.
-	 */
-	public ServiceContext() {
-		_attributes = new LinkedHashMap<>();
-		_expandoBridgeAttributes = new LinkedHashMap<>();
-	}
-
-	/**
 	 * Returns a new service context object identical to this service context
 	 * object.
 	 *
@@ -124,8 +114,7 @@ public class ServiceContext implements Cloneable, Serializable {
 		serviceContext.setLayoutURL(getLayoutURL());
 
 		if (_modelPermissions != null) {
-			serviceContext.setModelPermissions(
-				(ModelPermissions)_modelPermissions.clone());
+			serviceContext.setModelPermissions(_modelPermissions.clone());
 		}
 
 		serviceContext.setModifiedDate(getModifiedDate());
@@ -206,21 +195,18 @@ public class ServiceContext implements Cloneable, Serializable {
 			}
 		}
 
-		String[] groupPermissions = groupPermissionsList.toArray(new String[0]);
-		String[] guestPermissions = guestPermissionsList.toArray(new String[0]);
+		setModelPermissions(
+			ModelPermissionsFactory.create(
+				groupPermissionsList.toArray(new String[0]),
+				guestPermissionsList.toArray(new String[0]), modelName));
+	}
 
-		ModelPermissions modelPermissions = getModelPermissions();
-
-		if (modelPermissions == null) {
-			modelPermissions = new ModelPermissions(modelName);
+	public User fetchUser() {
+		if (_userId == 0) {
+			return null;
 		}
 
-		modelPermissions.addRolePermissions(
-			RoleConstants.PLACEHOLDER_DEFAULT_GROUP_ROLE, groupPermissions);
-		modelPermissions.addRolePermissions(
-			RoleConstants.GUEST, guestPermissions);
-
-		setModelPermissions(modelPermissions);
+		return UserLocalServiceUtil.fetchUserById(_userId);
 	}
 
 	/**
@@ -1560,13 +1546,14 @@ public class ServiceContext implements Cloneable, Serializable {
 	private long[] _assetLinkEntryIds;
 	private double _assetPriority;
 	private String[] _assetTagNames;
-	private Map<String, Serializable> _attributes;
+	private Map<String, Serializable> _attributes = new LinkedHashMap<>();
 	private String _command;
 	private long _companyId;
 	private Date _createDate;
 	private String _currentURL;
 	private boolean _deriveDefaultPermissions;
-	private Map<String, Serializable> _expandoBridgeAttributes;
+	private Map<String, Serializable> _expandoBridgeAttributes =
+		new LinkedHashMap<>();
 	private boolean _failOnPortalException = true;
 	private Date _formDate;
 	private transient Map<String, String> _headers;

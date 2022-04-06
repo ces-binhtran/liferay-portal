@@ -61,16 +61,12 @@ public class TagResourceHandler {
 	}
 
 	public void outputBundleStyleSheet(String bundleCssPath) {
-		StringBundler sb = new StringBundler(6);
-
-		sb.append("<link data-senna-track=\"temporary\" href=\"");
-		sb.append(PortalUtil.getPathModule());
-		sb.append(_webContextPath);
-		sb.append(StringPool.SLASH);
-		sb.append(bundleCssPath);
-		sb.append("\" rel=\"stylesheet\">");
-
-		outputResource(Position.TOP, sb.toString());
+		outputResource(
+			Position.TOP,
+			StringBundler.concat(
+				"<link data-senna-track=\"temporary\" href=\"",
+				PortalUtil.getPathModule(), _webContextPath, StringPool.SLASH,
+				bundleCssPath, "\" rel=\"stylesheet\">"));
 	}
 
 	public void outputNPMResource(String npmResourcePath) {
@@ -97,16 +93,12 @@ public class TagResourceHandler {
 
 			String cssPath = npmResolver.resolveModuleName(npmCssPath);
 
-			StringBundler sb = new StringBundler(6);
-
-			sb.append("<link href=\"");
-			sb.append(PortalUtil.getPathModule());
-			sb.append(_webContextPath);
-			sb.append("/node_modules/");
-			sb.append(cssPath);
-			sb.append("\" rel=\"stylesheet\">");
-
-			outputResource(Position.TOP, sb.toString());
+			outputResource(
+				Position.TOP,
+				StringBundler.concat(
+					"<link href=\"", PortalUtil.getPathModule(),
+					_webContextPath, "/node_modules/", cssPath,
+					"\" rel=\"stylesheet\">"));
 		}
 		catch (Exception exception) {
 			_log.error(
@@ -115,7 +107,7 @@ public class TagResourceHandler {
 	}
 
 	public void outputResource(Position position, String html) {
-		HttpServletRequest httpServletRequest = _getRequest();
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
 		boolean xPjax = GetterUtil.getBoolean(
 			httpServletRequest.getHeader("X-PJAX"));
@@ -153,8 +145,12 @@ public class TagResourceHandler {
 
 	}
 
+	private HttpServletRequest _getHttpServletRequest() {
+		return _tagAccessor.getRequest();
+	}
+
 	private OutputData _getOutputData() {
-		HttpServletRequest httpServletRequest = _getRequest();
+		HttpServletRequest httpServletRequest = _getHttpServletRequest();
 
 		OutputData outputData = (OutputData)httpServletRequest.getAttribute(
 			WebKeys.OUTPUT_DATA);
@@ -168,12 +164,8 @@ public class TagResourceHandler {
 		return outputData;
 	}
 
-	private HttpServletRequest _getRequest() {
-		return _tagAccessor.getRequest();
-	}
-
 	private ThemeDisplay _getThemeDisplay() {
-		ServletRequest servletRequest = _getRequest();
+		ServletRequest servletRequest = _getHttpServletRequest();
 
 		return (ThemeDisplay)servletRequest.getAttribute(WebKeys.THEME_DISPLAY);
 	}

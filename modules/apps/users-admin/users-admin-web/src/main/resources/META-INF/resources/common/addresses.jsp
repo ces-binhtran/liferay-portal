@@ -31,30 +31,30 @@ List<Address> addresses = AddressServiceUtil.getAddresses(className, classPK);
 		cssClass="sheet-title"
 	>
 		<clay:content-col
-			expand="true"
+			expand="<%= true %>"
 		>
 			<span class="heading-text"><liferay-ui:message key="addresses" /></span>
 		</clay:content-col>
 
-		<clay:content-col
-			expand="true"
-		>
+		<clay:content-col>
 			<span class="heading-end">
-
-				<%
-				PortletURL editURL = liferayPortletResponse.createRenderURL();
-
-				editURL.setParameter("mvcPath", "/common/edit_address.jsp");
-				editURL.setParameter("redirect", currentURL);
-				editURL.setParameter("className", className);
-				editURL.setParameter("classPK", String.valueOf(classPK));
-				%>
-
 				<liferay-ui:icon
 					label="<%= true %>"
 					linkCssClass="add-address-link btn btn-secondary btn-sm"
 					message="add"
-					url="<%= editURL.toString() %>"
+					url='<%=
+						PortletURLBuilder.createRenderURL(
+							liferayPortletResponse
+						).setMVCPath(
+							"/common/edit_address.jsp"
+						).setRedirect(
+							currentURL
+						).setParameter(
+							"className", className
+						).setParameter(
+							"classPK", classPK
+						).buildString()
+					%>'
 				/>
 			</span>
 		</clay:content-col>
@@ -70,13 +70,13 @@ List<Address> addresses = AddressServiceUtil.getAddresses(className, classPK);
 </c:if>
 
 <div
-	class='<%=
-		CSSClassNames.builder(
+	class="<%=
+		CSSClasses.builder(
 			"addresses-table-wrapper", "table-responsive"
 		).add(
 			"hide", addresses.isEmpty()
 		).build()
-	%>'
+	%>"
 >
 	<table class="table table-autofit">
 		<tbody>

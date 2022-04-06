@@ -46,6 +46,10 @@ public class StringUtil_IW {
 		return StringUtil.appendParentheticalSuffix(s, suffix);
 	}
 
+	public java.util.List<java.lang.String> asList(java.lang.Object object) {
+		return StringUtil.asList(object);
+	}
+
 	public java.lang.String bytesToHexString(byte[] bytes) {
 		return StringUtil.bytesToHexString(bytes);
 	}
@@ -318,6 +322,10 @@ public class StringUtil_IW {
 		return StringUtil.randomId();
 	}
 
+	public java.lang.String randomId(int length) {
+		return StringUtil.randomId(length);
+	}
+
 	public java.lang.String randomString() {
 		return StringUtil.randomString();
 	}
@@ -340,15 +348,15 @@ public class StringUtil_IW {
 		return StringUtil.read(classLoader, name, all);
 	}
 
-	public java.lang.String read(java.io.InputStream is)
+	public java.lang.String read(java.io.InputStream inputStream)
 		throws java.io.IOException {
-		return StringUtil.read(is);
+		return StringUtil.read(inputStream);
 	}
 
-	public void readLines(java.io.InputStream is,
+	public void readLines(java.io.InputStream inputStream,
 		java.util.Collection<java.lang.String> lines)
 		throws java.io.IOException {
-		StringUtil.readLines(is, lines);
+		StringUtil.readLines(inputStream, lines);
 	}
 
 	public java.lang.String removeChar(java.lang.String s, char oldSub) {
@@ -359,6 +367,11 @@ public class StringUtil_IW {
 		return StringUtil.removeChars(s, oldSubs);
 	}
 
+	public java.lang.String removeFirst(java.lang.String s,
+		java.lang.String oldSub) {
+		return StringUtil.removeFirst(s, oldSub);
+	}
+
 	public java.lang.String removeFromList(java.lang.String s,
 		java.lang.String element) {
 		return StringUtil.removeFromList(s, element);
@@ -367,6 +380,11 @@ public class StringUtil_IW {
 	public java.lang.String removeFromList(java.lang.String s,
 		java.lang.String element, java.lang.String delimiter) {
 		return StringUtil.removeFromList(s, element, delimiter);
+	}
+
+	public java.lang.String removeLast(java.lang.String s,
+		java.lang.String oldSub) {
+		return StringUtil.removeLast(s, oldSub);
 	}
 
 	public java.lang.String removeSubstring(java.lang.String s,
@@ -470,15 +488,15 @@ public class StringUtil_IW {
 		return StringUtil.replaceLast(s, oldSubs, newSubs);
 	}
 
-	public com.liferay.portal.kernel.util.StringBundler replaceToStringBundler(
+	public com.liferay.petra.string.StringBundler replaceToStringBundler(
 		java.lang.String s, java.lang.String begin, java.lang.String end,
 		java.util.Map<java.lang.String, java.lang.String> values) {
 		return StringUtil.replaceToStringBundler(s, begin, end, values);
 	}
 
-	public com.liferay.portal.kernel.util.StringBundler replaceWithStringBundler(
+	public com.liferay.petra.string.StringBundler replaceWithStringBundler(
 		java.lang.String s, java.lang.String begin, java.lang.String end,
-		java.util.Map<java.lang.String, com.liferay.portal.kernel.util.StringBundler> values) {
+		java.util.Map<java.lang.String, com.liferay.petra.string.StringBundler> values) {
 		return StringUtil.replaceWithStringBundler(s, begin, end, values);
 	}
 
@@ -603,8 +621,8 @@ public class StringUtil_IW {
 		return StringUtil.toHexString(l);
 	}
 
-	public java.lang.String toHexString(java.lang.Object obj) {
-		return StringUtil.toHexString(obj);
+	public java.lang.String toHexString(java.lang.Object object) {
+		return StringUtil.toHexString(object);
 	}
 
 	public java.lang.String toLowerCase(java.lang.String s) {

@@ -14,9 +14,9 @@
 
 package com.liferay.gradle.plugins.node;
 
-import com.liferay.gradle.plugins.node.internal.util.FileUtil;
 import com.liferay.gradle.plugins.node.internal.util.GradleUtil;
 import com.liferay.gradle.plugins.node.internal.util.NodePluginUtil;
+import com.liferay.gradle.util.GUtil;
 import com.liferay.gradle.util.OSDetector;
 import com.liferay.gradle.util.Validator;
 
@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 
 import org.gradle.api.Project;
-import org.gradle.util.GUtil;
 
 /**
  * @author Andrea Di Giorgi
@@ -44,6 +43,10 @@ public class NodeExtension {
 
 			@Override
 			public File call() throws Exception {
+				if (!isDownload()) {
+					return null;
+				}
+
 				Project curProject = project;
 
 				if (isGlobal()) {
@@ -99,7 +102,17 @@ public class NodeExtension {
 					}
 
 					sb.append(os);
-					sb.append("-x");
+
+					String processorArchitecture = "-x";
+
+					int nodeMajorVersion = NodePluginUtil.getNodeMajorVersion(
+						nodeVersion);
+
+					if (OSDetector.isAppleARM() && (nodeMajorVersion > 15)) {
+						processorArchitecture = "-arm";
+					}
+
+					sb.append(processorArchitecture);
 
 					String bitmode = OSDetector.getBitmode();
 
@@ -159,35 +172,37 @@ public class NodeExtension {
 				}
 
 				if (isUseNpm()) {
-					File npmDir = NodePluginUtil.getNpmDir(nodeDir);
-
-					return new File(npmDir, "bin/npm-cli.js");
+					return new File(
+						NodePluginUtil.getNpmDir(nodeDir), "bin/npm-cli.js");
 				}
 
-				File projectDir = project.getProjectDir();
-
-				return NodePluginUtil.getYarnScriptFile(projectDir);
+				return new File(
+					NodePluginUtil.getYarnDir(nodeDir),
+					"yarn-" + getYarnVersion() + ".js");
 			}
 
 		};
 
-		_useNpm = new Callable<Boolean>() {
+		_yarnUrl = new Callable<String>() {
 
 			@Override
-			public Boolean call() throws Exception {
-				if (FileUtil.exists(project, "package-lock.json")) {
-					return true;
+			public String call() throws Exception {
+				String yarnVersion = getYarnVersion();
+
+				if (Validator.isNull(yarnVersion)) {
+					return null;
 				}
 
-				File projectDir = project.getProjectDir();
+				StringBuilder sb = new StringBuilder();
 
-				File file = NodePluginUtil.getYarnScriptFile(projectDir);
+				sb.append(
+					"https://github.com/yarnpkg/yarn/releases/download/v");
+				sb.append(yarnVersion);
+				sb.append("/yarn-");
+				sb.append(yarnVersion);
+				sb.append(".js");
 
-				if (file == null) {
-					return true;
-				}
-
-				return false;
+				return sb.toString();
 			}
 
 		};
@@ -219,6 +234,14 @@ public class NodeExtension {
 
 	public File getScriptFile() {
 		return GradleUtil.toFile(_project, _scriptFile);
+	}
+
+	public String getYarnUrl() {
+		return GradleUtil.toString(_yarnUrl);
+	}
+
+	public String getYarnVersion() {
+		return GradleUtil.toString(_yarnVersion);
 	}
 
 	public boolean isDownload() {
@@ -289,6 +312,14 @@ public class NodeExtension {
 		_useNpm = useNpm;
 	}
 
+	public void setYarnUrl(Object yarnUrl) {
+		_yarnUrl = yarnUrl;
+	}
+
+	public void setYarnVersion(Object yarnVersion) {
+		_yarnVersion = yarnVersion;
+	}
+
 	private static final Map<String, String> _npmVersions =
 		new HashMap<String, String>() {
 			{
@@ -320,6 +351,8 @@ public class NodeExtension {
 	private Object _npmVersion;
 	private final Project _project;
 	private Object _scriptFile;
-	private Object _useNpm;
+	private Object _useNpm = true;
+	private Object _yarnUrl;
+	private Object _yarnVersion = "1.13.0";
 
 }

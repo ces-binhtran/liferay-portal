@@ -33,7 +33,6 @@ import com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil;
 import com.liferay.portal.kernel.service.OrganizationLocalServiceUtil;
 import com.liferay.portal.kernel.service.PasswordPolicyRelLocalServiceUtil;
 import com.liferay.portal.kernel.service.PhoneLocalServiceUtil;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.WebsiteLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.OrganizationTestUtil;
@@ -74,7 +73,7 @@ public class OrganizationStagedModelDataHandlerTest
 						_organization.getUuid(), _organization.getCompanyId());
 
 			if (_organization != null) {
-				deleteOrganizations(_organization);
+				_deleteOrganizations(_organization);
 			}
 		}
 	}
@@ -107,12 +106,10 @@ public class OrganizationStagedModelDataHandlerTest
 
 		OrganizationTestUtil.addOrgLabor(_organization);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
-
 		PasswordPolicy passwordPolicy =
 			OrganizationTestUtil.addPasswordPolicyRel(
-				_organization, serviceContext);
+				_organization,
+				ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		addDependentStagedModel(
 			dependentStagedModelsMap, PasswordPolicy.class, passwordPolicy);
@@ -127,20 +124,6 @@ public class OrganizationStagedModelDataHandlerTest
 			dependentStagedModelsMap, Website.class, website);
 
 		return _organization;
-	}
-
-	protected void deleteOrganizations(Organization organization)
-		throws Exception {
-
-		List<Organization> childOrganizations =
-			OrganizationLocalServiceUtil.getOrganizations(
-				organization.getCompanyId(), organization.getOrganizationId());
-
-		for (Organization childOrganization : childOrganizations) {
-			deleteOrganizations(childOrganization);
-		}
-
-		OrganizationLocalServiceUtil.deleteOrganization(organization);
 	}
 
 	@Override
@@ -310,6 +293,20 @@ public class OrganizationStagedModelDataHandlerTest
 			organization.isRecursable(), importedOrganization.isRecursable());
 		Assert.assertEquals(
 			organization.getComments(), importedOrganization.getComments());
+	}
+
+	private void _deleteOrganizations(Organization organization)
+		throws Exception {
+
+		List<Organization> childOrganizations =
+			OrganizationLocalServiceUtil.getOrganizations(
+				organization.getCompanyId(), organization.getOrganizationId());
+
+		for (Organization childOrganization : childOrganizations) {
+			_deleteOrganizations(childOrganization);
+		}
+
+		OrganizationLocalServiceUtil.deleteOrganization(organization);
 	}
 
 	private Organization _organization;

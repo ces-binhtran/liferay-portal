@@ -14,6 +14,8 @@
 
 package com.liferay.product.navigation.taglib.internal.servlet;
 
+import com.liferay.application.list.PanelAppRegistry;
+import com.liferay.application.list.PanelCategoryRegistry;
 import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuCategoryRegistry;
 import com.liferay.product.navigation.control.menu.util.ProductNavigationControlMenuEntryRegistry;
 
@@ -28,24 +30,44 @@ import org.osgi.service.component.annotations.Reference;
 @Component(immediate = true, service = {})
 public class ServletContextUtil {
 
-	public static final String getContextPath() {
+	public static String getContextPath() {
 		return _servletContext.getContextPath();
 	}
 
-	public static final ProductNavigationControlMenuCategoryRegistry
+	public static PanelAppRegistry getPanelAppRegistry() {
+		return _panelAppRegistry;
+	}
+
+	public static PanelCategoryRegistry getPanelCategoryRegistry() {
+		return _panelCategoryRegistry;
+	}
+
+	public static ProductNavigationControlMenuCategoryRegistry
 		getProductNavigationControlMenuCategoryRegistry() {
 
 		return _productNavigationControlMenuCategoryRegistry;
 	}
 
-	public static final ProductNavigationControlMenuEntryRegistry
+	public static ProductNavigationControlMenuEntryRegistry
 		getProductNavigationControlMenuEntryRegistry() {
 
 		return _productNavigationControlMenuEntryRegistry;
 	}
 
-	public static final ServletContext getServletContext() {
+	public static ServletContext getServletContext() {
 		return _servletContext;
+	}
+
+	@Reference(unbind = "-")
+	protected void setPanelAppRegistry(PanelAppRegistry panelAppRegistry) {
+		_panelAppRegistry = panelAppRegistry;
+	}
+
+	@Reference(unbind = "-")
+	protected void setPanelCategoryRegistry(
+		PanelCategoryRegistry panelCategoryRegistry) {
+
+		_panelCategoryRegistry = panelCategoryRegistry;
 	}
 
 	@Reference(unbind = "-")
@@ -74,6 +96,8 @@ public class ServletContextUtil {
 		_servletContext = servletContext;
 	}
 
+	private static PanelAppRegistry _panelAppRegistry;
+	private static PanelCategoryRegistry _panelCategoryRegistry;
 	private static ProductNavigationControlMenuCategoryRegistry
 		_productNavigationControlMenuCategoryRegistry;
 	private static ProductNavigationControlMenuEntryRegistry

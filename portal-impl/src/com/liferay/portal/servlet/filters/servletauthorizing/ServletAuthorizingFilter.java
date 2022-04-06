@@ -18,7 +18,6 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.auth.PrincipalThreadLocal;
-import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
@@ -46,7 +45,7 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		HttpSession session = httpServletRequest.getSession();
+		HttpSession httpSession = httpServletRequest.getSession();
 
 		// Company id
 
@@ -59,12 +58,13 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 		String remoteUser = httpServletRequest.getRemoteUser();
 
 		if (!PropsValues.PORTAL_JAAS_ENABLE) {
-			String jRemoteUser = (String)session.getAttribute("j_remoteuser");
+			String jRemoteUser = (String)httpSession.getAttribute(
+				"j_remoteuser");
 
 			if (jRemoteUser != null) {
 				remoteUser = jRemoteUser;
 
-				session.removeAttribute("j_remoteuser");
+				httpSession.removeAttribute("j_remoteuser");
 			}
 		}
 
@@ -107,21 +107,19 @@ public class ServletAuthorizingFilter extends BasePortalFilter {
 
 				// Permission checker
 
-				PermissionChecker permissionChecker =
-					PermissionCheckerFactoryUtil.create(user);
-
-				PermissionThreadLocal.setPermissionChecker(permissionChecker);
+				PermissionThreadLocal.setPermissionChecker(
+					PermissionCheckerFactoryUtil.create(user));
 
 				// User id
 
-				session.setAttribute(WebKeys.USER_ID, Long.valueOf(userId));
+				httpSession.setAttribute(WebKeys.USER_ID, Long.valueOf(userId));
 
 				// User locale
 
-				session.setAttribute(WebKeys.LOCALE, user.getLocale());
+				httpSession.setAttribute(WebKeys.LOCALE, user.getLocale());
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 

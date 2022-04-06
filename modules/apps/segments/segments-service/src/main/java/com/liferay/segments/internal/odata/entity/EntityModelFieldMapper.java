@@ -38,6 +38,7 @@ import com.liferay.segments.field.customizer.SegmentsFieldCustomizerRegistry;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -119,7 +120,164 @@ public class EntityModelFieldMapper {
 		return fields;
 	}
 
-	protected Field getField(
+	protected List<Field> getFields(
+		EntityModel entityModel, EntityField entityField,
+		PortletRequest portletRequest) {
+
+		Locale locale = _portal.getLocale(portletRequest);
+
+		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
+			locale, getClass());
+
+		EntityField.Type entityFieldType = entityField.getType();
+
+		if (entityFieldType == EntityField.Type.COMPLEX) {
+			ComplexEntityField complexEntityField =
+				(ComplexEntityField)entityField;
+
+			return _getComplexFields(
+				entityModel.getName(), entityField.getName(),
+				complexEntityField.getEntityFieldsMap(), locale, portletRequest,
+				resourceBundle);
+		}
+
+		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional =
+			_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizerOptional(
+				entityModel.getName(), entityField.getName());
+
+		if ((entityFieldType == EntityField.Type.ID) &&
+			!segmentsFieldCustomizerOptional.isPresent()) {
+
+			return Collections.emptyList();
+		}
+
+		return Collections.singletonList(
+			_getField(
+				entityField.getName(), _getType(entityField.getType()),
+				portletRequest, resourceBundle,
+				segmentsFieldCustomizerOptional));
+	}
+
+	private List<Field> _getComplexFields(
+		String entityModelName, String complexEntityFieldName,
+		Map<String, EntityField> entityFieldsMap, Locale locale,
+		PortletRequest portletRequest, ResourceBundle resourceBundle) {
+
+		if (complexEntityFieldName.equals("customField")) {
+			return _getCustomFields(entityFieldsMap, locale);
+		}
+
+		List<Field> complexFields = new ArrayList<>();
+
+		entityFieldsMap.forEach(
+			(entityFieldName, entityField) -> {
+				Optional<SegmentsFieldCustomizer>
+					segmentsFieldCustomizerOptional =
+						_segmentsFieldCustomizerRegistry.
+							getSegmentsFieldCustomizerOptional(
+								entityModelName, entityField.getName());
+
+				if ((entityField.getType() == EntityField.Type.ID) &&
+					!segmentsFieldCustomizerOptional.isPresent()) {
+
+					return;
+				}
+
+				complexFields.add(
+					_getField(
+						"customContext/" + entityField.getName(),
+						_getType(entityField.getType()), portletRequest,
+						resourceBundle, segmentsFieldCustomizerOptional));
+			});
+
+		return complexFields;
+	}
+
+	private List<Field> _getCustomFields(
+		Map<String, EntityField> entityFieldsMap, Locale locale) {
+
+		List<Field> customFields = new ArrayList<>();
+
+		entityFieldsMap.forEach(
+			(entityFieldName, entityField) -> {
+				ExpandoColumn expandoColumn =
+					_expandoColumnLocalService.fetchExpandoColumn(
+						getExpandoColumnId(entityFieldName));
+
+				if (expandoColumn == null) {
+					return;
+				}
+
+				String label = expandoColumn.getDisplayName(locale);
+
+				customFields.add(
+					new Field(
+						"customField/" + entityFieldName, label,
+						_getType(entityField.getType()),
+						_getExpandoColumnFieldOptions(expandoColumn), null));
+			});
+
+		return customFields;
+	}
+
+	private List<Field.Option> _getExpandoColumnFieldOptions(
+		ExpandoColumn expandoColumn) {
+
+		List<Field.Option> fieldOptions = new ArrayList<>();
+
+		if (expandoColumn.getType() == ExpandoColumnConstants.DOUBLE_ARRAY) {
+			for (double value : (double[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.FLOAT_ARRAY) {
+
+			for (float value : (float[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.INTEGER_ARRAY) {
+
+			for (int value : (int[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() == ExpandoColumnConstants.LONG_ARRAY) {
+			for (long value : (long[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.SHORT_ARRAY) {
+
+			for (short value : (short[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(
+					new Field.Option(
+						String.valueOf(value), String.valueOf(value)));
+			}
+		}
+		else if (expandoColumn.getType() ==
+					ExpandoColumnConstants.STRING_ARRAY) {
+
+			for (String value : (String[])expandoColumn.getDefaultValue()) {
+				fieldOptions.add(new Field.Option(value, value));
+			}
+		}
+
+		return fieldOptions;
+	}
+
+	private Field _getField(
 		String fieldName, String fieldType, PortletRequest portletRequest,
 		ResourceBundle resourceBundle,
 		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional) {
@@ -143,43 +301,7 @@ public class EntityModelFieldMapper {
 		return new Field(fieldName, fieldLabel, fieldType);
 	}
 
-	protected List<Field> getFields(
-		EntityModel entityModel, EntityField entityField,
-		PortletRequest portletRequest) {
-
-		ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
-			_portal.getLocale(portletRequest), getClass());
-
-		EntityField.Type entityFieldType = entityField.getType();
-
-		if (entityFieldType == EntityField.Type.COMPLEX) {
-			ComplexEntityField complexEntityField =
-				(ComplexEntityField)entityField;
-
-			return _getComplexFields(
-				entityModel.getName(), entityField.getName(),
-				complexEntityField.getEntityFieldsMap(), portletRequest,
-				resourceBundle);
-		}
-
-		Optional<SegmentsFieldCustomizer> segmentsFieldCustomizerOptional =
-			_segmentsFieldCustomizerRegistry.getSegmentsFieldCustomizerOptional(
-				entityModel.getName(), entityField.getName());
-
-		if ((entityFieldType == EntityField.Type.ID) &&
-			!segmentsFieldCustomizerOptional.isPresent()) {
-
-			return Collections.emptyList();
-		}
-
-		return Collections.singletonList(
-			getField(
-				entityField.getName(), getType(entityField.getType()),
-				portletRequest, resourceBundle,
-				segmentsFieldCustomizerOptional));
-	}
-
-	protected String getType(EntityField.Type entityFieldType) {
+	private String _getType(EntityField.Type entityFieldType) {
 		if (entityFieldType == EntityField.Type.BOOLEAN) {
 			return "boolean";
 		}
@@ -203,103 +325,6 @@ public class EntityModelFieldMapper {
 		}
 
 		return "string";
-	}
-
-	private List<Field> _getComplexFields(
-		String entityModelName, String complexEntityFieldName,
-		Map<String, EntityField> entityFieldsMap, PortletRequest portletRequest,
-		ResourceBundle resourceBundle) {
-
-		if (complexEntityFieldName.equals("customField")) {
-			return _getCustomFields(entityFieldsMap, resourceBundle);
-		}
-
-		List<Field> complexFields = new ArrayList<>();
-
-		entityFieldsMap.forEach(
-			(entityFieldName, entityField) -> {
-				Optional<SegmentsFieldCustomizer>
-					segmentsFieldCustomizerOptional =
-						_segmentsFieldCustomizerRegistry.
-							getSegmentsFieldCustomizerOptional(
-								entityModelName, entityField.getName());
-
-				if ((entityField.getType() == EntityField.Type.ID) &&
-					!segmentsFieldCustomizerOptional.isPresent()) {
-
-					return;
-				}
-
-				complexFields.add(
-					getField(
-						"customContext/" + entityField.getName(),
-						getType(entityField.getType()), portletRequest,
-						resourceBundle, segmentsFieldCustomizerOptional));
-			});
-
-		return complexFields;
-	}
-
-	private List<Field> _getCustomFields(
-		Map<String, EntityField> entityFieldsMap,
-		ResourceBundle resourceBundle) {
-
-		List<Field> customFields = new ArrayList<>();
-
-		entityFieldsMap.forEach(
-			(entityFieldName, entityField) -> {
-				ExpandoColumn expandoColumn =
-					_expandoColumnLocalService.fetchExpandoColumn(
-						getExpandoColumnId(entityFieldName));
-
-				if (expandoColumn == null) {
-					return;
-				}
-
-				String label = expandoColumn.getDisplayName(
-					resourceBundle.getLocale());
-
-				String type = getType(entityField.getType());
-
-				customFields.add(
-					new Field(
-						"customField/" + entityFieldName, label, type,
-						_getExpandoColumnFieldOptions(expandoColumn), null));
-			});
-
-		return customFields;
-	}
-
-	private List<Field.Option> _getExpandoColumnFieldOptions(
-		ExpandoColumn expandoColumn) {
-
-		List<Field.Option> fieldOptions = new ArrayList<>();
-
-		if (expandoColumn.getType() == ExpandoColumnConstants.DOUBLE_ARRAY) {
-			for (double value : (double[])expandoColumn.getDefaultValue()) {
-				fieldOptions.add(
-					new Field.Option(
-						String.valueOf(value), String.valueOf(value)));
-			}
-		}
-		else if (expandoColumn.getType() ==
-					ExpandoColumnConstants.INTEGER_ARRAY) {
-
-			for (int value : (int[])expandoColumn.getDefaultValue()) {
-				fieldOptions.add(
-					new Field.Option(
-						String.valueOf(value), String.valueOf(value)));
-			}
-		}
-		else if (expandoColumn.getType() ==
-					ExpandoColumnConstants.STRING_ARRAY) {
-
-			for (String value : (String[])expandoColumn.getDefaultValue()) {
-				fieldOptions.add(new Field.Option(value, value));
-			}
-		}
-
-		return fieldOptions;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

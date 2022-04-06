@@ -22,9 +22,9 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.test.util.JournalTestUtil;
 import com.liferay.petra.string.StringPool;
@@ -137,11 +137,11 @@ public class JournalArticleScheduledTest {
 		}
 
 		return JournalArticleLocalServiceUtil.addArticle(
-			TestPropsValues.getUserId(), groupId,
+			null, TestPropsValues.getUserId(), groupId,
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
 			true, JournalArticleConstants.VERSION_DEFAULT, titleMap,
-			descriptionMap, content, ddmStructure.getStructureKey(),
+			descriptionMap, titleMap, content, ddmStructure.getStructureKey(),
 			ddmTemplate.getTemplateKey(), null,
 			displayDateCalendar.get(Calendar.MONTH),
 			displayDateCalendar.get(Calendar.DAY_OF_MONTH),
@@ -154,7 +154,7 @@ public class JournalArticleScheduledTest {
 	protected Calendar getCalendar(Date date, int when) {
 		Calendar calendar = new GregorianCalendar();
 
-		calendar.setTime(new Date(date.getTime() + Time.MINUTE * when * 5));
+		calendar.setTime(new Date(date.getTime() + (Time.MINUTE * when * 5)));
 
 		return calendar;
 	}
@@ -165,10 +165,8 @@ public class JournalArticleScheduledTest {
 		int initialSearchArticlesCount = JournalTestUtil.getSearchArticlesCount(
 			_group.getCompanyId(), _group.getGroupId());
 
-		Date now = new Date();
-
 		JournalArticle article = addArticle(
-			_group.getGroupId(), now, when, approved);
+			_group.getGroupId(), new Date(), when, approved);
 
 		JournalArticleLocalServiceUtil.checkArticles();
 

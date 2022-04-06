@@ -45,7 +45,16 @@ else {
 }
 
 PluginPackage selPluginPackage = selTheme.getPluginPackage();
+
+String stylebookWarningMessage = layoutsAdminDisplayContext.getStyleBookWarningMessage();
 %>
+
+<c:if test="<%= Validator.isNotNull(stylebookWarningMessage) %>">
+	<clay:alert
+		displayType="info"
+		message="<%= stylebookWarningMessage %>"
+	/>
+</c:if>
 
 <aui:input name="regularThemeId" type="hidden" value="<%= selTheme.getThemeId() %>" />
 <aui:input name="regularColorSchemeId" type="hidden" value="<%= selColorScheme.getColorSchemeId() %>" />
@@ -55,9 +64,9 @@ PluginPackage selPluginPackage = selTheme.getPluginPackage();
 		size="6"
 		sm="4"
 	>
-		<div class="card image-card img-thumbnail">
-			<div class="aspect-ratio aspect-ratio-16-to-9">
-				<img alt="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" class="aspect-ratio-item-flush aspect-ratio-item-top-center img-thumbnail theme-screenshot" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selTheme.getImagesPath()) %>/thumbnail.png" title="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" />
+		<div class="card card-type-asset image-card">
+			<div class="aspect-ratio card-item-first card-item-last">
+				<img alt="<%= HtmlUtil.escapeAttribute(selTheme.getName()) %>" class="aspect-ratio-item aspect-ratio-item-center-middle aspect-ratio-item-fluid" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(selTheme.getImagesPath()) %>/thumbnail.png" />
 			</div>
 		</div>
 	</clay:col>
@@ -113,7 +122,7 @@ List<ColorScheme> colorSchemes = selTheme.getColorSchemes();
 					size="6"
 					sm="4"
 				>
-					<div class='card card-interactive card-interactive-secondary card-type-asset color-scheme-selector image-card img-thumbnail <%= selColorSchemeId.equals(curColorScheme.getColorSchemeId()) ? "selected" : StringPool.BLANK %>' data-color-scheme-id="<%= curColorScheme.getColorSchemeId() %>" tabindex="0">
+					<div class="card card-interactive card-interactive-secondary card-type-asset color-scheme-selector image-card img-thumbnail <%= selColorSchemeId.equals(curColorScheme.getColorSchemeId()) ? "selected" : StringPool.BLANK %>" data-color-scheme-id="<%= curColorScheme.getColorSchemeId() %>" tabindex="0">
 						<div class="aspect-ratio aspect-ratio-16-to-9">
 							<img alt="" class="aspect-ratio-item-flush aspect-ratio-item-top-center" src="<%= themeDisplay.getCDNBaseURL() %><%= HtmlUtil.escapeAttribute(selTheme.getStaticResourcePath()) %><%= HtmlUtil.escapeAttribute(curColorScheme.getColorSchemeThumbnailPath()) %>/thumbnail.png" />
 						</div>
@@ -146,19 +155,17 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 	<%
 	ServletContext servletContext = ServletContextPool.get(selTheme.getServletContextName());
 
-	ResourceBundle selThemeResourceBundle = resourceBundle;
+	ResourceBundle selThemeResourceBundle = ResourceBundleUtil.getBundle("content.Language", servletContext.getClassLoader());
 
-	try {
-		selThemeResourceBundle = ResourceBundleUtil.getBundle("content.Language", servletContext.getClassLoader());
-	}
-	catch (Exception e) {
-	}
+	ResourceBundle aggregateResourceBundle = new AggregateResourceBundle(resourceBundle, selThemeResourceBundle);
 
 	for (Map.Entry<String, ThemeSetting> entry : configurableSettings.entrySet()) {
-		String name = LanguageUtil.get(selThemeResourceBundle, entry.getKey());
+		String name = LanguageUtil.get(aggregateResourceBundle, entry.getKey());
+
 		ThemeSetting themeSetting = entry.getValue();
 
 		String type = GetterUtil.getString(themeSetting.getType(), "text");
+
 		String value = StringPool.BLANK;
 
 		if (useDefaultThemeSettings) {
@@ -178,7 +185,7 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 
 		<c:choose>
 			<c:when test='<%= type.equals("checkbox") %>'>
-				<aui:input label="<%= HtmlUtil.escape(name) %>" name="<%= propertyName %>" type="toggle-switch" value="<%= value %>" />
+				<aui:input inlineLabel="right" label="<%= HtmlUtil.escape(name) %>" labelCssClass="simple-toggle-switch" name="<%= propertyName %>" type="toggle-switch" value="<%= value %>" />
 			</c:when>
 			<c:when test='<%= type.equals("text") || type.equals("textarea") %>'>
 				<aui:input label="<%= HtmlUtil.escape(name) %>" name="<%= propertyName %>" type="<%= type %>" value="<%= value %>" />
@@ -213,31 +220,16 @@ Map<String, ThemeSetting> configurableSettings = selTheme.getConfigurableSetting
 </c:if>
 
 <c:if test="<%= !colorSchemes.isEmpty() %>">
-	<aui:script use="aui-base,aui-event-key">
-		var colorSchemesContainer = A.one(
-			'#<portlet:namespace />colorSchemesContainer'
-		);
-
-		colorSchemesContainer.delegate(
-			['click', 'keydown'],
-			function (event) {
-				if (!event.keyCode || event.keyCode === 13 || event.keyCode === 32) {
-					event.preventDefault();
-
-					var currentTarget = event.currentTarget;
-
-					colorSchemesContainer
-						.all('.color-scheme-selector')
-						.removeClass('selected');
-
-					currentTarget.addClass('selected');
-
-					A.one('#<portlet:namespace />regularColorSchemeId').val(
-						currentTarget.attr('data-color-scheme-id')
-					);
-				}
-			},
-			'.color-scheme-selector'
-		);
-	</aui:script>
+	<liferay-frontend:component
+		context='<%=
+			HashMapBuilder.<String, Object>put(
+				"buttonCssClass", ".color-scheme-selector"
+			).put(
+				"containerId", liferayPortletResponse.getNamespace() + "colorSchemesContainer"
+			).put(
+				"regularColorSchemeInputId", liferayPortletResponse.getNamespace() + "regularColorSchemeId"
+			).build()
+		%>'
+		module="js/LookAndFeelThemeDetails"
+	/>
 </c:if>

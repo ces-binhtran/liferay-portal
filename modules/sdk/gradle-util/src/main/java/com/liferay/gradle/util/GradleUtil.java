@@ -332,9 +332,8 @@ public class GradleUtil {
 	public static String getGradlePropertiesValue(
 		Project project, String key, String defaultValue) {
 
-		File rootDir = getRootDir(project, "gradle.properties");
-
-		return getGradlePropertiesValue(rootDir, key, defaultValue);
+		return getGradlePropertiesValue(
+			getRootDir(project, "gradle.properties"), key, defaultValue);
 	}
 
 	public static Project getProject(Project rootProject, File projectDir) {
@@ -531,9 +530,9 @@ public class GradleUtil {
 		while (iterator.hasNext()) {
 			Dependency dependency = iterator.next();
 
-			String dependencyNotation = _getDependencyNotation(dependency);
+			if (ArrayUtil.contains(
+					dependencyNotations, _getDependencyNotation(dependency))) {
 
-			if (ArrayUtil.contains(dependencyNotations, dependencyNotation)) {
 				iterator.remove();
 			}
 		}

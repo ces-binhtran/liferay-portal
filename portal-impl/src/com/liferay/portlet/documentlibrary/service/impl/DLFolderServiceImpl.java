@@ -121,21 +121,6 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 			groupId, folderId, queryDefinition);
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getFileEntriesAndFileShortcutsCount(long, long, String[],
-	 *             int)}
-	 */
-	@Deprecated
-	@Override
-	public int getFileEntriesAndFileShortcutsCount(
-			long groupId, long folderId, int status, String[] mimeTypes)
-		throws PortalException {
-
-		return getFileEntriesAndFileShortcutsCount(
-			groupId, folderId, mimeTypes, status);
-	}
-
 	@Override
 	public int getFileEntriesAndFileShortcutsCount(
 			long groupId, long folderId, String[] mimeTypes, int status)
@@ -198,7 +183,8 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 	@Override
 	public List<DLFolder> getFolders(
 			long groupId, long parentFolderId, boolean includeMountfolders,
-			int status, int start, int end, OrderByComparator<DLFolder> obc)
+			int status, int start, int end,
+			OrderByComparator<DLFolder> orderByComparator)
 		throws PortalException {
 
 		if (!ModelResourcePermissionUtil.contains(
@@ -210,46 +196,31 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 
 		if (includeMountfolders) {
 			return dlFolderPersistence.filterFindByG_P_H_S(
-				groupId, parentFolderId, false, status, start, end, obc);
+				groupId, parentFolderId, false, status, start, end,
+				orderByComparator);
 		}
 
 		return dlFolderPersistence.filterFindByG_M_P_H_S(
-			groupId, false, parentFolderId, false, status, start, end, obc);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getFolders(long, long, boolean, int, int, int,
-	 *             OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	public List<DLFolder> getFolders(
-			long groupId, long parentFolderId, int status,
-			boolean includeMountfolders, int start, int end,
-			OrderByComparator<DLFolder> obc)
-		throws PortalException {
-
-		return getFolders(
-			groupId, parentFolderId, includeMountfolders, status, start, end,
-			obc);
+			groupId, false, parentFolderId, false, status, start, end,
+			orderByComparator);
 	}
 
 	@Override
 	public List<DLFolder> getFolders(
 			long groupId, long parentFolderId, int start, int end,
-			OrderByComparator<DLFolder> obc)
+			OrderByComparator<DLFolder> orderByComparator)
 		throws PortalException {
 
 		return getFolders(
 			groupId, parentFolderId, true, WorkflowConstants.STATUS_APPROVED,
-			start, end, obc);
+			start, end, orderByComparator);
 	}
 
 	@Override
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long groupId, long folderId, boolean includeMountFolders,
-			int status, int start, int end, OrderByComparator<?> obc)
+			int status, int start, int end,
+			OrderByComparator<?> orderByComparator)
 		throws PortalException {
 
 		if (!ModelResourcePermissionUtil.contains(
@@ -260,52 +231,17 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 		}
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
-			status, start, end, (OrderByComparator<Object>)obc);
+			status, start, end, (OrderByComparator<Object>)orderByComparator);
 
 		return dlFolderFinder.filterFindF_FE_FS_ByG_F_M_M(
 			groupId, folderId, null, includeMountFolders, queryDefinition);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getFoldersAndFileEntriesAndFileShortcuts(long, long,
-	 *             boolean, int, int, int, OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
-			long groupId, long folderId, int status,
-			boolean includeMountFolders, int start, int end,
-			OrderByComparator<?> obc)
-		throws PortalException {
-
-		return getFoldersAndFileEntriesAndFileShortcuts(
-			groupId, folderId, includeMountFolders, status, start, end, obc);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getFoldersAndFileEntriesAndFileShortcuts(long, long,
-	 *             String[], boolean, int, int, int, OrderByComparator)}
-	 */
-	@Deprecated
-	@Override
-	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
-			long groupId, long folderId, int status, String[] mimeTypes,
-			boolean includeMountFolders, int start, int end,
-			OrderByComparator<?> obc)
-		throws PortalException {
-
-		return getFoldersAndFileEntriesAndFileShortcuts(
-			groupId, folderId, mimeTypes, includeMountFolders, status, start,
-			end, obc);
 	}
 
 	@Override
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long groupId, long folderId, String[] mimeTypes,
 			boolean includeMountFolders, int status, int start, int end,
-			OrderByComparator<?> obc)
+			OrderByComparator<?> orderByComparator)
 		throws PortalException {
 
 		if (!ModelResourcePermissionUtil.contains(
@@ -316,7 +252,7 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 		}
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
-			status, start, end, (OrderByComparator<Object>)obc);
+			status, start, end, (OrderByComparator<Object>)orderByComparator);
 
 		return dlFolderFinder.filterFindF_FE_FS_ByG_F_M_M(
 			groupId, folderId, mimeTypes, includeMountFolders, queryDefinition);
@@ -349,7 +285,7 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 	public List<Object> getFoldersAndFileEntriesAndFileShortcuts(
 			long groupId, long folderId, String[] mimeTypes,
 			long fileEntryTypeId, boolean includeMountFolders, int status,
-			int start, int end, OrderByComparator<?> obc)
+			int start, int end, OrderByComparator<?> orderByComparator)
 		throws PortalException {
 
 		if (!ModelResourcePermissionUtil.contains(
@@ -360,7 +296,7 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 		}
 
 		QueryDefinition<?> queryDefinition = new QueryDefinition<>(
-			status, start, end, (OrderByComparator<Object>)obc);
+			status, start, end, (OrderByComparator<Object>)orderByComparator);
 
 		return dlFolderFinder.filterFindF_FE_FS_ByG_F_M_FETI_M(
 			groupId, folderId, mimeTypes, fileEntryTypeId, includeMountFolders,
@@ -512,7 +448,7 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 	@Override
 	public List<DLFolder> getMountFolders(
 			long groupId, long parentFolderId, int start, int end,
-			OrderByComparator<DLFolder> obc)
+			OrderByComparator<DLFolder> orderByComparator)
 		throws PortalException {
 
 		if (!ModelResourcePermissionUtil.contains(
@@ -527,11 +463,12 @@ public class DLFolderServiceImpl extends DLFolderServiceBaseImpl {
 
 		if (dlGroupServiceSettings.isShowHiddenMountFolders()) {
 			return dlFolderPersistence.filterFindByG_M_P(
-				groupId, true, parentFolderId, start, end, obc);
+				groupId, true, parentFolderId, start, end, orderByComparator);
 		}
 
 		return dlFolderPersistence.filterFindByG_M_P_H(
-			groupId, true, parentFolderId, false, start, end, obc);
+			groupId, true, parentFolderId, false, start, end,
+			orderByComparator);
 	}
 
 	@Override

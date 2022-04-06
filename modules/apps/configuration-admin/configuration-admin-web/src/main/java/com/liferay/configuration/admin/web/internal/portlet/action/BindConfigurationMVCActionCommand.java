@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.json.JSONFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.resource.manager.ClassLoaderResourceManager;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.settings.LocationVariableResolver;
@@ -42,20 +43,11 @@ import com.liferay.portal.kernel.settings.SettingsLocatorHelper;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.portal.util.PropsValues;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-
-import java.net.URI;
-
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
@@ -84,7 +76,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
-		"mvc.command.name=bindConfiguration"
+		"mvc.command.name=/configuration_admin/bind_configuration"
 	},
 	service = MVCActionCommand.class
 )
@@ -124,29 +116,45 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 			configurationModel = configurationModels.get(pid);
 		}
 
-		Configuration configuration =
+		configurationModel = _getConfigurationModel(
 			_configurationModelRetriever.getConfiguration(
 				pid, configurationScopeDisplayContext.getScope(),
-				configurationScopeDisplayContext.getScopePK());
+				configurationScopeDisplayContext.getScopePK()),
+			configurationModel);
 
 		if (configurationModel.isFactory() && pid.equals(factoryPid)) {
-			configuration = null;
+			if (_log.isDebugEnabled()) {
+				_log.debug("Writing a new factory instance for service " + pid);
+			}
+
+			configurationModel = _getConfigurationModel(
+				null, configurationModel);
 		}
 
-		configurationModel = new ConfigurationModel(
-			configurationModel.getBundleLocation(),
-			configurationModel.getBundleSymbolicName(),
-			configurationModel.getClassLoader(), configuration,
-			configurationModel.getExtendedObjectClassDefinition(),
-			configurationModel.isFactory());
+		if (!configurationModel.hasScopeConfiguration(
+				configurationScopeDisplayContext.getScope())) {
+
+			if (_log.isDebugEnabled()) {
+				_log.debug(
+					StringBundler.concat(
+						"Writing a new scoped instance for service ", pid,
+						" at scope ",
+						configurationScopeDisplayContext.getScope(),
+						" for scope ID ",
+						configurationScopeDisplayContext.getScopePK()));
+			}
+
+			configurationModel = _getConfigurationModel(
+				null, configurationModel);
+		}
 
 		Dictionary<String, Object> properties = null;
 
-		Map<String, Object> requestParameters = getRequestParameters(
+		Map<String, Object> requestParameters = _getRequestParameters(
 			actionRequest, pid);
 
 		if (requestParameters != null) {
-			properties = toDictionary(requestParameters);
+			properties = _toDictionary(requestParameters);
 		}
 		else {
 			ResourceBundleLoader resourceBundleLoader =
@@ -157,7 +165,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 				resourceBundleLoader.loadResourceBundle(
 					themeDisplay.getLocale());
 
-			properties = getDDMRequestParameters(
+			properties = _getDDMRequestParameters(
 				actionRequest, configurationModel, resourceBundle);
 		}
 
@@ -168,8 +176,8 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		}
 
 		try {
-			configureTargetService(
-				configurationModel, configuration, properties,
+			_configureTargetService(
+				configurationModel, properties,
 				configurationScopeDisplayContext.getScope(),
 				configurationScopeDisplayContext.getScopePK());
 
@@ -187,7 +195,8 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 				configurationModelListenerException);
 
 			actionResponse.setRenderParameter(
-				"mvcRenderCommandName", "/edit_configuration");
+				"mvcRenderCommandName",
+				"/configuration_admin/edit_configuration");
 		}
 		catch (IOException ioException) {
 			throw new PortletException(ioException);
@@ -196,8 +205,8 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		return true;
 	}
 
-	protected void configureTargetService(
-			ConfigurationModel configurationModel, Configuration configuration,
+	private void _configureTargetService(
+			ConfigurationModel configurationModel,
 			Dictionary<String, Object> properties,
 			ExtendedObjectClassDefinition.Scope scope, Serializable scopePK)
 		throws ConfigurationModelListenerException, PortletException {
@@ -207,6 +216,8 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		}
 
 		try {
+			Configuration configuration = configurationModel.getConfiguration();
+
 			boolean scoped = !scope.equals(
 				ExtendedObjectClassDefinition.Scope.SYSTEM.getValue());
 
@@ -274,53 +285,6 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 			if (configurationModel.isFactory()) {
 				configuredProperties.put(
 					"configuration.cleaner.ignore", "true");
-
-				String pid = configuration.getPid();
-
-				int index = pid.lastIndexOf('.');
-
-				String factoryPid = pid.substring(index + 1);
-
-				StringBundler sb = new StringBundler(4);
-
-				sb.append(configuration.getFactoryPid());
-				sb.append(StringPool.DASH);
-				sb.append(factoryPid);
-				sb.append(".config");
-
-				File file = new File(
-					PropsValues.MODULE_FRAMEWORK_CONFIGS_DIR, sb.toString());
-
-				file = file.getAbsoluteFile();
-
-				URI uri = file.toURI();
-
-				String fileName = uri.toString();
-
-				String oldFileName = (String)configuredProperties.put(
-					"felix.fileinstall.filename", fileName);
-
-				if ((oldFileName != null) && !oldFileName.equals(fileName)) {
-					try {
-						Path oldFilePath = Paths.get(new URI(oldFileName));
-
-						Files.deleteIfExists(oldFilePath);
-
-						if (_log.isInfoEnabled()) {
-							_log.info(
-								"Delete inconsistent factory configuration " +
-									oldFileName);
-						}
-					}
-					catch (Exception exception) {
-						if (_log.isWarnEnabled()) {
-							_log.warn(
-								"Unable to delete inconsistent factory " +
-									"configuration " + oldFileName,
-								exception);
-						}
-					}
-				}
 			}
 
 			configuration.update(configuredProperties);
@@ -335,13 +299,24 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		}
 	}
 
-	protected DDMFormValues getDDMFormValues(
+	private ConfigurationModel _getConfigurationModel(
+		Configuration configuration, ConfigurationModel configurationModel) {
+
+		return new ConfigurationModel(
+			configurationModel.getBundleLocation(),
+			configurationModel.getBundleSymbolicName(),
+			configurationModel.getClassLoader(), configuration,
+			configurationModel.getExtendedObjectClassDefinition(),
+			configurationModel.isFactory());
+	}
+
+	private DDMFormValues _getDDMFormValues(
 		ActionRequest actionRequest, DDMForm ddmForm) {
 
 		return _ddmFormValuesFactory.create(actionRequest, ddmForm);
 	}
 
-	protected Dictionary<String, Object> getDDMRequestParameters(
+	private Dictionary<String, Object> _getDDMRequestParameters(
 		ActionRequest actionRequest, ConfigurationModel configurationModel,
 		ResourceBundle resourceBundle) {
 
@@ -354,7 +329,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 					configurationModel, themeDisplay.getLocale(),
 					resourceBundle);
 
-		DDMFormValues ddmFormValues = getDDMFormValues(
+		DDMFormValues ddmFormValues = _getDDMFormValues(
 			actionRequest, configurationModelToDDMFormConverter.getDDMForm());
 
 		LocationVariableResolver locationVariableResolver =
@@ -371,7 +346,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 		return ddmFormValuesToPropertiesConverter.getProperties();
 	}
 
-	protected Map<String, Object> getRequestParameters(
+	private Map<String, Object> _getRequestParameters(
 		ActionRequest actionRequest, String pid) {
 
 		ConfigurationFormRenderer configurationFormRenderer =
@@ -382,7 +357,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 			_portal.getHttpServletRequest(actionRequest));
 	}
 
-	protected Dictionary<String, Object> toDictionary(
+	private Dictionary<String, Object> _toDictionary(
 		Map<String, Object> requestParameters) {
 
 		Dictionary<String, Object> properties = new Hashtable<>();
@@ -404,7 +379,7 @@ public class BindConfigurationMVCActionCommand implements MVCActionCommand {
 	private ConfigurationFormRendererRetriever
 		_configurationFormRendererRetriever;
 
-	@Reference
+	@Reference(target = "(!(filter.visibility=*))")
 	private ConfigurationModelRetriever _configurationModelRetriever;
 
 	@Reference

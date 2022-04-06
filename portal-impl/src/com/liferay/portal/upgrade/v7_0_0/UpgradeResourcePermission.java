@@ -14,10 +14,15 @@
 
 package com.liferay.portal.upgrade.v7_0_0;
 
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.dao.orm.common.SQLTransformer;
+import com.liferay.portal.kernel.dao.db.DB;
+import com.liferay.portal.kernel.dao.db.DBManagerUtil;
+import com.liferay.portal.kernel.dao.db.DBType;
 import com.liferay.portal.kernel.model.PortletConstants;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LoggingTimer;
 
@@ -32,20 +37,13 @@ import java.util.List;
  */
 public class UpgradeResourcePermission extends UpgradeProcess {
 
-	protected void createIndex() throws Exception {
-		try (LoggingTimer loggingTimer = new LoggingTimer()) {
-			runSQLTemplateString(
-				"create index IX_D5F1E2A2 on ResourcePermission " +
-					"(name[$COLUMN_LENGTH:255$])",
-				false);
-		}
-	}
-
 	@Override
 	protected void doUpgrade() throws Exception {
-		createIndex();
+		try (SafeCloseable safeCloseable = addTempIndex(
+				"ResourcePermission", false, "name")) {
 
-		upgradeResourcePermissions();
+			upgradeResourcePermissions();
+		}
 	}
 
 	protected void upgradeResourcePermissions() throws Exception {
@@ -57,99 +55,127 @@ public class UpgradeResourcePermission extends UpgradeProcess {
 				"update ResourcePermission set viewActionId = [$TRUE$] where " +
 					"MOD(actionIds, 2) = 1");
 
-			try (PreparedStatement ps1 = connection.prepareStatement(
-					"select distinct name from ResourcePermission");
-				ResultSet rs1 = ps1.executeQuery();
-				PreparedStatement ps2 = connection.prepareStatement(
-					"select distinct primKey from ResourcePermission where " +
-						"name = ?")) {
+			try (PreparedStatement preparedStatement1 =
+					connection.prepareStatement(
+						"select distinct name from ResourcePermission");
+				ResultSet resultSet1 = preparedStatement1.executeQuery();
+				PreparedStatement preparedStatement2 =
+					connection.prepareStatement(
+						"select distinct primKey from ResourcePermission " +
+							"where name = ?")) {
 
-				while (rs1.next()) {
-					List<String> stringPrimKeys = new ArrayList<>();
+				while (resultSet1.next()) {
+					List<String> primKeys = new ArrayList<>();
 
-					String name = rs1.getString("name");
+					String name = resultSet1.getString("name");
 
-					ps2.setString(1, name);
+					preparedStatement2.setString(1, name);
 
-					try (ResultSet rs2 = ps2.executeQuery()) {
-						while (rs2.next()) {
-							String primKey = rs2.getString("primKey");
+					try (ResultSet resultSet2 =
+							preparedStatement2.executeQuery()) {
+
+						while (resultSet2.next()) {
+							String primKey = resultSet2.getString("primKey");
 
 							if ((GetterUtil.getLong(primKey) <= 0) &&
 								!primKey.contains(
 									PortletConstants.LAYOUT_SEPARATOR)) {
 
-								stringPrimKeys.add(primKey);
+								primKeys.add(primKey);
 							}
 						}
 					}
 
-					_updatePrimKeyIdsByName(name, stringPrimKeys);
+					String[][] primKeysArray = null;
+
+					if (!primKeys.isEmpty()) {
+						primKeysArray = (String[][])ArrayUtil.split(
+							primKeys.toArray(new String[0]),
+							_getPrimKeysSplitSize(primKeys.size()));
+					}
+
+					_updatePrimKeyIdsByName(name, primKeysArray);
 				}
 			}
 		}
 	}
 
-	private void _updatePrimKeyIds(
-			String sql, String name, List<String> primKeys)
-		throws Exception {
-
-		try (PreparedStatement ps = connection.prepareStatement(
-				SQLTransformer.transform(sql))) {
-
-			ps.setString(1, name);
-
-			for (int i = 0; i < primKeys.size(); i++) {
-				String primKey = primKeys.get(i);
-
-				ps.setString(i + 2, primKey);
-			}
-
-			ps.executeUpdate();
-		}
-	}
-
-	private void _updatePrimKeyIdsByName(String name, List<String> primKeys)
-		throws Exception {
-
-		if (primKeys.isEmpty()) {
-			_updatePrimKeyIds(
-				"update ResourcePermission set primKeyId = CAST_LONG(" +
-					"primKey) where name = ? and primKey not like '%_LAYOUT_%'",
-				name, primKeys);
-
-			_updatePrimKeyIds(
-				"update ResourcePermission set primKeyId = 0 where name = ? " +
-					"and primKey like '%_LAYOUT_%'",
-				name, primKeys);
-
-			return;
-		}
-
-		StringBundler sb = new StringBundler(primKeys.size() + 1);
+	private String _createInClause(String[] primKeys) {
+		StringBundler sb = new StringBundler(primKeys.length + 1);
 
 		sb.append("in (?");
 
-		for (int i = 1; i < primKeys.size(); i++) {
+		for (int i = 1; i < primKeys.length; i++) {
 			sb.append(", ?");
 		}
 
 		sb.append(")");
 
-		String inClause = sb.toString();
+		return sb.toString();
+	}
 
-		_updatePrimKeyIds(
-			StringBundler.concat(
-				"update ResourcePermission set primKeyId = 0 where name = ? ",
-				"and (primKey like '%_LAYOUT_%' or primKey ", inClause, ")"),
-			name, primKeys);
+	private int _getPrimKeysSplitSize(int primKeysCount) {
+		DB db = DBManagerUtil.getDB();
 
-		_updatePrimKeyIds(
+		if (db.getDBType() == DBType.ORACLE) {
+			return 1000;
+		}
+
+		return primKeysCount;
+	}
+
+	private void _updatePrimKeyIds(String sql, String name, String[] primKeys)
+		throws Exception {
+
+		try (PreparedStatement preparedStatement = connection.prepareStatement(
+				SQLTransformer.transform(sql))) {
+
+			preparedStatement.setString(1, name);
+
+			for (int i = 0; i < primKeys.length; i++) {
+				String primKey = primKeys[i];
+
+				preparedStatement.setString(i + 2, primKey);
+			}
+
+			preparedStatement.executeUpdate();
+		}
+	}
+
+	private void _updatePrimKeyIdsByName(String name, String[][] primKeysArray)
+		throws Exception {
+
+		if (ArrayUtil.isEmpty(primKeysArray)) {
+			_updatePrimKeyIds(
+				"update ResourcePermission set primKeyId = CAST_LONG(" +
+					"primKey) where name = ? and primKey not like '%_LAYOUT_%'",
+				name, new String[0]);
+
+			_updatePrimKeyIds(
+				"update ResourcePermission set primKeyId = 0 where name = ? " +
+					"and primKey like '%_LAYOUT_%'",
+				name, new String[0]);
+
+			return;
+		}
+
+		for (String[] primKeys : primKeysArray) {
+			String inClause = _createInClause(primKeys);
+
+			_updatePrimKeyIds(
+				StringBundler.concat(
+					"update ResourcePermission set primKeyId = 0 where name = ",
+					"? and (primKey like '%_LAYOUT_%' or primKey ", inClause,
+					")"),
+				name, primKeys);
+		}
+
+		runSQL(
 			StringBundler.concat(
 				"update ResourcePermission set primKeyId = CAST_LONG(primKey",
-				") where name = ? and (primKey not like '%_LAYOUT_%' and ",
-				"primKey not ", inClause, ")"),
-			name, primKeys);
+				") where name = '", name,
+				"' and (primKey not like '%_LAYOUT_%' and (primKeyId IS NULL ",
+				"or primKeyId != 0))"));
 	}
 
 }

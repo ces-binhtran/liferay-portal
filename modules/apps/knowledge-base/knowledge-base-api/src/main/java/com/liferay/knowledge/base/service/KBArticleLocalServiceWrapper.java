@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class KBArticleLocalServiceWrapper
 	implements KBArticleLocalService, ServiceWrapper<KBArticleLocalService> {
 
+	public KBArticleLocalServiceWrapper() {
+		this(null);
+	}
+
 	public KBArticleLocalServiceWrapper(
 		KBArticleLocalService kbArticleLocalService) {
 
@@ -45,6 +49,10 @@ public class KBArticleLocalServiceWrapper
 	/**
 	 * Adds the kb article to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was added
 	 */
@@ -57,17 +65,17 @@ public class KBArticleLocalServiceWrapper
 
 	@Override
 	public com.liferay.knowledge.base.model.KBArticle addKBArticle(
-			long userId, long parentResourceClassNameId,
-			long parentResourcePrimKey, String title, String urlTitle,
-			String content, String description, String sourceURL,
-			String[] sections, String[] selectedFileNames,
+			String externalReferenceCode, long userId,
+			long parentResourceClassNameId, long parentResourcePrimKey,
+			String title, String urlTitle, String content, String description,
+			String sourceURL, String[] sections, String[] selectedFileNames,
 			com.liferay.portal.kernel.service.ServiceContext serviceContext)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _kbArticleLocalService.addKBArticle(
-			userId, parentResourceClassNameId, parentResourcePrimKey, title,
-			urlTitle, content, description, sourceURL, sections,
-			selectedFileNames, serviceContext);
+			externalReferenceCode, userId, parentResourceClassNameId,
+			parentResourcePrimKey, title, urlTitle, content, description,
+			sourceURL, sections, selectedFileNames, serviceContext);
 	}
 
 	@Override
@@ -158,6 +166,10 @@ public class KBArticleLocalServiceWrapper
 	/**
 	 * Deletes the kb article from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was removed
 	 * @throws PortalException
@@ -172,6 +184,10 @@ public class KBArticleLocalServiceWrapper
 
 	/**
 	 * Deletes the kb article with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kbArticleId the primary key of the kb article
 	 * @return the kb article that was removed
@@ -222,6 +238,13 @@ public class KBArticleLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _kbArticleLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _kbArticleLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -382,6 +405,16 @@ public class KBArticleLocalServiceWrapper
 
 		return _kbArticleLocalService.fetchLatestKBArticle(
 			resourcePrimKey, groupId);
+	}
+
+	@Override
+	public com.liferay.knowledge.base.model.KBArticle
+		fetchLatestKBArticleByExternalReferenceCode(
+			long groupId, String externalReferenceCode) {
+
+		return _kbArticleLocalService.
+			fetchLatestKBArticleByExternalReferenceCode(
+				groupId, externalReferenceCode);
 	}
 
 	@Override
@@ -678,6 +711,16 @@ public class KBArticleLocalServiceWrapper
 
 	@Override
 	public com.liferay.knowledge.base.model.KBArticle
+			getLatestKBArticleByExternalReferenceCode(
+				long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _kbArticleLocalService.getLatestKBArticleByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	@Override
+	public com.liferay.knowledge.base.model.KBArticle
 			getLatestKBArticleByUrlTitle(
 				long groupId, long kbFolderId, String urlTitle, int status)
 		throws com.liferay.portal.kernel.exception.PortalException {
@@ -828,6 +871,10 @@ public class KBArticleLocalServiceWrapper
 
 	/**
 	 * Updates the kb article in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KBArticleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kbArticle the kb article
 	 * @return the kb article that was updated

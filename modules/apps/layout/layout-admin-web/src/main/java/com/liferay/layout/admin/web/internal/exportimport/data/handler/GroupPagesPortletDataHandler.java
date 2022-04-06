@@ -53,7 +53,7 @@ public class GroupPagesPortletDataHandler extends BasePortletDataHandler {
 
 	public static final String NAMESPACE = "page-templates";
 
-	public static final String SCHEMA_VERSION = "1.0.0";
+	public static final String SCHEMA_VERSION = "4.0.0";
 
 	@Override
 	public String getSchemaVersion() {
@@ -88,7 +88,7 @@ public class GroupPagesPortletDataHandler extends BasePortletDataHandler {
 			new StagedModelType(LayoutPageTemplateEntry.class));
 		setExportControls(
 			new PortletDataHandlerBoolean(
-				NAMESPACE, "page-template-collections", true, true, null,
+				NAMESPACE, "page-template-sets", true, true, null,
 				LayoutPageTemplateCollection.class.getName()),
 			new PortletDataHandlerBoolean(
 				NAMESPACE, "page-templates", true, false, null,
@@ -115,7 +115,7 @@ public class GroupPagesPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 

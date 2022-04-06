@@ -19,7 +19,7 @@
 <%
 SegmentsDisplayContext segmentsDisplayContext = (SegmentsDisplayContext)request.getAttribute(SegmentsWebKeys.SEGMENTS_DISPLAY_CONTEXT);
 
-String eventName = renderResponse.getNamespace() + "assignSiteRoles";
+String eventName = liferayPortletResponse.getNamespace() + "assignSiteRoles";
 
 request.setAttribute("view.jsp-eventName", eventName);
 %>
@@ -27,11 +27,11 @@ request.setAttribute("view.jsp-eventName", eventName);
 <clay:management-toolbar
 	actionDropdownItems="<%= segmentsDisplayContext.getActionDropdownItems() %>"
 	clearResultsURL="<%= segmentsDisplayContext.getClearResultsURL() %>"
-	componentId="segmentsEntriesManagementToolbar"
 	creationMenu="<%= segmentsDisplayContext.getCreationMenu() %>"
 	disabled="<%= segmentsDisplayContext.isDisabledManagementBar() %>"
 	filterDropdownItems="<%= segmentsDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= segmentsDisplayContext.getTotalItems() %>"
+	propsTransformer="js/SegmentsManagementToolbarPropsTransformer"
 	searchActionURL="<%= segmentsDisplayContext.getSearchActionURL() %>"
 	searchContainerId="segmentsEntries"
 	searchFormName="searchFm"
@@ -41,11 +41,11 @@ request.setAttribute("view.jsp-eventName", eventName);
 	sortingURL="<%= segmentsDisplayContext.getSortingURL() %>"
 />
 
-<portlet:actionURL name="deleteSegmentsEntry" var="deleteSegmentsEntryURL">
+<portlet:actionURL name="/segments/delete_segments_entry" var="deleteSegmentsEntryURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
-<aui:form action="<%= deleteSegmentsEntryURL %>" cssClass="container-fluid-1280" method="post" name="fmSegmentsEntries">
+<aui:form action="<%= deleteSegmentsEntryURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fmSegmentsEntries">
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
 
 	<liferay-ui:error exception="<%= RequiredSegmentsEntryException.MustNotDeleteSegmentsEntryReferencedBySegmentsExperiences.class %>" message="the-segment-cannot-be-deleted-because-it-is-required-by-one-or-more-experiences" />
@@ -61,11 +61,10 @@ request.setAttribute("view.jsp-eventName", eventName);
 		>
 
 			<%
-			Map<String, Object> rowData = HashMapBuilder.<String, Object>put(
-				"actions", segmentsDisplayContext.getAvailableActions(segmentsEntry)
-			).build();
-
-			row.setData(rowData);
+			row.setData(
+				HashMapBuilder.<String, Object>put(
+					"actions", segmentsDisplayContext.getAvailableActions(segmentsEntry)
+				).build());
 			%>
 
 			<liferay-ui:search-container-column-text
@@ -81,20 +80,17 @@ request.setAttribute("view.jsp-eventName", eventName);
 					cssClass="table-cell-expand-smallest table-cell-minw-150"
 					name="source"
 				>
-					<c:choose>
-						<c:when test="<%= Objects.equals(segmentsEntry.getSource(), SegmentsEntryConstants.SOURCE_ASAH_FARO_BACKEND) %>">
-							<liferay-ui:icon
-								message="source.analytics-cloud"
-								src='<%= PortalUtil.getPathContext(request) + "/assets/ac-icon.svg" %>'
-							/>
-						</c:when>
-						<c:otherwise>
-							<liferay-ui:icon
-								message="source.dxp"
-								src='<%= PortalUtil.getPathContext(request) + "/assets/dxp-icon.svg" %>'
-							/>
-						</c:otherwise>
-					</c:choose>
+
+					<%
+					SegmentsSourceDetailsProvider segmentsSourceDetailsProvider = SegmentsSourceDetailsProviderUtil.getSegmentsSourceDetailsProvider(segmentsEntry);
+					%>
+
+					<c:if test="<%= segmentsSourceDetailsProvider != null %>">
+						<liferay-ui:icon
+							message="<%= segmentsSourceDetailsProvider.getLabel(locale) %>"
+							src="<%= segmentsSourceDetailsProvider.getIconSrc() %>"
+						/>
+					</c:if>
 				</liferay-ui:search-container-column-text>
 			</c:if>
 
@@ -133,37 +129,7 @@ request.setAttribute("view.jsp-eventName", eventName);
 	</liferay-ui:search-container>
 </aui:form>
 
-<aui:script sandbox="<%= true %>">
-	var deleteSegmentsEntries = function () {
-		if (
-			confirm(
-				'<%= UnicodeLanguageUtil.get(request, "are-you-sure-you-want-to-delete-this") %>'
-			)
-		) {
-			submitForm(
-				document.querySelector('#<portlet:namespace />fmSegmentsEntries')
-			);
-		}
-	};
-
-	var ACTIONS = {
-		deleteSegmentsEntries: deleteSegmentsEntries,
-	};
-
-	Liferay.componentReady('segmentsEntriesManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('actionItemClicked', function (event) {
-			var itemData = event.data.item.data;
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>
-
-<portlet:actionURL name="updateSegmentsEntrySiteRoles" var="updateSegmentsEntrySiteRolesURL">
+<portlet:actionURL name="/segments/update_segments_entry_site_roles" var="updateSegmentsEntrySiteRolesURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </portlet:actionURL>
 
@@ -172,36 +138,47 @@ request.setAttribute("view.jsp-eventName", eventName);
 	<aui:input name="siteRoleIds" type="hidden" />
 </aui:form>
 
-<aui:script require="metal-dom/src/all/dom as dom, frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
 	var form = document.getElementById(
-		'<portlet:namespace/>updateSegmentsEntrySiteRolesFm'
+		'<portlet:namespace />updateSegmentsEntrySiteRolesFm'
 	);
 
-	dom.delegate(document, 'click', '.assign-site-roles-link', function (event) {
-		var link = dom.closest(event.target, '.assign-site-roles-link');
+	var delegate = delegateModule.default;
 
-		var itemSelectorURL = link.dataset.itemselectorurl;
-		var segmentsEntryId = link.dataset.segmentsentryid;
+	var delegateHandler = delegate(
+		document,
+		'click',
+		'.assign-site-roles-link',
+		(event) => {
+			var link = event.target.closest('.assign-site-roles-link');
 
-		var itemSelectorDialog = new ItemSelectorDialog.default({
-			eventName: '<%= eventName %>',
-			title: '<liferay-ui:message key="assign-site-roles" />',
-			url: itemSelectorURL,
-		});
+			var itemSelectorURL = link.dataset.itemselectorurl;
+			var segmentsEntryId = link.dataset.segmentsentryid;
 
-		itemSelectorDialog.on('selectedItemChange', function (event) {
-			var selectedItem = event.selectedItem;
+			Liferay.Util.openSelectionModal({
+				eventName: '<%= eventName %>',
+				multiple: true,
+				onSelect: function (selectedItems) {
+					if (selectedItems) {
+						var data = {
+							segmentsEntryId: segmentsEntryId,
+							siteRoleIds: selectedItems.map((item) => item.value),
+						};
 
-			if (selectedItem) {
-				var data = {
-					segmentsEntryId: segmentsEntryId,
-					siteRoleIds: selectedItem.value,
-				};
+						Liferay.Util.postForm(form, {data: data});
+					}
+				},
+				title: '<liferay-ui:message key="assign-site-roles" />',
+				url: itemSelectorURL,
+			});
+		}
+	);
 
-				Liferay.Util.postForm(form, {data: data});
-			}
-		});
+	var onDestroyPortlet = function () {
+		delegateHandler.dispose();
 
-		itemSelectorDialog.open();
-	});
+		Liferay.detach('destroyPortlet', onDestroyPortlet);
+	};
+
+	Liferay.on('destroyPortlet', onDestroyPortlet);
 </aui:script>

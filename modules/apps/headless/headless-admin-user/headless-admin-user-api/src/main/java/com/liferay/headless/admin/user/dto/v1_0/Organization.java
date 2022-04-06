@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -46,13 +49,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Organization")
+@GraphQLName(
+	description = "Represents an organization. Organizations can contain other organizations (suborganizations). Properties follow the [Organization](https://schema.org/Organization) specification.",
+	value = "Organization"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Organization")
-public class Organization {
+public class Organization implements Serializable {
 
 	public static Organization toDTO(String json) {
 		return ObjectMapperUtil.readValue(Organization.class, json);
+	}
+
+	public static Organization unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Organization.class, json);
 	}
 
 	@Schema
@@ -84,6 +94,36 @@ public class Organization {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
+
+	@Schema
+	@Valid
+	public Organization[] getChildOrganizations() {
+		return childOrganizations;
+	}
+
+	public void setChildOrganizations(Organization[] childOrganizations) {
+		this.childOrganizations = childOrganizations;
+	}
+
+	@JsonIgnore
+	public void setChildOrganizations(
+		UnsafeSupplier<Organization[], Exception>
+			childOrganizationsUnsafeSupplier) {
+
+		try {
+			childOrganizations = childOrganizationsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Organization[] childOrganizations;
 
 	@Schema(
 		description = "The text of a comment associated with the organization."
@@ -205,6 +245,36 @@ public class Organization {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Date dateModified;
+
+	@Schema(description = "The optional external key of this organization.")
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The optional external key of this organization."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
 
 	@Schema(description = "The organization's ID.")
 	public String getId() {
@@ -350,6 +420,38 @@ public class Organization {
 	protected String name;
 
 	@Schema(
+		description = "The number of this organization's associated accounts."
+	)
+	public Integer getNumberOfAccounts() {
+		return numberOfAccounts;
+	}
+
+	public void setNumberOfAccounts(Integer numberOfAccounts) {
+		this.numberOfAccounts = numberOfAccounts;
+	}
+
+	@JsonIgnore
+	public void setNumberOfAccounts(
+		UnsafeSupplier<Integer, Exception> numberOfAccountsUnsafeSupplier) {
+
+		try {
+			numberOfAccounts = numberOfAccountsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The number of this organization's associated accounts."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Integer numberOfAccounts;
+
+	@Schema(
 		description = "The number of this organization's child organizations."
 	)
 	public Integer getNumberOfOrganizations() {
@@ -381,6 +483,66 @@ public class Organization {
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Integer numberOfOrganizations;
+
+	@Schema(description = "The number of this organization's associated users.")
+	public Integer getNumberOfUsers() {
+		return numberOfUsers;
+	}
+
+	public void setNumberOfUsers(Integer numberOfUsers) {
+		this.numberOfUsers = numberOfUsers;
+	}
+
+	@JsonIgnore
+	public void setNumberOfUsers(
+		UnsafeSupplier<Integer, Exception> numberOfUsersUnsafeSupplier) {
+
+		try {
+			numberOfUsers = numberOfUsersUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The number of this organization's associated users."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Integer numberOfUsers;
+
+	@Schema
+	@Valid
+	public Account[] getOrganizationAccounts() {
+		return organizationAccounts;
+	}
+
+	public void setOrganizationAccounts(Account[] organizationAccounts) {
+		this.organizationAccounts = organizationAccounts;
+	}
+
+	@JsonIgnore
+	public void setOrganizationAccounts(
+		UnsafeSupplier<Account[], Exception>
+			organizationAccountsUnsafeSupplier) {
+
+		try {
+			organizationAccounts = organizationAccountsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Account[] organizationAccounts;
 
 	@Schema(
 		description = "The organization's contact information, which includes email addresses, postal addresses, phone numbers, and web URLs. This is modeled internally as a `Contact`."
@@ -482,6 +644,35 @@ public class Organization {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Service[] services;
 
+	@Schema
+	@Valid
+	public UserAccount[] getUserAccounts() {
+		return userAccounts;
+	}
+
+	public void setUserAccounts(UserAccount[] userAccounts) {
+		this.userAccounts = userAccounts;
+	}
+
+	@JsonIgnore
+	public void setUserAccounts(
+		UnsafeSupplier<UserAccount[], Exception> userAccountsUnsafeSupplier) {
+
+		try {
+			userAccounts = userAccountsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected UserAccount[] userAccounts;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -520,6 +711,26 @@ public class Organization {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(actions));
+		}
+
+		if (childOrganizations != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"childOrganizations\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < childOrganizations.length; i++) {
+				sb.append(String.valueOf(childOrganizations[i]));
+
+				if ((i + 1) < childOrganizations.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (comment != null) {
@@ -580,6 +791,20 @@ public class Organization {
 			sb.append("\"");
 
 			sb.append(liferayToJSONDateFormat.format(dateModified));
+
+			sb.append("\"");
+		}
+
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
 
 			sb.append("\"");
 		}
@@ -660,6 +885,16 @@ public class Organization {
 			sb.append("\"");
 		}
 
+		if (numberOfAccounts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfAccounts\": ");
+
+			sb.append(numberOfAccounts);
+		}
+
 		if (numberOfOrganizations != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -668,6 +903,36 @@ public class Organization {
 			sb.append("\"numberOfOrganizations\": ");
 
 			sb.append(numberOfOrganizations);
+		}
+
+		if (numberOfUsers != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfUsers\": ");
+
+			sb.append(numberOfUsers);
+		}
+
+		if (organizationAccounts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"organizationAccounts\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < organizationAccounts.length; i++) {
+				sb.append(String.valueOf(organizationAccounts[i]));
+
+				if ((i + 1) < organizationAccounts.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (organizationContactInformation != null) {
@@ -710,21 +975,52 @@ public class Organization {
 			sb.append("]");
 		}
 
+		if (userAccounts != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"userAccounts\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < userAccounts.length; i++) {
+				sb.append(String.valueOf(userAccounts[i]));
+
+				if ((i + 1) < userAccounts.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.Organization",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -740,14 +1036,12 @@ public class Organization {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -774,7 +1068,7 @@ public class Organization {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -782,7 +1076,7 @@ public class Organization {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -790,5 +1084,10 @@ public class Organization {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

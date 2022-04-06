@@ -40,23 +40,23 @@ public class UserGroupRoleUserChecker extends RowChecker {
 	}
 
 	@Override
-	public boolean isChecked(Object obj) {
-		User user = (User)obj;
+	public boolean isChecked(Object object) {
+		User user = (User)object;
 
 		try {
 			return UserGroupRoleLocalServiceUtil.hasUserGroupRole(
 				user.getUserId(), _group.getGroupId(), _role.getRoleId());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return false;
 		}
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		User user = (User)obj;
+	public boolean isDisabled(Object object) {
+		User user = (User)object;
 
 		try {
 			if (isChecked(user)) {
@@ -77,10 +77,10 @@ public class UserGroupRoleUserChecker extends RowChecker {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
-		return super.isDisabled(obj);
+		return super.isDisabled(object);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -18,8 +18,6 @@
 
 <%
 OrganizationsDisplayContext organizationsDisplayContext = new OrganizationsDisplayContext(request, renderRequest, renderResponse);
-
-OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDisplayContext = new OrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationsDisplayContext);
 %>
 
 <clay:navigation-bar
@@ -28,14 +26,12 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 />
 
 <clay:management-toolbar
-	displayContext="<%= organizationsManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= new OrganizationsManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, organizationsDisplayContext) %>"
+	propsTransformer="js/OrganizationsManagementToolbarPropsTransformer"
 />
 
-<clay:container-fluid
-	cssClass="closed sidenav-container sidenav-right"
-	id='<%= renderResponse.getNamespace() + "infoPanelId" %>'
->
-	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/organization/info_panel" var="sidebarPanelURL">
+<div class="closed sidenav-container sidenav-right" id="<portlet:namespace />infoPanelId">
+	<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/site_memberships/organizations_info_panel" var="sidebarPanelURL">
 		<portlet:param name="groupId" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
 	</liferay-portlet:resourceURL>
 
@@ -47,42 +43,48 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 	</liferay-frontend:sidebar-panel>
 
 	<div class="sidenav-content">
-		<portlet:actionURL name="deleteGroupOrganizations" var="deleteGroupOrganizationsURL">
-			<portlet:param name="redirect" value="<%= currentURL %>" />
-		</portlet:actionURL>
+		<clay:container-fluid>
+			<portlet:actionURL name="deleteGroupOrganizations" var="deleteGroupOrganizationsURL">
+				<portlet:param name="redirect" value="<%= currentURL %>" />
+			</portlet:actionURL>
 
-		<aui:form action="<%= deleteGroupOrganizationsURL %>" method="post" name="fm">
-			<aui:input name="tabs1" type="hidden" value="organizations" />
-			<aui:input name="groupId" type="hidden" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
+			<aui:form action="<%= deleteGroupOrganizationsURL %>" method="post" name="fm">
+				<aui:input name="tabs1" type="hidden" value="organizations" />
+				<aui:input name="groupId" type="hidden" value="<%= String.valueOf(siteMembershipsDisplayContext.getGroupId()) %>" />
 
-			<liferay-ui:search-container
-				id="organizations"
-				searchContainer="<%= organizationsDisplayContext.getOrganizationSearchContainer() %>"
-			>
-				<liferay-ui:search-container-row
-					className="com.liferay.portal.kernel.model.Organization"
-					escapedModel="<%= true %>"
-					keyProperty="organizationId"
-					modelVar="organization"
-				>
-
-					<%
-					String displayStyle = organizationsDisplayContext.getDisplayStyle();
-
-					boolean selectOrganizations = false;
-					%>
-
-					<%@ include file="/organization_columns.jspf" %>
-				</liferay-ui:search-container-row>
-
-				<liferay-ui:search-iterator
-					displayStyle="<%= organizationsDisplayContext.getDisplayStyle() %>"
-					markupView="lexicon"
+				<liferay-ui:breadcrumb
+					showLayout="<%= false %>"
 				/>
-			</liferay-ui:search-container>
-		</aui:form>
+
+				<liferay-ui:search-container
+					id="organizations"
+					searchContainer="<%= organizationsDisplayContext.getOrganizationSearchContainer() %>"
+				>
+					<liferay-ui:search-container-row
+						className="com.liferay.portal.kernel.model.Organization"
+						escapedModel="<%= true %>"
+						keyProperty="organizationId"
+						modelVar="organization"
+					>
+
+						<%
+						String displayStyle = organizationsDisplayContext.getDisplayStyle();
+
+						boolean selectOrganizations = false;
+						%>
+
+						<%@ include file="/organization_columns.jspf" %>
+					</liferay-ui:search-container-row>
+
+					<liferay-ui:search-iterator
+						displayStyle="<%= organizationsDisplayContext.getDisplayStyle() %>"
+						markupView="lexicon"
+					/>
+				</liferay-ui:search-container>
+			</aui:form>
+		</clay:container-fluid>
 	</div>
-</clay:container-fluid>
+</div>
 
 <portlet:actionURL name="addGroupOrganizations" var="addGroupOrganizationsURL">
 	<portlet:param name="redirect" value="<%= currentURL %>" />
@@ -91,13 +93,3 @@ OrganizationsManagementToolbarDisplayContext organizationsManagementToolbarDispl
 <aui:form action="<%= addGroupOrganizationsURL %>" cssClass="hide" name="addGroupOrganizationsFm">
 	<aui:input name="tabs1" type="hidden" value="organizations" />
 </aui:form>
-
-<liferay-frontend:component
-	componentId="<%= organizationsManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/OrganizationsManagementToolbarDefaultEventHandler.es"
-/>
-
-<liferay-frontend:component
-	componentId="<%= SiteMembershipWebKeys.ORGANIZATION_DROPDOWN_DEFAULT_EVENT_HANDLER %>"
-	module="js/OrganizationDropdownDefaultEventHandler.es"
-/>

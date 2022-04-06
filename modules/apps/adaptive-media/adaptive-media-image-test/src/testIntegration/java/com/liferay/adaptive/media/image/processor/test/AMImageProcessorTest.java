@@ -40,7 +40,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.stream.Stream;
 
 import org.junit.Assert;
@@ -100,11 +99,9 @@ public class AMImageProcessorTest {
 				amImageConfigurationEntry.getUUID());
 		}
 
-		ServiceContext serviceContext =
+		FileEntry fileEntry = _addNonimageFileEntry(
 			ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-
-		FileEntry fileEntry = _addNonimageFileEntry(serviceContext);
+				_group, TestPropsValues.getUserId()));
 
 		Stream<AdaptiveMedia<AMImageProcessor>> adaptiveMediaStream =
 			_amImageFinder.getAdaptiveMediaStream(
@@ -117,11 +114,9 @@ public class AMImageProcessorTest {
 
 	@Test
 	public void testAddingFileEntryWithImageCreatesMedia() throws Exception {
-		ServiceContext serviceContext =
+		FileEntry fileEntry = _addImageFileEntry(
 			ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+				_group, TestPropsValues.getUserId()));
 
 		Stream<AdaptiveMedia<AMImageProcessor>> adaptiveMediaStream =
 			_amImageFinder.getAdaptiveMediaStream(
@@ -136,11 +131,9 @@ public class AMImageProcessorTest {
 	public void testAddingFileEntryWithNoImageCreatesNoMedia()
 		throws Exception {
 
-		ServiceContext serviceContext =
+		FileEntry fileEntry = _addNonimageFileEntry(
 			ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-
-		FileEntry fileEntry = _addNonimageFileEntry(serviceContext);
+				_group, TestPropsValues.getUserId()));
 
 		Stream<AdaptiveMedia<AMImageProcessor>> adaptiveMediaStream =
 			_amImageFinder.getAdaptiveMediaStream(
@@ -153,11 +146,9 @@ public class AMImageProcessorTest {
 
 	@Test
 	public void testCleaningFileEntryWithImageRemovesMedia() throws Exception {
-		ServiceContext serviceContext =
+		FileEntry fileEntry = _addImageFileEntry(
 			ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-
-		final FileEntry fileEntry = _addImageFileEntry(serviceContext);
+				_group, TestPropsValues.getUserId()));
 
 		_amImageProcessor.cleanUp(fileEntry.getLatestFileVersion(true));
 
@@ -172,11 +163,9 @@ public class AMImageProcessorTest {
 
 	@Test
 	public void testCleaningFileEntryWithNoImageDoesNothing() throws Exception {
-		ServiceContext serviceContext =
+		FileEntry fileEntry = _addNonimageFileEntry(
 			ServiceContextTestUtil.getServiceContext(
-				_group, TestPropsValues.getUserId());
-
-		final FileEntry fileEntry = _addNonimageFileEntry(serviceContext);
+				_group, TestPropsValues.getUserId()));
 
 		_amImageProcessor.cleanUp(fileEntry.getLatestFileVersion(true));
 
@@ -193,33 +182,31 @@ public class AMImageProcessorTest {
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(), ContentTypes.IMAGE_JPEG,
-			_getImageBytes(), serviceContext);
+			_getImageBytes(), null, null, serviceContext);
 	}
 
 	private FileEntry _addNonimageFileEntry(ServiceContext serviceContext)
 		throws Exception {
 
 		return _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
-			ContentTypes.APPLICATION_OCTET_STREAM, _getNonimageBytes(),
-			serviceContext);
+			ContentTypes.APPLICATION_OCTET_STREAM, _getNonimageBytes(), null,
+			null, serviceContext);
 	}
 
 	private void _addTestVariant() throws Exception {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "100"
-		).build();
-
 		_amImageConfigurationHelper.addAMImageConfigurationEntry(
 			TestPropsValues.getCompanyId(), "small", StringPool.BLANK, "0",
-			properties);
+			HashMapBuilder.put(
+				"max-height", "100"
+			).put(
+				"max-width", "100"
+			).build());
 	}
 
 	private byte[] _getImageBytes() throws Exception {

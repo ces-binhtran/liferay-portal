@@ -14,43 +14,43 @@
 
 import ClayForm from '@clayui/form';
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, {useState} from 'react';
 
 import ColorPalette from '../../../common/components/ColorPalette';
-import useControlledState from '../../../core/hooks/useControlledState';
 import {ConfigurationFieldPropTypes} from '../../../prop-types/index';
 
-export const ColorPaletteField = ({field, onValueSelect, value}) => {
-	const [nextValue, setNextValue] = useControlledState(
-		value && value.cssClass
-	);
+export function ColorPaletteField({field, onValueSelect, value}) {
+	const [nextValue, setNextValue] = useState(value?.cssClass ?? value);
 
 	return (
 		<ClayForm.Group>
 			<ColorPalette
 				label={field.label}
-				onColorSelect={(color, event) => {
-					setNextValue(color);
+				onClear={() => {
+					setNextValue('');
 
-					onValueSelect(field.name, {
-						color,
-						cssClass: color,
-						rgbValue: getComputedStyle(event.target)
-							.backgroundColor,
-					});
+					onValueSelect(field.name, '');
+				}}
+				onColorSelect={(color) => {
+					setNextValue(color.cssClass);
+
+					onValueSelect(field.name, color);
 				}}
 				selectedColor={nextValue}
 			/>
 		</ClayForm.Group>
 	);
-};
+}
 
 ColorPaletteField.propTypes = {
 	field: PropTypes.shape(ConfigurationFieldPropTypes).isRequired,
 	onValueSelect: PropTypes.func.isRequired,
-	value: PropTypes.shape({
-		color: PropTypes.string,
-		cssClass: PropTypes.string,
-		rgbValue: PropTypes.string,
-	}),
+	value: PropTypes.oneOfType([
+		PropTypes.shape({
+			color: PropTypes.string,
+			cssClass: PropTypes.string,
+			rgbValue: PropTypes.string,
+		}),
+		PropTypes.string,
+	]),
 };

@@ -23,7 +23,7 @@
 		</div>
 	</c:when>
 	<c:otherwise>
-		<p><%= LanguageUtil.get(resourceBundle, "select-the-maps-api-provider-to-use-when-displaying-geolocalized-assets") %></p>
+		<p class="small text-secondary"><%= LanguageUtil.get(resourceBundle, "select-the-maps-api-provider-to-use-when-displaying-geolocalized-assets") %></p>
 
 		<%
 		for (MapProvider mapProvider : mapProviders) {
@@ -36,13 +36,13 @@
 				<%
 				request.setAttribute(MapProviderWebKeys.MAP_PROVIDER_CONFIGURATION_PREFIX, configurationPrefix);
 
-				mapProvider.includeConfiguration(request, PipingServletResponse.createPipingServletResponse(pageContext));
+				mapProvider.includeConfiguration(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 				%>
 
 			</div>
 
 			<%
-			StringBundler sb = new StringBundler((mapProviders.size() - 1) * 6 - 1);
+			StringBundler sb = new StringBundler(((mapProviders.size() - 1) * 6) - 1);
 
 			for (MapProvider curMapProvider : mapProviders) {
 				if (Objects.equals(mapProvider.getKey(), curMapProvider.getKey())) {

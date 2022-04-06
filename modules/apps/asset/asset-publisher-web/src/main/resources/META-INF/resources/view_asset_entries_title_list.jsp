@@ -27,7 +27,7 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 <ul class="list-group show-quick-actions-on-hover">
 	<c:if test="<%= Validator.isNotNull(assetEntryResult.getTitle()) %>">
 		<li class="list-group-header">
-			<h3 class="list-group-header-title"><%= assetEntryResult.getTitle() %></h3>
+			<p class="h3 list-group-header-title"><%= assetEntryResult.getTitle() %></p>
 		</li>
 	</c:if>
 
@@ -51,7 +51,7 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 		}
 		catch (Exception e) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(e, e);
+				_log.warn(e);
 			}
 		}
 
@@ -71,23 +71,24 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 
 		<li class="list-group-item list-group-item-flex <%= ((previewClassNameId == assetEntry.getClassNameId()) && (previewClassPK == assetEntry.getClassPK())) ? "active" : StringPool.BLANK %>" <%= AUIUtil.buildData(fragmentsEditorData) %>>
 			<c:if test="<%= assetPublisherDisplayContext.isShowAuthor() %>">
-				<div class="autofit-col">
+				<clay:content-col>
 					<span class="inline-item">
 						<liferay-ui:user-portrait
 							userId="<%= assetEntry.getUserId() %>"
 						/>
 					</span>
-				</div>
+				</clay:content-col>
 			</c:if>
 
-			<div class="autofit-col autofit-col-expand">
-				<h4 class="list-group-title text-truncate">
+			<clay:content-col
+				expand="<%= true %>"
+			>
+				<p class="h4 list-group-title text-truncate">
 					<span class="asset-anchor lfr-asset-anchor" id="<%= assetEntry.getEntryId() %>"></span>
 
-					<aui:a href="<%= assetPublisherHelper.getAssetViewURL(liferayPortletRequest, liferayPortletResponse, assetRenderer, assetEntry, assetPublisherDisplayContext.isAssetLinkBehaviorViewInPortlet()) %>">
-						<%= HtmlUtil.escape(assetEntry.getTitle(locale)) %>
+					<aui:a href="<%= assetPublisherHelper.getAssetViewURL(liferayPortletRequest, liferayPortletResponse, assetRenderer, assetEntry, assetPublisherDisplayContext.isAssetLinkBehaviorViewInPortlet()) %>"> <%= HtmlUtil.escape(assetEntry.getTitle(locale)) %>
 					</aui:a>
-				</h4>
+				</p>
 
 				<%
 				Date displayDate = assetPublisherDisplayContext.isShowCreateDate() ? assetEntry.getCreateDate() : null;
@@ -126,11 +127,11 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 						</c:if>
 					</div>
 				</c:if>
-			</div>
+			</clay:content-col>
 
-			<div class="autofit-col">
+			<clay:content-col>
 				<liferay-util:include page="/asset_actions.jsp" servletContext="<%= application %>" />
-			</div>
+			</clay:content-col>
 		</li>
 
 	<%
@@ -140,5 +141,5 @@ AssetEntryResult assetEntryResult = (AssetEntryResult)request.getAttribute("view
 </ul>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("com_liferay_asset_publisher_web.view_asset_entries_title_list_jsp");
+private static final Log _log = LogFactoryUtil.getLog("com_liferay_asset_publisher_web.view_asset_entries_title_list_jsp");
 %>

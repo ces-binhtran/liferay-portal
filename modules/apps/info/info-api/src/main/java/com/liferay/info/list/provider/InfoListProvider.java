@@ -16,14 +16,18 @@ package com.liferay.info.list.provider;
 
 import com.liferay.info.pagination.Pagination;
 import com.liferay.info.sort.Sort;
+import com.liferay.info.type.Keyed;
 
 import java.util.List;
 import java.util.Locale;
 
 /**
  * @author Jorge Ferrer
+ * @deprecated As of Athanasius (7.3.x), replaced by {@link
+ *             com.liferay.info.collection.provider.InfoCollectionProvider}
  */
-public interface InfoListProvider<T> {
+@Deprecated
+public interface InfoListProvider<T> extends Keyed {
 
 	public List<T> getInfoList(InfoListProviderContext infoListProviderContext);
 
@@ -33,12 +37,6 @@ public interface InfoListProvider<T> {
 
 	public int getInfoListCount(
 		InfoListProviderContext infoListProviderContext);
-
-	public default String getKey() {
-		Class<?> clazz = getClass();
-
-		return clazz.getName();
-	}
 
 	public String getLabel(Locale locale);
 

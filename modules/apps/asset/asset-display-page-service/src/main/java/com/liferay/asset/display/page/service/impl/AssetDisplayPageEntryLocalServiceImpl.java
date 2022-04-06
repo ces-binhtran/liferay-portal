@@ -16,16 +16,22 @@ package com.liferay.asset.display.page.service.impl;
 
 import com.liferay.asset.display.page.constants.AssetDisplayPageConstants;
 import com.liferay.asset.display.page.model.AssetDisplayPageEntry;
+import com.liferay.asset.display.page.model.AssetDisplayPageEntryTable;
 import com.liferay.asset.display.page.service.base.AssetDisplayPageEntryLocalServiceBaseImpl;
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetEntryTable;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.item.InfoItemReference;
+import com.liferay.layout.display.page.LayoutDisplayPageObjectProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProvider;
+import com.liferay.layout.display.page.LayoutDisplayPageProviderTracker;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
+import com.liferay.petra.sql.dsl.expression.Predicate;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
@@ -34,9 +40,12 @@ import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
+import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Portal;
 
 import java.util.Date;
@@ -63,7 +72,7 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			ServiceContext serviceContext)
 		throws PortalException {
 
-		User user = userLocalService.getUser(userId);
+		User user = _userLocalService.getUser(userId);
 
 		long assetDisplayPageEntryId = counterLocalService.increment();
 
@@ -84,11 +93,8 @@ public class AssetDisplayPageEntryLocalServiceImpl
 		assetDisplayPageEntry.setLayoutPageTemplateEntryId(
 			layoutPageTemplateEntryId);
 		assetDisplayPageEntry.setType(type);
-
-		long plid = _getPlid(
-			groupId, classNameId, classPK, layoutPageTemplateEntryId);
-
-		assetDisplayPageEntry.setPlid(plid);
+		assetDisplayPageEntry.setPlid(
+			_getPlid(groupId, classNameId, classPK, layoutPageTemplateEntryId));
 
 		assetDisplayPageEntry = assetDisplayPageEntryPersistence.update(
 			assetDisplayPageEntry);
@@ -137,12 +143,70 @@ public class AssetDisplayPageEntryLocalServiceImpl
 	}
 
 	@Override
+	public List<AssetDisplayPageEntry> getAssetDisplayPageEntries(
+		long classNameId, long classTypeId, long layoutPageTemplateEntryId,
+		boolean defaultTemplate, int start, int end,
+		OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.select(
+			AssetDisplayPageEntryTable.INSTANCE
+		).from(
+			AssetDisplayPageEntryTable.INSTANCE
+		).innerJoinON(
+			AssetEntryTable.INSTANCE,
+			AssetDisplayPageEntryTable.INSTANCE.classPK.eq(
+				AssetEntryTable.INSTANCE.classPK)
+		).where(
+			_getPredicate(
+				classNameId, classTypeId, layoutPageTemplateEntryId,
+				defaultTemplate)
+		).orderBy(
+			AssetDisplayPageEntryTable.INSTANCE, orderByComparator
+		).limit(
+			start, end
+		);
+
+		return assetDisplayPageEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
 	public List<AssetDisplayPageEntry>
 		getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
 			long layoutPageTemplateEntryId) {
 
 		return assetDisplayPageEntryPersistence.findByLayoutPageTemplateEntryId(
 			layoutPageTemplateEntryId);
+	}
+
+	@Override
+	public List<AssetDisplayPageEntry>
+		getAssetDisplayPageEntriesByLayoutPageTemplateEntryId(
+			long layoutPageTemplateEntryId, int start, int end,
+			OrderByComparator<AssetDisplayPageEntry> orderByComparator) {
+
+		return assetDisplayPageEntryPersistence.findByLayoutPageTemplateEntryId(
+			layoutPageTemplateEntryId, start, end, orderByComparator);
+	}
+
+	@Override
+	public int getAssetDisplayPageEntriesCount(
+		long classNameId, long classTypeId, long layoutPageTemplateEntryId,
+		boolean defaultTemplate) {
+
+		DSLQuery dslQuery = DSLQueryFactoryUtil.count(
+		).from(
+			AssetDisplayPageEntryTable.INSTANCE
+		).innerJoinON(
+			AssetEntryTable.INSTANCE,
+			AssetDisplayPageEntryTable.INSTANCE.classPK.eq(
+				AssetEntryTable.INSTANCE.classPK)
+		).where(
+			_getPredicate(
+				classNameId, classTypeId, layoutPageTemplateEntryId,
+				defaultTemplate)
+		);
+
+		return assetDisplayPageEntryPersistence.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -196,31 +260,25 @@ public class AssetDisplayPageEntryLocalServiceImpl
 		long groupId, long classNameId, long classPK,
 		long layoutPageTemplateEntryId) {
 
-		InfoDisplayContributor<?> infoDisplayContributor =
-			_infoDisplayContributorTracker.getInfoDisplayContributor(
-				_portal.getClassName(classNameId));
+		String className = _portal.getClassName(classNameId);
 
-		if (infoDisplayContributor == null) {
+		LayoutDisplayPageProvider<?> layoutDisplayPageProvider =
+			_layoutDisplayPageProviderTracker.
+				getLayoutDisplayPageProviderByClassName(className);
+
+		if (layoutDisplayPageProvider == null) {
 			return LayoutConstants.DEFAULT_PLID;
 		}
 
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider = null;
+		LayoutDisplayPageObjectProvider<?> layoutDisplayPageObjectProvider =
+			layoutDisplayPageProvider.getLayoutDisplayPageObjectProvider(
+				new InfoItemReference(className, classPK));
 
-		try {
-			infoDisplayObjectProvider =
-				infoDisplayContributor.getInfoDisplayObjectProvider(classPK);
-		}
-		catch (PortalException portalException) {
-			if (_log.isWarnEnabled()) {
-				_log.warn(portalException, portalException);
-			}
-		}
-
-		if (infoDisplayObjectProvider == null) {
+		if (layoutDisplayPageObjectProvider == null) {
 			return LayoutConstants.DEFAULT_PLID;
 		}
 
-		long classTypeId = infoDisplayObjectProvider.getClassTypeId();
+		long classTypeId = layoutDisplayPageObjectProvider.getClassTypeId();
 
 		LayoutPageTemplateEntry layoutPageTemplateEntry = Optional.ofNullable(
 			_layoutPageTemplateEntryLocalService.fetchLayoutPageTemplateEntry(
@@ -249,7 +307,7 @@ public class AssetDisplayPageEntryLocalServiceImpl
 			}
 			catch (PortalException portalException) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(portalException, portalException);
+					_log.warn(portalException);
 				}
 			}
 		}
@@ -279,6 +337,53 @@ public class AssetDisplayPageEntryLocalServiceImpl
 		return LayoutConstants.DEFAULT_PLID;
 	}
 
+	private Predicate _getPredicate(
+		long classNameId, long classTypeId, long layoutPageTemplateEntryId,
+		boolean defaultTemplate) {
+
+		return AssetDisplayPageEntryTable.INSTANCE.classNameId.eq(
+			classNameId
+		).and(
+			() -> {
+				if (classNameId == _portal.getClassNameId(
+						FileEntry.class.getName())) {
+
+					return AssetEntryTable.INSTANCE.classNameId.eq(
+						_portal.getClassNameId(
+							"com.liferay.document.library.kernel.model." +
+								"DLFileEntry"));
+				}
+
+				return AssetEntryTable.INSTANCE.classNameId.eq(classNameId);
+			}
+		).and(
+			AssetDisplayPageEntryTable.INSTANCE.layoutPageTemplateEntryId.eq(
+				layoutPageTemplateEntryId
+			).and(
+				AssetDisplayPageEntryTable.INSTANCE.type.eq(
+					AssetDisplayPageConstants.TYPE_SPECIFIC)
+			).withParentheses(
+			).or(
+				() -> {
+					if (defaultTemplate) {
+						return AssetDisplayPageEntryTable.INSTANCE.type.eq(
+							AssetDisplayPageConstants.TYPE_DEFAULT);
+					}
+
+					return null;
+				}
+			).withParentheses()
+		).and(
+			() -> {
+				if (classTypeId > 0) {
+					return AssetEntryTable.INSTANCE.classTypeId.eq(classTypeId);
+				}
+
+				return null;
+			}
+		);
+	}
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		AssetDisplayPageEntryLocalServiceImpl.class);
 
@@ -286,7 +391,7 @@ public class AssetDisplayPageEntryLocalServiceImpl
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private LayoutDisplayPageProviderTracker _layoutDisplayPageProviderTracker;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
@@ -297,5 +402,8 @@ public class AssetDisplayPageEntryLocalServiceImpl
 
 	@Reference
 	private Portal _portal;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

@@ -15,15 +15,19 @@
 package com.liferay.frontend.editor.ckeditor.web.internal.editor.configuration;
 
 import com.liferay.frontend.editor.ckeditor.web.internal.constants.CKEditorConstants;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.editor.configuration.BaseEditorConfigContributor;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
+import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Map;
 
@@ -40,12 +44,28 @@ public class BaseCKEditorConfigContributor extends BaseEditorConfigContributor {
 
 		jsonObject.put("allowedContent", Boolean.TRUE);
 
+		StringBundler sb = new StringBundler(5);
+
+		sb.append("cke_editable html-editor");
+
+		ColorScheme colorScheme = themeDisplay.getColorScheme();
+
+		if (Validator.isNotNull(colorScheme.getCssClass())) {
+			sb.append(StringPool.SPACE);
+			sb.append(HtmlUtil.escape(colorScheme.getCssClass()));
+		}
+
 		String cssClasses = GetterUtil.getString(
 			inputEditorTaglibAttributes.get(
 				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":cssClasses"));
 
+		if (Validator.isNotNull(cssClasses)) {
+			sb.append(StringPool.SPACE);
+			sb.append(HtmlUtil.escape(cssClasses));
+		}
+
 		jsonObject.put(
-			"bodyClass", "html-editor " + HtmlUtil.escape(cssClasses)
+			"bodyClass", sb.toString()
 		).put(
 			"contentsCss",
 			JSONUtil.putAll(
@@ -60,31 +80,19 @@ public class BaseCKEditorConfigContributor extends BaseEditorConfigContributor {
 				HtmlUtil.escape(
 					PortalUtil.getStaticResourceURL(
 						themeDisplay.getRequest(),
-						"/o/frontend-css-web/main.css")))
+						PortalUtil.getPathContext() +
+							"/o/frontend-editor-ckeditor-web/ckeditor/skins" +
+								"/moono-lexicon/editor.css")),
+				HtmlUtil.escape(
+					PortalUtil.getStaticResourceURL(
+						themeDisplay.getRequest(),
+						PortalUtil.getPathContext() +
+							"/o/frontend-editor-ckeditor-web/ckeditor/skins" +
+								"/moono-lexicon/dialog.css")))
 		).put(
 			"contentsLangDirection",
 			HtmlUtil.escapeJS(
 				getContentsLanguageDir(inputEditorTaglibAttributes))
-		).put(
-			"contextmenu_contentsCss",
-			JSONUtil.putAll(
-				HtmlUtil.escape(
-					PortalUtil.getStaticResourceURL(
-						themeDisplay.getRequest(),
-						themeDisplay.getPathThemeCss() + "/clay.css")),
-				HtmlUtil.escape(
-					PortalUtil.getStaticResourceURL(
-						themeDisplay.getRequest(),
-						themeDisplay.getPathThemeCss() + "/main.css")),
-				HtmlUtil.escape(
-					PortalUtil.getStaticResourceURL(
-						themeDisplay.getRequest(),
-						"/o/frontend-editor-ckeditor-web/ckeditor/skins" +
-							"/moono-lisa/editor.css")),
-				HtmlUtil.escape(
-					PortalUtil.getStaticResourceURL(
-						themeDisplay.getRequest(),
-						"/o/frontend-css-web/main.css")))
 		);
 
 		String contentsLanguageId = getContentsLanguageId(
@@ -122,7 +130,8 @@ public class BaseCKEditorConfigContributor extends BaseEditorConfigContributor {
 
 		return GetterUtil.getBoolean(
 			inputEditorTaglibAttributes.get(
-				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"));
+				CKEditorConstants.ATTRIBUTE_NAMESPACE + ":showSource"),
+			true);
 	}
 
 }

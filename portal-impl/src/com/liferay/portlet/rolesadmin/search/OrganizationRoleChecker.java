@@ -36,8 +36,8 @@ public class OrganizationRoleChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isChecked(Object obj) {
-		Organization organization = (Organization)obj;
+	public boolean isChecked(Object object) {
+		Organization organization = (Organization)object;
 
 		try {
 			Group group = organization.getGroup();
@@ -46,15 +46,15 @@ public class OrganizationRoleChecker extends EmptyOnClickRowChecker {
 				_role.getRoleId(), group.getGroupId());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return false;
 		}
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
-		Organization organization = (Organization)obj;
+	public boolean isDisabled(Object object) {
+		Organization organization = (Organization)object;
 
 		return isChecked(organization);
 	}

@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import java.io.File;
 import java.io.InputStream;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -51,16 +52,18 @@ public class CapabilityLocalRepository
 
 	@Override
 	public FileEntry addFileEntry(
-			long userId, long folderId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog, File file,
-			ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog, File file,
+			Date expirationDate, Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		LocalRepository localRepository = getRepository();
 
 		FileEntry fileEntry = localRepository.addFileEntry(
-			userId, folderId, sourceFileName, mimeType, title, description,
-			changeLog, file, serviceContext);
+			externalReferenceCode, userId, folderId, sourceFileName, mimeType,
+			title, urlTitle, description, changeLog, file, expirationDate,
+			reviewDate, serviceContext);
 
 		_repositoryEventTrigger.trigger(
 			RepositoryEventType.Add.class, FileEntry.class, fileEntry);
@@ -70,16 +73,19 @@ public class CapabilityLocalRepository
 
 	@Override
 	public FileEntry addFileEntry(
-			long userId, long folderId, String sourceFileName, String mimeType,
-			String title, String description, String changeLog, InputStream is,
-			long size, ServiceContext serviceContext)
+			String externalReferenceCode, long userId, long folderId,
+			String sourceFileName, String mimeType, String title,
+			String urlTitle, String description, String changeLog,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		LocalRepository localRepository = getRepository();
 
 		FileEntry fileEntry = localRepository.addFileEntry(
-			userId, folderId, sourceFileName, mimeType, title, description,
-			changeLog, is, size, serviceContext);
+			externalReferenceCode, userId, folderId, sourceFileName, mimeType,
+			title, urlTitle, description, changeLog, inputStream, size,
+			expirationDate, reviewDate, serviceContext);
 
 		_repositoryEventTrigger.trigger(
 			RepositoryEventType.Add.class, FileEntry.class, fileEntry);
@@ -245,31 +251,41 @@ public class CapabilityLocalRepository
 	}
 
 	@Override
-	public List<FileEntry> getFileEntries(
-			long folderId, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
-		throws PortalException {
+	public FileEntry fetchFileEntryByExternalReferenceCode(
+		String externalReferenceCode) {
 
-		return getRepository().getFileEntries(
-			folderId, status, start, end, obc);
+		return getRepository().fetchFileEntryByExternalReferenceCode(
+			externalReferenceCode);
 	}
 
 	@Override
 	public List<FileEntry> getFileEntries(
-			long folderId, int start, int end, OrderByComparator<FileEntry> obc)
+			long folderId, int status, int start, int end,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
-		return getRepository().getFileEntries(folderId, start, end, obc);
+		return getRepository().getFileEntries(
+			folderId, status, start, end, orderByComparator);
+	}
+
+	@Override
+	public List<FileEntry> getFileEntries(
+			long folderId, int start, int end,
+			OrderByComparator<FileEntry> orderByComparator)
+		throws PortalException {
+
+		return getRepository().getFileEntries(
+			folderId, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getFileEntries(
 			long folderId, String[] mimeTypes, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		return getRepository().getFileEntries(
-			folderId, mimeTypes, status, start, end, obc);
+			folderId, mimeTypes, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -322,6 +338,22 @@ public class CapabilityLocalRepository
 	}
 
 	@Override
+	public FileEntry getFileEntryByExternalReferenceCode(
+			String externalReferenceCode)
+		throws PortalException {
+
+		return getRepository().getFileEntryByExternalReferenceCode(
+			externalReferenceCode);
+	}
+
+	@Override
+	public FileEntry getFileEntryByFileName(long folderId, String fileName)
+		throws PortalException {
+
+		return getRepository().getFileEntryByFileName(folderId, fileName);
+	}
+
+	@Override
 	public FileEntry getFileEntryByUuid(String uuid) throws PortalException {
 		return getRepository().getFileEntryByUuid(uuid);
 	}
@@ -355,31 +387,33 @@ public class CapabilityLocalRepository
 	@Override
 	public List<Folder> getFolders(
 			long parentFolderId, boolean includeMountFolders, int start,
-			int end, OrderByComparator<Folder> obc)
+			int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException {
 
 		return getRepository().getFolders(
-			parentFolderId, includeMountFolders, start, end, obc);
+			parentFolderId, includeMountFolders, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<Folder> getFolders(
 			long parentFolderId, int status, boolean includeMountFolders,
-			int start, int end, OrderByComparator<Folder> obc)
+			int start, int end, OrderByComparator<Folder> orderByComparator)
 		throws PortalException {
 
 		return getRepository().getFolders(
-			parentFolderId, status, includeMountFolders, start, end, obc);
+			parentFolderId, status, includeMountFolders, start, end,
+			orderByComparator);
 	}
 
 	@Override
 	public List<RepositoryEntry> getFoldersAndFileEntriesAndFileShortcuts(
 			long folderId, int status, boolean includeMountFolders, int start,
-			int end, OrderByComparator<?> obc)
+			int end, OrderByComparator<?> orderByComparator)
 		throws PortalException {
 
 		return getRepository().getFoldersAndFileEntriesAndFileShortcuts(
-			folderId, status, includeMountFolders, start, end, obc);
+			folderId, status, includeMountFolders, start, end,
+			orderByComparator);
 	}
 
 	@Override
@@ -411,11 +445,11 @@ public class CapabilityLocalRepository
 	@Override
 	public List<FileEntry> getRepositoryFileEntries(
 			long userId, long rootFolderId, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		return getRepository().getRepositoryFileEntries(
-			userId, rootFolderId, start, end, obc);
+			userId, rootFolderId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -476,16 +510,18 @@ public class CapabilityLocalRepository
 	@Override
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, File file,
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
+			File file, Date expirationDate, Date reviewDate,
 			ServiceContext serviceContext)
 		throws PortalException {
 
 		LocalRepository localRepository = getRepository();
 
 		FileEntry fileEntry = localRepository.updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, dlVersionNumberIncrease, file, serviceContext);
+			userId, fileEntryId, sourceFileName, mimeType, title, urlTitle,
+			description, changeLog, dlVersionNumberIncrease, file,
+			expirationDate, reviewDate, serviceContext);
 
 		_repositoryEventTrigger.trigger(
 			RepositoryEventType.Update.class, FileEntry.class, fileEntry);
@@ -496,16 +532,18 @@ public class CapabilityLocalRepository
 	@Override
 	public FileEntry updateFileEntry(
 			long userId, long fileEntryId, String sourceFileName,
-			String mimeType, String title, String description, String changeLog,
-			DLVersionNumberIncrease dlVersionNumberIncrease, InputStream is,
-			long size, ServiceContext serviceContext)
+			String mimeType, String title, String urlTitle, String description,
+			String changeLog, DLVersionNumberIncrease dlVersionNumberIncrease,
+			InputStream inputStream, long size, Date expirationDate,
+			Date reviewDate, ServiceContext serviceContext)
 		throws PortalException {
 
 		LocalRepository localRepository = getRepository();
 
 		FileEntry fileEntry = localRepository.updateFileEntry(
-			userId, fileEntryId, sourceFileName, mimeType, title, description,
-			changeLog, dlVersionNumberIncrease, is, size, serviceContext);
+			userId, fileEntryId, sourceFileName, mimeType, title, urlTitle,
+			description, changeLog, dlVersionNumberIncrease, inputStream, size,
+			expirationDate, reviewDate, serviceContext);
 
 		_repositoryEventTrigger.trigger(
 			RepositoryEventType.Update.class, FileEntry.class, fileEntry);

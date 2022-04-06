@@ -23,8 +23,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.LayoutRevision;
 import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
 import com.liferay.portal.kernel.transaction.Transactional;
@@ -57,11 +59,15 @@ public interface LayoutRevisionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link LayoutRevisionLocalServiceUtil} to access the layout revision local service. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutRevisionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.LayoutRevisionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the layout revision local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link LayoutRevisionLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the layout revision to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutRevisionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutRevision the layout revision
 	 * @return the layout revision that was added
@@ -99,16 +105,25 @@ public interface LayoutRevisionLocalService
 	/**
 	 * Deletes the layout revision from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutRevisionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutRevision the layout revision
 	 * @return the layout revision that was removed
 	 * @throws PortalException
 	 */
 	@Indexable(type = IndexableType.DELETE)
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public LayoutRevision deleteLayoutRevision(LayoutRevision layoutRevision)
 		throws PortalException;
 
 	/**
 	 * Deletes the layout revision with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutRevisionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutRevisionId the primary key of the layout revision
 	 * @return the layout revision that was removed
@@ -137,6 +152,9 @@ public interface LayoutRevisionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -210,6 +228,10 @@ public interface LayoutRevisionLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutRevision fetchLatestLayoutRevision(
 		long layoutSetBranchId, long plid);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public LayoutRevision fetchLatestLayoutRevision(
+		long layoutSetBranchId, long layoutBranchId, long plid);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public LayoutRevision fetchLayoutRevision(long layoutRevisionId);
@@ -316,6 +338,9 @@ public interface LayoutRevisionLocalService
 	public int getLayoutRevisionsCount();
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getLayoutRevisionsCount(long plid);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getLayoutRevisionsCount(
 		long layoutSetBranchId, long layoutBranchId, long plid);
 
@@ -336,6 +361,10 @@ public interface LayoutRevisionLocalService
 
 	/**
 	 * Updates the layout revision in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutRevisionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutRevision the layout revision
 	 * @return the layout revision that was updated

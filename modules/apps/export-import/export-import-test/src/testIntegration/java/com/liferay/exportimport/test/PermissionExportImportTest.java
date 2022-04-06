@@ -53,7 +53,6 @@ import java.lang.reflect.Method;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -88,7 +87,8 @@ public class PermissionExportImportTest {
 
 		Group exportGroup = exportLayoutSetPrototype.getGroup();
 
-		Layout exportLayout = LayoutTestUtil.addLayout(exportGroup, true);
+		Layout exportLayout = LayoutTestUtil.addTypePortletLayout(
+			exportGroup, true);
 
 		String exportResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
 			exportLayout.getPlid(), _PORTLET_ID);
@@ -108,7 +108,8 @@ public class PermissionExportImportTest {
 
 		Group importGroup = importLayoutSetPrototype.getGroup();
 
-		Layout importLayout = LayoutTestUtil.addLayout(importGroup, true);
+		Layout importLayout = LayoutTestUtil.addTypePortletLayout(
+			importGroup, true);
 
 		String importResourcePrimKey = PortletPermissionUtil.getPrimaryKey(
 			importLayout.getPlid(), _PORTLET_ID);
@@ -128,13 +129,12 @@ public class PermissionExportImportTest {
 			Group exportGroup, Role role, String exportResourcePrimKey)
 		throws Exception {
 
-		Map<Long, String[]> roleIdsToActionIds = HashMapBuilder.put(
-			role.getRoleId(), _ACTION_IDS
-		).build();
-
 		ResourcePermissionServiceUtil.setIndividualResourcePermissions(
 			exportGroup.getGroupId(), TestPropsValues.getCompanyId(),
-			_PORTLET_ID, exportResourcePrimKey, roleIdsToActionIds);
+			_PORTLET_ID, exportResourcePrimKey,
+			HashMapBuilder.put(
+				role.getRoleId(), _ACTION_IDS
+			).build());
 	}
 
 	protected Element exportPortletPermissions(

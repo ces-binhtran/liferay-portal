@@ -18,21 +18,21 @@
 
 <span class="taglib-workflow-status">
 	<c:if test="<%= Validator.isNotNull(id) %>">
-		<span class="workflow-id">
+		<span class="mr-2 workflow-id">
 			<span class="workflow-label"><liferay-ui:message key="id" />:</span>
 			<span class="workflow-value"><%= HtmlUtil.escape(id) %></span>
 		</span>
 	</c:if>
 
 	<c:if test="<%= Validator.isNotNull(version) %>">
-		<span class="workflow-version">
+		<span class="mr-2 workflow-version">
 			<span class="workflow-label"><liferay-ui:message key="version" />:</span>
 
 			<strong class="workflow-value"><%= version %></strong>
 		</span>
 	</c:if>
 
-	<span class='<%= showIcon ? "icon-file-alt workflow-status" : "workflow-status" %>'>
+	<span class="<%= showIcon ? "icon-file-alt workflow-status" : "workflow-status" %>">
 		<c:if test="<%= showLabel %>">
 			<span class="workflow-label"><liferay-ui:message key="status" />:</span>
 		</c:if>

@@ -20,6 +20,7 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.workflow.kaleo.definition.ScriptLanguage;
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.model.KaleoAction;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.action.ActionExecutorManager;
@@ -45,7 +46,7 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 			KaleoAction kaleoAction, ExecutionContext executionContext)
 		throws PortalException {
 
-		String actionExecutorKey = getActionExecutorKey(
+		String actionExecutorKey = _getActionExecutorKey(
 			kaleoAction.getScriptLanguage(),
 			StringUtil.trim(kaleoAction.getScript()));
 
@@ -59,8 +60,52 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 		actionExecutor.execute(kaleoAction, executionContext);
 	}
 
-	protected String getActionExecutorKey(
-		String language, String actionExecutorClassName) {
+	@Reference(
+		cardinality = ReferenceCardinality.MULTIPLE,
+		policy = ReferencePolicy.DYNAMIC,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	protected synchronized void registerActionExecutor(
+			ActionExecutor actionExecutor, Map<String, Object> properties)
+		throws KaleoDefinitionValidationException {
+
+		Object value = properties.get(
+			"com.liferay.portal.workflow.kaleo.runtime.action.executor." +
+				"language");
+
+		String[] languages = GetterUtil.getStringValues(
+			value, new String[] {String.valueOf(value)});
+
+		for (String language : languages) {
+			String actionExecutorKey = _getActionExecutorKey(
+				language, ClassUtil.getClassName(actionExecutor));
+
+			_actionExecutors.put(actionExecutorKey, actionExecutor);
+		}
+	}
+
+	protected synchronized void unregisterActionExecutor(
+			ActionExecutor actionExecutor, Map<String, Object> properties)
+		throws KaleoDefinitionValidationException {
+
+		Object value = properties.get(
+			"com.liferay.portal.workflow.kaleo.runtime.action.executor." +
+				"language");
+
+		String[] languages = GetterUtil.getStringValues(
+			value, new String[] {String.valueOf(value)});
+
+		for (String language : languages) {
+			String actionExecutorKey = _getActionExecutorKey(
+				language, ClassUtil.getClassName(actionExecutor));
+
+			_actionExecutors.remove(actionExecutorKey);
+		}
+	}
+
+	private String _getActionExecutorKey(
+			String language, String actionExecutorClassName)
+		throws KaleoDefinitionValidationException {
 
 		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
 
@@ -69,47 +114,6 @@ public class ActionExecutorManagerImpl implements ActionExecutorManager {
 		}
 
 		return language;
-	}
-
-	@Reference(
-		cardinality = ReferenceCardinality.MULTIPLE,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY
-	)
-	protected synchronized void registerActionExecutor(
-		ActionExecutor actionExecutor, Map<String, Object> properties) {
-
-		Object value = properties.get(
-			"com.liferay.portal.workflow.kaleo.runtime.action.executor." +
-				"language");
-
-		String[] languages = GetterUtil.getStringValues(
-			value, new String[] {String.valueOf(value)});
-
-		for (String language : languages) {
-			String actionExecutorKey = getActionExecutorKey(
-				language, ClassUtil.getClassName(actionExecutor));
-
-			_actionExecutors.put(actionExecutorKey, actionExecutor);
-		}
-	}
-
-	protected synchronized void unregisterActionExecutor(
-		ActionExecutor actionExecutor, Map<String, Object> properties) {
-
-		Object value = properties.get(
-			"com.liferay.portal.workflow.kaleo.runtime.action.executor." +
-				"language");
-
-		String[] languages = GetterUtil.getStringValues(
-			value, new String[] {String.valueOf(value)});
-
-		for (String language : languages) {
-			String actionExecutorKey = getActionExecutorKey(
-				language, ClassUtil.getClassName(actionExecutor));
-
-			_actionExecutors.remove(actionExecutorKey);
-		}
 	}
 
 	private final Map<String, ActionExecutor> _actionExecutors =

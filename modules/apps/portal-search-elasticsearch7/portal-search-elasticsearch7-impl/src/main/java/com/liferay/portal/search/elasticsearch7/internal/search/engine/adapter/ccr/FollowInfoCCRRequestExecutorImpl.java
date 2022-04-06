@@ -43,10 +43,10 @@ public class FollowInfoCCRRequestExecutorImpl
 	public FollowInfoCCRResponse execute(
 		FollowInfoCCRRequest followInfoCCRRequest) {
 
-		FollowInfoRequest followInfoRequest = createFollowInfoRequest(
+		FollowInfoRequest followInfoRequest = _createFollowInfoRequest(
 			followInfoCCRRequest);
 
-		FollowInfoResponse followInfoResponse = getFollowInfoResponse(
+		FollowInfoResponse followInfoResponse = _getFollowInfoResponse(
 			followInfoRequest, followInfoCCRRequest);
 
 		List<FollowInfoResponse.FollowerInfo> followerInfos =
@@ -63,19 +63,27 @@ public class FollowInfoCCRRequestExecutorImpl
 		return new FollowInfoCCRResponse(FollowInfoStatus.PAUSED);
 	}
 
-	protected FollowInfoRequest createFollowInfoRequest(
+	@Reference(unbind = "-")
+	protected void setElasticsearchClientResolver(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private FollowInfoRequest _createFollowInfoRequest(
 		FollowInfoCCRRequest followInfoCCRRequest) {
 
 		return new FollowInfoRequest(followInfoCCRRequest.getIndexName());
 	}
 
-	protected FollowInfoResponse getFollowInfoResponse(
+	private FollowInfoResponse _getFollowInfoResponse(
 		FollowInfoRequest followInfoRequest,
 		FollowInfoCCRRequest followInfoCCRRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				followInfoCCRRequest.getConnectionId(), true);
+				followInfoCCRRequest.getConnectionId(),
+				followInfoCCRRequest.isPreferLocalCluster());
 
 		CcrClient ccrClient = restHighLevelClient.ccr();
 
@@ -86,13 +94,6 @@ public class FollowInfoCCRRequestExecutorImpl
 		catch (IOException ioException) {
 			throw new RuntimeException(ioException);
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setElasticsearchClientResolver(
-		ElasticsearchClientResolver elasticsearchClientResolver) {
-
-		_elasticsearchClientResolver = elasticsearchClientResolver;
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

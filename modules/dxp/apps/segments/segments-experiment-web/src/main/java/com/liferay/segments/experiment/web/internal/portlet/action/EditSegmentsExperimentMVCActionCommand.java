@@ -75,8 +75,8 @@ public class EditSegmentsExperimentMVCActionCommand
 			jsonObject = TransactionInvokerUtil.invoke(
 				_transactionConfig, callable);
 		}
-		catch (Throwable t) {
-			_log.error(t, t);
+		catch (Throwable throwable) {
+			_log.error(throwable, throwable);
 
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
@@ -98,21 +98,25 @@ public class EditSegmentsExperimentMVCActionCommand
 	private JSONObject _editSegmentsExperiment(ActionRequest actionRequest)
 		throws Exception {
 
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		SegmentsExperiment segmentsExperiment =
-			_segmentsExperimentService.updateSegmentsExperiment(
-				ParamUtil.getLong(actionRequest, "segmentsExperimentId"),
-				ParamUtil.getString(actionRequest, "name"),
-				ParamUtil.getString(actionRequest, "description"),
-				ParamUtil.getString(actionRequest, "goal"),
-				ParamUtil.getString(actionRequest, "goalTarget"));
-
 		return JSONUtil.put(
 			"segmentsExperiment",
-			SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
-				themeDisplay.getLocale(), segmentsExperiment));
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				SegmentsExperiment segmentsExperiment =
+					_segmentsExperimentService.updateSegmentsExperiment(
+						ParamUtil.getLong(
+							actionRequest, "segmentsExperimentId"),
+						ParamUtil.getString(actionRequest, "name"),
+						ParamUtil.getString(actionRequest, "description"),
+						ParamUtil.getString(actionRequest, "goal"),
+						ParamUtil.getString(actionRequest, "goalTarget"));
+
+				return SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
+					themeDisplay.getLocale(), segmentsExperiment);
+			});
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

@@ -66,7 +66,7 @@ public interface KaleoLogLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link KaleoLogLocalServiceUtil} to access the kaleo log local service. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoLogLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoLogLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the kaleo log local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link KaleoLogLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	@Indexable(type = IndexableType.REINDEX)
 	public KaleoLog addActionExecutionKaleoLog(
@@ -77,6 +77,10 @@ public interface KaleoLogLocalService
 
 	/**
 	 * Adds the kaleo log to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoLogLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoLog the kaleo log
 	 * @return the kaleo log that was added
@@ -100,6 +104,29 @@ public interface KaleoLogLocalService
 	public KaleoLog addTaskAssignmentKaleoLog(
 			List<KaleoTaskAssignmentInstance>
 				previousKaleoTaskAssignmentInstances,
+			KaleoTaskAssignmentInstance kaleoTaskAssignmentInstance,
+			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
+			Map<String, Serializable> workflowContext,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addTaskAssignmentKaleoLog(List, KaleoTaskAssignmentInstance,
+	 KaleoTaskInstanceToken, String, Map, ServiceContext)}}
+	 */
+	@Deprecated
+	@Indexable(type = IndexableType.REINDEX)
+	public KaleoLog addTaskAssignmentKaleoLog(
+			List<KaleoTaskAssignmentInstance>
+				previousKaleoTaskAssignmentInstances,
+			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
+			Map<String, Serializable> workflowContext,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	public List<KaleoLog> addTaskAssignmentKaleoLogs(
+			List<KaleoTaskAssignmentInstance> previousTaskAssignmentInstances,
 			KaleoTaskInstanceToken kaleoTaskInstanceToken, String comment,
 			Map<String, Serializable> workflowContext,
 			ServiceContext serviceContext)
@@ -156,6 +183,10 @@ public interface KaleoLogLocalService
 	/**
 	 * Deletes the kaleo log from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoLogLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoLog the kaleo log
 	 * @return the kaleo log that was removed
 	 */
@@ -164,6 +195,10 @@ public interface KaleoLogLocalService
 
 	/**
 	 * Deletes the kaleo log with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoLogLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoLogId the primary key of the kaleo log
 	 * @return the kaleo log that was removed
@@ -181,6 +216,9 @@ public interface KaleoLogLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -257,30 +295,10 @@ public interface KaleoLogLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public IndexableActionableDynamicQuery getIndexableActionableDynamicQuery();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoInstanceKaleoLogs(long, long, List, int, int,
-	 OrderByComparator)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<KaleoLog> getKaleoInstanceKaleoLogs(
-		long kaleoInstanceId, List<Integer> logTypes, int start, int end,
-		OrderByComparator<KaleoLog> orderByComparator);
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KaleoLog> getKaleoInstanceKaleoLogs(
 		long companyId, long kaleoInstanceId, List<Integer> logTypes, int start,
 		int end, OrderByComparator<KaleoLog> orderByComparator);
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoInstanceKaleoLogsCount(long, long, List)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getKaleoInstanceKaleoLogsCount(
-		long kaleoInstanceId, List<Integer> logTypes);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoInstanceKaleoLogsCount(
@@ -318,30 +336,10 @@ public interface KaleoLogLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoLogsCount();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoTaskInstanceTokenKaleoLogs(long, long, List, int,
-	 int, OrderByComparator)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<KaleoLog> getKaleoTaskInstanceTokenKaleoLogs(
-		long kaleoTaskInstanceTokenId, List<Integer> logTypes, int start,
-		int end, OrderByComparator<KaleoLog> orderByComparator);
-
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KaleoLog> getKaleoTaskInstanceTokenKaleoLogs(
 		long companyId, long kaleoTaskInstanceTokenId, List<Integer> logTypes,
 		int start, int end, OrderByComparator<KaleoLog> orderByComparator);
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 #getKaleoTaskInstanceTokenKaleoLogsCount(long, long, List)}
-	 */
-	@Deprecated
-	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public int getKaleoTaskInstanceTokenKaleoLogsCount(
-		long kaleoTaskInstanceTokenId, List<Integer> logTypes);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getKaleoTaskInstanceTokenKaleoLogsCount(
@@ -364,6 +362,10 @@ public interface KaleoLogLocalService
 
 	/**
 	 * Updates the kaleo log in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoLogLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoLog the kaleo log
 	 * @return the kaleo log that was updated

@@ -41,18 +41,6 @@ public class PortalCacheHelperUtil {
 	}
 
 	public static <K extends Serializable, V> PortalCache<K, V> getPortalCache(
-		String portalCacheManagerName, String portalCacheName,
-		boolean blocking) {
-
-		PortalCacheManager<?, ?> portalCacheManager =
-			PortalCacheManagerProvider.getPortalCacheManager(
-				portalCacheManagerName);
-
-		return (PortalCache<K, V>)portalCacheManager.getPortalCache(
-			portalCacheName, blocking);
-	}
-
-	public static <K extends Serializable, V> PortalCache<K, V> getPortalCache(
 		String portalCacheManagerName, String portalCacheName, boolean blocking,
 		boolean mvcc) {
 

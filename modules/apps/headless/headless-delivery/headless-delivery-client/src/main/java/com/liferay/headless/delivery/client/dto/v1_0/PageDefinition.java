@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.PageDefinitionSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PageDefinition implements Cloneable {
+public class PageDefinition implements Cloneable, Serializable {
 
 	public static PageDefinition toDTO(String json) {
 		return PageDefinitionSerDes.toDTO(json);
@@ -73,6 +75,27 @@ public class PageDefinition implements Cloneable {
 	}
 
 	protected Settings settings;
+
+	public Double getVersion() {
+		return version;
+	}
+
+	public void setVersion(Double version) {
+		this.version = version;
+	}
+
+	public void setVersion(
+		UnsafeSupplier<Double, Exception> versionUnsafeSupplier) {
+
+		try {
+			version = versionUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Double version;
 
 	@Override
 	public PageDefinition clone() throws CloneNotSupportedException {

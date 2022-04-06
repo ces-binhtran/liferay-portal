@@ -15,21 +15,27 @@
 package com.liferay.portal.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchCountryException;
 import com.liferay.portal.kernel.model.Country;
+import com.liferay.portal.kernel.service.CountryLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.CountryPersistence;
 import com.liferay.portal.kernel.service.persistence.CountryUtil;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -41,7 +47,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -121,19 +126,45 @@ public class CountryPersistenceTest {
 
 		newCountry.setMvccVersion(RandomTestUtil.nextLong());
 
-		newCountry.setName(RandomTestUtil.randomString());
+		newCountry.setUuid(RandomTestUtil.randomString());
+
+		newCountry.setDefaultLanguageId(RandomTestUtil.randomString());
+
+		newCountry.setCompanyId(RandomTestUtil.nextLong());
+
+		newCountry.setUserId(RandomTestUtil.nextLong());
+
+		newCountry.setUserName(RandomTestUtil.randomString());
+
+		newCountry.setCreateDate(RandomTestUtil.nextDate());
+
+		newCountry.setModifiedDate(RandomTestUtil.nextDate());
 
 		newCountry.setA2(RandomTestUtil.randomString());
 
 		newCountry.setA3(RandomTestUtil.randomString());
 
-		newCountry.setNumber(RandomTestUtil.randomString());
+		newCountry.setActive(RandomTestUtil.randomBoolean());
+
+		newCountry.setBillingAllowed(RandomTestUtil.randomBoolean());
+
+		newCountry.setGroupFilterEnabled(RandomTestUtil.randomBoolean());
 
 		newCountry.setIdd(RandomTestUtil.randomString());
 
+		newCountry.setName(RandomTestUtil.randomString());
+
+		newCountry.setNumber(RandomTestUtil.randomString());
+
+		newCountry.setPosition(RandomTestUtil.nextDouble());
+
+		newCountry.setShippingAllowed(RandomTestUtil.randomBoolean());
+
+		newCountry.setSubjectToVAT(RandomTestUtil.randomBoolean());
+
 		newCountry.setZipRequired(RandomTestUtil.randomBoolean());
 
-		newCountry.setActive(RandomTestUtil.randomBoolean());
+		newCountry.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_countries.add(_persistence.update(newCountry));
 
@@ -142,44 +173,73 @@ public class CountryPersistenceTest {
 
 		Assert.assertEquals(
 			existingCountry.getMvccVersion(), newCountry.getMvccVersion());
+		Assert.assertEquals(existingCountry.getUuid(), newCountry.getUuid());
+		Assert.assertEquals(
+			existingCountry.getDefaultLanguageId(),
+			newCountry.getDefaultLanguageId());
 		Assert.assertEquals(
 			existingCountry.getCountryId(), newCountry.getCountryId());
-		Assert.assertEquals(existingCountry.getName(), newCountry.getName());
+		Assert.assertEquals(
+			existingCountry.getCompanyId(), newCountry.getCompanyId());
+		Assert.assertEquals(
+			existingCountry.getUserId(), newCountry.getUserId());
+		Assert.assertEquals(
+			existingCountry.getUserName(), newCountry.getUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingCountry.getCreateDate()),
+			Time.getShortTimestamp(newCountry.getCreateDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingCountry.getModifiedDate()),
+			Time.getShortTimestamp(newCountry.getModifiedDate()));
 		Assert.assertEquals(existingCountry.getA2(), newCountry.getA2());
 		Assert.assertEquals(existingCountry.getA3(), newCountry.getA3());
+		Assert.assertEquals(existingCountry.isActive(), newCountry.isActive());
+		Assert.assertEquals(
+			existingCountry.isBillingAllowed(), newCountry.isBillingAllowed());
+		Assert.assertEquals(
+			existingCountry.isGroupFilterEnabled(),
+			newCountry.isGroupFilterEnabled());
+		Assert.assertEquals(existingCountry.getIdd(), newCountry.getIdd());
+		Assert.assertEquals(existingCountry.getName(), newCountry.getName());
 		Assert.assertEquals(
 			existingCountry.getNumber(), newCountry.getNumber());
-		Assert.assertEquals(existingCountry.getIdd(), newCountry.getIdd());
+		AssertUtils.assertEquals(
+			existingCountry.getPosition(), newCountry.getPosition());
+		Assert.assertEquals(
+			existingCountry.isShippingAllowed(),
+			newCountry.isShippingAllowed());
+		Assert.assertEquals(
+			existingCountry.isSubjectToVAT(), newCountry.isSubjectToVAT());
 		Assert.assertEquals(
 			existingCountry.isZipRequired(), newCountry.isZipRequired());
-		Assert.assertEquals(existingCountry.isActive(), newCountry.isActive());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingCountry.getLastPublishDate()),
+			Time.getShortTimestamp(newCountry.getLastPublishDate()));
 	}
 
 	@Test
-	public void testCountByName() throws Exception {
-		_persistence.countByName("");
+	public void testCountByUuid() throws Exception {
+		_persistence.countByUuid("");
 
-		_persistence.countByName("null");
+		_persistence.countByUuid("null");
 
-		_persistence.countByName((String)null);
+		_persistence.countByUuid((String)null);
 	}
 
 	@Test
-	public void testCountByA2() throws Exception {
-		_persistence.countByA2("");
+	public void testCountByUuid_C() throws Exception {
+		_persistence.countByUuid_C("", RandomTestUtil.nextLong());
 
-		_persistence.countByA2("null");
+		_persistence.countByUuid_C("null", 0L);
 
-		_persistence.countByA2((String)null);
+		_persistence.countByUuid_C((String)null, 0L);
 	}
 
 	@Test
-	public void testCountByA3() throws Exception {
-		_persistence.countByA3("");
+	public void testCountByCompanyId() throws Exception {
+		_persistence.countByCompanyId(RandomTestUtil.nextLong());
 
-		_persistence.countByA3("null");
-
-		_persistence.countByA3((String)null);
+		_persistence.countByCompanyId(0L);
 	}
 
 	@Test
@@ -187,6 +247,70 @@ public class CountryPersistenceTest {
 		_persistence.countByActive(RandomTestUtil.randomBoolean());
 
 		_persistence.countByActive(RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_A2() throws Exception {
+		_persistence.countByC_A2(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_A2(0L, "null");
+
+		_persistence.countByC_A2(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByC_A3() throws Exception {
+		_persistence.countByC_A3(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_A3(0L, "null");
+
+		_persistence.countByC_A3(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByC_Active() throws Exception {
+		_persistence.countByC_Active(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_Active(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_Name() throws Exception {
+		_persistence.countByC_Name(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_Name(0L, "null");
+
+		_persistence.countByC_Name(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByC_Number() throws Exception {
+		_persistence.countByC_Number(RandomTestUtil.nextLong(), "");
+
+		_persistence.countByC_Number(0L, "null");
+
+		_persistence.countByC_Number(0L, (String)null);
+	}
+
+	@Test
+	public void testCountByC_A_B() throws Exception {
+		_persistence.countByC_A_B(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_A_B(
+			0L, RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean());
+	}
+
+	@Test
+	public void testCountByC_A_S() throws Exception {
+		_persistence.countByC_A_S(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean(),
+			RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_A_S(
+			0L, RandomTestUtil.randomBoolean(), RandomTestUtil.randomBoolean());
 	}
 
 	@Test
@@ -214,9 +338,13 @@ public class CountryPersistenceTest {
 
 	protected OrderByComparator<Country> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"Country", "mvccVersion", true, "countryId", true, "name", true,
-			"a2", true, "a3", true, "number", true, "idd", true, "zipRequired",
-			true, "active", true);
+			"Country", "mvccVersion", true, "uuid", true, "defaultLanguageId",
+			true, "countryId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true, "a2",
+			true, "a3", true, "active", true, "billingAllowed", true,
+			"groupFilterEnabled", true, "idd", true, "name", true, "number",
+			true, "position", true, "shippingAllowed", true, "subjectToVAT",
+			true, "zipRequired", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -327,6 +455,30 @@ public class CountryPersistenceTest {
 	}
 
 	@Test
+	public void testActionableDynamicQuery() throws Exception {
+		final IntegerWrapper count = new IntegerWrapper();
+
+		ActionableDynamicQuery actionableDynamicQuery =
+			CountryLocalServiceUtil.getActionableDynamicQuery();
+
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<Country>() {
+
+				@Override
+				public void performAction(Country country) {
+					Assert.assertNotNull(country);
+
+					count.increment();
+				}
+
+			});
+
+		actionableDynamicQuery.performActions();
+
+		Assert.assertEquals(count.getValue(), _persistence.countAll());
+	}
+
+	@Test
 	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		Country newCountry = addCountry();
 
@@ -404,26 +556,92 @@ public class CountryPersistenceTest {
 
 		_persistence.clearCache();
 
-		Country existingCountry = _persistence.findByPrimaryKey(
-			newCountry.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newCountry.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingCountry.getName(),
-				ReflectionTestUtil.invoke(
-					existingCountry, "getOriginalName", new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingCountry.getA2(),
-				ReflectionTestUtil.invoke(
-					existingCountry, "getOriginalA2", new Class<?>[0])));
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingCountry.getA3(),
-				ReflectionTestUtil.invoke(
-					existingCountry, "getOriginalA3", new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		Country newCountry = addCountry();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Country.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("countryId", newCountry.getCountryId()));
+
+		List<Country> result = _persistence.findWithDynamicQuery(dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(Country country) {
+		Assert.assertEquals(
+			Long.valueOf(country.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			country.getA2(),
+			ReflectionTestUtil.invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "a2"));
+
+		Assert.assertEquals(
+			Long.valueOf(country.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			country.getA3(),
+			ReflectionTestUtil.invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "a3"));
+
+		Assert.assertEquals(
+			Long.valueOf(country.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			country.getName(),
+			ReflectionTestUtil.invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "name"));
+
+		Assert.assertEquals(
+			Long.valueOf(country.getCompanyId()),
+			ReflectionTestUtil.<Long>invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "companyId"));
+		Assert.assertEquals(
+			country.getNumber(),
+			ReflectionTestUtil.invoke(
+				country, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "number_"));
 	}
 
 	protected Country addCountry() throws Exception {
@@ -433,19 +651,45 @@ public class CountryPersistenceTest {
 
 		country.setMvccVersion(RandomTestUtil.nextLong());
 
-		country.setName(RandomTestUtil.randomString());
+		country.setUuid(RandomTestUtil.randomString());
+
+		country.setDefaultLanguageId(RandomTestUtil.randomString());
+
+		country.setCompanyId(RandomTestUtil.nextLong());
+
+		country.setUserId(RandomTestUtil.nextLong());
+
+		country.setUserName(RandomTestUtil.randomString());
+
+		country.setCreateDate(RandomTestUtil.nextDate());
+
+		country.setModifiedDate(RandomTestUtil.nextDate());
 
 		country.setA2(RandomTestUtil.randomString());
 
 		country.setA3(RandomTestUtil.randomString());
 
-		country.setNumber(RandomTestUtil.randomString());
+		country.setActive(RandomTestUtil.randomBoolean());
+
+		country.setBillingAllowed(RandomTestUtil.randomBoolean());
+
+		country.setGroupFilterEnabled(RandomTestUtil.randomBoolean());
 
 		country.setIdd(RandomTestUtil.randomString());
 
+		country.setName(RandomTestUtil.randomString());
+
+		country.setNumber(RandomTestUtil.randomString());
+
+		country.setPosition(RandomTestUtil.nextDouble());
+
+		country.setShippingAllowed(RandomTestUtil.randomBoolean());
+
+		country.setSubjectToVAT(RandomTestUtil.randomBoolean());
+
 		country.setZipRequired(RandomTestUtil.randomBoolean());
 
-		country.setActive(RandomTestUtil.randomBoolean());
+		country.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_countries.add(_persistence.update(country));
 

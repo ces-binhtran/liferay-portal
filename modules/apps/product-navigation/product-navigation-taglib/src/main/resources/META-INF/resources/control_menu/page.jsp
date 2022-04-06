@@ -17,9 +17,12 @@
 <%@ include file="/control_menu/init.jsp" %>
 
 <%
+boolean applicationsMenuApp = GetterUtil.getBoolean(request.getAttribute("liferay-product-navigation:control-menu:applicationsMenuApp"));
+
 ProductNavigationControlMenuCategoryRegistry productNavigationControlMenuCategoryRegistry = ServletContextUtil.getProductNavigationControlMenuCategoryRegistry();
 
 List<ProductNavigationControlMenuCategory> productNavigationControlMenuCategories = productNavigationControlMenuCategoryRegistry.getProductNavigationControlMenuCategories(ProductNavigationControlMenuCategoryKeys.ROOT);
+
 ProductNavigationControlMenuEntryRegistry productNavigationControlMenuEntryRegistry = ServletContextUtil.getProductNavigationControlMenuEntryRegistry();
 
 boolean hasControlMenuEntries = false;
@@ -32,16 +35,22 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 	productNavigationControlMenuEntriesMap.put(productNavigationControlMenuCategory, productNavigationControlMenuEntries);
 
 	if (!productNavigationControlMenuEntries.isEmpty()) {
-		hasControlMenuEntries = true;
+		for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : productNavigationControlMenuEntries) {
+			if (productNavigationControlMenuEntry.isRelevant(request)) {
+				hasControlMenuEntries = true;
+
+				break;
+			}
+		}
 	}
 }
 %>
 
 <c:if test="<%= hasControlMenuEntries %>">
-	<div class="control-menu-container">
+	<div class="cadmin control-menu-container">
 		<liferay-util:dynamic-include key="com.liferay.product.navigation.taglib#/page.jsp#pre" />
 
-		<div class="control-menu control-menu-level-1 d-print-none" data-qa-id="controlMenu" id="<portlet:namespace />ControlMenu">
+		<div class="control-menu control-menu-level-1 control-menu-level-1-<%= applicationsMenuApp ? "light" : "dark" %> d-print-none" data-qa-id="controlMenu" id="<portlet:namespace />ControlMenu">
 			<clay:container-fluid>
 				<h1 class="sr-only"><liferay-ui:message key="admin-header" /></h1>
 
@@ -57,7 +66,7 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 
 								<%
 								for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : entry.getValue()) {
-									if (productNavigationControlMenuEntry.includeIcon(request, PipingServletResponse.createPipingServletResponse(pageContext))) {
+									if (productNavigationControlMenuEntry.includeIcon(request, PipingServletResponseFactory.createPipingServletResponse(pageContext))) {
 										continue;
 									}
 								%>
@@ -71,6 +80,7 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 											linkCssClass='<%= "control-menu-icon " + productNavigationControlMenuEntry.getLinkCssClass(request) %>'
 											markupView="<%= productNavigationControlMenuEntry.getMarkupView(request) %>"
 											message="<%= productNavigationControlMenuEntry.getLabel(locale) %>"
+											method="get"
 											url="<%= productNavigationControlMenuEntry.getURL(request) %>"
 										/>
 									</li>
@@ -96,7 +106,7 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 					List<ProductNavigationControlMenuEntry> productNavigationControlMenuEntries = productNavigationControlMenuEntriesMap.get(productNavigationControlMenuCategory);
 
 					for (ProductNavigationControlMenuEntry productNavigationControlMenuEntry : productNavigationControlMenuEntries) {
-						productNavigationControlMenuEntry.includeBody(request, PipingServletResponse.createPipingServletResponse(pageContext));
+						productNavigationControlMenuEntry.includeBody(request, PipingServletResponseFactory.createPipingServletResponse(pageContext));
 					}
 				}
 				%>
@@ -116,13 +126,13 @@ for (ProductNavigationControlMenuCategory productNavigationControlMenuCategory :
 			'#<portlet:namespace />ControlMenu [data-toggle="liferay-sidenav"]'
 		);
 
-		var sidenavInstances = Array.from(sidenavToggles).map(function (toggle) {
+		var sidenavInstances = Array.from(sidenavToggles).map((toggle) => {
 			return Liferay.SideNavigation.instance(toggle);
 		});
 
-		sidenavInstances.forEach(function (instance) {
-			instance.on('openStart.lexicon.sidenav', function (event, source) {
-				sidenavInstances.forEach(function (sidenav) {
+		sidenavInstances.forEach((instance) => {
+			instance.on('openStart.lexicon.sidenav', (event, source) => {
+				sidenavInstances.forEach((sidenav) => {
 					if (sidenav !== source) {
 						sidenav.hide();
 					}

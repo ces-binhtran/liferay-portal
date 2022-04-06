@@ -26,9 +26,12 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.transaction.Transactional;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -48,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/discard_draft_layout"
+		"mvc.command.name=/layout_admin/discard_draft_layout"
 	},
 	service = {AopService.class, MVCActionCommand.class}
 )
@@ -90,10 +93,7 @@ public class DiscardDraftLayoutMVCActionCommand
 
 		Layout draftLayout = _layoutLocalService.getLayout(selPlid);
 
-		if ((draftLayout.getClassPK() == 0) ||
-			(_portal.getClassNameId(Layout.class) !=
-				draftLayout.getClassNameId())) {
-
+		if (!draftLayout.isDraftLayout()) {
 			sendRedirect(actionRequest, actionResponse);
 
 			return;
@@ -102,10 +102,8 @@ public class DiscardDraftLayoutMVCActionCommand
 		Layout layout = _layoutLocalService.getLayout(draftLayout.getClassPK());
 
 		int fragmentEntryLinksCount =
-			_fragmentEntryLinkLocalService.
-				getClassedModelFragmentEntryLinksCount(
-					layout.getGroupId(), _portal.getClassNameId(Layout.class),
-					layout.getPlid());
+			_fragmentEntryLinkLocalService.getFragmentEntryLinksCountByPlid(
+				layout.getGroupId(), layout.getPlid());
 
 		if ((fragmentEntryLinksCount == 0) &&
 			(layout.getClassNameId() == _portal.getClassNameId(
@@ -125,11 +123,19 @@ public class DiscardDraftLayoutMVCActionCommand
 			themeDisplay.getPermissionChecker(), layout.getPlid(),
 			ActionKeys.VIEW);
 
+		boolean published = GetterUtil.getBoolean(
+			draftLayout.getTypeSettingsProperty("published"));
+
 		draftLayout = _layoutCopyHelper.copyLayout(layout, draftLayout);
 
-		draftLayout.setStatus(WorkflowConstants.STATUS_APPROVED);
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			Layout.class.getName(), actionRequest);
 
-		_layoutLocalService.updateLayout(draftLayout);
+		serviceContext.setAttribute("published", published);
+
+		_layoutLocalService.updateStatus(
+			themeDisplay.getUserId(), draftLayout.getPlid(),
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 
 		sendRedirect(actionRequest, actionResponse);
 	}

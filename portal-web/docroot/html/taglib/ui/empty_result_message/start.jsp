@@ -17,19 +17,18 @@
 <%@ include file="/html/taglib/ui/empty_result_message/init.jsp" %>
 
 <%
-String cssClass = (String)request.getAttribute("liferay-ui:empty-result-message:cssClass");
 String message = GetterUtil.getString((String)request.getAttribute("liferay-ui:empty-result-message:message"));
 %>
 
 <c:choose>
 	<c:when test="<%= compact %>">
-		<p class="text-muted">
+		<p class="text-secondary">
 			<liferay-ui:message key="<%= message %>" />
 		</p>
 	</c:when>
 	<c:otherwise>
 		<div class="sheet taglib-empty-result-message">
-			<div class="<%= cssClass %>"></div>
+			<div class="<%= (String)request.getAttribute("liferay-ui:empty-result-message:cssClass") %>"></div>
 
 			<c:if test="<%= Validator.isNotNull(message) %>">
 				<div class="sheet-text text-center">

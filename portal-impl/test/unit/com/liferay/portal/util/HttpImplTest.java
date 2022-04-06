@@ -17,28 +17,36 @@ package com.liferay.portal.util;
 import com.liferay.petra.string.CharPool;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.test.CaptureHandler;
-import com.liferay.portal.kernel.test.JDKLoggerTestUtil;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.randomizerbumpers.NumericStringRandomizerBumper;
+import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.CodeCoverageAssertor;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.URLCodec;
+import com.liferay.portal.test.log.LogCapture;
+import com.liferay.portal.test.log.LogEntry;
+import com.liferay.portal.test.log.LoggerTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.LogRecord;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+
+import org.springframework.mock.web.MockHttpServletRequest;
 
 /**
  * @author Miguel Pastor
@@ -46,25 +54,28 @@ import org.junit.Test;
 public class HttpImplTest {
 
 	@ClassRule
-	public static final CodeCoverageAssertor codeCoverageAssertor =
-		new CodeCoverageAssertor() {
+	@Rule
+	public static final AggregateTestRule aggregateTestRule =
+		new AggregateTestRule(
+			new CodeCoverageAssertor() {
 
-			@Override
-			public void appendAssertClasses(List<Class<?>> assertClasses) {
-				assertClasses.clear();
-			}
+				@Override
+				public void appendAssertClasses(List<Class<?>> assertClasses) {
+					assertClasses.clear();
+				}
 
-			@Override
-			public List<Method> getAssertMethods()
-				throws ReflectiveOperationException {
+				@Override
+				public List<Method> getAssertMethods()
+					throws ReflectiveOperationException {
 
-				return Arrays.asList(
-					HttpImpl.class.getDeclaredMethod(
-						"_shortenURL", String.class, int.class, String.class,
-						String.class, String.class));
-			}
+					return Arrays.asList(
+						HttpImpl.class.getDeclaredMethod(
+							"_shortenURL", String.class, int.class,
+							String.class, String.class, String.class));
+				}
 
-		};
+			},
+			LiferayUnitTestRule.INSTANCE);
 
 	@BeforeClass
 	public static void setUpClass() {
@@ -195,6 +206,13 @@ public class HttpImplTest {
 	}
 
 	@Test
+	public void testEncodePathWikiFriendlyURL() {
+		Assert.assertEquals(
+			"/web/guest/wiki/-/wiki/Main/test+test",
+			_httpImpl.encodePath("/web/guest/wiki/-/wiki/Main/test+test"));
+	}
+
+	@Test
 	public void testGetDomainWithInvalidURLs() {
 		Assert.assertEquals("", _httpImpl.getDomain("foo.foo.1"));
 		Assert.assertEquals("", _httpImpl.getDomain("test:test@/a/b"));
@@ -281,6 +299,86 @@ public class HttpImplTest {
 		Assert.assertEquals("", _httpImpl.getProtocol("1a://foo.com"));
 		Assert.assertEquals("", _httpImpl.getProtocol("#%://foo.com"));
 		Assert.assertEquals("", _httpImpl.getProtocol("foo.com"));
+	}
+
+	@Test
+	public void testGetQueryString() {
+		String queryString = "doAsUserId=tUaJhZHZbDYaV0WQmKNRig%3D%3D&foo=bar";
+
+		Assert.assertEquals(
+			queryString,
+			_httpImpl.getQueryString("http://localhost:8080/?" + queryString));
+	}
+
+	@Test
+	public void testGetQueryStringWithHttpServletRequest() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING, "b=2");
+		mockHttpServletRequest.setQueryString("a=1");
+
+		Assert.assertEquals(
+			"a=1", _httpImpl.getQueryString(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testGetQueryStringWithHttpServletRequestForwarded() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_QUERY_STRING, "b=2");
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI, "https://foo.com");
+		mockHttpServletRequest.setQueryString("a=1");
+
+		Assert.assertEquals(
+			"b=2", _httpImpl.getQueryString(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testIsForwarded() {
+		Assert.assertFalse(_httpImpl.isForwarded(new MockHttpServletRequest()));
+	}
+
+	@Test
+	public void testIsForwardedWithHttpServletRequestForwarded() {
+		MockHttpServletRequest mockHttpServletRequest =
+			new MockHttpServletRequest();
+
+		mockHttpServletRequest.setAttribute(
+			JavaConstants.JAVAX_SERVLET_FORWARD_REQUEST_URI, "https://foo.com");
+
+		Assert.assertTrue(_httpImpl.isForwarded(mockHttpServletRequest));
+	}
+
+	@Test
+	public void testIsNonProxyHost() throws Exception {
+		String domain = "foo.com";
+		String ipAddress = "192.168.0.250";
+		String ipAddressWithStarWildcard = "182.*.0.250";
+
+		Field field = ReflectionTestUtil.getField(
+			HttpImpl.class, "_NON_PROXY_HOSTS");
+
+		Object value = field.get(null);
+
+		try {
+			field.set(
+				null,
+				new String[] {domain, ipAddress, ipAddressWithStarWildcard});
+
+			Assert.assertTrue(_httpImpl.isNonProxyHost(domain));
+			Assert.assertTrue(_httpImpl.isNonProxyHost(ipAddress));
+			Assert.assertTrue(_httpImpl.isNonProxyHost("182.123.0.250"));
+			Assert.assertFalse(_httpImpl.isNonProxyHost("182.100.1.250"));
+			Assert.assertFalse(_httpImpl.isNonProxyHost("google.com"));
+		}
+		finally {
+			field.set(null, value);
+		}
 	}
 
 	@Test
@@ -534,14 +632,14 @@ public class HttpImplTest {
 
 		// Remove redirect two deep
 
-		String encodedURL = URLCodec.encodeURL(
+		String encodedURL1 = URLCodec.encodeURL(
 			"www.liferay.com?key1=value1&redirect=" + paramValue);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" +
 				URLCodec.encodeURL("www.liferay.com?key1=value1"),
 			_httpImpl.shortenURL(
-				"www.liferay.com?key1=value1&redirect=" + encodedURL));
+				"www.liferay.com?key1=value1&redirect=" + encodedURL1));
 
 		// Remove redirect three deep
 
@@ -550,7 +648,7 @@ public class HttpImplTest {
 				URLCodec.encodeURL("www.liferay.com?key1=value1"));
 
 		String encodedURL3 = URLCodec.encodeURL(
-			"www.liferay.com?key1=value1&redirect=" + encodedURL);
+			"www.liferay.com?key1=value1&redirect=" + encodedURL1);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" + encodedURL2,
@@ -565,7 +663,7 @@ public class HttpImplTest {
 
 		String encodedURL5 = URLCodec.encodeURL(
 			"www.liferay.com?_returnToFullPageURL=test&key1=value1&redirect=" +
-				encodedURL);
+				encodedURL1);
 
 		Assert.assertEquals(
 			"www.liferay.com?key1=value1&redirect=" + encodedURL4,
@@ -587,33 +685,28 @@ public class HttpImplTest {
 		String newURL = _httpImpl.addParameter(
 			url, parameterName, parameterValue);
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(url);
-		sb.append(StringPool.QUESTION);
-		sb.append(parameterName);
-		sb.append(StringPool.EQUAL);
-		sb.append(parameterValue);
-
-		Assert.assertEquals(sb.toString(), newURL);
+		Assert.assertEquals(
+			StringBundler.concat(
+				url, StringPool.QUESTION, parameterName, StringPool.EQUAL,
+				parameterValue),
+			newURL);
 	}
 
 	private void _testDecodeURL(String url, String expectedMessage) {
-		try (CaptureHandler captureHandler =
-				JDKLoggerTestUtil.configureJDKLogger(
-					HttpImpl.class.getName(), Level.SEVERE)) {
+		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
+				HttpImpl.class.getName(), Level.WARNING)) {
 
 			String decodeURL = _httpImpl.decodeURL(url);
 
 			Assert.assertEquals(StringPool.BLANK, decodeURL);
 
-			List<LogRecord> logRecords = captureHandler.getLogRecords();
+			List<LogEntry> logEntries = logCapture.getLogEntries();
 
-			Assert.assertEquals(logRecords.toString(), 1, logRecords.size());
+			Assert.assertEquals(logEntries.toString(), 1, logEntries.size());
 
-			LogRecord logRecord = logRecords.get(0);
+			LogEntry logEntry = logEntries.get(0);
 
-			String message = logRecord.getMessage();
+			String message = logEntry.getMessage();
 
 			Assert.assertTrue(message, message.contains(expectedMessage));
 		}

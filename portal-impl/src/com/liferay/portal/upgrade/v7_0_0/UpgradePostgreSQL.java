@@ -40,11 +40,10 @@ public class UpgradePostgreSQL extends UpgradeProcess {
 			return;
 		}
 
-		Map<String, String> oidColumnNames = HashMapBuilder.put(
-			"DLContent", "data_"
-		).build();
-
-		updatePostgreSQLRules(oidColumnNames);
+		updatePostgreSQLRules(
+			HashMapBuilder.put(
+				"DLContent", "data_"
+			).build());
 	}
 
 	protected void updatePostgreSQLRules(Map<String, String> oidColumnNames)
@@ -55,11 +54,12 @@ public class UpgradePostgreSQL extends UpgradeProcess {
 				String tableName = entry.getKey();
 				String columnName = entry.getValue();
 
-				try (PreparedStatement ps = connection.prepareStatement(
-						PostgreSQLDB.getCreateRulesSQL(
-							tableName, columnName))) {
+				try (PreparedStatement preparedStatement =
+						connection.prepareStatement(
+							PostgreSQLDB.getCreateRulesSQL(
+								tableName, columnName))) {
 
-					ps.executeUpdate();
+					preparedStatement.executeUpdate();
 				}
 			}
 		}

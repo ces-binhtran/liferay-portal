@@ -113,13 +113,12 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 						Property statusProperty = PropertyFactoryUtil.forName(
 							"status");
 
-						Integer[] statuses = {
-							WorkflowConstants.STATUS_APPROVED,
-							WorkflowConstants.STATUS_IN_TRASH
-						};
-
 						journalArticleDynamicQuery.add(
-							statusProperty.in(statuses));
+							statusProperty.in(
+								new Integer[] {
+									WorkflowConstants.STATUS_APPROVED,
+									WorkflowConstants.STATUS_IN_TRASH
+								}));
 					}
 
 					Property resourcePrimKeyProperty =
@@ -159,7 +158,7 @@ public class JournalArticleDDMStructureIndexer implements DDMStructureIndexer {
 			return journalServiceConfiguration.indexAllArticleVersionsEnabled();
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return false;

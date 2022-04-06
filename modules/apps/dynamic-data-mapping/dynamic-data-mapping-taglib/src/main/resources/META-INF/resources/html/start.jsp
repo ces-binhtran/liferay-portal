@@ -20,7 +20,7 @@
 
 <div class="lfr-ddm-container" id="<%= randomNamespace %>">
 	<c:if test="<%= ddmForm != null %>">
-		<div class="input-group-item input-group-item-shrink input-localized-content <%= hideClass %>" role="menu" style="justify-content: flex-end;">
+		<div class="input-group-item input-group-item-shrink input-localized-content <%= hideCssClass %>" role="menu" style="justify-content: flex-end;">
 
 			<%
 			String defaultLanguageId = null;
@@ -75,26 +75,20 @@
 							String linkCssClass = "dropdown-item palette-item";
 
 							Locale curLocale = LocaleUtil.fromLanguageId(curLanguageId);
-
-							String title = HtmlUtil.escapeAttribute(curLocale.getDisplayName(LocaleUtil.fromLanguageId(LanguageUtil.getLanguageId(request)))) + " " + LanguageUtil.get(LocaleUtil.getDefault(), "translation");
-
-							Map<String, Object> data = HashMapBuilder.<String, Object>put(
-								"languageid", curLanguageId
-							).build();
-
-							Map<String, Object> iconData = HashMapBuilder.<String, Object>put(
-								"index", index++
-							).put(
-								"languageid", curLanguageId
-							).put(
-								"value", curLanguageId
-							).build();
-							%>
+						%>
 
 							<c:if test="<%= showLanguageSelector %>">
 								<liferay-ui:icon
-									alt="<%= title %>"
-									data="<%= iconData %>"
+									alt='<%= HtmlUtil.escapeAttribute(curLocale.getDisplayName(LocaleUtil.fromLanguageId(LanguageUtil.getLanguageId(request)))) + " " + LanguageUtil.get(LocaleUtil.getDefault(), "translation") %>'
+									data='<%=
+										HashMapBuilder.<String, Object>put(
+											"index", index++
+										).put(
+											"languageid", curLanguageId
+										).put(
+											"value", curLanguageId
+										).build()
+									%>'
 									icon="<%= StringUtil.toLowerCase(StringUtil.replace(curLanguageId, '_', '-')) %>"
 									iconCssClass="inline-item inline-item-before"
 									linkCssClass="<%= linkCssClass %>"
@@ -126,7 +120,7 @@
 		ddmFormFieldRenderingContext.setLocale(requestedLocale);
 		ddmFormFieldRenderingContext.setMode(mode);
 		ddmFormFieldRenderingContext.setNamespace(fieldsNamespace);
-		ddmFormFieldRenderingContext.setPortletNamespace(portletResponse.getNamespace());
+		ddmFormFieldRenderingContext.setPortletNamespace(liferayPortletResponse.getNamespace());
 		ddmFormFieldRenderingContext.setReadOnly(readOnly);
 		ddmFormFieldRenderingContext.setShowEmptyFieldLabel(showEmptyFieldLabel);
 		%>
@@ -140,8 +134,18 @@
 
 			var ddmFormDefinition = <%= DDMUtil.getDDMFormJSONString(ddmForm) %>;
 
-			ddmFormDefinition.defaultLanguageId =
-				'<%= LocaleUtil.toLanguageId(defaultLocale) %>';
+			<%
+			if (defaultLocale != null) {
+			%>
+
+				ddmFormDefinition.defaultLanguageId =
+					'<%= LocaleUtil.toLanguageId(defaultLocale) %>';
+
+			<%
+			}
+
+			Group group = themeDisplay.getScopeGroup();
+			%>
 
 			var liferayDDMForm = Liferay.component(
 				'<portlet:namespace /><%= HtmlUtil.escapeJS(fieldsNamespace) %>ddmForm',
@@ -156,6 +160,7 @@
 					doAsGroupId: <%= scopeGroupId %>,
 					fieldsNamespace: '<%= HtmlUtil.escapeJS(fieldsNamespace) %>',
 					imageSelectorURL: '<%= imageSelectorURL %>',
+					isPrivateLayoutsEnabled: <%= group.isPrivateLayoutsEnabled() %>,
 					mode: '<%= HtmlUtil.escapeJS(mode) %>',
 					p_l_id: <%= themeDisplay.getPlid() %>,
 					portletNamespace: '<portlet:namespace />',

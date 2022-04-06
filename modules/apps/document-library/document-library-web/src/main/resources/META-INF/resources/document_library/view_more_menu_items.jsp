@@ -28,7 +28,6 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 
 <clay:management-toolbar
 	clearResultsURL="<%= dlViewMoreMenuItemsDisplayContext.getClearResultsURL() %>"
-	componentId="dlViewMoreMenuItemsManagementToolbar"
 	disabled="<%= dlViewMoreMenuItemsDisplayContext.getTotalItems() == 0 %>"
 	itemsTotal="<%= dlViewMoreMenuItemsDisplayContext.getTotalItems() %>"
 	searchActionURL="<%= dlViewMoreMenuItemsDisplayContext.getSearchActionURL() %>"
@@ -36,7 +35,7 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 	selectable="<%= false %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="addMenuItemFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="addMenuItemFm">
 	<liferay-ui:search-container
 		searchContainer="<%= dlViewMoreMenuItemsDisplayContext.getSearchContainer() %>"
 	>
@@ -46,20 +45,26 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 			keyProperty="fileEntryTypeId"
 			modelVar="fileEntryType"
 		>
-
-			<%
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"fileEntryTypeId", String.valueOf(fileEntryType.getFileEntryTypeId())
-			).build();
-			%>
-
 			<liferay-ui:search-container-column-text
 				name="name"
 			>
-				<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+				<aui:a
+					cssClass="selector-button"
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"fileEntryTypeId", String.valueOf(fileEntryType.getFileEntryTypeId())
+						).build()
+					%>'
+					href="javascript:;"
+				>
 					<%= HtmlUtil.escape(fileEntryType.getName(locale)) %>
 				</aui:a>
 			</liferay-ui:search-container-column-text>
+
+			<liferay-ui:search-container-column-text
+				name="scope"
+				value="<%= dlViewMoreMenuItemsDisplayContext.getDLFileEntryTypeScopeName(fileEntryType, locale) %>"
+			/>
 
 			<liferay-ui:search-container-column-text
 				name="description"
@@ -83,7 +88,7 @@ DLViewMoreMenuItemsDisplayContext dlViewMoreMenuItemsDisplayContext = new DLView
 
 	A.one('#<portlet:namespace />addMenuItemFm').delegate(
 		'click',
-		function (event) {
+		(event) => {
 			Util.getOpener().Liferay.fire(
 				'<%= HtmlUtil.escapeJS(dlViewMoreMenuItemsDisplayContext.getEventName()) %>',
 				{

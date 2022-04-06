@@ -37,11 +37,13 @@ page import="com.liferay.portal.kernel.util.ArrayUtil" %><%@
 page import="com.liferay.portal.kernel.util.FastDateFormatFactoryUtil" %><%@
 page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
+page import="com.liferay.portal.kernel.util.PortalUtil" %><%@
 page import="com.liferay.portal.kernel.util.Validator" %>
 
 <%@ page import="java.text.Format" %>
 
-<%@ page import="java.util.List" %><%@
+<%@ page import="java.util.Date" %><%@
+page import="java.util.List" %><%@
 page import="java.util.Objects" %>
 
 <liferay-frontend:defineObjects />

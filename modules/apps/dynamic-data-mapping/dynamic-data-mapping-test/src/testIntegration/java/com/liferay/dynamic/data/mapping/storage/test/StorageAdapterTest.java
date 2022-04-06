@@ -17,13 +17,13 @@ package com.liferay.dynamic.data.mapping.storage.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.internal.util.DDMImpl;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidation;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldValidationExpression;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.test.BaseDDMServiceTestCase;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -39,22 +39,22 @@ import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
 import com.liferay.dynamic.data.mapping.util.FieldsToDDMFormValuesConverter;
 import com.liferay.dynamic.data.mapping.validator.DDMFormValuesValidationException;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONSerializer;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.io.Serializable;
 
@@ -96,8 +96,6 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	public void setUp() throws Exception {
 		super.setUp();
 
-		setUpDDMFormValuesToFieldsConverter();
-		setUpFieldsToDDMFormValuesConverter();
 		setUpJSONStorageAdapter();
 	}
 
@@ -107,19 +105,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Boolean Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field booleanField = new Field(
+			structure.getStructureId(), "boolean",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray(true, true, true)
 			).put(
 				_ptLocale, ListUtil.fromArray(false, false, false)
-			).build();
-
-		Field booleanField = new Field(
-			structure.getStructureId(), "boolean", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(booleanField);
 
@@ -171,7 +168,7 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
-		_jsonStorageAdapter.create(
+		_defaultStorageAdapter.create(
 			TestPropsValues.getCompanyId(), structure.getStructureId(),
 			ddmFormValues,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
@@ -192,7 +189,7 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 		DDMFormValues ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(
 			ddmForm);
 
-		_jsonStorageAdapter.create(
+		_defaultStorageAdapter.create(
 			TestPropsValues.getCompanyId(), structure.getStructureId(),
 			ddmFormValues,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
@@ -236,7 +233,7 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
-		_jsonStorageAdapter.create(
+		_defaultStorageAdapter.create(
 			TestPropsValues.getCompanyId(), structure.getStructureId(),
 			ddmFormValues,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
@@ -248,7 +245,7 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Date Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
@@ -287,19 +284,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Decimal Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field decimalField = new Field(
+			structure.getStructureId(), "decimal",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray(1.1, 1.2, 1.3)
 			).put(
 				_ptLocale, ListUtil.fromArray(2.1, 2.2, 2.3)
-			).build();
-
-		Field decimalField = new Field(
-			structure.getStructureId(), "decimal", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(decimalField);
 
@@ -325,7 +321,7 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Documents and Media Field Structure",
-			definition, StorageType.JSON.getValue(),
+			definition, StorageType.DEFAULT.getValue(),
 			DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
@@ -335,30 +331,30 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 				TestPropsValues.getGroupId(), TestPropsValues.getUserId());
 
 		FileEntry file1 = DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 1.txt",
-			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			ContentTypes.TEXT_PLAIN, "Test 1.txt", StringPool.BLANK,
+			StringPool.BLANK, StringPool.BLANK,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null, serviceContext);
 
 		String file1Value = getDocLibraryFieldValue(file1);
 
 		FileEntry file2 = DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
+			null, TestPropsValues.getUserId(), TestPropsValues.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test 2.txt",
-			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			ContentTypes.TEXT_PLAIN, TestDataConstants.TEST_BYTE_ARRAY, null,
+			null, serviceContext);
 
 		String file2Value = getDocLibraryFieldValue(file2);
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field documentLibraryField = new Field(
+			structure.getStructureId(), "doc_library",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray(file1Value, file2Value)
 			).put(
 				_ptLocale, ListUtil.fromArray(file1Value, file2Value)
-			).build();
-
-		Field documentLibraryField = new Field(
-			structure.getStructureId(), "doc_library", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(documentLibraryField);
 
@@ -377,19 +373,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Integer Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field integerField = new Field(
+			structure.getStructureId(), "integer",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray(1, 2, 3)
 			).put(
 				_ptLocale, ListUtil.fromArray(3, 4, 5)
-			).build();
-
-		Field integerField = new Field(
-			structure.getStructureId(), "integer", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(integerField);
 
@@ -409,11 +404,12 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Link to Page Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field linkToPageField = new Field(
+			structure.getStructureId(), "link_to_page",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale,
 				ListUtil.fromArray(
@@ -422,10 +418,8 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 				_ptLocale,
 				ListUtil.fromArray(
 					"{\"layoutId\":\"2\",\"privateLayout\":true}")
-			).build();
-
-		Field linkToPageField = new Field(
-			structure.getStructureId(), "link_to_page", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(linkToPageField);
 
@@ -443,19 +437,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Number Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field numberField = new Field(
+			structure.getStructureId(), "number",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray(1, 1.5F, 2)
 			).put(
 				_ptLocale, ListUtil.fromArray(3, 3.5F, 4)
-			).build();
-
-		Field numberField = new Field(
-			structure.getStructureId(), "number", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(numberField);
 
@@ -474,19 +467,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Radio Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field radioField = new Field(
+			structure.getStructureId(), "radio",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray("value 1", "value 2")
 			).put(
 				_ptLocale, ListUtil.fromArray("value 2", "value 3")
-			).build();
-
-		Field radioField = new Field(
-			structure.getStructureId(), "radio", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(radioField);
 
@@ -505,20 +497,19 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Select Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field selectField = new Field(
+			structure.getStructureId(), "select",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale,
 				ListUtil.fromArray("[\"value 1\",\"value 2\"]", "[\"value 3\"]")
 			).put(
 				_ptLocale, ListUtil.fromArray("[\"value 2\"]", "[\"value 3\"]")
-			).build();
-
-		Field selectField = new Field(
-			structure.getStructureId(), "select", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(selectField);
 
@@ -537,19 +528,18 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		DDMStructure structure = addStructure(
 			_classNameId, null, "Text Field Structure", definition,
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 
 		Fields fields = new Fields();
 
-		Map<Locale, List<Serializable>> dataMap =
+		Field textField = new Field(
+			structure.getStructureId(), "text",
 			HashMapBuilder.<Locale, List<Serializable>>put(
 				_enLocale, ListUtil.fromArray("one", "two", "three")
 			).put(
 				_ptLocale, ListUtil.fromArray("um", "dois", "tres")
-			).build();
-
-		Field textField = new Field(
-			structure.getStructureId(), "text", dataMap, _enLocale);
+			).build(),
+			_enLocale);
 
 		fields.put(textField);
 
@@ -583,14 +573,14 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		ddmFormValues.addDDMFormFieldValue(ddmFormFieldValue);
 
-		long classPK = _jsonStorageAdapter.create(
+		long classPK = _defaultStorageAdapter.create(
 			TestPropsValues.getCompanyId(), structure.getStructureId(),
 			ddmFormValues,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		ddmFormValues = DDMFormValuesTestUtil.createDDMFormValues(ddmForm);
 
-		_jsonStorageAdapter.update(
+		_defaultStorageAdapter.update(
 			classPK, ddmFormValues,
 			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 	}
@@ -633,41 +623,15 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	}
 
 	protected String getDocLibraryFieldValue(FileEntry fileEntry) {
-		StringBundler sb = new StringBundler(7);
-
-		sb.append("{\"groupId\":");
-		sb.append(fileEntry.getGroupId());
-		sb.append(",\"uuid\":\"");
-		sb.append(fileEntry.getUuid());
-		sb.append("\",\"version\":\"");
-		sb.append(fileEntry.getVersion());
-		sb.append("\"}");
-
-		return sb.toString();
-	}
-
-	protected void setUpDDMFormValuesToFieldsConverter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_ddmFormValuesToFieldsConverter = registry.getService(
-			registry.getServiceReference(DDMFormValuesToFieldsConverter.class));
-	}
-
-	protected void setUpFieldsToDDMFormValuesConverter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_fieldsToDDMFormValuesConverter = registry.getService(
-			registry.getServiceReference(FieldsToDDMFormValuesConverter.class));
+		return StringBundler.concat(
+			"{\"groupId\":", fileEntry.getGroupId(), ",\"uuid\":\"",
+			fileEntry.getUuid(), "\",\"version\":\"", fileEntry.getVersion(),
+			"\"}");
 	}
 
 	protected void setUpJSONStorageAdapter() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		_storageAdapterRegistry = registry.getService(
-			registry.getServiceReference(StorageAdapterRegistry.class));
-
-		_jsonStorageAdapter = _storageAdapterRegistry.getStorageAdapter(
-			StorageType.JSON.toString());
+		_defaultStorageAdapter = _storageAdapterRegistry.getStorageAdapter(
+			StorageType.DEFAULT.toString());
 	}
 
 	protected void validate(long ddmStructureId, Fields fields)
@@ -677,13 +641,13 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 
 		String expectedFieldsString = jsonSerializer.serializeDeep(fields);
 
-		long classPK = create(_jsonStorageAdapter, ddmStructureId, fields);
+		long classPK = create(_defaultStorageAdapter, ddmStructureId, fields);
 
 		DDMStructure ddmStructure = DDMStructureLocalServiceUtil.getStructure(
 			ddmStructureId);
 
 		DDMFormValues actualDDMFormValues =
-			_jsonStorageAdapter.getDDMFormValues(classPK);
+			_defaultStorageAdapter.getDDMFormValues(classPK);
 
 		Fields actualFields = _ddmFormValuesToFieldsConverter.convert(
 			ddmStructure, actualDDMFormValues);
@@ -696,9 +660,15 @@ public class StorageAdapterTest extends BaseDDMServiceTestCase {
 	private static Locale _enLocale;
 	private static Locale _ptLocale;
 
+	@Inject
 	private DDMFormValuesToFieldsConverter _ddmFormValuesToFieldsConverter;
+
+	private StorageAdapter _defaultStorageAdapter;
+
+	@Inject
 	private FieldsToDDMFormValuesConverter _fieldsToDDMFormValuesConverter;
-	private StorageAdapter _jsonStorageAdapter;
+
+	@Inject
 	private StorageAdapterRegistry _storageAdapterRegistry;
 
 }

@@ -16,7 +16,7 @@ package com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib;
 
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderingContext;
 import com.liferay.dynamic.data.mapping.form.taglib.internal.security.permission.DDMFormInstancePermission;
-import com.liferay.dynamic.data.mapping.form.taglib.servlet.taglib.util.DDMFormTaglibUtil;
+import com.liferay.dynamic.data.mapping.form.taglib.internal.servlet.taglib.util.DDMFormTaglibUtil;
 import com.liferay.dynamic.data.mapping.form.values.factory.DDMFormValuesFactory;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormInstance;
@@ -39,6 +39,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.JavaConstants;
 import com.liferay.portal.kernel.util.LocaleUtil;
@@ -68,7 +69,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import org.powermock.api.mockito.PowerMockito;
-import org.powermock.api.support.membermodification.MemberMatcher;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.core.classloader.annotations.SuppressStaticInitializationFor;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -83,15 +83,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 	{DDMFormInstancePermission.class, DDMFormTaglibUtil.class, LocaleUtil.class}
 )
 @RunWith(PowerMockRunner.class)
-@SuppressStaticInitializationFor(
-	{
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceRecordVersionModelImpl",
-		"com.liferay.dynamic.data.mapping.model.impl.DDMFormInstanceVersionModelImpl",
-		"com.liferay.taglib.util.IncludeTag"
-	}
-)
+@SuppressStaticInitializationFor("com.liferay.taglib.util.IncludeTag")
 public class DDMFormRendererTagTest extends PowerMockito {
 
 	@Before
@@ -241,9 +233,8 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	public void testGetRedirectURLWhenFormInstanceIsNull() {
 		setDDMFormRendererTagInputs(null, null, null, null);
 
-		String redirectURL = _ddmFormRendererTag.getRedirectURL();
-
-		Assert.assertEquals(StringPool.BLANK, redirectURL);
+		Assert.assertEquals(
+			StringPool.BLANK, _ddmFormRendererTag.getRedirectURL());
 	}
 
 	protected Set<Locale> createAvailableLocales(Locale... locales) {
@@ -397,17 +388,13 @@ public class DDMFormRendererTagTest extends PowerMockito {
 	}
 
 	protected void setUpHttpServletRequest() throws IllegalAccessException {
-		ThemeDisplay themeDisplay = new ThemeDisplay();
-
 		_httpServletRequest.setAttribute(
 			JavaConstants.JAVAX_PORTLET_RESPONSE, new MockRenderResponse());
-		_httpServletRequest.setAttribute(WebKeys.THEME_DISPLAY, themeDisplay);
+		_httpServletRequest.setAttribute(
+			WebKeys.THEME_DISPLAY, new ThemeDisplay());
 
-		MemberMatcher.field(
-			DDMFormRendererTag.class, "request"
-		).set(
-			_ddmFormRendererTag, _httpServletRequest
-		);
+		ReflectionTestUtil.setFieldValue(
+			_ddmFormRendererTag, "_httpServletRequest", _httpServletRequest);
 	}
 
 	protected void setUpLanguageUtil() {

@@ -17,6 +17,7 @@ package com.liferay.portal.service.persistence.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -32,8 +33,12 @@ import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.WebsitePersistence;
+import com.liferay.portal.kernel.service.persistence.WebsiteUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.Validator;
@@ -43,6 +48,7 @@ import com.liferay.portal.model.impl.WebsiteModelImpl;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Date;
@@ -176,7 +182,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -246,10 +252,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -560,8 +562,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -599,8 +600,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -720,7 +719,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -796,10 +795,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1136,8 +1131,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {uuid, companyId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1179,8 +1173,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1295,7 +1287,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -1354,10 +1346,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1655,8 +1643,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -1683,8 +1670,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1790,7 +1775,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -1849,10 +1834,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2149,8 +2130,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -2177,8 +2157,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -2294,7 +2272,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -2359,10 +2337,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -2686,8 +2660,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, classNameId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -2718,8 +2691,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -2846,7 +2817,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -2916,10 +2887,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3262,8 +3229,7 @@ public class WebsitePersistenceImpl
 
 		Object[] finderArgs = new Object[] {companyId, classNameId, classPK};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(4);
@@ -3298,8 +3264,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -3439,7 +3403,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (Website website : list) {
@@ -3514,10 +3478,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -3883,8 +3843,7 @@ public class WebsitePersistenceImpl
 			companyId, classNameId, classPK, primary
 		};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(5);
@@ -3923,8 +3882,6 @@ public class WebsitePersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -3959,7 +3916,6 @@ public class WebsitePersistenceImpl
 
 		setModelImplClass(WebsiteImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(WebsiteModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(WebsiteTable.INSTANCE);
 	}
@@ -3972,11 +3928,10 @@ public class WebsitePersistenceImpl
 	@Override
 	public void cacheResult(Website website) {
 		EntityCacheUtil.putResult(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-			website.getPrimaryKey(), website);
-
-		website.resetOriginalValues();
+			WebsiteImpl.class, website.getPrimaryKey(), website);
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the websites in the entity cache if it is enabled.
@@ -3985,15 +3940,18 @@ public class WebsitePersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<Website> websites) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (websites.size() > _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (Website website : websites) {
 			if (EntityCacheUtil.getResult(
-					WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-					website.getPrimaryKey()) == null) {
+					WebsiteImpl.class, website.getPrimaryKey()) == null) {
 
 				cacheResult(website);
-			}
-			else {
-				website.resetOriginalValues();
 			}
 		}
 	}
@@ -4002,57 +3960,41 @@ public class WebsitePersistenceImpl
 	 * Clears the cache for all websites.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(WebsiteImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(WebsiteImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the website.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(Website website) {
-		EntityCacheUtil.removeResult(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-			website.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		EntityCacheUtil.removeResult(WebsiteImpl.class, website);
 	}
 
 	@Override
 	public void clearCache(List<Website> websites) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (Website website : websites) {
-			EntityCacheUtil.removeResult(
-				WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-				website.getPrimaryKey());
+			EntityCacheUtil.removeResult(WebsiteImpl.class, website);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(WebsiteImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			EntityCacheUtil.removeResult(
-				WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-				primaryKey);
+			EntityCacheUtil.removeResult(WebsiteImpl.class, primaryKey);
 		}
 	}
 
@@ -4192,23 +4134,23 @@ public class WebsitePersistenceImpl
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
-		Date now = new Date();
+		Date date = new Date();
 
 		if (isNew && (website.getCreateDate() == null)) {
 			if (serviceContext == null) {
-				website.setCreateDate(now);
+				website.setCreateDate(date);
 			}
 			else {
-				website.setCreateDate(serviceContext.getCreateDate(now));
+				website.setCreateDate(serviceContext.getCreateDate(date));
 			}
 		}
 
 		if (!websiteModelImpl.hasSetModifiedDate()) {
 			if (serviceContext == null) {
-				website.setModifiedDate(now);
+				website.setModifiedDate(date);
 			}
 			else {
-				website.setModifiedDate(serviceContext.getModifiedDate(now));
+				website.setModifiedDate(serviceContext.getModifiedDate(date));
 			}
 		}
 
@@ -4217,10 +4159,8 @@ public class WebsitePersistenceImpl
 		try {
 			session = openSession();
 
-			if (website.isNew()) {
+			if (isNew) {
 				session.save(website);
-
-				website.setNew(false);
 			}
 			else {
 				website = (Website)session.merge(website);
@@ -4233,230 +4173,12 @@ public class WebsitePersistenceImpl
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!WebsiteModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {websiteModelImpl.getUuid()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid, args);
-
-			args = new Object[] {
-				websiteModelImpl.getUuid(), websiteModelImpl.getCompanyId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUuid_C, args);
-
-			args = new Object[] {websiteModelImpl.getCompanyId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByCompanyId, args);
-
-			args = new Object[] {websiteModelImpl.getUserId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUserId, args);
-
-			args = new Object[] {
-				websiteModelImpl.getCompanyId(),
-				websiteModelImpl.getClassNameId()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_C, args);
-
-			args = new Object[] {
-				websiteModelImpl.getCompanyId(),
-				websiteModelImpl.getClassNameId(), websiteModelImpl.getClassPK()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_C_C, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_C_C, args);
-
-			args = new Object[] {
-				websiteModelImpl.getCompanyId(),
-				websiteModelImpl.getClassNameId(),
-				websiteModelImpl.getClassPK(), websiteModelImpl.isPrimary()
-			};
-
-			FinderCacheUtil.removeResult(_finderPathCountByC_C_C_P, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByC_C_C_P, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalUuid()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-
-				args = new Object[] {websiteModelImpl.getUuid()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUuid_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalUuid(),
-					websiteModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-
-				args = new Object[] {
-					websiteModelImpl.getUuid(), websiteModelImpl.getCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUuid_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUuid_C, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByCompanyId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalCompanyId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-
-				args = new Object[] {websiteModelImpl.getCompanyId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByCompanyId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByCompanyId, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-
-				args = new Object[] {websiteModelImpl.getUserId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalCompanyId(),
-					websiteModelImpl.getOriginalClassNameId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C, args);
-
-				args = new Object[] {
-					websiteModelImpl.getCompanyId(),
-					websiteModelImpl.getClassNameId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_C_C.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalCompanyId(),
-					websiteModelImpl.getOriginalClassNameId(),
-					websiteModelImpl.getOriginalClassPK()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_C, args);
-
-				args = new Object[] {
-					websiteModelImpl.getCompanyId(),
-					websiteModelImpl.getClassNameId(),
-					websiteModelImpl.getClassPK()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_C, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_C, args);
-			}
-
-			if ((websiteModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByC_C_C_P.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					websiteModelImpl.getOriginalCompanyId(),
-					websiteModelImpl.getOriginalClassNameId(),
-					websiteModelImpl.getOriginalClassPK(),
-					websiteModelImpl.getOriginalPrimary()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_C_P, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_C_P, args);
-
-				args = new Object[] {
-					websiteModelImpl.getCompanyId(),
-					websiteModelImpl.getClassNameId(),
-					websiteModelImpl.getClassPK(), websiteModelImpl.isPrimary()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByC_C_C_P, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByC_C_C_P, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED, WebsiteImpl.class,
-			website.getPrimaryKey(), website, false);
+			WebsiteImpl.class, websiteModelImpl, false, true);
+
+		if (isNew) {
+			website.setNew(false);
+		}
 
 		website.resetOriginalValues();
 
@@ -4596,7 +4318,7 @@ public class WebsitePersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<Website>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -4637,10 +4359,6 @@ public class WebsitePersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -4670,7 +4388,7 @@ public class WebsitePersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -4686,9 +4404,6 @@ public class WebsitePersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -4728,212 +4443,186 @@ public class WebsitePersistenceImpl
 	 * Initializes the website persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUuid = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
 			new String[] {
 				String.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_"}, true);
 
 		_finderPathWithoutPaginationFindByUuid = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
-			new String[] {String.class.getName()},
-			WebsiteModelImpl.UUID_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			true);
 
 		_finderPathCountByUuid = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
-			new String[] {String.class.getName()});
+			new String[] {String.class.getName()}, new String[] {"uuid_"},
+			false);
 
 		_finderPathWithPaginationFindByUuid_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid_C",
 			new String[] {
 				String.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathWithoutPaginationFindByUuid_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid_C",
 			new String[] {String.class.getName(), Long.class.getName()},
-			WebsiteModelImpl.UUID_COLUMN_BITMASK |
-			WebsiteModelImpl.COMPANYID_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"uuid_", "companyId"}, true);
 
 		_finderPathCountByUuid_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid_C",
-			new String[] {String.class.getName(), Long.class.getName()});
+			new String[] {String.class.getName(), Long.class.getName()},
+			new String[] {"uuid_", "companyId"}, false);
 
 		_finderPathWithPaginationFindByCompanyId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByCompanyId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId"}, true);
 
 		_finderPathWithoutPaginationFindByCompanyId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByCompanyId",
-			new String[] {Long.class.getName()},
-			WebsiteModelImpl.COMPANYID_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			true);
 
 		_finderPathCountByCompanyId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByCompanyId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"companyId"},
+			false);
 
 		_finderPathWithPaginationFindByUserId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId"}, true);
 
 		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] {Long.class.getName()},
-			WebsiteModelImpl.USERID_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
 		_finderPathCountByUserId = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"userId"},
+			false);
 
 		_finderPathWithPaginationFindByC_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "classNameId"}, true);
 
 		_finderPathWithoutPaginationFindByC_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C",
 			new String[] {Long.class.getName(), Long.class.getName()},
-			WebsiteModelImpl.COMPANYID_COLUMN_BITMASK |
-			WebsiteModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "classNameId"}, true);
 
 		_finderPathCountByC_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C",
-			new String[] {Long.class.getName(), Long.class.getName()});
+			new String[] {Long.class.getName(), Long.class.getName()},
+			new String[] {"companyId", "classNameId"}, false);
 
 		_finderPathWithPaginationFindByC_C_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "classNameId", "classPK"}, true);
 
 		_finderPathWithoutPaginationFindByC_C_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
 			},
-			WebsiteModelImpl.COMPANYID_COLUMN_BITMASK |
-			WebsiteModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			WebsiteModelImpl.CLASSPK_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "classNameId", "classPK"}, true);
 
 		_finderPathCountByC_C_C = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_C",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {"companyId", "classNameId", "classPK"}, false);
 
 		_finderPathWithPaginationFindByC_C_C_P = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByC_C_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Boolean.class.getName(),
 				Integer.class.getName(), Integer.class.getName(),
 				OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"companyId", "classNameId", "classPK", "primary_"},
+			true);
 
 		_finderPathWithoutPaginationFindByC_C_C_P = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, WebsiteImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByC_C_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Boolean.class.getName()
 			},
-			WebsiteModelImpl.COMPANYID_COLUMN_BITMASK |
-			WebsiteModelImpl.CLASSNAMEID_COLUMN_BITMASK |
-			WebsiteModelImpl.CLASSPK_COLUMN_BITMASK |
-			WebsiteModelImpl.PRIMARY_COLUMN_BITMASK |
-			WebsiteModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {"companyId", "classNameId", "classPK", "primary_"},
+			true);
 
 		_finderPathCountByC_C_C_P = new FinderPath(
-			WebsiteModelImpl.ENTITY_CACHE_ENABLED,
-			WebsiteModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByC_C_C_P",
 			new String[] {
 				Long.class.getName(), Long.class.getName(),
 				Long.class.getName(), Boolean.class.getName()
-			});
+			},
+			new String[] {"companyId", "classNameId", "classPK", "primary_"},
+			false);
+
+		_setWebsiteUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setWebsiteUtilPersistence(null);
+
 		EntityCacheUtil.removeCache(WebsiteImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setWebsiteUtilPersistence(
+		WebsitePersistence websitePersistence) {
+
+		try {
+			Field field = WebsiteUtil.class.getDeclaredField("_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, websitePersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	private static final String _SQL_SELECT_WEBSITE =
@@ -4961,5 +4650,10 @@ public class WebsitePersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"uuid", "primary"});
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
+	}
 
 }

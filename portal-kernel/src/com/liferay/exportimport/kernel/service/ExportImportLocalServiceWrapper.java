@@ -27,6 +27,10 @@ public class ExportImportLocalServiceWrapper
 	implements ExportImportLocalService,
 			   ServiceWrapper<ExportImportLocalService> {
 
+	public ExportImportLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ExportImportLocalServiceWrapper(
 		ExportImportLocalService exportImportLocalService) {
 
@@ -134,6 +138,18 @@ public class ExportImportLocalServiceWrapper
 
 		_exportImportLocalService.importLayoutsDataDeletions(
 			exportImportConfiguration, file);
+	}
+
+	@Override
+	public long importLayoutSetPrototypeInBackground(
+			long userId,
+			com.liferay.exportimport.kernel.model.ExportImportConfiguration
+				exportImportConfiguration,
+			java.io.File file)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _exportImportLocalService.importLayoutSetPrototypeInBackground(
+			userId, exportImportConfiguration, file);
 	}
 
 	@Override

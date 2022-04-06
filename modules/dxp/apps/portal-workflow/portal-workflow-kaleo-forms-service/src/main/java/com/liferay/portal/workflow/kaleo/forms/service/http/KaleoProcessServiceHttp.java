@@ -46,7 +46,6 @@ import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessServiceUtil;
  * </p>
  *
  * @author Marcellus Tavares
- * @see KaleoProcessServiceSoap
  * @generated
  */
 public class KaleoProcessServiceHttp {
@@ -189,7 +188,8 @@ public class KaleoProcessServiceHttp {
 			HttpPrincipal httpPrincipal, long groupId, String keywords,
 			int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				orderByComparator) {
+				<com.liferay.portal.workflow.kaleo.forms.model.KaleoProcess>
+					orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(

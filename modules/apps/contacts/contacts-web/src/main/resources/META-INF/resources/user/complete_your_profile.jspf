@@ -26,7 +26,7 @@
 				%>
 
 				<a href="<%= editCommentsURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "introduction") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "introduction") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -46,7 +46,7 @@
 				%>
 
 				<a href="<%= editCategorizationURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "tags") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "tags") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -62,14 +62,17 @@
 			<c:if test="<%= phones.isEmpty() %>">
 
 				<%
-				PortletURL editPhonesURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editPhonesURL.setParameter("screenNavigationCategoryKey", "contact");
-				editPhonesURL.setParameter("screenNavigationEntryKey", "contact-information");
+				PortletURL editPhonesURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).setParameter(
+					"screenNavigationEntryKey", "contact-information"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editPhonesURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "phone-numbers") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "phone-numbers") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -85,14 +88,17 @@
 			<c:if test="<%= emailAddresses.isEmpty() %>">
 
 				<%
-				PortletURL editAdditionalEmailAddressesURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editAdditionalEmailAddressesURL.setParameter("screenNavigationCategoryKey", "contact");
-				editAdditionalEmailAddressesURL.setParameter("screenNavigationEntryKey", "contact-information");
+				PortletURL editAdditionalEmailAddressesURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).setParameter(
+					"screenNavigationEntryKey", "contact-information"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editAdditionalEmailAddressesURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "additional-email-addresses") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "additional-email-addresses") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -108,13 +114,15 @@
 			<c:if test="<%= addresses.isEmpty() %>">
 
 				<%
-				PortletURL editAddressesURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editAddressesURL.setParameter("screenNavigationCategoryKey", "contact");
+				PortletURL editAddressesURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editAddressesURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "addresses") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "addresses") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -130,14 +138,17 @@
 			<c:if test="<%= websites.isEmpty() %>">
 
 				<%
-				PortletURL editWebsitesURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editWebsitesURL.setParameter("screenNavigationCategoryKey", "contact");
-				editWebsitesURL.setParameter("screenNavigationEntryKey", "contact-information");
+				PortletURL editWebsitesURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).setParameter(
+					"screenNavigationEntryKey", "contact-information"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editWebsitesURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "websites") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "websites") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -153,14 +164,17 @@
 			<c:if test="<%= Validator.isNull(facebook) && Validator.isNull(twitter) %>">
 
 				<%
-				PortletURL editSocialNetworkURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editSocialNetworkURL.setParameter("screenNavigationCategoryKey", "contact");
-				editSocialNetworkURL.setParameter("screenNavigationEntryKey", "contact-information");
+				PortletURL editSocialNetworkURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).setParameter(
+					"screenNavigationEntryKey", "contact-information"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editSocialNetworkURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "social-network") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "social-network") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="plus"
@@ -176,14 +190,17 @@
 			<c:if test="<%= Validator.isNull(contact2.getSmsSn()) %>">
 
 				<%
-				PortletURL editSmsURL = PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE);
-
-				editSmsURL.setParameter("screenNavigationCategoryKey", "contact");
-				editSmsURL.setParameter("screenNavigationEntryKey", "contact-information");
+				PortletURL editSmsURL = PortletURLBuilder.create(
+					PortletURLFactoryUtil.create(request, PortletKeys.MY_ACCOUNT, embeddedPersonalApplicationLayout, PortletRequest.RENDER_PHASE)
+				).setParameter(
+					"screenNavigationCategoryKey", "contact"
+				).setParameter(
+					"screenNavigationEntryKey", "contact-information"
+				).buildPortletURL();
 				%>
 
 				<a href="<%= editSmsURL.toString() %>">
-					<li class="action-field component lfr-token settings-field" data-title='<%= LanguageUtil.get(request, "sms") %>'>
+					<li class="action-field component lfr-token settings-field" data-title="<%= LanguageUtil.get(request, "sms") %>">
 						<div class="settings-field-content">
 							<liferay-ui:icon
 								icon="pencil"

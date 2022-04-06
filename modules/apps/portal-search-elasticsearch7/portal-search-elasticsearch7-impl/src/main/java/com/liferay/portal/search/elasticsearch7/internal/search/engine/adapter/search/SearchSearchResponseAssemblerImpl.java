@@ -36,6 +36,7 @@ import com.liferay.portal.search.highlight.HighlightFieldBuilderFactory;
 import com.liferay.portal.search.hits.SearchHitBuilderFactory;
 import com.liferay.portal.search.hits.SearchHits;
 import com.liferay.portal.search.hits.SearchHitsBuilderFactory;
+import com.liferay.portal.search.searcher.SearchTimeValue;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -43,6 +44,7 @@ import java.util.stream.Stream;
 import org.apache.lucene.search.TotalHits;
 
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
@@ -68,12 +70,13 @@ public class SearchSearchResponseAssemblerImpl
 			searchRequestBuilder, searchResponse, searchSearchRequest,
 			searchSearchResponse);
 
-		addAggregations(
+		_addAggregations(
 			searchResponse, searchSearchResponse, searchSearchRequest);
 		setCount(searchResponse, searchSearchResponse);
-		setScrollId(searchResponse, searchSearchResponse);
-		setSearchHits(
+		_setScrollId(searchResponse, searchSearchResponse);
+		_setSearchHits(
 			searchResponse, searchSearchResponse, searchSearchRequest);
+		_setSearchTimeValue(searchResponse, searchSearchResponse);
 
 		_searchResponseTranslator.populate(
 			searchSearchResponse, searchResponse, searchSearchRequest);
@@ -101,37 +104,6 @@ public class SearchSearchResponseAssemblerImpl
 
 		return new ElasticsearchPipelineAggregationResultTranslator(
 			elasticsearchAggregation, _aggregationResults);
-	}
-
-	protected void addAggregations(
-		SearchResponse searchResponse,
-		SearchSearchResponse searchSearchResponse,
-		SearchSearchRequest searchSearchRequest) {
-
-		Aggregations elasticsearchAggregations =
-			searchResponse.getAggregations();
-
-		if (elasticsearchAggregations == null) {
-			return;
-		}
-
-		Map<String, Aggregation> aggregationsMap =
-			searchSearchRequest.getAggregationsMap();
-
-		Map<String, PipelineAggregation> pipelineAggregationsMap =
-			searchSearchRequest.getPipelineAggregationsMap();
-
-		ElasticsearchAggregationResultsTranslator
-			elasticsearchAggregationResultsTranslator =
-				new ElasticsearchAggregationResultsTranslator(
-					this, this, aggregationsMap::get,
-					pipelineAggregationsMap::get);
-
-		Stream<AggregationResult> stream =
-			elasticsearchAggregationResultsTranslator.translate(
-				elasticsearchAggregations);
-
-		stream.forEach(searchSearchResponse::addAggregationResult);
 	}
 
 	@Reference(unbind = "-")
@@ -179,7 +151,59 @@ public class SearchSearchResponseAssemblerImpl
 		_highlightFieldBuilderFactory = highlightFieldBuilderFactory;
 	}
 
-	protected void setScrollId(
+	@Reference(unbind = "-")
+	protected void setSearchHitBuilderFactory(
+		SearchHitBuilderFactory searchHitBuilderFactory) {
+
+		_searchHitBuilderFactory = searchHitBuilderFactory;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSearchHitsBuilderFactory(
+		SearchHitsBuilderFactory searchHitsBuilderFactory) {
+
+		_searchHitsBuilderFactory = searchHitsBuilderFactory;
+	}
+
+	@Reference(unbind = "-")
+	protected void setSearchResponseTranslator(
+		SearchResponseTranslator searchResponseTranslator) {
+
+		_searchResponseTranslator = searchResponseTranslator;
+	}
+
+	private void _addAggregations(
+		SearchResponse searchResponse,
+		SearchSearchResponse searchSearchResponse,
+		SearchSearchRequest searchSearchRequest) {
+
+		Aggregations elasticsearchAggregations =
+			searchResponse.getAggregations();
+
+		if (elasticsearchAggregations == null) {
+			return;
+		}
+
+		Map<String, Aggregation> aggregationsMap =
+			searchSearchRequest.getAggregationsMap();
+
+		Map<String, PipelineAggregation> pipelineAggregationsMap =
+			searchSearchRequest.getPipelineAggregationsMap();
+
+		ElasticsearchAggregationResultsTranslator
+			elasticsearchAggregationResultsTranslator =
+				new ElasticsearchAggregationResultsTranslator(
+					this, this, aggregationsMap::get,
+					pipelineAggregationsMap::get);
+
+		Stream<AggregationResult> stream =
+			elasticsearchAggregationResultsTranslator.translate(
+				elasticsearchAggregations);
+
+		stream.forEach(searchSearchResponse::addAggregationResult);
+	}
+
+	private void _setScrollId(
 		SearchResponse searchResponse,
 		SearchSearchResponse searchSearchResponse) {
 
@@ -188,14 +212,7 @@ public class SearchSearchResponseAssemblerImpl
 		}
 	}
 
-	@Reference(unbind = "-")
-	protected void setSearchHitBuilderFactory(
-		SearchHitBuilderFactory searchHitBuilderFactory) {
-
-		_searchHitBuilderFactory = searchHitBuilderFactory;
-	}
-
-	protected void setSearchHits(
+	private void _setSearchHits(
 		SearchResponse searchResponse,
 		SearchSearchResponse searchSearchResponse,
 		SearchSearchRequest searchSearchRequest) {
@@ -215,18 +232,21 @@ public class SearchSearchResponseAssemblerImpl
 		searchSearchResponse.setSearchHits(searchHits);
 	}
 
-	@Reference(unbind = "-")
-	protected void setSearchHitsBuilderFactory(
-		SearchHitsBuilderFactory searchHitsBuilderFactory) {
+	private void _setSearchTimeValue(
+		SearchResponse searchResponse,
+		SearchSearchResponse searchSearchResponse) {
 
-		_searchHitsBuilderFactory = searchHitsBuilderFactory;
-	}
+		TimeValue took = searchResponse.getTook();
 
-	@Reference(unbind = "-")
-	protected void setSearchResponseTranslator(
-		SearchResponseTranslator searchResponseTranslator) {
+		SearchTimeValue.Builder builder = SearchTimeValue.Builder.newBuilder();
 
-		_searchResponseTranslator = searchResponseTranslator;
+		builder.duration(
+			took.duration()
+		).timeUnit(
+			took.timeUnit()
+		);
+
+		searchSearchResponse.setSearchTimeValue(builder.build());
 	}
 
 	private AggregationResults _aggregationResults;

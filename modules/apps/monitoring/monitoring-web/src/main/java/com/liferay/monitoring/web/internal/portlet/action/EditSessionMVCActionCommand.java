@@ -75,12 +75,29 @@ public class EditSessionMVCActionCommand extends BaseMVCActionCommand {
 			return;
 		}
 
-		invalidateSession(actionRequest);
+		_invalidateSession(actionRequest);
 
 		sendRedirect(actionRequest, actionResponse);
 	}
 
-	protected void invalidateSession(ActionRequest actionRequest)
+	private static void _invalidateSession(String sessionId) {
+		HttpSession userHttpSession = PortalSessionContext.get(sessionId);
+
+		if (userHttpSession != null) {
+			boolean eanbled = ClusterInvokeThreadLocal.isEnabled();
+
+			ClusterInvokeThreadLocal.setEnabled(true);
+
+			try {
+				userHttpSession.invalidate();
+			}
+			finally {
+				ClusterInvokeThreadLocal.setEnabled(eanbled);
+			}
+		}
+	}
+
+	private void _invalidateSession(ActionRequest actionRequest)
 		throws Exception {
 
 		String sessionId = ParamUtil.getString(actionRequest, "sessionId");
@@ -91,10 +108,11 @@ public class EditSessionMVCActionCommand extends BaseMVCActionCommand {
 			String portletSessionId = portletSession.getId();
 
 			if (!portletSessionId.equals(sessionId)) {
-				HttpSession userSession = PortalSessionContext.get(sessionId);
+				HttpSession userHttpSession = PortalSessionContext.get(
+					sessionId);
 
-				if (userSession != null) {
-					userSession.invalidate();
+				if (userHttpSession != null) {
+					userHttpSession.invalidate();
 
 					return;
 				}
@@ -115,30 +133,13 @@ public class EditSessionMVCActionCommand extends BaseMVCActionCommand {
 
 					_clusterExecutor.execute(clusterRequest);
 				}
-				catch (Throwable t) {
-					_log.error("Unable to notify cluster ", t);
+				catch (Throwable throwable) {
+					_log.error("Unable to notify cluster ", throwable);
 				}
 			}
 		}
 		catch (Exception exception) {
 			_log.error("Unable to invalidate session", exception);
-		}
-	}
-
-	private static void _invalidateSession(String sessionId) {
-		HttpSession userSession = PortalSessionContext.get(sessionId);
-
-		if (userSession != null) {
-			boolean eanbled = ClusterInvokeThreadLocal.isEnabled();
-
-			ClusterInvokeThreadLocal.setEnabled(true);
-
-			try {
-				userSession.invalidate();
-			}
-			finally {
-				ClusterInvokeThreadLocal.setEnabled(eanbled);
-			}
 		}
 	}
 

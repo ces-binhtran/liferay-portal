@@ -187,6 +187,26 @@ public class FragmentCompositionServiceImpl
 
 	@Override
 	public FragmentComposition updateFragmentComposition(
+			long fragmentCompositionId, long fragmentCollectionId, String name,
+			String description, String data, long previewFileEntryId,
+			int status)
+		throws PortalException {
+
+		FragmentComposition fragmentComposition =
+			fragmentCompositionPersistence.findByPrimaryKey(
+				fragmentCompositionId);
+
+		_portletResourcePermission.check(
+			getPermissionChecker(), fragmentComposition.getGroupId(),
+			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
+
+		return fragmentCompositionLocalService.updateFragmentComposition(
+			getUserId(), fragmentCompositionId, fragmentCollectionId, name,
+			description, data, previewFileEntryId, status);
+	}
+
+	@Override
+	public FragmentComposition updateFragmentComposition(
 			long fragmentCompositionId, String name)
 		throws PortalException {
 
@@ -217,8 +237,9 @@ public class FragmentCompositionServiceImpl
 			FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 
 		return fragmentCompositionLocalService.updateFragmentComposition(
-			getUserId(), fragmentCompositionId, name, description, data,
-			previewFileEntryId, status);
+			getUserId(), fragmentCompositionId,
+			fragmentComposition.getFragmentCollectionId(), name, description,
+			data, previewFileEntryId, status);
 	}
 
 	@Reference

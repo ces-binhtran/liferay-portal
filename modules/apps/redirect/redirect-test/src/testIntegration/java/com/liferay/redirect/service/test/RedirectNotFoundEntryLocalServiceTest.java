@@ -17,7 +17,6 @@ package com.liferay.redirect.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -62,7 +61,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 		RedirectNotFoundEntry redirectNotFoundEntry =
 			_addOrUpdateRedirectNotFoundEntry("url");
 
-		Assert.assertEquals(1, redirectNotFoundEntry.getHits());
+		Assert.assertEquals(1, redirectNotFoundEntry.getRequestCount());
 	}
 
 	@Test
@@ -74,8 +73,8 @@ public class RedirectNotFoundEntryLocalServiceTest {
 
 		Assert.assertNotEquals(redirectNotFoundEntry1, redirectNotFoundEntry2);
 
-		Assert.assertEquals(1, redirectNotFoundEntry1.getHits());
-		Assert.assertEquals(1, redirectNotFoundEntry2.getHits());
+		Assert.assertEquals(1, redirectNotFoundEntry1.getRequestCount());
+		Assert.assertEquals(1, redirectNotFoundEntry2.getRequestCount());
 	}
 
 	@Test
@@ -86,7 +85,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 			_addOrUpdateRedirectNotFoundEntry("url");
 
 		Assert.assertEquals(redirectNotFoundEntry1, redirectNotFoundEntry2);
-		Assert.assertEquals(2, redirectNotFoundEntry2.getHits());
+		Assert.assertEquals(2, redirectNotFoundEntry2.getRequestCount());
 	}
 
 	@Test
@@ -94,7 +93,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 		RedirectNotFoundEntry redirectNotFoundEntry =
 			_addOrUpdateRedirectNotFoundEntry(null);
 
-		Assert.assertEquals(1, redirectNotFoundEntry.getHits());
+		Assert.assertEquals(1, redirectNotFoundEntry.getRequestCount());
 	}
 
 	@Test
@@ -117,6 +116,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 	public void testGetRedirectNotFoundEntriesReturnsActiveEntries() {
 		RedirectNotFoundEntry activeRedirectNotFoundEntry =
 			_addOrUpdateRedirectNotFoundEntry("url1", false);
+
 		_addOrUpdateRedirectNotFoundEntry("url2", true);
 
 		List<RedirectNotFoundEntry> activeRedirectNotFoundEntries =
@@ -157,6 +157,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 	@Test
 	public void testGetRedirectNotFoundEntriesReturnsIgnoredEntries() {
 		_addOrUpdateRedirectNotFoundEntry("url1", false);
+
 		RedirectNotFoundEntry ignoredRedirectNotFoundEntry =
 			_addOrUpdateRedirectNotFoundEntry("url2", true);
 
@@ -182,6 +183,7 @@ public class RedirectNotFoundEntryLocalServiceTest {
 
 		RedirectNotFoundEntry redirectNotFoundEntry =
 			_addOrUpdateRedirectNotFoundEntry("url1", new Date());
+
 		_addOrUpdateRedirectNotFoundEntry(
 			"url2", Date.from(instant.minus(Duration.ofDays(6))));
 		_addOrUpdateRedirectNotFoundEntry(
@@ -275,9 +277,6 @@ public class RedirectNotFoundEntryLocalServiceTest {
 
 	@DeleteAfterTestRun
 	private Group _group;
-
-	@Inject
-	private GroupLocalService _groupLocalService;
 
 	@DeleteAfterTestRun
 	private final Set<RedirectNotFoundEntry> _redirectNotFoundEntries =

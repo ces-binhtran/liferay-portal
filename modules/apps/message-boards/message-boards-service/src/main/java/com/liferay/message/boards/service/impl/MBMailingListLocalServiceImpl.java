@@ -23,7 +23,8 @@ import com.liferay.message.boards.exception.MailingListOutUserNameException;
 import com.liferay.message.boards.internal.messaging.MailingListRequest;
 import com.liferay.message.boards.model.MBMailingList;
 import com.liferay.message.boards.service.base.MBMailingListLocalServiceBaseImpl;
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.json.jabsorb.serializer.LiferayJSONDeserializationWhitelist;
@@ -31,6 +32,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.messaging.DestinationNames;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.messaging.proxy.ProxyModeThreadLocal;
+import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.scheduler.SchedulerEngineHelperUtil;
 import com.liferay.portal.kernel.scheduler.StorageType;
@@ -39,6 +41,7 @@ import com.liferay.portal.kernel.scheduler.Trigger;
 import com.liferay.portal.kernel.scheduler.TriggerFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.util.CalendarFactoryUtil;
 import com.liferay.portal.kernel.util.Validator;
 
@@ -139,6 +142,7 @@ public class MBMailingListLocalServiceImpl
 	}
 
 	@Override
+	@SystemEvent(type = SystemEventConstants.TYPE_DELETE)
 	public void deleteMailingList(MBMailingList mailingList)
 		throws PortalException {
 
@@ -204,8 +208,8 @@ public class MBMailingListLocalServiceImpl
 		// Scheduler
 
 		if (active) {
-			try (SafeClosable safeClosable =
-					ProxyModeThreadLocal.setWithSafeClosable(true)) {
+			try (SafeCloseable safeCloseable =
+					ProxyModeThreadLocal.setWithSafeCloseable(true)) {
 
 				unscheduleMailingList(mailingList);
 
@@ -226,16 +230,22 @@ public class MBMailingListLocalServiceImpl
 	}
 
 	@Deactivate
-	protected void deactivate() throws Exception {
-		_unregister.close();
+	@Override
+	protected void deactivate() {
+		super.deactivate();
+
+		try {
+			_unregister.close();
+		}
+		catch (Exception exception) {
+			throw new RuntimeException(exception);
+		}
 	}
 
 	protected String getSchedulerGroupName(MBMailingList mailingList) {
-		return DestinationNames.MESSAGE_BOARDS_MAILING_LIST.concat(
-			StringPool.SLASH
-		).concat(
-			String.valueOf(mailingList.getMailingListId())
-		);
+		return StringBundler.concat(
+			DestinationNames.MESSAGE_BOARDS_MAILING_LIST, StringPool.SLASH,
+			mailingList.getMailingListId());
 	}
 
 	protected void scheduleMailingList(MBMailingList mailingList)

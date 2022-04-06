@@ -15,6 +15,7 @@
 package com.liferay.users.admin.search.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.Country;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.model.UserGroup;
 import com.liferay.portal.kernel.search.Document;
 import com.liferay.portal.kernel.search.Field;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.service.OrganizationLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.UserGroupLocalService;
@@ -37,6 +37,8 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.search.document.DocumentBuilderFactory;
+import com.liferay.portal.search.model.uid.UIDFactory;
 import com.liferay.portal.search.test.util.FieldValuesAssert;
 import com.liferay.portal.search.test.util.IndexedFieldsFixture;
 import com.liferay.portal.search.test.util.IndexerFixture;
@@ -191,15 +193,13 @@ public class UserIndexerIndexedFieldsTest {
 	}
 
 	protected User addUser() throws Exception {
-		String[] assetTagNames = {};
-
 		return userSearchFixture.addUser(
-			RandomTestUtil.randomString(), group, assetTagNames);
+			RandomTestUtil.randomString(), group, new String[0]);
 	}
 
 	protected void setUpIndexedFieldsFixture() {
 		indexedFieldsFixture = new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
+			resourcePermissionLocalService, uidFactory, documentBuilderFactory);
 	}
 
 	protected void setUpIndexerFixture() {
@@ -234,6 +234,9 @@ public class UserIndexerIndexedFieldsTest {
 		group = groupSearchFixture.addGroup(new GroupBlueprint());
 	}
 
+	@Inject
+	protected DocumentBuilderFactory documentBuilderFactory;
+
 	protected Group group;
 	protected IndexedFieldsFixture indexedFieldsFixture;
 	protected IndexerFixture<User> indexerFixture;
@@ -247,7 +250,7 @@ public class UserIndexerIndexedFieldsTest {
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 
 	@Inject
-	protected SearchEngineHelper searchEngineHelper;
+	protected UIDFactory uidFactory;
 
 	@Inject
 	protected UserGroupLocalService userGroupLocalService;
@@ -258,6 +261,10 @@ public class UserIndexerIndexedFieldsTest {
 	protected UserLocalService userLocalService;
 
 	protected UserSearchFixture userSearchFixture;
+
+	private String _getEmailAddressDomain(String emailAddress) {
+		return emailAddress.substring(emailAddress.indexOf(StringPool.AT) + 1);
+	}
 
 	private Map<String, String> _getExpectedFieldValues(User user)
 		throws Exception {
@@ -285,6 +292,8 @@ public class UserIndexerIndexedFieldsTest {
 		).put(
 			"emailAddress", user.getEmailAddress()
 		).put(
+			"emailAddressDomain", _getEmailAddressDomain(user.getEmailAddress())
+		).put(
 			"firstName", user.getFirstName()
 		).put(
 			"firstName_sortable", StringUtil.toLowerCase(user.getFirstName())
@@ -311,8 +320,7 @@ public class UserIndexerIndexedFieldsTest {
 			"screenName_sortable", StringUtil.toLowerCase(user.getScreenName())
 		).build();
 
-		indexedFieldsFixture.populateUID(
-			User.class.getName(), user.getUserId(), map);
+		indexedFieldsFixture.populateUID(user, map);
 
 		indexedFieldsFixture.populateDate(
 			Field.MODIFIED_DATE, user.getModifiedDate(), map);

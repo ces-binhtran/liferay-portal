@@ -15,8 +15,11 @@
 package com.liferay.portal.kernel.servlet;
 
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.internal.util.ContextResourcePathsUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.URLUtil;
 
@@ -76,11 +79,8 @@ public class ServletContextUtil {
 
 		if (cache) {
 			lastModifiedCacheKey = ServletContextUtil.class.getName();
-			lastModifiedCacheKey = lastModifiedCacheKey.concat(
-				StringPool.PERIOD
-			).concat(
-				path
-			);
+			lastModifiedCacheKey = StringBundler.concat(
+				lastModifiedCacheKey, StringPool.PERIOD, path);
 
 			Long lastModified = (Long)servletContext.getAttribute(
 				lastModifiedCacheKey);
@@ -113,9 +113,7 @@ public class ServletContextUtil {
 	public static String getRootPath(ServletContext servletContext)
 		throws MalformedURLException {
 
-		URI rootURI = getRootURI(servletContext);
-
-		return rootURI.toString();
+		return String.valueOf(getRootURI(servletContext));
 	}
 
 	public static URI getRootURI(ServletContext servletContext)
@@ -188,16 +186,14 @@ public class ServletContextUtil {
 
 		for (String path : paths) {
 			if (path.endsWith(_EXT_CLASS)) {
-				String className = _getClassName(rootPath, path);
-
-				classNames.add(className);
+				classNames.add(_getClassName(rootPath, path));
 			}
 			else if (path.endsWith(_EXT_JAR)) {
-				try (JarInputStream jarFile = new JarInputStream(
+				try (JarInputStream jarInputStream = new JarInputStream(
 						servletContext.getResourceAsStream(path))) {
 
 					while (true) {
-						JarEntry jarEntry = jarFile.getNextJarEntry();
+						JarEntry jarEntry = jarInputStream.getNextJarEntry();
 
 						if (jarEntry == null) {
 							break;
@@ -225,7 +221,20 @@ public class ServletContextUtil {
 	private static long _getLastModified(
 		ServletContext servletContext, String path) {
 
-		Long lastModifiedLong = ContextResourcePathsUtil.visitResources(
+		boolean root = StringPool.SLASH.equals(path);
+
+		Long lastModifiedLong = null;
+
+		if (root) {
+			lastModifiedLong = (Long)servletContext.getAttribute(
+				_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED);
+
+			if (lastModifiedLong != null) {
+				return lastModifiedLong;
+			}
+		}
+
+		lastModifiedLong = ContextResourcePathsUtil.visitResources(
 			servletContext, path, null,
 			enumeration -> {
 				long lastModified = 0;
@@ -253,6 +262,9 @@ public class ServletContextUtil {
 						}
 					}
 					catch (IOException ioException) {
+						if (_log.isDebugEnabled()) {
+							_log.debug(ioException);
+						}
 					}
 				}
 
@@ -260,6 +272,12 @@ public class ServletContextUtil {
 			});
 
 		if (lastModifiedLong != null) {
+			if (root) {
+				servletContext.setAttribute(
+					_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED,
+					lastModifiedLong);
+			}
+
 			return lastModifiedLong;
 		}
 
@@ -295,5 +313,11 @@ public class ServletContextUtil {
 	private static final String _EXT_CLASS = ".class";
 
 	private static final String _EXT_JAR = ".jar";
+
+	private static final String _LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED =
+		"LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED";
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ServletContextUtil.class);
 
 }

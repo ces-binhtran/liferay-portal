@@ -14,6 +14,8 @@
 
 package com.liferay.document.library.web.internal.portlet.action;
 
+import com.liferay.diff.Diff;
+import com.liferay.diff.DiffResult;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
@@ -21,8 +23,6 @@ import com.liferay.document.library.kernel.service.DLAppLocalService;
 import com.liferay.document.library.kernel.service.DLAppService;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.diff.DiffResult;
-import com.liferay.portal.kernel.diff.DiffUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
@@ -95,15 +95,18 @@ public class CompareVersionsMVCRenderCommand implements MVCRenderCommand {
 		FileVersion sourceFileVersion = _dlAppService.getFileVersion(
 			sourceFileVersionId);
 
-		InputStream sourceIs = _getFileVersionInputStream(sourceFileVersion);
+		InputStream sourceInputStream = _getFileVersionInputStream(
+			sourceFileVersion);
 
 		FileVersion targetFileVersion = _dlAppLocalService.getFileVersion(
 			targetFileVersionId);
 
-		InputStream targetIs = _getFileVersionInputStream(targetFileVersion);
+		InputStream targetInputStream = _getFileVersionInputStream(
+			targetFileVersion);
 
-		List<DiffResult>[] diffResults = DiffUtil.diff(
-			new InputStreamReader(sourceIs), new InputStreamReader(targetIs));
+		List<DiffResult>[] diffResults = _diff.diff(
+			new InputStreamReader(sourceInputStream),
+			new InputStreamReader(targetInputStream));
 
 		renderRequest.setAttribute(WebKeys.DIFF_RESULTS, diffResults);
 
@@ -120,7 +123,7 @@ public class CompareVersionsMVCRenderCommand implements MVCRenderCommand {
 	private InputStream _getFileVersionInputStream(FileVersion fileVersion)
 		throws IOException, PortalException {
 
-		InputStream is = fileVersion.getContentStream(false);
+		InputStream inputStream = fileVersion.getContentStream(false);
 
 		String extension = fileVersion.getExtension();
 
@@ -128,16 +131,16 @@ public class CompareVersionsMVCRenderCommand implements MVCRenderCommand {
 			extension.equals("html") || extension.equals("js") ||
 			extension.equals("txt") || extension.equals("xml")) {
 
-			String content = HtmlUtil.escape(StringUtil.read(is));
+			String content = HtmlUtil.escape(StringUtil.read(inputStream));
 
-			is = new UnsyncByteArrayInputStream(
+			inputStream = new UnsyncByteArrayInputStream(
 				content.getBytes(StandardCharsets.UTF_8));
 		}
 
 		if (!DocumentConversionUtil.isEnabled() ||
 			!DocumentConversionUtil.isConvertBeforeCompare(extension)) {
 
-			return is;
+			return inputStream;
 		}
 
 		String tempFileId = DLUtil.getTempFileId(
@@ -145,8 +148,11 @@ public class CompareVersionsMVCRenderCommand implements MVCRenderCommand {
 
 		return new FileInputStream(
 			DocumentConversionUtil.convert(
-				tempFileId, is, fileVersion.getExtension(), "txt"));
+				tempFileId, inputStream, fileVersion.getExtension(), "txt"));
 	}
+
+	@Reference
+	private Diff _diff;
 
 	@Reference
 	private DLAppLocalService _dlAppLocalService;

@@ -48,15 +48,19 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.sharing.model.SharingEntry;
 import com.liferay.sharing.service.SharingEntryLocalService;
+import com.liferay.sharing.service.SharingEntryLocalServiceUtil;
 import com.liferay.sharing.service.persistence.SharingEntryFinder;
 import com.liferay.sharing.service.persistence.SharingEntryPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -77,11 +81,15 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SharingEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.sharing.service.SharingEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SharingEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SharingEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the sharing entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was added
@@ -109,6 +117,10 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the sharing entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntryId the primary key of the sharing entry
 	 * @return the sharing entry that was removed
 	 * @throws PortalException if a sharing entry with the primary key could not be found
@@ -124,6 +136,10 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the sharing entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was removed
 	 */
@@ -136,6 +152,13 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return sharingEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -394,6 +417,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -412,6 +436,7 @@ public abstract class SharingEntryLocalServiceBaseImpl
 			(SharingEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SharingEntry> getBasePersistence() {
 		return sharingEntryPersistence;
 	}
@@ -504,6 +529,10 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	/**
 	 * Updates the sharing entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SharingEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sharingEntry the sharing entry
 	 * @return the sharing entry that was updated
 	 */
@@ -511,6 +540,11 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public SharingEntry updateSharingEntry(SharingEntry sharingEntry) {
 		return sharingEntryPersistence.update(sharingEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -524,6 +558,8 @@ public abstract class SharingEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		sharingEntryLocalService = (SharingEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(sharingEntryLocalService);
 	}
 
 	/**
@@ -565,6 +601,22 @@ public abstract class SharingEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		SharingEntryLocalService sharingEntryLocalService) {
+
+		try {
+			Field field = SharingEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, sharingEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

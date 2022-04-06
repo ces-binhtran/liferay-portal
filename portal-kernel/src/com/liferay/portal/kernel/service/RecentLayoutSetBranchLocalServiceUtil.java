@@ -14,7 +14,16 @@
 
 package com.liferay.portal.kernel.service;
 
-import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.dao.orm.DynamicQuery;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.model.PersistedModel;
+import com.liferay.portal.kernel.model.RecentLayoutSetBranch;
+import com.liferay.portal.kernel.util.OrderByComparator;
+
+import java.io.Serializable;
+
+import java.util.List;
 
 /**
  * Provides the local service utility for RecentLayoutSetBranch. This utility wraps
@@ -35,10 +44,9 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 *
 	 * Never modify this class directly. Add custom service methods to <code>com.liferay.portal.service.impl.RecentLayoutSetBranchLocalServiceImpl</code> and rerun ServiceBuilder to regenerate this class.
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-			addRecentLayoutSetBranch(
-				long userId, long layoutSetBranchId, long layoutSetId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static RecentLayoutSetBranch addRecentLayoutSetBranch(
+			long userId, long layoutSetBranchId, long layoutSetId)
+		throws PortalException {
 
 		return getService().addRecentLayoutSetBranch(
 			userId, layoutSetBranchId, layoutSetId);
@@ -47,13 +55,15 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * Adds the recent layout set branch to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was added
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		addRecentLayoutSetBranch(
-			com.liferay.portal.kernel.model.RecentLayoutSetBranch
-				recentLayoutSetBranch) {
+	public static RecentLayoutSetBranch addRecentLayoutSetBranch(
+		RecentLayoutSetBranch recentLayoutSetBranch) {
 
 		return getService().addRecentLayoutSetBranch(recentLayoutSetBranch);
 	}
@@ -61,9 +71,9 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			createPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel createPersistedModel(
+			Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().createPersistedModel(primaryKeyObj);
 	}
@@ -74,8 +84,8 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param recentLayoutSetBranchId the primary key for the new recent layout set branch
 	 * @return the new recent layout set branch
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		createRecentLayoutSetBranch(long recentLayoutSetBranchId) {
+	public static RecentLayoutSetBranch createRecentLayoutSetBranch(
+		long recentLayoutSetBranchId) {
 
 		return getService().createRecentLayoutSetBranch(
 			recentLayoutSetBranchId);
@@ -84,10 +94,9 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			deletePersistedModel(
-				com.liferay.portal.kernel.model.PersistedModel persistedModel)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel deletePersistedModel(
+			PersistedModel persistedModel)
+		throws PortalException {
 
 		return getService().deletePersistedModel(persistedModel);
 	}
@@ -95,13 +104,17 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * Deletes the recent layout set branch with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recentLayoutSetBranchId the primary key of the recent layout set branch
 	 * @return the recent layout set branch that was removed
 	 * @throws PortalException if a recent layout set branch with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-			deleteRecentLayoutSetBranch(long recentLayoutSetBranchId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static RecentLayoutSetBranch deleteRecentLayoutSetBranch(
+			long recentLayoutSetBranchId)
+		throws PortalException {
 
 		return getService().deleteRecentLayoutSetBranch(
 			recentLayoutSetBranchId);
@@ -110,13 +123,15 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * Deletes the recent layout set branch from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was removed
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		deleteRecentLayoutSetBranch(
-			com.liferay.portal.kernel.model.RecentLayoutSetBranch
-				recentLayoutSetBranch) {
+	public static RecentLayoutSetBranch deleteRecentLayoutSetBranch(
+		RecentLayoutSetBranch recentLayoutSetBranch) {
 
 		return getService().deleteRecentLayoutSetBranch(recentLayoutSetBranch);
 	}
@@ -129,15 +144,15 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 		getService().deleteUserRecentLayoutSetBranches(userId);
 	}
 
-	public static <T> T dslQuery(
-		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
-
+	public static <T> T dslQuery(DSLQuery dslQuery) {
 		return getService().dslQuery(dslQuery);
 	}
 
-	public static com.liferay.portal.kernel.dao.orm.DynamicQuery
-		dynamicQuery() {
+	public static int dslQueryCount(DSLQuery dslQuery) {
+		return getService().dslQueryCount(dslQuery);
+	}
 
+	public static DynamicQuery dynamicQuery() {
 		return getService().dynamicQuery();
 	}
 
@@ -147,9 +162,7 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static <T> List<T> dynamicQuery(DynamicQuery dynamicQuery) {
 		return getService().dynamicQuery(dynamicQuery);
 	}
 
@@ -165,9 +178,8 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param end the upper bound of the range of model instances (not inclusive)
 	 * @return the range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end) {
 
 		return getService().dynamicQuery(dynamicQuery, start, end);
 	}
@@ -185,10 +197,9 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
 	 * @return the ordered range of matching rows
 	 */
-	public static <T> java.util.List<T> dynamicQuery(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery, int start,
-		int end,
-		com.liferay.portal.kernel.util.OrderByComparator<T> orderByComparator) {
+	public static <T> List<T> dynamicQuery(
+		DynamicQuery dynamicQuery, int start, int end,
+		OrderByComparator<T> orderByComparator) {
 
 		return getService().dynamicQuery(
 			dynamicQuery, start, end, orderByComparator);
@@ -200,9 +211,7 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param dynamicQuery the dynamic query
 	 * @return the number of rows matching the dynamic query
 	 */
-	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery) {
-
+	public static long dynamicQueryCount(DynamicQuery dynamicQuery) {
 		return getService().dynamicQueryCount(dynamicQuery);
 	}
 
@@ -214,20 +223,20 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @return the number of rows matching the dynamic query
 	 */
 	public static long dynamicQueryCount(
-		com.liferay.portal.kernel.dao.orm.DynamicQuery dynamicQuery,
+		DynamicQuery dynamicQuery,
 		com.liferay.portal.kernel.dao.orm.Projection projection) {
 
 		return getService().dynamicQueryCount(dynamicQuery, projection);
 	}
 
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		fetchRecentLayoutSetBranch(long recentLayoutSetBranchId) {
+	public static RecentLayoutSetBranch fetchRecentLayoutSetBranch(
+		long recentLayoutSetBranchId) {
 
 		return getService().fetchRecentLayoutSetBranch(recentLayoutSetBranchId);
 	}
 
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		fetchRecentLayoutSetBranch(long userId, long layoutSetId) {
+	public static RecentLayoutSetBranch fetchRecentLayoutSetBranch(
+		long userId, long layoutSetId) {
 
 		return getService().fetchRecentLayoutSetBranch(userId, layoutSetId);
 	}
@@ -257,9 +266,8 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * @throws PortalException
 	 */
-	public static com.liferay.portal.kernel.model.PersistedModel
-			getPersistedModel(java.io.Serializable primaryKeyObj)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static PersistedModel getPersistedModel(Serializable primaryKeyObj)
+		throws PortalException {
 
 		return getService().getPersistedModel(primaryKeyObj);
 	}
@@ -271,9 +279,9 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @return the recent layout set branch
 	 * @throws PortalException if a recent layout set branch with the primary key could not be found
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-			getRecentLayoutSetBranch(long recentLayoutSetBranchId)
-		throws com.liferay.portal.kernel.exception.PortalException {
+	public static RecentLayoutSetBranch getRecentLayoutSetBranch(
+			long recentLayoutSetBranchId)
+		throws PortalException {
 
 		return getService().getRecentLayoutSetBranch(recentLayoutSetBranchId);
 	}
@@ -289,9 +297,8 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	 * @param end the upper bound of the range of recent layout set branches (not inclusive)
 	 * @return the range of recent layout set branches
 	 */
-	public static java.util.List
-		<com.liferay.portal.kernel.model.RecentLayoutSetBranch>
-			getRecentLayoutSetBranchs(int start, int end) {
+	public static List<RecentLayoutSetBranch> getRecentLayoutSetBranchs(
+		int start, int end) {
 
 		return getService().getRecentLayoutSetBranchs(start, end);
 	}
@@ -308,27 +315,23 @@ public class RecentLayoutSetBranchLocalServiceUtil {
 	/**
 	 * Updates the recent layout set branch in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RecentLayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param recentLayoutSetBranch the recent layout set branch
 	 * @return the recent layout set branch that was updated
 	 */
-	public static com.liferay.portal.kernel.model.RecentLayoutSetBranch
-		updateRecentLayoutSetBranch(
-			com.liferay.portal.kernel.model.RecentLayoutSetBranch
-				recentLayoutSetBranch) {
+	public static RecentLayoutSetBranch updateRecentLayoutSetBranch(
+		RecentLayoutSetBranch recentLayoutSetBranch) {
 
 		return getService().updateRecentLayoutSetBranch(recentLayoutSetBranch);
 	}
 
 	public static RecentLayoutSetBranchLocalService getService() {
-		if (_service == null) {
-			_service =
-				(RecentLayoutSetBranchLocalService)PortalBeanLocatorUtil.locate(
-					RecentLayoutSetBranchLocalService.class.getName());
-		}
-
 		return _service;
 	}
 
-	private static RecentLayoutSetBranchLocalService _service;
+	private static volatile RecentLayoutSetBranchLocalService _service;
 
 }

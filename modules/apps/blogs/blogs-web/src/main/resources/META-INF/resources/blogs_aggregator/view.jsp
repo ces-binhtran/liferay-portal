@@ -22,40 +22,17 @@ boolean blogsPortletFound = ParamUtil.getBoolean(request, "blogsPortletFound", t
 
 <c:if test="<%= !blogsPortletFound %>">
 	<clay:stripe
-		message='<%= LanguageUtil.get(resourceBundle, "no-suitable-application-found-to-display-the-blogs-entry") %>'
-		style="danger"
-		title='<%= LanguageUtil.get(resourceBundle, "error") + ":" %>'
+		displayType="danger"
+		message="no-suitable-application-found-to-display-the-blogs-entry"
 	/>
 </c:if>
 
 <%
-PortletURL portletURL = renderResponse.createRenderURL();
+BlogsAggregatorDisplayContext blogsAggregatorDisplayContext = new BlogsAggregatorDisplayContext(request, renderRequest, renderResponse);
 
-portletURL.setParameter("mvcRenderCommandName", "/blogs_aggregator/view");
+SearchContainer<BlogsEntry> searchContainer = blogsAggregatorDisplayContext.getSearchContainer();
 
-SearchContainer<BlogsEntry> searchContainer = new SearchContainer(renderRequest, null, null, SearchContainer.DEFAULT_CUR_PARAM, 5, portletURL, null, null);
-
-List<BlogsEntry> entries = null;
-
-if (selectionMethod.equals("users")) {
-	if (organizationId > 0) {
-		entries = BlogsEntryServiceUtil.getOrganizationEntries(organizationId, new Date(), WorkflowConstants.STATUS_APPROVED, max);
-	}
-	else {
-		entries = BlogsEntryServiceUtil.getGroupsEntries(company.getCompanyId(), scopeGroupId, new Date(), WorkflowConstants.STATUS_APPROVED, max);
-	}
-}
-else {
-	entries = BlogsEntryServiceUtil.getGroupEntries(scopeGroupId, new Date(), WorkflowConstants.STATUS_APPROVED, max);
-}
-
-int total = entries.size();
-
-searchContainer.setTotal(total);
-
-List<BlogsEntry> results = ListUtil.subList(entries, searchContainer.getStart(), searchContainer.getEnd());
-
-searchContainer.setResults(results);
+List<BlogsEntry> results = searchContainer.getResults();
 %>
 
 <%@ include file="/blogs_aggregator/view_entries.jspf" %>

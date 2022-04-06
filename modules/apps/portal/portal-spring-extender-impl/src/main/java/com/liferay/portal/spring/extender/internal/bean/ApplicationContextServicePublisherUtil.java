@@ -14,10 +14,12 @@
 
 package com.liferay.portal.spring.extender.internal.bean;
 
+import com.liferay.petra.reflect.AnnotationLocator;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.spring.osgi.OSGiBeanProperties;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -25,7 +27,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +39,6 @@ import org.springframework.beans.factory.BeanIsAbstractException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.annotation.AnnotationUtils;
 
 /**
  * @author Miguel Pastor
@@ -71,6 +71,9 @@ public class ApplicationContextServicePublisherUtil {
 					}
 				}
 				catch (BeanIsAbstractException beanIsAbstractException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(beanIsAbstractException);
+					}
 				}
 				catch (Exception exception) {
 					_log.error(
@@ -80,16 +83,13 @@ public class ApplicationContextServicePublisherUtil {
 
 		Bundle bundle = bundleContext.getBundle();
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			"org.springframework.context.service.name",
-			bundle.getSymbolicName());
-
 		ServiceRegistration<ApplicationContext> serviceRegistration =
 			bundleContext.registerService(
 				ApplicationContext.class, configurableApplicationContext,
-				properties);
+				HashMapDictionaryBuilder.<String, Object>put(
+					"org.springframework.context.service.name",
+					bundle.getSymbolicName()
+				).build());
 
 		serviceRegistrations.add(serviceRegistration);
 
@@ -129,10 +129,13 @@ public class ApplicationContextServicePublisherUtil {
 				clazz = target.getClass();
 			}
 			catch (ReflectiveOperationException reflectiveOperationException) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(reflectiveOperationException);
+				}
 			}
 		}
 
-		OSGiBeanProperties osgiBeanProperties = AnnotationUtils.findAnnotation(
+		OSGiBeanProperties osgiBeanProperties = AnnotationLocator.locate(
 			clazz, OSGiBeanProperties.class);
 
 		Set<String> names = OSGiBeanProperties.Service.interfaceNames(
@@ -149,13 +152,17 @@ public class ApplicationContextServicePublisherUtil {
 			return null;
 		}
 
-		Bundle bundle = bundleContext.getBundle();
-
 		HashMapDictionary<String, Object> properties =
-			new HashMapDictionary<>();
+			HashMapDictionaryBuilder.<String, Object>put(
+				"bean.id", beanName
+			).put(
+				"origin.bundle.symbolic.name",
+				() -> {
+					Bundle bundle = bundleContext.getBundle();
 
-		properties.put("bean.id", beanName);
-		properties.put("origin.bundle.symbolic.name", bundle.getSymbolicName());
+					return bundle.getSymbolicName();
+				}
+			).build();
 
 		if (osgiBeanProperties != null) {
 			properties.putAll(

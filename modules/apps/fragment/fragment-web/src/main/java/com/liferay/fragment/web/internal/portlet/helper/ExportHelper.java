@@ -14,6 +14,7 @@
 
 package com.liferay.fragment.web.internal.portlet.helper;
 
+import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.model.FragmentCollection;
 import com.liferay.fragment.model.FragmentComposition;
 import com.liferay.fragment.model.FragmentEntry;
@@ -46,8 +47,6 @@ public class ExportHelper {
 				fragmentCollection.populateZipWriter(zipWriter);
 			}
 
-			zipWriter.finish();
-
 			return zipWriter.getFile();
 		}
 		catch (Exception exception) {
@@ -71,10 +70,12 @@ public class ExportHelper {
 			}
 
 			for (FragmentEntry fragmentEntry : fragmentEntries) {
+				if (fragmentEntry.getType() == FragmentConstants.TYPE_REACT) {
+					continue;
+				}
+
 				fragmentEntry.populateZipWriter(zipWriter, StringPool.BLANK);
 			}
-
-			zipWriter.finish();
 
 			return zipWriter.getFile();
 		}

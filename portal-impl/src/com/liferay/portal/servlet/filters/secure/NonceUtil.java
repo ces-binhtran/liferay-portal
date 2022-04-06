@@ -122,7 +122,8 @@ public class NonceUtil {
 		catch (InterruptedException interruptedException) {
 			_log.error(
 				"Interrupted while waiting for nonce verification in the " +
-					"cluster");
+					"cluster",
+				interruptedException);
 		}
 
 		return false;
@@ -155,6 +156,7 @@ public class NonceUtil {
 			}
 
 			_nonce = nonce;
+
 			_createTime = System.currentTimeMillis();
 		}
 
@@ -175,8 +177,8 @@ public class NonceUtil {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			NonceDelayed nonceDelayed = (NonceDelayed)obj;
+		public boolean equals(Object object) {
+			NonceDelayed nonceDelayed = (NonceDelayed)object;
 
 			if (_nonce.equals(nonceDelayed._nonce)) {
 				return true;

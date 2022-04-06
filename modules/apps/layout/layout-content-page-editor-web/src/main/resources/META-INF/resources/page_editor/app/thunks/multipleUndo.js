@@ -14,13 +14,15 @@
 
 import {updateNetwork} from '../actions/index';
 import {
-	UPDATE_NETWORK,
+	ADD_REDO_ACTION,
+	ADD_UNDO_ACTION,
 	UPDATE_REDO_ACTIONS,
 	UPDATE_UNDO_ACTIONS,
 } from '../actions/types';
 import {undoAction} from '../components/undo/undoActions';
 import {SERVICE_NETWORK_STATUS_TYPES} from '../config/constants/serviceNetworkStatusTypes';
 import {UNDO_TYPES} from '../config/constants/undoTypes';
+import {reducer} from '../reducers/index';
 import {canUndoAction} from './../components/undo/undoActions';
 
 export default function multipleUndo({numberOfActions, store, type}) {
@@ -29,18 +31,32 @@ export default function multipleUndo({numberOfActions, store, type}) {
 			return;
 		}
 
-		const actions = [];
+		let isUndoAction;
+		let remainingUndos;
+		let undosToUndo;
+		let updateHistoryAction;
+
+		let updatedStore = store;
 
 		const multipleUndoDispatch = (originalType) => (action) => {
 			if (canUndoAction(action)) {
-				actions.push({action, originalType});
-			}
-			else if (action.type !== UPDATE_NETWORK) {
-				dispatch(action);
+				updatedStore = reducer(updatedStore, {
+					...action,
+					actionType: action.type,
+					originalType,
+					type:
+						type === UNDO_TYPES.undo
+							? ADD_REDO_ACTION
+							: ADD_UNDO_ACTION,
+				});
+
+				updatedStore = reducer(updatedStore, {
+					...action,
+					...isUndoAction,
+					originalType,
+				});
 			}
 		};
-
-		let isUndoAction, remainingUndos, undosToUndo, updateHistoryAction;
 
 		if (type === UNDO_TYPES.undo) {
 			isUndoAction = {isUndo: true};
@@ -75,30 +91,45 @@ export default function multipleUndo({numberOfActions, store, type}) {
 
 		dispatch(
 			updateNetwork({
-				requestGenerateDraft: false,
 				status: SERVICE_NETWORK_STATUS_TYPES.savingDraft,
 			})
 		);
 
-		undosToUndo
+		return undosToUndo
 			.reduce((promise, undo) => {
 				return promise.then(() => {
-					return undoAction({action: undo, store})(
-						multipleUndoDispatch(undo.originalType || undo.type)
+					return undoAction({
+						action: undo,
+						store: updatedStore,
+					})(
+						multipleUndoDispatch(undo.originalType || undo.type),
+						() => updatedStore
 					);
 				});
 			}, Promise.resolve())
 			.then(() => {
-				actions.forEach(({action, originalType}) => {
-					dispatch({...action, ...isUndoAction, originalType});
-				});
-			})
-			.then(() => {
-				dispatch(updateHistoryAction);
 				dispatch(
 					updateNetwork({
 						requestGenerateDraft: false,
 						status: SERVICE_NETWORK_STATUS_TYPES.draftSaved,
+					})
+				);
+
+				updatedStore = reducer(updatedStore, updateHistoryAction);
+
+				dispatch({store: updatedStore, type: 'UPDATE_STORE'});
+			})
+			.catch((error) => {
+				if (process.env.NODE_ENV === 'development') {
+					console.error(error);
+				}
+
+				dispatch(
+					updateNetwork({
+						error: Liferay.Language.get(
+							'an-unexpected-error-occurred'
+						),
+						status: SERVICE_NETWORK_STATUS_TYPES.error,
 					})
 				);
 			});

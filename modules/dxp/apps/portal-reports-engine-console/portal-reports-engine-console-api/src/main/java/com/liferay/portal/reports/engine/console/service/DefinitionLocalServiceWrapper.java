@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DefinitionLocalServiceWrapper
 	implements DefinitionLocalService, ServiceWrapper<DefinitionLocalService> {
 
+	public DefinitionLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DefinitionLocalServiceWrapper(
 		DefinitionLocalService definitionLocalService) {
 
@@ -34,6 +38,10 @@ public class DefinitionLocalServiceWrapper
 
 	/**
 	 * Adds the definition to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param definition the definition
 	 * @return the definition that was added
@@ -90,6 +98,10 @@ public class DefinitionLocalServiceWrapper
 	/**
 	 * Deletes the definition from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param definition the definition
 	 * @return the definition that was removed
 	 * @throws PortalException
@@ -106,6 +118,10 @@ public class DefinitionLocalServiceWrapper
 
 	/**
 	 * Deletes the definition with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param definitionId the primary key of the definition
 	 * @return the definition that was removed
@@ -149,6 +165,13 @@ public class DefinitionLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _definitionLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _definitionLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -329,7 +352,8 @@ public class DefinitionLocalServiceWrapper
 				String sourceId, String reportName, boolean andSearch,
 				int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					orderByComparator) {
+					<com.liferay.portal.reports.engine.console.model.Definition>
+						orderByComparator) {
 
 		return _definitionLocalService.getDefinitions(
 			groupId, definitionName, description, sourceId, reportName,
@@ -435,6 +459,10 @@ public class DefinitionLocalServiceWrapper
 
 	/**
 	 * Updates the definition in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DefinitionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param definition the definition
 	 * @return the definition that was updated

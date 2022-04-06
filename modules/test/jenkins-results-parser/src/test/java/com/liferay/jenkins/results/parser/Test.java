@@ -221,15 +221,15 @@ public class Test {
 	}
 
 	protected String fixMessage(String message) {
-		if (message.contains(JenkinsResultsParserUtil.URL_DEPENDENCIES_FILE)) {
+		if (message.contains(JenkinsResultsParserUtil.urlDependenciesFile)) {
 			message = message.replace(
-				JenkinsResultsParserUtil.URL_DEPENDENCIES_FILE,
+				JenkinsResultsParserUtil.urlDependenciesFile,
 				"${dependencies.url}");
 		}
 
-		if (message.contains(JenkinsResultsParserUtil.URL_DEPENDENCIES_HTTP)) {
+		if (message.contains(JenkinsResultsParserUtil.urlDependenciesHttp)) {
 			message = message.replace(
-				JenkinsResultsParserUtil.URL_DEPENDENCIES_HTTP,
+				JenkinsResultsParserUtil.urlDependenciesHttp,
 				"${dependencies.url}");
 		}
 
@@ -341,9 +341,7 @@ public class Test {
 	protected String toURLString(File file) throws Exception {
 		URI uri = file.toURI();
 
-		URL url = uri.toURL();
-
-		String urlString = url.toString();
+		String urlString = String.valueOf(uri.toURL());
 
 		File dependenciesDir = dependenciesDirs.get(0);
 

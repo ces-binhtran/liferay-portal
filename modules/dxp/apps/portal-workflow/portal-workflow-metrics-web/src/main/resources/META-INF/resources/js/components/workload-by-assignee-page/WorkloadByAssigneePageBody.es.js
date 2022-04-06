@@ -9,14 +9,15 @@
  * distribution rights of the Software.
  */
 
-import React, {useMemo} from 'react';
+import ClayLayout from '@clayui/layout';
+import React from 'react';
 
 import ContentView from '../../shared/components/content-view/ContentView.es';
 import ReloadButton from '../../shared/components/list/ReloadButton.es';
 import PaginationBar from '../../shared/components/pagination-bar/PaginationBar.es';
-import {Table} from './WorkloadByAssigneePageTable.es';
+import Table from './WorkloadByAssigneePageTable.es';
 
-const Body = ({
+function Body({
 	filtered,
 	items,
 	page,
@@ -24,24 +25,21 @@ const Body = ({
 	processId,
 	taskNames,
 	totalCount,
-}) => {
-	const statesProps = useMemo(
-		() => ({
-			emptyProps: {filtered},
-			errorProps: {
-				actionButton: <ReloadButton />,
-				hideAnimation: true,
-				message: Liferay.Language.get(
-					'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
-				),
-			},
-			loadingProps: {className: 'pb-6 pt-6 sheet'},
-		}),
-		[filtered]
-	);
+}) {
+	const statesProps = {
+		emptyProps: {filtered},
+		errorProps: {
+			actionButton: <ReloadButton />,
+			hideAnimation: true,
+			message: Liferay.Language.get(
+				'there-was-a-problem-retrieving-data-please-try-reloading-the-page'
+			),
+		},
+		loadingProps: {className: 'pb-6 pt-6 sheet'},
+	};
 
 	return (
-		<div className="container-fluid-1280 mt-4">
+		<ClayLayout.ContainerFluid className="mt-4">
 			<ContentView {...statesProps}>
 				{totalCount > 0 && (
 					<>
@@ -59,10 +57,10 @@ const Body = ({
 					</>
 				)}
 			</ContentView>
-		</div>
+		</ClayLayout.ContainerFluid>
 	);
-};
+}
 
 Body.Table = Table;
 
-export {Body};
+export default Body;

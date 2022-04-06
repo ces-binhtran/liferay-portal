@@ -27,6 +27,10 @@ public class DepotEntryGroupRelServiceWrapper
 	implements DepotEntryGroupRelService,
 			   ServiceWrapper<DepotEntryGroupRelService> {
 
+	public DepotEntryGroupRelServiceWrapper() {
+		this(null);
+	}
+
 	public DepotEntryGroupRelServiceWrapper(
 		DepotEntryGroupRelService depotEntryGroupRelService) {
 
@@ -84,6 +88,16 @@ public class DepotEntryGroupRelServiceWrapper
 	@Override
 	public String getOSGiServiceIdentifier() {
 		return _depotEntryGroupRelService.getOSGiServiceIdentifier();
+	}
+
+	@Override
+	public com.liferay.depot.model.DepotEntryGroupRel
+			updateDDMStructuresAvailable(
+				long depotEntryGroupRelId, boolean ddmStructuresAvailable)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _depotEntryGroupRelService.updateDDMStructuresAvailable(
+			depotEntryGroupRelId, ddmStructuresAvailable);
 	}
 
 	@Override

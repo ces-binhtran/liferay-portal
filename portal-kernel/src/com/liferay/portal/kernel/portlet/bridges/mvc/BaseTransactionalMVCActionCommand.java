@@ -33,8 +33,7 @@ public abstract class BaseTransactionalMVCActionCommand
 
 	@Override
 	public boolean processAction(
-			final ActionRequest actionRequest,
-			final ActionResponse actionResponse)
+			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws PortletException {
 
 		try {
@@ -51,12 +50,12 @@ public abstract class BaseTransactionalMVCActionCommand
 
 			return TransactionInvokerUtil.invoke(_transactionConfig, callable);
 		}
-		catch (Throwable t) {
-			if (t instanceof PortletException) {
-				throw (PortletException)t;
+		catch (Throwable throwable) {
+			if (throwable instanceof PortletException) {
+				throw (PortletException)throwable;
 			}
 
-			throw new PortletException(t);
+			throw new PortletException(throwable);
 		}
 	}
 

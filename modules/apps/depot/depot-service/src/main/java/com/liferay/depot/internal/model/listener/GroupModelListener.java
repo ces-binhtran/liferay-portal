@@ -14,11 +14,19 @@
 
 package com.liferay.depot.internal.model.listener;
 
+import com.liferay.depot.model.DepotEntry;
 import com.liferay.depot.service.DepotEntryGroupRelLocalService;
+import com.liferay.depot.service.DepotEntryLocalService;
 import com.liferay.portal.kernel.exception.ModelListenerException;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.BaseModelListener;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ModelListener;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,9 +38,44 @@ import org.osgi.service.component.annotations.Reference;
 public class GroupModelListener extends BaseModelListener<Group> {
 
 	@Override
-	public void onBeforeRemove(Group group) throws ModelListenerException {
-		super.onBeforeRemove(group);
+	public void onAfterRemove(Group group) throws ModelListenerException {
+		if ((group != null) && group.isDepot()) {
+			TransactionCommitCallbackUtil.registerCallback(
+				() -> {
+					DepotEntry depotEntry =
+						_depotEntryLocalService.fetchGroupDepotEntry(
+							group.getGroupId());
 
+					if (depotEntry != null) {
+						_depotEntryLocalService.deleteDepotEntry(
+							depotEntry.getDepotEntryId());
+					}
+
+					return null;
+				});
+		}
+	}
+
+	@Override
+	public void onBeforeCreate(Group group) throws ModelListenerException {
+		try {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			if (group.isDepot() && _isStaging(serviceContext)) {
+				DepotEntry depotEntry = _depotEntryLocalService.addDepotEntry(
+					group, serviceContext);
+
+				group.setClassPK(depotEntry.getDepotEntryId());
+			}
+		}
+		catch (PortalException portalException) {
+			throw new ModelListenerException(portalException);
+		}
+	}
+
+	@Override
+	public void onBeforeRemove(Group group) throws ModelListenerException {
 		if (!group.isSite()) {
 			return;
 		}
@@ -41,7 +84,21 @@ public class GroupModelListener extends BaseModelListener<Group> {
 			group.getGroupId());
 	}
 
+	private boolean _isStaging(ServiceContext serviceContext) {
+		if (serviceContext == null) {
+			return false;
+		}
+
+		return ParamUtil.getBoolean(serviceContext, "staging");
+	}
+
 	@Reference
 	private DepotEntryGroupRelLocalService _depotEntryGroupRelLocalService;
+
+	@Reference
+	private DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
+	private GroupLocalService _groupLocalService;
 
 }

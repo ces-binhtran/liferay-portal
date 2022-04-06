@@ -17,6 +17,7 @@ package com.liferay.portal.search.tuning.rankings.web.internal.index;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.Field;
 import com.liferay.portal.search.internal.document.DocumentBuilderFactoryImpl;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,6 +28,8 @@ import java.util.stream.Stream;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -34,21 +37,25 @@ import org.junit.Test;
  */
 public class RankingToDocumentTranslatorTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
-		_documentToRankingTranslator = createDocumentToRankingTranslator();
-		_rankingToDocumentTranslator = createRankingToDocumentTranslator();
+		_documentToRankingTranslator = _createDocumentToRankingTranslator();
+		_rankingToDocumentTranslator = _createRankingToDocumentTranslator();
 	}
 
 	@Test
 	public void testBlocks() {
 		Ranking.RankingBuilder rankingBuilder = new Ranking.RankingBuilder();
 
-		rankingBuilder.blocks(Arrays.asList("142857", "285714", "428571"));
+		rankingBuilder.hiddenDocumentIds(
+			Arrays.asList("142857", "285714", "428571"));
 
-		Ranking ranking1 = rankingBuilder.build();
-
-		Document document = translate(ranking1);
+		Document document = translate(rankingBuilder.build());
 
 		Map<String, Field> fieldsMap = document.getFields();
 
@@ -59,16 +66,15 @@ public class RankingToDocumentTranslatorTest {
 			document, null);
 
 		Assert.assertEquals(
-			"[142857, 285714, 428571]", String.valueOf(ranking2.getBlockIds()));
+			"[142857, 285714, 428571]",
+			String.valueOf(ranking2.getHiddenDocumentIds()));
 	}
 
 	@Test
 	public void testDefaults() {
 		Ranking.RankingBuilder rankingBuilder = new Ranking.RankingBuilder();
 
-		Ranking ranking1 = rankingBuilder.build();
-
-		Document document = translate(ranking1);
+		Document document = translate(rankingBuilder.build());
 
 		Map<String, Field> fieldsMap = document.getFields();
 
@@ -78,7 +84,8 @@ public class RankingToDocumentTranslatorTest {
 			document, null);
 
 		Assert.assertEquals("[]", String.valueOf(ranking2.getAliases()));
-		Assert.assertEquals("[]", String.valueOf(ranking2.getBlockIds()));
+		Assert.assertEquals(
+			"[]", String.valueOf(ranking2.getHiddenDocumentIds()));
 		Assert.assertEquals("[]", String.valueOf(ranking2.getPins()));
 		Assert.assertEquals("[]", String.valueOf(ranking2.getQueryStrings()));
 	}
@@ -90,9 +97,7 @@ public class RankingToDocumentTranslatorTest {
 		rankingBuilder.pins(
 			Collections.singletonList(new Ranking.Pin(142857, "uid")));
 
-		Ranking ranking1 = rankingBuilder.build();
-
-		Document document = translate(ranking1);
+		Document document = translate(rankingBuilder.build());
 
 		Map<String, Field> fieldsMap = document.getFields();
 
@@ -111,9 +116,7 @@ public class RankingToDocumentTranslatorTest {
 
 		rankingBuilder.aliases(Arrays.asList("142857", "285714", "428571"));
 
-		Ranking ranking1 = rankingBuilder.build();
-
-		Document document = translate(ranking1);
+		Document document = translate(rankingBuilder.build());
 
 		Map<String, Field> fieldsMap = document.getFields();
 
@@ -130,14 +133,16 @@ public class RankingToDocumentTranslatorTest {
 			String.valueOf(ranking2.getQueryStrings()));
 	}
 
-	protected static DocumentToRankingTranslator
-		createDocumentToRankingTranslator() {
+	protected Document translate(Ranking ranking) {
+		return _rankingToDocumentTranslator.translate(ranking);
+	}
 
+	private DocumentToRankingTranslator _createDocumentToRankingTranslator() {
 		return new DocumentToRankingTranslatorImpl();
 	}
 
-	protected static RankingToDocumentTranslatorImpl
-		createRankingToDocumentTranslator() {
+	private RankingToDocumentTranslatorImpl
+		_createRankingToDocumentTranslator() {
 
 		return new RankingToDocumentTranslatorImpl() {
 			{
@@ -146,16 +151,12 @@ public class RankingToDocumentTranslatorTest {
 		};
 	}
 
-	protected Document translate(Ranking ranking) {
-		return _rankingToDocumentTranslator.translate(ranking);
-	}
-
 	private String _toString(List<Ranking.Pin> pins) {
 		Stream<Ranking.Pin> stream = pins.stream();
 
 		return String.valueOf(
 			stream.map(
-				pin -> pin.getPosition() + "=" + pin.getId()
+				pin -> pin.getPosition() + "=" + pin.getDocumentId()
 			).collect(
 				Collectors.toList()
 			));

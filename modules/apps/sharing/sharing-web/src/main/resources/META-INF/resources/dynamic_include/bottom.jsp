@@ -17,58 +17,33 @@
 <%@ include file="/dynamic_include/init.jsp" %>
 
 <%
-PortletURL manageCollaboratorsURL = PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.MANAGE);
+PortletURL manageCollaboratorsURL = PortletURLBuilder.create(
+	PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.MANAGE)
+).setWindowState(
+	LiferayWindowState.POP_UP
+).buildPortletURL();
 
-manageCollaboratorsURL.setWindowState(LiferayWindowState.POP_UP);
-
-PortletURL sharingURL = PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.EDIT);
-
-sharingURL.setWindowState(LiferayWindowState.POP_UP);
+PortletURL sharingURL = PortletURLBuilder.create(
+	PortletProviderUtil.getPortletURL(request, SharingEntry.class.getName(), PortletProvider.Action.EDIT)
+).setWindowState(
+	LiferayWindowState.POP_UP
+).buildPortletURL();
 %>
 
 <aui:script sandbox="<%= true %>">
 	function showDialog(uri, title) {
-		Liferay.Util.openWindow({
-			dialog: {
-				centered: true,
-				constrain: true,
-				cssClass: 'sharing-dialog',
-				destroyOnHide: true,
-				modal: true,
-				height: 540,
-				width: 600,
-			},
+		Liferay.Util.openModal({
 			id: 'sharingDialog',
-			title: Liferay.Util.escapeHTML(title),
-			uri: uri,
+			iframeBodyCssClass: 'sharing-dialog',
+			height: 475,
+			size: 'md',
+			title: title,
+			url: uri,
 		});
 	}
 
-	var Sharing = {};
-
-	Liferay.provide(
-		Sharing,
-		'share',
-		function (classNameId, classPK, title) {
-			var sharingParameters = {
-				classNameId: classNameId,
-				classPK: classPK,
-			};
-
-			var sharingURL = Liferay.Util.PortletURL.createPortletURL(
-				'<%= sharingURL.toString() %>',
-				sharingParameters
-			);
-
-			showDialog(sharingURL.toString(), title);
-		},
-		[]
-	);
-
-	Liferay.provide(
-		Sharing,
-		'manageCollaborators',
-		function (classNameId, classPK) {
+	var Sharing = {
+		manageCollaborators: function (classNameId, classPK) {
 			var manageCollaboratorsParameters = {
 				classNameId: classNameId,
 				classPK: classPK,
@@ -84,8 +59,21 @@ sharingURL.setWindowState(LiferayWindowState.POP_UP);
 				'<%= LanguageUtil.get(resourceBundle, "manage-collaborators") %>'
 			);
 		},
-		[]
-	);
+
+		share: function (classNameId, classPK, title) {
+			var sharingParameters = {
+				classNameId: classNameId,
+				classPK: classPK,
+			};
+
+			var sharingURL = Liferay.Util.PortletURL.createPortletURL(
+				'<%= sharingURL.toString() %>',
+				sharingParameters
+			);
+
+			showDialog(sharingURL.toString(), title);
+		},
+	};
 
 	Liferay.Sharing = Sharing;
 </aui:script>

@@ -24,7 +24,7 @@ JournalPreviewArticleContentTemplateDisplayContext journalPreviewArticleContentT
 	<nav class="component-tbar subnav-tbar-light tbar tbar-article">
 		<ul class="tbar-nav">
 			<li class="tbar-item">
-				<aui:select label="" name="ddmTemplateId" onChange="previewArticleContentTemplate()" wrapperCssClass="form-group-sm mb-0 ml-4">
+				<aui:select cssClass="mr-3" label="" name="ddmTemplateId" onChange="previewArticleContentTemplate()" wrapperCssClass="form-group-sm mb-0 ml-4">
 					<aui:option label="no-template" selected="<%= Objects.equals(journalPreviewArticleContentTemplateDisplayContext.getDDMTemplateId(), -1) %>" value="<%= -1 %>" />
 
 					<%
@@ -41,14 +41,15 @@ JournalPreviewArticleContentTemplateDisplayContext journalPreviewArticleContentT
 			</li>
 			<li class="tbar-item">
 				<div class="journal-article-button-row tbar-section text-right">
-
-					<%
-					Map<String, Object> data = HashMapBuilder.<String, Object>put(
-						"ddmtemplateid", journalPreviewArticleContentTemplateDisplayContext.getDDMTemplateId()
-					).build();
-					%>
-
-					<aui:button cssClass="btn-sm selector-button" data="<%= data %>" value="apply" />
+					<aui:button
+						cssClass="btn-sm selector-button"
+						data='<%=
+							HashMapBuilder.<String, Object>put(
+								"ddmtemplateid", journalPreviewArticleContentTemplateDisplayContext.getDDMTemplateId()
+							).build()
+						%>'
+						value="apply"
+					/>
 				</div>
 			</li>
 		</ul>
@@ -87,9 +88,4 @@ JournalArticleDisplay articleDisplay = journalPreviewArticleContentTemplateDispl
 			'<%= journalPreviewArticleContentTemplateDisplayContext.getPortletURL() %>'
 		);
 	}
-
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />previewFm',
-		'<%= HtmlUtil.escapeJS(journalPreviewArticleContentTemplateDisplayContext.getEventName()) %>'
-	);
 </script>

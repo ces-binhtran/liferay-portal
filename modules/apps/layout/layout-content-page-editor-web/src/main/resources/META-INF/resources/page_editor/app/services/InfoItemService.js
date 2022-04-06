@@ -18,56 +18,6 @@ import serviceFetch from './serviceFetch';
 export default {
 
 	/**
-	 * Get an asset's value
-	 * @param {object} options
-	 * @param {string} options.classNameId Asset's className
-	 * @param {string} options.classPK Asset's classPK
-	 * @param {string} options.fieldId
-	 * @param {string} [options.languageId]
-	 * @param {function} options.onNetworkStatus
-	 */
-	getAssetFieldValue({
-		classNameId,
-		classPK,
-		fieldId,
-		languageId,
-		onNetworkStatus,
-	}) {
-		return serviceFetch(
-			config.getAssetFieldValueURL,
-			{
-				body: {
-					classNameId,
-					classPK,
-					fieldId,
-					languageId,
-				},
-			},
-			onNetworkStatus
-		);
-	},
-
-	/**
-	 * Get available asset mapping fields
-	 * @param {object} options
-	 * @param {string} options.classNameId Asset's className
-	 * @param {string} options.classPK Asset's classPK
-	 * @param {function} options.onNetworkStatus
-	 */
-	getAvailableAssetMappingFields({classNameId, classPK, onNetworkStatus}) {
-		return serviceFetch(
-			config.getAssetMappingFieldsURL,
-			{
-				body: {
-					classNameId,
-					classPK,
-				},
-			},
-			onNetworkStatus
-		);
-	},
-
-	/**
 	 * Get available list item renderers for the list style
 	 * @param {object} options
 	 * @param {string} options.itemSubtype itemSubtype
@@ -117,6 +67,7 @@ export default {
 	 * @param {object} options
 	 * @param {string} options.classNameId Asset's className
 	 * @param {string} options.classTypeId Asset's classTypeId
+	 * @param {string} options.fieldType Type of field to which we are mapping
 	 * @param {function} options.onNetworkStatus
 	 */
 	getAvailableStructureMappingFields({
@@ -157,11 +108,49 @@ export default {
 	},
 
 	/**
+	 * Get an item's value
+	 * @param {object} options
+	 * @param {string} options.classNameId Asset's className
+	 * @param {string} options.classPK Asset's classPK
+	 * @param {string} options.fieldId
+	 * @param {string} [options.languageId]
+	 * @param {function} options.onNetworkStatus
+	 */
+	getInfoItemFieldValue({
+		classNameId,
+		classPK,
+		fieldId,
+		languageId,
+		onNetworkStatus,
+	}) {
+		return serviceFetch(
+			config.getInfoItemFieldValueURL,
+			{
+				body: {
+					classNameId,
+					classPK,
+					fieldId,
+					languageId,
+				},
+			},
+			onNetworkStatus
+		);
+	},
+
+	/**
 	 * Get page contents
 	 * @param {object} options
 	 * @param {function} options.onNetworkStatus
 	 */
-	getPageContents({onNetworkStatus}) {
-		return serviceFetch(config.getPageContentsURL, {}, onNetworkStatus);
+	getPageContents({onNetworkStatus, segmentsExperienceId}) {
+		return serviceFetch(
+			config.getPageContentsURL,
+			{
+				body: {
+					segmentsExperienceId,
+				},
+			},
+			onNetworkStatus
+		);
 	},
 };

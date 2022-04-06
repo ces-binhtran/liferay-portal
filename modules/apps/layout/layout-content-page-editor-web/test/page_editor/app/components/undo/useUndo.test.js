@@ -18,11 +18,6 @@ import * as Actions from '../../../../../src/main/resources/META-INF/resources/p
 import useUndo from '../../../../../src/main/resources/META-INF/resources/page_editor/app/components/undo/useUndo';
 import * as ExperienceActions from '../../../../../src/main/resources/META-INF/resources/page_editor/plugins/experience/actions';
 
-jest.mock(
-	'../../../../../src/main/resources/META-INF/resources/page_editor/app/config',
-	() => ({config: {undoEnabled: true}})
-);
-
 describe('useUndo', () => {
 
 	// List of the actions that do not need undo
@@ -33,6 +28,7 @@ describe('useUndo', () => {
 		Actions.ADD_FRAGMENT_COMPOSITION,
 		Actions.ADD_FRAGMENT_ENTRY_LINK_COMMENT,
 		Actions.ADD_MAPPED_INFO_ITEM,
+		Actions.ADD_MAPPING_FIELDS,
 		Actions.ADD_UNDO_ACTION,
 		Actions.ADD_REDO_ACTION,
 		Actions.ADD_USED_WIDGET,
@@ -52,10 +48,13 @@ describe('useUndo', () => {
 		Actions.UPDATE_UNDO_ACTIONS,
 		Actions.UPDATE_PAGE_CONTENTS,
 		Actions.UPDATE_REDO_ACTIONS,
+		Actions.UPDATE_REDO_ACTIONS,
+		Actions.UPDATE_PREVIEW_IMAGE,
 		ExperienceActions.CREATE_SEGMENTS_EXPERIENCE,
 		ExperienceActions.DELETE_SEGMENTS_EXPERIENCE,
+		ExperienceActions.DUPLICATE_SEGMENTS_EXPERIENCE,
 		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCE,
-		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCE_PRIORITY,
+		ExperienceActions.UPDATE_SEGMENTS_EXPERIENCES_LIST,
 	];
 
 	const dispatch = jest.fn();

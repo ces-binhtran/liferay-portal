@@ -14,12 +14,14 @@
 
 package com.liferay.journal.internal.asset.util;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.asset.publisher.constants.AssetPublisherPortletKeys;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.display.contributor.InfoDisplayObjectProvider;
+import com.liferay.info.item.ClassPKInfoItemIdentifier;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemObjectProvider;
 import com.liferay.journal.model.JournalArticle;
 import com.liferay.journal.model.JournalContentSearch;
 import com.liferay.journal.service.JournalContentSearchLocalService;
@@ -31,15 +33,14 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.PortletPreferences;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
-import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
 
@@ -65,30 +66,42 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			return;
 		}
 
-		InfoDisplayContributor<?> infoDisplayContributor =
-			_infoDisplayContributorTracker.getInfoDisplayContributor(
+		InfoItemObjectProvider<JournalArticle> infoItemObjectProvider =
+			_infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemObjectProvider.class,
 				_portal.getClassName(classNameId));
 
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider =
-			infoDisplayContributor.getInfoDisplayObjectProvider(classPK);
+		JournalArticle article = infoItemObjectProvider.getInfoItem(
+			new ClassPKInfoItemIdentifier(classPK));
 
-		_recordJournalContentSearches(infoDisplayObjectProvider);
-		_recordPortletPreferences(infoDisplayObjectProvider, true);
-		_recordPortletPreferences(infoDisplayObjectProvider, false);
+		AssetEntry assetEntry = _getAssetEntry(article);
+
+		_recordJournalContentSearches(article, assetEntry);
+		_recordPortletPreferences(article, assetEntry, true);
+		_recordPortletPreferences(article, assetEntry, false);
 
 		_layoutClassedModelUsageLocalService.addDefaultLayoutClassedModelUsage(
-			infoDisplayObjectProvider.getGroupId(), classNameId, classPK,
+			article.getGroupId(), classNameId, classPK,
 			ServiceContextThreadLocal.getServiceContext());
 	}
 
+	private AssetEntry _getAssetEntry(JournalArticle journalArticle)
+		throws PortalException {
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				JournalArticle.class.getName());
+
+		return assetRendererFactory.getAssetEntry(
+			JournalArticle.class.getName(),
+			journalArticle.getResourcePrimKey());
+	}
+
 	private void _recordJournalContentSearches(
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider) {
+		JournalArticle article, AssetEntry assetEntry) {
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
-
-		JournalArticle article =
-			(JournalArticle)infoDisplayObjectProvider.getDisplayObject();
 
 		List<JournalContentSearch> contentSearches =
 			_journalContentSearchLocalService.getArticleContentSearches(
@@ -102,8 +115,8 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			LayoutClassedModelUsage layoutClassedModelUsage =
 				_layoutClassedModelUsageLocalService.
 					fetchLayoutClassedModelUsage(
-						infoDisplayObjectProvider.getClassNameId(),
-						infoDisplayObjectProvider.getClassPK(),
+						assetEntry.getClassNameId(),
+						article.getResourcePrimKey(),
 						contentSearch.getPortletId(),
 						_portal.getClassNameId(Portlet.class),
 						layout.getPlid());
@@ -113,21 +126,15 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			}
 
 			_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-				contentSearch.getGroupId(),
-				infoDisplayObjectProvider.getClassNameId(),
-				infoDisplayObjectProvider.getClassPK(),
-				contentSearch.getPortletId(),
+				contentSearch.getGroupId(), assetEntry.getClassNameId(),
+				article.getResourcePrimKey(), contentSearch.getPortletId(),
 				_portal.getClassNameId(Portlet.class), layout.getPlid(),
 				serviceContext);
 		}
 	}
 
 	private void _recordPortletPreferences(
-		InfoDisplayObjectProvider<?> infoDisplayObjectProvider,
-		boolean privateLayout) {
-
-		JournalArticle article =
-			(JournalArticle)infoDisplayObjectProvider.getDisplayObject();
+		JournalArticle article, AssetEntry assetEntry, boolean privateLayout) {
 
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
@@ -140,14 +147,9 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 				AssetPublisherPortletKeys.ASSET_PUBLISHER, privateLayout);
 
 		for (PortletPreferences portletPreferences : portletPreferencesList) {
-			String preferencesXML = portletPreferences.getPreferences();
-
-			if (Validator.isNull(preferencesXML)) {
-				continue;
-			}
-
 			javax.portlet.PortletPreferences jxPortletPreferences =
-				PortletPreferencesFactoryUtil.fromDefaultXML(preferencesXML);
+				_portletPreferenceValueLocalService.getPreferences(
+					portletPreferences);
 
 			String selectionStyle = jxPortletPreferences.getValue(
 				"selectionStyle", "dynamic");
@@ -159,10 +161,6 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			String assetEntryXml = jxPortletPreferences.getValue(
 				"assetEntryXml", StringPool.BLANK);
 
-			AssetEntry assetEntry = _assetEntryLocalService.fetchEntry(
-				infoDisplayObjectProvider.getClassNameId(),
-				infoDisplayObjectProvider.getClassPK());
-
 			if ((assetEntry == null) ||
 				!assetEntryXml.contains(assetEntry.getClassUuid())) {
 
@@ -172,8 +170,8 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			LayoutClassedModelUsage layoutClassedModelUsage =
 				_layoutClassedModelUsageLocalService.
 					fetchLayoutClassedModelUsage(
-						infoDisplayObjectProvider.getClassNameId(),
-						infoDisplayObjectProvider.getClassPK(),
+						assetEntry.getClassNameId(),
+						article.getResourcePrimKey(),
 						portletPreferences.getPortletId(),
 						_portal.getClassNameId(Portlet.class),
 						portletPreferences.getPlid());
@@ -183,10 +181,8 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 			}
 
 			_layoutClassedModelUsageLocalService.addLayoutClassedModelUsage(
-				infoDisplayObjectProvider.getGroupId(),
-				infoDisplayObjectProvider.getClassNameId(),
-				infoDisplayObjectProvider.getClassPK(),
-				portletPreferences.getPortletId(),
+				article.getGroupId(), assetEntry.getClassNameId(),
+				article.getResourcePrimKey(), portletPreferences.getPortletId(),
 				_portal.getClassNameId(Portlet.class),
 				portletPreferences.getPlid(), serviceContext);
 		}
@@ -196,7 +192,7 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
-	private InfoDisplayContributorTracker _infoDisplayContributorTracker;
+	private InfoItemServiceTracker _infoItemServiceTracker;
 
 	@Reference
 	private JournalContentSearchLocalService _journalContentSearchLocalService;
@@ -213,5 +209,9 @@ public class JournalArticleLayoutClassedModelUsageRecorder
 
 	@Reference
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Reference
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 }

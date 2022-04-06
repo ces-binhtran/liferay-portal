@@ -16,7 +16,6 @@ package com.liferay.portal.workflow.task.web.internal.portlet.action;
 
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCResourceCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
-import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -40,32 +39,11 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + PortletKeys.MY_WORKFLOW_TASK,
-		"mvc.command.name=assignWorkflowTask"
+		"mvc.command.name=/portal_workflow_task/assign_task"
 	},
 	service = MVCResourceCommand.class
 )
 public class AssignTaskMVCResourceCommand extends BaseMVCResourceCommand {
-
-	protected void checkWorkflowTaskAssignmentPermission(
-			long workflowTaskId, ThemeDisplay themeDisplay)
-		throws Exception {
-
-		WorkflowTask workflowTask = workflowTaskManager.getWorkflowTask(
-			themeDisplay.getCompanyId(), workflowTaskId);
-
-		long groupId = MapUtil.getLong(
-			workflowTask.getOptionalAttributes(), "groupId",
-			themeDisplay.getSiteGroupId());
-
-		if (!_workflowTaskPermissionChecker.hasPermission(
-				groupId, workflowTask, themeDisplay.getPermissionChecker())) {
-
-			throw new PrincipalException(
-				String.format(
-					"User %d does not have permission to assign task %d",
-					themeDisplay.getUserId(), workflowTaskId));
-		}
-	}
 
 	@Override
 	protected void doServeResource(
@@ -82,7 +60,7 @@ public class AssignTaskMVCResourceCommand extends BaseMVCResourceCommand {
 			resourceRequest, "assigneeUserId");
 		String comment = ParamUtil.getString(resourceRequest, "comment");
 
-		checkWorkflowTaskAssignmentPermission(workflowTaskId, themeDisplay);
+		_checkWorkflowTaskAssignmentPermission(workflowTaskId, themeDisplay);
 
 		workflowTaskManager.assignWorkflowTaskToUser(
 			themeDisplay.getCompanyId(), themeDisplay.getUserId(),
@@ -93,6 +71,21 @@ public class AssignTaskMVCResourceCommand extends BaseMVCResourceCommand {
 
 	@Reference
 	protected WorkflowTaskManager workflowTaskManager;
+
+	private void _checkWorkflowTaskAssignmentPermission(
+			long workflowTaskId, ThemeDisplay themeDisplay)
+		throws Exception {
+
+		WorkflowTask workflowTask = workflowTaskManager.getWorkflowTask(
+			themeDisplay.getCompanyId(), workflowTaskId);
+
+		long groupId = MapUtil.getLong(
+			workflowTask.getOptionalAttributes(), "groupId",
+			themeDisplay.getSiteGroupId());
+
+		_workflowTaskPermissionChecker.check(
+			groupId, workflowTask, themeDisplay.getPermissionChecker());
+	}
 
 	private final WorkflowTaskPermissionChecker _workflowTaskPermissionChecker =
 		new WorkflowTaskPermissionChecker();

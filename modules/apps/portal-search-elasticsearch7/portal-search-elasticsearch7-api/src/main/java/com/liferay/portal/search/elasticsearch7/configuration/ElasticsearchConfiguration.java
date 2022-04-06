@@ -32,6 +32,11 @@ import org.osgi.annotation.versioning.ProviderType;
 @ProviderType
 public interface ElasticsearchConfiguration {
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #productionModeEnabled()}
+	 */
+	@Deprecated
 	@Meta.AD(
 		deflt = "EMBEDDED", description = "operation-mode-help",
 		name = "operation-mode", required = false
@@ -39,10 +44,65 @@ public interface ElasticsearchConfiguration {
 	public OperationMode operationMode();
 
 	@Meta.AD(
+		deflt = "false", description = "production-mode-enabled-help",
+		name = "production-mode-enabled", required = false
+	)
+	public boolean productionModeEnabled();
+
+	@Meta.AD(
 		description = "remote-cluster-connection-id-help",
 		name = "remote-cluster-connection-id", required = false
 	)
 	public String remoteClusterConnectionId();
+
+	@Meta.AD(
+		deflt = "http://localhost:9200",
+		description = "network-host-addresses-help",
+		name = "network-host-addresses", required = false
+	)
+	public String[] networkHostAddresses();
+
+	@Meta.AD(
+		deflt = "false", description = "authentication-enabled-help",
+		name = "authentication-enabled", required = false
+	)
+	public boolean authenticationEnabled();
+
+	@Meta.AD(
+		deflt = "elastic", description = "username-help", name = "username",
+		required = false
+	)
+	public String username();
+
+	@Meta.AD(
+		description = "password-help", name = "password", required = false,
+		type = Meta.Type.Password
+	)
+	public String password();
+
+	@Meta.AD(
+		deflt = "false", description = "http-ssl-enabled-help",
+		name = "http-ssl-enabled", required = false
+	)
+	public boolean httpSSLEnabled();
+
+	@Meta.AD(
+		deflt = "pkcs12", description = "truststore-type-help",
+		name = "truststore-type", required = false
+	)
+	public String truststoreType();
+
+	@Meta.AD(
+		deflt = "/path/to/localhost.p12", description = "truststore-path-help",
+		name = "truststore-path", required = false
+	)
+	public String truststorePath();
+
+	@Meta.AD(
+		description = "truststore-password-help", name = "truststore-password",
+		required = false, type = Meta.Type.Password
+	)
+	public String truststorePassword();
 
 	@Meta.AD(
 		deflt = "liferay-", description = "index-name-prefix-help",
@@ -87,6 +147,12 @@ public interface ElasticsearchConfiguration {
 	public boolean logExceptionsOnly();
 
 	@Meta.AD(
+		deflt = "0.0.0", description = "minimum-required-node-version-help",
+		name = "minimum-required-node-version", required = false
+	)
+	public String minimumRequiredNodeVersion();
+
+	@Meta.AD(
 		deflt = "ERROR", description = "rest-client-logger-level-help",
 		name = "rest-client-logger-level", required = false
 	)
@@ -100,6 +166,11 @@ public interface ElasticsearchConfiguration {
 	public String clusterName();
 
 	@Meta.AD(
+		description = "node-name-help", name = "node-name", required = false
+	)
+	public String nodeName();
+
+	@Meta.AD(
 		deflt = "false", description = "bootstrap-mlockall-help",
 		name = "bootstrap-mlockall", required = false
 	)
@@ -107,7 +178,7 @@ public interface ElasticsearchConfiguration {
 
 	/**
 	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *			 #sidecarHttpPort()}
+	 *             #sidecarHttpPort()}
 	 */
 	@Deprecated
 	@Meta.AD(
@@ -117,11 +188,15 @@ public interface ElasticsearchConfiguration {
 	public int embeddedHttpPort();
 
 	@Meta.AD(
-		deflt = "9200-9300", description = "sidecar-http-port-help",
-		name = "sidecar-http-port", required = false
+		description = "sidecar-http-port-help", name = "sidecar-http-port",
+		required = false
 	)
 	public String sidecarHttpPort();
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x)
+	 */
+	@Deprecated
 	@Meta.AD(
 		deflt = "9300-9400",
 		description = "discovery-zen-ping-unicast-hosts-port-help",
@@ -146,6 +221,12 @@ public interface ElasticsearchConfiguration {
 		name = "network-publish-host", required = false
 	)
 	public String networkPublishHost();
+
+	@Meta.AD(
+		deflt = "true", description = "track-total-hits-help",
+		name = "track-total-hits", required = false
+	)
+	public boolean trackTotalHits();
 
 	@Meta.AD(
 		deflt = "", description = "transport-tcp-port-help",
@@ -185,7 +266,7 @@ public interface ElasticsearchConfiguration {
 	public boolean sidecarDebug();
 
 	@Meta.AD(
-		deflt = "-agentlib:jdwp\\=transport\\=dt_socket\\,address\\=8001\\,server\\=y\\,suspend\\=y\\,quiet\\=y",
+		deflt = "-agentlib:jdwp=transport=dt_socket,address=8001,server=y,suspend=y,quiet=y",
 		description = "sidecar-debug-settings-help",
 		name = "sidecar-debug-settings", required = false
 	)
@@ -198,7 +279,7 @@ public interface ElasticsearchConfiguration {
 	public long sidecarHeartbeatInterval();
 
 	@Meta.AD(
-		deflt = "elasticsearch7", description = "sidecar-home-help",
+		deflt = "elasticsearch-sidecar", description = "sidecar-home-help",
 		name = "sidecar-home", required = false
 	)
 	public String sidecarHome();
@@ -215,5 +296,30 @@ public interface ElasticsearchConfiguration {
 		name = "sidecar-shutdown-timeout", required = false
 	)
 	public long sidecarShutdownTimeout();
+
+	@Meta.AD(
+		description = "set-the-proxy-host-to-be-used-for-the-client-connection",
+		name = "proxy-host", required = false
+	)
+	public String proxyHost();
+
+	@Meta.AD(
+		deflt = "0",
+		description = "set-the-proxy-port-to-be-used-for-the-client-connection",
+		name = "proxy-port", required = false
+	)
+	public int proxyPort();
+
+	@Meta.AD(
+		description = "proxy-username-help", name = "proxy-username",
+		required = false
+	)
+	public String proxyUserName();
+
+	@Meta.AD(
+		description = "set-the-password-for-connecting-to-the-proxy",
+		name = "proxy-password", required = false, type = Meta.Type.Password
+	)
+	public String proxyPassword();
 
 }

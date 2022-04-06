@@ -14,44 +14,23 @@
 
 package com.liferay.blogs.web.internal.info.item.provider;
 
-import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
 import com.liferay.asset.info.item.provider.AssetEntryInfoItemFieldSetProvider;
-import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.blogs.model.BlogsEntry;
+import com.liferay.blogs.web.internal.info.item.BlogsEntryInfoItemFields;
 import com.liferay.expando.info.item.provider.ExpandoInfoItemFieldSetProvider;
-import com.liferay.info.field.InfoField;
-import com.liferay.info.field.InfoFieldSetEntry;
-import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.InfoFormValues;
-import com.liferay.info.field.type.ImageInfoFieldType;
-import com.liferay.info.field.type.TextInfoFieldType;
-import com.liferay.info.field.type.URLInfoFieldType;
+import com.liferay.info.field.InfoFieldSet;
 import com.liferay.info.form.InfoForm;
-import com.liferay.info.item.InfoItemClassPKReference;
-import com.liferay.info.item.NoSuchInfoItemException;
 import com.liferay.info.item.field.reader.InfoItemFieldReaderFieldSetProvider;
 import com.liferay.info.item.provider.InfoItemFormProvider;
 import com.liferay.info.localized.InfoLocalizedValue;
-import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.model.User;
-import com.liferay.portal.kernel.service.ServiceContext;
-import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
-import com.liferay.portal.kernel.service.UserLocalService;
-import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
-import com.liferay.portal.kernel.util.LocaleThreadLocal;
+import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
+import com.liferay.template.info.item.provider.TemplateInfoItemFieldSetProvider;
 
-import java.text.Format;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
@@ -70,219 +49,139 @@ public class BlogsEntryInfoItemFormProvider
 
 	@Override
 	public InfoForm getInfoForm() {
-		InfoForm infoForm = new InfoForm(BlogsEntry.class.getName());
-
-		infoForm.addAll(_getBlogsEntryInfoFieldSetEntries());
-
-		infoForm.add(
-			_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(
-				BlogsEntry.class.getName()));
-
-		infoForm.add(
+		return _getInfoForm(
 			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
-				AssetEntry.class.getName()));
-
-		infoForm.add(
-			_expandoInfoItemFieldSetProvider.getInfoFieldSet(
 				BlogsEntry.class.getName()));
-
-		return infoForm;
 	}
 
 	@Override
-	public InfoFormValues getInfoFormValues(BlogsEntry blogsEntry) {
-		InfoFormValues infoFormValues = new InfoFormValues();
-
-		infoFormValues.addAll(_getBlogsEntryInfoFieldValues(blogsEntry));
-
-		infoFormValues.setInfoItemClassPKReference(
-			new InfoItemClassPKReference(
-				BlogsEntry.class.getName(), blogsEntry.getEntryId()));
-
+	public InfoForm getInfoForm(BlogsEntry blogsEntry) {
 		try {
-			infoFormValues.addAll(
-				_assetEntryInfoItemFieldSetProvider.getInfoFieldValues(
-					BlogsEntry.class.getName(), blogsEntry.getEntryId()));
-		}
-		catch (NoSuchInfoItemException noSuchInfoItemException) {
-			throw new RuntimeException(
-				"Caught unexpected exception", noSuchInfoItemException);
-		}
-
-		infoFormValues.addAll(
-			_expandoInfoItemFieldSetProvider.getInfoFieldValues(
-				BlogsEntry.class.getName(), blogsEntry));
-		infoFormValues.addAll(
-			_infoItemFieldReaderFieldSetProvider.getInfoFieldValues(
-				BlogsEntry.class.getName(), blogsEntry));
-
-		return infoFormValues;
-	}
-
-	private Collection<InfoFieldSetEntry> _getBlogsEntryInfoFieldSetEntries() {
-		return Arrays.asList(
-			_titleInfoField, _subtitleInfoField, _descriptionInfoField,
-			_smallImageInfoField, _coverImageInfoField,
-			_coverImageCaptionInfoField, _authorNameInfoField,
-			_authorProfileImageInfoField, _publishDateInfoField,
-			_displayPageUrlInfoField, _contentInfoField);
-	}
-
-	private List<InfoFieldValue<Object>> _getBlogsEntryInfoFieldValues(
-		BlogsEntry blogsEntry) {
-
-		List<InfoFieldValue<Object>> blogsEntryFieldValues = new ArrayList<>();
-
-		ThemeDisplay themeDisplay = _getThemeDisplay();
-
-		try {
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(_titleInfoField, blogsEntry.getTitle()));
-
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(
-					_subtitleInfoField, blogsEntry.getSubtitle()));
-
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(
-					_descriptionInfoField, blogsEntry.getDescription()));
-
-			if (themeDisplay != null) {
-				blogsEntryFieldValues.add(
-					new InfoFieldValue<>(
-						_smallImageInfoField,
-						_getImageJSONObject(
-							blogsEntry.getSmallImageAlt(),
-							blogsEntry.getSmallImageURL(themeDisplay))));
-
-				blogsEntryFieldValues.add(
-					new InfoFieldValue<>(
-						_coverImageInfoField,
-						_getImageJSONObject(
-							blogsEntry.getCoverImageAlt(),
-							blogsEntry.getCoverImageURL(themeDisplay))));
-			}
-
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(
-					_coverImageCaptionInfoField,
-					blogsEntry.getCoverImageCaption()));
-
-			User user = _userLocalService.fetchUser(blogsEntry.getUserId());
-
-			if (user != null) {
-				blogsEntryFieldValues.add(
-					new InfoFieldValue<>(
-						_authorNameInfoField, user.getFullName()));
-
-				if (themeDisplay != null) {
-					blogsEntryFieldValues.add(
-						new InfoFieldValue<>(
-							_authorProfileImageInfoField,
-							_getImageJSONObject(
-								user.getFullName(),
-								user.getPortraitURL(themeDisplay))));
-				}
-			}
-
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(
-					_publishDateInfoField,
-					_getDateValue(blogsEntry.getDisplayDate())));
-
-			if (themeDisplay != null) {
-				blogsEntryFieldValues.add(
-					new InfoFieldValue<>(
-						_displayPageUrlInfoField,
-						_getDisplayPageURL(blogsEntry)));
-			}
-
-			blogsEntryFieldValues.add(
-				new InfoFieldValue<>(
-					_contentInfoField, blogsEntry.getContent()));
-
-			return blogsEntryFieldValues;
+			return _getInfoForm(
+				_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+					_assetEntryLocalService.getEntry(
+						BlogsEntry.class.getName(), blogsEntry.getEntryId())));
 		}
 		catch (PortalException portalException) {
-			throw new RuntimeException(portalException);
+			throw new RuntimeException(
+				"Unable to get asset entry for blogs entry " +
+					blogsEntry.getEntryId(),
+				portalException);
 		}
 	}
 
-	private String _getDateValue(Date date) {
-		if (date == null) {
-			return StringPool.BLANK;
+	@Override
+	public InfoForm getInfoForm(String formVariationKey, long groupId) {
+		return _getInfoForm(
+			_assetEntryInfoItemFieldSetProvider.getInfoFieldSet(
+				BlogsEntry.class.getName(), 0, groupId));
+	}
+
+	private InfoFieldSet _getBasicInformationInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.titleInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.authorNameInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.authorProfileImageInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(
+				"com.liferay.journal.lang", "basic-information")
+		).name(
+			"basic-information"
+		).build();
+	}
+
+	private InfoFieldSet _getConfigurationInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.descriptionInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.smallImageInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.displayDateInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "configuration")
+		).name(
+			"configuration"
+		).build();
+	}
+
+	private InfoFieldSet _getContentInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.subtitleInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.coverImageInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.coverImageCaptionInfoField
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.contentInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "content")
+		).name(
+			"content"
+		).build();
+	}
+
+	private InfoFieldSet _getDisplayPageInfoFieldSet() {
+		return InfoFieldSet.builder(
+		).infoFieldSetEntry(
+			BlogsEntryInfoItemFields.displayPageURLInfoField
+		).labelInfoLocalizedValue(
+			InfoLocalizedValue.localize(getClass(), "configuration")
+		).name(
+			"configuration"
+		).build();
+	}
+
+	private InfoForm _getInfoForm(InfoFieldSet assetEntryInfoFieldSet) {
+		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales();
+
+		InfoLocalizedValue.Builder infoLocalizedValueBuilder =
+			InfoLocalizedValue.builder();
+
+		for (Locale locale : availableLocales) {
+			infoLocalizedValueBuilder.value(
+				locale,
+				ResourceActionsUtil.getModelResource(
+					locale, BlogsEntry.class.getName()));
 		}
 
-		Locale locale = LocaleThreadLocal.getThemeDisplayLocale();
-
-		Format dateFormatDateTime = FastDateFormatFactoryUtil.getDateTime(
-			locale);
-
-		return dateFormatDateTime.format(date);
+		return InfoForm.builder(
+		).infoFieldSetEntry(
+			_getBasicInformationInfoFieldSet()
+		).infoFieldSetEntry(
+			_getContentInfoFieldSet()
+		).infoFieldSetEntry(
+			_expandoInfoItemFieldSetProvider.getInfoFieldSet(
+				BlogsEntry.class.getName())
+		).infoFieldSetEntry(
+			_templateInfoItemFieldSetProvider.getInfoFieldSet(
+				BlogsEntry.class.getName())
+		).infoFieldSetEntry(
+			_getDisplayPageInfoFieldSet()
+		).infoFieldSetEntry(
+			_getConfigurationInfoFieldSet()
+		).infoFieldSetEntry(
+			assetEntryInfoFieldSet
+		).infoFieldSetEntry(
+			_infoItemFieldReaderFieldSetProvider.getInfoFieldSet(
+				BlogsEntry.class.getName())
+		).labelInfoLocalizedValue(
+			infoLocalizedValueBuilder.build()
+		).name(
+			BlogsEntry.class.getName()
+		).build();
 	}
-
-	private String _getDisplayPageURL(BlogsEntry blogsEntry)
-		throws PortalException {
-
-		return _assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-			BlogsEntry.class.getName(), blogsEntry.getEntryId(),
-			_getThemeDisplay());
-	}
-
-	private JSONObject _getImageJSONObject(String alt, String url) {
-		return JSONUtil.put(
-			"alt", alt
-		).put(
-			"url", url
-		);
-	}
-
-	private ThemeDisplay _getThemeDisplay() {
-		ServiceContext serviceContext =
-			ServiceContextThreadLocal.getServiceContext();
-
-		if (serviceContext != null) {
-			return serviceContext.getThemeDisplay();
-		}
-
-		return null;
-	}
-
-	@Reference
-	private AssetDisplayPageFriendlyURLProvider
-		_assetDisplayPageFriendlyURLProvider;
 
 	@Reference
 	private AssetEntryInfoItemFieldSetProvider
 		_assetEntryInfoItemFieldSetProvider;
 
-	private final InfoField _authorNameInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "author-name"), "authorName");
-	private final InfoField _authorProfileImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(
-			"com.liferay.journal.lang", "author-profile-image"),
-		"authorProfileImage");
-	private final InfoField _contentInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "content"), "content");
-	private final InfoField _coverImageCaptionInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "cover-image-caption"),
-		"coverImageCaption");
-	private final InfoField _coverImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize("com.liferay.journal.lang", "cover-image"),
-		"coverImage");
-	private final InfoField _descriptionInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "description"), "description");
-	private final InfoField _displayPageUrlInfoField = new InfoField(
-		URLInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(
-			"com.liferay.asset.info.display.impl", "display-page-url"),
-		"displayPageURL");
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
 	private ExpandoInfoItemFieldSetProvider _expandoInfoItemFieldSetProvider;
@@ -291,21 +190,7 @@ public class BlogsEntryInfoItemFormProvider
 	private InfoItemFieldReaderFieldSetProvider
 		_infoItemFieldReaderFieldSetProvider;
 
-	private final InfoField _publishDateInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "publish-date"), "publishDate");
-	private final InfoField _smallImageInfoField = new InfoField(
-		ImageInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize("com.liferay.journal.lang", "small-image"),
-		"smallImage");
-	private final InfoField _subtitleInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "subtitle"), "subtitle");
-	private final InfoField _titleInfoField = new InfoField(
-		TextInfoFieldType.INSTANCE,
-		InfoLocalizedValue.localize(getClass(), "title"), "title");
-
 	@Reference
-	private UserLocalService _userLocalService;
+	private TemplateInfoItemFieldSetProvider _templateInfoItemFieldSetProvider;
 
 }

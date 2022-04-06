@@ -46,6 +46,7 @@ public class NPMResolvedPackageNameUtil {
 	 * the {@link ServletContext} associated to the given request.
 	 *
 	 * @param  httpServletRequest
+	 * @throws UnsupportedOperationException if the associated bundle does not contain AMD modules
 	 * @review
 	 */
 	public static String get(HttpServletRequest httpServletRequest) {
@@ -71,17 +72,18 @@ public class NPMResolvedPackageNameUtil {
 	 * given servlet context.
 	 *
 	 * @param  servletContext
+	 * @throws UnsupportedOperationException if the associated bundle does not contain AMD modules
 	 * @review
 	 */
 	public static String get(ServletContext servletContext) {
-		Object obj = servletContext.getAttribute(
+		Object object = servletContext.getAttribute(
 			NPMResolvedPackageNameUtil.class.getName());
 
-		if (obj instanceof String) {
-			return (String)obj;
+		if (object instanceof String) {
+			return (String)object;
 		}
 
-		if (obj == _NULL_HOLDER) {
+		if (object == _NULL_HOLDER) {
 			return null;
 		}
 
@@ -134,10 +136,12 @@ public class NPMResolvedPackageNameUtil {
 
 			return npmResolver.resolveModuleName(name);
 		}
+		catch (UnsupportedOperationException unsupportedOperationException) {
+			throw unsupportedOperationException;
+		}
 		catch (Exception exception) {
 			_log.error(
-				"Unable to read META-INF/resources/package.json in " +
-					bundle.getSymbolicName(),
+				"Unable to resolve NPM package " + bundle.getSymbolicName(),
 				exception);
 		}
 

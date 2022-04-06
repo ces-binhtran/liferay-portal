@@ -17,22 +17,20 @@ package com.liferay.headless.batch.engine.internal.resource.v1_0;
 import com.liferay.headless.batch.engine.dto.v1_0.ImportTask;
 import com.liferay.headless.batch.engine.resource.v1_0.ImportTaskResource;
 import com.liferay.petra.function.UnsafeFunction;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.GroupedModel;
+import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.RoleLocalService;
+import com.liferay.portal.odata.filter.ExpressionConvert;
+import com.liferay.portal.odata.filter.FilterParserProvider;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.multipart.MultipartBody;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.TransformUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.tags.Tags;
 
 import java.util.List;
 import java.util.Map;
@@ -42,17 +40,7 @@ import javax.annotation.Generated;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import javax.validation.constraints.NotNull;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 /**
@@ -60,7 +48,7 @@ import javax.ws.rs.core.UriInfo;
  * @generated
  */
 @Generated("")
-@Path("/v1.0")
+@javax.ws.rs.Path("/v1.0")
 public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 
 	/**
@@ -68,32 +56,63 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes(
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Uploads a new file for deleting items in batch."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes(
 		{
 			"application/json", "application/x-ndjson", "application/xml",
 			"text/csv"
 		}
 	)
-	@DELETE
-	@Operation(description = "Uploads a new file for deleting items in batch.")
-	@Parameters(
-		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
-		}
-	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
 	public ImportTask deleteImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -105,27 +124,58 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'DELETE' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes("multipart/form-data")
-	@DELETE
-	@Operation(description = "Uploads a new file for deleting items in batch.")
-	@Parameters(
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Uploads a new file for deleting items in batch."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
 		}
 	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes("multipart/form-data")
+	@javax.ws.rs.DELETE
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
 	public ImportTask deleteImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -137,37 +187,70 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes(
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Uploads a new file for creating new items in batch."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNameMapping"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes(
 		{
 			"application/json", "application/x-ndjson", "application/xml",
 			"text/csv"
 		}
 	)
-	@Operation(
-		description = "Uploads a new file for creating new items in batch."
-	)
-	@POST
-	@Parameters(
-		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
-		}
-	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
 	public ImportTask postImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("fieldNameMapping") String
-				fieldNameMapping,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNameMapping")
+			String fieldNameMapping,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -179,32 +262,65 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'POST' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes("multipart/form-data")
-	@Operation(
+	@io.swagger.v3.oas.annotations.Operation(
 		description = "Uploads a new file for creating new items in batch."
 	)
-	@POST
-	@Parameters(
+	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "fieldNameMapping"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "fieldNameMapping"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
 		}
 	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes("multipart/form-data")
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.POST
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
 	public ImportTask postImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("fieldNameMapping") String
-				fieldNameMapping,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("fieldNameMapping")
+			String fieldNameMapping,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -216,32 +332,63 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes(
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Uploads a new file for updating items in batch."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes(
 		{
 			"application/json", "application/x-ndjson", "application/xml",
 			"text/csv"
 		}
 	)
-	@Operation(description = "Uploads a new file for updating items in batch.")
-	@PUT
-	@Parameters(
-		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
-		}
-	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
 	public ImportTask putImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			Object object)
 		throws Exception {
 
@@ -253,27 +400,58 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'PUT' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{className}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@Consumes("multipart/form-data")
-	@Operation(description = "Uploads a new file for updating items in batch.")
-	@PUT
-	@Parameters(
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Uploads a new file for updating items in batch."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
 		value = {
-			@Parameter(in = ParameterIn.PATH, name = "className"),
-			@Parameter(in = ParameterIn.QUERY, name = "callbackURL"),
-			@Parameter(in = ParameterIn.QUERY, name = "taskItemDelegateName")
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "className"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "callbackURL"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "externalReferenceCode"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "importStrategy"
+			),
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.QUERY,
+				name = "taskItemDelegateName"
+			)
 		}
 	)
-	@Path("/import-task/{className}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.Consumes("multipart/form-data")
+	@javax.ws.rs.Path("/import-task/{className}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@javax.ws.rs.PUT
+	@Override
 	public ImportTask putImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("className") String
-				className,
-			@Parameter(hidden = true) @QueryParam("callbackURL") String
-				callbackURL,
-			@Parameter(hidden = true) @QueryParam("taskItemDelegateName") String
-				taskItemDelegateName,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("className")
+			String className,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("callbackURL")
+			String callbackURL,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("externalReferenceCode")
+			String externalReferenceCode,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("importStrategy")
+			String importStrategy,
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.ws.rs.QueryParam("taskItemDelegateName")
+			String taskItemDelegateName,
 			MultipartBody multipartBody)
 		throws Exception {
 
@@ -285,21 +463,99 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	 *
 	 * curl -X 'GET' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{importTaskId}'  -u 'test@liferay.com:test'
 	 */
-	@Override
-	@GET
-	@Operation(description = "Retrieves the import task.")
-	@Parameters(
-		value = {@Parameter(in = ParameterIn.PATH, name = "importTaskId")}
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the import task."
 	)
-	@Path("/import-task/{importTaskId}")
-	@Produces({"application/json", "application/xml"})
-	@Tags(value = {@Tag(name = "ImportTask")})
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "importTaskId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/import-task/{importTaskId}")
+	@javax.ws.rs.Produces({"application/json", "application/xml"})
+	@Override
 	public ImportTask getImportTask(
-			@NotNull @Parameter(hidden = true) @PathParam("importTaskId") Long
-				importTaskId)
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("importTaskId")
+			Long importTaskId)
 		throws Exception {
 
 		return new ImportTask();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{importTaskId}/content'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Operation(
+		description = "Retrieves the exported content."
+	)
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "importTaskId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/import-task/{importTaskId}/content")
+	@javax.ws.rs.Produces("application/octet-stream")
+	@Override
+	public Response getImportTaskContent(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("importTaskId")
+			Long importTaskId)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -X 'GET' 'http://localhost:8080/o/headless-batch-engine/v1.0/import-task/{importTaskId}/failed-items/report'  -u 'test@liferay.com:test'
+	 */
+	@io.swagger.v3.oas.annotations.Parameters(
+		value = {
+			@io.swagger.v3.oas.annotations.Parameter(
+				in = io.swagger.v3.oas.annotations.enums.ParameterIn.PATH,
+				name = "importTaskId"
+			)
+		}
+	)
+	@io.swagger.v3.oas.annotations.tags.Tags(
+		value = {@io.swagger.v3.oas.annotations.tags.Tag(name = "ImportTask")}
+	)
+	@javax.ws.rs.GET
+	@javax.ws.rs.Path("/import-task/{importTaskId}/failed-items/report")
+	@javax.ws.rs.Produces("application/octet-stream")
+	@Override
+	public Response getImportTaskFailedItemReport(
+			@io.swagger.v3.oas.annotations.Parameter(hidden = true)
+			@javax.validation.constraints.NotNull
+			@javax.ws.rs.PathParam("importTaskId")
+			Long importTaskId)
+		throws Exception {
+
+		Response.ResponseBuilder responseBuilder = Response.ok();
+
+		return responseBuilder.build();
 	}
 
 	public void setContextAcceptLanguage(AcceptLanguage contextAcceptLanguage) {
@@ -334,6 +590,38 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 		this.contextUser = contextUser;
 	}
 
+	public void setExpressionConvert(
+		ExpressionConvert<Filter> expressionConvert) {
+
+		this.expressionConvert = expressionConvert;
+	}
+
+	public void setFilterParserProvider(
+		FilterParserProvider filterParserProvider) {
+
+		this.filterParserProvider = filterParserProvider;
+	}
+
+	public void setGroupLocalService(GroupLocalService groupLocalService) {
+		this.groupLocalService = groupLocalService;
+	}
+
+	public void setResourceActionLocalService(
+		ResourceActionLocalService resourceActionLocalService) {
+
+		this.resourceActionLocalService = resourceActionLocalService;
+	}
+
+	public void setResourcePermissionLocalService(
+		ResourcePermissionLocalService resourcePermissionLocalService) {
+
+		this.resourcePermissionLocalService = resourcePermissionLocalService;
+	}
+
+	public void setRoleLocalService(RoleLocalService roleLocalService) {
+		this.roleLocalService = roleLocalService;
+	}
+
 	protected Map<String, String> addAction(
 		String actionName, GroupedModel groupedModel, String methodName) {
 
@@ -349,6 +637,15 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 		return ActionUtil.addAction(
 			actionName, getClass(), id, methodName, contextScopeChecker,
 			ownerId, permissionName, siteId, contextUriInfo);
+	}
+
+	protected Map<String, String> addAction(
+		String actionName, Long id, String methodName,
+		ModelResourcePermission modelResourcePermission) {
+
+		return ActionUtil.addAction(
+			actionName, getClass(), id, methodName, contextScopeChecker,
+			modelResourcePermission, contextUriInfo);
 	}
 
 	protected Map<String, String> addAction(
@@ -394,9 +691,14 @@ public abstract class BaseImportTaskResourceImpl implements ImportTaskResource {
 	protected Object contextScopeChecker;
 	protected UriInfo contextUriInfo;
 	protected com.liferay.portal.kernel.model.User contextUser;
+	protected ExpressionConvert<Filter> expressionConvert;
+	protected FilterParserProvider filterParserProvider;
 	protected GroupLocalService groupLocalService;
 	protected ResourceActionLocalService resourceActionLocalService;
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
 	protected RoleLocalService roleLocalService;
+
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseImportTaskResourceImpl.class);
 
 }

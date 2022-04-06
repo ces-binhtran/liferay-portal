@@ -40,7 +40,6 @@ import com.liferay.vldap.server.internal.util.PortletPropsValues;
 import java.text.Format;
 
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
@@ -104,7 +103,7 @@ public class UserDirectory extends Directory {
 		if (LdapHandlerThreadLocal.isHostAllowed(
 				PortletPropsValues.SAMBA_HOSTS_ALLOWED)) {
 
-			addSambaAttributes(company, user);
+			_addSambaAttributes(company, user);
 		}
 
 		setName(top, company, "Users", "cn=" + user.getScreenName());
@@ -112,14 +111,12 @@ public class UserDirectory extends Directory {
 		long groupClassNameId = PortalUtil.getClassNameId(
 			Group.class.getName());
 
-		LinkedHashMap<String, Object> params =
-			LinkedHashMapBuilder.<String, Object>put(
-				"usersGroups", user.getUserId()
-			).build();
-
 		List<Group> groups = GroupLocalServiceUtil.search(
 			user.getCompanyId(), new long[] {groupClassNameId}, null, null,
-			params, true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersGroups", user.getUserId()
+			).build(),
+			true, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 		for (Group group : groups) {
 			String value = LdapUtil.buildName(
@@ -152,7 +149,7 @@ public class UserDirectory extends Directory {
 		}
 	}
 
-	protected void addSambaAttributes(Company company, User user)
+	private void _addSambaAttributes(Company company, User user)
 		throws PortalException {
 
 		addAttribute("objectclass", "sambaSamAccount");

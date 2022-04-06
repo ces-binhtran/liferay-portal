@@ -16,18 +16,22 @@ import {useFilterFetch} from '../../shared/components/filter/hooks/useFilterFetc
 import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 
-const AssigneeFilter = ({
+const unassigned = {
+	dividerAfter: true,
+	id: -1,
+	key: '-1',
+	name: Liferay.Language.get('unassigned'),
+};
+
+export default function AssigneeFilter({
 	className,
 	filterKey = filterConstants.assignee.key,
 	options = {},
 	prefixKey = '',
 	processId,
 	staticData,
-}) => {
+}) {
 	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
 		withSelectionTitle: false,
 		withoutRouteParams: false,
 		withoutUnassigned: false,
@@ -45,7 +49,7 @@ const AssigneeFilter = ({
 		withoutRouteParams: options.withoutRouteParams,
 	});
 
-	const defaultItem = useMemo(() => (items ? items[0] : undefined), [items]);
+	const defaultItem = useMemo(() => items[0], [items]);
 
 	const filterName = useFilterName(
 		options.multiple,
@@ -56,7 +60,6 @@ const AssigneeFilter = ({
 
 	return (
 		<Filter
-			data-testid="assigneeFilter"
 			defaultItem={defaultItem}
 			elementClasses={className}
 			filterKey={filterKey}
@@ -66,13 +69,4 @@ const AssigneeFilter = ({
 			{...options}
 		/>
 	);
-};
-
-const unassigned = {
-	dividerAfter: true,
-	id: -1,
-	key: '-1',
-	name: Liferay.Language.get('unassigned'),
-};
-
-export default AssigneeFilter;
+}

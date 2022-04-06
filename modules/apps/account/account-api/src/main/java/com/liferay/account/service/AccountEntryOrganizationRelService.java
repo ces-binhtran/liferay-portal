@@ -14,6 +14,7 @@
 
 package com.liferay.account.service;
 
+import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -45,8 +46,23 @@ public interface AccountEntryOrganizationRelService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AccountEntryOrganizationRelServiceUtil} to access the account entry organization rel remote service. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryOrganizationRelServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryOrganizationRelServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the account entry organization rel remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AccountEntryOrganizationRelServiceUtil} if injection and service tracking are not available.
 	 */
+	public AccountEntryOrganizationRel addAccountEntryOrganizationRel(
+			long accountEntryId, long organizationId)
+		throws PortalException;
+
+	public void addAccountEntryOrganizationRels(
+			long accountEntryId, long[] organizationIds)
+		throws PortalException;
+
+	public void deleteAccountEntryOrganizationRel(
+			long accountEntryId, long organizationId)
+		throws PortalException;
+
+	public void deleteAccountEntryOrganizationRels(
+			long accountEntryId, long[] organizationIds)
+		throws PortalException;
 
 	/**
 	 * Returns the OSGi service identifier.

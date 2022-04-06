@@ -17,15 +17,8 @@ package com.liferay.layout.taglib.servlet.taglib;
 import com.liferay.fragment.constants.FragmentActionKeys;
 import com.liferay.layout.content.page.editor.constants.ContentPageEditorWebKeys;
 import com.liferay.layout.taglib.internal.servlet.ServletContextUtil;
-import com.liferay.layout.util.LayoutClassedModelUsageRecorder;
-import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.layout.taglib.internal.servlet.taglib.util.LayoutClassedModelUsagesTaglibUtil;
 import com.liferay.taglib.util.IncludeTag;
-
-import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
@@ -38,33 +31,15 @@ public class LayoutClassedModelUsagesAdminTag extends IncludeTag {
 
 	@Override
 	public int doStartTag() throws JspException {
-		try {
-			Map<String, LayoutClassedModelUsageRecorder>
-				layoutClassedModelUsageRecorders =
-					ServletContextUtil.getLayoutClassedModelUsageRecorders();
+		LayoutClassedModelUsagesTaglibUtil.recordLayoutClassedModelUsage(
+			getClassName(), getClassPK());
 
-			LayoutClassedModelUsageRecorder layoutClassedModelUsageRecorder =
-				layoutClassedModelUsageRecorders.get(getClassName());
+		HttpServletRequest httpServletRequest = getRequest();
 
-			if (layoutClassedModelUsageRecorder != null) {
-				layoutClassedModelUsageRecorder.record(
-					PortalUtil.getClassNameId(getClassName()), getClassPK());
-			}
-		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(
-					StringBundler.concat(
-						"Unable to check layout classed model usages for ",
-						"class name ", _className, " and class PK ", _classPK),
-					portalException);
-			}
-		}
-
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			ContentPageEditorWebKeys.FRAGMENT_COLLECTION_CONTRIBUTOR_TRACKER,
 			ServletContextUtil.getFragmentCollectionContributorTracker());
-		request.setAttribute(
+		httpServletRequest.setAttribute(
 			FragmentActionKeys.FRAGMENT_RENDERER_TRACKER,
 			ServletContextUtil.getFragmentRendererTracker());
 
@@ -91,7 +66,7 @@ public class LayoutClassedModelUsagesAdminTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	@Override
@@ -119,9 +94,6 @@ public class LayoutClassedModelUsagesAdminTag extends IncludeTag {
 
 	private static final String _PAGE =
 		"/layout_classed_model_usages_admin/page.jsp";
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		LayoutClassedModelUsagesAdminTag.class);
 
 	private String _className;
 	private long _classPK;

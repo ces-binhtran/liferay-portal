@@ -2,7 +2,7 @@
 
 <#include init />
 
-<html class="${root_css_class}" dir='<@liferay.language key="lang.dir" />' lang="${w3c_language_id}">
+<html class="${root_css_class}" dir="<@liferay.language key="lang.dir" />" lang="${w3c_language_id}">
 
 <head>
 	<title>${html_title}</title>
@@ -24,12 +24,12 @@
 	<header id="banner" role="banner">
 		<div id="heading">
 			<div aria-level="1" class="site-title" role="heading">
-				<a class="${logo_css_class}" href="${site_default_url}" title='<@liferay.language_format arguments="${site_name}" key="go-to-x" />'>
+				<a class="${logo_css_class}" href="${site_default_url}" title="<@liferay.language_format arguments="${site_name}" key="go-to-x" />">
 					<img alt="${logo_description}" height="${site_logo_height}" src="${site_logo}" width="${site_logo_width}" />
 				</a>
 
 				<#if show_site_name>
-					<span class="site-name" title='<@liferay.language_format arguments="${site_name}" key="go-to-x" />'>
+					<span class="site-name" title="<@liferay.language_format arguments="${site_name}" key="go-to-x" />">
 						${site_name}
 					</span>
 				</#if>
@@ -46,7 +46,7 @@
 	</header>
 
 	<section id="content">
-		<h2 class="hide-accessible" role="heading" aria-level="1">${the_title}</h2>
+		<h2 class="hide-accessible sr-only" role="heading" aria-level="1">${the_title}</h2>
 
 		<#if selectable>
 			<@liferay_util["include"] page=content_include />
@@ -63,7 +63,10 @@
 
 	<footer id="footer" role="contentinfo">
 		<p class="powered-by">
-			<@liferay.language key="powered-by" /> <a href="http://www.liferay.com" rel="external">Liferay</a>
+			<@liferay.language_format
+				arguments='<a href="http://www.liferay.com" rel="external">Liferay</a>'
+				key="powered-by-x"
+			/>
 		</p>
 	</footer>
 </div>

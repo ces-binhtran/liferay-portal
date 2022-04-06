@@ -14,13 +14,11 @@
 
 package com.liferay.portal.search.tuning.synonyms.web.internal.index.creation.contributor;
 
-import com.liferay.portal.search.engine.SearchEngineInformation;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.search.spi.model.index.contributor.IndexContributor;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexName;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.SynonymSetIndexReader;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.synchronizer.IndexToFilterSynchronizer;
-
-import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,30 +32,23 @@ public class SynonymSetIndexCreationIndexContributor
 
 	@Override
 	public void onAfterCreate(String companyIndexName) {
-		if (Objects.equals(
-				_searchEngineInformation.getVendorString(), "Solr")) {
+		SynonymSetIndexName synonymSetIndexName =
+			() ->
+				companyIndexName + StringPool.DASH + SYNONYMS_INDEX_NAME_SUFFIX;
 
+		if (!_synonymSetIndexReader.isExists(synonymSetIndexName)) {
 			return;
 		}
 
-		if (!_synonymSetIndexReader.isExists(
-				_synonymSetIndexNameBuilder.getSynonymSetIndexName(
-					companyIndexName))) {
-
-			return;
-		}
-
-		_indexToFilterSynchronizer.copyToFilter(companyIndexName);
+		_indexToFilterSynchronizer.copyToFilter(
+			synonymSetIndexName, companyIndexName, false);
 	}
+
+	protected static final String SYNONYMS_INDEX_NAME_SUFFIX =
+		"search-tuning-synonyms";
 
 	@Reference
 	private IndexToFilterSynchronizer _indexToFilterSynchronizer;
-
-	@Reference
-	private SearchEngineInformation _searchEngineInformation;
-
-	@Reference
-	private SynonymSetIndexNameBuilder _synonymSetIndexNameBuilder;
 
 	@Reference
 	private SynonymSetIndexReader _synonymSetIndexReader;

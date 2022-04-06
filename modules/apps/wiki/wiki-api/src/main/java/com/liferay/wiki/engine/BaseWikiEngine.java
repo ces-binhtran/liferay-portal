@@ -18,11 +18,11 @@ import com.liferay.petra.io.unsync.UnsyncStringWriter;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.servlet.PipingServletResponse;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.language.LanguageResources;
-import com.liferay.taglib.servlet.PipingServletResponse;
 import com.liferay.wiki.exception.PageContentException;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
@@ -187,7 +187,7 @@ public abstract class BaseWikiEngine implements WikiEngine {
 	protected abstract ServletContext getHelpPageServletContext();
 
 	protected ResourceBundleLoader getResourceBundleLoader() {
-		return LanguageResources.RESOURCE_BUNDLE_LOADER;
+		return LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER;
 	}
 
 	private static final String _BASE_WIKI_ENGINE =

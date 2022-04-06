@@ -28,7 +28,7 @@ ConfigurationCategoryMenuDisplay configurationCategoryMenuDisplay = (Configurati
 
 ConfigurationCategoryDisplay configurationCategoryDisplay = configurationCategoryMenuDisplay.getConfigurationCategoryDisplay();
 
-String categoryDisplayName = HtmlUtil.escape(configurationCategoryDisplay.getCategoryLabel(locale));
+String categoryDisplayName = configurationCategoryDisplay.getCategoryLabel(locale);
 
 String viewCategoryHREF = ConfigurationCategoryUtil.getHREF(configurationCategoryMenuDisplay, liferayPortletResponse, renderRequest, renderResponse);
 
@@ -74,21 +74,23 @@ renderResponse.setTitle(categoryDisplayName);
 		<clay:col
 			md="9"
 		>
-			<div class="sheet sheet-lg">
-				<div class="autofit-row">
-					<div class="autofit-col">
+			<clay:sheet
+				size="full"
+			>
+				<clay:content-row>
+					<clay:content-col>
 						<h2><%= factoryConfigurationModelName %></h2>
-					</div>
+					</clay:content-col>
 
 					<c:if test="<%= configurationModelIterator.getTotal() > 0 %>">
-						<div class="autofit-col">
+						<clay:content-col>
 							<liferay-ui:icon-menu
 								cssClass="float-right"
 								direction="right"
 								markupView="lexicon"
 								showWhenSingleIcon="<%= true %>"
 							>
-								<portlet:resourceURL id="export" var="exportEntriesURL">
+								<portlet:resourceURL id="/configuration_admin/export_configuration" var="exportEntriesURL">
 									<portlet:param name="redirect" value="<%= currentURL %>" />
 									<portlet:param name="factoryPid" value="<%= configurationModel.getFactoryPid() %>" />
 								</portlet:resourceURL>
@@ -99,39 +101,49 @@ renderResponse.setTitle(categoryDisplayName);
 									url="<%= exportEntriesURL %>"
 								/>
 							</liferay-ui:icon-menu>
-						</div>
+						</clay:content-col>
 					</c:if>
-				</div>
+				</clay:content-row>
 
-				<h3 class="autofit-row sheet-subtitle">
-					<span class="autofit-col autofit-col-expand">
+				<clay:content-row
+					containerElement="h3"
+					cssClass="sheet-subtitle"
+				>
+					<clay:content-col
+						containerElement="span"
+						expand="<%= true %>"
+					>
 						<span class="heading-text">
 							<liferay-ui:message key="configuration-entries" />
 						</span>
-					</span>
-					<span class="autofit-col">
+					</clay:content-col>
+
+					<clay:content-col
+						containerElement="span"
+					>
 						<span class="heading-end">
 							<portlet:renderURL var="createFactoryConfigURL">
-								<portlet:param name="mvcRenderCommandName" value="/edit_configuration" />
+								<portlet:param name="mvcRenderCommandName" value="/configuration_admin/edit_configuration" />
 								<portlet:param name="redirect" value="<%= currentURL %>" />
 								<portlet:param name="factoryPid" value="<%= configurationModel.getFactoryPid() %>" />
 							</portlet:renderURL>
 
 							<a class="btn btn-secondary btn-sm" href="<%= createFactoryConfigURL %>"><liferay-ui:message key="add" /></a>
 						</span>
-					</span>
-				</h3>
-
-				<%
-				PortletURL iteratorURL = renderResponse.createRenderURL();
-
-				iteratorURL.setParameter("mvcRenderCommandName", "/view_factory_instances");
-				iteratorURL.setParameter("factoryPid", configurationModel.getFactoryPid());
-				%>
+					</clay:content-col>
+				</clay:content-row>
 
 				<liferay-ui:search-container
-					emptyResultsMessage='<%= LanguageUtil.format(request, "no-entries-for-x-have-been-added-yet", factoryConfigurationModelName) %>'
-					iteratorURL="<%= iteratorURL %>"
+					emptyResultsMessage='<%= LanguageUtil.format(request, "no-entries-for-x-have-been-added-yet.-use-the-add-button-above-to-add-the-first", factoryConfigurationModelName) %>'
+					iteratorURL='<%=
+						PortletURLBuilder.createRenderURL(
+							renderResponse
+						).setMVCRenderCommandName(
+							"/configuration_admin/view_factory_instances"
+						).setParameter(
+							"factoryPid", configurationModel.getFactoryPid()
+						).buildPortletURL()
+					%>'
 					total="<%= configurationModelIterator.getTotal() %>"
 				>
 					<liferay-ui:search-container-results
@@ -144,7 +156,7 @@ renderResponse.setTitle(categoryDisplayName);
 						modelVar="curConfigurationModel"
 					>
 						<portlet:renderURL var="editFactoryInstanceURL">
-							<portlet:param name="mvcRenderCommandName" value="/edit_configuration" />
+							<portlet:param name="mvcRenderCommandName" value="/configuration_admin/edit_configuration" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 							<portlet:param name="factoryPid" value="<%= curConfigurationModel.getFactoryPid() %>" />
 							<portlet:param name="pid" value="<%= curConfigurationModel.getID() %>" />
@@ -191,7 +203,7 @@ renderResponse.setTitle(categoryDisplayName);
 								/>
 
 								<c:if test="<%= curConfigurationModel.hasConfiguration() %>">
-									<portlet:actionURL name="deleteConfiguration" var="deleteConfigActionURL">
+									<portlet:actionURL name="/configuration_admin/delete_configuration" var="deleteConfigActionURL">
 										<portlet:param name="redirect" value="<%= currentURL %>" />
 										<portlet:param name="factoryPid" value="<%= curConfigurationModel.getFactoryPid() %>" />
 										<portlet:param name="pid" value="<%= curConfigurationModel.getID() %>" />
@@ -203,7 +215,7 @@ renderResponse.setTitle(categoryDisplayName);
 										url="<%= deleteConfigActionURL %>"
 									/>
 
-									<portlet:resourceURL id="export" var="exportURL">
+									<portlet:resourceURL id="/configuration_admin/export_configuration" var="exportURL">
 										<portlet:param name="factoryPid" value="<%= curConfigurationModel.getFactoryPid() %>" />
 										<portlet:param name="pid" value="<%= curConfigurationModel.getID() %>" />
 									</portlet:resourceURL>
@@ -223,7 +235,7 @@ renderResponse.setTitle(categoryDisplayName);
 						searchResultCssClass="show-quick-actions-on-hover table table-autofit"
 					/>
 				</liferay-ui:search-container>
-			</div>
+			</clay:sheet>
 		</clay:col>
 	</clay:row>
 </clay:container-fluid>

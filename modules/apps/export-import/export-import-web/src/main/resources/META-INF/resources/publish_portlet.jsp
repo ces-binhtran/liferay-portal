@@ -19,7 +19,7 @@
 <liferay-staging:defineObjects />
 
 <%
-String tabs3 = ParamUtil.getString(request, "tabs3", "new-publication-process");
+String tabs3 = ParamUtil.getString(request, "tabs3", "new-publish-process");
 
 String errorMessageKey = StringPool.BLANK;
 
@@ -43,14 +43,16 @@ if (!layout.isTypeControlPanel()) {
 				targetLayout = LayoutLocalServiceUtil.getLayoutByUuidAndGroupId(layout.getUuid(), liveGroup.getGroupId(), layout.isPrivateLayout());
 			}
 		}
-		catch (NoSuchLayoutException nsle) {
+		catch (PortalException portalException) {
 			errorMessageKey = "this-widget-is-placed-in-a-page-that-does-not-exist-in-the-live-site-publish-the-page-first";
 		}
 
 		if (targetLayout != null) {
 			LayoutType layoutType = targetLayout.getLayoutType();
 
-			if (!(layoutType instanceof LayoutTypePortlet) || !((LayoutTypePortlet)layoutType).hasPortletId(selPortlet.getPortletId())) {
+			LayoutTypePortlet targetLayoutTypePortlet = (LayoutTypePortlet)layoutType;
+
+			if (!(layoutType instanceof LayoutTypePortlet) || !targetLayoutTypePortlet.hasPortletId(selPortlet.getPortletId())) {
 				errorMessageKey = "this-widget-has-not-been-added-to-the-live-page-publish-the-page-first";
 			}
 		}
@@ -93,7 +95,7 @@ if (!GroupPermissionUtil.contains(permissionChecker, themeDisplay.getScopeGroup(
 		</c:when>
 		<c:when test="<%= (themeDisplay.getURLPublishToLive() != null) || layout.isTypeControlPanel() %>">
 			<c:choose>
-				<c:when test='<%= tabs3.equals("copy-from-live") || tabs3.equals("new-publication-process") %>'>
+				<c:when test='<%= tabs3.equals("copy-from-live") || tabs3.equals("new-publish-process") %>'>
 					<liferay-util:include page="/publish_portlet_publish_or_copy.jsp" servletContext="<%= application %>" />
 				</c:when>
 				<c:when test='<%= tabs3.equals("current-and-previous") %>'>
@@ -104,7 +106,7 @@ if (!GroupPermissionUtil.contains(permissionChecker, themeDisplay.getScopeGroup(
 			</c:choose>
 
 			<aui:script use="liferay-export-import-export-import">
-				<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="publishPortlet" var="publishProcessesURL">
+				<liferay-portlet:resourceURL copyCurrentRenderParameters="<%= false %>" id="/export_import/publish_portlet" var="publishProcessesURL">
 					<portlet:param name="<%= Constants.CMD %>" value="<%= Constants.PUBLISH %>" />
 					<portlet:param name="<%= SearchContainer.DEFAULT_CUR_PARAM %>" value="<%= ParamUtil.getString(request, SearchContainer.DEFAULT_CUR_PARAM) %>" />
 					<portlet:param name="<%= SearchContainer.DEFAULT_DELTA_PARAM %>" value="<%= ParamUtil.getString(request, SearchContainer.DEFAULT_DELTA_PARAM) %>" />

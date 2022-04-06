@@ -14,15 +14,20 @@
 
 package com.liferay.headless.delivery.internal.resource.v1_0;
 
+import com.liferay.dynamic.data.mapping.util.DDMIndexer;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.service.ExpandoTableLocalService;
-import com.liferay.headless.common.spi.service.context.ServiceContextUtil;
+import com.liferay.headless.common.spi.service.context.ServiceContextRequestUtil;
 import com.liferay.headless.delivery.dto.v1_0.MessageBoardSection;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CreatorUtil;
-import com.liferay.headless.delivery.internal.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.delivery.dto.v1_0.util.CustomFieldsUtil;
+import com.liferay.headless.delivery.internal.dto.v1_0.converter.MessageBoardSectionDTOConverter;
 import com.liferay.headless.delivery.internal.dto.v1_0.util.EntityFieldsUtil;
 import com.liferay.headless.delivery.internal.odata.entity.v1_0.MessageBoardSectionEntityModel;
 import com.liferay.headless.delivery.resource.v1_0.MessageBoardSectionResource;
+import com.liferay.headless.delivery.search.aggregation.AggregationUtil;
+import com.liferay.headless.delivery.search.filter.FilterUtil;
+import com.liferay.headless.delivery.search.sort.SortUtil;
+import com.liferay.message.boards.constants.MBConstants;
 import com.liferay.message.boards.model.MBCategory;
 import com.liferay.message.boards.service.MBCategoryService;
 import com.liferay.petra.function.UnsafeConsumer;
@@ -33,18 +38,24 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
-import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.search.aggregation.Aggregations;
+import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
+import com.liferay.portal.search.query.Queries;
+import com.liferay.portal.search.searcher.SearchRequestBuilder;
+import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
+import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
+import com.liferay.portal.vulcan.dto.converter.DefaultDTOConverterContext;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 import com.liferay.portal.vulcan.util.ActionUtil;
 import com.liferay.portal.vulcan.util.SearchUtil;
-import com.liferay.subscription.service.SubscriptionLocalService;
 
 import java.io.Serializable;
 
@@ -96,25 +107,27 @@ public class MessageBoardSectionResourceImpl
 	@Override
 	public Page<MessageBoardSection>
 			getMessageBoardSectionMessageBoardSectionsPage(
-				Long parentMessageBoardSectionId, String search, Filter filter,
-				Pagination pagination, Sort[] sorts)
+				Long parentMessageBoardSectionId, String search,
+				Aggregation aggregation, Filter filter, Pagination pagination,
+				Sort[] sorts)
 		throws Exception {
 
 		MBCategory mbCategory = _mbCategoryService.getCategory(
 			parentMessageBoardSectionId);
 
 		return _getMessageBoardSectionsPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
-					"ADD_CATEGORY",
+					ActionKeys.ADD_CATEGORY,
 					"postMessageBoardSectionMessageBoardSection",
-					"com.liferay.message.boards", mbCategory.getGroupId())
+					MBConstants.RESOURCE_NAME, mbCategory.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", "getMessageBoardSectionMessageBoardSectionsPage",
-					"com.liferay.message.boards", mbCategory.getGroupId())
+					ActionKeys.VIEW,
+					"getMessageBoardSectionMessageBoardSectionsPage",
+					MBConstants.RESOURCE_NAME, mbCategory.getGroupId())
 			).build(),
 			booleanQuery -> {
 				BooleanFilter booleanFilter =
@@ -126,26 +139,28 @@ public class MessageBoardSectionResourceImpl
 						String.valueOf(mbCategory.getCategoryId())),
 					BooleanClauseOccur.MUST);
 			},
-			mbCategory.getGroupId(), filter, search, pagination, sorts);
+			mbCategory.getGroupId(), search, aggregation, filter, pagination,
+			sorts);
 	}
 
 	@Override
 	public Page<MessageBoardSection> getSiteMessageBoardSectionsPage(
-			Long siteId, Boolean flatten, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long siteId, Boolean flatten, String search,
+			Aggregation aggregation, Filter filter, Pagination pagination,
+			Sort[] sorts)
 		throws Exception {
 
 		return _getMessageBoardSectionsPage(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"create",
 				addAction(
-					"ADD_CATEGORY", "postSiteMessageBoardSection",
-					"com.liferay.message.boards", siteId)
+					ActionKeys.ADD_CATEGORY, "postSiteMessageBoardSection",
+					MBConstants.RESOURCE_NAME, siteId)
 			).put(
 				"get",
 				addAction(
-					"VIEW", "getSiteMessageBoardSectionsPage",
-					"com.liferay.message.boards", siteId)
+					ActionKeys.VIEW, "getSiteMessageBoardSectionsPage",
+					MBConstants.RESOURCE_NAME, siteId)
 			).build(),
 			booleanQuery -> {
 				if (!GetterUtil.getBoolean(flatten)) {
@@ -157,7 +172,7 @@ public class MessageBoardSectionResourceImpl
 						BooleanClauseOccur.MUST);
 				}
 			},
-			siteId, filter, search, pagination, sorts);
+			siteId, search, aggregation, filter, pagination, sorts);
 	}
 
 	@Override
@@ -197,9 +212,9 @@ public class MessageBoardSectionResourceImpl
 				messageBoardSection.getDescription(),
 				mbCategory.getDisplayStyle(), "", "", "", 0, false, "", "", 0,
 				"", false, "", 0, false, "", "", false, false, false,
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					_getExpandoBridgeAttributes(messageBoardSection),
-					mbCategory.getGroupId(), null)));
+					mbCategory.getGroupId(), contextHttpServletRequest, null)));
 	}
 
 	@Override
@@ -224,6 +239,23 @@ public class MessageBoardSectionResourceImpl
 			mbCategory.getGroupId(), mbCategory.getCategoryId());
 	}
 
+	@Override
+	protected Long getPermissionCheckerGroupId(Object id) throws Exception {
+		MBCategory mbCategory = _mbCategoryService.getCategory((Long)id);
+
+		return mbCategory.getGroupId();
+	}
+
+	@Override
+	protected String getPermissionCheckerPortletName(Object id) {
+		return MBConstants.RESOURCE_NAME;
+	}
+
+	@Override
+	protected String getPermissionCheckerResourceName(Object id) {
+		return MBCategory.class.getName();
+	}
+
 	private MessageBoardSection _addMessageBoardSection(
 			long siteId, Long parentMessageBoardSectionId,
 			MessageBoardSection messageBoardSection)
@@ -234,8 +266,9 @@ public class MessageBoardSectionResourceImpl
 				contextUser.getUserId(), parentMessageBoardSectionId,
 				messageBoardSection.getTitle(),
 				messageBoardSection.getDescription(),
-				ServiceContextUtil.createServiceContext(
+				ServiceContextRequestUtil.createServiceContext(
 					_getExpandoBridgeAttributes(messageBoardSection), siteId,
+					contextHttpServletRequest,
 					messageBoardSection.getViewableByAsString())));
 	}
 
@@ -251,18 +284,31 @@ public class MessageBoardSectionResourceImpl
 	private Page<MessageBoardSection> _getMessageBoardSectionsPage(
 			Map<String, Map<String, String>> actions,
 			UnsafeConsumer<BooleanQuery, Exception> booleanQueryUnsafeConsumer,
-			Long siteId, Filter filter, String keywords, Pagination pagination,
-			Sort[] sorts)
+			Long siteId, String keywords, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
-			actions, booleanQueryUnsafeConsumer, filter, MBCategory.class,
-			keywords, pagination,
+			actions, booleanQueryUnsafeConsumer,
+			FilterUtil.processFilter(_ddmIndexer, filter),
+			MBCategory.class.getName(), keywords, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setCompanyId(contextCompany.getCompanyId());
 				searchContext.setGroupIds(new long[] {siteId});
+
+				SearchRequestBuilder searchRequestBuilder =
+					_searchRequestBuilderFactory.builder(searchContext);
+
+				AggregationUtil.processVulcanAggregation(
+					_aggregations, _ddmIndexer, _queries, searchRequestBuilder,
+					aggregation);
+
+				SortUtil.processSorts(
+					_ddmIndexer, searchRequestBuilder, searchContext.getSorts(),
+					_queries, _sorts);
 			},
 			sorts,
 			document -> _toMessageBoardSection(
@@ -273,17 +319,19 @@ public class MessageBoardSectionResourceImpl
 	private MessageBoardSection _toMessageBoardSection(MBCategory mbCategory)
 		throws Exception {
 
-		return new MessageBoardSection() {
-			{
-				actions = HashMapBuilder.<String, Map<String, String>>put(
+		return _messageBoardSectionDTOConverter.toDTO(
+			new DefaultDTOConverterContext(
+				contextAcceptLanguage.isAcceptAllLanguages(),
+				HashMapBuilder.put(
 					"add-subcategory",
 					addAction(
-						"ADD_SUBCATEGORY", mbCategory,
+						ActionKeys.ADD_SUBCATEGORY, mbCategory,
 						"postMessageBoardSectionMessageBoardSection")
 				).put(
 					"add-thread",
 					ActionUtil.addAction(
-						"ADD_MESSAGE", MessageBoardThreadResourceImpl.class,
+						ActionKeys.ADD_MESSAGE,
+						MessageBoardThreadResourceImpl.class,
 						mbCategory.getCategoryId(),
 						"postMessageBoardSectionMessageBoardThread",
 						contextScopeChecker, mbCategory.getUserId(),
@@ -291,58 +339,41 @@ public class MessageBoardSectionResourceImpl
 						contextUriInfo)
 				).put(
 					"delete",
-					addAction("DELETE", mbCategory, "deleteMessageBoardSection")
+					addAction(
+						ActionKeys.DELETE, mbCategory,
+						"deleteMessageBoardSection")
 				).put(
 					"get",
-					addAction("VIEW", mbCategory, "getMessageBoardSection")
+					addAction(
+						ActionKeys.VIEW, mbCategory, "getMessageBoardSection")
 				).put(
 					"replace",
-					addAction("UPDATE", mbCategory, "putMessageBoardSection")
+					addAction(
+						ActionKeys.UPDATE, mbCategory, "putMessageBoardSection")
 				).put(
 					"subscribe",
 					addAction(
-						"SUBSCRIBE", mbCategory,
+						ActionKeys.SUBSCRIBE, mbCategory,
 						"putMessageBoardSectionSubscribe")
 				).put(
 					"unsubscribe",
 					addAction(
-						"SUBSCRIBE", mbCategory,
+						ActionKeys.SUBSCRIBE, mbCategory,
 						"putMessageBoardSectionUnsubscribe")
-				).build();
-				creator = CreatorUtil.toCreator(
-					_portal,
-					_userLocalService.fetchUser(mbCategory.getUserId()));
-				customFields = CustomFieldsUtil.toCustomFields(
-					contextAcceptLanguage.isAcceptAllLanguages(),
-					MBCategory.class.getName(), mbCategory.getCategoryId(),
-					mbCategory.getCompanyId(),
-					contextAcceptLanguage.getPreferredLocale());
-				dateCreated = mbCategory.getCreateDate();
-				dateModified = mbCategory.getModifiedDate();
-				description = mbCategory.getDescription();
-				id = mbCategory.getCategoryId();
-				numberOfMessageBoardSections =
-					_mbCategoryService.getCategoriesCount(
-						mbCategory.getGroupId(), mbCategory.getCategoryId(),
-						WorkflowConstants.STATUS_APPROVED);
-				numberOfMessageBoardThreads = mbCategory.getThreadCount();
-				siteId = mbCategory.getGroupId();
-				subscribed = _subscriptionLocalService.isSubscribed(
-					mbCategory.getCompanyId(), contextUser.getUserId(),
-					MBCategory.class.getName(), mbCategory.getCategoryId());
-				title = mbCategory.getName();
-
-				setParentMessageBoardSectionId(
-					() -> {
-						if (mbCategory.getParentCategoryId() == 0L) {
-							return null;
-						}
-
-						return mbCategory.getParentCategoryId();
-					});
-			}
-		};
+				).build(),
+				_dtoConverterRegistry, mbCategory.getCategoryId(),
+				contextAcceptLanguage.getPreferredLocale(), contextUriInfo,
+				contextUser));
 	}
+
+	@Reference
+	private Aggregations _aggregations;
+
+	@Reference
+	private DDMIndexer _ddmIndexer;
+
+	@Reference
+	private DTOConverterRegistry _dtoConverterRegistry;
 
 	@Reference
 	private ExpandoColumnLocalService _expandoColumnLocalService;
@@ -354,12 +385,18 @@ public class MessageBoardSectionResourceImpl
 	private MBCategoryService _mbCategoryService;
 
 	@Reference
+	private MessageBoardSectionDTOConverter _messageBoardSectionDTOConverter;
+
+	@Reference
 	private Portal _portal;
 
 	@Reference
-	private SubscriptionLocalService _subscriptionLocalService;
+	private Queries _queries;
 
 	@Reference
-	private UserLocalService _userLocalService;
+	private SearchRequestBuilderFactory _searchRequestBuilderFactory;
+
+	@Reference
+	private Sorts _sorts;
 
 }

@@ -45,7 +45,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + JournalPortletKeys.JOURNAL,
-		"mvc.command.name=exportArticle"
+		"mvc.command.name=/journal/export_article"
 	},
 	service = MVCResourceCommand.class
 )
@@ -63,10 +63,10 @@ public class ExportArticleMVCResourceCommand extends BaseMVCResourceCommand {
 			PortletPreferences portletPreferences =
 				resourceRequest.getPreferences();
 
-			String porletResource = ParamUtil.getString(
+			String portletResource = ParamUtil.getString(
 				resourceRequest, "portletResource");
 
-			if (Validator.isNotNull(porletResource)) {
+			if (Validator.isNotNull(portletResource)) {
 				long plid = ParamUtil.getLong(resourceRequest, "plid");
 
 				Layout layout = _layoutLocalService.fetchLayout(plid);
@@ -74,7 +74,7 @@ public class ExportArticleMVCResourceCommand extends BaseMVCResourceCommand {
 				if (layout != null) {
 					portletPreferences =
 						PortletPreferencesFactoryUtil.getExistingPortletSetup(
-							layout, porletResource);
+							layout, portletResource);
 				}
 			}
 

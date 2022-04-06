@@ -18,13 +18,15 @@ import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
 import com.liferay.asset.kernel.model.AssetRenderer;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
 import com.liferay.journal.constants.JournalActivityKeys;
+import com.liferay.journal.constants.JournalArticleConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.exception.NoSuchArticleException;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
 import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalService;
-import com.liferay.journal.web.internal.util.JournalResourceBundleLoader;
+import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -34,7 +36,6 @@ import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermi
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.social.kernel.model.BaseSocialActivityInterpreter;
 import com.liferay.social.kernel.model.SocialActivity;
@@ -96,25 +97,46 @@ public class JournalArticleActivityInterpreter
 
 			if (layout != null) {
 				String groupFriendlyURL = _portal.getGroupFriendlyURL(
-					layout.getLayoutSet(), serviceContext.getThemeDisplay());
+					layout.getLayoutSet(), serviceContext.getThemeDisplay(),
+					false, false);
 
-				return groupFriendlyURL.concat(
-					JournalArticleConstants.CANONICAL_URL_SEPARATOR
-				).concat(
-					article.getUrlTitle()
-				);
+				return StringBundler.concat(
+					groupFriendlyURL,
+					JournalArticleConstants.CANONICAL_URL_SEPARATOR,
+					article.getUrlTitle());
 			}
 
 			return null;
 		}
 		catch (NoSuchArticleException noSuchArticleException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchArticleException);
+			}
+
 			return null;
 		}
 	}
 
 	@Override
-	protected ResourceBundleLoader getResourceBundleLoader() {
-		return JournalResourceBundleLoader.INSTANCE;
+	protected Object[] getTitleArguments(
+			String groupName, SocialActivity activity, String link,
+			String title, ServiceContext serviceContext)
+		throws Exception {
+
+		if (activity.getType() == SocialActivityConstants.TYPE_ADD_COMMENT) {
+			String creatorUserName = getUserName(
+				activity.getUserId(), serviceContext);
+			String receiverUserName = getUserName(
+				activity.getReceiverUserId(), serviceContext);
+
+			return new Object[] {
+				groupName, creatorUserName, receiverUserName,
+				wrapLink(link, title)
+			};
+		}
+
+		return super.getTitleArguments(
+			groupName, activity, link, title, serviceContext);
 	}
 
 	@Override
@@ -136,6 +158,13 @@ public class JournalArticleActivityInterpreter
 			}
 
 			return "activity-journal-article-update-web-content-in";
+		}
+		else if (activityType == SocialActivityConstants.TYPE_ADD_COMMENT) {
+			if (Validator.isNull(groupName)) {
+				return "activity-journal-article-add-comment";
+			}
+
+			return "activity-journal-article-add-comment-in";
 		}
 		else if (activityType == SocialActivityConstants.TYPE_MOVE_TO_TRASH) {
 			if (Validator.isNull(groupName)) {
@@ -194,6 +223,9 @@ public class JournalArticleActivityInterpreter
 	private static final String[] _CLASS_NAMES = {
 		JournalArticle.class.getName()
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		JournalArticleActivityInterpreter.class);
 
 	private JournalArticleLocalService _journalArticleLocalService;
 

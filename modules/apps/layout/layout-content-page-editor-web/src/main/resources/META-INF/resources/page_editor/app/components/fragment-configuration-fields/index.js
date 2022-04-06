@@ -12,18 +12,30 @@
  * details.
  */
 
+import {CategoryTreeNodeSelectorField} from './CategoryTreeNodeSelectorField';
 import {CheckboxField} from './CheckboxField';
 import {CollectionSelectorField} from './CollectionSelectorField';
 import {ColorPaletteField} from './ColorPaletteField';
+import {ColorPickerField} from './ColorPickerField';
+import {ImageSelectorField} from './ImageSelectorField';
 import {ItemSelectorField} from './ItemSelectorField';
+import {NavigationMenuSelectorField} from './NavigationMenuSelectorField';
 import {SelectField} from './SelectField';
+import {SpacingBoxField} from './SpacingBoxField';
 import {TextField} from './TextField';
+import {VideoSelectorField} from './VideoSelectorField';
 
 export const FRAGMENT_CONFIGURATION_FIELDS = {
+	categoryTreeNodeSelector: CategoryTreeNodeSelectorField,
 	checkbox: CheckboxField,
 	collectionSelector: CollectionSelectorField,
 	colorPalette: ColorPaletteField,
+	colorPicker: ColorPickerField,
+	imageSelector: ImageSelectorField,
 	itemSelector: ItemSelectorField,
+	navigationMenuSelector: NavigationMenuSelectorField,
 	select: SelectField,
+	spacing: SpacingBoxField,
 	text: TextField,
+	videoSelector: VideoSelectorField,
 };

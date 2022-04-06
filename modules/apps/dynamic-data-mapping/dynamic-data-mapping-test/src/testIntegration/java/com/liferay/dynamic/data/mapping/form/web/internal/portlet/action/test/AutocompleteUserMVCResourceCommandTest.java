@@ -64,8 +64,6 @@ public class AutocompleteUserMVCResourceCommandTest {
 
 	@Before
 	public void setUp() throws Exception {
-		_users = new ArrayList<>();
-
 		_setUpAutocompleteUserMVCResourceCommand();
 	}
 
@@ -81,10 +79,8 @@ public class AutocompleteUserMVCResourceCommandTest {
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
 
-		ThemeDisplay themeDisplay = _getThemeDisplay(user, true);
-
 		_mvcResourceCommand.serveResource(
-			_getMockLiferayResourceRequest(themeDisplay),
+			_getMockLiferayResourceRequest(_getThemeDisplay(user, true)),
 			mockLiferayResourceResponse);
 
 		JSONArray jsonArray = _getUsersJSONArray(mockLiferayResourceResponse);
@@ -127,10 +123,8 @@ public class AutocompleteUserMVCResourceCommandTest {
 		MockLiferayResourceResponse mockLiferayResourceResponse =
 			new MockLiferayResourceResponse();
 
-		ThemeDisplay themeDisplay = _getThemeDisplay(user, true);
-
 		_mvcResourceCommand.serveResource(
-			_getMockLiferayResourceRequest(themeDisplay),
+			_getMockLiferayResourceRequest(_getThemeDisplay(user, true)),
 			mockLiferayResourceResponse);
 
 		JSONArray jsonArray = _getUsersJSONArray(mockLiferayResourceResponse);
@@ -148,9 +142,11 @@ public class AutocompleteUserMVCResourceCommandTest {
 			new MockLiferayResourceResponse());
 	}
 
-	private boolean _containsField(JSONArray fieldValues, String field) {
-		for (int i = 0; i < fieldValues.length(); i++) {
-			JSONObject jsonObject = fieldValues.getJSONObject(i);
+	private boolean _containsField(
+		JSONArray fieldValuesJSONArray, String field) {
+
+		for (int i = 0; i < fieldValuesJSONArray.length(); i++) {
+			JSONObject jsonObject = fieldValuesJSONArray.getJSONObject(i);
 
 			if (jsonObject.has(field)) {
 				return true;
@@ -229,6 +225,6 @@ public class AutocompleteUserMVCResourceCommandTest {
 	private Portal _portal;
 
 	@DeleteAfterTestRun
-	private List<User> _users;
+	private List<User> _users = new ArrayList<>();
 
 }

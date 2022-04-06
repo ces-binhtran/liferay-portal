@@ -1,10 +1,11 @@
-@component-name = "portal-forms-and-workflow-ee"
+@component-name = "portal-workflow-ee"
 definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
 	property test.run.environment = "EE";
 	property testray.main.component.name = "Kaleo Forms Admin";
+
 	var kfFieldSetName = "New Kaleo Field Set";
 	var workflowAssetType = "Process";
 
@@ -16,17 +17,8 @@ definition {
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
-
-		KaleoFormsAdmin.addProcess();
-
-		KaleoFormsAdmin.addProcessDetails(
-			kfProcessDescription = "Kaleo Forms Process Description",
-			kfProcessName = "Kaleo Forms Process");
-
-		KaleoFormsAdmin.next();
 
 		KaleoFormsAdmin.addFieldSet(
 			kfFieldSetName = "${kfFieldSetName}",
@@ -38,6 +30,14 @@ definition {
 			fieldName = "Text");
 
 		KaleoFormsAdmin.saveFieldSet();
+
+		KaleoFormsAdmin.addProcess();
+
+		KaleoFormsAdmin.addProcessDetails(
+			kfProcessDescription = "Kaleo Forms Process Description",
+			kfProcessName = "Kaleo Forms Process");
+
+		KaleoFormsAdmin.next();
 
 		KaleoFormsAdmin.chooseFieldSet(
 			kfFieldSetName = "${kfFieldSetName}",
@@ -85,7 +85,7 @@ definition {
 
 			DMDocument.tearDownCP();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 
 			Workflow.tearDownSpecificWorkflowDefinition(workflowDefinitionTitle = "Edited Workflow Definition");
 
@@ -104,21 +104,21 @@ definition {
 		property test.name.skip.portal.instance = "KaleoFormsEditSingleApprover#CompleteProcessAndViewEmailNotifications";
 		property test.smtp.server.enabled = "true";
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
 		Role.add(roleTitle = "Reviewer Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
 		Role.add(roleTitle = "Updater Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -129,7 +129,7 @@ definition {
 			userLastName = "Creator",
 			userScreenName = "creator");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -138,16 +138,17 @@ definition {
 			userEmailAddress = "user1@liferay.com",
 			userScreenName = "creator");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
-			roleTitle = "Administrator",
-			userScreenName = "creator");
+		Role.addAssignee(
+			assigneeName = "creator",
+			assigneeType = "Users",
+			roleTitle = "Administrator");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -158,7 +159,7 @@ definition {
 			userLastName = "Reviewer",
 			userScreenName = "reviewer");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -167,25 +168,27 @@ definition {
 			userEmailAddress = "user2@liferay.com",
 			userScreenName = "reviewer");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
-			roleTitle = "Administrator",
-			userScreenName = "reviewer");
+		Role.addAssignee(
+			assigneeName = "reviewer",
+			assigneeType = "Users",
+			roleTitle = "Administrator");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
-			roleTitle = "Reviewer Name",
-			userScreenName = "reviewer");
+		Role.addAssignee(
+			assigneeName = "reviewer",
+			assigneeType = "Users",
+			roleTitle = "Reviewer Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -196,7 +199,7 @@ definition {
 			userLastName = "Updater",
 			userScreenName = "updater");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -205,29 +208,30 @@ definition {
 			userEmailAddress = "user3@liferay.com",
 			userScreenName = "updater");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
-			roleTitle = "Administrator",
-			userScreenName = "updater");
+		Role.addAssignee(
+			assigneeName = "updater",
+			assigneeType = "Users",
+			roleTitle = "Administrator");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Roles");
 
-		Role.assignRegRoleCP(
-			roleTitle = "Updater Name",
-			userScreenName = "updater");
+		Role.addAssignee(
+			assigneeName = "updater",
+			assigneeType = "Users",
+			roleTitle = "Updater Name");
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.editProcess(kfProcessName = "Kaleo Forms Process");
@@ -282,8 +286,7 @@ definition {
 		KaleoFormsAdmin.saveProcess(kfProcessName = "Kaleo Forms Process");
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.viewProcess(kfProcessName = "Kaleo Forms Process");
@@ -297,8 +300,7 @@ definition {
 		Workflow.viewDefaultMyWorkflowTasksCP();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.submitNewProcess(kfProcessName = "Kaleo Forms Process");
@@ -410,13 +412,11 @@ definition {
 	@priority = "3"
 	test ViewApprovedProcessNotificationWithComments {
 		property test.name.skip.portal.instance = "KaleoFormsEditSingleApprover#ViewApprovedProcessNotificationWithComments";
-		property portal.upstream = "quarantine";
 
 		Navigator.openURL();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.editProcess(kfProcessName = "Kaleo Forms Process");
@@ -455,8 +455,7 @@ definition {
 		KaleoFormsAdmin.saveProcess(kfProcessName = "Kaleo Forms Process");
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.viewProcess(kfProcessName = "Kaleo Forms Process");
@@ -466,8 +465,7 @@ definition {
 		Workflow.viewDefaultMyWorkflowTasksCP();
 
 		ProductMenu.gotoPortlet(
-			category = "Content &amp; Data",
-			panel = "Site Administration",
+			category = "Content & Data",
 			portlet = "Kaleo Forms Admin");
 
 		KaleoFormsAdmin.submitNewProcess(kfProcessName = "Kaleo Forms Process");

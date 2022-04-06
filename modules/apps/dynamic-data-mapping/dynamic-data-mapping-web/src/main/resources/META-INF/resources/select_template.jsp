@@ -21,7 +21,6 @@ long templateId = ParamUtil.getLong(request, "templateId");
 
 long classNameId = ParamUtil.getLong(request, "classNameId");
 long classPK = ParamUtil.getLong(request, "classPK");
-String eventName = ParamUtil.getString(request, "eventName", "selectTemplate");
 
 DDMStructure structure = null;
 
@@ -30,8 +29,6 @@ long structureClassNameId = PortalUtil.getClassNameId(DDMStructure.class);
 if ((classPK > 0) && (structureClassNameId == classNameId)) {
 	structure = DDMStructureLocalServiceUtil.getStructure(classPK);
 }
-
-SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearch();
 %>
 
 <liferay-util:include page="/navigation_bar.jsp" servletContext="<%= application %>" />
@@ -42,10 +39,10 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 	disabled="<%= ddmDisplayContext.isDisabledManagementBar(DDMWebKeys.DYNAMIC_DATA_MAPPING_TEMPLATE) %>"
 	filterDropdownItems="<%= ddmDisplayContext.getFilterItemsDropdownItems() %>"
 	itemsTotal="<%= ddmDisplayContext.getTotalItems(DDMWebKeys.DYNAMIC_DATA_MAPPING_TEMPLATE) %>"
-	namespace="<%= renderResponse.getNamespace() %>"
 	searchActionURL="<%= ddmDisplayContext.getSelectTemplateSearchActionURL() %>"
 	searchFormName="searchForm"
-	selectable="false"
+	searchInputAutoFocus="<%= true %>"
+	selectable="<%= false %>"
 	sortingOrder="<%= ddmDisplayContext.getOrderByType() %>"
 	sortingURL="<%= ddmDisplayContext.getSortingURL() %>"
 />
@@ -53,7 +50,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 <aui:form action="<%= ddmDisplayContext.getSelectTemplateSearchActionURL() %>" method="post" name="selectTemplateFm">
 	<clay:container-fluid>
 		<liferay-ui:search-container
-			searchContainer="<%= templateSearch %>"
+			searchContainer="<%= ddmDisplayContext.getTemplateSearch() %>"
 		>
 			<liferay-ui:search-container-row
 				className="com.liferay.dynamic.data.mapping.model.DDMTemplate"
@@ -66,7 +63,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 				/>
 
 				<liferay-ui:search-container-column-text
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="name"
 				>
 					<c:choose>
@@ -98,7 +95,7 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 				</liferay-ui:search-container-column-text>
 
 				<liferay-ui:search-container-column-jsp
-					cssClass="table-cell-content"
+					cssClass="table-cell-expand"
 					name="description"
 					path="/template_description.jsp"
 				/>
@@ -115,16 +112,3 @@ SearchContainer<DDMTemplate> templateSearch = ddmDisplayContext.getTemplateSearc
 		</liferay-ui:search-container>
 	</clay:container-fluid>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.focusFormField(
-		document.<portlet:namespace />searchForm.<portlet:namespace />keywords
-	);
-</aui:script>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectTemplateFm',
-		'<%= HtmlUtil.escapeJS(eventName) %>'
-	);
-</aui:script>

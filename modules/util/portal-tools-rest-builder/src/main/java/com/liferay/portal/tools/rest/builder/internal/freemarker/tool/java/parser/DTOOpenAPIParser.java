@@ -18,14 +18,16 @@ import com.liferay.portal.kernel.util.CamelCaseUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.tool.java.parser.util.OpenAPIParserUtil;
 import com.liferay.portal.tools.rest.builder.internal.freemarker.util.OpenAPIUtil;
-import com.liferay.portal.vulcan.yaml.config.ConfigYAML;
-import com.liferay.portal.vulcan.yaml.openapi.Items;
-import com.liferay.portal.vulcan.yaml.openapi.OpenAPIYAML;
-import com.liferay.portal.vulcan.yaml.openapi.Schema;
+import com.liferay.portal.tools.rest.builder.internal.yaml.config.ConfigYAML;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Items;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.OpenAPIYAML;
+import com.liferay.portal.tools.rest.builder.internal.yaml.openapi.Schema;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -46,11 +48,12 @@ public class DTOOpenAPIParser {
 
 		for (Map.Entry<String, Schema> entry : propertySchemas.entrySet()) {
 			Schema propertySchema = entry.getValue();
-			String propertySchemaName = entry.getKey();
 
 			List<String> enumValues = propertySchema.getEnumValues();
 
 			if ((enumValues != null) && !enumValues.isEmpty()) {
+				String propertySchemaName = entry.getKey();
+
 				enumSchemas.put(
 					_getEnumName(openAPIYAML, propertySchemaName),
 					propertySchema);
@@ -116,26 +119,13 @@ public class DTOOpenAPIParser {
 	public static boolean isSchemaProperty(
 		OpenAPIYAML openAPIYAML, String propertyName, Schema schema) {
 
-		Map<String, Schema> schemas = OpenAPIUtil.getAllSchemas(openAPIYAML);
-
 		Map<String, Schema> propertySchemas = _getPropertySchemas(schema);
 
 		for (Map.Entry<String, Schema> entry : propertySchemas.entrySet()) {
 			String propertySchemaName = entry.getKey();
-			Schema propertySchema = entry.getValue();
 
-			String curPropertyName = _getPropertyName(
-				propertySchema, propertySchemaName);
-
-			if (StringUtil.equalsIgnoreCase(curPropertyName, propertyName)) {
-				String schemaName = StringUtil.upperCaseFirstLetter(
-					propertySchemaName);
-
-				if (propertySchema.getItems() != null) {
-					schemaName = OpenAPIUtil.formatSingular(schemaName);
-				}
-
-				if (schemas.containsKey(schemaName)) {
+			if (propertySchemaName.equals(propertyName)) {
+				if (_isSchema(entry.getValue())) {
 					return true;
 				}
 
@@ -205,6 +195,15 @@ public class DTOOpenAPIParser {
 			return Collections.emptyMap();
 		}
 
+		Set<Map.Entry<String, Schema>> entries = propertySchemas.entrySet();
+
+		entries.forEach(
+			entry -> {
+				Schema propertySchema = entry.getValue();
+
+				propertySchema.setName(entry.getKey());
+			});
+
 		return propertySchemas;
 	}
 
@@ -232,7 +231,10 @@ public class DTOOpenAPIParser {
 			}
 		}
 
-		if (StringUtil.equalsIgnoreCase(type, "object")) {
+		if (StringUtil.equalsIgnoreCase(type, "object") &&
+			((propertySchema.getAdditionalPropertySchema() == null) ||
+			 _isEmpty(propertySchema.getAdditionalPropertySchema()))) {
+
 			String name = StringUtil.upperCaseFirstLetter(propertySchemaName);
 
 			if (items != null) {
@@ -278,6 +280,46 @@ public class DTOOpenAPIParser {
 		}
 
 		return propertyType;
+	}
+
+	private static boolean _isEmpty(Schema schema) {
+		if ((schema.getAdditionalPropertySchema() == null) &&
+			(schema.getAllOfSchemas() == null) &&
+			(schema.getAnyOfSchemas() == null) && (schema.getItems() == null) &&
+			(schema.getOneOfSchemas() == null) &&
+			(schema.getPropertySchemas() == null) &&
+			(schema.getReference() == null) && (schema.getType() == null)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean _isObject(Schema schema, String type) {
+		if (Objects.equals("object", type) &&
+			(schema.getAdditionalPropertySchema() == null)) {
+
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean _isSchema(Schema schema) {
+		Items items = schema.getItems();
+
+		if (_isObject(schema, schema.getType()) ||
+			(schema.getAllOfSchemas() != null) ||
+			(schema.getReference() != null) ||
+			((items != null) &&
+			 (_isObject(schema, items.getType()) ||
+			  (items.getReference() != null)))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 }

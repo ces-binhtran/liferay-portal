@@ -47,11 +47,11 @@ public class FormNavigatorEntryConfigurationHelperImpl
 
 		String context = _getContext(formNavigatorId, formModelBean);
 
-		Optional<List<String>> optionalFormNavigatorEntryKeys =
+		Optional<List<String>> formNavigatorEntryKeysOptional =
 			_formNavigatorEntryConfigurationRetriever.getFormNavigatorEntryKeys(
 				formNavigatorId, categoryKey, context);
 
-		return optionalFormNavigatorEntryKeys.map(
+		return formNavigatorEntryKeysOptional.map(
 			formNavigatorEntryKeys -> _getFormNavigatorEntries(
 				formNavigatorId, formNavigatorEntryKeys));
 	}
@@ -76,7 +76,9 @@ public class FormNavigatorEntryConfigurationHelperImpl
 
 		_formNavigatorContextProviderMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, FormNavigatorContextProvider.class,
+				bundleContext,
+				(Class<FormNavigatorContextProvider<?>>)
+					(Class<?>)FormNavigatorContextProvider.class,
 				FormNavigatorContextConstants.FORM_NAVIGATOR_ID);
 	}
 
@@ -88,7 +90,8 @@ public class FormNavigatorEntryConfigurationHelperImpl
 
 	private <T> String _getContext(String formNavigatorId, T formModelBean) {
 		FormNavigatorContextProvider<T> formNavigatorContextProvider =
-			_formNavigatorContextProviderMap.getService(formNavigatorId);
+			(FormNavigatorContextProvider<T>)
+				_formNavigatorContextProviderMap.getService(formNavigatorId);
 
 		if (formNavigatorContextProvider != null) {
 			return formNavigatorContextProvider.getContext(formModelBean);
@@ -143,7 +146,7 @@ public class FormNavigatorEntryConfigurationHelperImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		FormNavigatorEntryConfigurationHelperImpl.class);
 
-	private ServiceTrackerMap<String, FormNavigatorContextProvider>
+	private ServiceTrackerMap<String, FormNavigatorContextProvider<?>>
 		_formNavigatorContextProviderMap;
 	private ServiceTrackerMap<String, FormNavigatorEntry<?>>
 		_formNavigatorEntriesMap;

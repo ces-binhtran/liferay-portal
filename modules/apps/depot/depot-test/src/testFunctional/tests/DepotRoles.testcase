@@ -22,21 +22,36 @@ definition {
 			PortalInstances.tearDownCP();
 		}
 		else {
+			JSONDepot.deleteDepot(depotName = "Test Depot Name");
+
+			Site.tearDownCP();
+
 			User.logoutPG();
 		}
 	}
 
 	@description = "This test covers LPS-113731. It ensures that roles and permissions from a library are removed after membership is revoked."
 	@priority = "5"
+	@refactorneeded
 	test AccessALAfterRevokingMembership {
-		Permissions.setUpRegRoleLoginUserCP(
-			roleTitle = "Depot Regrole Name",
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		JSONUser.addUser(
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "test test",
 			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
+
+		JSONRole.addRegularRole(roleTitle = "Depot Regrole Name");
+
+		JSONRole.assignRoleToUser(
+			roleTitle = "Depot Regrole Name",
+			userEmailAddress = "userea@liferay.com");
 
 		Permissions.definePermissionViaJSONAPI(
 			resourceAction = "VIEW_CONTROL_PANEL",
@@ -56,7 +71,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -97,27 +111,23 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		GlobalMenu.gotoPortlet(
-			category = "Asset Libraries",
+		ApplicationsMenu.gotoPortlet(
+			category = "Content",
 			panel = "Applications",
 			portlet = "Asset Libraries");
 
 		AssertElementNotPresent(
 			key_card = "Test Depot Name",
-			locator1 = "LexiconCard#CARD_ELLIPSIS");
+			locator1 = "Card#CARD_ELLIPSIS");
 
-		Click(
-			key_card = "Test Depot Name",
-			locator1 = "LexiconCard#CARD_TITLE",
-			value1 = "Test Depot Name");
-
-		AssertVisible(
-			key_card = "Test Depot Name",
-			locator1 = "LexiconCard#CARD");
+		DepotNavigator.gotoDepot(
+			depotName = "Test Depot Name",
+			noViewApplicationPermission = "true");
 	}
 
 	@description = "This ensures that the Asset Library Connected Site Members role does not appear in user roles even after it is automatically assigned to a connected site member. This test also covers permissions and makes sure the library asset can be updated by the role."
 	@priority = "5"
+	@refactorneeded
 	test AddSiteMemberWithPermissionsAfterConnectingSite {
 		JSONGroup.addGroup(groupName = "Site Name");
 
@@ -125,13 +135,9 @@ definition {
 			groupName = "Site Name",
 			layoutName = "Test Page Name");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
-
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
-
-		Depot.connectSite(siteList = "Site Name");
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
 
 		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
@@ -139,7 +145,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -153,7 +159,7 @@ definition {
 			userLoginEmailAddress = "test@liferay.com",
 			userLoginFullName = "Test Test");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -162,7 +168,7 @@ definition {
 			siteName = "Site Name",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -190,17 +196,20 @@ definition {
 			site = "false",
 			title = "WC WebContent Title");
 
-		Navigator.gotoSitePage(
+		JSONLayout.addWidgetToPublicLayout(
+			groupName = "Site Name",
+			layoutName = "Test Page Name",
+			widgetName = "Web Content Display");
+
+		Navigator.openSitePage(
 			pageName = "Test Page Name",
 			siteName = "Site Name");
-
-		Portlet.addPG(portletName = "Web Content Display");
 
 		WebContentDisplayPortlet.selectWebContent(
 			depotName = "Test Depot Name",
 			webContentTitle = "WC WebContent Title");
 
-		Navigator.gotoSitePage(
+		Navigator.openSitePage(
 			pageName = "Test Page Name",
 			siteName = "Site Name");
 
@@ -210,7 +219,7 @@ definition {
 			permissionDefinitionKey = "CONTENT_PERMISSIONS_VIEW_CHECKBOX",
 			roleTitle = "Guest");
 
-		Navigator.gotoSitePage(
+		Navigator.openSitePage(
 			pageName = "Test Page Name",
 			siteName = "Site Name");
 
@@ -224,11 +233,13 @@ definition {
 			userLoginEmailAddress = "user1@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		Navigator.gotoSitePage(
+		Navigator.openSitePage(
 			pageName = "Test Page Name",
 			siteName = "Site Name");
 
-		AssertElementNotPresent(locator1 = "WCD#WEB_CONTENT_CONTENT");
+		AssertElementNotPresent(
+			key_content = "[normalize-space(text())='WC WebContent Depot']",
+			locator1 = "WCD#WEB_CONTENT_CONTENT_ANY");
 
 		User.logoutAndLoginPG(
 			userLoginEmailAddress = "test@liferay.com",
@@ -236,7 +247,7 @@ definition {
 
 		DepotNavigator.openDepotAdmin();
 
-		DepotNavigator.gotoDepot(
+		DepotNavigator.gotoDepotPortlet(
 			depotName = "Test Depot Name",
 			portlet = "Web Content");
 
@@ -252,11 +263,13 @@ definition {
 			userLoginEmailAddress = "user1@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		Navigator.gotoSitePage(
+		Navigator.openSitePage(
 			pageName = "Test Page Name",
 			siteName = "Site Name");
 
-		WebContent.viewPGViaWCD(webContentContent = "WC WebContent Depot");
+		WebContentDisplayPortlet.viewContent(
+			webContentContent = "WC WebContent Depot",
+			webContentTitle = "WC WebContent Title");
 
 		WebContentDisplayPortletNavigator.gotoArticleEllipsisMenu(webContentTitle = "WC WebContent Title");
 
@@ -265,7 +278,10 @@ definition {
 
 	@description = "This ensures that the user can perform CRUD operations with an AL role that has all WC permissions."
 	@priority = "5"
+	@refactorneeded
 	test AssignALRoleWithAllWCPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
 		Role.openRolesAdmin();
 
 		RoleNavigator.gotoRoleType(roleType = "Asset Library");
@@ -307,16 +323,14 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
 		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_SITE_ADMINISTRATION",
-			resourceName = "com.liferay.portal.kernel.model.Group",
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
 			roleTitle = "Depot Regrole Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -328,7 +342,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -340,7 +353,11 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ProductMenu.gotoSite(depotName = "Test Depot Name");
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepotPortlet(
+			depotName = "Test Depot Name",
+			portlet = "Web Content");
 
 		WebContentNavigator.gotoAddCP();
 
@@ -350,20 +367,25 @@ definition {
 
 		PortletEntry.publish();
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title");
+		DepotNavigator.openToEditWCEntry(
+			depotName = "Test Depot Name",
+			webContentTitle = "WC WebContent Title");
 
 		WebContent.editCP(
 			webContentContentEdit = "WC WebContent Content Edit",
 			webContentTitle = "WC WebContent Title",
 			webContentTitleEdit = "WC WebContent Title Edit");
 
-		WebContentNavigator.gotoEditCP(webContentTitle = "WC WebContent Title Edit");
+		DepotNavigator.openToEditWCEntry(
+			depotName = "Test Depot Name",
+			version = "1.1",
+			webContentTitle = "WC WebContent Title");
 
 		WebContent.viewCP(
 			webContentContent = "WC WebContent Content Edit",
 			webContentTitle = "WC WebContent Title Edit");
 
-		WebContentNavigator.openWebContentAdmin(siteURLKey = "test-depot-name");
+		DepotNavigator.openDepotWebContentAdmin(depotName = "Test Depot Name");
 
 		WebContent.moveToRecycleBinCP(
 			assetType = "Web Content Article",
@@ -372,7 +394,10 @@ definition {
 
 	@description = "This ensures that the user can edit documents with an AL role that has edit documents permissions."
 	@priority = "5"
+	@refactorneeded
 	test AssignALRoleWithDMEditPermissions {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
 		JSONDocument.addFile(
 			dmDocumentDescription = "DM Document Description",
 			dmDocumentTitle = "DM Document Title",
@@ -421,20 +446,14 @@ definition {
 			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userLoginEmailAddress = "userea@liferay.com",
-			userLoginFullName = "userfn userln",
 			userScreenName = "usersn");
 
-		User.logoutAndLoginPG(
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "Test Test");
-
 		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_SITE_ADMINISTRATION",
-			resourceName = "com.liferay.portal.kernel.model.Group",
+			resourceAction = "ACCESS_IN_CONTROL_PANEL",
+			resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
 			roleTitle = "Depot Regrole Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -446,7 +465,6 @@ definition {
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -458,7 +476,11 @@ definition {
 			userLoginEmailAddress = "userea@liferay.com",
 			userLoginFullName = "userfn userln");
 
-		ProductMenu.gotoSite(depotName = "Test Depot Name");
+		DepotNavigator.openDepotAdmin();
+
+		DepotNavigator.gotoDepotPortlet(
+			depotName = "Test Depot Name",
+			portlet = "Documents and Media");
 
 		AssertElementNotPresent(locator1 = "Button#PLUS");
 
@@ -475,6 +497,7 @@ definition {
 
 	@description = "This ensures that an asset library role can be deleted."
 	@priority = "5"
+	@refactorneeded
 	test DeleteALRole {
 		Role.openRolesAdmin();
 
@@ -505,6 +528,7 @@ definition {
 
 	@description = "This ensures that an asset library role can be edited."
 	@priority = "5"
+	@refactorneeded
 	test EditALRole {
 		Role.openRolesAdmin();
 
@@ -536,55 +560,59 @@ definition {
 			roleType = "Asset Library");
 	}
 
-	@description = "This ensures that an asset library role can be edited."
+	@description = "This ensures that a depot owner can assign specific roles to a user."
 	@priority = "5"
-	test ViewALAdminRole {
-		JSONGroup.addGroup(groupName = "Site Name");
+	test OwnerCanAssignSpecificRolesToUser {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
 
-		JSONLayout.addPublicLayout(
-			groupName = "Site Name",
-			layoutName = "Test Page Name");
-
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
-
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
-
-		Depot.connectSite(siteList = "Site Name");
-
-		Permissions.setUpRegRoleLoginUserCP(
-			roleTitle = "Depot Regrole Name",
-			userEmailAddress = "user1@liferay.com",
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
 			userFirstName = "userfn",
 			userLastName = "userln",
-			userLoginEmailAddress = "test@liferay.com",
-			userLoginFullName = "test test",
 			userScreenName = "usersn");
 
-		Permissions.definePermissionViaJSONAPI(
-			resourceAction = "VIEW_CONTROL_PANEL",
-			resourceName = "90",
-			roleTitle = "Depot Regrole Name");
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
-		for (var resourceActionIndex : list "ACCESS_IN_CONTROL_PANEL,VIEW") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com_liferay_depot_web_portlet_DepotAdminPortlet",
-				roleTitle = "Depot Regrole Name");
-		}
+		JSONUser.addUserToDepot(
+			depotName = "Test Depot Name",
+			userEmailAddress = "userea@liferay.com");
 
-		for (var resourceActionIndex : list "ASSIGN_MEMBERS,ASSIGN_USER_ROLES,VIEW,VIEW_MEMBERS,VIEW_SITE_ADMINISTRATION") {
-			Permissions.definePermissionViaJSONAPI(
-				resourceAction = "${resourceActionIndex}",
-				resourceName = "com.liferay.depot.model.DepotEntry",
-				roleTitle = "Depot Regrole Name");
+		DepotNavigator.openDepotMembershipsAdmin(depotName = "Test Depot Name");
+
+		LexiconEntry.gotoEntryMenuItem(
+			menuItem = "Assign Roles",
+			rowEntry = "userfn userln");
+
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
+
+		for (var roleTitle : list "Asset Library Administrator,Asset Library Owner,Asset Library Content Reviewer") {
+			LexiconEntry.viewEntryName(rowEntry = "${roleTitle}");
 		}
+	}
+
+	@description = "This ensures that an asset library role can be edited."
+	@priority = "5"
+	@refactorneeded
+	test ViewALAdminRole {
+		property custom.properties = "jsonws.web.service.paths.excludes=";
+
+		JSONUser.addUser(
+			userEmailAddress = "userea@liferay.com",
+			userFirstName = "userfn",
+			userLastName = "userln",
+			userScreenName = "usersn");
+
+		JSONUser.setFirstPassword(
+			agreeToTermsAndAnswerReminderQuery = "true",
+			requireReset = "false",
+			userEmailAddress = "userea@liferay.com");
 
 		DepotNavigator.openDepotAdmin();
 
 		DepotNavigator.gotoDepotPortlet(
-			category = "People",
 			depotName = "Test Depot Name",
 			portlet = "Memberships");
 
@@ -594,7 +622,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -603,18 +631,23 @@ definition {
 			roleTitle = "Asset Library Administrator",
 			userScreenName = "usersn");
 
+		Role.openRolesAdmin();
+
+		Navigator.gotoNavItem(navItem = "Asset Library Roles");
+
+		PermissionsInline.gotoRolePermissions(roleName = "Asset Library Content Reviewer");
+
+		Role.definePermissionPG(
+			permissionDefinitionKey = "CONTENT_PERMISSIONS_ASSIGN_MEMBERS_CHECKBOX",
+			roleTitle = "Asset Library Administrator");
+
 		User.logoutPG();
 
 		User.loginUserPG(
 			password = "test",
-			userEmailAddress = "user1@liferay.com");
+			userEmailAddress = "userea@liferay.com");
 
-		DepotNavigator.openDepotAdmin();
-
-		DepotNavigator.gotoDepotPortlet(
-			category = "People",
-			depotName = "Test Depot Name",
-			portlet = "Memberships");
+		DepotNavigator.openDepotMembershipsAdmin(depotName = "Test Depot Name");
 
 		LexiconCard.clickEllipsisItem(
 			card = "userfn userln",
@@ -624,20 +657,21 @@ definition {
 
 		AssertTextEquals(
 			key_card = "Asset Library Content Reviewer",
-			locator1 = "LexiconCard#CARD_TITLE",
+			locator1 = "Card#CARD_TITLE",
 			value1 = "Asset Library Content Reviewer");
 
 		AssertElementNotPresent(
 			key_card = "Asset Library Administrator",
-			locator1 = "LexiconCard#CARD_TITLE");
+			locator1 = "Card#CARD_TITLE");
 
 		AssertElementNotPresent(
 			key_card = "Asset Library Owner",
-			locator1 = "LexiconCard#CARD_TITLE");
+			locator1 = "Card#CARD_TITLE");
 	}
 
 	@description = "This ensures that the Asset Library Connected Site Members role does not appear in user roles even it is automatically assigned to an existing site member after connecting site."
 	@priority = "5"
+	@refactorneeded
 	test ViewExistingSiteMemberAfterConnectingSite {
 		JSONUser.addUser(
 			userEmailAddress = "user1@liferay.com",
@@ -645,7 +679,7 @@ definition {
 			userLastName = "userln",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -661,7 +695,7 @@ definition {
 
 		JSONGroup.addGroup(groupName = "Site Name");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -670,15 +704,11 @@ definition {
 			siteName = "Site Name",
 			userScreenName = "usersn");
 
-		DepotNavigator.openDepotAdmin();
+		JSONDepot.connectSite(
+			depotName = "Test Depot Name",
+			groupName = "Site Name");
 
-		DepotNavigator.gotoEdit(depotName = "Test Depot Name");
-
-		DepotNavigator.gotoSites(depotName = "Test Depot Name");
-
-		Depot.connectSite(siteList = "Site Name");
-
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -703,7 +733,7 @@ definition {
 
 		Navigator.openURL();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");
@@ -712,7 +742,7 @@ definition {
 			depotName = "Test Depot Name",
 			userScreenName = "usersn");
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Users",
 			panel = "Control Panel",
 			portlet = "Users and Organizations");

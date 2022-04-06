@@ -16,7 +16,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<html dir='<liferay-ui:message key="lang.dir" />'>
+<html dir="<liferay-ui:message key="lang.dir" />">
 	<head>
 		<meta content="no-cache" http-equiv="Cache-Control" />
 		<meta content="no-cache" http-equiv="Pragma" />
@@ -37,7 +37,6 @@
 			%>
 
 			<input name="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.userNameField()) %>" type="hidden" value="<%= HtmlUtil.escapeAttribute(iFrameDisplayContext.getUserName()) %>" />
-
 			<input name="<%= HtmlUtil.escapeAttribute(iFramePortletInstanceConfiguration.passwordField()) %>" type="hidden" value="<%= HtmlUtil.escapeAttribute(iFrameDisplayContext.getPassword()) %>" />
 		</form>
 	</body>

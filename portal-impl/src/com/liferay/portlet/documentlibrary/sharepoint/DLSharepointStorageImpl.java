@@ -21,6 +21,7 @@ import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.model.DLVersionNumberIncrease;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -72,11 +73,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 			groupId, parentFolderId);
 
 		for (FileEntry fileEntry : fileEntries) {
-			String documentPath = parentFolderPath.concat(
-				StringPool.SLASH
-			).concat(
-				fileEntry.getTitle()
-			);
+			String documentPath = StringBundler.concat(
+				parentFolderPath, StringPool.SLASH, fileEntry.getTitle());
 
 			addDocumentElement(
 				element, documentPath, fileEntry.getCreateDate(),
@@ -278,9 +276,9 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 				String description = fileEntry.getDescription();
 				String changeLog = StringPool.BLANK;
 
-				InputStream is = fileEntry.getContentStream();
+				InputStream inputStream = fileEntry.getContentStream();
 
-				file = FileUtil.createTempFile(is);
+				file = FileUtil.createTempFile(inputStream);
 
 				String[] assetTagNames = AssetTagLocalServiceUtil.getTagNames(
 					DLFileEntryConstants.getClassName(),
@@ -289,9 +287,11 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 				serviceContext.setAssetTagNames(assetTagNames);
 
 				fileEntry = DLAppServiceUtil.updateFileEntry(
-					fileEntryId, newName, mimeType, newName, description,
-					changeLog, DLVersionNumberIncrease.fromMajorVersion(false),
-					file, serviceContext);
+					fileEntryId, newName, mimeType, newName, StringPool.BLANK,
+					description, changeLog,
+					DLVersionNumberIncrease.fromMajorVersion(false), file,
+					fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+					serviceContext);
 
 				if (folderId != newParentFolderId) {
 					fileEntry = DLAppServiceUtil.moveFileEntry(
@@ -322,9 +322,7 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 					folderId, newName, description, serviceContext);
 			}
 
-			Tree folderTree = getFolderTree(folder, newParentFolderPath);
-
-			movedDirsTree.addChild(folderTree);
+			movedDirsTree.addChild(getFolderTree(folder, newParentFolderPath));
 		}
 
 		return new Tree[] {movedDocsTree, movedDirsTree};
@@ -376,8 +374,6 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 			try {
 				FileEntry fileEntry = getFileEntry(sharepointRequest);
 
-				long fileEntryId = fileEntry.getFileEntryId();
-
 				description = fileEntry.getDescription();
 
 				String[] assetTagNames = AssetTagLocalServiceUtil.getTagNames(
@@ -387,19 +383,21 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 				serviceContext.setAssetTagNames(assetTagNames);
 
 				DLAppServiceUtil.updateFileEntry(
-					fileEntryId, title, contentType, title, description,
-					changeLog, DLVersionNumberIncrease.fromMajorVersion(false),
-					file, serviceContext);
+					fileEntry.getFileEntryId(), title, contentType, title,
+					StringPool.BLANK, description, changeLog,
+					DLVersionNumberIncrease.fromMajorVersion(false), file,
+					fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+					serviceContext);
 			}
 			catch (NoSuchFileEntryException noSuchFileEntryException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(
-						noSuchFileEntryException, noSuchFileEntryException);
+					_log.debug(noSuchFileEntryException);
 				}
 
 				DLAppServiceUtil.addFileEntry(
-					groupId, parentFolderId, title, contentType, title,
-					description, changeLog, file, serviceContext);
+					null, groupId, parentFolderId, title, contentType, null,
+					null, description, changeLog, file, null, null,
+					serviceContext);
 			}
 		}
 		finally {
@@ -433,17 +431,15 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 			}
 		}
 
-		Tree documentTree = new Tree();
-
 		Tree removedDocsTree = new Tree();
 		Tree failedDocsTree = new Tree();
-
-		Tree folderTree = new Tree();
 
 		Tree removedDirsTree = new Tree();
 		Tree failedDirsTree = new Tree();
 
 		if (fileEntry != null) {
+			Tree documentTree = new Tree();
+
 			try {
 				documentTree = getFileEntryTree(fileEntry, parentFolderPath);
 
@@ -460,6 +456,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 			}
 		}
 		else if (folder != null) {
+			Tree folderTree = new Tree();
+
 			try {
 				folderTree = getFolderTree(folder, parentFolderPath);
 
@@ -502,11 +500,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 	protected Tree getFileEntryTree(
 		FileEntry fileEntry, String parentFolderPath) {
 
-		String documentPath = parentFolderPath.concat(
-			StringPool.SLASH
-		).concat(
-			fileEntry.getTitle()
-		);
+		String documentPath = StringBundler.concat(
+			parentFolderPath, StringPool.SLASH, fileEntry.getTitle());
 
 		return getDocumentTree(
 			documentPath, fileEntry.getCreateDate(),
@@ -515,11 +510,8 @@ public class DLSharepointStorageImpl extends BaseSharepointStorageImpl {
 	}
 
 	protected Tree getFolderTree(Folder folder, String parentFolderPath) {
-		String folderPath = parentFolderPath.concat(
-			StringPool.SLASH
-		).concat(
-			folder.getName()
-		);
+		String folderPath = StringBundler.concat(
+			parentFolderPath, StringPool.SLASH, folder.getName());
 
 		return getFolderTree(
 			folderPath, folder.getCreateDate(), folder.getModifiedDate(),

@@ -17,12 +17,16 @@ package com.liferay.wiki.service.test;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.CompanyLocalServiceUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
+import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.FileUtil;
@@ -30,6 +34,7 @@ import com.liferay.portal.kernel.util.ProgressTracker;
 import com.liferay.portal.kernel.util.ProgressTrackerThreadLocal;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
+import com.liferay.wiki.exception.DuplicateNodeExternalReferenceCodeException;
 import com.liferay.wiki.model.WikiNode;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiNodeLocalServiceUtil;
@@ -58,6 +63,53 @@ public class WikiNodeLocalServiceTest {
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
+	@Test(expected = DuplicateNodeExternalReferenceCodeException.class)
+	public void testAddNodeWithExistingExternalReferenceCode()
+		throws Exception {
+
+		User user = TestPropsValues.getUser();
+
+		WikiNode wikiNode = WikiNodeLocalServiceUtil.addNode(
+			user.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext());
+
+		WikiNodeLocalServiceUtil.addNode(
+			wikiNode.getExternalReferenceCode(), user.getUserId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext());
+	}
+
+	@Test
+	public void testAddNodeWithExternalReferenceCode() throws Exception {
+		String externalReferenceCode = RandomTestUtil.randomString();
+		User user = TestPropsValues.getUser();
+
+		WikiNode wikiNode = WikiNodeLocalServiceUtil.addNode(
+			externalReferenceCode, user.getUserId(),
+			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			externalReferenceCode, wikiNode.getExternalReferenceCode());
+	}
+
+	@Test
+	public void testAddNodeWithoutExternalReferenceCode()
+		throws PortalException {
+
+		User user = TestPropsValues.getUser();
+
+		WikiNode wikiNode = WikiNodeLocalServiceUtil.addNode(
+			user.getUserId(), RandomTestUtil.randomString(),
+			RandomTestUtil.randomString(),
+			ServiceContextTestUtil.getServiceContext());
+
+		Assert.assertEquals(
+			wikiNode.getExternalReferenceCode(),
+			String.valueOf(wikiNode.getNodeId()));
+	}
+
 	@Test
 	public void testImportPages() throws Exception {
 		_node = WikiTestUtil.addNode(TestPropsValues.getGroupId());
@@ -72,11 +124,11 @@ public class WikiNodeLocalServiceTest {
 			"/com/liferay/wiki/service/test/dependencies" +
 				"/liferay_media_wiki.xml");
 
-		InputStream is = new ByteArrayInputStream(bytes);
+		InputStream inputStream = new ByteArrayInputStream(bytes);
 
 		WikiNodeLocalServiceUtil.importPages(
 			TestPropsValues.getUserId(), _node.getNodeId(), "MediaWiki",
-			new InputStream[] {is, null, null},
+			new InputStream[] {inputStream, null, null},
 			Collections.<String, String[]>emptyMap());
 
 		WikiPage importedPage = WikiPageLocalServiceUtil.fetchPage(
@@ -119,9 +171,7 @@ public class WikiNodeLocalServiceTest {
 		Company company = CompanyLocalServiceUtil.getCompany(
 			_node.getCompanyId());
 
-		String portalURL = company.getPortalURL(_node.getGroupId());
-
-		themeDisplay.setPortalURL(portalURL);
+		themeDisplay.setPortalURL(company.getPortalURL(_node.getGroupId()));
 
 		WikiPage sharedImagesPage = WikiPageLocalServiceUtil.fetchPage(
 			_node.getNodeId(), "SharedImages");

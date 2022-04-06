@@ -14,6 +14,7 @@
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
 
+import com.liferay.headless.delivery.client.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.client.dto.v1_0.PageCollectionDefinition;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -66,6 +68,65 @@ public class PageCollectionDefinitionSerDes {
 
 			sb.append(
 				String.valueOf(pageCollectionDefinition.getCollectionConfig()));
+		}
+
+		if (pageCollectionDefinition.getDisplayAllItems() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"displayAllItems\": ");
+
+			sb.append(pageCollectionDefinition.getDisplayAllItems());
+		}
+
+		if (pageCollectionDefinition.getDisplayAllPages() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"displayAllPages\": ");
+
+			sb.append(pageCollectionDefinition.getDisplayAllPages());
+		}
+
+		if (pageCollectionDefinition.getFragmentStyle() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentStyle\": ");
+
+			sb.append(
+				String.valueOf(pageCollectionDefinition.getFragmentStyle()));
+		}
+
+		if (pageCollectionDefinition.getFragmentViewports() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i < pageCollectionDefinition.getFragmentViewports().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(
+						pageCollectionDefinition.getFragmentViewports()[i]));
+
+				if ((i + 1) <
+						pageCollectionDefinition.
+							getFragmentViewports().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (pageCollectionDefinition.getListItemStyle() != null) {
@@ -116,6 +177,50 @@ public class PageCollectionDefinitionSerDes {
 			sb.append(pageCollectionDefinition.getNumberOfItems());
 		}
 
+		if (pageCollectionDefinition.getNumberOfItemsPerPage() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfItemsPerPage\": ");
+
+			sb.append(pageCollectionDefinition.getNumberOfItemsPerPage());
+		}
+
+		if (pageCollectionDefinition.getNumberOfPages() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"numberOfPages\": ");
+
+			sb.append(pageCollectionDefinition.getNumberOfPages());
+		}
+
+		if (pageCollectionDefinition.getPaginationType() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"paginationType\": ");
+
+			sb.append("\"");
+
+			sb.append(pageCollectionDefinition.getPaginationType());
+
+			sb.append("\"");
+		}
+
+		if (pageCollectionDefinition.getShowAllItems() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"showAllItems\": ");
+
+			sb.append(pageCollectionDefinition.getShowAllItems());
+		}
+
 		if (pageCollectionDefinition.getTemplateKey() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -160,6 +265,43 @@ public class PageCollectionDefinitionSerDes {
 				String.valueOf(pageCollectionDefinition.getCollectionConfig()));
 		}
 
+		if (pageCollectionDefinition.getDisplayAllItems() == null) {
+			map.put("displayAllItems", null);
+		}
+		else {
+			map.put(
+				"displayAllItems",
+				String.valueOf(pageCollectionDefinition.getDisplayAllItems()));
+		}
+
+		if (pageCollectionDefinition.getDisplayAllPages() == null) {
+			map.put("displayAllPages", null);
+		}
+		else {
+			map.put(
+				"displayAllPages",
+				String.valueOf(pageCollectionDefinition.getDisplayAllPages()));
+		}
+
+		if (pageCollectionDefinition.getFragmentStyle() == null) {
+			map.put("fragmentStyle", null);
+		}
+		else {
+			map.put(
+				"fragmentStyle",
+				String.valueOf(pageCollectionDefinition.getFragmentStyle()));
+		}
+
+		if (pageCollectionDefinition.getFragmentViewports() == null) {
+			map.put("fragmentViewports", null);
+		}
+		else {
+			map.put(
+				"fragmentViewports",
+				String.valueOf(
+					pageCollectionDefinition.getFragmentViewports()));
+		}
+
 		if (pageCollectionDefinition.getListItemStyle() == null) {
 			map.put("listItemStyle", null);
 		}
@@ -194,6 +336,43 @@ public class PageCollectionDefinitionSerDes {
 			map.put(
 				"numberOfItems",
 				String.valueOf(pageCollectionDefinition.getNumberOfItems()));
+		}
+
+		if (pageCollectionDefinition.getNumberOfItemsPerPage() == null) {
+			map.put("numberOfItemsPerPage", null);
+		}
+		else {
+			map.put(
+				"numberOfItemsPerPage",
+				String.valueOf(
+					pageCollectionDefinition.getNumberOfItemsPerPage()));
+		}
+
+		if (pageCollectionDefinition.getNumberOfPages() == null) {
+			map.put("numberOfPages", null);
+		}
+		else {
+			map.put(
+				"numberOfPages",
+				String.valueOf(pageCollectionDefinition.getNumberOfPages()));
+		}
+
+		if (pageCollectionDefinition.getPaginationType() == null) {
+			map.put("paginationType", null);
+		}
+		else {
+			map.put(
+				"paginationType",
+				String.valueOf(pageCollectionDefinition.getPaginationType()));
+		}
+
+		if (pageCollectionDefinition.getShowAllItems() == null) {
+			map.put("showAllItems", null);
+		}
+		else {
+			map.put(
+				"showAllItems",
+				String.valueOf(pageCollectionDefinition.getShowAllItems()));
 		}
 
 		if (pageCollectionDefinition.getTemplateKey() == null) {
@@ -233,6 +412,38 @@ public class PageCollectionDefinitionSerDes {
 							(String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "displayAllItems")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setDisplayAllItems(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "displayAllPages")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setDisplayAllPages(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fragmentStyle")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setFragmentStyle(
+						FragmentStyleSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fragmentViewports")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setFragmentViewports(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> FragmentViewportSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new FragmentViewport[size]
+						));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "listItemStyle")) {
 				if (jsonParserFieldValue != null) {
 					pageCollectionDefinition.setListItemStyle(
@@ -257,15 +468,38 @@ public class PageCollectionDefinitionSerDes {
 						Integer.valueOf((String)jsonParserFieldValue));
 				}
 			}
+			else if (Objects.equals(
+						jsonParserFieldName, "numberOfItemsPerPage")) {
+
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setNumberOfItemsPerPage(
+						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "numberOfPages")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setNumberOfPages(
+						Integer.valueOf((String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "paginationType")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setPaginationType(
+						PageCollectionDefinition.PaginationType.create(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "showAllItems")) {
+				if (jsonParserFieldValue != null) {
+					pageCollectionDefinition.setShowAllItems(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "templateKey")) {
 				if (jsonParserFieldValue != null) {
 					pageCollectionDefinition.setTemplateKey(
 						(String)jsonParserFieldValue);
 				}
-			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
 			}
 		}
 
@@ -295,7 +529,7 @@ public class PageCollectionDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -331,7 +565,7 @@ public class PageCollectionDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

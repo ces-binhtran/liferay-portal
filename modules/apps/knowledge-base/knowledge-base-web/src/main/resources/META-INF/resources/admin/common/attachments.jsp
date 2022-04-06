@@ -61,7 +61,7 @@ if (kbArticle != null) {
 					/>
 
 					<%
-					String taglibURL = "javascript:" + renderResponse.getNamespace() + "deleteFileEntry('" + fileEntry.getFileEntryId() + "');";
+					String taglibURL = "javascript:" + liferayPortletResponse.getNamespace() + "deleteFileEntry('" + fileEntry.getFileEntryId() + "');";
 					%>
 
 					<liferay-ui:icon-delete
@@ -90,7 +90,7 @@ if (kbArticle != null) {
 
 		fileDescription:
 			'<%= StringUtil.merge(dlConfiguration.fileExtensions()) %>',
-		maxFileSize: '<%= dlConfiguration.fileMaxSize() %> B',
+		maxFileSize: '<%= DLValidatorUtil.getMaxAllowableSize(null) %> B',
 		metadataContainer:
 			'#<portlet:namespace />selectedFileNameMetadataContainer',
 		metadataExplanationContainer:
@@ -108,10 +108,8 @@ if (kbArticle != null) {
 	});
 </aui:script>
 
-<aui:script>
-	Liferay.provide(window, '<portlet:namespace />deleteFileEntry', function (
-		fileEntryId
-	) {
+<script>
+	window['<portlet:namespace />deleteFileEntry'] = function (fileEntryId) {
 		var removeFileEntryIdsInput = document.getElementById(
 			'<portlet:namespace />removeFileEntryIds'
 		);
@@ -131,7 +129,7 @@ if (kbArticle != null) {
 		);
 
 		if (fileEntryIdWrapper) {
-			fileEntryIdWrapper.hide();
+			fileEntryIdWrapper.style.display = 'none';
 		}
-	});
-</aui:script>
+	};
+</script>

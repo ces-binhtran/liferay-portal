@@ -60,11 +60,15 @@ public interface SamlSpSessionLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link SamlSpSessionLocalServiceUtil} to access the saml sp session local service. Add custom service methods to <code>com.liferay.saml.persistence.service.impl.SamlSpSessionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.saml.persistence.service.impl.SamlSpSessionLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the saml sp session local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link SamlSpSessionLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the saml sp session to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpSessionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlSpSession the saml sp session
 	 * @return the saml sp session that was added
@@ -73,11 +77,10 @@ public interface SamlSpSessionLocalService
 	public SamlSpSession addSamlSpSession(SamlSpSession samlSpSession);
 
 	public SamlSpSession addSamlSpSession(
-			String samlIdpEntityId, String samlSpSessionKey,
 			String assertionXml, String jSessionId, String nameIdFormat,
 			String nameIdNameQualifier, String nameIdSPNameQualifier,
-			String nameIdValue, String sessionIndex,
-			ServiceContext serviceContext)
+			String nameIdValue, String samlIdpEntityId, String samlSpSessionKey,
+			String sessionIndex, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -105,6 +108,10 @@ public interface SamlSpSessionLocalService
 	/**
 	 * Deletes the saml sp session with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpSessionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpSessionId the primary key of the saml sp session
 	 * @return the saml sp session that was removed
 	 * @throws PortalException if a saml sp session with the primary key could not be found
@@ -116,6 +123,10 @@ public interface SamlSpSessionLocalService
 	/**
 	 * Deletes the saml sp session from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpSessionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param samlSpSession the saml sp session
 	 * @return the saml sp session that was removed
 	 */
@@ -124,6 +135,9 @@ public interface SamlSpSessionLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -202,7 +216,8 @@ public interface SamlSpSessionLocalService
 		String samlSpSessionKey);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public SamlSpSession fetchSamlSpSessionBySessionIndex(String sessionIndex);
+	public SamlSpSession fetchSamlSpSessionBySessionIndex(
+		long companyId, String sessionIndex);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ActionableDynamicQuery getActionableDynamicQuery();
@@ -246,7 +261,8 @@ public interface SamlSpSessionLocalService
 		throws PortalException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public SamlSpSession getSamlSpSessionBySessionIndex(String sessionIndex)
+	public SamlSpSession getSamlSpSessionBySessionIndex(
+			long companyId, String sessionIndex)
 		throws PortalException;
 
 	/**
@@ -264,7 +280,10 @@ public interface SamlSpSessionLocalService
 	public List<SamlSpSession> getSamlSpSessions(int start, int end);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
-	public List<SamlSpSession> getSamlSpSessions(String nameIdValue);
+	public List<SamlSpSession> getSamlSpSessions(
+		long companyId, String nameIdFormat, String nameIdNameQualifier,
+		String nameIdSPNameQualifier, String nameIdValue,
+		String samlIdpEntityId);
 
 	/**
 	 * Returns the number of saml sp sessions.
@@ -279,15 +298,19 @@ public interface SamlSpSessionLocalService
 		throws PortalException;
 
 	public SamlSpSession updateSamlSpSession(
-			long samlSpSessionId, String samlIdpEntityId,
-			String samlSpSessionKey, String assertionXml, String jSessionId,
+			long samlSpSessionId, String assertionXml, String jSessionId,
 			String nameIdFormat, String nameIdNameQualifier,
 			String nameIdSPNameQualifier, String nameIdValue,
+			String samlIdpEntityId, String samlSpSessionKey,
 			String sessionIndex, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
 	 * Updates the saml sp session in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SamlSpSessionLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param samlSpSession the saml sp session
 	 * @return the saml sp session that was updated

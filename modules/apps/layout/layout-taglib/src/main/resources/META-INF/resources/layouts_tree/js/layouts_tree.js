@@ -17,8 +17,6 @@ AUI.add(
 	(A) => {
 		var Lang = A.Lang;
 
-		var LString = Lang.String;
-
 		var NODE_ID_TPL =
 			'{treeId}_layout_{layoutId}_plid_{plid}_groupId_{groupId}';
 
@@ -139,7 +137,7 @@ AUI.add(
 			_createNodeLink(data, template) {
 				var instance = this;
 
-				var className = 'layout-tree ';
+				var className = 'layout-tree text-truncate ';
 
 				data.cssClass = data.cssClass
 					? className + data.cssClass
@@ -154,40 +152,34 @@ AUI.add(
 				});
 
 				data.id = data.url
-					? LString.escapeHTML(
+					? Liferay.Util.escapeHTML(
 							instance._treeId +
 								'_layout_' +
 								data.url.substring(1)
 					  )
 					: STR_EMPTY;
 
-				data.title = data.title ? data.title : STR_EMPTY;
+				data.title = data.title ? data.title : data.name;
 
-				data.url = data.url ? LString.escapeHTML(data.url) : STR_EMPTY;
+				data.url = data.url
+					? Liferay.Util.escapeHTML(data.url)
+					: STR_EMPTY;
 
 				data.uuid = data.uuid
-					? LString.escapeHTML(data.uuid)
+					? Liferay.Util.escapeHTML(data.uuid)
 					: STR_EMPTY;
 
 				return A.Lang.sub(template, data);
 			},
 
-			_displayNotice(message, type, timeout, useAnimation) {
-				new Liferay.Notice({
-					closeText: false,
-					content:
-						message +
-						'<button aria-label="' +
-						Liferay.Language.get('close') +
-						'" class="close" type="button">&times;</button>',
-					noticeClass: 'hide',
-					timeout: timeout || 10000,
-					toggleText: false,
-					type: type || 'warning',
-					useAnimation: Lang.isValue(useAnimation)
-						? useAnimation
-						: true,
-				}).show();
+			_displayNotice(message, type, timeout) {
+				Liferay.Util.openToast({
+					message,
+					toastProps: {
+						autoClose: timeout,
+					},
+					type,
+				});
 			},
 
 			_formatJSONResults(json) {
@@ -242,7 +234,7 @@ AUI.add(
 				var newNode = {
 					alwaysShowHitArea: hasChildren,
 					cssClasses: {
-						pages: A.merge(TREE_CSS_CLASSES, cssIcons),
+						pages: {...TREE_CSS_CLASSES, ...cssIcons},
 					},
 					draggable: node.sortable,
 					expanded,
@@ -264,30 +256,30 @@ AUI.add(
 					);
 				}
 
-				if (instance.get('selPlid') == node.plid) {
+				if (instance.get('selPlid') === node.plid) {
 					instance._pendingSelectedNodeId = id;
 				}
 
 				var cssClass = STR_EMPTY;
 				var title = STR_EMPTY;
 
-				var name = LString.escapeHTML(node.name);
+				var name = Liferay.Util.escapeHTML(node.name);
 
 				if (node.layoutRevisionId) {
 					if (!node.layoutRevisionHead) {
 						title = Liferay.Language.get(
-							'there-is-not-a-version-of-this-page-marked-as-ready-for-publication'
+							'there-is-not-a-version-of-this-page-marked-as-ready-for-publish-process'
 						);
 					}
 					else if (node.layoutBranchName) {
-						node.layoutBranchName = LString.escapeHTML(
+						node.layoutBranchName = Liferay.Util.escapeHTML(
 							node.layoutBranchName
 						);
 
 						name += Lang.sub(' [{layoutBranchName}]', node);
 
 						title = Liferay.Language.get(
-							'this-is-the-page-variation-that-is-marked-as-ready-for-publication'
+							'this-is-the-page-variation-that-is-marked-as-ready-for-publish-process'
 						);
 					}
 
@@ -317,17 +309,15 @@ AUI.add(
 			_formatNodeLabel(node, cssClass, name, title) {
 				var instance = this;
 
-				var data = A.merge(
-					{
-						cssClass,
-						label: name,
-						plid: node.plid,
-						title,
-						url: node.regularURL,
-						uuid: node.uuid,
-					},
-					node
-				);
+				var data = {
+					cssClass,
+					label: name,
+					plid: node.plid,
+					title,
+					url: node.regularURL,
+					uuid: node.uuid,
+					...node,
+				};
 
 				var label = instance._createNodeLink(
 					data,
@@ -341,13 +331,11 @@ AUI.add(
 				var instance = this;
 
 				var rootLabel = instance._createNodeLink(
-					A.merge(
-						{
-							label: LString.escapeHTML(rootConfig.label),
-							plid: rootConfig.defaultParentLayoutId,
-						},
-						rootConfig
-					),
+					{
+						label: Liferay.Util.escapeHTML(rootConfig.label),
+						plid: rootConfig.defaultParentLayoutId,
+						...rootConfig,
+					},
 					rootConfig.linkTemplate
 				);
 
@@ -419,7 +407,7 @@ AUI.add(
 
 									this.syncUI();
 								}
-								catch (e) {}
+								catch (error) {}
 
 								this.fire('ioSuccess');
 							},
@@ -494,12 +482,7 @@ AUI.add(
 			_restoreNodePosition(response) {
 				var instance = this;
 
-				instance._displayNotice(
-					response.message,
-					'warning',
-					10000,
-					true
-				);
+				instance._displayNotice(response.message, 'warning', 10000);
 
 				var nodeId = A.Lang.sub(NODE_ID_TPL, {
 					groupId: response.groupId,
@@ -554,7 +537,7 @@ AUI.add(
 					linkTemplate: NODE_LINK_TPL,
 				};
 
-				return A.merge(defaultRootConfig, val);
+				return {...defaultRootConfig, ...val};
 			},
 
 			_updateLayout(data) {

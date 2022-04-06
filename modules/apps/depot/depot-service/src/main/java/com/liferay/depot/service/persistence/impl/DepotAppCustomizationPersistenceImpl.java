@@ -20,6 +20,7 @@ import com.liferay.depot.model.DepotAppCustomizationTable;
 import com.liferay.depot.model.impl.DepotAppCustomizationImpl;
 import com.liferay.depot.model.impl.DepotAppCustomizationModelImpl;
 import com.liferay.depot.service.persistence.DepotAppCustomizationPersistence;
+import com.liferay.depot.service.persistence.DepotAppCustomizationUtil;
 import com.liferay.depot.service.persistence.impl.constants.DepotPersistenceConstants;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.configuration.Configuration;
@@ -34,14 +35,18 @@ import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.Collections;
@@ -67,7 +72,9 @@ import org.osgi.service.component.annotations.Reference;
  * @author Brian Wing Shun Chan
  * @generated
  */
-@Component(service = DepotAppCustomizationPersistence.class)
+@Component(
+	service = {DepotAppCustomizationPersistence.class, BasePersistence.class}
+)
 public class DepotAppCustomizationPersistenceImpl
 	extends BasePersistenceImpl<DepotAppCustomization>
 	implements DepotAppCustomizationPersistence {
@@ -188,7 +195,7 @@ public class DepotAppCustomizationPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DepotAppCustomization>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (DepotAppCustomization depotAppCustomization : list) {
@@ -249,10 +256,6 @@ public class DepotAppCustomizationPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -562,7 +565,7 @@ public class DepotAppCustomizationPersistenceImpl
 
 		Object[] finderArgs = new Object[] {depotEntryId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -589,8 +592,6 @@ public class DepotAppCustomizationPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -680,8 +681,7 @@ public class DepotAppCustomizationPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByD_E, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByD_E, finderArgs);
 		}
 
 		if (result instanceof DepotAppCustomization) {
@@ -753,10 +753,6 @@ public class DepotAppCustomizationPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(_finderPathFetchByD_E, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -802,7 +798,7 @@ public class DepotAppCustomizationPersistenceImpl
 
 		Object[] finderArgs = new Object[] {depotEntryId, enabled};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -833,8 +829,6 @@ public class DepotAppCustomizationPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -929,8 +923,7 @@ public class DepotAppCustomizationPersistenceImpl
 		Object result = null;
 
 		if (useFinderCache) {
-			result = finderCache.getResult(
-				_finderPathFetchByD_P, finderArgs, this);
+			result = finderCache.getResult(_finderPathFetchByD_P, finderArgs);
 		}
 
 		if (result instanceof DepotAppCustomization) {
@@ -997,10 +990,6 @@ public class DepotAppCustomizationPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(_finderPathFetchByD_P, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1049,7 +1038,7 @@ public class DepotAppCustomizationPersistenceImpl
 
 		Object[] finderArgs = new Object[] {depotEntryId, portletId};
 
-		Long count = (Long)finderCache.getResult(finderPath, finderArgs, this);
+		Long count = (Long)finderCache.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(3);
@@ -1091,8 +1080,6 @@ public class DepotAppCustomizationPersistenceImpl
 				finderCache.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1129,7 +1116,7 @@ public class DepotAppCustomizationPersistenceImpl
 	@Override
 	public void cacheResult(DepotAppCustomization depotAppCustomization) {
 		entityCache.putResult(
-			entityCacheEnabled, DepotAppCustomizationImpl.class,
+			DepotAppCustomizationImpl.class,
 			depotAppCustomization.getPrimaryKey(), depotAppCustomization);
 
 		finderCache.putResult(
@@ -1147,9 +1134,9 @@ public class DepotAppCustomizationPersistenceImpl
 				depotAppCustomization.getPortletId()
 			},
 			depotAppCustomization);
-
-		depotAppCustomization.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the depot app customizations in the entity cache if it is enabled.
@@ -1160,17 +1147,22 @@ public class DepotAppCustomizationPersistenceImpl
 	public void cacheResult(
 		List<DepotAppCustomization> depotAppCustomizations) {
 
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (depotAppCustomizations.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (DepotAppCustomization depotAppCustomization :
 				depotAppCustomizations) {
 
 			if (entityCache.getResult(
-					entityCacheEnabled, DepotAppCustomizationImpl.class,
+					DepotAppCustomizationImpl.class,
 					depotAppCustomization.getPrimaryKey()) == null) {
 
 				cacheResult(depotAppCustomization);
-			}
-			else {
-				depotAppCustomization.resetOriginalValues();
 			}
 		}
 	}
@@ -1186,9 +1178,7 @@ public class DepotAppCustomizationPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(DepotAppCustomizationImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DepotAppCustomizationImpl.class);
 	}
 
 	/**
@@ -1201,43 +1191,26 @@ public class DepotAppCustomizationPersistenceImpl
 	@Override
 	public void clearCache(DepotAppCustomization depotAppCustomization) {
 		entityCache.removeResult(
-			entityCacheEnabled, DepotAppCustomizationImpl.class,
-			depotAppCustomization.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
-		clearUniqueFindersCache(
-			(DepotAppCustomizationModelImpl)depotAppCustomization, true);
+			DepotAppCustomizationImpl.class, depotAppCustomization);
 	}
 
 	@Override
 	public void clearCache(List<DepotAppCustomization> depotAppCustomizations) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (DepotAppCustomization depotAppCustomization :
 				depotAppCustomizations) {
 
 			entityCache.removeResult(
-				entityCacheEnabled, DepotAppCustomizationImpl.class,
-				depotAppCustomization.getPrimaryKey());
-
-			clearUniqueFindersCache(
-				(DepotAppCustomizationModelImpl)depotAppCustomization, true);
+				DepotAppCustomizationImpl.class, depotAppCustomization);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(DepotAppCustomizationImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
 			entityCache.removeResult(
-				entityCacheEnabled, DepotAppCustomizationImpl.class,
-				primaryKey);
+				DepotAppCustomizationImpl.class, primaryKey);
 		}
 	}
 
@@ -1249,69 +1222,18 @@ public class DepotAppCustomizationPersistenceImpl
 			depotAppCustomizationModelImpl.isEnabled()
 		};
 
+		finderCache.putResult(_finderPathCountByD_E, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByD_E, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByD_E, args, depotAppCustomizationModelImpl, false);
+			_finderPathFetchByD_E, args, depotAppCustomizationModelImpl);
 
 		args = new Object[] {
 			depotAppCustomizationModelImpl.getDepotEntryId(),
 			depotAppCustomizationModelImpl.getPortletId()
 		};
 
+		finderCache.putResult(_finderPathCountByD_P, args, Long.valueOf(1));
 		finderCache.putResult(
-			_finderPathCountByD_P, args, Long.valueOf(1), false);
-		finderCache.putResult(
-			_finderPathFetchByD_P, args, depotAppCustomizationModelImpl, false);
-	}
-
-	protected void clearUniqueFindersCache(
-		DepotAppCustomizationModelImpl depotAppCustomizationModelImpl,
-		boolean clearCurrent) {
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				depotAppCustomizationModelImpl.getDepotEntryId(),
-				depotAppCustomizationModelImpl.isEnabled()
-			};
-
-			finderCache.removeResult(_finderPathCountByD_E, args);
-			finderCache.removeResult(_finderPathFetchByD_E, args);
-		}
-
-		if ((depotAppCustomizationModelImpl.getColumnBitmask() &
-			 _finderPathFetchByD_E.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				depotAppCustomizationModelImpl.getOriginalDepotEntryId(),
-				depotAppCustomizationModelImpl.getOriginalEnabled()
-			};
-
-			finderCache.removeResult(_finderPathCountByD_E, args);
-			finderCache.removeResult(_finderPathFetchByD_E, args);
-		}
-
-		if (clearCurrent) {
-			Object[] args = new Object[] {
-				depotAppCustomizationModelImpl.getDepotEntryId(),
-				depotAppCustomizationModelImpl.getPortletId()
-			};
-
-			finderCache.removeResult(_finderPathCountByD_P, args);
-			finderCache.removeResult(_finderPathFetchByD_P, args);
-		}
-
-		if ((depotAppCustomizationModelImpl.getColumnBitmask() &
-			 _finderPathFetchByD_P.getColumnBitmask()) != 0) {
-
-			Object[] args = new Object[] {
-				depotAppCustomizationModelImpl.getOriginalDepotEntryId(),
-				depotAppCustomizationModelImpl.getOriginalPortletId()
-			};
-
-			finderCache.removeResult(_finderPathCountByD_P, args);
-			finderCache.removeResult(_finderPathFetchByD_P, args);
-		}
+			_finderPathFetchByD_P, args, depotAppCustomizationModelImpl);
 	}
 
 	/**
@@ -1455,10 +1377,8 @@ public class DepotAppCustomizationPersistenceImpl
 		try {
 			session = openSession();
 
-			if (depotAppCustomization.isNew()) {
+			if (isNew) {
 				session.save(depotAppCustomization);
-
-				depotAppCustomization.setNew(false);
 			}
 			else {
 				depotAppCustomization = (DepotAppCustomization)session.merge(
@@ -1472,54 +1392,15 @@ public class DepotAppCustomizationPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!_columnBitmaskEnabled) {
-			finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {
-				depotAppCustomizationModelImpl.getDepotEntryId()
-			};
-
-			finderCache.removeResult(_finderPathCountByDepotEntryId, args);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindByDepotEntryId, args);
-
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((depotAppCustomizationModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByDepotEntryId.
-					 getColumnBitmask()) != 0) {
-
-				Object[] args = new Object[] {
-					depotAppCustomizationModelImpl.getOriginalDepotEntryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByDepotEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDepotEntryId, args);
-
-				args = new Object[] {
-					depotAppCustomizationModelImpl.getDepotEntryId()
-				};
-
-				finderCache.removeResult(_finderPathCountByDepotEntryId, args);
-				finderCache.removeResult(
-					_finderPathWithoutPaginationFindByDepotEntryId, args);
-			}
-		}
-
 		entityCache.putResult(
-			entityCacheEnabled, DepotAppCustomizationImpl.class,
-			depotAppCustomization.getPrimaryKey(), depotAppCustomization,
-			false);
+			DepotAppCustomizationImpl.class, depotAppCustomizationModelImpl,
+			false, true);
 
-		clearUniqueFindersCache(depotAppCustomizationModelImpl, false);
 		cacheUniqueFindersCache(depotAppCustomizationModelImpl);
+
+		if (isNew) {
+			depotAppCustomization.setNew(false);
+		}
 
 		depotAppCustomization.resetOriginalValues();
 
@@ -1664,7 +1545,7 @@ public class DepotAppCustomizationPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<DepotAppCustomization>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1705,10 +1586,6 @@ public class DepotAppCustomizationPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1738,7 +1615,7 @@ public class DepotAppCustomizationPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1755,9 +1632,6 @@ public class DepotAppCustomizationPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1793,81 +1667,83 @@ public class DepotAppCustomizationPersistenceImpl
 	 */
 	@Activate
 	public void activate() {
-		DepotAppCustomizationModelImpl.setEntityCacheEnabled(
-			entityCacheEnabled);
-		DepotAppCustomizationModelImpl.setFinderCacheEnabled(
-			finderCacheEnabled);
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
 
 		_finderPathWithPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByDepotEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByDepotEntryId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"depotEntryId"}, true);
 
 		_finderPathWithoutPaginationFindByDepotEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByDepotEntryId",
-			new String[] {Long.class.getName()},
-			DepotAppCustomizationModelImpl.DEPOTENTRYID_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"depotEntryId"},
+			true);
 
 		_finderPathCountByDepotEntryId = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByDepotEntryId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"depotEntryId"},
+			false);
 
 		_finderPathFetchByD_E = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByD_E",
+			FINDER_CLASS_NAME_ENTITY, "fetchByD_E",
 			new String[] {Long.class.getName(), Boolean.class.getName()},
-			DepotAppCustomizationModelImpl.DEPOTENTRYID_COLUMN_BITMASK |
-			DepotAppCustomizationModelImpl.ENABLED_COLUMN_BITMASK);
+			new String[] {"depotEntryId", "enabled"}, true);
 
 		_finderPathCountByD_E = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByD_E",
-			new String[] {Long.class.getName(), Boolean.class.getName()});
+			new String[] {Long.class.getName(), Boolean.class.getName()},
+			new String[] {"depotEntryId", "enabled"}, false);
 
 		_finderPathFetchByD_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled,
-			DepotAppCustomizationImpl.class, FINDER_CLASS_NAME_ENTITY,
-			"fetchByD_P",
+			FINDER_CLASS_NAME_ENTITY, "fetchByD_P",
 			new String[] {Long.class.getName(), String.class.getName()},
-			DepotAppCustomizationModelImpl.DEPOTENTRYID_COLUMN_BITMASK |
-			DepotAppCustomizationModelImpl.PORTLETID_COLUMN_BITMASK);
+			new String[] {"depotEntryId", "portletId"}, true);
 
 		_finderPathCountByD_P = new FinderPath(
-			entityCacheEnabled, finderCacheEnabled, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByD_P",
-			new String[] {Long.class.getName(), String.class.getName()});
+			new String[] {Long.class.getName(), String.class.getName()},
+			new String[] {"depotEntryId", "portletId"}, false);
+
+		_setDepotAppCustomizationUtilPersistence(this);
 	}
 
 	@Deactivate
 	public void deactivate() {
+		_setDepotAppCustomizationUtilPersistence(null);
+
 		entityCache.removeCache(DepotAppCustomizationImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setDepotAppCustomizationUtilPersistence(
+		DepotAppCustomizationPersistence depotAppCustomizationPersistence) {
+
+		try {
+			Field field = DepotAppCustomizationUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, depotAppCustomizationPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@Override
@@ -1876,12 +1752,6 @@ public class DepotAppCustomizationPersistenceImpl
 		unbind = "-"
 	)
 	public void setConfiguration(Configuration configuration) {
-		super.setConfiguration(configuration);
-
-		_columnBitmaskEnabled = GetterUtil.getBoolean(
-			configuration.get(
-				"value.object.column.bitmask.enabled.com.liferay.depot.model.DepotAppCustomization"),
-			true);
 	}
 
 	@Override
@@ -1901,8 +1771,6 @@ public class DepotAppCustomizationPersistenceImpl
 	public void setSessionFactory(SessionFactory sessionFactory) {
 		super.setSessionFactory(sessionFactory);
 	}
-
-	private boolean _columnBitmaskEnabled;
 
 	@Reference
 	protected EntityCache entityCache;
@@ -1934,13 +1802,13 @@ public class DepotAppCustomizationPersistenceImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		DepotAppCustomizationPersistenceImpl.class);
 
-	static {
-		try {
-			Class.forName(DepotPersistenceConstants.class.getName());
-		}
-		catch (ClassNotFoundException classNotFoundException) {
-			throw new ExceptionInInitializerError(classNotFoundException);
-		}
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
 	}
+
+	@Reference
+	private DepotAppCustomizationModelArgumentsResolver
+		_depotAppCustomizationModelArgumentsResolver;
 
 }

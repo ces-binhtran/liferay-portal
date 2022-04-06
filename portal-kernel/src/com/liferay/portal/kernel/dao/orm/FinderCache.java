@@ -17,17 +17,29 @@ package com.liferay.portal.kernel.dao.orm;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Brian Wing Shun Chan
  */
+@ProviderType
 public interface FinderCache {
 
 	public void clearCache();
 
-	public void clearCache(String className);
+	public void clearCache(Class<?> clazz);
+
+	public void clearDSLQueryCache(String tableName);
 
 	public void clearLocalCache();
 
+	public Object getResult(FinderPath finderPath, Object[] args);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 *             #getResult(FinderPath, Object[])}
+	 */
+	@Deprecated
 	public Object getResult(
 		FinderPath finderPath, Object[] args,
 		BasePersistenceImpl<? extends BaseModel<?>> basePersistenceImpl);
@@ -35,9 +47,6 @@ public interface FinderCache {
 	public void invalidate();
 
 	public void putResult(FinderPath finderPath, Object[] args, Object result);
-
-	public void putResult(
-		FinderPath finderPath, Object[] args, Object result, boolean quiet);
 
 	public void removeCache(String className);
 

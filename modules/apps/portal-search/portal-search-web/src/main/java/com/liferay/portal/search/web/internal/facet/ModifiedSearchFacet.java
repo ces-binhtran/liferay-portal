@@ -59,23 +59,23 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 
 		facetConfiguration.setClassName(getFacetClassName());
 
-		JSONObject jsonObject = JSONUtil.put("frequencyThreshold", 0);
-
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (int i = 0; i < _LABELS.length; i++) {
-			JSONObject range = JSONUtil.put(
-				"label", _LABELS[i]
-			).put(
-				"range", _RANGES[i]
-			);
-
-			jsonArray.put(range);
+			jsonArray.put(
+				JSONUtil.put(
+					"label", _LABELS[i]
+				).put(
+					"range", _RANGES[i]
+				));
 		}
 
-		jsonObject.put("ranges", jsonArray);
-
-		facetConfiguration.setDataJSONObject(jsonObject);
+		facetConfiguration.setDataJSONObject(
+			JSONUtil.put(
+				"frequencyThreshold", 0
+			).put(
+				"ranges", jsonArray
+			));
 		facetConfiguration.setFieldName(getFieldName());
 		facetConfiguration.setLabel(getLabel());
 		facetConfiguration.setOrder(getOrder());
@@ -98,7 +98,7 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 			new ModifiedFacetConfigurationImpl(facet.getFacetConfiguration());
 
 		modifiedFacetConfiguration.setRangesJSONArray(
-			replaceAliases(modifiedFacetConfiguration.getRangesJSONArray()));
+			_replaceAliases(modifiedFacetConfiguration.getRangesJSONArray()));
 
 		return facet;
 	}
@@ -117,12 +117,6 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 
 	@Override
 	public JSONObject getJSONData(ActionRequest actionRequest) {
-		int frequencyThreshold = ParamUtil.getInteger(
-			actionRequest, getClassName() + "frequencyThreshold", 1);
-
-		JSONObject jsonObject = JSONUtil.put(
-			"frequencyThreshold", frequencyThreshold);
-
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		String[] rangesIndexes = StringUtil.split(
@@ -130,23 +124,25 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 				actionRequest, getClassName() + "rangesIndexes"));
 
 		for (String rangesIndex : rangesIndexes) {
-			String label = ParamUtil.getString(
-				actionRequest, getClassName() + "label_" + rangesIndex);
-			String range = ParamUtil.getString(
-				actionRequest, getClassName() + "range_" + rangesIndex);
-
-			JSONObject rangeJSONObject = JSONUtil.put(
-				"label", label
-			).put(
-				"range", range
-			);
-
-			jsonArray.put(rangeJSONObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"label",
+					ParamUtil.getString(
+						actionRequest, getClassName() + "label_" + rangesIndex)
+				).put(
+					"range",
+					ParamUtil.getString(
+						actionRequest, getClassName() + "range_" + rangesIndex)
+				));
 		}
 
-		jsonObject.put("ranges", jsonArray);
-
-		return jsonObject;
+		return JSONUtil.put(
+			"frequencyThreshold",
+			ParamUtil.getInteger(
+				actionRequest, getClassName() + "frequencyThreshold", 1)
+		).put(
+			"ranges", jsonArray
+		);
 	}
 
 	@Override
@@ -168,7 +164,19 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 		super.setServletContext(servletContext);
 	}
 
-	protected CalendarFactory getCalendarFactory() {
+	@Override
+	protected FacetFactory getFacetFactory() {
+		return modifiedFacetFactory;
+	}
+
+	protected CalendarFactory calendarFactory;
+	protected DateFormatFactory dateFormatFactory;
+	protected JSONFactory jsonFactory;
+
+	@Reference
+	protected ModifiedFacetFactory modifiedFacetFactory;
+
+	private CalendarFactory _getCalendarFactory() {
 
 		// See LPS-72507 and LPS-76500
 
@@ -179,7 +187,7 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 		return CalendarFactoryUtil.getCalendarFactory();
 	}
 
-	protected DateFormatFactory getDateFormatFactory() {
+	private DateFormatFactory _getDateFormatFactory() {
 
 		// See LPS-72507 and LPS-76500
 
@@ -190,12 +198,7 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 		return DateFormatFactoryUtil.getDateFormatFactory();
 	}
 
-	@Override
-	protected FacetFactory getFacetFactory() {
-		return modifiedFacetFactory;
-	}
-
-	protected JSONFactory getJSONFactory() {
+	private JSONFactory _getJSONFactory() {
 
 		// See LPS-72507 and LPS-76500
 
@@ -206,22 +209,15 @@ public class ModifiedSearchFacet extends BaseJSPSearchFacet {
 		return JSONFactoryUtil.getJSONFactory();
 	}
 
-	protected JSONArray replaceAliases(JSONArray rangesJSONArray) {
+	private JSONArray _replaceAliases(JSONArray rangesJSONArray) {
 		DateRangeFactory dateRangeFactory = new DateRangeFactory(
-			getDateFormatFactory());
+			_getDateFormatFactory());
 
-		CalendarFactory calendarFactory = getCalendarFactory();
+		CalendarFactory calendarFactory = _getCalendarFactory();
 
 		return dateRangeFactory.replaceAliases(
-			rangesJSONArray, calendarFactory.getCalendar(), getJSONFactory());
+			rangesJSONArray, calendarFactory.getCalendar(), _getJSONFactory());
 	}
-
-	protected CalendarFactory calendarFactory;
-	protected DateFormatFactory dateFormatFactory;
-	protected JSONFactory jsonFactory;
-
-	@Reference
-	protected ModifiedFacetFactory modifiedFacetFactory;
 
 	private static final String[] _LABELS = {
 		"past-hour", "past-24-hours", "past-week", "past-month", "past-year"

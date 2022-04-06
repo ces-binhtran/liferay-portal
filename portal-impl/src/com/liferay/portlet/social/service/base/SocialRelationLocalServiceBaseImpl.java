@@ -36,17 +36,18 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.UserFinder;
-import com.liferay.portal.kernel.service.persistence.UserPersistence;
 import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.social.kernel.model.SocialRelation;
 import com.liferay.social.kernel.service.SocialRelationLocalService;
+import com.liferay.social.kernel.service.SocialRelationLocalServiceUtil;
 import com.liferay.social.kernel.service.persistence.SocialRelationPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -70,11 +71,15 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SocialRelationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.social.kernel.service.SocialRelationLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SocialRelationLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SocialRelationLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the social relation to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was added
@@ -102,6 +107,10 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	/**
 	 * Deletes the social relation with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param relationId the primary key of the social relation
 	 * @return the social relation that was removed
 	 * @throws PortalException if a social relation with the primary key could not be found
@@ -117,6 +126,10 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	/**
 	 * Deletes the social relation from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was removed
 	 */
@@ -129,6 +142,13 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return socialRelationPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -296,6 +316,7 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -314,6 +335,7 @@ public abstract class SocialRelationLocalServiceBaseImpl
 			(SocialRelation)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SocialRelation> getBasePersistence() {
 		return socialRelationPersistence;
 	}
@@ -373,6 +395,10 @@ public abstract class SocialRelationLocalServiceBaseImpl
 
 	/**
 	 * Updates the social relation in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialRelationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialRelation the social relation
 	 * @return the social relation that was updated
@@ -446,73 +472,19 @@ public abstract class SocialRelationLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the user local service.
-	 *
-	 * @return the user local service
-	 */
-	public com.liferay.portal.kernel.service.UserLocalService
-		getUserLocalService() {
-
-		return userLocalService;
-	}
-
-	/**
-	 * Sets the user local service.
-	 *
-	 * @param userLocalService the user local service
-	 */
-	public void setUserLocalService(
-		com.liferay.portal.kernel.service.UserLocalService userLocalService) {
-
-		this.userLocalService = userLocalService;
-	}
-
-	/**
-	 * Returns the user persistence.
-	 *
-	 * @return the user persistence
-	 */
-	public UserPersistence getUserPersistence() {
-		return userPersistence;
-	}
-
-	/**
-	 * Sets the user persistence.
-	 *
-	 * @param userPersistence the user persistence
-	 */
-	public void setUserPersistence(UserPersistence userPersistence) {
-		this.userPersistence = userPersistence;
-	}
-
-	/**
-	 * Returns the user finder.
-	 *
-	 * @return the user finder
-	 */
-	public UserFinder getUserFinder() {
-		return userFinder;
-	}
-
-	/**
-	 * Sets the user finder.
-	 *
-	 * @param userFinder the user finder
-	 */
-	public void setUserFinder(UserFinder userFinder) {
-		this.userFinder = userFinder;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.social.kernel.model.SocialRelation",
 			socialRelationLocalService);
+
+		_setLocalServiceUtilService(socialRelationLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.social.kernel.model.SocialRelation");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -572,6 +544,22 @@ public abstract class SocialRelationLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		SocialRelationLocalService socialRelationLocalService) {
+
+		try {
+			Field field = SocialRelationLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, socialRelationLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = SocialRelationLocalService.class)
 	protected SocialRelationLocalService socialRelationLocalService;
 
@@ -583,18 +571,6 @@ public abstract class SocialRelationLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.UserLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@BeanReference(type = UserPersistence.class)
-	protected UserPersistence userPersistence;
-
-	@BeanReference(type = UserFinder.class)
-	protected UserFinder userFinder;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

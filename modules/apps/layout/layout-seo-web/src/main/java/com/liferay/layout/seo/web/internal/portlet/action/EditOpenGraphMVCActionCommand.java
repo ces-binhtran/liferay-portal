@@ -18,12 +18,12 @@ import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.seo.model.LayoutSEOEntry;
 import com.liferay.layout.seo.service.LayoutSEOEntryLocalService;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
-import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.layout.seo.web.internal.util.LayoutTypeSettingsUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.LayoutService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
@@ -31,7 +31,8 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropertiesParamUtil;
+import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -114,26 +115,12 @@ public class EditOpenGraphMVCActionCommand extends BaseMVCActionCommand {
 			openGraphImageFileEntryId, openGraphTitleEnabled, openGraphTitleMap,
 			serviceContext);
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
+		UnicodeProperties formTypeSettingsUnicodeProperties =
+			PropertiesParamUtil.getProperties(
+				actionRequest, "TypeSettingsProperties--");
 
-		if (draftLayout != null) {
-			_layoutSEOEntryService.updateLayoutSEOEntry(
-				groupId, privateLayout, draftLayout.getLayoutId(),
-				canonicalURLEnabled, canonicalURLMap,
-				openGraphDescriptionEnabled, openGraphDescriptionMap,
-				openGraphImageAltMap, openGraphImageFileEntryId,
-				openGraphTitleEnabled, openGraphTitleMap, serviceContext);
-		}
-
-		LayoutTypePortlet layoutTypePortlet =
-			(LayoutTypePortlet)layout.getLayoutType();
-
-		EventsProcessorUtil.process(
-			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
-			layoutTypePortlet.getConfigurationActionUpdate(),
-			_portal.getHttpServletRequest(actionRequest),
-			_portal.getHttpServletResponse(actionResponse));
+		layout = LayoutTypeSettingsUtil.updateTypeSettings(
+			layout, _layoutService, formTypeSettingsUnicodeProperties);
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
@@ -161,6 +148,9 @@ public class EditOpenGraphMVCActionCommand extends BaseMVCActionCommand {
 
 	@Reference
 	private LayoutSEOEntryService _layoutSEOEntryService;
+
+	@Reference
+	private LayoutService _layoutService;
 
 	@Reference
 	private Portal _portal;

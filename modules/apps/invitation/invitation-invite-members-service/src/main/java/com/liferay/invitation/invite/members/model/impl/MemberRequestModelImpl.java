@@ -30,12 +30,14 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
@@ -43,6 +45,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -111,22 +114,49 @@ public class MemberRequestModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long KEY_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long RECEIVERUSERID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long STATUS_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CREATEDATE_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public MemberRequestModelImpl() {
@@ -180,9 +210,6 @@ public class MemberRequestModelImpl
 				attributeName,
 				attributeGetterFunction.apply((MemberRequest)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -323,6 +350,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setMemberRequestId(long memberRequestId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_memberRequestId = memberRequestId;
 	}
 
@@ -333,19 +364,20 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -355,6 +387,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -365,6 +401,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -396,6 +436,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -406,7 +450,9 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_createDate = createDate;
 	}
@@ -424,6 +470,10 @@ public class MemberRequestModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -439,17 +489,20 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setKey(String key) {
-		_columnBitmask |= KEY_COLUMN_BITMASK;
-
-		if (_originalKey == null) {
-			_originalKey = _key;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_key = key;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalKey() {
-		return GetterUtil.getString(_originalKey);
+		return getColumnOriginalValue("key_");
 	}
 
 	@Override
@@ -459,12 +512,8 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setReceiverUserId(long receiverUserId) {
-		_columnBitmask |= RECEIVERUSERID_COLUMN_BITMASK;
-
-		if (!_setOriginalReceiverUserId) {
-			_setOriginalReceiverUserId = true;
-
-			_originalReceiverUserId = _receiverUserId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_receiverUserId = receiverUserId;
@@ -486,8 +535,14 @@ public class MemberRequestModelImpl
 	public void setReceiverUserUuid(String receiverUserUuid) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalReceiverUserId() {
-		return _originalReceiverUserId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("receiverUserId"));
 	}
 
 	@Override
@@ -497,6 +552,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setInvitedRoleId(long invitedRoleId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_invitedRoleId = invitedRoleId;
 	}
 
@@ -507,6 +566,10 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setInvitedTeamId(long invitedTeamId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_invitedTeamId = invitedTeamId;
 	}
 
@@ -517,22 +580,44 @@ public class MemberRequestModelImpl
 
 	@Override
 	public void setStatus(int status) {
-		_columnBitmask |= STATUS_COLUMN_BITMASK;
-
-		if (!_setOriginalStatus) {
-			_setOriginalStatus = true;
-
-			_originalStatus = _status;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_status = status;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public int getOriginalStatus() {
-		return _originalStatus;
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("status"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -587,6 +672,37 @@ public class MemberRequestModelImpl
 	}
 
 	@Override
+	public MemberRequest cloneWithOriginalValues() {
+		MemberRequestImpl memberRequestImpl = new MemberRequestImpl();
+
+		memberRequestImpl.setMemberRequestId(
+			this.<Long>getColumnOriginalValue("memberRequestId"));
+		memberRequestImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		memberRequestImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		memberRequestImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		memberRequestImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		memberRequestImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		memberRequestImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		memberRequestImpl.setKey(this.<String>getColumnOriginalValue("key_"));
+		memberRequestImpl.setReceiverUserId(
+			this.<Long>getColumnOriginalValue("receiverUserId"));
+		memberRequestImpl.setInvitedRoleId(
+			this.<Long>getColumnOriginalValue("invitedRoleId"));
+		memberRequestImpl.setInvitedTeamId(
+			this.<Long>getColumnOriginalValue("invitedTeamId"));
+		memberRequestImpl.setStatus(
+			this.<Integer>getColumnOriginalValue("status"));
+
+		return memberRequestImpl;
+	}
+
+	@Override
 	public int compareTo(MemberRequest memberRequest) {
 		int value = 0;
 
@@ -603,16 +719,16 @@ public class MemberRequestModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof MemberRequest)) {
+		if (!(object instanceof MemberRequest)) {
 			return false;
 		}
 
-		MemberRequest memberRequest = (MemberRequest)obj;
+		MemberRequest memberRequest = (MemberRequest)object;
 
 		long primaryKey = memberRequest.getPrimaryKey();
 
@@ -629,39 +745,31 @@ public class MemberRequestModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		MemberRequestModelImpl memberRequestModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		memberRequestModelImpl._originalGroupId =
-			memberRequestModelImpl._groupId;
+		_setModifiedDate = false;
 
-		memberRequestModelImpl._setOriginalGroupId = false;
-
-		memberRequestModelImpl._setModifiedDate = false;
-
-		memberRequestModelImpl._originalKey = memberRequestModelImpl._key;
-
-		memberRequestModelImpl._originalReceiverUserId =
-			memberRequestModelImpl._receiverUserId;
-
-		memberRequestModelImpl._setOriginalReceiverUserId = false;
-
-		memberRequestModelImpl._originalStatus = memberRequestModelImpl._status;
-
-		memberRequestModelImpl._setOriginalStatus = false;
-
-		memberRequestModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -728,7 +836,7 @@ public class MemberRequestModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -739,9 +847,26 @@ public class MemberRequestModelImpl
 			Function<MemberRequest, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((MemberRequest)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((MemberRequest)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -760,7 +885,7 @@ public class MemberRequestModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -792,13 +917,8 @@ public class MemberRequestModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _memberRequestId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
 	private long _userId;
 	private String _userName;
@@ -806,15 +926,102 @@ public class MemberRequestModelImpl
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private String _key;
-	private String _originalKey;
 	private long _receiverUserId;
-	private long _originalReceiverUserId;
-	private boolean _setOriginalReceiverUserId;
 	private long _invitedRoleId;
 	private long _invitedTeamId;
 	private int _status;
-	private int _originalStatus;
-	private boolean _setOriginalStatus;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<MemberRequest, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((MemberRequest)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("memberRequestId", _memberRequestId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("key_", _key);
+		_columnOriginalValues.put("receiverUserId", _receiverUserId);
+		_columnOriginalValues.put("invitedRoleId", _invitedRoleId);
+		_columnOriginalValues.put("invitedTeamId", _invitedTeamId);
+		_columnOriginalValues.put("status", _status);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("key_", "key");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("memberRequestId", 1L);
+
+		columnBitmasks.put("groupId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("userId", 8L);
+
+		columnBitmasks.put("userName", 16L);
+
+		columnBitmasks.put("createDate", 32L);
+
+		columnBitmasks.put("modifiedDate", 64L);
+
+		columnBitmasks.put("key_", 128L);
+
+		columnBitmasks.put("receiverUserId", 256L);
+
+		columnBitmasks.put("invitedRoleId", 512L);
+
+		columnBitmasks.put("invitedTeamId", 1024L);
+
+		columnBitmasks.put("status", 2048L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private MemberRequest _escapedModel;
 

@@ -14,15 +14,21 @@
 
 package com.liferay.gradle.plugins.defaults;
 
-import com.liferay.gradle.plugins.LiferayYarnPlugin;
+import com.liferay.gradle.plugins.NodeDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayCIPatcherPlugin;
 import com.liferay.gradle.plugins.defaults.internal.LiferayCIPlugin;
-import com.liferay.gradle.plugins.defaults.internal.NodeDefaultsPlugin;
+import com.liferay.gradle.plugins.defaults.internal.util.CIUtil;
 import com.liferay.gradle.plugins.defaults.internal.util.GradleUtil;
+import com.liferay.gradle.plugins.node.YarnPlugin;
+import com.liferay.gradle.plugins.node.tasks.YarnInstallTask;
 import com.liferay.gradle.util.Validator;
 
+import org.gradle.StartParameter;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.invocation.Gradle;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * @author Peter Shin
@@ -31,35 +37,52 @@ public class LiferayYarnDefaultsPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply(Project project) {
-		GradleUtil.applyPlugin(project, LiferayYarnPlugin.class);
+		GradleUtil.applyPlugin(project, YarnPlugin.class);
 
-		NodeDefaultsPlugin.INSTANCE.apply(project);
+		GradleUtil.applyPlugin(project, NodeDefaultsPlugin.class);
 
-		if (_isRunningInCIEnvironment()) {
+		com.liferay.gradle.plugins.defaults.internal.NodeDefaultsPlugin.
+			INSTANCE.apply(project);
+
+		if (CIUtil.isRunningInCIEnvironment()) {
 			LiferayCIPlugin.INSTANCE.apply(project);
 		}
 
-		if (_isRunningInCIPatcherEnvironment()) {
+		if (CIUtil.isRunningInCIPatcherEnvironment()) {
 			LiferayCIPatcherPlugin.INSTANCE.apply(project);
 		}
+
+		TaskProvider<YarnInstallTask> yarnInstallTaskProvider =
+			GradleUtil.getTaskProvider(
+				project, YarnPlugin.YARN_INSTALL_TASK_NAME,
+				YarnInstallTask.class);
+
+		_configureTaskYarnInstallProvider(project, yarnInstallTaskProvider);
 	}
 
-	private boolean _isRunningInCIEnvironment() {
-		if (Validator.isNotNull(System.getenv("JENKINS_HOME"))) {
-			return true;
-		}
+	private void _configureTaskYarnInstallProvider(
+		final Project project,
+		TaskProvider<YarnInstallTask> yarnInstallTaskProvider) {
 
-		return false;
-	}
+		yarnInstallTaskProvider.configure(
+			new Action<YarnInstallTask>() {
 
-	private boolean _isRunningInCIPatcherEnvironment() {
-		if (Validator.isNotNull(
-				System.getenv("FIX_PACKS_RELEASE_ENVIRONMENT"))) {
+				@Override
+				public void execute(YarnInstallTask yarnInstallTask) {
+					Gradle gradle = project.getGradle();
 
-			return true;
-		}
+					StartParameter startParameter = gradle.getStartParameter();
 
-		return false;
+					String buildProfile = System.getProperty("build.profile");
+
+					if (startParameter.isParallelProjectExecutionEnabled() ||
+						Validator.isNotNull(buildProfile)) {
+
+						yarnInstallTask.setEnabled(false);
+					}
+				}
+
+			});
 	}
 
 }

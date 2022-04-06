@@ -26,8 +26,10 @@ import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.model.Address;
 import com.liferay.portal.kernel.model.PersistedModel;
 import com.liferay.portal.kernel.model.SystemEventConstants;
+import com.liferay.portal.kernel.search.BaseModelSearchResult;
 import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
+import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
 import com.liferay.portal.kernel.transaction.Isolation;
 import com.liferay.portal.kernel.transaction.Propagation;
@@ -36,6 +38,7 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 
 import java.io.Serializable;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.osgi.annotation.versioning.ProviderType;
@@ -61,11 +64,15 @@ public interface AddressLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AddressLocalServiceUtil} to access the address local service. Add custom service methods to <code>com.liferay.portal.service.impl.AddressLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.AddressLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the address local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AddressLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the address to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param address the address
 	 * @return the address that was added
@@ -73,11 +80,32 @@ public interface AddressLocalService
 	@Indexable(type = IndexableType.REINDEX)
 	public Address addAddress(Address address);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addAddress(String, long, String, long, String, String,
+	 String, String, String, String, String, long, long, long,
+	 boolean, boolean, String, ServiceContext)}
+	 */
+	@Deprecated
 	public Address addAddress(
 			long userId, String className, long classPK, String street1,
 			String street2, String street3, String city, String zip,
 			long regionId, long countryId, long typeId, boolean mailing,
 			boolean primary, ServiceContext serviceContext)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public Address addAddress(
+			String externalReferenceCode, long userId, String className,
+			long classPK, String name, String description, String street1,
+			String street2, String street3, String city, String zip,
+			long regionId, long countryId, long typeId, boolean mailing,
+			boolean primary, String phoneNumber, ServiceContext serviceContext)
+		throws PortalException;
+
+	public Address copyAddress(
+			long addressId, String className, long classPK,
+			ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -98,6 +126,10 @@ public interface AddressLocalService
 	/**
 	 * Deletes the address from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param address the address
 	 * @return the address that was removed
 	 */
@@ -111,6 +143,10 @@ public interface AddressLocalService
 	/**
 	 * Deletes the address with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param addressId the primary key of the address
 	 * @return the address that was removed
 	 * @throws PortalException if a address with the primary key could not be found
@@ -120,6 +156,8 @@ public interface AddressLocalService
 
 	public void deleteAddresses(long companyId, String className, long classPK);
 
+	public void deleteCountryAddresses(long countryId);
+
 	/**
 	 * @throws PortalException
 	 */
@@ -127,8 +165,13 @@ public interface AddressLocalService
 	public PersistedModel deletePersistedModel(PersistedModel persistedModel)
 		throws PortalException;
 
+	public void deleteRegionAddresses(long regionId);
+
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -200,6 +243,25 @@ public interface AddressLocalService
 	public Address fetchAddress(long addressId);
 
 	/**
+	 * Returns the address with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the address's external reference code
+	 * @return the matching address, or <code>null</code> if a matching address could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Address fetchAddressByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAddressByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Address fetchAddressByReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
 	 * Returns the address with the matching UUID and company.
 	 *
 	 * @param uuid the address's UUID
@@ -221,6 +283,19 @@ public interface AddressLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public Address getAddress(long addressId) throws PortalException;
+
+	/**
+	 * Returns the address with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the address's external reference code
+	 * @return the matching address
+	 * @throws PortalException if a matching address could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public Address getAddressByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws PortalException;
 
 	/**
 	 * Returns the address with the matching UUID and company.
@@ -255,6 +330,11 @@ public interface AddressLocalService
 	public List<Address> getAddresses(
 		long companyId, String className, long classPK);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getAddresses(
+		long companyId, String className, long classPK, int start, int end,
+		OrderByComparator<Address> orderByComparator);
+
 	/**
 	 * Returns the number of addresses.
 	 *
@@ -262,6 +342,10 @@ public interface AddressLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public int getAddressesCount();
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAddressesCount(
+		long companyId, String className, long classPK);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
@@ -285,8 +369,27 @@ public interface AddressLocalService
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException;
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] typeIds);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<Address> getTypeAddresses(
+		long companyId, String className, long classPK, long[] typeIds,
+		int start, int end, OrderByComparator<Address> orderByComparator);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public BaseModelSearchResult<Address> searchAddresses(
+			long companyId, String className, long classPK, String keywords,
+			LinkedHashMap<String, Object> params, int start, int end, Sort sort)
+		throws PortalException;
+
 	/**
 	 * Updates the address in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param address the address
 	 * @return the address that was updated
@@ -298,6 +401,14 @@ public interface AddressLocalService
 			long addressId, String street1, String street2, String street3,
 			String city, String zip, long regionId, long countryId, long typeId,
 			boolean mailing, boolean primary)
+		throws PortalException;
+
+	@Indexable(type = IndexableType.REINDEX)
+	public Address updateAddress(
+			long addressId, String name, String description, String street1,
+			String street2, String street3, String city, String zip,
+			long regionId, long countryId, long typeId, boolean mailing,
+			boolean primary, String phoneNumber)
 		throws PortalException;
 
 }

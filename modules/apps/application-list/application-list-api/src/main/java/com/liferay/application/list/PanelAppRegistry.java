@@ -23,10 +23,12 @@ import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapListene
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletPreferencesFactory;
+import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.PortletLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -37,14 +39,12 @@ import com.liferay.portal.kernel.util.PrefsProps;
 import java.io.Serializable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -77,7 +77,7 @@ public class PanelAppRegistry {
 				}
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 		}
 
@@ -89,8 +89,8 @@ public class PanelAppRegistry {
 	}
 
 	public List<PanelApp> getPanelApps(
-		PanelCategory parentPanelCategory,
-		final PermissionChecker permissionChecker, final Group group) {
+		PanelCategory parentPanelCategory, PermissionChecker permissionChecker,
+		Group group) {
 
 		return getPanelApps(
 			parentPanelCategory.getKey(), permissionChecker, group);
@@ -104,12 +104,28 @@ public class PanelAppRegistry {
 			return Collections.emptyList();
 		}
 
-		return panelApps;
+		long companyId = CompanyThreadLocal.getCompanyId();
+
+		return ListUtil.filter(
+			panelApps,
+			panelApp -> {
+				Portlet portlet = panelApp.getPortlet();
+
+				long portletCompanyId = portlet.getCompanyId();
+
+				if ((portletCompanyId != CompanyConstants.SYSTEM) &&
+					(portletCompanyId != companyId)) {
+
+					return false;
+				}
+
+				return true;
+			});
 	}
 
 	public List<PanelApp> getPanelApps(
-		String parentPanelCategoryKey,
-		final PermissionChecker permissionChecker, final Group group) {
+		String parentPanelCategoryKey, PermissionChecker permissionChecker,
+		Group group) {
 
 		List<PanelApp> panelApps = getPanelApps(parentPanelCategoryKey);
 
@@ -124,7 +140,7 @@ public class PanelAppRegistry {
 					return panelApp.isShow(permissionChecker, group);
 				}
 				catch (PortalException portalException) {
-					_log.error(portalException, portalException);
+					_log.error(portalException);
 				}
 
 				return false;
@@ -148,7 +164,7 @@ public class PanelAppRegistry {
 				}
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 		}
 
@@ -249,7 +265,9 @@ public class PanelAppRegistry {
 			<PanelApp, PanelApp, List<PanelApp>> {
 
 		@Override
-		public ServiceTrackerBucket create() {
+		public ServiceTrackerBucket<PanelApp, PanelApp, List<PanelApp>>
+			create() {
+
 			return new PanelCategoryServiceTrackerBucket();
 		}
 
@@ -283,32 +301,49 @@ public class PanelAppRegistry {
 				ServiceReferenceServiceTuple<PanelApp, PanelApp>
 					serviceReferenceServiceTuple) {
 
+				int index = Collections.binarySearch(
+					_serviceReferenceServiceTuples,
+					serviceReferenceServiceTuple, _comparator);
+
+				if (index < 0) {
+					index = -index - 1;
+				}
+
 				_serviceReferenceServiceTuples.add(
-					serviceReferenceServiceTuple);
+					index, serviceReferenceServiceTuple);
 
 				_rebuild();
 			}
 
-			private Predicate<PanelApp> _getDistinctByKeyPredicate() {
-				Map<String, Boolean> seen = new ConcurrentHashMap<>();
-
-				return panelApp ->
-					seen.putIfAbsent(panelApp.getKey(), true) == null;
-			}
-
 			private void _rebuild() {
-				Stream<ServiceReferenceServiceTuple<PanelApp, PanelApp>>
-					stream = _serviceReferenceServiceTuples.stream();
+				if (_serviceReferenceServiceTuples.isEmpty()) {
+					_services = Collections.emptyList();
 
-				_services = stream.sorted(
-					_comparator
-				).map(
-					ServiceReferenceServiceTuple::getService
-				).filter(
-					_getDistinctByKeyPredicate()
-				).collect(
-					Collectors.toList()
-				);
+					return;
+				}
+
+				if (_serviceReferenceServiceTuples.size() == 1) {
+					ServiceReferenceServiceTuple<PanelApp, PanelApp>
+						serviceReferenceServiceTuple =
+							_serviceReferenceServiceTuples.get(0);
+
+					_services = Arrays.asList(
+						serviceReferenceServiceTuple.getService());
+
+					return;
+				}
+
+				Map<String, PanelApp> panelApps = new LinkedHashMap<>();
+
+				_serviceReferenceServiceTuples.forEach(
+					erviceReferenceServiceTuple -> {
+						PanelApp panelApp =
+							erviceReferenceServiceTuple.getService();
+
+						panelApps.putIfAbsent(panelApp.getKey(), panelApp);
+					});
+
+				_services = new ArrayList<>(panelApps.values());
 			}
 
 			private final Comparator

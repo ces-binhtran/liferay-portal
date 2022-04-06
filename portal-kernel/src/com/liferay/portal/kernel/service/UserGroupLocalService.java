@@ -17,6 +17,7 @@ package com.liferay.portal.kernel.service;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -57,6 +58,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see UserGroupLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -68,7 +70,7 @@ public interface UserGroupLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link UserGroupLocalServiceUtil} to access the user group local service. Add custom service methods to <code>com.liferay.portal.service.impl.UserGroupLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.UserGroupLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the user group local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link UserGroupLocalServiceUtil} if injection and service tracking are not available.
 	 */
 	public void addGroupUserGroup(long groupId, long userGroupId);
 
@@ -77,6 +79,11 @@ public interface UserGroupLocalService
 	public void addGroupUserGroups(long groupId, List<UserGroup> userGroups);
 
 	public void addGroupUserGroups(long groupId, long[] userGroupIds);
+
+	public UserGroup addOrUpdateUserGroup(
+			String externalReferenceCode, long userId, long companyId,
+			String name, String description, ServiceContext serviceContext)
+		throws PortalException;
 
 	public void addTeamUserGroup(long teamId, long userGroupId);
 
@@ -112,6 +119,10 @@ public interface UserGroupLocalService
 
 	/**
 	 * Adds the user group to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroup the user group
 	 * @return the user group that was added
@@ -174,6 +185,10 @@ public interface UserGroupLocalService
 	/**
 	 * Deletes the user group with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userGroupId the primary key of the user group
 	 * @return the user group that was removed
 	 * @throws PortalException if a user group with the primary key could not be found
@@ -183,6 +198,10 @@ public interface UserGroupLocalService
 
 	/**
 	 * Deletes the user group from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroup the user group
 	 * @return the user group that was removed
@@ -208,6 +227,9 @@ public interface UserGroupLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -288,6 +310,14 @@ public interface UserGroupLocalService
 	 * @param externalReferenceCode the user group's external reference code
 	 * @return the matching user group, or <code>null</code> if a matching user group could not be found
 	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public UserGroup fetchUserGroupByExternalReferenceCode(
+		long companyId, String externalReferenceCode);
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchUserGroupByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public UserGroup fetchUserGroupByReferenceCode(
 		long companyId, String externalReferenceCode);
@@ -397,6 +427,19 @@ public interface UserGroupLocalService
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public UserGroup getUserGroup(long companyId, String name)
+		throws PortalException;
+
+	/**
+	 * Returns the user group with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the user group's external reference code
+	 * @return the matching user group
+	 * @throws PortalException if a matching user group could not be found
+	 */
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public UserGroup getUserGroupByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
 		throws PortalException;
 
 	/**
@@ -521,15 +564,16 @@ public interface UserGroupLocalService
 	 * @param start the lower bound of the range of user groups to return
 	 * @param end the upper bound of the range of user groups to return (not
 	 inclusive)
-	 * @param obc the comparator to order the user groups (optionally
-	 <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the user groups
+	 (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<UserGroup> search(
 		long companyId, String keywords, LinkedHashMap<String, Object> params,
-		int start, int end, OrderByComparator<UserGroup> obc);
+		int start, int end, OrderByComparator<UserGroup> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the user groups that match the keywords,
@@ -589,16 +633,17 @@ public interface UserGroupLocalService
 	 * @param start the lower bound of the range of user groups to return
 	 * @param end the upper bound of the range of user groups to return (not
 	 inclusive)
-	 * @param obc the comparator to order the user groups (optionally
-	 <code>null</code>)
-	 * @return the matching user groups ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the user groups
+	 (optionally <code>null</code>)
+	 * @return the matching user groups ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.UserGroupFinder
 	 */
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<UserGroup> search(
 		long companyId, String name, String description,
 		LinkedHashMap<String, Object> params, boolean andOperator, int start,
-		int end, OrderByComparator<UserGroup> obc);
+		int end, OrderByComparator<UserGroup> orderByComparator);
 
 	/**
 	 * Returns an ordered range of all the user groups that match the name and
@@ -712,6 +757,11 @@ public interface UserGroupLocalService
 	 */
 	public void unsetTeamUserGroups(long teamId, long[] userGroupIds);
 
+	@Indexable(type = IndexableType.REINDEX)
+	public UserGroup updateExternalReferenceCode(
+			UserGroup userGroup, String externalReferenceCode)
+		throws PortalException;
+
 	/**
 	 * Updates the user group.
 	 *
@@ -731,6 +781,10 @@ public interface UserGroupLocalService
 
 	/**
 	 * Updates the user group in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroup the user group
 	 * @return the user group that was updated

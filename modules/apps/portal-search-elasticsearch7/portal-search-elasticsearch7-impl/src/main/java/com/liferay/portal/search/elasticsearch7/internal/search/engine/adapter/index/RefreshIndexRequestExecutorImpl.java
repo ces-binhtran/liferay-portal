@@ -46,7 +46,7 @@ public class RefreshIndexRequestExecutorImpl
 		RefreshRequest refreshRequest = createRefreshRequest(
 			refreshIndexRequest);
 
-		RefreshResponse refreshResponse = getRefreshResponse(
+		RefreshResponse refreshResponse = _getRefreshResponse(
 			refreshRequest, refreshIndexRequest);
 
 		RefreshIndexResponse refreshIndexResponse = new RefreshIndexResponse();
@@ -81,25 +81,6 @@ public class RefreshIndexRequestExecutorImpl
 		return new RefreshRequest(refreshIndexRequest.getIndexNames());
 	}
 
-	protected RefreshResponse getRefreshResponse(
-		RefreshRequest refreshRequest,
-		RefreshIndexRequest refreshIndexRequest) {
-
-		RestHighLevelClient restHighLevelClient =
-			_elasticsearchClientResolver.getRestHighLevelClient(
-				refreshIndexRequest.getConnectionId(), false);
-
-		IndicesClient indicesClient = restHighLevelClient.indices();
-
-		try {
-			return indicesClient.refresh(
-				refreshRequest, RequestOptions.DEFAULT);
-		}
-		catch (IOException ioException) {
-			throw new RuntimeException(ioException);
-		}
-	}
-
 	@Reference(unbind = "-")
 	protected void setElasticsearchClientResolver(
 		ElasticsearchClientResolver elasticsearchClientResolver) {
@@ -113,6 +94,26 @@ public class RefreshIndexRequestExecutorImpl
 
 		_indexRequestShardFailureTranslator =
 			indexRequestShardFailureTranslator;
+	}
+
+	private RefreshResponse _getRefreshResponse(
+		RefreshRequest refreshRequest,
+		RefreshIndexRequest refreshIndexRequest) {
+
+		RestHighLevelClient restHighLevelClient =
+			_elasticsearchClientResolver.getRestHighLevelClient(
+				refreshIndexRequest.getConnectionId(),
+				refreshIndexRequest.isPreferLocalCluster());
+
+		IndicesClient indicesClient = restHighLevelClient.indices();
+
+		try {
+			return indicesClient.refresh(
+				refreshRequest, RequestOptions.DEFAULT);
+		}
+		catch (IOException ioException) {
+			throw new RuntimeException(ioException);
+		}
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

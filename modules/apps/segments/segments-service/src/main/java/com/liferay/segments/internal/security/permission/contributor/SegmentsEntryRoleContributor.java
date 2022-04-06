@@ -15,19 +15,24 @@
 package com.liferay.segments.internal.security.permission.contributor;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
+import com.liferay.portal.kernel.module.configuration.ConfigurationProvider;
+import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
+import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.security.permission.contributor.RoleCollection;
 import com.liferay.portal.kernel.security.permission.contributor.RoleContributor;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
+import com.liferay.segments.SegmentsEntryRetriever;
+import com.liferay.segments.configuration.provider.SegmentsConfigurationProvider;
 import com.liferay.segments.context.RequestContextMapper;
 import com.liferay.segments.model.SegmentsEntryRole;
 import com.liferay.segments.provider.SegmentsEntryProviderRegistry;
 import com.liferay.segments.service.SegmentsEntryRoleLocalService;
-import com.liferay.segments.simulator.SegmentsEntrySimulator;
 
 import java.util.List;
 
@@ -35,68 +40,75 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
-import org.osgi.service.component.annotations.ReferencePolicy;
-import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Drew Brokke
  */
-@Component(immediate = true, service = RoleContributor.class)
+@Component(
+	configurationPid = "com.liferay.segments.configuration.SegmentsConfiguration",
+	service = RoleContributor.class
+)
 public class SegmentsEntryRoleContributor implements RoleContributor {
 
 	@Override
 	public void contribute(RoleCollection roleCollection) {
-		for (long segmentsEntryId : _getSegmentsEntryIds(roleCollection)) {
-			List<SegmentsEntryRole> segmentsEntryRoles =
-				_segmentsEntryRoleLocalService.getSegmentsEntryRoles(
-					segmentsEntryId);
+		try {
+			if (!_segmentsConfigurationProvider.isRoleSegmentationEnabled(
+					roleCollection.getCompanyId())) {
 
-			for (SegmentsEntryRole segmentsEntryRole : segmentsEntryRoles) {
-				roleCollection.addRoleId(segmentsEntryRole.getRoleId());
+				return;
 			}
+		}
+		catch (ConfigurationException configurationException) {
+			_log.error(configurationException);
+
+			return;
+		}
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		try {
+			if (permissionChecker != null) {
+				PermissionThreadLocal.setPermissionChecker(
+					_liberalPermissionCheckerFactory.create(
+						permissionChecker.getUser()));
+			}
+
+			for (long segmentsEntryId : _getSegmentsEntryIds(roleCollection)) {
+				List<SegmentsEntryRole> segmentsEntryRoles =
+					_segmentsEntryRoleLocalService.getSegmentsEntryRoles(
+						segmentsEntryId);
+
+				for (SegmentsEntryRole segmentsEntryRole : segmentsEntryRoles) {
+					roleCollection.addRoleId(segmentsEntryRole.getRoleId());
+				}
+			}
+		}
+		finally {
+			PermissionThreadLocal.setPermissionChecker(permissionChecker);
 		}
 	}
 
 	private long[] _getSegmentsEntryIds(RoleCollection roleCollection) {
-		long[] segmentsEntryIds = new long[0];
-
 		ServiceContext serviceContext =
 			ServiceContextThreadLocal.getServiceContext();
 
 		if (serviceContext == null) {
-			return segmentsEntryIds;
+			return new long[0];
 		}
 
 		HttpServletRequest httpServletRequest = serviceContext.getRequest();
 
 		if (httpServletRequest == null) {
-			return segmentsEntryIds;
+			return new long[0];
 		}
 
 		User user = roleCollection.getUser();
 
-		if ((_segmentsEntrySimulator != null) &&
-			_segmentsEntrySimulator.isSimulationActive(user.getUserId())) {
-
-			segmentsEntryIds =
-				_segmentsEntrySimulator.getSimulatedSegmentsEntryIds(
-					user.getUserId());
-		}
-		else {
-			try {
-				segmentsEntryIds =
-					_segmentsEntryProviderRegistry.getSegmentsEntryIds(
-						roleCollection.getGroupId(), User.class.getName(),
-						user.getUserId(),
-						_requestContextMapper.map(httpServletRequest));
-			}
-			catch (PortalException portalException) {
-				if (_log.isWarnEnabled()) {
-					_log.warn(portalException.getMessage());
-				}
-			}
-		}
+		long[] segmentsEntryIds = _segmentsEntryRetriever.getSegmentsEntryIds(
+			roleCollection.getGroupId(), user.getUserId(),
+			_requestContextMapper.map(httpServletRequest));
 
 		if ((segmentsEntryIds.length > 0) && _log.isDebugEnabled()) {
 			_log.debug(
@@ -113,20 +125,24 @@ public class SegmentsEntryRoleContributor implements RoleContributor {
 		SegmentsEntryRoleContributor.class);
 
 	@Reference
+	private ConfigurationProvider _configurationProvider;
+
+	@Reference(target = "(permission.checker.type=liberal)")
+	private PermissionCheckerFactory _liberalPermissionCheckerFactory;
+
+	@Reference
 	private RequestContextMapper _requestContextMapper;
+
+	@Reference
+	private SegmentsConfigurationProvider _segmentsConfigurationProvider;
 
 	@Reference
 	private SegmentsEntryProviderRegistry _segmentsEntryProviderRegistry;
 
 	@Reference
-	private SegmentsEntryRoleLocalService _segmentsEntryRoleLocalService;
+	private SegmentsEntryRetriever _segmentsEntryRetriever;
 
-	@Reference(
-		cardinality = ReferenceCardinality.OPTIONAL,
-		policy = ReferencePolicy.DYNAMIC,
-		policyOption = ReferencePolicyOption.GREEDY,
-		target = "(model.class.name=com.liferay.portal.kernel.model.User)"
-	)
-	private volatile SegmentsEntrySimulator _segmentsEntrySimulator;
+	@Reference
+	private SegmentsEntryRoleLocalService _segmentsEntryRoleLocalService;
 
 }

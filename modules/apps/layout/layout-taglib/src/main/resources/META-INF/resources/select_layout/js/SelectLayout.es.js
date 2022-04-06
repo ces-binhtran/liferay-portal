@@ -14,10 +14,13 @@
 
 import {ClayButtonWithIcon} from '@clayui/button';
 import {ClayInput} from '@clayui/form';
+import ClayLayout from '@clayui/layout';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import {Treeview} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
+
+import {SelectLayoutTree} from './SelectLayoutTree.es';
 
 function visit(nodes, callback) {
 	nodes.forEach((node) => {
@@ -29,24 +32,14 @@ function visit(nodes, callback) {
 	});
 }
 
-/**
- * SelectLayout
- *
- * This component shows a list of available layouts to select in expanded tree
- * and allows to filter them by searching.
- *
- * @review
- */
-
-const SelectLayout = ({
+const OldSelectLayoutTree = ({
+	filter,
 	followURLOnTitleClick,
 	itemSelectorSaveEvent,
+	items,
 	multiSelection,
-	namespace,
-	nodes,
+	selectedLayoutIds,
 }) => {
-	const [filterQuery, setFilterQuery] = useState();
-
 	const handleSelectionChange = (selectedNodeIds) => {
 		if (!selectedNodeIds.size) {
 			return;
@@ -54,7 +47,7 @@ const SelectLayout = ({
 
 		let data = [];
 
-		visit(nodes, (node) => {
+		visit(items, (node) => {
 			if (selectedNodeIds.has(node.id)) {
 				data.push({
 					groupId: node.groupId,
@@ -62,7 +55,9 @@ const SelectLayout = ({
 					layoutId: node.layoutId,
 					name: node.value,
 					privateLayout: node.privateLayout,
-					value: node.url,
+					returnType: node.returnType,
+					title: node.name,
+					value: node.payload,
 				});
 			}
 		});
@@ -86,6 +81,43 @@ const SelectLayout = ({
 	};
 
 	return (
+		<Treeview
+			NodeComponent={Treeview.Card}
+			filter={filter}
+			initialSelectedNodeIds={selectedLayoutIds}
+			multiSelection={multiSelection}
+			nodes={items}
+			onSelectedNodesChange={handleSelectionChange}
+		/>
+	);
+};
+
+const Tree = Liferay.__FF__.enableClayTreeView
+	? SelectLayoutTree
+	: OldSelectLayoutTree;
+
+/**
+ * SelectLayout
+ *
+ * This component shows a list of available layouts to select in expanded tree
+ * and allows to filter them by searching.
+ *
+ * @review
+ */
+
+const SelectLayout = ({
+	followURLOnTitleClick,
+	itemSelectorSaveEvent,
+	multiSelection,
+	namespace,
+	nodes,
+	selectedLayoutIds,
+}) => {
+	const [filter, setFilter] = useState();
+
+	const empty = nodes.length === 0;
+
+	return (
 		<div className="select-layout">
 			<ClayManagementToolbar>
 				<ClayManagementToolbar.Search
@@ -97,23 +129,26 @@ const SelectLayout = ({
 						<ClayInput.GroupItem>
 							<ClayInput
 								className="form-control input-group-inset input-group-inset-after"
+								disabled={empty}
 								name={`${namespace}filterKeywords`}
 								onInput={(event) => {
-									setFilterQuery(
-										event.target.value.toLowerCase()
-									);
+									setFilter(event.target.value.toLowerCase());
 								}}
 								placeholder={Liferay.Language.get('search-for')}
 								type="text"
 							/>
+
 							<ClayInput.GroupInsetItem after tag="span">
 								<ClayButtonWithIcon
 									className="navbar-breakpoint-d-none"
+									disabled={empty}
 									displayType="unstyled"
 									symbol="times"
 								/>
+
 								<ClayButtonWithIcon
 									className="navbar-breakpoint-d-block"
+									disabled={empty}
 									displayType="unstyled"
 									symbol="search"
 								/>
@@ -123,24 +158,41 @@ const SelectLayout = ({
 				</ClayManagementToolbar.Search>
 			</ClayManagementToolbar>
 
-			<div
-				className="container-fluid-1280 layouts-selector"
+			<ClayLayout.ContainerFluid
+				className="layouts-selector"
 				id={`${namespace}selectLayoutFm`}
 			>
 				<fieldset className="panel-body">
-					<div
-						className="layout-tree"
-						id={`${namespace}layoutContainer`}
-					>
-						<Treeview
-							filterQuery={filterQuery}
-							multiSelection={multiSelection}
-							NodeComponent={Treeview.Card}
-							nodes={nodes}
-							onSelectedNodesChange={handleSelectionChange}
-						/>
-					</div>
+					{empty ? (
+						<EmptyState />
+					) : (
+						<div
+							className="layout-tree"
+							id={`${namespace}layoutContainer`}
+						>
+							<Tree
+								filter={filter}
+								followURLOnTitleClick={followURLOnTitleClick}
+								itemSelectorSaveEvent={itemSelectorSaveEvent}
+								items={nodes}
+								multiSelection={multiSelection}
+								selectedLayoutIds={selectedLayoutIds}
+							/>
+						</div>
+					)}
 				</fieldset>
+			</ClayLayout.ContainerFluid>
+		</div>
+	);
+};
+
+const EmptyState = () => {
+	return (
+		<div className="sheet taglib-empty-result-message">
+			<div className="taglib-empty-result-message-header"></div>
+
+			<div className="sheet-text text-center">
+				{Liferay.Language.get('there-are-no-pages')}
 			</div>
 		</div>
 	);

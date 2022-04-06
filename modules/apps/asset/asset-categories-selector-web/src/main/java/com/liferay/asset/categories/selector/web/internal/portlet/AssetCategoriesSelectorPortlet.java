@@ -14,7 +14,7 @@
 
 package com.liferay.asset.categories.selector.web.internal.portlet;
 
-import com.liferay.asset.categories.selector.web.internal.contants.AssetCategoriesSelectorPortletKeys;
+import com.liferay.asset.categories.selector.web.internal.constants.AssetCategoriesSelectorPortletKeys;
 import com.liferay.asset.kernel.model.AssetCategory;
 import com.liferay.asset.kernel.model.AssetCategoryConstants;
 import com.liferay.asset.kernel.service.AssetCategoryService;
@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -79,28 +78,28 @@ public class AssetCategoriesSelectorPortlet extends MVCPortlet {
 			try {
 				JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
-				List<AssetCategory> categories = getCategories(resourceRequest);
+				List<AssetCategory> categories = _getCategories(
+					resourceRequest);
 
 				for (AssetCategory category : categories) {
 					List<AssetCategory> childCategories =
 						_assetCategoryService.getChildCategories(
 							category.getCategoryId());
 
-					JSONObject jsonObject = JSONUtil.put(
-						"categoryId", category.getCategoryId()
-					).put(
-						"childrenCount", childCategories.size()
-					).put(
-						"hasChildren", !childCategories.isEmpty()
-					).put(
-						"name", category.getName()
-					).put(
-						"parentCategoryId", category.getParentCategoryId()
-					).put(
-						"titleCurrentValue", category.getTitleCurrentValue()
-					);
-
-					jsonArray.put(jsonObject);
+					jsonArray.put(
+						JSONUtil.put(
+							"categoryId", category.getCategoryId()
+						).put(
+							"childrenCount", childCategories.size()
+						).put(
+							"hasChildren", !childCategories.isEmpty()
+						).put(
+							"name", category.getName()
+						).put(
+							"parentCategoryId", category.getParentCategoryId()
+						).put(
+							"titleCurrentValue", category.getTitleCurrentValue()
+						));
 				}
 
 				writeJSON(
@@ -115,7 +114,7 @@ public class AssetCategoriesSelectorPortlet extends MVCPortlet {
 		}
 	}
 
-	protected List<AssetCategory> getCategories(PortletRequest portletRequest)
+	private List<AssetCategory> _getCategories(PortletRequest portletRequest)
 		throws PortalException {
 
 		long categoryId = ParamUtil.getLong(portletRequest, "categoryId");

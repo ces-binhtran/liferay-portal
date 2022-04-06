@@ -17,6 +17,8 @@ package com.liferay.headless.admin.workflow.client.dto.v1_0;
 import com.liferay.headless.admin.workflow.client.function.UnsafeSupplier;
 import com.liferay.headless.admin.workflow.client.serdes.v1_0.TransitionSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class Transition implements Cloneable {
+public class Transition implements Cloneable, Serializable {
 
 	public static Transition toDTO(String json) {
 		return TransitionSerDes.toDTO(json);
@@ -71,6 +73,48 @@ public class Transition implements Cloneable {
 	}
 
 	protected String name;
+
+	public String getSourceNodeName() {
+		return sourceNodeName;
+	}
+
+	public void setSourceNodeName(String sourceNodeName) {
+		this.sourceNodeName = sourceNodeName;
+	}
+
+	public void setSourceNodeName(
+		UnsafeSupplier<String, Exception> sourceNodeNameUnsafeSupplier) {
+
+		try {
+			sourceNodeName = sourceNodeNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String sourceNodeName;
+
+	public String getTargetNodeName() {
+		return targetNodeName;
+	}
+
+	public void setTargetNodeName(String targetNodeName) {
+		this.targetNodeName = targetNodeName;
+	}
+
+	public void setTargetNodeName(
+		UnsafeSupplier<String, Exception> targetNodeNameUnsafeSupplier) {
+
+		try {
+			targetNodeName = targetNodeNameUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String targetNodeName;
 
 	@Override
 	public Transition clone() throws CloneNotSupportedException {

@@ -57,7 +57,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	property = {
-		"javax.portlet.name=" + MFAEmailOTPPortletKeys.MFA_EMAIL_OTP_VERIFY_PORTLET,
+		"javax.portlet.name=" + MFAEmailOTPPortletKeys.MFA_EMAIL_OTP_VERIFY,
 		"mvc.command.name=/mfa_email_otp_verify/send_mfa_email_otp"
 	},
 	service = MVCResourceCommand.class
@@ -160,7 +160,7 @@ public class SendMFAEmailOTPMVCResourceCommand implements MVCResourceCommand {
 		long resendEmailTimeout = mfaEmailOTPConfiguration.resendEmailTimeout();
 
 		if (resendEmailTimeout > 0) {
-			long time = mfaEmailOTPSetAtTime + resendEmailTimeout * 1000;
+			long time = mfaEmailOTPSetAtTime + (resendEmailTimeout * 1000);
 
 			if (System.currentTimeMillis() <= time) {
 				if (_log.isInfoEnabled()) {
@@ -214,13 +214,11 @@ public class SendMFAEmailOTPMVCResourceCommand implements MVCResourceCommand {
 		mailTemplateContextBuilder.put(
 			"[$TO_NAME$]", HtmlUtil.escape(user.getFullName()));
 
-		MailTemplateContext mailTemplateContext =
-			mailTemplateContextBuilder.build();
-
 		_sendNotificationEmail(
 			mfaEmailOTPConfiguration.emailFromAddress(),
 			mfaEmailOTPConfiguration.emailFromName(), user.getEmailAddress(),
-			user, emailOTPSubject, emailOTPBody, mailTemplateContext);
+			user, emailOTPSubject, emailOTPBody,
+			mailTemplateContextBuilder.build());
 
 		return true;
 	}

@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.util.ClassUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.workflow.kaleo.definition.ScriptLanguage;
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
 import com.liferay.portal.workflow.kaleo.model.KaleoCondition;
 import com.liferay.portal.workflow.kaleo.runtime.ExecutionContext;
 import com.liferay.portal.workflow.kaleo.runtime.condition.ConditionEvaluator;
@@ -45,7 +46,7 @@ public class MultiLanguageConditionEvaluator implements ConditionEvaluator {
 			KaleoCondition kaleoCondition, ExecutionContext executionContext)
 		throws PortalException {
 
-		String conditionEvaluatorKey = getConditionEvaluatorKey(
+		String conditionEvaluatorKey = _getConditionEvaluatorKey(
 			kaleoCondition.getScriptLanguage(),
 			StringUtil.trim(kaleoCondition.getScript()));
 
@@ -68,21 +69,40 @@ public class MultiLanguageConditionEvaluator implements ConditionEvaluator {
 		target = "(scripting.language=*)"
 	)
 	protected void addConditionEvaluator(
-		ConditionEvaluator conditionEvaluator, Map<String, Object> properties) {
+			ConditionEvaluator conditionEvaluator,
+			Map<String, Object> properties)
+		throws KaleoDefinitionValidationException {
 
-		String[] scriptingLanguages = getScriptingLanguages(
+		String[] scriptingLanguages = _getScriptingLanguages(
 			conditionEvaluator, properties);
 
 		for (String scriptingLanguage : scriptingLanguages) {
-			String conditionEvaluatorKey = getConditionEvaluatorKey(
+			String conditionEvaluatorKey = _getConditionEvaluatorKey(
 				scriptingLanguage, ClassUtil.getClassName(conditionEvaluator));
 
 			_conditionEvaluators.put(conditionEvaluatorKey, conditionEvaluator);
 		}
 	}
 
-	protected String getConditionEvaluatorKey(
-		String language, String conditionEvaluatorClassName) {
+	protected void removeConditionEvaluator(
+			ConditionEvaluator conditionEvaluator,
+			Map<String, Object> properties)
+		throws KaleoDefinitionValidationException {
+
+		String[] scriptingLanguages = _getScriptingLanguages(
+			conditionEvaluator, properties);
+
+		for (String scriptingLanguage : scriptingLanguages) {
+			String conditionEvaluatorKey = _getConditionEvaluatorKey(
+				scriptingLanguage, ClassUtil.getClassName(conditionEvaluator));
+
+			_conditionEvaluators.remove(conditionEvaluatorKey);
+		}
+	}
+
+	private String _getConditionEvaluatorKey(
+			String language, String conditionEvaluatorClassName)
+		throws KaleoDefinitionValidationException {
 
 		ScriptLanguage scriptLanguage = ScriptLanguage.parse(language);
 
@@ -93,7 +113,7 @@ public class MultiLanguageConditionEvaluator implements ConditionEvaluator {
 		return language;
 	}
 
-	protected String[] getScriptingLanguages(
+	private String[] _getScriptingLanguages(
 		ConditionEvaluator conditionEvaluator, Map<String, Object> properties) {
 
 		Object value = properties.get("scripting.language");
@@ -108,20 +128,6 @@ public class MultiLanguageConditionEvaluator implements ConditionEvaluator {
 		}
 
 		return scriptingLanguages;
-	}
-
-	protected void removeConditionEvaluator(
-		ConditionEvaluator conditionEvaluator, Map<String, Object> properties) {
-
-		String[] scriptingLanguages = getScriptingLanguages(
-			conditionEvaluator, properties);
-
-		for (String scriptingLanguage : scriptingLanguages) {
-			String conditionEvaluatorKey = getConditionEvaluatorKey(
-				scriptingLanguage, ClassUtil.getClassName(conditionEvaluator));
-
-			_conditionEvaluators.remove(conditionEvaluatorKey);
-		}
 	}
 
 	private final Map<String, ConditionEvaluator> _conditionEvaluators =

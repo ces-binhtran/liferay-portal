@@ -27,6 +27,10 @@ public class BackgroundTaskLocalServiceWrapper
 	implements BackgroundTaskLocalService,
 			   ServiceWrapper<BackgroundTaskLocalService> {
 
+	public BackgroundTaskLocalServiceWrapper() {
+		this(null);
+	}
+
 	public BackgroundTaskLocalServiceWrapper(
 		BackgroundTaskLocalService backgroundTaskLocalService) {
 
@@ -35,6 +39,10 @@ public class BackgroundTaskLocalServiceWrapper
 
 	/**
 	 * Adds the background task to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BackgroundTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param backgroundTask the background task
 	 * @return the background task that was added
@@ -160,6 +168,10 @@ public class BackgroundTaskLocalServiceWrapper
 	/**
 	 * Deletes the background task from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BackgroundTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param backgroundTask the background task
 	 * @return the background task that was removed
 	 * @throws PortalException
@@ -176,6 +188,10 @@ public class BackgroundTaskLocalServiceWrapper
 
 	/**
 	 * Deletes the background task with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BackgroundTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param backgroundTaskId the primary key of the background task
 	 * @return the background task that was removed
@@ -227,6 +243,13 @@ public class BackgroundTaskLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _backgroundTaskLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _backgroundTaskLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -758,6 +781,10 @@ public class BackgroundTaskLocalServiceWrapper
 
 	/**
 	 * Updates the background task in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BackgroundTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param backgroundTask the background task
 	 * @return the background task that was updated

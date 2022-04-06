@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -156,17 +157,17 @@ public class AccountEntryUserRelPersistenceTest {
 	}
 
 	@Test
-	public void testCountByAEI() throws Exception {
-		_persistence.countByAEI(RandomTestUtil.nextLong());
+	public void testCountByAccountEntryId() throws Exception {
+		_persistence.countByAccountEntryId(RandomTestUtil.nextLong());
 
-		_persistence.countByAEI(0L);
+		_persistence.countByAccountEntryId(0L);
 	}
 
 	@Test
-	public void testCountByAUI() throws Exception {
-		_persistence.countByAUI(RandomTestUtil.nextLong());
+	public void testCountByAccountUserId() throws Exception {
+		_persistence.countByAccountUserId(RandomTestUtil.nextLong());
 
-		_persistence.countByAUI(0L);
+		_persistence.countByAccountUserId(0L);
 	}
 
 	@Test
@@ -440,20 +441,65 @@ public class AccountEntryUserRelPersistenceTest {
 
 		_persistence.clearCache();
 
-		AccountEntryUserRel existingAccountEntryUserRel =
+		_assertOriginalValues(
 			_persistence.findByPrimaryKey(
-				newAccountEntryUserRel.getPrimaryKey());
+				newAccountEntryUserRel.getPrimaryKey()));
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		AccountEntryUserRel newAccountEntryUserRel = addAccountEntryUserRel();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			AccountEntryUserRel.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"accountEntryUserRelId",
+				newAccountEntryUserRel.getAccountEntryUserRelId()));
+
+		List<AccountEntryUserRel> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(
+		AccountEntryUserRel accountEntryUserRel) {
 
 		Assert.assertEquals(
-			Long.valueOf(existingAccountEntryUserRel.getAccountEntryId()),
+			Long.valueOf(accountEntryUserRel.getAccountEntryId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingAccountEntryUserRel, "getOriginalAccountEntryId",
-				new Class<?>[0]));
+				accountEntryUserRel, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "accountEntryId"));
 		Assert.assertEquals(
-			Long.valueOf(existingAccountEntryUserRel.getAccountUserId()),
+			Long.valueOf(accountEntryUserRel.getAccountUserId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingAccountEntryUserRel, "getOriginalAccountUserId",
-				new Class<?>[0]));
+				accountEntryUserRel, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "accountUserId"));
 	}
 
 	protected AccountEntryUserRel addAccountEntryUserRel() throws Exception {

@@ -1,11 +1,7 @@
-# Checks for .function, .macro or .testcase
+# Checks for .function, .jar, .lar, .macro, .path, .testcase, .war or .zip
 
 Check | Category | Description
 ----- | -------- | -----------
-PoshiAnnotationsOrderCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiCommandsOrderCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiEmptyLinesCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiIndentationCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiParametersOrderCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiStylingCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
-PoshiWhitespaceCheck | [Miscellaneous](miscellaneous_checks.markdown#miscellaneous-checks) | |
+PoshiDependenciesFileLocationCheck | [Bug Prevention](bug_prevention_checks.markdown#bug-prevention-checks) | Checks that dependencies files are located in the correct directory. |
+PoshiStylingCheck | [Styling](styling_checks.markdown#styling-checks) | Applies rules to enforce consisteny in code style. |
+PoshiVariableNameCheck | [Styling](styling_checks.markdown#styling-checks) | Checks variable names for correct use of `camelCase`. |

@@ -20,11 +20,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,16 +46,26 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("PageDropZoneDefinition")
+@GraphQLName(
+	description = "Represent a definition of a Page drop zone.",
+	value = "PageDropZoneDefinition"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "PageDropZoneDefinition")
-public class PageDropZoneDefinition {
+public class PageDropZoneDefinition implements Serializable {
 
 	public static PageDropZoneDefinition toDTO(String json) {
 		return ObjectMapperUtil.readValue(PageDropZoneDefinition.class, json);
 	}
 
-	@Schema
+	public static PageDropZoneDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(
+			PageDropZoneDefinition.class, json);
+	}
+
+	@Schema(
+		description = "The page drop zone's allowed or unallowed fragments."
+	)
 	@Valid
 	public Object getFragmentSettings() {
 		return fragmentSettings;
@@ -76,7 +90,9 @@ public class PageDropZoneDefinition {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(
+		description = "The page drop zone's allowed or unallowed fragments."
+	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object fragmentSettings;
 
@@ -115,7 +131,19 @@ public class PageDropZoneDefinition {
 
 			sb.append("\"fragmentSettings\": ");
 
-			sb.append(String.valueOf(fragmentSettings));
+			if (fragmentSettings instanceof Map) {
+				sb.append(
+					JSONFactoryUtil.createJSONObject(
+						(Map<?, ?>)fragmentSettings));
+			}
+			else if (fragmentSettings instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)fragmentSettings));
+				sb.append("\"");
+			}
+			else {
+				sb.append(fragmentSettings);
+			}
 		}
 
 		sb.append("}");
@@ -124,15 +152,26 @@ public class PageDropZoneDefinition {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.PageDropZoneDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -148,14 +187,12 @@ public class PageDropZoneDefinition {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -182,7 +219,7 @@ public class PageDropZoneDefinition {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -190,7 +227,7 @@ public class PageDropZoneDefinition {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -198,5 +235,10 @@ public class PageDropZoneDefinition {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -184,13 +184,13 @@ public class AMImageConfigurationEntryParserTest extends PowerMockito {
 
 	@Test
 	public void testGetConfigurationStringWithMaxHeight() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, true);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-height", "100"
+				).build(),
+				true);
 
 		String configurationString =
 			_amImageConfigurationEntryParser.getConfigurationString(
@@ -202,41 +202,36 @@ public class AMImageConfigurationEntryParserTest extends PowerMockito {
 
 	@Test
 	public void testGetConfigurationStringWithMaxHeightAndMaxWidth() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "200"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, true);
-
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-height", "100"
+				).put(
+					"max-width", "200"
+				).build(),
+				true);
 
 		Assert.assertEquals(
 			"test:desc:12345:max-height=100;max-width=200:enabled=true",
-			configurationString);
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test
 	public void testGetConfigurationStringWithMaxWidth() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-width", "200"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, true);
-
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-width", "200"
+				).build(),
+				true);
 
 		Assert.assertEquals(
-			"test:desc:12345:max-width=200:enabled=true", configurationString);
+			"test:desc:12345:max-width=200:enabled=true",
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test
@@ -245,70 +240,60 @@ public class AMImageConfigurationEntryParserTest extends PowerMockito {
 			new AMImageConfigurationEntryImpl(
 				"test", "desc", "12345", Collections.emptyMap(), true);
 
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
-
 		Assert.assertEquals(
-			"test:desc:12345::enabled=true", configurationString);
+			"test:desc:12345::enabled=true",
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test
 	public void testGetDisabledConfigurationStringWithMaxHeight() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, false);
-
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-height", "100"
+				).build(),
+				false);
 
 		Assert.assertEquals(
 			"test:desc:12345:max-height=100:enabled=false",
-			configurationString);
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test
 	public void testGetDisabledConfigurationStringWithMaxHeightAndMaxWidth() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-height", "100"
-		).put(
-			"max-width", "200"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, false);
-
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-height", "100"
+				).put(
+					"max-width", "200"
+				).build(),
+				false);
 
 		Assert.assertEquals(
 			"test:desc:12345:max-height=100;max-width=200:enabled=false",
-			configurationString);
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test
 	public void testGetDisabledConfigurationStringWithMaxWidth() {
-		Map<String, String> properties = HashMapBuilder.put(
-			"max-width", "200"
-		).build();
-
 		AMImageConfigurationEntry amImageConfigurationEntry =
 			new AMImageConfigurationEntryImpl(
-				"test", "desc", "12345", properties, false);
-
-		String configurationString =
-			_amImageConfigurationEntryParser.getConfigurationString(
-				amImageConfigurationEntry);
+				"test", "desc", "12345",
+				HashMapBuilder.put(
+					"max-width", "200"
+				).build(),
+				false);
 
 		Assert.assertEquals(
-			"test:desc:12345:max-width=200:enabled=false", configurationString);
+			"test:desc:12345:max-width=200:enabled=false",
+			_amImageConfigurationEntryParser.getConfigurationString(
+				amImageConfigurationEntry));
 	}
 
 	@Test(expected = IllegalArgumentException.class)

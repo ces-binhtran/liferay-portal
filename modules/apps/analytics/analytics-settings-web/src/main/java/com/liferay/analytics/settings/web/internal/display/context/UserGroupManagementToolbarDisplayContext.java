@@ -17,11 +17,13 @@ package com.liferay.analytics.settings.web.internal.display.context;
 import com.liferay.frontend.taglib.clay.servlet.taglib.display.context.SearchContainerManagementToolbarDisplayContext;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemList;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
@@ -49,8 +51,6 @@ public class UserGroupManagementToolbarDisplayContext
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			userGroupDisplayContext.getUserGroupSearch());
 
-		_userGroupDisplayContext = userGroupDisplayContext;
-
 		ThemeDisplay themeDisplay =
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
@@ -61,11 +61,11 @@ public class UserGroupManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -100,7 +100,7 @@ public class UserGroupManagementToolbarDisplayContext
 		Map<String, String> entriesMap, PortletURL entryURL,
 		String parameterName, String parameterValue) {
 
-		if ((entriesMap == null) || entriesMap.isEmpty()) {
+		if (MapUtil.isEmpty(entriesMap)) {
 			return null;
 		}
 
@@ -127,7 +127,7 @@ public class UserGroupManagementToolbarDisplayContext
 
 	@Override
 	protected String getFilterNavigationDropdownItemsLabel() {
-		return LanguageUtil.get(request, "user-groups");
+		return LanguageUtil.get(httpServletRequest, "user-groups");
 	}
 
 	@Override
@@ -136,6 +136,5 @@ public class UserGroupManagementToolbarDisplayContext
 	}
 
 	private final ResourceBundle _resourceBundle;
-	private final UserGroupDisplayContext _userGroupDisplayContext;
 
 }

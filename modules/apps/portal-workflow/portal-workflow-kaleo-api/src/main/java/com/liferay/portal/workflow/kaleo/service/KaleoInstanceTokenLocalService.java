@@ -64,11 +64,15 @@ public interface KaleoInstanceTokenLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link KaleoInstanceTokenLocalServiceUtil} to access the kaleo instance token local service. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoInstanceTokenLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.workflow.kaleo.service.impl.KaleoInstanceTokenLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the kaleo instance token local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link KaleoInstanceTokenLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the kaleo instance token to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstanceToken the kaleo instance token
 	 * @return the kaleo instance token that was added
@@ -123,6 +127,10 @@ public interface KaleoInstanceTokenLocalService
 	/**
 	 * Deletes the kaleo instance token from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoInstanceToken the kaleo instance token
 	 * @return the kaleo instance token that was removed
 	 */
@@ -132,6 +140,10 @@ public interface KaleoInstanceTokenLocalService
 
 	/**
 	 * Deletes the kaleo instance token with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstanceTokenId the primary key of the kaleo instance token
 	 * @return the kaleo instance token that was removed
@@ -151,6 +163,9 @@ public interface KaleoInstanceTokenLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -255,6 +270,10 @@ public interface KaleoInstanceTokenLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<KaleoInstanceToken> getKaleoInstanceTokens(
+		long kaleoInstanceId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<KaleoInstanceToken> getKaleoInstanceTokens(
 		long parentKaleoInstanceTokenId, Date completionDate,
 		ServiceContext serviceContext);
 
@@ -304,7 +323,8 @@ public interface KaleoInstanceTokenLocalService
 	public Hits search(
 		Long userId, String assetClassName, String assetTitle,
 		String assetDescription, String currentKaleoNodeName,
-		String kaleoDefinitionName, Boolean completed, int start, int end,
+		String kaleoDefinitionName, Boolean completed,
+		boolean searchByActiveWorkflowHandlers, int start, int end,
 		Sort[] sorts, ServiceContext serviceContext);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -312,10 +332,14 @@ public interface KaleoInstanceTokenLocalService
 		Long userId, String assetClassName, String assetTitle,
 		String assetDescription, String currentKaleoNodeName,
 		String kaleoDefinitionName, Boolean completed,
-		ServiceContext serviceContext);
+		boolean searchByActiveWorkflowHandlers, ServiceContext serviceContext);
 
 	/**
 	 * Updates the kaleo instance token in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoInstanceTokenLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoInstanceToken the kaleo instance token
 	 * @return the kaleo instance token that was updated

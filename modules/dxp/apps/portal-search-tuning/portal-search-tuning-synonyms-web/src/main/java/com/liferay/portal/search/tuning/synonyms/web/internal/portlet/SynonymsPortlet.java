@@ -17,15 +17,14 @@ package com.liferay.portal.search.tuning.synonyms.web.internal.portlet;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.search.engine.SearchEngineInformation;
 import com.liferay.portal.search.engine.adapter.SearchEngineAdapter;
 import com.liferay.portal.search.index.IndexNameBuilder;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.sort.Sorts;
+import com.liferay.portal.search.tuning.synonyms.index.name.SynonymSetIndexNameBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.constants.SynonymsPortletKeys;
 import com.liferay.portal.search.tuning.synonyms.web.internal.display.context.SynonymsDisplayBuilder;
 import com.liferay.portal.search.tuning.synonyms.web.internal.index.DocumentToSynonymSetTranslator;
-import com.liferay.portal.search.tuning.synonyms.web.internal.index.name.SynonymSetIndexNameBuilder;
 
 import java.io.IOException;
 
@@ -70,10 +69,9 @@ public class SynonymsPortlet extends MVCPortlet {
 		SynonymsDisplayBuilder synonymsDisplayBuilder =
 			new SynonymsDisplayBuilder(
 				_documentToSynonymSetTranslator,
-				_portal.getHttpServletRequest(renderRequest), _indexNameBuilder,
-				_language, _portal, _queries, renderRequest, renderResponse,
-				_searchEngineAdapter, _searchEngineInformation, _sorts,
-				_synonymSetIndexNameBuilder);
+				_portal.getHttpServletRequest(renderRequest), _language,
+				_portal, _queries, renderRequest, renderResponse,
+				_searchEngineAdapter, _sorts, _synonymSetIndexNameBuilder);
 
 		renderRequest.setAttribute(
 			SynonymsPortletKeys.SYNONYMS_DISPLAY_CONTEXT,
@@ -99,9 +97,6 @@ public class SynonymsPortlet extends MVCPortlet {
 
 	@Reference
 	private SearchEngineAdapter _searchEngineAdapter;
-
-	@Reference
-	private SearchEngineInformation _searchEngineInformation;
 
 	@Reference
 	private Sorts _sorts;

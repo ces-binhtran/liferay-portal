@@ -27,10 +27,6 @@ import java.util.Map;
  */
 public class CacheKeyGeneratorUtil {
 
-	public static CacheKeyGenerator getCacheKeyGenerator() {
-		return getCacheKeyGenerator(null);
-	}
-
 	public static CacheKeyGenerator getCacheKeyGenerator(String cacheName) {
 		ThreadLocalCache<CacheKeyGenerator> threadLocalCacheKeyGenerators =
 			ThreadLocalCacheManager.getThreadLocalCache(

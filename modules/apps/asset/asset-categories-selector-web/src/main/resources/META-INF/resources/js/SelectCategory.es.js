@@ -12,9 +12,16 @@
  * details.
  */
 
+import ClayAlert from '@clayui/alert';
+import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import {Treeview} from 'frontend-js-components-web';
-import React, {useCallback, useRef, useState} from 'react';
+import {navigate} from 'frontend-js-web';
+import PropTypes from 'prop-types';
+import React, {useMemo, useRef, useState} from 'react';
+
+import {SelectTree} from './SelectTree.es';
 
 function visit(nodes, callback) {
 	nodes.forEach((node) => {
@@ -26,28 +33,32 @@ function visit(nodes, callback) {
 	});
 }
 
-function SelectCategory({
+function getFilter(filterQuery) {
+	if (!filterQuery) {
+		return null;
+	}
+
+	const filterQueryLowerCase = filterQuery.toLowerCase();
+
+	return (node) =>
+		!node.vocabulary &&
+		node.name.toLowerCase().indexOf(filterQueryLowerCase) !== -1;
+}
+
+function OldSelectTree({
+	filterQuery,
 	itemSelectorSaveEvent,
+	items,
 	multiSelection,
-	namespace,
-	nodes,
 }) {
-	const [filterQuery, setFilterQuery] = useState('');
-
 	const selectedNodesRef = useRef(null);
-
-	const handleQueryChange = useCallback((event) => {
-		const value = event.target.value;
-
-		setFilterQuery(value);
-	}, []);
 
 	const handleSelectionChange = (selectedNodes) => {
 		const data = {};
 
 		// Mark newly selected nodes as selected.
 
-		visit(nodes, (node) => {
+		visit(items, (node) => {
 			if (selectedNodes.has(node.id)) {
 				data[node.id] = {
 					categoryId: node.vocabulary ? 0 : node.id,
@@ -73,26 +84,79 @@ function SelectCategory({
 
 		selectedNodesRef.current = data;
 
-		Liferay.Util.getOpener().Liferay.fire(itemSelectorSaveEvent, {data});
+		const openerWindow = Liferay.Util.getOpener();
+
+		openerWindow.Liferay.fire(itemSelectorSaveEvent, {data});
 	};
 
-	const initialSelectedNodeIds = [];
+	const initialSelectedNodeIds = useMemo(() => {
+		const selectedNodes = [];
 
-	visit(nodes, (node) => {
-		if (node.selected) {
-			initialSelectedNodeIds.push(node.id);
+		visit(items, (node) => {
+			if (node.selected) {
+				selectedNodes.push(node.id);
+			}
+		});
+
+		return selectedNodes;
+	}, [items]);
+
+	return (
+		<Treeview
+			NodeComponent={Treeview.Card}
+			filter={getFilter(filterQuery)}
+			initialSelectedNodeIds={initialSelectedNodeIds}
+			multiSelection={multiSelection}
+			nodes={items}
+			onSelectedNodesChange={handleSelectionChange}
+		/>
+	);
+}
+
+const Tree = Liferay.__FF__.enableClayTreeView ? SelectTree : OldSelectTree;
+
+function SelectCategory({
+	addCategoryURL,
+	itemSelectorSaveEvent,
+	moveCategory,
+	multiSelection,
+	namespace,
+	nodes,
+	selectedCategoryIds,
+}) {
+	const [items, setItems] = useState(() => {
+		if (nodes.length === 1 && nodes[0].vocabulary && nodes[0].id !== '0') {
+			return nodes[0].children;
 		}
+
+		return nodes;
 	});
+
+	const [filterQuery, setFilterQuery] = useState('');
 
 	return (
 		<div className="select-category">
-			<form className="select-category-filter" role="search">
-				<div className="container-fluid-1280">
+			{moveCategory && (
+				<ClayAlert displayType="info" variant="embedded">
+					{Liferay.Language.get(
+						'categories-can-only-be-moved-to-a-vocabulary-or-a-category-with-the-same-visibility'
+					)}
+				</ClayAlert>
+			)}
+
+			<form
+				className="select-category-filter"
+				onSubmit={(event) => event.preventDefault()}
+				role="search"
+			>
+				<ClayLayout.ContainerFluid className="d-flex">
 					<div className="input-group">
 						<div className="input-group-item">
 							<input
-								className="form-control input-group-inset input-group-inset-after"
-								onChange={handleQueryChange}
+								className="form-control h-100 input-group-inset input-group-inset-after"
+								onChange={(event) =>
+									setFilterQuery(event.target.value)
+								}
 								placeholder={Liferay.Language.get('search')}
 								type="text"
 							/>
@@ -102,28 +166,57 @@ function SelectCategory({
 							</div>
 						</div>
 					</div>
-				</div>
+
+					{addCategoryURL && (
+						<ClayButton
+							className="btn-monospaced ml-3 nav-btn nav-btn-monospaced"
+							displayType="primary"
+							onClick={() => {
+								navigate(addCategoryURL);
+							}}
+						>
+							<ClayIcon symbol="plus" />
+						</ClayButton>
+					)}
+				</ClayLayout.ContainerFluid>
 			</form>
 
 			<form name={`${namespace}selectCategoryFm`}>
-				<fieldset className="container-fluid-1280">
+				<ClayLayout.ContainerFluid containerElement="fieldset">
 					<div
 						className="category-tree"
 						id={`${namespace}categoryContainer`}
 					>
-						<Treeview
-							filterQuery={filterQuery}
-							initialSelectedNodeIds={initialSelectedNodeIds}
-							multiSelection={multiSelection}
-							NodeComponent={Treeview.Card}
-							nodes={nodes}
-							onSelectedNodesChange={handleSelectionChange}
-						/>
+						{items.length > 0 ? (
+							<Tree
+								filterQuery={filterQuery}
+								itemSelectorSaveEvent={itemSelectorSaveEvent}
+								items={items}
+								multiSelection={multiSelection}
+								onItems={setItems}
+								selectedCategoryIds={selectedCategoryIds}
+							/>
+						) : (
+							<div className="border-0 pt-0 sheet taglib-empty-result-message">
+								<div className="taglib-empty-result-message-header"></div>
+
+								<div className="sheet-text text-center">
+									{Liferay.Language.get(
+										'no-categories-were-found'
+									)}
+								</div>
+							</div>
+						)}
 					</div>
-				</fieldset>
+				</ClayLayout.ContainerFluid>
 			</form>
 		</div>
 	);
 }
+
+SelectCategory.propTypes = {
+	addCategoryURL: PropTypes.string,
+	moveCategory: PropTypes.bool,
+};
 
 export default SelectCategory;

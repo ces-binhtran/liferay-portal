@@ -60,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + PersonalMenuPortletKeys.PERSONAL_MENU,
-		"mvc.command.name=/get_personal_menu_items"
+		"mvc.command.name=/product_navigation_personal_menu/get_personal_menu_items"
 	},
 	service = MVCResourceCommand.class
 )
@@ -84,7 +84,7 @@ public class GetPersonalMenuItemsMVCResourceCommand
 				httpServletResponse, jsonArray.toString());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
@@ -124,16 +124,15 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					realUser, realUser.getGroup(), true);
 		}
 
-		JSONObject jsonObject1 = JSONUtil.put(
-			"href", realUserURL
-		).put(
-			"label",
-			LanguageUtil.get(themeDisplay.getLocale(), "be-yourself-again")
-		).put(
-			"symbolRight", "change"
-		);
-
-		JSONArray jsonArray = JSONUtil.put(jsonObject1);
+		JSONArray jsonArray = JSONUtil.put(
+			JSONUtil.put(
+				"href", realUserURL
+			).put(
+				"label",
+				LanguageUtil.get(themeDisplay.getLocale(), "be-yourself-again")
+			).put(
+				"symbolRight", "change"
+			));
 
 		Locale realUserLocale = realUser.getLocale();
 		Locale userLocale = user.getLocale();
@@ -170,18 +169,17 @@ public class GetPersonalMenuItemsMVCResourceCommand
 					StringPool.UNDERLINE);
 			}
 
-			JSONObject jsonObject2 = JSONUtil.put(
-				"href",
-				_http.setParameter(
-					ParamUtil.getString(portletRequest, "currentURL"),
-					"doAsUserLanguageId", doAsUserLanguageId)
-			).put(
-				"label", changeLanguageLabel
-			).put(
-				"symbolRight", "globe"
-			);
-
-			jsonArray.put(jsonObject2);
+			jsonArray.put(
+				JSONUtil.put(
+					"href",
+					_http.setParameter(
+						ParamUtil.getString(portletRequest, "currentURL"),
+						"doAsUserLanguageId", doAsUserLanguageId)
+				).put(
+					"label", changeLanguageLabel
+				).put(
+					"symbolRight", "globe"
+				));
 		}
 
 		return jsonArray;
@@ -204,11 +202,11 @@ public class GetPersonalMenuItemsMVCResourceCommand
 				continue;
 			}
 
-			String portletId = ParamUtil.getString(portletRequest, "portletId");
-
 			JSONObject jsonObject = JSONUtil.put(
 				"active",
-				personalMenuEntry.isActive(portletRequest, portletId));
+				personalMenuEntry.isActive(
+					portletRequest,
+					ParamUtil.getString(portletRequest, "portletId")));
 
 			try {
 				jsonObject.put(
@@ -217,7 +215,7 @@ public class GetPersonalMenuItemsMVCResourceCommand
 						_portal.getHttpServletRequest(portletRequest)));
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
 
 			jsonObject.put(
@@ -245,22 +243,24 @@ public class GetPersonalMenuItemsMVCResourceCommand
 			WebKeys.THEME_DISPLAY);
 
 		if (themeDisplay.isImpersonated()) {
-			JSONObject impersonationJSONObject = JSONUtil.put(
-				"items",
-				_getImpersonationItemsJSONArray(portletRequest, themeDisplay));
+			jsonArray.put(
+				JSONUtil.put(
+					"items",
+					_getImpersonationItemsJSONArray(
+						portletRequest, themeDisplay)
+				).put(
+					"label",
+					() -> {
+						User user = themeDisplay.getUser();
 
-			User user = themeDisplay.getUser();
-
-			impersonationJSONObject.put(
-				"label",
-				StringUtil.appendParentheticalSuffix(
-					user.getFullName(),
-					LanguageUtil.get(themeDisplay.getLocale(), "impersonated"))
-			).put(
-				"type", "group"
-			);
-
-			jsonArray.put(impersonationJSONObject);
+						return StringUtil.appendParentheticalSuffix(
+							user.getFullName(),
+							LanguageUtil.get(
+								themeDisplay.getLocale(), "impersonated"));
+					}
+				).put(
+					"type", "group"
+				));
 		}
 
 		JSONObject dividerJSONObject = JSONUtil.put("type", "divider");
@@ -280,13 +280,12 @@ public class GetPersonalMenuItemsMVCResourceCommand
 				jsonArray.put(dividerJSONObject);
 			}
 
-			JSONObject jsonObject = JSONUtil.put(
-				"items", personalMenuEntriesJSONArray
-			).put(
-				"type", "group"
-			);
-
-			jsonArray.put(jsonObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"items", personalMenuEntriesJSONArray
+				).put(
+					"type", "group"
+				));
 		}
 
 		if ((jsonArray.length() > 0) && !themeDisplay.isImpersonated()) {

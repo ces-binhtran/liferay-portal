@@ -115,17 +115,14 @@ public abstract class BaseModelHintsImpl implements ModelHints {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 	}
 
 	@Override
 	public String buildCustomValidatorName(String validatorName) {
-		return validatorName.concat(
-			StringPool.UNDERLINE
-		).concat(
-			StringUtil.randomId()
-		);
+		return StringBundler.concat(
+			validatorName, StringPool.UNDERLINE, StringUtil.randomId());
 	}
 
 	@Override

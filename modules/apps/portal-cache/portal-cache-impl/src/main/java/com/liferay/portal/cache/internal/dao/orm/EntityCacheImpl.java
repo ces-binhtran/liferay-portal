@@ -15,7 +15,6 @@
 package com.liferay.portal.cache.internal.dao.orm;
 
 import com.liferay.petra.lang.CentralizedThreadLocal;
-import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.cache.CacheRegistryItem;
 import com.liferay.portal.kernel.cache.CacheRegistryUtil;
@@ -24,15 +23,18 @@ import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.PortalCacheHelperUtil;
 import com.liferay.portal.kernel.cache.PortalCacheManager;
 import com.liferay.portal.kernel.cache.PortalCacheManagerListener;
+import com.liferay.portal.kernel.cluster.ClusterExecutor;
+import com.liferay.portal.kernel.cluster.ClusterInvokeThreadLocal;
+import com.liferay.portal.kernel.cluster.ClusterRequest;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
-import com.liferay.portal.kernel.dao.orm.Session;
-import com.liferay.portal.kernel.dao.orm.SessionFactory;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.MVCCModel;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.MethodHandler;
+import com.liferay.portal.kernel.util.MethodKey;
 import com.liferay.portal.kernel.util.Props;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.servlet.filters.threadlocal.ThreadLocalFilterThreadLocal;
@@ -47,7 +49,6 @@ import org.apache.commons.collections.map.LRUMap;
 
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -62,6 +63,8 @@ public class EntityCacheImpl
 
 	@Override
 	public void clearCache() {
+		_notifyFinderCache(null, null, false);
+
 		clearLocalCache();
 
 		for (PortalCache<?, ?> portalCache : _portalCaches.values()) {
@@ -71,6 +74,8 @@ public class EntityCacheImpl
 
 	@Override
 	public void clearCache(Class<?> clazz) {
+		_notifyFinderCache(clazz.getName(), null, false);
+
 		clearLocalCache();
 
 		PortalCache<?, ?> portalCache = getPortalCache(clazz);
@@ -87,6 +92,8 @@ public class EntityCacheImpl
 
 	@Override
 	public void dispose() {
+		_notifyFinderCache(null, null, true);
+
 		_portalCaches.clear();
 	}
 
@@ -115,8 +122,7 @@ public class EntityCacheImpl
 
 		portalCache =
 			(PortalCache<Serializable, Serializable>)
-				_multiVMPool.getPortalCache(
-					groupKey, _valueObjectEntityBlockingCacheEnabled, mvcc);
+				_multiVMPool.getPortalCache(groupKey, false, mvcc);
 
 		PortalCache<Serializable, Serializable> previousPortalCache =
 			_portalCaches.putIfAbsent(className, portalCache);
@@ -134,12 +140,8 @@ public class EntityCacheImpl
 	}
 
 	@Override
-	public Serializable getResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey) {
-
-		if (!_valueObjectEntityCacheEnabled || !entityCacheEnabled ||
-			!CacheRegistryUtil.isActive()) {
-
+	public Serializable getResult(Class<?> clazz, Serializable primaryKey) {
+		if (!_valueObjectEntityCacheEnabled || !CacheRegistryUtil.isActive()) {
 			return null;
 		}
 
@@ -184,153 +186,44 @@ public class EntityCacheImpl
 		clearCache();
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public Serializable loadResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		SessionFactory sessionFactory) {
-
-		if (!_valueObjectEntityCacheEnabled || !entityCacheEnabled ||
-			!CacheRegistryUtil.isActive()) {
-
-			Session session = null;
-
-			try {
-				session = sessionFactory.openSession();
-
-				return (Serializable)session.get(clazz, primaryKey);
-			}
-			finally {
-				sessionFactory.closeSession(session);
-			}
-		}
-
-		Serializable result = null;
-
-		Map<Serializable, Serializable> localCache = null;
-
-		Serializable localCacheKey = null;
-
-		if (_isLocalCacheEnabled()) {
-			localCache = _localCache.get();
-
-			localCacheKey = new LocalCacheKey(clazz.getName(), primaryKey);
-
-			result = localCache.get(localCacheKey);
-		}
-
-		Serializable loadResult = null;
-
-		if (result == null) {
-			PortalCache<Serializable, Serializable> portalCache =
-				getPortalCache(clazz);
-
-			result = portalCache.get(primaryKey);
-
-			if (result == null) {
-				if (_log.isDebugEnabled()) {
-					_log.debug(
-						StringBundler.concat(
-							"Load ", clazz, " ", primaryKey, " from session"));
-				}
-
-				Session session = null;
-
-				try {
-					session = sessionFactory.openSession();
-
-					loadResult = (Serializable)session.get(clazz, primaryKey);
-				}
-				finally {
-					sessionFactory.closeSession(session);
-				}
-
-				if (loadResult == null) {
-					result = StringPool.BLANK;
-				}
-				else {
-					BaseModel<?> baseModel = (BaseModel<?>)loadResult;
-
-					result = baseModel.toCacheModel();
-
-					PortalCacheHelperUtil.putWithoutReplicator(
-						portalCache, primaryKey, result);
-				}
-			}
-
-			if (localCache != null) {
-				localCache.put(localCacheKey, result);
-			}
-		}
-
-		if (loadResult != null) {
-			return loadResult;
-		}
-
-		return _toEntityModel(result);
-	}
-
 	@Override
 	public void notifyPortalCacheAdded(String portalCacheName) {
 	}
 
 	@Override
 	public void notifyPortalCacheRemoved(String portalCacheName) {
+		String cacheName = portalCacheName;
+
 		if (portalCacheName.startsWith(_GROUP_KEY_PREFIX)) {
-			_portalCaches.remove(
-				portalCacheName.substring(_GROUP_KEY_PREFIX.length()));
+			cacheName = portalCacheName.substring(_GROUP_KEY_PREFIX.length());
 		}
+
+		_notifyFinderCache(cacheName, null, true);
+
+		_portalCaches.remove(cacheName);
 	}
 
 	@Override
 	public void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result) {
+		Class<?> clazz, BaseModel<?> baseModel, boolean quiet,
+		boolean updateFinderCache) {
 
-		putResult(entityCacheEnabled, clazz, primaryKey, result, true);
+		_putResult(
+			clazz, baseModel.getPrimaryKeyObj(), baseModel, quiet,
+			updateFinderCache);
 	}
 
 	@Override
 	public void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result, boolean quiet) {
+		Class<?> clazz, Serializable primaryKey, Serializable result) {
 
-		if (!_valueObjectEntityCacheEnabled || !entityCacheEnabled ||
-			!CacheRegistryUtil.isActive() || (result == null)) {
-
-			return;
-		}
-
-		BaseModel<?> baseModel = (BaseModel<?>)result;
-
-		result = baseModel.toCacheModel();
-
-		if (_isLocalCacheEnabled()) {
-			Map<Serializable, Serializable> localCache = _localCache.get();
-
-			Serializable localCacheKey = new LocalCacheKey(
-				clazz.getName(), primaryKey);
-
-			localCache.put(localCacheKey, result);
-		}
-
-		PortalCache<Serializable, Serializable> portalCache = getPortalCache(
-			clazz);
-
-		if (quiet) {
-			PortalCacheHelperUtil.putWithoutReplicator(
-				portalCache, primaryKey, result);
-		}
-		else {
-			portalCache.put(primaryKey, result);
-		}
+		_putResult(clazz, primaryKey, (BaseModel<?>)result, true, false);
 	}
 
 	@Override
 	public void removeCache(String className) {
+		_notifyFinderCache(className, null, true);
+
 		_portalCaches.remove(className);
 
 		String groupKey = _GROUP_KEY_PREFIX.concat(className);
@@ -339,35 +232,17 @@ public class EntityCacheImpl
 	}
 
 	@Override
-	public void removeResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey) {
+	public void removeResult(Class<?> clazz, BaseModel<?> baseModel) {
+		_removeResult(clazz, baseModel.getPrimaryKeyObj(), baseModel);
+	}
 
-		if (!_valueObjectEntityCacheEnabled || !entityCacheEnabled ||
-			!CacheRegistryUtil.isActive()) {
-
-			return;
-		}
-
-		if (_isLocalCacheEnabled()) {
-			Map<Serializable, Serializable> localCache = _localCache.get();
-
-			Serializable localCacheKey = new LocalCacheKey(
-				clazz.getName(), primaryKey);
-
-			localCache.remove(localCacheKey);
-		}
-
-		PortalCache<Serializable, Serializable> portalCache = getPortalCache(
-			clazz);
-
-		portalCache.remove(primaryKey);
+	@Override
+	public void removeResult(Class<?> clazz, Serializable primaryKey) {
+		_removeResult(clazz, primaryKey, null);
 	}
 
 	@Activate
-	@Modified
 	protected void activate() {
-		_valueObjectEntityBlockingCacheEnabled = GetterUtil.getBoolean(
-			_props.get(PropsKeys.VALUE_OBJECT_ENTITY_BLOCKING_CACHE));
 		_valueObjectEntityCacheEnabled = GetterUtil.getBoolean(
 			_props.get(PropsKeys.VALUE_OBJECT_ENTITY_CACHE_ENABLED));
 		_valueObjectMVCCEntityCacheEnabled = GetterUtil.getBoolean(
@@ -393,13 +268,8 @@ public class EntityCacheImpl
 	}
 
 	@Reference(unbind = "-")
-	protected void setMultiVMPool(MultiVMPool multiVMPool) {
-		_multiVMPool = multiVMPool;
-	}
-
-	@Reference(unbind = "-")
-	protected void setProps(Props props) {
-		_props = props;
+	protected void setFinderCacheImpl(FinderCacheImpl finderCacheImpl) {
+		_finderCacheImpl = finderCacheImpl;
 	}
 
 	private boolean _isLocalCacheEnabled() {
@@ -408,6 +278,130 @@ public class EntityCacheImpl
 		}
 
 		return ThreadLocalFilterThreadLocal.isFilterInvoked();
+	}
+
+	private void _notify(
+		String className, BaseModel<?> baseModel, Boolean removePortalCache) {
+
+		FinderCacheImpl finderCacheImpl = _finderCacheImpl;
+
+		if (finderCacheImpl == null) {
+			return;
+		}
+
+		if (removePortalCache == null) {
+			finderCacheImpl.updateByEntityCache(className, baseModel);
+		}
+		else if (baseModel != null) {
+			finderCacheImpl.removeByEntityCache(className, baseModel);
+		}
+		else if (removePortalCache) {
+			if (className == null) {
+				finderCacheImpl.dispose();
+			}
+			else {
+				finderCacheImpl.removeCacheByEntityCache(className);
+			}
+		}
+		else {
+			if (className == null) {
+				finderCacheImpl.clearCache();
+			}
+			else {
+				finderCacheImpl.clearByEntityCache(className);
+			}
+		}
+	}
+
+	private void _notifyFinderCache(
+		String className, BaseModel<?> baseModel, Boolean removePortalCache) {
+
+		_notify(className, baseModel, removePortalCache);
+
+		if (!_clusterExecutor.isEnabled() ||
+			!ClusterInvokeThreadLocal.isEnabled()) {
+
+			return;
+		}
+
+		try {
+			MethodHandler methodHandler = new MethodHandler(
+				_notifyMethodKey,
+				new Object[] {className, baseModel, removePortalCache});
+
+			ClusterRequest clusterRequest =
+				ClusterRequest.createMulticastRequest(methodHandler, true);
+
+			clusterRequest.setFireAndForget(true);
+
+			_clusterExecutor.execute(clusterRequest);
+		}
+		catch (Throwable throwable) {
+			_log.error("Unable to notify cluster", throwable);
+		}
+	}
+
+	private void _putResult(
+		Class<?> clazz, Serializable primaryKey, BaseModel<?> baseModel,
+		boolean quiet, boolean updateFinderCache) {
+
+		if (!_valueObjectEntityCacheEnabled || !CacheRegistryUtil.isActive() ||
+			(baseModel == null)) {
+
+			return;
+		}
+
+		if (!quiet && updateFinderCache) {
+			_notifyFinderCache(clazz.getName(), baseModel, null);
+		}
+
+		CacheModel<?> result = baseModel.toCacheModel();
+
+		if (_isLocalCacheEnabled()) {
+			Map<Serializable, Serializable> localCache = _localCache.get();
+
+			Serializable localCacheKey = new LocalCacheKey(
+				clazz.getName(), primaryKey);
+
+			localCache.put(localCacheKey, result);
+		}
+
+		PortalCache<Serializable, Serializable> portalCache = getPortalCache(
+			clazz);
+
+		if (quiet) {
+			PortalCacheHelperUtil.putWithoutReplicator(
+				portalCache, primaryKey, result);
+		}
+		else {
+			portalCache.put(primaryKey, result);
+		}
+	}
+
+	private void _removeResult(
+		Class<?> clazz, Serializable primaryKey, BaseModel<?> baseModel) {
+
+		if (!_valueObjectEntityCacheEnabled || !CacheRegistryUtil.isActive()) {
+			return;
+		}
+
+		if (baseModel != null) {
+			_notifyFinderCache(clazz.getName(), baseModel, false);
+		}
+
+		if (_isLocalCacheEnabled()) {
+			Map<Serializable, Serializable> localCache = _localCache.get();
+
+			Serializable localCacheKey = new LocalCacheKey(
+				clazz.getName(), primaryKey);
+
+			localCache.remove(localCacheKey);
+		}
+
+		PortalCache<Serializable, Serializable> portalCache = getPortalCache(
+			clazz);
+
+		portalCache.remove(primaryKey);
 	}
 
 	private Serializable _toEntityModel(Serializable result) {
@@ -430,12 +424,25 @@ public class EntityCacheImpl
 	private static final Log _log = LogFactoryUtil.getLog(
 		EntityCacheImpl.class);
 
+	private static volatile FinderCacheImpl _finderCacheImpl;
+	private static final MethodKey _notifyMethodKey = new MethodKey(
+		EntityCacheImpl.class, "_notify", String.class, BaseModel.class,
+		Boolean.class);
+
+	@Reference
+	private ClusterExecutor _clusterExecutor;
+
 	private ThreadLocal<LRUMap> _localCache;
+
+	@Reference
 	private MultiVMPool _multiVMPool;
+
 	private final ConcurrentMap<String, PortalCache<Serializable, Serializable>>
 		_portalCaches = new ConcurrentHashMap<>();
+
+	@Reference
 	private Props _props;
-	private boolean _valueObjectEntityBlockingCacheEnabled;
+
 	private boolean _valueObjectEntityCacheEnabled;
 	private boolean _valueObjectMVCCEntityCacheEnabled;
 
@@ -447,8 +454,8 @@ public class EntityCacheImpl
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			LocalCacheKey localCacheKey = (LocalCacheKey)obj;
+		public boolean equals(Object object) {
+			LocalCacheKey localCacheKey = (LocalCacheKey)object;
 
 			if (localCacheKey._className.equals(_className) &&
 				localCacheKey._primaryKey.equals(_primaryKey)) {
@@ -461,7 +468,7 @@ public class EntityCacheImpl
 
 		@Override
 		public int hashCode() {
-			return _className.hashCode() * 11 + _primaryKey.hashCode();
+			return (_className.hashCode() * 11) + _primaryKey.hashCode();
 		}
 
 		private static final long serialVersionUID = 1L;

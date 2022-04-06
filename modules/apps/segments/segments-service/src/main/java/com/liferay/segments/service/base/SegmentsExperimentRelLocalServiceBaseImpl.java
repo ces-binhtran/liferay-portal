@@ -14,6 +14,7 @@
 
 package com.liferay.segments.service.base;
 
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -34,12 +35,15 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.segments.model.SegmentsExperimentRel;
 import com.liferay.segments.service.SegmentsExperimentRelLocalService;
+import com.liferay.segments.service.SegmentsExperimentRelLocalServiceUtil;
 import com.liferay.segments.service.persistence.SegmentsEntryPersistence;
 import com.liferay.segments.service.persistence.SegmentsEntryRelPersistence;
 import com.liferay.segments.service.persistence.SegmentsEntryRolePersistence;
@@ -50,10 +54,13 @@ import com.liferay.segments.service.persistence.SegmentsExperimentRelPersistence
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -75,11 +82,15 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>SegmentsExperimentRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.segments.service.SegmentsExperimentRelLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>SegmentsExperimentRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>SegmentsExperimentRelLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the segments experiment rel to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperimentRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperimentRel the segments experiment rel
 	 * @return the segments experiment rel that was added
@@ -111,6 +122,10 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	/**
 	 * Deletes the segments experiment rel with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperimentRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param segmentsExperimentRelId the primary key of the segments experiment rel
 	 * @return the segments experiment rel that was removed
 	 * @throws PortalException if a segments experiment rel with the primary key could not be found
@@ -126,6 +141,10 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 
 	/**
 	 * Deletes the segments experiment rel from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperimentRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param segmentsExperimentRel the segments experiment rel
 	 * @return the segments experiment rel that was removed
@@ -143,6 +162,13 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return segmentsExperimentRelPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -308,6 +334,7 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -326,6 +353,7 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 			(SegmentsExperimentRel)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<SegmentsExperimentRel> getBasePersistence() {
 		return segmentsExperimentRelPersistence;
 	}
@@ -371,6 +399,10 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	/**
 	 * Updates the segments experiment rel in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SegmentsExperimentRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param segmentsExperimentRel the segments experiment rel
 	 * @return the segments experiment rel that was updated
 	 */
@@ -382,11 +414,17 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 		return segmentsExperimentRelPersistence.update(segmentsExperimentRel);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			SegmentsExperimentRelLocalService.class,
-			IdentifiableOSGiService.class, PersistedModelLocalService.class
+			IdentifiableOSGiService.class, CTService.class,
+			PersistedModelLocalService.class
 		};
 	}
 
@@ -394,6 +432,8 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		segmentsExperimentRelLocalService =
 			(SegmentsExperimentRelLocalService)aopProxy;
+
+		_setLocalServiceUtilService(segmentsExperimentRelLocalService);
 	}
 
 	/**
@@ -406,8 +446,23 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 		return SegmentsExperimentRelLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<SegmentsExperimentRel> getCTPersistence() {
+		return segmentsExperimentRelPersistence;
+	}
+
+	@Override
+	public Class<SegmentsExperimentRel> getModelClass() {
 		return SegmentsExperimentRel.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<SegmentsExperimentRel>, R, E>
+				updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(segmentsExperimentRelPersistence);
 	}
 
 	protected String getModelClassName() {
@@ -436,6 +491,23 @@ public abstract class SegmentsExperimentRelLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		SegmentsExperimentRelLocalService segmentsExperimentRelLocalService) {
+
+		try {
+			Field field =
+				SegmentsExperimentRelLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, segmentsExperimentRelLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

@@ -24,6 +24,10 @@ package com.liferay.portal.kernel.service;
 public class LayoutSetBranchServiceWrapper
 	implements LayoutSetBranchService, ServiceWrapper<LayoutSetBranchService> {
 
+	public LayoutSetBranchServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutSetBranchServiceWrapper(
 		LayoutSetBranchService layoutSetBranchService) {
 
@@ -47,6 +51,15 @@ public class LayoutSetBranchServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		_layoutSetBranchService.deleteLayoutSetBranch(layoutSetBranchId);
+	}
+
+	@Override
+	public void deleteLayoutSetBranch(
+			long currentLayoutPlid, long layoutSetBranchId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_layoutSetBranchService.deleteLayoutSetBranch(
+			currentLayoutPlid, layoutSetBranchId);
 	}
 
 	@Override

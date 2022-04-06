@@ -18,11 +18,6 @@
 
 <%
 String tabs1 = ParamUtil.getString(renderRequest, "tabs1", "assigned-to-me");
-
-PortletURL portletURL = renderResponse.createRenderURL();
-
-portletURL.setParameter("mvcPath", "/view.jsp");
-portletURL.setParameter("tabs1", tabs1);
 %>
 
 <clay:navigation-bar
@@ -34,14 +29,14 @@ portletURL.setParameter("tabs1", tabs1);
 					navigationItem -> {
 						navigationItem.setActive(tabs1.equals("assigned-to-me"));
 						navigationItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/view.jsp", "tabs1", "assigned-to-me");
-						navigationItem.setLabel(LanguageUtil.get(request, "assigned-to-me"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "assigned-to-me"));
 					});
 
 				add(
 					navigationItem -> {
 						navigationItem.setActive(tabs1.equals("assigned-to-my-roles"));
 						navigationItem.setHref(renderResponse.createRenderURL(), "mvcPath", "/view.jsp", "tabs1", "assigned-to-my-roles");
-						navigationItem.setLabel(LanguageUtil.get(request, "assigned-to-my-roles"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "assigned-to-my-roles"));
 					});
 			}
 		}
@@ -52,7 +47,6 @@ portletURL.setParameter("tabs1", tabs1);
 	clearResultsURL="<%= workflowTaskDisplayContext.getClearResultsURL() %>"
 	filterDropdownItems="<%= workflowTaskDisplayContext.getFilterOptions() %>"
 	itemsTotal="<%= workflowTaskDisplayContext.getTotalItems() %>"
-	namespace="<%= renderResponse.getNamespace() %>"
 	searchActionURL="<%= workflowTaskDisplayContext.getSearchURL() %>"
 	searchContainerId="workflowTasks"
 	searchFormName="fm1"

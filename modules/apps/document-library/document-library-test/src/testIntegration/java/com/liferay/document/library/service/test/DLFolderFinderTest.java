@@ -30,11 +30,11 @@ import com.liferay.portal.kernel.repository.model.FileShortcut;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.RepositoryLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -77,11 +77,9 @@ public class DLFolderFinderTest {
 			ServiceContextTestUtil.getServiceContext(
 				_group.getGroupId(), TestPropsValues.getUserId());
 
-		long classNameId = PortalUtil.getClassNameId(
-			PortletRepository.class.getName());
-
 		RepositoryLocalServiceUtil.addRepository(
-			TestPropsValues.getUserId(), _group.getGroupId(), classNameId,
+			TestPropsValues.getUserId(), _group.getGroupId(),
+			PortalUtil.getClassNameId(PortletRepository.class.getName()),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Test Repository",
 			StringUtil.randomString(), StringUtil.randomString(),
 			new UnicodeProperties(), false, serviceContext);
@@ -330,7 +328,7 @@ public class DLFolderFinderTest {
 				FileShortcut fileShortcut = (FileShortcut)result;
 
 				Assert.assertEquals(
-					this._fileShortcut.getFileShortcutId(),
+					_fileShortcut.getFileShortcutId(),
 					fileShortcut.getFileShortcutId());
 			}
 			else if (result instanceof DLFolder) {
@@ -380,8 +378,9 @@ public class DLFolderFinderTest {
 				groupId, TestPropsValues.getUserId());
 
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), groupId, folderId, sourceFileName,
-			mimeType, TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			null, TestPropsValues.getUserId(), groupId, folderId,
+			sourceFileName, mimeType, TestDataConstants.TEST_BYTE_ARRAY, null,
+			null, serviceContext);
 	}
 
 	private FileShortcut _fileShortcut;

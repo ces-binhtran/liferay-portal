@@ -20,6 +20,8 @@ import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Image;
+import com.liferay.portal.kernel.service.ImageLocalServiceUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.util.PropsValues;
 
@@ -47,21 +49,23 @@ public class ImageImpl extends ImageBaseImpl {
 						imageId);
 			}
 
-			InputStream is = null;
+			InputStream inputStream = null;
 
 			if ((dlFileEntry != null) &&
 				(dlFileEntry.getLargeImageId() == imageId)) {
 
-				is = DLStoreUtil.getFileAsStream(
+				inputStream = DLStoreUtil.getFileAsStream(
 					dlFileEntry.getCompanyId(),
 					dlFileEntry.getDataRepositoryId(), dlFileEntry.getName());
 			}
 			else {
-				is = DLStoreUtil.getFileAsStream(
-					_DEFAULT_COMPANY_ID, _DEFAULT_REPOSITORY_ID, getFileName());
+				Image image = ImageLocalServiceUtil.getImage(imageId);
+
+				inputStream = DLStoreUtil.getFileAsStream(
+					image.getCompanyId(), _REPOSITORY_ID, getFileName());
 			}
 
-			byte[] bytes = FileUtil.getBytes(is);
+			byte[] bytes = FileUtil.getBytes(inputStream);
 
 			_textObj = bytes;
 		}
@@ -81,9 +85,7 @@ public class ImageImpl extends ImageBaseImpl {
 		return getImageId() + StringPool.PERIOD + getType();
 	}
 
-	private static final long _DEFAULT_COMPANY_ID = 0;
-
-	private static final long _DEFAULT_REPOSITORY_ID = 0;
+	private static final long _REPOSITORY_ID = 0;
 
 	private static final Log _log = LogFactoryUtil.getLog(ImageImpl.class);
 

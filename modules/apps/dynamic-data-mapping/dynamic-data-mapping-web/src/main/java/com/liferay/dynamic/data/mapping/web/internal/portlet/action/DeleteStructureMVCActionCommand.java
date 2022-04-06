@@ -33,11 +33,11 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + DDMPortletKeys.DYNAMIC_DATA_MAPPING,
-		"mvc.command.name=deleteStructure"
+		"mvc.command.name=/dynamic_data_mapping/delete_structure"
 	},
 	service = MVCActionCommand.class
 )
-public class DeleteStructureMVCActionCommand extends DDMBaseMVCActionCommand {
+public class DeleteStructureMVCActionCommand extends BaseDDMMVCActionCommand {
 
 	@Override
 	protected void doProcessAction(

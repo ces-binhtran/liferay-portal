@@ -30,6 +30,10 @@ public class ExpandoColumnLocalServiceWrapper
 	implements ExpandoColumnLocalService,
 			   ServiceWrapper<ExpandoColumnLocalService> {
 
+	public ExpandoColumnLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ExpandoColumnLocalServiceWrapper(
 		ExpandoColumnLocalService expandoColumnLocalService) {
 
@@ -54,6 +58,10 @@ public class ExpandoColumnLocalServiceWrapper
 
 	/**
 	 * Adds the expando column to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoColumnLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoColumn the expando column
 	 * @return the expando column that was added
@@ -86,7 +94,9 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteColumn(ExpandoColumn column) {
+	public void deleteColumn(ExpandoColumn column)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoColumnLocalService.deleteColumn(column);
 	}
 
@@ -107,7 +117,9 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteColumn(long tableId, String name) {
+	public void deleteColumn(long tableId, String name)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoColumnLocalService.deleteColumn(tableId, name);
 	}
 
@@ -121,7 +133,9 @@ public class ExpandoColumnLocalServiceWrapper
 	}
 
 	@Override
-	public void deleteColumns(long tableId) {
+	public void deleteColumns(long tableId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
 		_expandoColumnLocalService.deleteColumns(tableId);
 	}
 
@@ -146,6 +160,10 @@ public class ExpandoColumnLocalServiceWrapper
 	/**
 	 * Deletes the expando column from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoColumnLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param expandoColumn the expando column
 	 * @return the expando column that was removed
 	 */
@@ -156,6 +174,10 @@ public class ExpandoColumnLocalServiceWrapper
 
 	/**
 	 * Deletes the expando column with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoColumnLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param columnId the primary key of the expando column
 	 * @return the expando column that was removed
@@ -182,6 +204,13 @@ public class ExpandoColumnLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _expandoColumnLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _expandoColumnLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -512,6 +541,10 @@ public class ExpandoColumnLocalServiceWrapper
 
 	/**
 	 * Updates the expando column in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ExpandoColumnLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param expandoColumn the expando column
 	 * @return the expando column that was updated

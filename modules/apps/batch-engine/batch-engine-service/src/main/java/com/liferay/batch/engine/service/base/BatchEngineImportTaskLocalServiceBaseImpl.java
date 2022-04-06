@@ -17,6 +17,7 @@ package com.liferay.batch.engine.service.base;
 import com.liferay.batch.engine.model.BatchEngineImportTask;
 import com.liferay.batch.engine.model.BatchEngineImportTaskContentBlobModel;
 import com.liferay.batch.engine.service.BatchEngineImportTaskLocalService;
+import com.liferay.batch.engine.service.BatchEngineImportTaskLocalServiceUtil;
 import com.liferay.batch.engine.service.persistence.BatchEngineImportTaskPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
@@ -57,6 +58,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.sql.Blob;
 
 import java.util.List;
@@ -64,6 +67,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -85,11 +89,15 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>BatchEngineImportTaskLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.batch.engine.service.BatchEngineImportTaskLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>BatchEngineImportTaskLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>BatchEngineImportTaskLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the batch engine import task to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineImportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineImportTask the batch engine import task
 	 * @return the batch engine import task that was added
@@ -121,6 +129,10 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	/**
 	 * Deletes the batch engine import task with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineImportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param batchEngineImportTaskId the primary key of the batch engine import task
 	 * @return the batch engine import task that was removed
 	 * @throws PortalException if a batch engine import task with the primary key could not be found
@@ -137,6 +149,10 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	/**
 	 * Deletes the batch engine import task from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineImportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param batchEngineImportTask the batch engine import task
 	 * @return the batch engine import task that was removed
 	 */
@@ -151,6 +167,13 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return batchEngineImportTaskPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -263,6 +286,52 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 
 		return batchEngineImportTaskPersistence.fetchByUuid_C_First(
 			uuid, companyId, null);
+	}
+
+	/**
+	 * Returns the batch engine import task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine import task's external reference code
+	 * @return the matching batch engine import task, or <code>null</code> if a matching batch engine import task could not be found
+	 */
+	@Override
+	public BatchEngineImportTask
+		fetchBatchEngineImportTaskByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return batchEngineImportTaskPersistence.fetchByC_ERC(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchBatchEngineImportTaskByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public BatchEngineImportTask fetchBatchEngineImportTaskByReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return fetchBatchEngineImportTaskByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the batch engine import task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine import task's external reference code
+	 * @return the matching batch engine import task
+	 * @throws PortalException if a matching batch engine import task could not be found
+	 */
+	@Override
+	public BatchEngineImportTask
+			getBatchEngineImportTaskByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws PortalException {
+
+		return batchEngineImportTaskPersistence.findByC_ERC(
+			companyId, externalReferenceCode);
 	}
 
 	/**
@@ -400,6 +469,7 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -418,6 +488,7 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 			(BatchEngineImportTask)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<BatchEngineImportTask> getBasePersistence() {
 		return batchEngineImportTaskPersistence;
 	}
@@ -479,6 +550,10 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 
 	/**
 	 * Updates the batch engine import task in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineImportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineImportTask the batch engine import task
 	 * @return the batch engine import task that was updated
@@ -552,6 +627,11 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 		}
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -564,6 +644,8 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		batchEngineImportTaskLocalService =
 			(BatchEngineImportTaskLocalService)aopProxy;
+
+		_setLocalServiceUtilService(batchEngineImportTaskLocalService);
 	}
 
 	/**
@@ -606,6 +688,23 @@ public abstract class BatchEngineImportTaskLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		BatchEngineImportTaskLocalService batchEngineImportTaskLocalService) {
+
+		try {
+			Field field =
+				BatchEngineImportTaskLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, batchEngineImportTaskLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

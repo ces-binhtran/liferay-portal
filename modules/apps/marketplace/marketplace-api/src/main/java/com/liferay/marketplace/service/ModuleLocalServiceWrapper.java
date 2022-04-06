@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class ModuleLocalServiceWrapper
 	implements ModuleLocalService, ServiceWrapper<ModuleLocalService> {
 
+	public ModuleLocalServiceWrapper() {
+		this(null);
+	}
+
 	public ModuleLocalServiceWrapper(ModuleLocalService moduleLocalService) {
 		_moduleLocalService = moduleLocalService;
 	}
@@ -42,6 +46,10 @@ public class ModuleLocalServiceWrapper
 
 	/**
 	 * Adds the module to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param module the module
 	 * @return the module that was added
@@ -78,6 +86,10 @@ public class ModuleLocalServiceWrapper
 	/**
 	 * Deletes the module with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param moduleId the primary key of the module
 	 * @return the module that was removed
 	 * @throws PortalException if a module with the primary key could not be found
@@ -91,6 +103,10 @@ public class ModuleLocalServiceWrapper
 
 	/**
 	 * Deletes the module from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param module the module
 	 * @return the module that was removed
@@ -121,6 +137,13 @@ public class ModuleLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _moduleLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _moduleLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -343,6 +366,10 @@ public class ModuleLocalServiceWrapper
 
 	/**
 	 * Updates the module in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param module the module
 	 * @return the module that was updated

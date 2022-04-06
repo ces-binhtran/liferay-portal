@@ -20,6 +20,7 @@
 long kbFolderClassNameId = PortalUtil.getClassNameId(KBFolderConstants.getClassName());
 
 long parentResourceClassNameId = ParamUtil.getLong(request, "parentResourceClassNameId", kbFolderClassNameId);
+
 long parentResourcePrimKey = ParamUtil.getLong(request, "parentResourcePrimKey", KBFolderConstants.DEFAULT_PARENT_FOLDER_ID);
 
 List<KBFolder> kbFolders = (List<KBFolder>)request.getAttribute(KBWebKeys.KNOWLEDGE_BASE_KB_FOLDERS);
@@ -42,8 +43,6 @@ if (ListUtil.isEmpty(kbFolders) && ListUtil.isEmpty(kbArticles)) {
 		kbArticles.add(KBArticleServiceUtil.getLatestKBArticle(parentResourcePrimKey, WorkflowConstants.STATUS_ANY));
 	}
 }
-
-boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", GetterUtil.getBoolean(request.getAttribute(KBWebKeys.SHOW_SIDEBAR_HEADER)));
 %>
 
 <c:choose>
@@ -56,17 +55,23 @@ boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", G
 		%>
 
 		<div class="sidebar-header">
-			<ul class="sidebar-actions">
-				<li>
-					<liferay-util:include page="/admin/folder_action.jsp" servletContext="<%= application %>" />
-				</li>
-			</ul>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h4 class="component-title"><%= (kbFolder != null) ? HtmlUtil.escape(kbFolder.getName()) : LanguageUtil.get(request, "home") %></h4>
 
-			<h4 class="sidebar-title"><%= (kbFolder != null) ? HtmlUtil.escape(kbFolder.getName()) : LanguageUtil.get(request, "home") %></h4>
+					<h5 class="component-subtitle">
+						<liferay-ui:message key="folder" />
+					</h5>
+				</div>
 
-			<h5 class="sidebar-subtitle">
-				<liferay-ui:message key="folder" />
-			</h5>
+				<div class="autofit-col">
+					<ul class="autofit-padded-no-gutters autofit-row">
+						<li class="autofit-col">
+							<liferay-util:include page="/admin/folder_action.jsp" servletContext="<%= application %>" />
+						</li>
+					</ul>
+				</div>
+			</div>
 		</div>
 
 		<%
@@ -78,7 +83,7 @@ boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", G
 		/>
 
 		<div class="sidebar-body">
-			<dl class="sidebar-block">
+			<dl class="sidebar-dl sidebar-section">
 				<dt class="sidebar-dt">
 					<liferay-ui:message key="num-of-items" />
 				</dt>
@@ -115,22 +120,28 @@ boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", G
 		%>
 
 		<div class="sidebar-header">
-			<c:if test="<%= showSidebarHeader %>">
-				<ul class="sidebar-actions">
-					<li>
-						<liferay-util:include page="/admin/subscribe.jsp" servletContext="<%= application %>" />
-					</li>
-					<li>
-						<liferay-util:include page="/admin/article_action.jsp" servletContext="<%= application %>" />
-					</li>
-				</ul>
-			</c:if>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h4 class="component-title"><%= HtmlUtil.escape(kbArticle.getTitle()) %></h4>
 
-			<h4 class="sidebar-title"><%= HtmlUtil.escape(kbArticle.getTitle()) %></h4>
+					<h5>
+						<liferay-ui:message key="entry" />
+					</h5>
+				</div>
 
-			<h5>
-				<liferay-ui:message key="entry" />
-			</h5>
+				<div class="autofit-col">
+					<c:if test='<%= ParamUtil.getBoolean(request, "showSidebarHeader", GetterUtil.getBoolean(request.getAttribute(KBWebKeys.SHOW_SIDEBAR_HEADER))) %>'>
+						<ul class="autofit-padded-no-gutters autofit-row">
+							<li class="autofit-col">
+								<liferay-util:include page="/admin/subscribe.jsp" servletContext="<%= application %>" />
+							</li>
+							<li class="autofit-col">
+								<liferay-util:include page="/admin/article_action.jsp" servletContext="<%= application %>" />
+							</li>
+						</ul>
+					</c:if>
+				</div>
+			</div>
 		</div>
 
 		<liferay-ui:tabs
@@ -141,7 +152,7 @@ boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", G
 		>
 			<liferay-ui:section>
 				<div class="sidebar-body">
-					<dl class="sidebar-block">
+					<dl class="sidebar-dl sidebar-section">
 						<dt class="sidebar-dt">
 							<liferay-ui:message key="title" />
 						</dt>
@@ -197,7 +208,11 @@ boolean showSidebarHeader = ParamUtil.getBoolean(request, "showSidebarHeader", G
 	</c:when>
 	<c:otherwise>
 		<div class="sidebar-header">
-			<h4 class="sidebar-title"><liferay-ui:message arguments="<%= kbFolders.size() + kbArticles.size() %>" key="x-items-are-selected" /></h4>
+			<div class="autofit-row sidebar-section">
+				<div class="autofit-col autofit-col-expand">
+					<h4 class="component-title"><liferay-ui:message arguments="<%= kbFolders.size() + kbArticles.size() %>" key="x-items-are-selected" /></h4>
+				</div>
+			</div>
 		</div>
 
 		<%

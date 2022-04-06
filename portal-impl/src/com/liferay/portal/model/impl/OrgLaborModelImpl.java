@@ -23,25 +23,26 @@ import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.OrgLabor;
 import com.liferay.portal.kernel.model.OrgLaborModel;
-import com.liferay.portal.kernel.model.OrgLaborSoap;
 import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -122,80 +123,36 @@ public class OrgLaborModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.OrgLabor"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.OrgLabor"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.OrgLabor"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ORGANIZATIONID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long TYPEID_COLUMN_BITMASK = 2L;
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static OrgLabor toModel(OrgLaborSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		OrgLabor model = new OrgLaborImpl();
-
-		model.setMvccVersion(soapModel.getMvccVersion());
-		model.setOrgLaborId(soapModel.getOrgLaborId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setOrganizationId(soapModel.getOrganizationId());
-		model.setTypeId(soapModel.getTypeId());
-		model.setSunOpen(soapModel.getSunOpen());
-		model.setSunClose(soapModel.getSunClose());
-		model.setMonOpen(soapModel.getMonOpen());
-		model.setMonClose(soapModel.getMonClose());
-		model.setTueOpen(soapModel.getTueOpen());
-		model.setTueClose(soapModel.getTueClose());
-		model.setWedOpen(soapModel.getWedOpen());
-		model.setWedClose(soapModel.getWedClose());
-		model.setThuOpen(soapModel.getThuOpen());
-		model.setThuClose(soapModel.getThuClose());
-		model.setFriOpen(soapModel.getFriOpen());
-		model.setFriClose(soapModel.getFriClose());
-		model.setSatOpen(soapModel.getSatOpen());
-		model.setSatClose(soapModel.getSatClose());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<OrgLabor> toModels(OrgLaborSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<OrgLabor> models = new ArrayList<OrgLabor>(soapModels.length);
-
-		for (OrgLaborSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
-	}
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
 		com.liferay.portal.util.PropsUtil.get(
@@ -251,9 +208,6 @@ public class OrgLaborModelImpl
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((OrgLabor)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -402,6 +356,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -413,6 +371,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setOrgLaborId(long orgLaborId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_orgLaborId = orgLaborId;
 	}
 
@@ -424,6 +386,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -435,19 +401,21 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setOrganizationId(long organizationId) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalOrganizationId) {
-			_setOriginalOrganizationId = true;
-
-			_originalOrganizationId = _organizationId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_organizationId = organizationId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalOrganizationId() {
-		return _originalOrganizationId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("organizationId"));
 	}
 
 	@JSON
@@ -458,7 +426,9 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setTypeId(long typeId) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_typeId = typeId;
 	}
@@ -471,6 +441,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setSunOpen(int sunOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sunOpen = sunOpen;
 	}
 
@@ -482,6 +456,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setSunClose(int sunClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sunClose = sunClose;
 	}
 
@@ -493,6 +471,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setMonOpen(int monOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_monOpen = monOpen;
 	}
 
@@ -504,6 +486,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setMonClose(int monClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_monClose = monClose;
 	}
 
@@ -515,6 +501,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setTueOpen(int tueOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_tueOpen = tueOpen;
 	}
 
@@ -526,6 +516,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setTueClose(int tueClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_tueClose = tueClose;
 	}
 
@@ -537,6 +531,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setWedOpen(int wedOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_wedOpen = wedOpen;
 	}
 
@@ -548,6 +546,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setWedClose(int wedClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_wedClose = wedClose;
 	}
 
@@ -559,6 +561,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setThuOpen(int thuOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_thuOpen = thuOpen;
 	}
 
@@ -570,6 +576,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setThuClose(int thuClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_thuClose = thuClose;
 	}
 
@@ -581,6 +591,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setFriOpen(int friOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_friOpen = friOpen;
 	}
 
@@ -592,6 +606,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setFriClose(int friClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_friClose = friClose;
 	}
 
@@ -603,6 +621,10 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setSatOpen(int satOpen) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_satOpen = satOpen;
 	}
 
@@ -614,10 +636,34 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void setSatClose(int satClose) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_satClose = satClose;
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -679,6 +725,51 @@ public class OrgLaborModelImpl
 	}
 
 	@Override
+	public OrgLabor cloneWithOriginalValues() {
+		OrgLaborImpl orgLaborImpl = new OrgLaborImpl();
+
+		orgLaborImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		orgLaborImpl.setOrgLaborId(
+			this.<Long>getColumnOriginalValue("orgLaborId"));
+		orgLaborImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		orgLaborImpl.setOrganizationId(
+			this.<Long>getColumnOriginalValue("organizationId"));
+		orgLaborImpl.setTypeId(this.<Long>getColumnOriginalValue("typeId"));
+		orgLaborImpl.setSunOpen(
+			this.<Integer>getColumnOriginalValue("sunOpen"));
+		orgLaborImpl.setSunClose(
+			this.<Integer>getColumnOriginalValue("sunClose"));
+		orgLaborImpl.setMonOpen(
+			this.<Integer>getColumnOriginalValue("monOpen"));
+		orgLaborImpl.setMonClose(
+			this.<Integer>getColumnOriginalValue("monClose"));
+		orgLaborImpl.setTueOpen(
+			this.<Integer>getColumnOriginalValue("tueOpen"));
+		orgLaborImpl.setTueClose(
+			this.<Integer>getColumnOriginalValue("tueClose"));
+		orgLaborImpl.setWedOpen(
+			this.<Integer>getColumnOriginalValue("wedOpen"));
+		orgLaborImpl.setWedClose(
+			this.<Integer>getColumnOriginalValue("wedClose"));
+		orgLaborImpl.setThuOpen(
+			this.<Integer>getColumnOriginalValue("thuOpen"));
+		orgLaborImpl.setThuClose(
+			this.<Integer>getColumnOriginalValue("thuClose"));
+		orgLaborImpl.setFriOpen(
+			this.<Integer>getColumnOriginalValue("friOpen"));
+		orgLaborImpl.setFriClose(
+			this.<Integer>getColumnOriginalValue("friClose"));
+		orgLaborImpl.setSatOpen(
+			this.<Integer>getColumnOriginalValue("satOpen"));
+		orgLaborImpl.setSatClose(
+			this.<Integer>getColumnOriginalValue("satClose"));
+
+		return orgLaborImpl;
+	}
+
+	@Override
 	public int compareTo(OrgLabor orgLabor) {
 		int value = 0;
 
@@ -714,16 +805,16 @@ public class OrgLaborModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof OrgLabor)) {
+		if (!(object instanceof OrgLabor)) {
 			return false;
 		}
 
-		OrgLabor orgLabor = (OrgLabor)obj;
+		OrgLabor orgLabor = (OrgLabor)object;
 
 		long primaryKey = orgLabor.getPrimaryKey();
 
@@ -740,11 +831,19 @@ public class OrgLaborModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -752,14 +851,9 @@ public class OrgLaborModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		OrgLaborModelImpl orgLaborModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		orgLaborModelImpl._originalOrganizationId =
-			orgLaborModelImpl._organizationId;
-
-		orgLaborModelImpl._setOriginalOrganizationId = false;
-
-		orgLaborModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -813,7 +907,7 @@ public class OrgLaborModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -824,9 +918,26 @@ public class OrgLaborModelImpl
 			Function<OrgLabor, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((OrgLabor)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((OrgLabor)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -845,7 +956,7 @@ public class OrgLaborModelImpl
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -881,8 +992,6 @@ public class OrgLaborModelImpl
 	private long _orgLaborId;
 	private long _companyId;
 	private long _organizationId;
-	private long _originalOrganizationId;
-	private boolean _setOriginalOrganizationId;
 	private long _typeId;
 	private int _sunOpen;
 	private int _sunClose;
@@ -898,6 +1007,107 @@ public class OrgLaborModelImpl
 	private int _friClose;
 	private int _satOpen;
 	private int _satClose;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<OrgLabor, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((OrgLabor)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("orgLaborId", _orgLaborId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("organizationId", _organizationId);
+		_columnOriginalValues.put("typeId", _typeId);
+		_columnOriginalValues.put("sunOpen", _sunOpen);
+		_columnOriginalValues.put("sunClose", _sunClose);
+		_columnOriginalValues.put("monOpen", _monOpen);
+		_columnOriginalValues.put("monClose", _monClose);
+		_columnOriginalValues.put("tueOpen", _tueOpen);
+		_columnOriginalValues.put("tueClose", _tueClose);
+		_columnOriginalValues.put("wedOpen", _wedOpen);
+		_columnOriginalValues.put("wedClose", _wedClose);
+		_columnOriginalValues.put("thuOpen", _thuOpen);
+		_columnOriginalValues.put("thuClose", _thuClose);
+		_columnOriginalValues.put("friOpen", _friOpen);
+		_columnOriginalValues.put("friClose", _friClose);
+		_columnOriginalValues.put("satOpen", _satOpen);
+		_columnOriginalValues.put("satClose", _satClose);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("orgLaborId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("organizationId", 8L);
+
+		columnBitmasks.put("typeId", 16L);
+
+		columnBitmasks.put("sunOpen", 32L);
+
+		columnBitmasks.put("sunClose", 64L);
+
+		columnBitmasks.put("monOpen", 128L);
+
+		columnBitmasks.put("monClose", 256L);
+
+		columnBitmasks.put("tueOpen", 512L);
+
+		columnBitmasks.put("tueClose", 1024L);
+
+		columnBitmasks.put("wedOpen", 2048L);
+
+		columnBitmasks.put("wedClose", 4096L);
+
+		columnBitmasks.put("thuOpen", 8192L);
+
+		columnBitmasks.put("thuClose", 16384L);
+
+		columnBitmasks.put("friOpen", 32768L);
+
+		columnBitmasks.put("friClose", 65536L);
+
+		columnBitmasks.put("satOpen", 131072L);
+
+		columnBitmasks.put("satClose", 262144L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private OrgLabor _escapedModel;
 

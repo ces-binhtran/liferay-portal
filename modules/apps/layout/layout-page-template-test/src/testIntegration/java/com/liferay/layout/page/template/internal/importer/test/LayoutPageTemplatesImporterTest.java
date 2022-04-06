@@ -30,14 +30,15 @@ import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalService;
 import com.liferay.layout.util.constants.LayoutDataItemTypeConstants;
-import com.liferay.layout.util.structure.CollectionLayoutStructureItem;
+import com.liferay.layout.util.structure.CollectionStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.ColumnLayoutStructureItem;
-import com.liferay.layout.util.structure.ContainerLayoutStructureItem;
-import com.liferay.layout.util.structure.FragmentLayoutStructureItem;
+import com.liferay.layout.util.structure.ContainerStyledLayoutStructureItem;
+import com.liferay.layout.util.structure.FragmentStyledLayoutStructureItem;
 import com.liferay.layout.util.structure.LayoutStructure;
 import com.liferay.layout.util.structure.LayoutStructureItem;
-import com.liferay.layout.util.structure.RowLayoutStructureItem;
+import com.liferay.layout.util.structure.RowStyledLayoutStructureItem;
 import com.liferay.petra.string.CharPool;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
@@ -50,10 +51,10 @@ import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
-import com.liferay.portal.kernel.portlet.PortletPreferencesFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.PortletPreferenceValueLocalService;
 import com.liferay.portal.kernel.service.PortletPreferencesLocalService;
 import com.liferay.portal.kernel.service.ResourceActionLocalService;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -69,7 +70,7 @@ import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -161,23 +162,28 @@ public class LayoutPageTemplatesImporterTest {
 		Assert.assertNotNull(layoutPageTemplateStructure);
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(0));
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 
 		LayoutStructureItem layoutStructureItem =
 			_getMainChildLayoutStructureItem(layoutStructure);
 
 		Assert.assertTrue(
-			layoutStructureItem instanceof CollectionLayoutStructureItem);
+			layoutStructureItem instanceof CollectionStyledLayoutStructureItem);
 
-		CollectionLayoutStructureItem collectionLayoutStructureItem =
-			(CollectionLayoutStructureItem)layoutStructureItem;
+		CollectionStyledLayoutStructureItem
+			collectionStyledLayoutStructureItem =
+				(CollectionStyledLayoutStructureItem)layoutStructureItem;
 
-		Assert.assertNotNull(collectionLayoutStructureItem);
+		Assert.assertNotNull(collectionStyledLayoutStructureItem);
 
 		Assert.assertEquals(
-			2, collectionLayoutStructureItem.getNumberOfColumns());
+			2, collectionStyledLayoutStructureItem.getNumberOfColumns());
 		Assert.assertEquals(
-			4, collectionLayoutStructureItem.getNumberOfItems());
+			4, collectionStyledLayoutStructureItem.getNumberOfItems());
+		Assert.assertEquals(
+			1, collectionStyledLayoutStructureItem.getNumberOfItemsPerPage());
+		Assert.assertEquals(
+			"simple", collectionStyledLayoutStructureItem.getPaginationType());
 	}
 
 	@Test
@@ -193,29 +199,30 @@ public class LayoutPageTemplatesImporterTest {
 		Assert.assertNotNull(layoutPageTemplateStructure);
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(0));
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 
 		LayoutStructureItem layoutStructureItem =
 			_getMainChildLayoutStructureItem(layoutStructure);
 
 		Assert.assertTrue(
-			layoutStructureItem instanceof RowLayoutStructureItem);
+			layoutStructureItem instanceof RowStyledLayoutStructureItem);
 
-		RowLayoutStructureItem rowLayoutStructureItem =
-			(RowLayoutStructureItem)layoutStructureItem;
+		RowStyledLayoutStructureItem rowStyledLayoutStructureItem =
+			(RowStyledLayoutStructureItem)layoutStructureItem;
 
-		Assert.assertNotNull(rowLayoutStructureItem);
-
-		Assert.assertEquals(6, rowLayoutStructureItem.getNumberOfColumns());
-		Assert.assertFalse(rowLayoutStructureItem.isGutters());
-
-		List<String> rowChildrenItemsIds =
-			rowLayoutStructureItem.getChildrenItemIds();
+		Assert.assertNotNull(rowStyledLayoutStructureItem);
 
 		Assert.assertEquals(
-			rowChildrenItemsIds.toString(), 6, rowChildrenItemsIds.size());
+			6, rowStyledLayoutStructureItem.getNumberOfColumns());
+		Assert.assertFalse(rowStyledLayoutStructureItem.isGutters());
 
-		for (String rowChildItemId : rowChildrenItemsIds) {
+		List<String> rowChildrenItemIds =
+			rowStyledLayoutStructureItem.getChildrenItemIds();
+
+		Assert.assertEquals(
+			rowChildrenItemIds.toString(), 6, rowChildrenItemIds.size());
+
+		for (String rowChildItemId : rowChildrenItemIds) {
 			LayoutStructureItem childLayoutStructureItem =
 				layoutStructure.getLayoutStructureItem(rowChildItemId);
 
@@ -245,31 +252,35 @@ public class LayoutPageTemplatesImporterTest {
 		Assert.assertNotNull(layoutPageTemplateStructure);
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(0));
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 
 		LayoutStructureItem layoutStructureItem =
 			_getMainChildLayoutStructureItem(layoutStructure);
 
 		Assert.assertTrue(
-			layoutStructureItem instanceof ContainerLayoutStructureItem);
+			layoutStructureItem instanceof ContainerStyledLayoutStructureItem);
 
-		ContainerLayoutStructureItem containerLayoutStructureItem =
-			(ContainerLayoutStructureItem)layoutStructureItem;
+		ContainerStyledLayoutStructureItem containerStyledLayoutStructureItem =
+			(ContainerStyledLayoutStructureItem)layoutStructureItem;
 
 		Assert.assertNotNull(layoutStructure);
 
 		Assert.assertEquals(
-			"danger",
-			containerLayoutStructureItem.getBackgroundColorCssClass());
+			"fluid", containerStyledLayoutStructureItem.getWidthType());
 		Assert.assertEquals(
-			"fluid", containerLayoutStructureItem.getContainerType());
-		Assert.assertEquals(5, containerLayoutStructureItem.getPaddingBottom());
+			StringPool.BLANK,
+			containerStyledLayoutStructureItem.getMarginRight());
 		Assert.assertEquals(
-			5, containerLayoutStructureItem.getPaddingHorizontal());
-		Assert.assertEquals(5, containerLayoutStructureItem.getPaddingTop());
+			"5", containerStyledLayoutStructureItem.getPaddingBottom());
+		Assert.assertEquals(
+			"5", containerStyledLayoutStructureItem.getPaddingLeft());
+		Assert.assertEquals(
+			"5", containerStyledLayoutStructureItem.getPaddingTop());
+		Assert.assertEquals(
+			"fluid", containerStyledLayoutStructureItem.getWidthType());
 
 		JSONObject jsonObject =
-			containerLayoutStructureItem.getBackgroundImageJSONObject();
+			containerStyledLayoutStructureItem.getBackgroundImageJSONObject();
 
 		Assert.assertEquals("test.jpg", jsonObject.get("title"));
 		Assert.assertEquals("test-image.jpg", jsonObject.get("url"));
@@ -286,18 +297,18 @@ public class LayoutPageTemplatesImporterTest {
 
 		Role role = _roleLocalService.getDefaultGroupRole(_group.getGroupId());
 
-		Map<String, String> valuesMap = HashMapBuilder.put(
-			"CONFIG_PROPERTY_1", configProperty1
-		).put(
-			"CONFIG_PROPERTY_2", configProperty2
-		).put(
-			"ROLE_KEY", role.getName()
-		).put(
-			"WIDGET_NAME", _testPortletName
-		).build();
-
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_getImportLayoutPageTemplateEntry("widget", valuesMap);
+			_getImportLayoutPageTemplateEntry(
+				"widget",
+				HashMapBuilder.put(
+					"CONFIG_PROPERTY_1", configProperty1
+				).put(
+					"CONFIG_PROPERTY_2", configProperty2
+				).put(
+					"ROLE_KEY", role.getName()
+				).put(
+					"WIDGET_NAME", _testPortletName
+				).build());
 
 		LayoutPageTemplateStructure layoutPageTemplateStructure =
 			_layoutPageTemplateStructureLocalService.
@@ -307,31 +318,31 @@ public class LayoutPageTemplatesImporterTest {
 		Assert.assertNotNull(layoutPageTemplateStructure);
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(0));
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 
 		LayoutStructureItem layoutStructureItem =
 			_getMainChildLayoutStructureItem(layoutStructure);
 
 		Assert.assertTrue(
-			layoutStructureItem instanceof FragmentLayoutStructureItem);
+			layoutStructureItem instanceof FragmentStyledLayoutStructureItem);
 
-		FragmentLayoutStructureItem fragmentLayoutStructureItem =
-			(FragmentLayoutStructureItem)layoutStructureItem;
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentLayoutStructureItem.getFragmentEntryLinkId());
+				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 		Assert.assertNotNull(fragmentEntryLink);
 
-		JSONObject editableValues = JSONFactoryUtil.createJSONObject(
+		JSONObject editableValuesJSONObject = JSONFactoryUtil.createJSONObject(
 			fragmentEntryLink.getEditableValues());
 
-		String portletId = editableValues.getString("portletId");
+		String portletId = editableValuesJSONObject.getString("portletId");
 
 		Assert.assertEquals(_testPortletName, portletId);
 
-		String instanceId = editableValues.getString("instanceId");
+		String instanceId = editableValuesJSONObject.getString("instanceId");
 
 		Assert.assertNotNull(instanceId);
 
@@ -343,8 +354,8 @@ public class LayoutPageTemplatesImporterTest {
 				PortletIdCodec.encode(portletId, instanceId));
 
 		javax.portlet.PortletPreferences jxPortletPreferences =
-			PortletPreferencesFactoryUtil.fromDefaultXML(
-				portletPreferences.getPreferences());
+			_portletPreferenceValueLocalService.getPreferences(
+				portletPreferences);
 
 		Assert.assertEquals(
 			configProperty1,
@@ -557,15 +568,13 @@ public class LayoutPageTemplatesImporterTest {
 
 	@Test
 	public void testImportLayoutPageTemplateWithMasterPage() throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
 		LayoutPageTemplateEntry masterLayoutPageTemplateEntry =
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				"Test Master Page",
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
-				WorkflowConstants.STATUS_DRAFT, serviceContext);
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
+				WorkflowConstants.STATUS_DRAFT,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries =
@@ -639,9 +648,9 @@ public class LayoutPageTemplatesImporterTest {
 		_fragmentEntryLocalService.addFragmentEntry(
 			TestPropsValues.getUserId(), _group.getGroupId(),
 			fragmentCollection.getFragmentCollectionId(), key, name,
-			StringPool.BLANK, html, StringPool.BLANK, StringPool.BLANK, 0,
-			FragmentConstants.TYPE_COMPONENT, WorkflowConstants.STATUS_APPROVED,
-			serviceContext);
+			StringPool.BLANK, html, StringPool.BLANK, false, StringPool.BLANK,
+			null, 0, FragmentConstants.TYPE_COMPONENT,
+			WorkflowConstants.STATUS_APPROVED, serviceContext);
 	}
 
 	private File _generateZipFile(String type, Map<String, String> valuesMap)
@@ -649,14 +658,11 @@ public class LayoutPageTemplatesImporterTest {
 
 		ZipWriter zipWriter = ZipWriterFactoryUtil.getZipWriter();
 
-		StringBuilder sb = new StringBuilder(3);
-
-		sb.append(_LAYOUT_PATE_TEMPLATES_PATH + type);
-		sb.append(StringPool.FORWARD_SLASH + _ROOT_FOLDER);
-		sb.append(StringPool.FORWARD_SLASH);
-
 		Enumeration<URL> enumeration = _bundle.findEntries(
-			sb.toString(),
+			StringBundler.concat(
+				_LAYOUT_PATE_TEMPLATES_PATH + type,
+				StringPool.FORWARD_SLASH + _ROOT_FOLDER,
+				StringPool.FORWARD_SLASH),
 			LayoutPageTemplateExportImportConstants.
 				FILE_NAME_PAGE_TEMPLATE_COLLECTION,
 			true);
@@ -667,8 +673,6 @@ public class LayoutPageTemplatesImporterTest {
 
 				_populateZipWriter(zipWriter, url, valuesMap);
 			}
-
-			zipWriter.finish();
 
 			return zipWriter.getFile();
 		}
@@ -688,23 +692,20 @@ public class LayoutPageTemplatesImporterTest {
 		Assert.assertNotNull(layoutPageTemplateStructure);
 
 		LayoutStructure layoutStructure = LayoutStructure.of(
-			layoutPageTemplateStructure.getData(0));
+			layoutPageTemplateStructure.getDefaultSegmentsExperienceData());
 
 		LayoutStructureItem layoutStructureItem =
 			_getMainChildLayoutStructureItem(layoutStructure);
 
 		Assert.assertTrue(
-			layoutStructureItem instanceof FragmentLayoutStructureItem);
+			layoutStructureItem instanceof FragmentStyledLayoutStructureItem);
 
-		FragmentLayoutStructureItem fragmentLayoutStructureItem =
-			(FragmentLayoutStructureItem)layoutStructureItem;
-
-		long fragmentEntryLinkId =
-			fragmentLayoutStructureItem.getFragmentEntryLinkId();
+		FragmentStyledLayoutStructureItem fragmentStyledLayoutStructureItem =
+			(FragmentStyledLayoutStructureItem)layoutStructureItem;
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.fetchFragmentEntryLink(
-				fragmentEntryLinkId);
+				fragmentStyledLayoutStructureItem.getFragmentEntryLinkId());
 
 		Assert.assertNotNull(fragmentEntryLink);
 
@@ -720,10 +721,8 @@ public class LayoutPageTemplatesImporterTest {
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		try {
 			layoutPageTemplatesImporterResultEntries =
@@ -800,10 +799,8 @@ public class LayoutPageTemplatesImporterTest {
 		List<LayoutPageTemplatesImporterResultEntry>
 			layoutPageTemplatesImporterResultEntries = null;
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
-		ServiceContextThreadLocal.pushServiceContext(serviceContext);
+		ServiceContextThreadLocal.pushServiceContext(
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		try {
 			layoutPageTemplatesImporterResultEntries =
@@ -853,9 +850,9 @@ public class LayoutPageTemplatesImporterTest {
 			true);
 
 		while (enumeration.hasMoreElements()) {
-			URL elementUrl = enumeration.nextElement();
+			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementUrl, valuesMap);
+			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
 		}
 
 		enumeration = _bundle.findEntries(
@@ -864,9 +861,9 @@ public class LayoutPageTemplatesImporterTest {
 			true);
 
 		while (enumeration.hasMoreElements()) {
-			URL elementUrl = enumeration.nextElement();
+			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementUrl, valuesMap);
+			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
 		}
 
 		enumeration = _bundle.findEntries(path, "thumbnail.png", true);
@@ -876,23 +873,22 @@ public class LayoutPageTemplatesImporterTest {
 		}
 
 		while (enumeration.hasMoreElements()) {
-			URL elementUrl = enumeration.nextElement();
+			URL elementURL = enumeration.nextElement();
 
-			_addZipWriterEntry(zipWriter, elementUrl, valuesMap);
+			_addZipWriterEntry(zipWriter, elementURL, valuesMap);
 		}
 	}
 
-	private void _registerTestPortlet(final String portletId) throws Exception {
+	private void _registerTestPortlet(String portletId) throws Exception {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
 				Portlet.class,
 				new LayoutPageTemplatesImporterTest.TestPortlet(),
-				new HashMapDictionary<String, String>() {
-					{
-						put("com.liferay.portlet.instanceable", "true");
-						put("javax.portlet.name", portletId);
-					}
-				}));
+				HashMapDictionaryBuilder.put(
+					"com.liferay.portlet.instanceable", "true"
+				).put(
+					"javax.portlet.name", portletId
+				).build()));
 	}
 
 	private void _validateHTMLFragmentEntryLinkEditableValues(
@@ -1093,6 +1089,10 @@ public class LayoutPageTemplatesImporterTest {
 
 	@Inject
 	private PortletPreferencesLocalService _portletPreferencesLocalService;
+
+	@Inject
+	private PortletPreferenceValueLocalService
+		_portletPreferenceValueLocalService;
 
 	@Inject
 	private ResourceActionLocalService _resourceActionLocalService;

@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
+import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.trash.TrashHandler;
@@ -34,10 +35,10 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
 import com.liferay.trash.constants.TrashActionKeys;
+import com.liferay.trash.constants.TrashEntryConstants;
+import com.liferay.trash.exception.RestoreEntryException;
 import com.liferay.trash.model.TrashEntry;
-import com.liferay.trash.model.TrashEntryConstants;
 import com.liferay.trash.model.TrashEntryList;
-import com.liferay.trash.model.TrashEntrySoap;
 import com.liferay.trash.model.impl.TrashEntryImpl;
 import com.liferay.trash.service.base.TrashEntryServiceBaseImpl;
 
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * The trash entry remote service is responsible for returning trash entries.
@@ -104,14 +106,13 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(
-						trashPermissionException, trashPermissionException);
+					_log.debug(trashPermissionException);
 				}
 
 				throwTrashPermissionException = true;
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
@@ -140,8 +141,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 				// LPS-52675
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(
-						trashPermissionException, trashPermissionException);
+					_log.debug(trashPermissionException);
 				}
 
 				throwTrashPermissionException = true;
@@ -219,17 +219,18 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 	 * @param  start the lower bound of the range of trash entries to return
 	 * @param  end the upper bound of the range of trash entries to return (not
 	 *         inclusive)
-	 * @param  obc the comparator to order the trash entries (optionally
-	 *         <code>null</code>)
+	 * @param  orderByComparator the comparator to order the trash entries
+	 *         (optionally <code>null</code>)
 	 * @return the range of matching trash entries ordered by comparator
-	 *         <code>obc</code>
+	 *         <code>orderByComparator</code>
 	 */
 	@Override
 	public TrashEntryList getEntries(
-			long groupId, int start, int end, OrderByComparator<TrashEntry> obc)
+			long groupId, int start, int end,
+			OrderByComparator<TrashEntry> orderByComparator)
 		throws PrincipalException {
 
-		return getEntries(groupId, null, start, end, obc);
+		return getEntries(groupId, null, start, end, orderByComparator);
 	}
 
 	@Override
@@ -237,7 +238,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 		throws PrincipalException {
 
 		List<TrashEntry> entries = trashEntryPersistence.findByG_C(
-			groupId, classNameLocalService.getClassNameId(className));
+			groupId, _classNameLocalService.getClassNameId(className));
 
 		return filterEntries(entries);
 	}
@@ -250,15 +251,15 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 	 * @param  start the lower bound of the range of trash entries to return
 	 * @param  end the upper bound of the range of trash entries to return (not
 	 *         inclusive)
-	 * @param  obc the comparator to order the trash entries (optionally
-	 *         <code>null</code>)
+	 * @param  orderByComparator the comparator to order the trash entries
+	 *         (optionally <code>null</code>)
 	 * @return the range of matching trash entries ordered by comparator
-	 *         <code>obc</code>
+	 *         <code>orderByComparator</code>
 	 */
 	@Override
 	public TrashEntryList getEntries(
 			long groupId, String className, int start, int end,
-			OrderByComparator<TrashEntry> obc)
+			OrderByComparator<TrashEntry> orderByComparator)
 		throws PrincipalException {
 
 		TrashEntryList trashEntriesList = new TrashEntryList();
@@ -277,12 +278,13 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 
 		if (Validator.isNotNull(className)) {
 			entries = trashEntryPersistence.findByG_C(
-				groupId, classNameLocalService.getClassNameId(className), 0,
-				end + PropsValues.TRASH_SEARCH_LIMIT, obc);
+				groupId, _classNameLocalService.getClassNameId(className), 0,
+				end + PropsValues.TRASH_SEARCH_LIMIT, orderByComparator);
 		}
 		else {
 			entries = trashEntryPersistence.findByGroupId(
-				groupId, 0, end + PropsValues.TRASH_SEARCH_LIMIT, obc);
+				groupId, 0, end + PropsValues.TRASH_SEARCH_LIMIT,
+				orderByComparator);
 		}
 
 		List<TrashEntry> filteredEntries = filterEntries(entries);
@@ -301,8 +303,6 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 		end = startAndEnd[1];
 
 		filteredEntries = filteredEntries.subList(start, end);
-
-		trashEntriesList.setArray(TrashEntrySoap.toSoapModels(filteredEntries));
 
 		trashEntriesList.setCount(total);
 		trashEntriesList.setOriginalTrashEntries(filteredEntries);
@@ -438,12 +438,17 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 			long entryId, long overrideClassPK, String name)
 		throws PortalException {
 
-		PermissionChecker permissionChecker = getPermissionChecker();
-
 		TrashEntry entry = trashEntryPersistence.findByPrimaryKey(entryId);
 
 		TrashHandler trashHandler = TrashHandlerRegistryUtil.getTrashHandler(
 			entry.getClassName());
+
+		if (!trashHandler.isRestorable(entry.getClassPK())) {
+			throw new RestoreEntryException(
+				RestoreEntryException.NOT_RESTORABLE);
+		}
+
+		PermissionChecker permissionChecker = getPermissionChecker();
 
 		if (!trashHandler.hasTrashPermission(
 				permissionChecker, 0, entry.getClassPK(),
@@ -504,7 +509,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 		throws PortalException {
 
 		TrashEntry trashEntry = trashEntryPersistence.fetchByC_C(
-			classNameLocalService.getClassNameId(className), classPK);
+			_classNameLocalService.getClassNameId(className), classPK);
 
 		if (trashEntry != null) {
 			return restoreEntry(trashEntry.getEntryId(), overrideClassPK, name);
@@ -550,7 +555,7 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 				}
 			}
 			catch (Exception exception) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 
@@ -559,5 +564,8 @@ public class TrashEntryServiceImpl extends TrashEntryServiceBaseImpl {
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		TrashEntryServiceImpl.class);
+
+	@Reference
+	private ClassNameLocalService _classNameLocalService;
 
 }

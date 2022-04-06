@@ -12,109 +12,91 @@
  * details.
  */
 
-import {useEventListener} from 'frontend-js-react-web';
-import {isPhone, isTablet} from 'frontend-js-web';
-import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import PropTypes from 'prop-types';
+import React, {forwardRef} from 'react';
 
-import {Editor} from './Editor';
+import BaseEditor from './BaseEditor';
 
-const getToolbarSet = (toolbarSet) => {
-	if (isPhone()) {
-		toolbarSet = 'phone';
+const ClassicEditor = forwardRef(
+	(
+		{
+			contents,
+			editorConfig,
+			initialToolbarSet = 'simple',
+			name,
+			title,
+			...otherProps
+		},
+		ref
+	) => {
+		return (
+			<div id={`${name}Container`}>
+				{title && (
+					<label className="control-label" htmlFor={name}>
+						{title}
+					</label>
+				)}
+
+				<BaseEditor
+					className="lfr-editable"
+					config={{
+						toolbar: initialToolbarSet,
+						...editorConfig,
+					}}
+					contents={contents}
+					name={name}
+					onBeforeLoad={(CKEDITOR) => {
+						CKEDITOR.disableAutoInline = true;
+						CKEDITOR.dtd.$removeEmpty.i = 0;
+						CKEDITOR.dtd.$removeEmpty.span = 0;
+
+						CKEDITOR.getNextZIndex = function () {
+							return CKEDITOR.dialog._.currentZIndex
+								? CKEDITOR.dialog._.currentZIndex + 10
+								: Liferay.zIndex.WINDOW + 10;
+						};
+					}}
+					onDrop={(event) => {
+						const data = event.data.dataTransfer.getData(
+							'text/html'
+						);
+						const editor = event.editor;
+
+						if (data) {
+							const fragment = CKEDITOR.htmlParser.fragment.fromHtml(
+								data
+							);
+
+							const name = fragment.children[0].name;
+
+							if (name) {
+								return editor.pasteFilter.check(name);
+							}
+						}
+					}}
+					onInstanceReady={({editor}) => {
+						editor.setData(contents, {
+							callback: () => {
+								editor.resetUndo();
+							},
+							noSnapshot: true,
+						});
+					}}
+					ref={ref}
+					{...otherProps}
+				/>
+			</div>
+		);
 	}
-	else if (isTablet()) {
-		toolbarSet = 'tablet';
-	}
+);
 
-	return toolbarSet;
+ClassicEditor.propTypes = {
+	contents: PropTypes.string,
+	editorConfig: PropTypes.object,
+	initialToolbarSet: PropTypes.string,
+	name: PropTypes.string,
+	title: PropTypes.string,
 };
 
-const ClassicEditor = ({
-	contents = '',
-	cssClass,
-	editorConfig = {},
-	initialToolbarSet,
-	name,
-	onChangeMethodName,
-}) => {
-	const editorRef = useRef();
-
-	const [toolbarSet, setToolbarSet] = useState(initialToolbarSet);
-
-	const config = useMemo(() => {
-		return {
-			toolbar: toolbarSet,
-			...editorConfig,
-		};
-	}, [editorConfig, toolbarSet]);
-
-	const getHTML = useCallback(() => {
-		let data = contents;
-
-		const editor = editorRef.current.editor;
-
-		if (editor && editor.instanceReady) {
-			data = editor.getData();
-
-			if (CKEDITOR.env.gecko && CKEDITOR.tools.trim(data) === '<br />') {
-				data = '';
-			}
-		}
-
-		return data;
-	}, [contents]);
-
-	const onChangeCallback = () => {
-		const editor = editorRef.current.editor;
-
-		if (editor.checkDirty()) {
-			window[onChangeMethodName](getHTML());
-
-			editor.resetDirty();
-		}
-	};
-
-	useEffect(() => {
-		setToolbarSet(getToolbarSet(initialToolbarSet));
-	}, [initialToolbarSet]);
-
-	useEffect(() => {
-		window[name] = {
-			getHTML,
-			getText() {
-				return contents;
-			},
-		};
-	}, [contents, getHTML, name]);
-
-	useEventListener(
-		'resize',
-		() => setToolbarSet(getToolbarSet(initialToolbarSet)),
-		true,
-		window
-	);
-
-	return (
-		<div className={cssClass} id={`${name}Container`}>
-			<Editor
-				className="lfr-editable"
-				config={config}
-				data={contents}
-				key={toolbarSet}
-				onBeforeLoad={(CKEDITOR) => {
-					CKEDITOR.disableAutoInline = true;
-					CKEDITOR.dtd.$removeEmpty.i = 0;
-					CKEDITOR.dtd.$removeEmpty.span = 0;
-
-					CKEDITOR.on('instanceCreated', ({editor}) => {
-						editor.name = name;
-					});
-				}}
-				onChange={onChangeCallback}
-				ref={editorRef}
-			/>
-		</div>
-	);
-};
-
+export {ClassicEditor};
 export default ClassicEditor;

@@ -54,8 +54,25 @@ public interface OAuth2ApplicationService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link OAuth2ApplicationServiceUtil} to access the o auth2 application remote service. Add custom service methods to <code>com.liferay.oauth2.provider.service.impl.OAuth2ApplicationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.oauth2.provider.service.impl.OAuth2ApplicationServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the o auth2 application remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link OAuth2ApplicationServiceUtil} if injection and service tracking are not available.
 	 */
+	public OAuth2Application addOAuth2Application(
+			List<GrantType> allowedGrantTypesList, long clientCredentialUserId,
+			String clientId, int clientProfile, String clientSecret,
+			String description, List<String> featuresList, String homePageURL,
+			long iconFileEntryId, String name, String privacyPolicyURL,
+			List<String> redirectURIsList, boolean rememberDevice,
+			List<String> scopeAliasesList, boolean trustedApplication,
+			ServiceContext serviceContext)
+		throws PortalException;
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addOAuth2Application(List, long, String, int, String,
+	 String, List, String, long, String, String, List, boolean,
+	 List, boolean, ServiceContext)}
+	 */
+	@Deprecated
 	public OAuth2Application addOAuth2Application(
 			List<GrantType> allowedGrantTypesList, long clientCredentialUserId,
 			String clientId, int clientProfile, String clientSecret,
@@ -113,13 +130,20 @@ public interface OAuth2ApplicationService extends BaseService {
 			long oAuth2ApplicationId, InputStream inputStream)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #updateOAuth2Application(long, long, List, long, String, int,
+	 String, String, List, String, long, String, String, List,
+	 boolean, boolean)}
+	 */
+	@Deprecated
 	public OAuth2Application updateOAuth2Application(
 			long oAuth2ApplicationId, List<GrantType> allowedGrantTypesList,
 			long clientCredentialUserId, String clientId, int clientProfile,
 			String clientSecret, String description, List<String> featuresList,
 			String homePageURL, long iconFileEntryId, String name,
 			String privacyPolicyURL, List<String> redirectURIsList,
-			long auth2ApplicationScopeAliasesId, ServiceContext serviceContext)
+			long oAuth2ApplicationScopeAliasesId, ServiceContext serviceContext)
 		throws PortalException;
 
 	/**
@@ -131,8 +155,18 @@ public interface OAuth2ApplicationService extends BaseService {
 			String clientId, int clientProfile, String clientSecret,
 			String description, List<String> featuresList, String homePageURL,
 			long iconFileEntryId, String name, String privacyPolicyURL,
-			List<String> redirectURIsList, long auth2ApplicationScopeAliasesId,
+			List<String> redirectURIsList, long oAuth2ApplicationScopeAliasesId,
 			ServiceContext serviceContext)
+		throws PortalException;
+
+	public OAuth2Application updateOAuth2Application(
+			long oAuth2ApplicationId, long oAuth2ApplicationScopeAliasesId,
+			List<GrantType> allowedGrantTypesList, long clientCredentialUserId,
+			String clientId, int clientProfile, String clientSecret,
+			String description, List<String> featuresList, String homePageURL,
+			long iconFileEntryId, String name, String privacyPolicyURL,
+			List<String> redirectURIsList, boolean rememberDevice,
+			boolean trustedApplication)
 		throws PortalException;
 
 	public OAuth2Application updateScopeAliases(

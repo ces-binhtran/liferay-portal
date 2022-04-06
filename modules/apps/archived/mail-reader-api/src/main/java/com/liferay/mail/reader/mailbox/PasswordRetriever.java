@@ -16,6 +16,7 @@ package com.liferay.mail.reader.mailbox;
 
 import com.liferay.mail.reader.model.Account;
 import com.liferay.mail.reader.service.AccountLocalServiceUtil;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 
@@ -43,30 +44,26 @@ public class PasswordRetriever {
 			return account.getPasswordDecrypted();
 		}
 
-		HttpSession session = _httpServletRequest.getSession();
+		HttpSession httpSession = _httpServletRequest.getSession();
 
-		return (String)session.getAttribute(encodeKey(accountId));
+		return (String)httpSession.getAttribute(encodeKey(accountId));
 	}
 
 	public void removePassword(long accountId) {
-		HttpSession session = _httpServletRequest.getSession();
+		HttpSession httpSession = _httpServletRequest.getSession();
 
-		session.removeAttribute(encodeKey(accountId));
+		httpSession.removeAttribute(encodeKey(accountId));
 	}
 
 	public void setPassword(long accountId, String password) {
-		HttpSession session = _httpServletRequest.getSession();
+		HttpSession httpSession = _httpServletRequest.getSession();
 
-		session.setAttribute(encodeKey(accountId), password);
+		httpSession.setAttribute(encodeKey(accountId), password);
 	}
 
 	protected String encodeKey(long accountId) {
-		return PasswordRetriever.class.getName(
-		).concat(
-			StringPool.POUND
-		).concat(
-			String.valueOf(accountId)
-		);
+		return StringBundler.concat(
+			PasswordRetriever.class.getName(), StringPool.POUND, accountId);
 	}
 
 	private final HttpServletRequest _httpServletRequest;

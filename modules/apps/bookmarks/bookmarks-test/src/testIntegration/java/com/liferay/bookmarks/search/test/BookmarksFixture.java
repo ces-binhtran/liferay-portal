@@ -14,9 +14,9 @@
 
 package com.liferay.bookmarks.search.test;
 
+import com.liferay.bookmarks.constants.BookmarksFolderConstants;
 import com.liferay.bookmarks.model.BookmarksEntry;
 import com.liferay.bookmarks.model.BookmarksFolder;
-import com.liferay.bookmarks.model.BookmarksFolderConstants;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.bookmarks.service.BookmarksFolderService;
 import com.liferay.petra.string.CharPool;
@@ -69,13 +69,11 @@ public class BookmarksFixture {
 			long folderId, String name, String description)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), _user.getUserId());
-
 		BookmarksEntry bookmarksEntry = _bookmarksEntryLocalService.addEntry(
 			_user.getUserId(), _group.getGroupId(), folderId, name,
-			"https://www.liferay.com", description, serviceContext);
+			"https://www.liferay.com", description,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), _user.getUserId()));
 
 		_bookmarksEntries.add(bookmarksEntry);
 
@@ -94,13 +92,10 @@ public class BookmarksFixture {
 	}
 
 	public BookmarksFolder createBookmarksFolder(String name) throws Exception {
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), _user.getUserId());
-
 		BookmarksFolder bookmarksFolder = addFolder(
 			BookmarksFolderConstants.DEFAULT_PARENT_FOLDER_ID, name,
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), _user.getUserId()));
 
 		_bookmarksFolders.add(bookmarksFolder);
 

@@ -23,7 +23,7 @@ FileVersion fileVersion = (FileVersion)request.getAttribute(WebKeys.DOCUMENT_LIB
 
 int previewFileCount = PDFProcessorUtil.getPreviewFileCount(fileVersion);
 
-String previewQueryString = "&previewFileIndex=";
+String previewQueryString = "&previewFileIndex=1";
 
 int status = ParamUtil.getInteger(request, "status", WorkflowConstants.STATUS_ANY);
 
@@ -36,25 +36,25 @@ String[] previewFileURLs = new String[1];
 previewFileURLs[0] = DLURLHelperUtil.getPreviewURL(fileVersion.getFileEntry(), fileVersion, themeDisplay, previewQueryString);
 
 String previewFileURL = previewFileURLs[0];
-
-Map<String, Object> data = HashMapBuilder.<String, Object>put(
-	"baseImageURL", previewFileURL
-).put(
-	"initialPage", 1
-).put(
-	"totalPages", previewFileCount
-).build();
 %>
 
 <liferay-util:html-top
 	outputKey="document_library_preview_document_css"
 >
-	<link href='<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>' rel="stylesheet" type="text/css" />
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/preview/css/main.css") %>" rel="stylesheet" type="text/css" />
 </liferay-util:html-top>
 
-<div id='<%= renderResponse.getNamespace() + randomNamespace + "previewDocument" %>'>
+<div id="<portlet:namespace /><%= randomNamespace %>previewDocument">
 	<react:component
-		data="<%= data %>"
 		module="preview/js/DocumentPreviewer.es"
+		props='<%=
+			HashMapBuilder.<String, Object>put(
+				"baseImageURL", previewFileURL
+			).put(
+				"initialPage", 1
+			).put(
+				"totalPages", previewFileCount
+			).build()
+		%>'
 	/>
 </div>

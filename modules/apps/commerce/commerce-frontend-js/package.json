@@ -1,0 +1,36 @@
+{
+	"dependencies": {
+	},
+	"devDependencies": {
+		"clay-css": "^2.16.2",
+		"faker": "^5.1.0"
+	},
+	"jest": {
+		"collectCoverageFrom": [
+			"!<rootDir>/node_modules/",
+			"<rootDir>/src/**/components/**/*.js",
+			"<rootDir>/src/**/ServiceProvider/composeAPI.js",
+			"<rootDir>/src/**/utilities/**/*.js",
+			"!<rootDir>/src/**/constants.js",
+			"!<rootDir>/src/**/entry.js"
+		],
+		"testPathIgnorePatterns": [
+			"<rootDir>/test/components/AddToCart",
+			"<rootDir>/test/components/MiniCart",
+			"<rootDir>/test/components/QuantitySelector",
+			"<rootDir>/test/utils/"
+		]
+	},
+	"main": "index.js",
+	"name": "commerce-frontend-js",
+	"private": true,
+	"scripts": {
+		"build": "liferay-npm-scripts build",
+		"checkFormat": "liferay-npm-scripts check",
+		"coverage": "liferay-npm-scripts test --coverage --silent --verbose",
+		"format": "liferay-npm-scripts format",
+		"test": "liferay-npm-scripts test",
+		"watch": "liferay-npm-scripts webpack --watch"
+	},
+	"version": "4.0.46"
+}

@@ -14,7 +14,9 @@
 
 package com.liferay.headless.delivery.client.serdes.v1_0;
 
+import com.liferay.headless.delivery.client.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.client.dto.v1_0.PageRowDefinition;
+import com.liferay.headless.delivery.client.dto.v1_0.RowViewport;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
 
 import java.util.Iterator;
@@ -22,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 import javax.annotation.Generated;
 
@@ -55,6 +58,40 @@ public class PageRowDefinitionSerDes {
 
 		sb.append("{");
 
+		if (pageRowDefinition.getFragmentStyle() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentStyle\": ");
+
+			sb.append(String.valueOf(pageRowDefinition.getFragmentStyle()));
+		}
+
+		if (pageRowDefinition.getFragmentViewports() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < pageRowDefinition.getFragmentViewports().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(
+						pageRowDefinition.getFragmentViewports()[i]));
+
+				if ((i + 1) < pageRowDefinition.getFragmentViewports().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (pageRowDefinition.getGutters() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -63,6 +100,16 @@ public class PageRowDefinitionSerDes {
 			sb.append("\"gutters\": ");
 
 			sb.append(pageRowDefinition.getGutters());
+		}
+
+		if (pageRowDefinition.getIndexed() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"indexed\": ");
+
+			sb.append(pageRowDefinition.getIndexed());
 		}
 
 		if (pageRowDefinition.getModulesPerRow() != null) {
@@ -93,6 +140,39 @@ public class PageRowDefinitionSerDes {
 			sb.append("\"reverseOrder\": ");
 
 			sb.append(pageRowDefinition.getReverseOrder());
+		}
+
+		if (pageRowDefinition.getRowViewportConfig() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewportConfig\": ");
+
+			sb.append(String.valueOf(pageRowDefinition.getRowViewportConfig()));
+		}
+
+		if (pageRowDefinition.getRowViewports() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"rowViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < pageRowDefinition.getRowViewports().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(pageRowDefinition.getRowViewports()[i]));
+
+				if ((i + 1) < pageRowDefinition.getRowViewports().length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (pageRowDefinition.getVerticalAlignment() != null) {
@@ -130,11 +210,36 @@ public class PageRowDefinitionSerDes {
 
 		Map<String, String> map = new TreeMap<>();
 
+		if (pageRowDefinition.getFragmentStyle() == null) {
+			map.put("fragmentStyle", null);
+		}
+		else {
+			map.put(
+				"fragmentStyle",
+				String.valueOf(pageRowDefinition.getFragmentStyle()));
+		}
+
+		if (pageRowDefinition.getFragmentViewports() == null) {
+			map.put("fragmentViewports", null);
+		}
+		else {
+			map.put(
+				"fragmentViewports",
+				String.valueOf(pageRowDefinition.getFragmentViewports()));
+		}
+
 		if (pageRowDefinition.getGutters() == null) {
 			map.put("gutters", null);
 		}
 		else {
 			map.put("gutters", String.valueOf(pageRowDefinition.getGutters()));
+		}
+
+		if (pageRowDefinition.getIndexed() == null) {
+			map.put("indexed", null);
+		}
+		else {
+			map.put("indexed", String.valueOf(pageRowDefinition.getIndexed()));
 		}
 
 		if (pageRowDefinition.getModulesPerRow() == null) {
@@ -162,6 +267,24 @@ public class PageRowDefinitionSerDes {
 			map.put(
 				"reverseOrder",
 				String.valueOf(pageRowDefinition.getReverseOrder()));
+		}
+
+		if (pageRowDefinition.getRowViewportConfig() == null) {
+			map.put("rowViewportConfig", null);
+		}
+		else {
+			map.put(
+				"rowViewportConfig",
+				String.valueOf(pageRowDefinition.getRowViewportConfig()));
+		}
+
+		if (pageRowDefinition.getRowViewports() == null) {
+			map.put("rowViewports", null);
+		}
+		else {
+			map.put(
+				"rowViewports",
+				String.valueOf(pageRowDefinition.getRowViewports()));
 		}
 
 		if (pageRowDefinition.getVerticalAlignment() == null) {
@@ -194,9 +317,34 @@ public class PageRowDefinitionSerDes {
 			PageRowDefinition pageRowDefinition, String jsonParserFieldName,
 			Object jsonParserFieldValue) {
 
-			if (Objects.equals(jsonParserFieldName, "gutters")) {
+			if (Objects.equals(jsonParserFieldName, "fragmentStyle")) {
+				if (jsonParserFieldValue != null) {
+					pageRowDefinition.setFragmentStyle(
+						FragmentStyleSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fragmentViewports")) {
+				if (jsonParserFieldValue != null) {
+					pageRowDefinition.setFragmentViewports(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> FragmentViewportSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new FragmentViewport[size]
+						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "gutters")) {
 				if (jsonParserFieldValue != null) {
 					pageRowDefinition.setGutters((Boolean)jsonParserFieldValue);
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "indexed")) {
+				if (jsonParserFieldValue != null) {
+					pageRowDefinition.setIndexed((Boolean)jsonParserFieldValue);
 				}
 			}
 			else if (Objects.equals(jsonParserFieldName, "modulesPerRow")) {
@@ -217,15 +365,30 @@ public class PageRowDefinitionSerDes {
 						(Boolean)jsonParserFieldValue);
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "rowViewportConfig")) {
+				if (jsonParserFieldValue != null) {
+					pageRowDefinition.setRowViewportConfig(
+						RowViewportConfigSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "rowViewports")) {
+				if (jsonParserFieldValue != null) {
+					pageRowDefinition.setRowViewports(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> RowViewportSerDes.toDTO((String)object)
+						).toArray(
+							size -> new RowViewport[size]
+						));
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "verticalAlignment")) {
 				if (jsonParserFieldValue != null) {
 					pageRowDefinition.setVerticalAlignment(
 						(String)jsonParserFieldValue);
 				}
-			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
 			}
 		}
 
@@ -255,7 +418,7 @@ public class PageRowDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -291,7 +454,7 @@ public class PageRowDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

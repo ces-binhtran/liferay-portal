@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.ColorScheme;
 import com.liferay.portal.kernel.model.Plugin;
 import com.liferay.portal.kernel.model.PortletDecorator;
-import com.liferay.portal.kernel.model.SpriteImage;
 import com.liferay.portal.kernel.model.Theme;
 import com.liferay.portal.kernel.model.ThemeSetting;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -38,7 +37,6 @@ import com.liferay.portal.kernel.theme.ThemeGroupLimit;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.util.PropsValues;
 
@@ -89,16 +87,16 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof Theme)) {
+		if (!(object instanceof Theme)) {
 			return false;
 		}
 
-		Theme theme = (Theme)obj;
+		Theme theme = (Theme)object;
 
 		if (getThemeId().equals(theme.getThemeId())) {
 			return true;
@@ -256,11 +254,7 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 		String key = path;
 
 		if (Validator.isNotNull(portletId)) {
-			key = path.concat(
-				StringPool.POUND
-			).concat(
-				portletId
-			);
+			key = StringBundler.concat(path, StringPool.POUND, portletId);
 		}
 
 		String resourcePath = _resourcePathsMap.get(key);
@@ -332,11 +326,6 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 		}
 
 		return properties;
-	}
-
-	@Override
-	public SpriteImage getSpriteImage(String fileName) {
-		return _spriteImagesMap.get(fileName);
 	}
 
 	@Override
@@ -480,11 +469,7 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 		String key = path;
 
 		if (Validator.isNotNull(portletId)) {
-			key = path.concat(
-				StringPool.POUND
-			).concat(
-				portletId
-			);
+			key = StringBundler.concat(path, StringPool.POUND, portletId);
 		}
 
 		Boolean resourceExists = _resourceExistsMap.get(key);
@@ -561,28 +546,6 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 		}
 		else {
 			addSetting(key, value, false, null, null, null);
-		}
-	}
-
-	@Override
-	public void setSpriteImages(
-		String spriteFileName, Properties spriteProperties) {
-
-		for (Map.Entry<Object, Object> entry : spriteProperties.entrySet()) {
-			String key = (String)entry.getKey();
-
-			String value = (String)entry.getValue();
-
-			int[] values = StringUtil.split(value, 0);
-
-			int offset = values[0];
-			int height = values[1];
-			int width = values[2];
-
-			SpriteImage spriteImage = new SpriteImage(
-				spriteFileName, key, offset, height, width);
-
-			_spriteImagesMap.put(key, spriteImage);
 		}
 	}
 
@@ -805,7 +768,6 @@ public class ThemeImpl extends PluginBaseImpl implements Theme {
 		new ConcurrentHashMap<>();
 	private String _rootPath = "/";
 	private String _servletContextName = StringPool.BLANK;
-	private final Map<String, SpriteImage> _spriteImagesMap = new HashMap<>();
 	private String _templateExtension = "ftl";
 	private String _templatesPath = "${root-path}/templates";
 	private ThemeCompanyLimit _themeCompanyLimit;

@@ -25,7 +25,6 @@ import com.liferay.portal.cluster.multiple.configuration.ClusterExecutorConfigur
 import com.liferay.portal.cluster.multiple.internal.ClusterChannel;
 import com.liferay.portal.cluster.multiple.internal.ClusterChannelFactory;
 import com.liferay.portal.cluster.multiple.internal.ClusterReceiver;
-import com.liferay.portal.cluster.multiple.internal.io.ClusterClassLoaderPool;
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -52,16 +51,12 @@ import java.util.concurrent.ExecutorService;
 import org.jgroups.conf.ConfiguratorFactory;
 import org.jgroups.conf.ProtocolStackConfigurator;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Modified;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.BundleTracker;
 
 /**
  * @author Tina Tian
@@ -109,51 +104,47 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 		_clusterExecutorConfiguration = ConfigurableUtil.createConfigurable(
 			ClusterExecutorConfiguration.class, properties);
 
-		initSystemProperties(
+		_initSystemProperties(
 			_props.getArray(PropsKeys.CLUSTER_LINK_CHANNEL_SYSTEM_PROPERTIES));
 
-		initBindAddress(
+		_initBindAddress(
 			GetterUtil.getString(
 				_props.get(PropsKeys.CLUSTER_LINK_AUTODETECT_ADDRESS)));
-
-		_bundleTracker = new BundleTracker<ClassLoader>(
-			bundleContext, Bundle.ACTIVE, null) {
-
-			@Override
-			public ClassLoader addingBundle(Bundle bundle, BundleEvent event) {
-				BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
-
-				ClassLoader classLoader = bundleWiring.getClassLoader();
-
-				ClusterClassLoaderPool.registerFallback(
-					bundle.getSymbolicName(), bundle.getVersion(), classLoader);
-
-				return classLoader;
-			}
-
-			@Override
-			public void removedBundle(
-				Bundle bundle, BundleEvent event, ClassLoader classLoader) {
-
-				ClusterClassLoaderPool.unregisterFallback(
-					bundle.getSymbolicName(), bundle.getVersion());
-			}
-
-		};
-
-		_bundleTracker.open();
 	}
 
 	@Deactivate
 	protected synchronized void deactivate() {
-		if (_bundleTracker != null) {
-			_bundleTracker.close();
-		}
-
 		_classLoaders.clear();
 	}
 
-	protected void initBindAddress(String autodetectAddress) {
+	@Reference(unbind = "-")
+	protected void setProps(Props props) {
+		_props = props;
+	}
+
+	private InputStream _getInputStream(String channelPropertiesLocation)
+		throws IOException {
+
+		InputStream inputStream = ConfiguratorFactory.getConfigStream(
+			channelPropertiesLocation);
+
+		if (inputStream == null) {
+			ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
+
+			inputStream = classLoader.getResourceAsStream(
+				channelPropertiesLocation);
+		}
+
+		if (inputStream == null) {
+			throw new FileNotFoundException(
+				"Unable to load channel properties from " +
+					channelPropertiesLocation);
+		}
+
+		return inputStream;
+	}
+
+	private void _initBindAddress(String autodetectAddress) {
 		if (Validator.isNull(autodetectAddress)) {
 			return;
 		}
@@ -190,7 +181,7 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 						"loopback");
 
 				if (_log.isDebugEnabled()) {
-					_log.debug(ioException1, ioException1);
+					_log.debug(ioException1);
 				}
 			}
 
@@ -215,7 +206,7 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 		}
 	}
 
-	protected void initSystemProperties(String[] channelSystemPropertiesArray) {
+	private void _initSystemProperties(String[] channelSystemPropertiesArray) {
 		for (String channelSystemProperty : channelSystemPropertiesArray) {
 			int index = channelSystemProperty.indexOf(CharPool.COLON);
 
@@ -235,33 +226,6 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 						"}"));
 			}
 		}
-	}
-
-	@Reference(unbind = "-")
-	protected void setProps(Props props) {
-		_props = props;
-	}
-
-	private InputStream _getInputStream(String channelPropertiesLocation)
-		throws IOException {
-
-		InputStream inputStream = ConfiguratorFactory.getConfigStream(
-			channelPropertiesLocation);
-
-		if (inputStream == null) {
-			ClassLoader classLoader = PortalClassLoaderUtil.getClassLoader();
-
-			inputStream = classLoader.getResourceAsStream(
-				channelPropertiesLocation);
-		}
-
-		if (inputStream == null) {
-			throw new FileNotFoundException(
-				"Unable to load channel properties from " +
-					channelPropertiesLocation);
-		}
-
-		return inputStream;
 	}
 
 	private ProtocolStackConfigurator _parseChannelProperties(
@@ -343,7 +307,6 @@ public class JGroupsClusterChannelFactory implements ClusterChannelFactory {
 
 	private InetAddress _bindInetAddress;
 	private NetworkInterface _bindNetworkInterface;
-	private BundleTracker<ClassLoader> _bundleTracker;
 	private final ConcurrentMap<ClassLoader, ClassLoader> _classLoaders =
 		new ConcurrentReferenceKeyHashMap<>(
 			FinalizeManager.WEAK_REFERENCE_FACTORY);

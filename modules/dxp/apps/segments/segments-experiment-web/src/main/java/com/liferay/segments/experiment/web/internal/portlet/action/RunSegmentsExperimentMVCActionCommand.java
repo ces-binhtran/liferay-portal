@@ -75,8 +75,8 @@ public class RunSegmentsExperimentMVCActionCommand
 		try {
 			jsonObject = _runSegmentsExperiment(actionRequest);
 		}
-		catch (Throwable t) {
-			_log.error(t, t);
+		catch (Throwable throwable) {
+			_log.error(throwable, throwable);
 
 			HttpServletResponse httpServletResponse =
 				_portal.getHttpServletResponse(actionResponse);
@@ -97,9 +97,6 @@ public class RunSegmentsExperimentMVCActionCommand
 
 	private JSONObject _runSegmentsExperiment(ActionRequest actionRequest)
 		throws PortalException {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperimentId = ParamUtil.getLong(
 			actionRequest, "segmentsExperimentId");
@@ -134,8 +131,14 @@ public class RunSegmentsExperimentMVCActionCommand
 
 		return JSONUtil.put(
 			"segmentsExperiment",
-			SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
-				themeDisplay.getLocale(), segmentsExperiment)
+			() -> {
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)actionRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
+
+				return SegmentsExperimentUtil.toSegmentsExperimentJSONObject(
+					themeDisplay.getLocale(), segmentsExperiment);
+			}
 		).put(
 			"segmentsExperimentRels", segmentsExperimentRelsJSONObject
 		);

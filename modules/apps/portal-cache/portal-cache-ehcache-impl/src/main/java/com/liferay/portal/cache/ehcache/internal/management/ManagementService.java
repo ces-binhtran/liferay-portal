@@ -137,7 +137,7 @@ public class ManagementService implements CacheManagerEventListener {
 				null));
 	}
 
-	private static ObjectName _getObjectName(
+	private ObjectName _getObjectName(
 		String type, String cacheManagerName, String name) {
 
 		StringBundler sb = new StringBundler(6);
@@ -206,14 +206,12 @@ public class ManagementService implements CacheManagerEventListener {
 		}
 		catch (InstanceAlreadyExistsException instanceAlreadyExistsException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(
-					instanceAlreadyExistsException,
-					instanceAlreadyExistsException);
+				_log.debug(instanceAlreadyExistsException);
 			}
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 	}
@@ -227,7 +225,7 @@ public class ManagementService implements CacheManagerEventListener {
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(exception, exception);
+					_log.warn(exception);
 				}
 			}
 		}

@@ -90,27 +90,9 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 		return false;
 	}
 
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public String encodeRedirectUrl(String url) {
-		return null;
-	}
-
 	@Override
 	public String encodeRedirectURL(String url) {
 		return null;
-	}
-
-	/**
-	 * @deprecated As of Wilberforce (7.0.x)
-	 */
-	@Deprecated
-	@Override
-	public String encodeUrl(String url) {
-		return _portletResponse.encodeURL(url);
 	}
 
 	@Override
@@ -306,9 +288,7 @@ public class PortletServletResponse extends HttpServletResponseWrapper {
 
 	@Override
 	public void setContentLengthLong(long contentLengthLong) {
-		int contentLength = Math.toIntExact(contentLengthLong);
-
-		setContentLength(contentLength);
+		setContentLength(Math.toIntExact(contentLengthLong));
 	}
 
 	@Override

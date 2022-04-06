@@ -120,8 +120,7 @@ public class VirtualHostFilter extends BasePortalFilter {
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(
-							noSuchLayoutException, noSuchLayoutException);
+						_log.debug(noSuchLayoutException);
 					}
 
 					return true;
@@ -142,12 +141,9 @@ public class VirtualHostFilter extends BasePortalFilter {
 			friendlyURL.startsWith(_PATH_MODULE_SLASH) ||
 			friendlyURL.startsWith(_PRIVATE_GROUP_SERVLET_MAPPING_SLASH) ||
 			friendlyURL.startsWith(_PRIVATE_USER_SERVLET_MAPPING_SLASH) ||
-			friendlyURL.startsWith(_PUBLIC_GROUP_SERVLET_MAPPING_SLASH)) {
+			friendlyURL.startsWith(_PUBLIC_GROUP_SERVLET_MAPPING_SLASH) ||
+			LayoutImpl.hasFriendlyURLKeyword(friendlyURL)) {
 
-			return false;
-		}
-
-		if (LayoutImpl.hasFriendlyURLKeyword(friendlyURL)) {
 			return false;
 		}
 
@@ -167,8 +163,6 @@ public class VirtualHostFilter extends BasePortalFilter {
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
-
-		long companyId = PortalInstances.getCompanyId(httpServletRequest);
 
 		String originalFriendlyURL = HttpUtil.normalizePath(
 			httpServletRequest.getRequestURI());
@@ -269,6 +263,8 @@ public class VirtualHostFilter extends BasePortalFilter {
 			return;
 		}
 
+		long companyId = PortalInstances.getCompanyId(httpServletRequest);
+
 		try {
 			Map<String, String[]> parameterMap =
 				httpServletRequest.getParameterMap();
@@ -364,7 +360,7 @@ public class VirtualHostFilter extends BasePortalFilter {
 			requestDispatcher.forward(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			processFilter(
 				VirtualHostFilter.class.getName(), httpServletRequest,

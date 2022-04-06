@@ -20,6 +20,8 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCResourceCommand;
 import com.liferay.portal.kernel.util.ListUtil;
@@ -58,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ResultRankingsPortletKeys.RESULT_RANKINGS,
-		"mvc.command.name=/results_ranking/validate"
+		"mvc.command.name=/result_rankings/validate_ranking"
 	},
 	service = MVCResourceCommand.class
 )
@@ -76,7 +78,7 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 			return false;
 		}
 		catch (RuntimeException runtimeException) {
-			runtimeException.printStackTrace();
+			_log.error(runtimeException);
 
 			throw runtimeException;
 		}
@@ -156,6 +158,10 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 		);
 	}
 
+	private long _getCompanyId(ResourceRequest resourceRequest) {
+		return portal.getCompanyId(resourceRequest);
+	}
+
 	private List<String> _getDuplicateQueryStrings(
 		ResourceRequest resourceRequest,
 		ValidateRankingMVCResourceRequest validateRankingMVCResourceRequest) {
@@ -181,21 +187,20 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 				queryStrings
 			).rankingIndexName(
 				_getRankingIndexName(resourceRequest)
-			).unlessRankingId(
+			).unlessRankingDocumentId(
 				validateRankingMVCResourceRequest.getResultsRankingUid()
 			).build());
 	}
 
 	private String _getIndexName(ResourceRequest resourceRequest) {
-		return indexNameBuilder.getIndexName(
-			portal.getCompanyId(resourceRequest));
+		return indexNameBuilder.getIndexName(_getCompanyId(resourceRequest));
 	}
 
 	private RankingIndexName _getRankingIndexName(
 		ResourceRequest resourceRequest) {
 
 		return rankingIndexNameBuilder.getRankingIndexName(
-			_getIndexName(resourceRequest));
+			_getCompanyId(resourceRequest));
 	}
 
 	private boolean _isUpdateSpecial(String string) {
@@ -203,6 +208,9 @@ public class ValidateRankingMVCResourceCommand implements MVCResourceCommand {
 	}
 
 	private static final String _UPDATE_SPECIAL = StringPool.GREATER_THAN;
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ValidateRankingMVCResourceCommand.class);
 
 	private class ValidateRankingMVCResourceRequest {
 

@@ -19,7 +19,6 @@ import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.marketplace.model.App;
 import com.liferay.marketplace.model.AppModel;
-import com.liferay.marketplace.model.AppSoap;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -33,21 +32,22 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -103,7 +103,7 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table Marketplace_App (uuid_ VARCHAR(75) null,appId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,remoteAppId LONG,title VARCHAR(75) null,description STRING null,category VARCHAR(75) null,iconURL STRING null,version VARCHAR(75) null,required BOOLEAN)";
+		"create table Marketplace_App (uuid_ VARCHAR(75) null,appId LONG not null primary key,companyId LONG,userId LONG,userName VARCHAR(75) null,createDate DATE null,modifiedDate DATE null,remoteAppId LONG,title VARCHAR(255) null,description STRING null,category VARCHAR(255) null,iconURL STRING null,version VARCHAR(75) null,required BOOLEAN)";
 
 	public static final String TABLE_SQL_DROP = "drop table Marketplace_App";
 
@@ -118,73 +118,49 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long CATEGORY_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long REMOTEAPPID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long APPID_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
-	}
-
-	/**
-	 * Converts the soap model instance into a normal model instance.
-	 *
-	 * @param soapModel the soap model instance to convert
-	 * @return the normal model instance
-	 */
-	public static App toModel(AppSoap soapModel) {
-		if (soapModel == null) {
-			return null;
-		}
-
-		App model = new AppImpl();
-
-		model.setUuid(soapModel.getUuid());
-		model.setAppId(soapModel.getAppId());
-		model.setCompanyId(soapModel.getCompanyId());
-		model.setUserId(soapModel.getUserId());
-		model.setUserName(soapModel.getUserName());
-		model.setCreateDate(soapModel.getCreateDate());
-		model.setModifiedDate(soapModel.getModifiedDate());
-		model.setRemoteAppId(soapModel.getRemoteAppId());
-		model.setTitle(soapModel.getTitle());
-		model.setDescription(soapModel.getDescription());
-		model.setCategory(soapModel.getCategory());
-		model.setIconURL(soapModel.getIconURL());
-		model.setVersion(soapModel.getVersion());
-		model.setRequired(soapModel.isRequired());
-
-		return model;
-	}
-
-	/**
-	 * Converts the soap model instances into normal model instances.
-	 *
-	 * @param soapModels the soap model instances to convert
-	 * @return the normal model instances
-	 */
-	public static List<App> toModels(AppSoap[] soapModels) {
-		if (soapModels == null) {
-			return null;
-		}
-
-		List<App> models = new ArrayList<App>(soapModels.length);
-
-		for (AppSoap soapModel : soapModels) {
-			models.add(toModel(soapModel));
-		}
-
-		return models;
 	}
 
 	public AppModelImpl() {
@@ -236,9 +212,6 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 			attributes.put(
 				attributeName, attributeGetterFunction.apply((App)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -370,17 +343,20 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@JSON
@@ -391,6 +367,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setAppId(long appId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_appId = appId;
 	}
 
@@ -402,19 +382,21 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@JSON
@@ -425,6 +407,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -457,6 +443,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -468,6 +458,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -485,6 +479,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -496,19 +494,21 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setRemoteAppId(long remoteAppId) {
-		_columnBitmask |= REMOTEAPPID_COLUMN_BITMASK;
-
-		if (!_setOriginalRemoteAppId) {
-			_setOriginalRemoteAppId = true;
-
-			_originalRemoteAppId = _remoteAppId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_remoteAppId = remoteAppId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalRemoteAppId() {
-		return _originalRemoteAppId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("remoteAppId"));
 	}
 
 	@JSON
@@ -524,6 +524,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setTitle(String title) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_title = title;
 	}
 
@@ -540,6 +544,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_description = description;
 	}
 
@@ -556,17 +564,20 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setCategory(String category) {
-		_columnBitmask |= CATEGORY_COLUMN_BITMASK;
-
-		if (_originalCategory == null) {
-			_originalCategory = _category;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_category = category;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalCategory() {
-		return GetterUtil.getString(_originalCategory);
+		return getColumnOriginalValue("category");
 	}
 
 	@JSON
@@ -582,6 +593,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setIconURL(String iconURL) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_iconURL = iconURL;
 	}
 
@@ -598,6 +613,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setVersion(String version) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_version = version;
 	}
 
@@ -615,6 +634,10 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	@Override
 	public void setRequired(boolean required) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_required = required;
 	}
 
@@ -625,6 +648,26 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -680,6 +723,31 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 	}
 
 	@Override
+	public App cloneWithOriginalValues() {
+		AppImpl appImpl = new AppImpl();
+
+		appImpl.setUuid(this.<String>getColumnOriginalValue("uuid_"));
+		appImpl.setAppId(this.<Long>getColumnOriginalValue("appId"));
+		appImpl.setCompanyId(this.<Long>getColumnOriginalValue("companyId"));
+		appImpl.setUserId(this.<Long>getColumnOriginalValue("userId"));
+		appImpl.setUserName(this.<String>getColumnOriginalValue("userName"));
+		appImpl.setCreateDate(this.<Date>getColumnOriginalValue("createDate"));
+		appImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		appImpl.setRemoteAppId(
+			this.<Long>getColumnOriginalValue("remoteAppId"));
+		appImpl.setTitle(this.<String>getColumnOriginalValue("title"));
+		appImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		appImpl.setCategory(this.<String>getColumnOriginalValue("category"));
+		appImpl.setIconURL(this.<String>getColumnOriginalValue("iconURL"));
+		appImpl.setVersion(this.<String>getColumnOriginalValue("version"));
+		appImpl.setRequired(this.<Boolean>getColumnOriginalValue("required"));
+
+		return appImpl;
+	}
+
+	@Override
 	public int compareTo(App app) {
 		long primaryKey = app.getPrimaryKey();
 
@@ -695,16 +763,16 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof App)) {
+		if (!(object instanceof App)) {
 			return false;
 		}
 
-		App app = (App)obj;
+		App app = (App)object;
 
 		long primaryKey = app.getPrimaryKey();
 
@@ -721,35 +789,31 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		AppModelImpl appModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		appModelImpl._originalUuid = appModelImpl._uuid;
+		_setModifiedDate = false;
 
-		appModelImpl._originalCompanyId = appModelImpl._companyId;
-
-		appModelImpl._setOriginalCompanyId = false;
-
-		appModelImpl._setModifiedDate = false;
-
-		appModelImpl._originalRemoteAppId = appModelImpl._remoteAppId;
-
-		appModelImpl._setOriginalRemoteAppId = false;
-
-		appModelImpl._originalCategory = appModelImpl._category;
-
-		appModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -849,7 +913,7 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -859,9 +923,26 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 			String attributeName = entry.getKey();
 			Function<App, Object> attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((App)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((App)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -880,7 +961,7 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 			getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -911,30 +992,119 @@ public class AppModelImpl extends BaseModelImpl<App> implements AppModel {
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private String _uuid;
-	private String _originalUuid;
 	private long _appId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
 	private Date _modifiedDate;
 	private boolean _setModifiedDate;
 	private long _remoteAppId;
-	private long _originalRemoteAppId;
-	private boolean _setOriginalRemoteAppId;
 	private String _title;
 	private String _description;
 	private String _category;
-	private String _originalCategory;
 	private String _iconURL;
 	private String _version;
 	private boolean _required;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<App, Object> function = _attributeGetterFunctions.get(
+			columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((App)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put("appId", _appId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("remoteAppId", _remoteAppId);
+		_columnOriginalValues.put("title", _title);
+		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("category", _category);
+		_columnOriginalValues.put("iconURL", _iconURL);
+		_columnOriginalValues.put("version", _version);
+		_columnOriginalValues.put("required", _required);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("uuid_", 1L);
+
+		columnBitmasks.put("appId", 2L);
+
+		columnBitmasks.put("companyId", 4L);
+
+		columnBitmasks.put("userId", 8L);
+
+		columnBitmasks.put("userName", 16L);
+
+		columnBitmasks.put("createDate", 32L);
+
+		columnBitmasks.put("modifiedDate", 64L);
+
+		columnBitmasks.put("remoteAppId", 128L);
+
+		columnBitmasks.put("title", 256L);
+
+		columnBitmasks.put("description", 512L);
+
+		columnBitmasks.put("category", 1024L);
+
+		columnBitmasks.put("iconURL", 2048L);
+
+		columnBitmasks.put("version", 4096L);
+
+		columnBitmasks.put("required", 8192L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private App _escapedModel;
 

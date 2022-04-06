@@ -12,75 +12,21 @@
  * details.
  */
 
-import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton from '@clayui/button';
 import ClayCard from '@clayui/card';
 import {ClayInput} from '@clayui/form';
 import ClayIcon from '@clayui/icon';
+import ClayProgressBar from '@clayui/progress-bar';
+import axios from 'axios';
 import {
-	ItemSelectorDialog,
-	createActionURL,
-	createPortletURL,
-} from 'frontend-js-web';
-import React, {useMemo, useState} from 'react';
+	PagesVisitor,
+	convertToFormData,
+	useConfig,
+	useFormState,
+} from 'data-engine-js-components-web';
+import React, {useEffect, useMemo, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
-
-function getDocumentLibrarySelectorURL({
-	groupId,
-	itemSelectorAuthToken,
-	portletNamespace,
-}) {
-	const criterionJSON = {
-		desiredItemSelectorReturnTypes:
-			'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
-	};
-
-	const uploadCriterionJSON = {
-		URL: getUploadURL(),
-		desiredItemSelectorReturnTypes:
-			'com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType,com.liferay.item.selector.criteria.FileEntryItemSelectorReturnType',
-	};
-
-	const documentLibrarySelectorParameters = {
-		'0_json': JSON.stringify(criterionJSON),
-		'1_json': JSON.stringify(criterionJSON),
-		'2_json': JSON.stringify(uploadCriterionJSON),
-		criteria:
-			'com.liferay.item.selector.criteria.file.criterion.FileItemSelectorCriterion',
-		doAsGroupId: groupId,
-		itemSelectedEventName: `${portletNamespace}selectDocumentLibrary`,
-		p_p_auth: itemSelectorAuthToken,
-		p_p_id: Liferay.PortletKeys.ITEM_SELECTOR,
-		p_p_mode: 'view',
-		p_p_state: 'pop_up',
-		refererGroupId: groupId,
-	};
-
-	const documentLibrarySelectorURL = createPortletURL(
-		themeDisplay.getLayoutRelativeControlPanelURL(),
-		documentLibrarySelectorParameters
-	);
-
-	return documentLibrarySelectorURL.toString();
-}
-
-function getUploadURL() {
-	const uploadParameters = {
-		cmd: 'add_temp',
-		'javax.portlet.action': '/document_library/upload_file_entry',
-		p_auth: Liferay.authToken,
-		p_p_id: Liferay.PortletKeys.DOCUMENT_LIBRARY,
-	};
-
-	const uploadURL = createActionURL(
-		themeDisplay.getLayoutRelativeURL(),
-		uploadParameters
-	);
-
-	return uploadURL.toString();
-}
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
 const CardItem = ({fileEntryTitle, fileEntryURL}) => {
 	return (
@@ -102,6 +48,18 @@ const CardItem = ({fileEntryTitle, fileEntryURL}) => {
 	);
 };
 
+const getValue = (value) => {
+	if (!value) {
+		return '';
+	}
+
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	return JSON.stringify(value);
+};
+
 function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
 	if (value && typeof value === 'string') {
 		try {
@@ -113,18 +71,20 @@ function transformFileEntryProperties({fileEntryTitle, fileEntryURL, value}) {
 				fileEntryURL = fileEntry.url;
 			}
 		}
-		catch (e) {
+		catch (error) {
 			console.warn('Unable to parse JSON', value);
 		}
 	}
 
-	return [fileEntryTitle, fileEntryURL];
+	return value ? [fileEntryTitle, fileEntryURL] : [];
 }
 
 const DocumentLibrary = ({
+	editingLanguageId,
 	fileEntryTitle = '',
 	fileEntryURL = '',
 	id,
+	message,
 	name,
 	onClearButtonClicked,
 	onSelectButtonClicked,
@@ -154,9 +114,12 @@ const DocumentLibrary = ({
 					<ClayInput.GroupItem prepend>
 						<ClayInput
 							aria-label={Liferay.Language.get('file')}
-							className="field"
-							disabled
+							className="bg-light field"
+							dir={Liferay.Language.direction[editingLanguageId]}
+							disabled={readOnly}
 							id={`${name}inputFile`}
+							lang={editingLanguageId}
+							onClick={onSelectButtonClicked}
 							value={transformedFileEntryTitle || ''}
 						/>
 					</ClayInput.GroupItem>
@@ -175,125 +138,432 @@ const DocumentLibrary = ({
 					</ClayInput.GroupItem>
 
 					{transformedFileEntryTitle && (
-						<ClayInput.GroupItem append shrink>
-							<ClayButtonWithIcon
-								className="clear-button"
+						<ClayInput.GroupItem shrink>
+							<ClayButton
+								aria-label={Liferay.Language.get(
+									'unselect-file'
+								)}
 								displayType="secondary"
 								onClick={onClearButtonClicked}
-								symbol="times"
-							/>
+								type="button"
+							>
+								{Liferay.Language.get('clear')}
+							</ClayButton>
 						</ClayInput.GroupItem>
 					)}
 				</ClayInput.Group>
 			)}
 
-			<ClayInput
+			<input
 				id={id}
 				name={name}
 				placeholder={placeholder}
 				type="hidden"
-				value={value || ''}
+				value={getValue(value)}
 			/>
+
+			{message && <div className="form-feedback-item">{message}</div>}
 		</div>
 	);
 };
 
-const DocumentLibraryProxy = connectStore(
-	({
-		emit,
-		fileEntryTitle,
-		fileEntryURL,
-		groupId,
-		id,
-		itemSelectorAuthToken,
-		name,
-		placeholder,
-		readOnly,
-		store,
-		value = '{}',
-		...otherProps
-	}) => {
-		const [currentValue, setCurrentValue] = useState(value);
+const GuestUploadFile = ({
+	fileEntryTitle = '',
+	fileEntryURL = '',
+	id,
+	message,
+	name,
+	onClearButtonClicked,
+	onUploadSelectButtonClicked,
+	placeholder,
+	progress,
+	readOnly,
+	value,
+}) => {
+	const [transformedFileEntryTitle] = useMemo(
+		() =>
+			transformFileEntryProperties({
+				fileEntryTitle,
+				fileEntryURL,
+				value,
+			}),
+		[fileEntryTitle, fileEntryURL, value]
+	);
 
-		const handleVisibleChange = (event) => {
-			if (event.selectedItem) {
-				emit('fieldFocused', event, event.selectedItem);
-			}
-			else {
-				emit('fieldBlurred', event);
-			}
-		};
+	return (
+		<div className="liferay-ddm-form-field-document-library">
+			<ClayInput.Group>
+				<ClayInput.GroupItem prepend>
+					<ClayInput
+						className="bg-light"
+						disabled={readOnly}
+						onClick={onUploadSelectButtonClicked}
+						type="text"
+						value={transformedFileEntryTitle || ''}
+					/>
+				</ClayInput.GroupItem>
 
-		const handleSelectButtonClicked = ({
-			itemSelectorAuthToken,
-			portletNamespace,
-		}) => {
-			const itemSelectorDialog = new ItemSelectorDialog({
-				eventName: `${portletNamespace}selectDocumentLibrary`,
-				singleSelect: true,
-				url: getDocumentLibrarySelectorURL({
-					groupId,
-					itemSelectorAuthToken,
-					portletNamespace,
-				}),
-			});
+				<ClayInput.GroupItem append shrink>
+					<label
+						className={
+							'btn btn-secondary select-button' +
+							(transformedFileEntryTitle
+								? ' clear-button-upload-on'
+								: '') +
+							(readOnly ? ' disabled' : '')
+						}
+						htmlFor={`${name}inputFileGuestUpload`}
+					>
+						{Liferay.Language.get('select')}
+					</label>
 
-			itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-			itemSelectorDialog.on('visibleChange', handleVisibleChange);
+					<input
+						className="input-file"
+						disabled={readOnly}
+						id={`${name}inputFileGuestUpload`}
+						onChange={onUploadSelectButtonClicked}
+						type="file"
+					/>
+				</ClayInput.GroupItem>
 
-			itemSelectorDialog.open();
-		};
+				{transformedFileEntryTitle && (
+					<ClayInput.GroupItem shrink>
+						<ClayButton
+							aria-label={Liferay.Language.get('unselect-file')}
+							displayType="secondary"
+							onClick={onClearButtonClicked}
+							type="button"
+						>
+							{Liferay.Language.get('clear')}
+						</ClayButton>
+					</ClayInput.GroupItem>
+				)}
+			</ClayInput.Group>
 
-		const handleFieldChanged = (event) => {
-			const selectedItem = event.selectedItem;
-
-			if (selectedItem) {
-				const {value} = selectedItem;
-
-				setCurrentValue(value);
-
-				emit('fieldEdited', event, value);
-			}
-		};
-
-		return (
-			<FieldBaseProxy
-				{...otherProps}
+			<input
 				id={id}
 				name={name}
-				readOnly={readOnly}
-				store={store}
-			>
-				<DocumentLibrary
+				placeholder={placeholder}
+				type="hidden"
+				value={getValue(value)}
+			/>
+
+			{progress !== 0 && <ClayProgressBar value={progress} />}
+
+			{message && <div className="form-feedback-item">{message}</div>}
+		</div>
+	);
+};
+
+const Main = ({
+	_onBlur,
+	_onFocus,
+	allowGuestUsers,
+	displayErrors: initialDisplayErrors,
+	editingLanguageId,
+	errorMessage: initialErrorMessage,
+	fieldName,
+	fileEntryTitle,
+	fileEntryURL,
+	guestUploadURL,
+	id,
+	itemSelectorURL,
+	maximumRepetitions,
+	maximumSubmissionLimitReached,
+	message,
+	name,
+	onBlur,
+	onChange,
+	onFocus,
+	placeholder,
+	readOnly,
+	showUploadPermissionMessage,
+	valid: initialValid,
+	value = '{}',
+	...otherProps
+}) => {
+	const {portletNamespace} = useConfig();
+	const {pages} = useFormState();
+
+	const [currentValue, setCurrentValue] = useState(value);
+	const [errorMessage, setErrorMessage] = useState(initialErrorMessage);
+	const [displayErrors, setDisplayErrors] = useState(initialDisplayErrors);
+	const [valid, setValid] = useState(initialValid);
+	const [progress, setProgress] = useState(0);
+
+	const isSignedIn = Liferay.ThemeDisplay.isSignedIn();
+
+	const getErrorMessages = (errorMessage, isSignedIn) => {
+		const errorMessages = [errorMessage];
+
+		if (!allowGuestUsers && !isSignedIn) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'you-need-to-be-signed-in-to-edit-this-field'
+				)
+			);
+		}
+		else if (maximumSubmissionLimitReached) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'the-maximum-number-of-submissions-allowed-for-this-form-has-been-reached'
+				)
+			);
+		}
+		else if (showUploadPermissionMessage) {
+			errorMessages.push(
+				Liferay.Language.get(
+					'you-need-to-be-assigned-to-the-same-site-where-the-form-was-created-to-use-this-field'
+				)
+			);
+		}
+
+		return errorMessages.join(' ');
+	};
+
+	useEffect(() => {
+		if ((!allowGuestUsers && !isSignedIn) || showUploadPermissionMessage) {
+			const ddmFormUploadPermissionMessage = document.querySelector(
+				`.ddm-form-upload-permission-message`
+			);
+
+			if (ddmFormUploadPermissionMessage) {
+				ddmFormUploadPermissionMessage.classList.remove('hide');
+			}
+		}
+	}, [allowGuestUsers, isSignedIn, showUploadPermissionMessage]);
+
+	useEffect(() => {
+		setCurrentValue(value);
+		setDisplayErrors(initialDisplayErrors);
+		setErrorMessage(getErrorMessages(initialErrorMessage, isSignedIn));
+		setValid(initialValid);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [initialDisplayErrors, initialErrorMessage, initialValid, value]);
+
+	const checkMaximumRepetitions = () => {
+		const visitor = new PagesVisitor(pages);
+
+		let repetitionsCounter = 0;
+
+		visitor.mapFields(
+			(field) => {
+				if (fieldName === field.fieldName) {
+					repetitionsCounter++;
+				}
+			},
+			true,
+			true
+		);
+
+		return repetitionsCounter === maximumRepetitions;
+	};
+
+	const handleFieldChanged = (selectedItem) => {
+		if (selectedItem?.value) {
+			setCurrentValue(selectedItem.value);
+
+			onChange(selectedItem, selectedItem.value);
+		}
+	};
+
+	const handleSelectButtonClicked = ({portletNamespace}, event) => {
+		onFocus(event);
+
+		Liferay.Util.openSelectionModal({
+			onClose: () => onBlur(event),
+			onSelect: handleFieldChanged,
+			selectEventName: `${portletNamespace}selectDocumentLibrary`,
+			title: Liferay.Util.sub(
+				Liferay.Language.get('select-x'),
+				Liferay.Language.get('document')
+			),
+			url: itemSelectorURL,
+		});
+	};
+
+	const configureErrorMessage = (message) => {
+		setErrorMessage(message);
+
+		const enable = message ? true : false;
+
+		setDisplayErrors(enable);
+		setValid(!enable);
+	};
+
+	const disableSubmitButton = (disable = true) => {
+		document.getElementById('ddm-form-submit').disabled = disable;
+	};
+
+	const handleGuestUploadFileChanged = (errorMessage, event, value) => {
+		configureErrorMessage(errorMessage);
+
+		setCurrentValue(value);
+
+		onChange(event, value ? value : '{}');
+	};
+
+	const isExceededUploadRequestSizeLimit = (fileSize) => {
+		const uploadRequestSizeLimit =
+			Liferay.PropsValues.UPLOAD_SERVLET_REQUEST_IMPL_MAX_SIZE;
+
+		if (fileSize <= uploadRequestSizeLimit) {
+			return false;
+		}
+
+		const errorMessage = Liferay.Util.sub(
+			Liferay.Language.get(
+				'please-enter-a-file-with-a-valid-file-size-no-larger-than-x'
+			),
+			[Liferay.Util.formatStorage(uploadRequestSizeLimit)]
+		);
+
+		handleGuestUploadFileChanged(errorMessage, {}, null);
+
+		return true;
+	};
+
+	const handleUploadSelectButtonClicked = (event) => {
+		onFocus(event);
+
+		const file = event.target.files[0];
+
+		if (isExceededUploadRequestSizeLimit(file.size)) {
+			onBlur(event);
+
+			return;
+		}
+
+		const data = {
+			[`${portletNamespace}file`]: file,
+		};
+
+		axios
+			.post(guestUploadURL, convertToFormData(data), {
+				onUploadProgress: (event) => {
+					const progress = Math.round(
+						(event.loaded * 100) / event.total
+					);
+
+					setCurrentValue(null);
+
+					setProgress(progress);
+
+					disableSubmitButton();
+				},
+			})
+			.then((response) => {
+				const {error, file} = response.data;
+
+				disableSubmitButton(false);
+
+				if (error) {
+					handleGuestUploadFileChanged(error.message, event, null);
+				}
+				else {
+					handleGuestUploadFileChanged(
+						'',
+						event,
+						JSON.stringify(file)
+					);
+				}
+
+				setProgress(0);
+			})
+			.catch(() => {
+				disableSubmitButton(false);
+
+				setProgress(0);
+			})
+			.finally(() => {
+				onBlur(event);
+			});
+	};
+
+	const hasCustomError =
+		(!isSignedIn && !allowGuestUsers) ||
+		maximumSubmissionLimitReached ||
+		showUploadPermissionMessage;
+
+	return (
+		<FieldBase
+			{...otherProps}
+			displayErrors={hasCustomError ? true : displayErrors}
+			errorMessage={errorMessage}
+			id={id}
+			name={name}
+			overMaximumRepetitionsLimit={
+				maximumRepetitions > 0 ? checkMaximumRepetitions() : false
+			}
+			readOnly={hasCustomError ? true : readOnly}
+			valid={hasCustomError ? false : valid}
+		>
+			{allowGuestUsers && !isSignedIn ? (
+				<GuestUploadFile
 					fileEntryTitle={fileEntryTitle}
 					fileEntryURL={fileEntryURL}
 					id={id}
+					message={message}
+					name={name}
+					onBlur={onBlur}
+					onClearButtonClicked={(event) => {
+						onFocus(event);
+
+						setCurrentValue(null);
+
+						onChange(event, '{}');
+
+						const guestUploadInput = document.getElementById(
+							`${name}inputFileGuestUpload`
+						);
+
+						if (guestUploadInput) {
+							guestUploadInput.value = '';
+						}
+
+						onBlur(event);
+					}}
+					onFocus={onFocus}
+					onUploadSelectButtonClicked={(event) =>
+						handleUploadSelectButtonClicked(event)
+					}
+					placeholder={placeholder}
+					progress={progress}
+					readOnly={hasCustomError ? true : readOnly}
+					value={currentValue || ''}
+				/>
+			) : (
+				<DocumentLibrary
+					editingLanguageId={editingLanguageId}
+					fileEntryTitle={fileEntryTitle}
+					fileEntryURL={fileEntryURL}
+					id={id}
+					message={message}
 					name={name}
 					onClearButtonClicked={(event) => {
 						setCurrentValue(null);
 
-						emit('fieldEdited', event, '{}');
+						onChange(event, '{}');
 					}}
-					onSelectButtonClicked={() =>
-						handleSelectButtonClicked({
-							itemSelectorAuthToken,
-							portletNamespace: store.portletNamespace,
-						})
+					onSelectButtonClicked={(event) =>
+						handleSelectButtonClicked(
+							{
+								itemSelectorURL,
+								portletNamespace,
+							},
+							event
+						)
 					}
 					placeholder={placeholder}
-					readOnly={readOnly}
+					readOnly={hasCustomError ? true : readOnly}
 					value={currentValue || ''}
 				/>
-			</FieldBaseProxy>
-		);
-	}
-);
+			)}
+		</FieldBase>
+	);
+};
 
-const ReactDocumentLibraryAdapter = getConnectedReactComponentAdapter(
-	DocumentLibraryProxy,
-	'document_library'
-);
+Main.displayName = 'DocumentLibrary';
 
-export {ReactDocumentLibraryAdapter};
-
-export default ReactDocumentLibraryAdapter;
+export default Main;

@@ -15,13 +15,11 @@
 package com.liferay.portal.service.impl;
 
 import com.liferay.petra.string.StringBundler;
-import com.liferay.portal.kernel.exception.NoSuchReleaseException;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.model.ReleaseConstants;
-import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.upgrade.OlderVersionException;
 import com.liferay.portal.kernel.upgrade.UpgradeProcess;
 import com.liferay.portal.kernel.upgrade.util.UpgradeProcessUtil;
@@ -29,7 +27,6 @@ import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.service.base.ReleaseLocalServiceBaseImpl;
-import com.liferay.portal.util.PropsValues;
 
 import java.util.Date;
 import java.util.List;
@@ -55,10 +52,10 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 			release = releasePersistence.create(releaseId);
 		}
 
-		Date now = new Date();
+		Date date = new Date();
 
-		release.setCreateDate(now);
-		release.setModifiedDate(now);
+		release.setCreateDate(date);
+		release.setModifiedDate(date);
 
 		release.setServletContextName(servletContextName);
 		release.setBuildNumber(buildNumber);
@@ -87,10 +84,10 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 			release = releasePersistence.create(releaseId);
 		}
 
-		Date now = new Date();
+		Date date = new Date();
 
-		release.setCreateDate(now);
-		release.setModifiedDate(now);
+		release.setCreateDate(date);
+		release.setModifiedDate(date);
 
 		release.setServletContextName(servletContextName);
 		release.setSchemaVersion(schemaVersion);
@@ -102,14 +99,6 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 		}
 
 		return releasePersistence.update(release);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	public void createTablesAndPopulate() {
 	}
 
 	@Override
@@ -134,23 +123,6 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 		return release;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	@Override
-	@Transactional
-	public int getBuildNumberOrCreate() throws PortalException {
-		Release release = releasePersistence.fetchByPrimaryKey(
-			ReleaseConstants.DEFAULT_ID);
-
-		if (release != null) {
-			return release.getBuildNumber();
-		}
-
-		throw new NoSuchReleaseException("The database needs to be populated");
-	}
-
 	@Override
 	public Release updateRelease(
 			long releaseId, String schemaVersion, int buildNumber,
@@ -171,7 +143,7 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 	@Override
 	public void updateRelease(
 			String servletContextName, List<UpgradeProcess> upgradeProcesses,
-			int buildNumber, int previousBuildNumber, boolean indexOnUpgrade)
+			int buildNumber, int previousBuildNumber)
 		throws PortalException {
 
 		if (buildNumber <= 0) {
@@ -203,7 +175,7 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 		}
 		else {
 			UpgradeProcessUtil.upgradeProcess(
-				release.getBuildNumber(), upgradeProcesses, indexOnUpgrade);
+				release.getBuildNumber(), upgradeProcesses);
 		}
 
 		releaseLocalService.updateRelease(
@@ -226,13 +198,9 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 				PropsKeys.RELEASE_INFO_PREVIOUS_BUILD_NUMBER),
 			buildNumber);
 
-		boolean indexOnUpgrade = GetterUtil.getBoolean(
-			unfilteredPortalProperties.getProperty(PropsKeys.INDEX_ON_UPGRADE),
-			PropsValues.INDEX_ON_UPGRADE);
-
 		updateRelease(
 			servletContextName, upgradeProcesses, buildNumber,
-			previousBuildNumber, indexOnUpgrade);
+			previousBuildNumber);
 	}
 
 	@Override
@@ -260,15 +228,12 @@ public class ReleaseLocalServiceImpl extends ReleaseLocalServiceBaseImpl {
 		}
 
 		if (!previousSchemaVersion.equals(currentSchemaVersion)) {
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("Unable to update release because the previous schema ");
-			sb.append("version ");
-			sb.append(previousSchemaVersion);
-			sb.append(" does not match the expected schema version ");
-			sb.append(currentSchemaVersion);
-
-			throw new IllegalStateException(sb.toString());
+			throw new IllegalStateException(
+				StringBundler.concat(
+					"Unable to update release because the previous schema ",
+					"version ", previousSchemaVersion,
+					" does not match the expected schema version ",
+					currentSchemaVersion));
 		}
 
 		release.setSchemaVersion(schemaVersion);

@@ -25,14 +25,12 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 %>
 
 <aui:script>
-	Liferay.provide(window, '<portlet:namespace />requestCloseDialog', function (
-		stateChange
-	) {
+	window['<portlet:namespace />requestCloseDialog'] = function (stateChange) {
 		Liferay.Util.getOpener().<portlet:namespace />closeDialog(
-			'<portlet:namespace/>certificateDialog',
+			'<portlet:namespace />certificateDialog',
 			stateChange
 		);
-	});
+	};
 </aui:script>
 
 <c:if test='<%= cmd.equals("replace") || cmd.equals("import") %>'>
@@ -40,20 +38,22 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 		navigationItems='<%=
 			new JSPNavigationItemList(pageContext) {
 				{
-					PortletURL portletURL = renderResponse.createRenderURL();
-
-					portletURL.setParameter("mvcRenderCommandName", "/admin/updateCertificate");
-					portletURL.setParameter("certificateUsage", certificateUsage.name());
-
-					portletURL.setParameter(Constants.CMD, "replace");
+					PortletURL portletURL = PortletURLBuilder.createRenderURL(
+						renderResponse
+					).setMVCRenderCommandName(
+						"/admin/update_certificate"
+					).setCMD(
+						"replace"
+					).setParameter(
+						"certificateUsage", certificateUsage.name()
+					).buildPortletURL();
 
 					add(
 						navigationItem -> {
 							navigationItem.setActive(cmd.equals("replace"));
 							navigationItem.setHref(portletURL.toString());
-							navigationItem.setLabel(LanguageUtil.get(request, "create-certificate"));
-						}
-					);
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "create-certificate"));
+						});
 
 					portletURL.setParameter(Constants.CMD, "import");
 
@@ -61,22 +61,21 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 						navigationItem -> {
 							navigationItem.setActive(cmd.equals("import"));
 							navigationItem.setHref(portletURL.toString());
-							navigationItem.setLabel(LanguageUtil.get(request, "import-certificate"));
-						}
-					);
+							navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "import-certificate"));
+						});
 				}
 			}
 		%>'
 	/>
 </c:if>
 
-<liferay-portlet:actionURL name="/admin/updateCertificate" var="updateCertificateURL">
-	<portlet:param name="mvcRenderCommandName" value="/admin/updateCertificate" />
+<liferay-portlet:actionURL name="/admin/update_certificate" var="updateCertificateURL">
+	<portlet:param name="mvcRenderCommandName" value="/admin/update_certificate" />
 	<portlet:param name="<%= Constants.CMD %>" value="<%= cmd %>" />
 	<portlet:param name="certificateUsage" value="<%= certificateUsage.name() %>" />
 </liferay-portlet:actionURL>
 
-<aui:form action="<%= updateCertificateURL.toString() %>" cssClass="" method="post" name="fm1">
+<aui:form action="<%= updateCertificateURL %>" cssClass="" method="post" name="fm1">
 	<c:choose>
 		<c:when test='<%= cmd.equals("import") && (x509Certificate == null) %>'>
 			<liferay-util:include page="/admin/import_certificate.jsp" servletContext="<%= application %>" />
@@ -84,15 +83,8 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 		<c:when test="<%= x509Certificate == null %>">
 
 			<%
-			String certificateCommonName = ParamUtil.getString(request, "certificateCommonName");
-			String certificateCountry = ParamUtil.getString(request, "certificateCountry");
 			String certificateKeyAlgorithm = ParamUtil.getString(request, "certificateKeyAlgorithm", "RSA");
 			String certificateKeyLength = ParamUtil.getString(request, "certificateKeyLength", "2048");
-			String certificateLocality = ParamUtil.getString(request, "certificateLocality");
-			String certificateOrganization = ParamUtil.getString(request, "certificateOrganization");
-			String certificateOrganizationUnit = ParamUtil.getString(request, "certificateOrganizationUnit");
-			String certificateState = ParamUtil.getString(request, "certificateState");
-			String certificateValidityDays = ParamUtil.getString(request, "certificateValidityDays", "356");
 			%>
 
 			<div class="lfr-form-content" id="<portlet:namespace />certificateForm">
@@ -105,19 +97,19 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 
 				<c:choose>
 					<c:when test='<%= cmd.equals("replace") %>'>
-						<aui:input label="common-name" name="certificateCommonName" required="<%= true %>" value="<%= certificateCommonName %>" />
+						<aui:input label="common-name" name="certificateCommonName" required="<%= true %>" value='<%= ParamUtil.getString(request, "certificateCommonName") %>' />
 
-						<aui:input label="organization" name="certificateOrganization" value="<%= certificateOrganization %>" />
+						<aui:input label="organization" name="certificateOrganization" value='<%= ParamUtil.getString(request, "certificateOrganization") %>' />
 
-						<aui:input label="organization-unit" name="certificateOrganizationUnit" value="<%= certificateOrganizationUnit %>" />
+						<aui:input label="organization-unit" name="certificateOrganizationUnit" value='<%= ParamUtil.getString(request, "certificateOrganizationUnit") %>' />
 
-						<aui:input label="locality" name="certificateLocality" value="<%= certificateLocality %>" />
+						<aui:input label="locality" name="certificateLocality" value='<%= ParamUtil.getString(request, "certificateLocality") %>' />
 
-						<aui:input label="state" name="certificateState" value="<%= certificateState %>" />
+						<aui:input label="state" name="certificateState" value='<%= ParamUtil.getString(request, "certificateState") %>' />
 
-						<aui:input label="country" name="certificateCountry" value="<%= certificateCountry %>" />
+						<aui:input label="country" name="certificateCountry" value='<%= ParamUtil.getString(request, "certificateCountry") %>' />
 
-						<aui:input label="validity-days" name="certificateValidityDays" value="<%= certificateValidityDays %>" />
+						<aui:input label="validity-days" name="certificateValidityDays" value='<%= ParamUtil.getString(request, "certificateValidityDays", "356") %>' />
 
 						<c:choose>
 							<c:when test="<%= certificateUsage == LocalEntityManager.CertificateUsage.SIGNING %>">
@@ -153,7 +145,7 @@ X509Certificate x509Certificate = (X509Certificate)request.getAttribute(SamlWebK
 
 			<aui:button-row>
 				<aui:button cssClass="btn-lg" type="submit" value="save" />
-				<aui:button cssClass="btn-lg" onClick='<%= renderResponse.getNamespace() + "requestCloseDialog(false);" %>' type="cancel" value="cancel" />
+				<aui:button cssClass="btn-lg" onClick='<%= liferayPortletResponse.getNamespace() + "requestCloseDialog(false);" %>' type="cancel" value="cancel" />
 			</aui:button-row>
 		</c:when>
 		<c:otherwise>

@@ -24,10 +24,9 @@ import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.document.library.test.util.BaseDLAppTestCase;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
@@ -230,11 +229,6 @@ public class DLFileEntryExtensionTest extends BaseDLAppTestCase {
 	}
 
 	@Test
-	public void testAddFileEntryEmptyFileName() throws Exception {
-		testAddFileEntryBasic("", _FILE_NAME, "txt", _FILE_NAME);
-	}
-
-	@Test
 	public void testAddFileEntryEmptyFileNameAndExtension() throws Exception {
 		testAddFileEntryBasic("", _STRIPPED_FILE_NAME, "", _STRIPPED_FILE_NAME);
 	}
@@ -280,14 +274,6 @@ public class DLFileEntryExtensionTest extends BaseDLAppTestCase {
 
 		testAddFileEntryBasic(
 			_STRIPPED_FILE_NAME, _STRIPPED_FILE_NAME, "", _STRIPPED_FILE_NAME);
-	}
-
-	@Test
-	public void testAddFileEntryTitleEqualToFileNamePlusExtension()
-		throws Exception {
-
-		testAddFileEntryBasic(
-			_STRIPPED_FILE_NAME, _FILE_NAME, "txt", _FILE_NAME);
 	}
 
 	@Test
@@ -366,30 +352,26 @@ public class DLFileEntryExtensionTest extends BaseDLAppTestCase {
 	protected FileEntry addFileEntry(String sourceFileName, String title)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), TestPropsValues.getUserId());
-
 		return DLAppLocalServiceUtil.addFileEntry(
-			TestPropsValues.getUserId(), group.getGroupId(),
+			null, TestPropsValues.getUserId(), group.getGroupId(),
 			parentFolder.getFolderId(), sourceFileName, ContentTypes.TEXT_PLAIN,
-			title, StringPool.BLANK, StringPool.BLANK,
-			TestDataConstants.TEST_BYTE_ARRAY, serviceContext);
+			title, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	protected void renameFileEntry(
 			FileEntry fileEntry, String sourceFileName, String title)
 		throws Exception {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				group.getGroupId(), TestPropsValues.getUserId());
-
 		DLAppServiceUtil.updateFileEntry(
 			fileEntry.getFileEntryId(), sourceFileName, ContentTypes.TEXT_PLAIN,
-			title, StringPool.BLANK, StringPool.BLANK,
+			title, StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
 			DLVersionNumberIncrease.MINOR, TestDataConstants.TEST_BYTE_ARRAY,
-			serviceContext);
+			fileEntry.getExpirationDate(), fileEntry.getReviewDate(),
+			ServiceContextTestUtil.getServiceContext(
+				group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	protected void testAddFileEntryBasic(

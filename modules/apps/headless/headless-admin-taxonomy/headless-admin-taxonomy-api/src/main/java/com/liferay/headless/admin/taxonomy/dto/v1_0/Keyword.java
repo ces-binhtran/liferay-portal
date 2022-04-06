@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -47,17 +50,24 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Keyword")
+@GraphQLName(
+	description = "Represents a keyword that describes content. Properties follow the [keywords](https://schema.org/keywords) specification.",
+	value = "Keyword"
+)
 @JsonFilter("Liferay.Vulcan")
 @Schema(
-	requiredProperties = {"name"},
-	description = "Represents a keyword that describes content. Properties follow the [keywords](https://schema.org/keywords) specification."
+	description = "Represents a keyword that describes content. Properties follow the [keywords](https://schema.org/keywords) specification.",
+	requiredProperties = {"name"}
 )
 @XmlRootElement(name = "Keyword")
-public class Keyword {
+public class Keyword implements Serializable {
 
 	public static Keyword toDTO(String json) {
 		return ObjectMapperUtil.readValue(Keyword.class, json);
+	}
+
+	public static Keyword unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Keyword.class, json);
 	}
 
 	@Schema
@@ -89,6 +99,34 @@ public class Keyword {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Map<String, Map<String, String>> actions;
+
+	@Schema
+	public String getAssetLibraryKey() {
+		return assetLibraryKey;
+	}
+
+	public void setAssetLibraryKey(String assetLibraryKey) {
+		this.assetLibraryKey = assetLibraryKey;
+	}
+
+	@JsonIgnore
+	public void setAssetLibraryKey(
+		UnsafeSupplier<String, Exception> assetLibraryKeyUnsafeSupplier) {
+
+		try {
+			assetLibraryKey = assetLibraryKeyUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String assetLibraryKey;
 
 	@Schema(description = "The keyword's creator.")
 	@Valid
@@ -290,6 +328,38 @@ public class Keyword {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected Long siteId;
 
+	@Schema(
+		description = "A flag that indicates whether the user making the requests is subscribed to this keyword."
+	)
+	public Boolean getSubscribed() {
+		return subscribed;
+	}
+
+	public void setSubscribed(Boolean subscribed) {
+		this.subscribed = subscribed;
+	}
+
+	@JsonIgnore
+	public void setSubscribed(
+		UnsafeSupplier<Boolean, Exception> subscribedUnsafeSupplier) {
+
+		try {
+			subscribed = subscribedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "A flag that indicates whether the user making the requests is subscribed to this keyword."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Boolean subscribed;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -328,6 +398,20 @@ public class Keyword {
 			sb.append("\"actions\": ");
 
 			sb.append(_toJSON(actions));
+		}
+
+		if (assetLibraryKey != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"assetLibraryKey\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(assetLibraryKey));
+
+			sb.append("\"");
 		}
 
 		if (creator != null) {
@@ -412,21 +496,42 @@ public class Keyword {
 			sb.append(siteId);
 		}
 
+		if (subscribed != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"subscribed\": ");
+
+			sb.append(subscribed);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.taxonomy.dto.v1_0.Keyword",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -442,14 +547,12 @@ public class Keyword {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -476,7 +579,7 @@ public class Keyword {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -484,7 +587,7 @@ public class Keyword {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -492,5 +595,10 @@ public class Keyword {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

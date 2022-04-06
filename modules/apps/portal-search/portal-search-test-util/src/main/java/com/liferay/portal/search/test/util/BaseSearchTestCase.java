@@ -87,14 +87,14 @@ public abstract class BaseSearchTestCase {
 		BaseModel<?> parentBaseModel = getParentBaseModel(
 			group, serviceContext);
 
-		Map<Locale, String> keywordsMap = HashMapBuilder.put(
-			LocaleUtil.getDefault(), "entity title"
-		).put(
-			LocaleUtil.HUNGARY, "entitas neve"
-		).build();
-
 		baseModel = addBaseModelWithWorkflow(
-			parentBaseModel, true, keywordsMap, serviceContext);
+			parentBaseModel, true,
+			HashMapBuilder.put(
+				LocaleUtil.getDefault(), "entity title"
+			).put(
+				LocaleUtil.HUNGARY, "entitas neve"
+			).build(),
+			serviceContext);
 
 		assertBaseModelsCount(initialBaseModelsSearchCount + 1, searchContext);
 
@@ -261,7 +261,7 @@ public abstract class BaseSearchTestCase {
 	}
 
 	protected void assertBaseModelsCount(
-			final int expectedCount, final SearchContext searchContext)
+			int expectedCount, SearchContext searchContext)
 		throws Exception {
 
 		Hits hits = searchBaseModelsCount(searchContext);
@@ -1056,10 +1056,8 @@ public abstract class BaseSearchTestCase {
 			PermissionThreadLocal.getPermissionChecker();
 
 		try {
-			PermissionChecker permissionChecker =
-				PermissionCheckerFactoryUtil.create(user);
-
-			PermissionThreadLocal.setPermissionChecker(permissionChecker);
+			PermissionThreadLocal.setPermissionChecker(
+				PermissionCheckerFactoryUtil.create(user));
 
 			searchContext.setUserId(user.getUserId());
 

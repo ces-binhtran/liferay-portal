@@ -14,8 +14,8 @@
 
 package com.liferay.bookmarks.internal.exportimport.staged.model.repository;
 
+import com.liferay.bookmarks.constants.BookmarksFolderConstants;
 import com.liferay.bookmarks.model.BookmarksEntry;
-import com.liferay.bookmarks.model.BookmarksFolderConstants;
 import com.liferay.bookmarks.service.BookmarksEntryLocalService;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.exportimport.kernel.lar.PortletDataException;
@@ -160,11 +160,9 @@ public class BookmarksEntryStagedModelRepository
 			if (trashHandler.isRestorable(
 					existingBookmarksEntry.getEntryId())) {
 
-				long userId = portletDataContext.getUserId(
-					bookmarksEntry.getUserUuid());
-
 				trashHandler.restoreTrashEntry(
-					userId, existingBookmarksEntry.getEntryId());
+					portletDataContext.getUserId(bookmarksEntry.getUserUuid()),
+					existingBookmarksEntry.getEntryId());
 			}
 		}
 		catch (PortalException portalException) {

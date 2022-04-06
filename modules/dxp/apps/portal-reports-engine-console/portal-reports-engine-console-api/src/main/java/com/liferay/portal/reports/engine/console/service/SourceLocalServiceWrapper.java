@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class SourceLocalServiceWrapper
 	implements ServiceWrapper<SourceLocalService>, SourceLocalService {
 
+	public SourceLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SourceLocalServiceWrapper(SourceLocalService sourceLocalService) {
 		_sourceLocalService = sourceLocalService;
 	}
@@ -46,6 +50,10 @@ public class SourceLocalServiceWrapper
 
 	/**
 	 * Adds the source to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param source the source
 	 * @return the source that was added
@@ -95,6 +103,10 @@ public class SourceLocalServiceWrapper
 	/**
 	 * Deletes the source with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param sourceId the primary key of the source
 	 * @return the source that was removed
 	 * @throws PortalException if a source with the primary key could not be found
@@ -109,6 +121,10 @@ public class SourceLocalServiceWrapper
 
 	/**
 	 * Deletes the source from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param source the source
 	 * @return the source that was removed
@@ -132,6 +148,13 @@ public class SourceLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _sourceLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _sourceLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -345,7 +368,8 @@ public class SourceLocalServiceWrapper
 			long groupId, String name, String driverUrl, boolean andSearch,
 			int start, int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				orderByComparator) {
+				<com.liferay.portal.reports.engine.console.model.Source>
+					orderByComparator) {
 
 		return _sourceLocalService.getSources(
 			groupId, name, driverUrl, andSearch, start, end, orderByComparator);
@@ -423,6 +447,10 @@ public class SourceLocalServiceWrapper
 
 	/**
 	 * Updates the source in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SourceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param source the source
 	 * @return the source that was updated

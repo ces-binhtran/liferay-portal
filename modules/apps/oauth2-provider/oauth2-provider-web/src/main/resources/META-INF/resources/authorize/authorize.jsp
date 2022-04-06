@@ -93,7 +93,7 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 									</clay:content-col>
 
 									<clay:content-col
-										expand="true"
+										expand="<%= true %>"
 									>
 										<liferay-ui:message arguments="<%= messageArguments %>" key="for-x-y" />
 									</clay:content-col>
@@ -104,6 +104,12 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 							%>
 
 						</ul>
+
+						<c:if test="<%= oAuth2Application.isRememberDevice() %>">
+							<aui:field-wrapper>
+								<aui:input checked="<%= false %>" helpMessage="remember-device-help" id="rememberDevice" label="remember-device" name="rememberDevice" type="checkbox" />
+							</aui:field-wrapper>
+						</c:if>
 
 						<c:if test="<%= !Validator.isBlank(oAuth2Application.getPrivacyPolicyURL()) %>">
 							<p class="privacy-policy text-truncate">
@@ -140,18 +146,18 @@ if (Validator.isNotNull(replyTo) && !replyTo.startsWith(PortalUtil.getPortalURL(
 								var allowButton = document.getElementById('<portlet:namespace />allow');
 
 								if (allowButton) {
-									allowButton.addEventListener('click', function () {
+									allowButton.addEventListener('click', () => {
 										document.getElementById('oauthDecision').value = 'allow';
-										Liferay.Util.postForm(document.<portlet:namespace/>fm);
+										Liferay.Util.postForm(document.<portlet:namespace />fm);
 									});
 								}
 
 								var cancelButton = document.getElementById('<portlet:namespace />cancel');
 
 								if (cancelButton) {
-									cancelButton.addEventListener('click', function () {
+									cancelButton.addEventListener('click', () => {
 										document.getElementById('oauthDecision').value = 'deny';
-										Liferay.Util.postForm(document.<portlet:namespace/>fm);
+										Liferay.Util.postForm(document.<portlet:namespace />fm);
 									});
 								}
 							</script>

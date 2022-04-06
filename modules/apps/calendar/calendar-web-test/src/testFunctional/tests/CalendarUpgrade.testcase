@@ -1,30 +1,22 @@
 @component-name = "portal-upgrades"
 definition {
 
-	property database.types = "db2,mariadb,mysql,oracle,postgresql,sqlserver,sybase";
+	property database.types = "db2,mariadb,mysql,oracle,postgresql,sybase";
 	property portal.release = "true";
 	property testray.component.names = "Calendar";
-	property testray.main.component.name = "Upgrades Workflow";
+	property testray.main.component.name = "Upgrades Calendar";
 
 	setUp {
 		SignIn.signIn();
 
-		Smoke.viewWelcomePage();
-
-		GlobalMenu.gotoPortlet(
-			category = "Configuration",
-			panel = "Control Panel",
-			portlet = "Search");
-
-		SearchAdministration.executeSearchActions(actionsDescription = "Reindex all search indexes.");
+		SearchAdministration.executeReindex();
 	}
 
 	@priority = "5"
 	test ViewCalendarArchive625 {
-		property portal.upstream = "quarantine";
-
 		property data.archive.type = "data-archive-calendar";
 		property database.types = "mariadb,mysql,postgresql";
+		property portal.upstream = "true";
 		property portal.version = "6.2.5";
 
 		Upgrade.viewCalendar();
@@ -33,6 +25,7 @@ definition {
 	@priority = "5"
 	test ViewCalendarArchive621015 {
 		property data.archive.type = "data-archive-calendar";
+		property portal.upstream = "true";
 		property portal.version = "6.2.10.15";
 
 		Upgrade.viewCalendar();
@@ -40,9 +33,8 @@ definition {
 
 	@priority = "5"
 	test ViewCalendarArchive621021 {
-		property portal.upstream = "quarantine";
-
 		property data.archive.type = "data-archive-calendar";
+		property portal.upstream = "true";
 		property portal.version = "6.2.10.21";
 
 		Upgrade.viewCalendar();

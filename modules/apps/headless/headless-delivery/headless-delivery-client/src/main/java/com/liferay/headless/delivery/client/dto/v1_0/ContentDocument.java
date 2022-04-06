@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.ContentDocumentSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class ContentDocument implements Cloneable {
+public class ContentDocument implements Cloneable, Serializable {
 
 	public static ContentDocument toDTO(String json) {
 		return ContentDocumentSerDes.toDTO(json);
@@ -96,6 +98,27 @@ public class ContentDocument implements Cloneable {
 	}
 
 	protected String contentUrl;
+
+	public String getContentValue() {
+		return contentValue;
+	}
+
+	public void setContentValue(String contentValue) {
+		this.contentValue = contentValue;
+	}
+
+	public void setContentValue(
+		UnsafeSupplier<String, Exception> contentValueUnsafeSupplier) {
+
+		try {
+			contentValue = contentValueUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected String contentValue;
 
 	public String getDescription() {
 		return description;

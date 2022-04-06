@@ -17,7 +17,7 @@ import ClayTable from '@clayui/table';
 import PropTypes from 'prop-types';
 import React, {useRef} from 'react';
 import {DndProvider, createDndContext} from 'react-dnd';
-import HTML5Backend from 'react-dnd-html5-backend';
+import {HTML5Backend} from 'react-dnd-html5-backend';
 
 import LanguageListItem from './LanguageListItem.es';
 import LanguageListItemEditable from './LanguageListItemEditable.es';
@@ -33,7 +33,7 @@ const LanguagesList = ({
 	onItemDrop = noop,
 	moveItem = noop,
 }) => {
-	const manager = useRef(createDndContext(HTML5Backend));
+	const managerRef = useRef(createDndContext(HTML5Backend));
 
 	return (
 		<ClayTable borderless headVerticalAlignment="middle" hover={false}>
@@ -58,7 +58,7 @@ const LanguagesList = ({
 			</ClayTable.Head>
 
 			<ClayTable.Body>
-				<DndProvider manager={manager.current.dragDropManager}>
+				<DndProvider manager={managerRef.current.dragDropManager}>
 					{locales.map((locale, index) => {
 						const baseProps = {
 							...locale,

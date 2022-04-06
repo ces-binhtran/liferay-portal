@@ -22,8 +22,10 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.taglib.util.TagResourceBundleUtil;
 
+import java.util.Map;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 
@@ -38,15 +40,21 @@ public class ButtonTag extends BaseContainerTag {
 
 		setContainerElement("button");
 
-		if (Validator.isNotNull(_ariaLabel)) {
-			setDynamicAttribute(StringPool.BLANK, "aria-label", _ariaLabel);
+		Map<String, Object> dynamicAttributes = getDynamicAttributes();
+
+		if (dynamicAttributes.get("title") != null) {
+			String title = (String)dynamicAttributes.get("title");
+
+			setDynamicAttribute(
+				StringPool.BLANK, "title",
+				LanguageUtil.get(
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					title));
 		}
 
-		if (_disabled) {
-			setDynamicAttribute(StringPool.BLANK, "disabled", _disabled);
+		if (dynamicAttributes.get("type") == null) {
+			setDynamicAttribute(StringPool.BLANK, "type", "button");
 		}
-
-		setDynamicAttribute(StringPool.BLANK, "type", _type);
 
 		return super.doStartTag();
 	}
@@ -55,28 +63,12 @@ public class ButtonTag extends BaseContainerTag {
 		return _alert;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getAriaLabel() {
-		return _ariaLabel;
-	}
-
 	public boolean getBlock() {
 		return _block;
 	}
 
 	public boolean getBorderless() {
 		return _borderless;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public boolean getDisabled() {
-		return _disabled;
 	}
 
 	public String getDisplayType() {
@@ -103,33 +95,8 @@ public class ButtonTag extends BaseContainerTag {
 		return _small;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getDisplayType()}
-	 */
-	@Deprecated
-	public String getStyle() {
-		return getDisplayType();
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getType() {
-		return _type;
-	}
-
 	public void setAlert(boolean alert) {
 		_alert = alert;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setAriaLabel(String ariaLabel) {
-		_ariaLabel = ariaLabel;
 	}
 
 	public void setBlock(boolean block) {
@@ -138,14 +105,6 @@ public class ButtonTag extends BaseContainerTag {
 
 	public void setBorderless(boolean borderless) {
 		_borderless = borderless;
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setDisabled(boolean disabled) {
-		_disabled = disabled;
 	}
 
 	public void setDisplayType(String displayType) {
@@ -172,39 +131,50 @@ public class ButtonTag extends BaseContainerTag {
 		_small = small;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #setDisplayType(String)}
-	 */
-	@Deprecated
-	public void setStyle(String style) {
-		setDisplayType(style);
-	}
-
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setType(String type) {
-		_type = type;
-	}
-
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
 		_alert = false;
-		_ariaLabel = null;
 		_block = false;
 		_borderless = false;
-		_disabled = false;
 		_displayType = "primary";
 		_icon = null;
 		_label = null;
 		_monospaced = false;
 		_outline = false;
 		_small = false;
-		_type = "button";
+	}
+
+	@Override
+	protected String getHydratedModuleName() {
+		if ((getAdditionalProps() != null) || (getPropsTransformer() != null)) {
+			return "frontend-taglib-clay/Button";
+		}
+
+		return null;
+	}
+
+	@Override
+	protected Map<String, Object> prepareProps(Map<String, Object> props) {
+		props.put("block", _block);
+		props.put("borderless", _borderless);
+		props.put("displayType", _displayType);
+		props.put("icon", _icon);
+
+		if (Validator.isNotNull(_label)) {
+			props.put(
+				"label",
+				LanguageUtil.get(
+					TagResourceBundleUtil.getResourceBundle(pageContext),
+					_label));
+		}
+
+		props.put("monospaced", _monospaced);
+		props.put("outline", _outline);
+		props.put("small", _small);
+
+		return super.prepareProps(props);
 	}
 
 	@Override
@@ -219,7 +189,9 @@ public class ButtonTag extends BaseContainerTag {
 			cssClasses.add("btn-block");
 		}
 
-		if (Validator.isNotNull(_icon) || _monospaced) {
+		if ((Validator.isNotNull(_icon) && Validator.isNull(_label)) ||
+			_monospaced) {
+
 			cssClasses.add("btn-monospaced");
 		}
 
@@ -251,13 +223,22 @@ public class ButtonTag extends BaseContainerTag {
 			JspWriter jspWriter = pageContext.getOut();
 
 			if (Validator.isNotNull(_icon)) {
-				jspWriter.write("<svg class=\"lexicon-icon lexicon-icon");
+				jspWriter.write("<span class=\"inline-item");
+
+				if (Validator.isNotNull(_label)) {
+					jspWriter.write(" inline-item-before");
+				}
+
+				jspWriter.write("\"><svg class=\"lexicon-icon lexicon-icon-");
 				jspWriter.write(_icon);
 				jspWriter.write("\" role=\"presentation\" viewBox=\"0 0 512 ");
 				jspWriter.write("512\"><use xlink:href=\"");
 
-				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-					WebKeys.THEME_DISPLAY);
+				HttpServletRequest httpServletRequest = getRequest();
+
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
 				String pathThemeImages = themeDisplay.getPathThemeImages();
 
@@ -267,7 +248,7 @@ public class ButtonTag extends BaseContainerTag {
 
 				jspWriter.write("#");
 				jspWriter.write(_icon);
-				jspWriter.write("\" /></svg>");
+				jspWriter.write("\" /></svg></span>");
 			}
 
 			if (Validator.isNotNull(_label)) {
@@ -286,16 +267,13 @@ public class ButtonTag extends BaseContainerTag {
 	private static final String _ATTRIBUTE_NAMESPACE = "clay:button:";
 
 	private boolean _alert;
-	private String _ariaLabel;
 	private boolean _block;
 	private boolean _borderless;
-	private boolean _disabled;
 	private String _displayType = "primary";
 	private String _icon;
 	private String _label;
 	private boolean _monospaced;
 	private boolean _outline;
 	private boolean _small;
-	private String _type = "button";
 
 }

@@ -24,6 +24,8 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.view.count.ViewCountManager;
 import com.liferay.redirect.model.RedirectNotFoundEntry;
 import com.liferay.redirect.service.base.RedirectNotFoundEntryLocalServiceBaseImpl;
 
@@ -31,6 +33,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Brian Wing Shun Chan
@@ -57,16 +60,18 @@ public class RedirectNotFoundEntryLocalServiceImpl
 
 			redirectNotFoundEntry.setGroupId(group.getGroupId());
 			redirectNotFoundEntry.setCompanyId(group.getCompanyId());
-			redirectNotFoundEntry.setHits(1);
 			redirectNotFoundEntry.setUrl(url);
 
-			return redirectNotFoundEntryPersistence.update(
+			redirectNotFoundEntry = redirectNotFoundEntryPersistence.update(
 				redirectNotFoundEntry);
 		}
 
-		redirectNotFoundEntry.setHits(redirectNotFoundEntry.getHits() + 1);
+		_viewCountManager.incrementViewCount(
+			redirectNotFoundEntry.getCompanyId(),
+			_portal.getClassNameId(RedirectNotFoundEntry.class),
+			redirectNotFoundEntry.getRedirectNotFoundEntryId(), 1);
 
-		return redirectNotFoundEntryPersistence.update(redirectNotFoundEntry);
+		return redirectNotFoundEntry;
 	}
 
 	@Override
@@ -79,32 +84,32 @@ public class RedirectNotFoundEntryLocalServiceImpl
 	@Override
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, Boolean ignored, Date minModifiedDate, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc) {
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator) {
 
 		return redirectNotFoundEntryLocalService.dynamicQuery(
 			_getRedirectNotFoundEntriesDynamicQuery(
-				groupId, ignored, minModifiedDate, obc),
+				groupId, ignored, minModifiedDate, orderByComparator),
 			start, end);
 	}
 
 	@Override
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, Date minModifiedDate, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc) {
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator) {
 
 		return redirectNotFoundEntryLocalService.dynamicQuery(
 			_getRedirectNotFoundEntriesDynamicQuery(
-				groupId, null, minModifiedDate, obc),
+				groupId, null, minModifiedDate, orderByComparator),
 			start, end);
 	}
 
 	@Override
 	public List<RedirectNotFoundEntry> getRedirectNotFoundEntries(
 		long groupId, int start, int end,
-		OrderByComparator<RedirectNotFoundEntry> obc) {
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator) {
 
 		return redirectNotFoundEntryPersistence.findByGroupId(
-			groupId, start, end, obc);
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -171,15 +176,15 @@ public class RedirectNotFoundEntryLocalServiceImpl
 
 	private DynamicQuery _getRedirectNotFoundEntriesDynamicQuery(
 		long groupId, Boolean ignored, Date minModifiedDate,
-		OrderByComparator<RedirectNotFoundEntry> obc) {
+		OrderByComparator<RedirectNotFoundEntry> orderByComparator) {
 
 		DynamicQuery redirectNotFoundEntriesDynamicQuery =
 			_getRedirectNotFoundEntriesDynamicQuery(
 				groupId, ignored, minModifiedDate);
 
-		if (obc != null) {
+		if (orderByComparator != null) {
 			OrderFactoryUtil.addOrderByComparator(
-				redirectNotFoundEntriesDynamicQuery, obc);
+				redirectNotFoundEntriesDynamicQuery, orderByComparator);
 		}
 		else {
 			redirectNotFoundEntriesDynamicQuery.addOrder(
@@ -188,5 +193,11 @@ public class RedirectNotFoundEntryLocalServiceImpl
 
 		return redirectNotFoundEntriesDynamicQuery;
 	}
+
+	@Reference
+	private Portal _portal;
+
+	@Reference
+	private ViewCountManager _viewCountManager;
 
 }

@@ -38,18 +38,18 @@ public class LayoutPageTemplateStructureRelCacheModel
 			   MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof LayoutPageTemplateStructureRelCacheModel)) {
+		if (!(object instanceof LayoutPageTemplateStructureRelCacheModel)) {
 			return false;
 		}
 
 		LayoutPageTemplateStructureRelCacheModel
 			layoutPageTemplateStructureRelCacheModel =
-				(LayoutPageTemplateStructureRelCacheModel)obj;
+				(LayoutPageTemplateStructureRelCacheModel)object;
 
 		if ((layoutPageTemplateStructureRelId ==
 				layoutPageTemplateStructureRelCacheModel.
@@ -82,10 +82,12 @@ public class LayoutPageTemplateStructureRelCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(25);
+		StringBundler sb = new StringBundler(37);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", layoutPageTemplateStructureRelId=");
@@ -108,6 +110,16 @@ public class LayoutPageTemplateStructureRelCacheModel
 		sb.append(segmentsExperienceId);
 		sb.append(", data=");
 		sb.append(data);
+		sb.append(", lastPublishDate=");
+		sb.append(lastPublishDate);
+		sb.append(", status=");
+		sb.append(status);
+		sb.append(", statusByUserId=");
+		sb.append(statusByUserId);
+		sb.append(", statusByUserName=");
+		sb.append(statusByUserName);
+		sb.append(", statusDate=");
+		sb.append(statusDate);
 		sb.append("}");
 
 		return sb.toString();
@@ -119,6 +131,7 @@ public class LayoutPageTemplateStructureRelCacheModel
 			new LayoutPageTemplateStructureRelImpl();
 
 		layoutPageTemplateStructureRelImpl.setMvccVersion(mvccVersion);
+		layoutPageTemplateStructureRelImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			layoutPageTemplateStructureRelImpl.setUuid("");
@@ -168,6 +181,33 @@ public class LayoutPageTemplateStructureRelCacheModel
 			layoutPageTemplateStructureRelImpl.setData(data);
 		}
 
+		if (lastPublishDate == Long.MIN_VALUE) {
+			layoutPageTemplateStructureRelImpl.setLastPublishDate(null);
+		}
+		else {
+			layoutPageTemplateStructureRelImpl.setLastPublishDate(
+				new Date(lastPublishDate));
+		}
+
+		layoutPageTemplateStructureRelImpl.setStatus(status);
+		layoutPageTemplateStructureRelImpl.setStatusByUserId(statusByUserId);
+
+		if (statusByUserName == null) {
+			layoutPageTemplateStructureRelImpl.setStatusByUserName("");
+		}
+		else {
+			layoutPageTemplateStructureRelImpl.setStatusByUserName(
+				statusByUserName);
+		}
+
+		if (statusDate == Long.MIN_VALUE) {
+			layoutPageTemplateStructureRelImpl.setStatusDate(null);
+		}
+		else {
+			layoutPageTemplateStructureRelImpl.setStatusDate(
+				new Date(statusDate));
+		}
+
 		layoutPageTemplateStructureRelImpl.resetOriginalValues();
 
 		return layoutPageTemplateStructureRelImpl;
@@ -178,6 +218,8 @@ public class LayoutPageTemplateStructureRelCacheModel
 		throws ClassNotFoundException, IOException {
 
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		layoutPageTemplateStructureRelId = objectInput.readLong();
@@ -195,11 +237,20 @@ public class LayoutPageTemplateStructureRelCacheModel
 
 		segmentsExperienceId = objectInput.readLong();
 		data = (String)objectInput.readObject();
+		lastPublishDate = objectInput.readLong();
+
+		status = objectInput.readInt();
+
+		statusByUserId = objectInput.readLong();
+		statusByUserName = objectInput.readUTF();
+		statusDate = objectInput.readLong();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -236,9 +287,25 @@ public class LayoutPageTemplateStructureRelCacheModel
 		else {
 			objectOutput.writeObject(data);
 		}
+
+		objectOutput.writeLong(lastPublishDate);
+
+		objectOutput.writeInt(status);
+
+		objectOutput.writeLong(statusByUserId);
+
+		if (statusByUserName == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(statusByUserName);
+		}
+
+		objectOutput.writeLong(statusDate);
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long layoutPageTemplateStructureRelId;
 	public long groupId;
@@ -250,5 +317,10 @@ public class LayoutPageTemplateStructureRelCacheModel
 	public long layoutPageTemplateStructureId;
 	public long segmentsExperienceId;
 	public String data;
+	public long lastPublishDate;
+	public int status;
+	public long statusByUserId;
+	public String statusByUserName;
+	public long statusDate;
 
 }

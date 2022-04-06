@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import Keywords from '../../../src/main/resources/META-INF/resources/js/components/Keywords';
@@ -17,25 +17,27 @@ import Keywords from '../../../src/main/resources/META-INF/resources/js/componen
 import '@testing-library/jest-dom/extend-expect';
 
 describe('Keywords', () => {
-	afterEach(cleanup);
-
 	it('renders message no best keywords when content was published today', () => {
 		const mockCurrentPage = {
 			data: {
+				countrySearchKeywords: [
+					{
+						countryCode: 'us',
+						countryName: 'United States',
+						keywords: [],
+					},
+				],
 				helpMessage:
 					'This number refers to the volume of people that find your page through a search engine.',
-				keywords: [],
 				name: 'organic',
 				share: 0,
 				title: 'Organic',
 				value: 0,
 			},
-			view: 'traffic-source-detail',
+			view: 'organic',
 		};
 
-		const {getByText} = render(
-			<Keywords currentPage={mockCurrentPage} languageTag={'en-US'} />
-		);
+		const {getByText} = render(<Keywords currentPage={mockCurrentPage} />);
 
 		expect(getByText('there-are-no-best-keywords-yet')).toBeInTheDocument();
 	});

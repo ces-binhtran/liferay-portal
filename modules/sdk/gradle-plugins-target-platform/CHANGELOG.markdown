@@ -1,5 +1,123 @@
 # Liferay Gradle Plugins Target Platform Change Log
 
+## 2.1.39 - 2022-01-12
+
+### Commits
+- [LPS-105380] prep nex (797e97c019)
+
+### Dependencies
+- [LRCI-2670] Update the com.liferay.gradle.util dependency to version 1.0.46.
+
+## 2.1.38 - 2021-12-09
+
+### Commits
+- [LPS-142100] [LPS-141250] revert (eee87baefd)
+
+### Dependencies
+- [LPS-143280] Update the com.liferay.gradle.util dependency to version 1.0.45.
+
+## 2.1.37 - 2021-10-19
+
+### Commits
+- [LPS-105380] Remove final from parameters (a4e6ca0985)
+- [LPS-105380] Remove final from variables (5a4e0b26b4)
+- [LPS-105380] Revert "LPS-105380 Remove final from variables" (cdda76fc8e)
+- [LPS-105380] Revert "LPS-105380 Remove final from parameters" (b2f9eed2c2)
+- [LPS-105380] Remove final from parameters (f615ff77ff)
+- [LPS-105380] Remove final from variables (ffe6186e71)
+
+## 2.1.33 - 2021-05-18
+
+### Commits
+- [LPS-130505] reverted, republish (a1551030f2)
+
+## 2.1.32 - 2021-03-30
+
+### Commits
+- [LPS-129874] Source formatting (677945141b)
+- [LPS-129874] Manually construct the Bndrun so we can overload the
+`getUnexpandedProperty` method so that it exibits the old behaviour of falling
+through to the parent processor (8fd4170a3d)
+
+## 2.1.29 - 2021-02-12
+
+### Commits
+- [LPS-105380] Make var final (12e010029a)
+
+## 2.1.26 - 2020-11-16
+
+### Commits
+- [LPS-123192] Fix tests (a0769d730f)
+- [LPS-123192] Fix tests (2efdaffa7b)
+
+## 2.1.25 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+- [LPS-121824] force referesh maven (0fe31dcef7)
+- [LPS-105380] Methods don't need to be static (c42da838cc)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+
+## 2.1.23 - 2020-07-06
+
+### Commits
+- [LPS-111461] fix excludes (551c8279b4)
+
+## 2.1.18 - 2020-06-11
+
+### Commits
+- [LPS-111461] exclude gradle-util (9839838e5a)
+- [LPS-105380] Rename variable: obj -> object (64cb899b48)
+- [LPS-113024] [LPS-114570] update because of CI CDN issues (8a163df22c)
+
+### Dependencies
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+
+## 2.1.17 - 2020-06-04
+
+### Commits
+- [LPS-114882] Add providedModules to whitelist (00cde5380b)
+
+## 2.1.11 - 2020-05-20
+
+### Dependencies
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+
+## 2.1.9 - 2020-05-13
+
+### Commits
+- [LPS-105380] revert (c22fc8b3e7)
+
+### Dependencies
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+
+## 2.1.5 - 2020-04-28
+
+### Commits
+- [LPS-112500] Add jsCompile to whitelist for TP configurations (79afe309f9)
+- [LPS-98417] Revert "LPS-98417 Add jsCompile to whitelist for TP
+configurations" (37bcf0a44a)
+
+### Dependencies
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+
+## 2.1.4 - 2020-04-22
+
+### Commits
+- [LPS-98417] Add jsCompile to whitelist for TP configurations (91020459c6)
+
+### Dependencies
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 2.1.3 - 2020-03-04
 
 ### Dependencies
@@ -398,6 +516,7 @@ and unit tests) (045479bf7c)
 [LPS-87419]: https://issues.liferay.com/browse/LPS-87419
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
 [LPS-88382]: https://issues.liferay.com/browse/LPS-88382
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-91342]: https://issues.liferay.com/browse/LPS-91342
 [LPS-91772]: https://issues.liferay.com/browse/LPS-91772
 [LPS-93483]: https://issues.liferay.com/browse/LPS-93483
@@ -409,6 +528,7 @@ and unit tests) (045479bf7c)
 [LPS-96290]: https://issues.liferay.com/browse/LPS-96290
 [LPS-97601]: https://issues.liferay.com/browse/LPS-97601
 [LPS-98190]: https://issues.liferay.com/browse/LPS-98190
+[LPS-98417]: https://issues.liferay.com/browse/LPS-98417
 [LPS-98877]: https://issues.liferay.com/browse/LPS-98877
 [LPS-99577]: https://issues.liferay.com/browse/LPS-99577
 [LPS-100448]: https://issues.liferay.com/browse/LPS-100448
@@ -422,3 +542,22 @@ and unit tests) (045479bf7c)
 [LPS-105889]: https://issues.liferay.com/browse/LPS-105889
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-107155]: https://issues.liferay.com/browse/LPS-107155
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111461]: https://issues.liferay.com/browse/LPS-111461
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-112500]: https://issues.liferay.com/browse/LPS-112500
+[LPS-113024]: https://issues.liferay.com/browse/LPS-113024
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-114570]: https://issues.liferay.com/browse/LPS-114570
+[LPS-114882]: https://issues.liferay.com/browse/LPS-114882
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020
+[LPS-121824]: https://issues.liferay.com/browse/LPS-121824
+[LPS-123192]: https://issues.liferay.com/browse/LPS-123192
+[LPS-129874]: https://issues.liferay.com/browse/LPS-129874
+[LPS-130505]: https://issues.liferay.com/browse/LPS-130505
+[LPS-141250]: https://issues.liferay.com/browse/LPS-141250
+[LPS-142100]: https://issues.liferay.com/browse/LPS-142100
+[LPS-143280]: https://issues.liferay.com/browse/LPS-143280
+[LRCI-2670]: https://issues.liferay.com/browse/LRCI-2670

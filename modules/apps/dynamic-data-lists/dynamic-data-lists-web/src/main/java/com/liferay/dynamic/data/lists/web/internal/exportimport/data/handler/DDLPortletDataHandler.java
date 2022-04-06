@@ -56,7 +56,7 @@ public class DDLPortletDataHandler extends BasePortletDataHandler {
 
 	public static final String NAMESPACE = "dynamic_data_lists";
 
-	public static final String SCHEMA_VERSION = "1.0.0";
+	public static final String SCHEMA_VERSION = "4.0.0";
 
 	@Override
 	public String[] getClassNames() {
@@ -66,6 +66,11 @@ public class DDLPortletDataHandler extends BasePortletDataHandler {
 	@Override
 	public String getSchemaVersion() {
 		return SCHEMA_VERSION;
+	}
+
+	@Override
+	public String getServiceName() {
+		return DDLConstants.SERVICE_NAME;
 	}
 
 	@Activate
@@ -104,7 +109,7 @@ public class DDLPortletDataHandler extends BasePortletDataHandler {
 
 	@Override
 	protected String doExportData(
-			final PortletDataContext portletDataContext, String portletId,
+			PortletDataContext portletDataContext, String portletId,
 			PortletPreferences portletPreferences)
 		throws Exception {
 

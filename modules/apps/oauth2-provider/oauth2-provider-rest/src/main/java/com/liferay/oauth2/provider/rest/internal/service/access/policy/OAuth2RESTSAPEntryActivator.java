@@ -20,11 +20,10 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.MapUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.security.service.access.policy.model.SAPEntry;
 import com.liferay.portal.security.service.access.policy.service.SAPEntryLocalService;
@@ -59,13 +58,8 @@ public class OAuth2RESTSAPEntryActivator {
 
 			String allowedServiceSignatures = sapEntryObjectArray[1];
 
-			ResourceBundleLoader resourceBundleLoader =
-				ResourceBundleLoaderUtil.
-					getResourceBundleLoaderByBundleSymbolicName(
-						"com.liferay.oauth2.provider.rest");
-
 			Map<Locale, String> map = ResourceBundleUtil.getLocalizationMap(
-				resourceBundleLoader, name);
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader(), name);
 
 			_sapEntryLocalService.addSAPEntry(
 				_userLocalService.getDefaultUserId(companyId),

@@ -43,13 +43,8 @@ public interface ContentPageEditorSidebarPanel {
 		return false;
 	}
 
-	public default boolean isVisible(boolean pageIsDisplayPage) {
-		return true;
-	}
-
 	public default boolean isVisible(
-		PermissionChecker permissionChecker, long plid,
-		boolean pageIsDisplayPage) {
+		PermissionChecker permissionChecker, long plid, int layoutType) {
 
 		return true;
 	}

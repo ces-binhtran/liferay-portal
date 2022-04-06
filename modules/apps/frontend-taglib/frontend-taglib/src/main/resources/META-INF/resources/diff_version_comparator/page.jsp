@@ -16,13 +16,13 @@
 
 <%@ include file="/init.jsp" %>
 
-<%
-Map<String, Object> data = (Map<String, Object>)request.getAttribute("liferay-frontend:diff-version-comparator:data");
-%>
+<liferay-util:html-top>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/diff_version_comparator.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
 
 <div>
 	<react:component
-		data="<%= data %>"
 		module="diff_version_comparator/index"
+		props='<%= (Map<String, Object>)request.getAttribute("liferay-frontend:diff-version-comparator:data") %>'
 	/>
 </div>

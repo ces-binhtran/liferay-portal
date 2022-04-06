@@ -21,10 +21,10 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 %>
 
 <clay:management-toolbar
-	displayContext="<%= new SelectUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUsersDisplayContext) %>"
+	managementToolbarDisplayContext="<%= new SelectUsersManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectUsersDisplayContext) %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectUser">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectUser">
 	<liferay-ui:search-container
 		id="users"
 		searchContainer="<%= selectUsersDisplayContext.getUserSearchContainer() %>"
@@ -41,16 +41,17 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 				name="screen-name"
 				orderable="<%= true %>"
 			>
-
-				<%
-				Map<String, Object> data = HashMapBuilder.<String, Object>put(
-					"screenname", userRow.getScreenName()
-				).put(
-					"userid", userRow.getUserId()
-				).build();
-				%>
-
-				<aui:a cssClass="selector-button" data="<%= data %>" href="javascript:;">
+				<aui:a
+					cssClass="selector-button"
+					data='<%=
+						HashMapBuilder.<String, Object>put(
+							"screenname", userRow.getScreenName()
+						).put(
+							"userid", userRow.getUserId()
+						).build()
+					%>'
+					href="javascript:;"
+				>
 					<%= userRow.getScreenName() %>
 				</aui:a>
 			</liferay-ui:search-container-column-text>
@@ -69,10 +70,3 @@ SelectUsersDisplayContext selectUsersDisplayContext = new SelectUsersDisplayCont
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectUser',
-		'<%= HtmlUtil.escapeJS(selectUsersDisplayContext.getEventName()) %>'
-	);
-</aui:script>

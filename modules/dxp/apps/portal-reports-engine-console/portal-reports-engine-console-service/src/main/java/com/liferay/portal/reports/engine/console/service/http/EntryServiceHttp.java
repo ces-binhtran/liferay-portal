@@ -46,7 +46,6 @@ import com.liferay.portal.reports.engine.console.service.EntryServiceUtil;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see EntryServiceSoap
  * @generated
  */
 public class EntryServiceHttp {
@@ -185,7 +184,8 @@ public class EntryServiceHttp {
 				java.util.Date createDateGT, java.util.Date createDateLT,
 				boolean andSearch, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					orderByComparator)
+					<com.liferay.portal.reports.engine.console.model.Entry>
+						orderByComparator)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {

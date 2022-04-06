@@ -19,9 +19,9 @@ import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.user.associated.data.anonymizer.UADAnonymizer;
+import com.liferay.user.associated.data.anonymizer.UADAnonymousUserProvider;
 import com.liferay.user.associated.data.constants.UserAssociatedDataPortletKeys;
 import com.liferay.user.associated.data.display.UADDisplay;
-import com.liferay.user.associated.data.web.internal.util.UADAnonymizerHelper;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + UserAssociatedDataPortletKeys.USER_ASSOCIATED_DATA,
-		"mvc.command.name=/anonymize_uad_applications"
+		"mvc.command.name=/user_associated_data/anonymize_uad_applications"
 	},
 	service = MVCActionCommand.class
 )
@@ -52,7 +52,7 @@ public class AnonymizeUADApplicationsMVCActionCommand
 
 		User selectedUser = getSelectedUser(actionRequest);
 
-		User anonymousUser = _uadAnonymizerHelper.getAnonymousUser(
+		User anonymousUser = _uadAnonymousUserProvider.getAnonymousUser(
 			selectedUser.getCompanyId());
 
 		long[] groupIds = ParamUtil.getLongValues(actionRequest, "groupIds");
@@ -85,6 +85,6 @@ public class AnonymizeUADApplicationsMVCActionCommand
 	}
 
 	@Reference
-	private UADAnonymizerHelper _uadAnonymizerHelper;
+	private UADAnonymousUserProvider _uadAnonymousUserProvider;
 
 }

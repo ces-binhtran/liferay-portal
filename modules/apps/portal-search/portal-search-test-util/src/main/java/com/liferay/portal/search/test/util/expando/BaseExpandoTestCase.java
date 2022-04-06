@@ -20,6 +20,7 @@ import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.service.ExpandoColumnLocalService;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactory;
 import com.liferay.expando.kernel.util.ExpandoBridgeIndexer;
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.search.BooleanQuery;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.search.Hits;
@@ -33,21 +34,18 @@ import com.liferay.portal.search.internal.analysis.DescriptionFieldQueryBuilder;
 import com.liferay.portal.search.internal.analysis.SimpleKeywordTokenizer;
 import com.liferay.portal.search.internal.analysis.SubstringFieldQueryBuilder;
 import com.liferay.portal.search.internal.expando.ExpandoFieldQueryBuilderFactory;
-import com.liferay.portal.search.internal.expando.ExpandoQueryContributorHelper;
+import com.liferay.portal.search.internal.expando.helper.ExpandoQueryContributorHelper;
+import com.liferay.portal.search.internal.expando.helper.ExpandoQueryContributorHelperImpl;
 import com.liferay.portal.search.internal.query.FieldQueryFactoryImpl;
 import com.liferay.portal.search.test.util.DocumentsAssert;
 import com.liferay.portal.search.test.util.IdempotentRetryAssert;
 import com.liferay.portal.search.test.util.indexing.BaseIndexingTestCase;
 import com.liferay.portal.search.test.util.indexing.DocumentCreationHelper;
-import com.liferay.registry.BasicRegistryImpl;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -56,6 +54,9 @@ import org.junit.Test;
 import org.mockito.Matchers;
 import org.mockito.Mockito;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
+
 /**
  * @author Bryan Engler
  */
@@ -63,18 +64,17 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 
 	@BeforeClass
 	public static void setUpClassBaseExpandoTestCase() {
-		Registry registry = new BasicRegistryImpl();
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		registry.registerService(
+		_serviceRegistration = bundleContext.registerService(
 			FieldQueryFactory.class,
-			createFieldQueryFactory(createExpandoFieldQueryBuilderFactory()));
-
-		RegistryUtil.setRegistry(registry);
+			createFieldQueryFactory(createExpandoFieldQueryBuilderFactory()),
+			null);
 	}
 
 	@AfterClass
 	public static void tearDownClassBaseExpandoTestCase() {
-		RegistryUtil.setRegistry(null);
+		_serviceRegistration.unregister();
 	}
 
 	@Test
@@ -276,9 +276,13 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 	protected ExpandoQueryContributorHelper
 		createExpandoQueryContributorHelper() {
 
-		return new ExpandoQueryContributorHelper(
-			createExpandoBridgeFactory(), createExpandoBridgeIndexer(),
-			createExpandoColumnLocalService(), null);
+		return new ExpandoQueryContributorHelperImpl() {
+			{
+				setExpandoBridgeFactory(createExpandoBridgeFactory());
+				setExpandoBridgeIndexer(createExpandoBridgeIndexer());
+				setExpandoColumnLocalService(createExpandoColumnLocalService());
+			}
+		};
 	}
 
 	protected UnicodeProperties createUnicodeProperties(int indexType) {
@@ -306,16 +310,10 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 		ExpandoQueryContributorHelper expandoQueryContributorHelper =
 			createExpandoQueryContributorHelper();
 
-		expandoQueryContributorHelper.setAndSearch(searchContext.isAndSearch());
-		expandoQueryContributorHelper.setBooleanQuery(booleanQuery);
-		expandoQueryContributorHelper.setClassNamesStream(
-			Stream.of(_CLASS_NAME_KEYWORD, _CLASS_NAME_TEXT));
-		expandoQueryContributorHelper.setCompanyId(
-			searchContext.getCompanyId());
-		expandoQueryContributorHelper.setKeywords(keywords);
-		expandoQueryContributorHelper.setLocale(searchContext.getLocale());
-
-		expandoQueryContributorHelper.contribute();
+		expandoQueryContributorHelper.contribute(
+			keywords, booleanQuery,
+			Arrays.asList(_CLASS_NAME_KEYWORD, _CLASS_NAME_TEXT),
+			searchContext);
 
 		Hits hits = search(searchContext, booleanQuery);
 
@@ -342,5 +340,7 @@ public abstract class BaseExpandoTestCase extends BaseIndexingTestCase {
 
 	private static final String _FIELD_TEXT =
 		"expando__custom_fields__testColumnName";
+
+	private static ServiceRegistration<?> _serviceRegistration;
 
 }

@@ -54,10 +54,10 @@ public class DLFileEntryRelatedEntryIndexer implements RelatedEntryIndexer {
 	}
 
 	@Override
-	public void addRelatedEntryFields(Document document, Object obj)
+	public void addRelatedEntryFields(Document document, Object object)
 		throws Exception {
 
-		Comment comment = (Comment)obj;
+		Comment comment = (Comment)object;
 
 		FileEntry fileEntry = null;
 
@@ -65,6 +65,10 @@ public class DLFileEntryRelatedEntryIndexer implements RelatedEntryIndexer {
 			fileEntry = dlAppLocalService.getFileEntry(comment.getClassPK());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return;
 		}
 

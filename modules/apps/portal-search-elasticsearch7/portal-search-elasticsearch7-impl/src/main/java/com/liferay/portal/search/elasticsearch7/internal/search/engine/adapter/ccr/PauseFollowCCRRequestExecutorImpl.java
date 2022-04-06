@@ -40,7 +40,7 @@ public class PauseFollowCCRRequestExecutorImpl
 	public PauseFollowCCRResponse execute(
 		PauseFollowCCRRequest pauseFollowCCRRequest) {
 
-		PauseFollowRequest pauseFollowRequest = createPauseFollowRequest(
+		PauseFollowRequest pauseFollowRequest = _createPauseFollowRequest(
 			pauseFollowCCRRequest);
 
 		AcknowledgedResponse acknowledgedResponse = getAcknowledgedResponse(
@@ -50,19 +50,14 @@ public class PauseFollowCCRRequestExecutorImpl
 			acknowledgedResponse.isAcknowledged());
 	}
 
-	protected PauseFollowRequest createPauseFollowRequest(
-		PauseFollowCCRRequest pauseFollowCCRRequest) {
-
-		return new PauseFollowRequest(pauseFollowCCRRequest.getIndexName());
-	}
-
 	protected AcknowledgedResponse getAcknowledgedResponse(
 		PauseFollowRequest pauseFollowRequest,
 		PauseFollowCCRRequest pauseFollowCCRRequest) {
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				pauseFollowCCRRequest.getConnectionId(), true);
+				pauseFollowCCRRequest.getConnectionId(),
+				pauseFollowCCRRequest.isPreferLocalCluster());
 
 		CcrClient ccrClient = restHighLevelClient.ccr();
 
@@ -80,6 +75,12 @@ public class PauseFollowCCRRequestExecutorImpl
 		ElasticsearchClientResolver elasticsearchClientResolver) {
 
 		_elasticsearchClientResolver = elasticsearchClientResolver;
+	}
+
+	private PauseFollowRequest _createPauseFollowRequest(
+		PauseFollowCCRRequest pauseFollowCCRRequest) {
+
+		return new PauseFollowRequest(pauseFollowCCRRequest.getIndexName());
 	}
 
 	private ElasticsearchClientResolver _elasticsearchClientResolver;

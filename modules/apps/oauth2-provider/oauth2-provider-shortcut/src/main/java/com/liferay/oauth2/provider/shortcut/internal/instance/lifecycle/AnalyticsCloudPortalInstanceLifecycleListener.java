@@ -54,10 +54,8 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserGroupService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.service.UserService;
-import com.liferay.portal.kernel.util.AggregateResourceBundleLoader;
-import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.Portal;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.language.LanguageResources;
@@ -68,7 +66,6 @@ import java.io.InputStream;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Dictionary;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -112,13 +109,6 @@ public class AnalyticsCloudPortalInstanceLifecycleListener
 					sapEntryObjectArray[0], "OAUTH2_", StringPool.BLANK));
 		}
 
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put(
-			"osgi.jaxrs.name",
-			OAuth2ProviderShortcutConstants.APPLICATION_NAME);
-		properties.put("sap.scope.finder", true);
-
 		_serviceRegistration = bundleContext.registerService(
 			new String[] {
 				ApplicationDescriptor.class.getName(),
@@ -126,7 +116,12 @@ public class AnalyticsCloudPortalInstanceLifecycleListener
 				ScopeFinder.class.getName(), ScopeMapper.class.getName()
 			},
 			new OAuth2ProviderShortcutScopeFinder(_sapEntryLocalService),
-			properties);
+			HashMapDictionaryBuilder.<String, Object>put(
+				"osgi.jaxrs.name",
+				OAuth2ProviderShortcutConstants.APPLICATION_NAME
+			).put(
+				"sap.scope.finder", true
+			).build());
 	}
 
 	@Deactivate
@@ -219,14 +214,6 @@ public class AnalyticsCloudPortalInstanceLifecycleListener
 	}
 
 	private void _addSAPEntries(long companyId, long userId) throws Exception {
-		Class<?> clazz = getClass();
-
-		ResourceBundleLoader resourceBundleLoader =
-			new AggregateResourceBundleLoader(
-				ResourceBundleUtil.getResourceBundleLoader(
-					"content.Language", clazz.getClassLoader()),
-				LanguageResources.RESOURCE_BUNDLE_LOADER);
-
 		for (String[] sapEntryObjectArray : _SAP_ENTRY_OBJECT_ARRAYS) {
 			String sapEntryName = sapEntryObjectArray[0];
 
@@ -239,7 +226,8 @@ public class AnalyticsCloudPortalInstanceLifecycleListener
 
 			Map<Locale, String> titleMap =
 				ResourceBundleUtil.getLocalizationMap(
-					resourceBundleLoader, sapEntryName);
+					LanguageResources.PORTAL_RESOURCE_BUNDLE_LOADER,
+					sapEntryName);
 
 			_sapEntryLocalService.addSAPEntry(
 				userId, sapEntryObjectArray[1], false, true, sapEntryName,

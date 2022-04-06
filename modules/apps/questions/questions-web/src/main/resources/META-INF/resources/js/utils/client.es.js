@@ -12,31 +12,31 @@
  * details.
  */
 
-import {ApolloClient, HttpLink, InMemoryCache, gql} from '@apollo/client';
 import {fetch} from 'frontend-js-web';
+import {GraphQLClient} from 'graphql-hooks';
+import memCache from 'graphql-hooks-memcache';
 
-const HEADERS = {
-	Accept: 'application/json',
+const headers = {
+	'Accept': 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 	'Content-Type': 'text/plain; charset=utf-8',
 };
 
-export const client = new ApolloClient({
-	cache: new InMemoryCache(),
-	defaultOptions: {
-		query: {
-			errorPolicy: 'all',
-		},
-	},
-	link: new HttpLink({
-		credentials: 'include',
-		fetch,
-		headers: HEADERS,
-		uri: '/o/graphql',
-	}),
+export const client = new GraphQLClient({
+	cache: memCache(),
+	fetch,
+	headers,
+	url: '/o/graphql',
 });
 
-export const createAnswerQuery = gql`
+export const clientNestedFields = new GraphQLClient({
+	cache: memCache(),
+	fetch,
+	headers,
+	url: '/o/graphql?nestedFields=lastPostDate',
+});
+
+export const createAnswerQuery = `
 	mutation createMessageBoardThreadMessageBoardMessage(
 		$articleBody: String!
 		$messageBoardThreadId: Long!
@@ -54,7 +54,7 @@ export const createAnswerQuery = gql`
 	}
 `;
 
-export const createCommentQuery = gql`
+export const createCommentQuery = `
 	mutation createMessageBoardMessageMessageBoardMessage(
 		$articleBody: String!
 		$parentMessageBoardMessageId: Long!
@@ -72,12 +72,40 @@ export const createCommentQuery = gql`
 			creator {
 				name
 			}
+			dateModified
 			id
 		}
 	}
 `;
 
-export const createQuestionQuery = gql`
+export const createQuestionInRootQuery = `
+	mutation createSiteMessageBoardThread(
+		$articleBody: String!
+		$headline: String!
+		$keywords: [String]
+		$siteKey: String!
+	) {
+		createSiteMessageBoardThread(
+			siteKey: $siteKey
+			messageBoardThread: {
+				articleBody: $articleBody
+				encodingFormat: "html"
+				headline: $headline
+				keywords: $keywords
+				showAsQuestion: true
+				subscribed: true
+				viewableBy: ANYONE
+			}
+		) {
+			articleBody
+			headline
+			keywords
+			showAsQuestion
+		}
+	}
+`;
+
+export const createQuestionInASectionQuery = `
 	mutation createMessageBoardSectionMessageBoardThread(
 		$messageBoardSectionId: Long!
 		$articleBody: String!
@@ -90,8 +118,9 @@ export const createQuestionQuery = gql`
 				articleBody: $articleBody
 				encodingFormat: "html"
 				headline: $headline
-				showAsQuestion: true
 				keywords: $keywords
+				showAsQuestion: true
+				subscribed: true
 				viewableBy: ANYONE
 			}
 		) {
@@ -103,7 +132,47 @@ export const createQuestionQuery = gql`
 	}
 `;
 
-export const createVoteMessageQuery = gql`
+export const createSubTopicQuery = `
+	mutation createMessageBoardSectionMessageBoardSection(
+		$description: String
+		$parentMessageBoardSectionId: Long!
+		$title: String!
+	) {
+		createMessageBoardSectionMessageBoardSection(
+			parentMessageBoardSectionId: $parentMessageBoardSectionId
+			messageBoardSection: {
+				description: $description
+				title: $title
+				viewableBy: ANYONE
+			}
+		) {
+			id
+			title
+		}
+	}
+`;
+
+export const createTopicQuery = `
+	mutation createSiteMessageBoardSection(
+		$description: String
+		$siteKey: String!
+		$title: String!
+	) {
+		createSiteMessageBoardSection(
+			siteKey: $siteKey
+			messageBoardSection: {
+				description: $description
+				title: $title
+				viewableBy: ANYONE
+			}
+		) {
+			id
+			title
+		}
+	}
+`;
+
+export const createVoteMessageQuery = `
 	mutation createMessageBoardMessageMyRating(
 		$messageBoardMessageId: Long!
 		$ratingValue: Float!
@@ -118,7 +187,7 @@ export const createVoteMessageQuery = gql`
 	}
 `;
 
-export const createVoteThreadQuery = gql`
+export const createVoteThreadQuery = `
 	mutation createMessageBoardThreadMyRating(
 		$messageBoardThreadId: Long!
 		$ratingValue: Float!
@@ -133,19 +202,48 @@ export const createVoteThreadQuery = gql`
 	}
 `;
 
-export const deleteMessageQuery = gql`
+export const deleteMessageQuery = `
 	mutation deleteMessageBoardMessage($messageBoardMessageId: Long!) {
 		deleteMessageBoardMessage(messageBoardMessageId: $messageBoardMessageId)
 	}
 `;
 
-export const deleteMessageBoardThreadQuery = gql`
+export const deleteMessageBoardThreadQuery = `
 	mutation deleteMessageBoardThread($messageBoardThreadId: Long!) {
 		deleteMessageBoardThread(messageBoardThreadId: $messageBoardThreadId)
 	}
 `;
 
-export const getTagsQuery = gql`
+export const getTagsOrderByDateCreatedQuery = `
+	query keywords(
+		$page: Int!
+		$pageSize: Int!
+		$search: String
+		$siteKey: String!
+	) {
+		keywords(
+			page: $page
+			pageSize: $pageSize
+			search: $search
+			siteKey: $siteKey
+			sort: "dateCreated:desc"
+		) {
+			items {
+				actions
+				id
+				dateCreated
+				name
+				subscribed
+			}
+			lastPage
+			page
+			pageSize
+			totalCount
+		}
+	}
+`;
+
+export const getTagsOrderByNumberOfUsagesQuery = `
 	query keywordsRanked(
 		$page: Int!
 		$pageSize: Int!
@@ -159,9 +257,11 @@ export const getTagsQuery = gql`
 			siteKey: $siteKey
 		) {
 			items {
+				actions
 				id
 				keywordUsageCount
 				name
+				subscribed
 			}
 			lastPage
 			page
@@ -171,7 +271,7 @@ export const getTagsQuery = gql`
 	}
 `;
 
-export const getMessageQuery = gql`
+export const getMessageQuery = `
 	query messageBoardMessageByFriendlyUrlPath(
 		$friendlyUrlPath: String!
 		$siteKey: String!
@@ -187,7 +287,7 @@ export const getMessageQuery = gql`
 	}
 `;
 
-export const getThreadQuery = gql`
+export const getThreadQuery = `
 	query messageBoardThreadByFriendlyUrlPath(
 		$friendlyUrlPath: String!
 		$siteKey: String!
@@ -221,27 +321,31 @@ export const getThreadQuery = gql`
 			headline
 			id
 			keywords
+			locked
 			messageBoardSection {
+				id
 				numberOfMessageBoardSections
+				parentMessageBoardSectionId
 				title
 			}
 			myRating {
 				ratingValue
 			}
+			seen
+			status
 			subscribed
 			viewCount
 		}
 	}
 `;
 
-export const getMessageBoardThreadByIdQuery = gql`
-	query messageBoardThreads($filter: String!, $siteKey: String!) {
-		messageBoardThreads(filter: $filter, flatten: true, siteKey: $siteKey) {
-			items {
-				friendlyUrlPath
-				id
+export const getSectionByMessageQuery = `
+	query messageBoardMessage($messageBoardMessageId: Long!) {
+		messageBoardMessage(messageBoardMessageId: $messageBoardMessageId) {
+			friendlyUrlPath
+			messageBoardThread {
 				messageBoardSection {
-					numberOfMessageBoardSections
+					id
 					title
 				}
 			}
@@ -249,7 +353,7 @@ export const getMessageBoardThreadByIdQuery = gql`
 	}
 `;
 
-export const getThreadContentQuery = gql`
+export const getThreadContentQuery = `
 	query messageBoardThreadByFriendlyUrlPath(
 		$friendlyUrlPath: String!
 		$siteKey: String!
@@ -266,7 +370,7 @@ export const getThreadContentQuery = gql`
 	}
 `;
 
-export const getMessagesQuery = gql`
+export const getMessagesQuery = `
 	query messageBoardThreadMessageBoardMessages(
 		$messageBoardThreadId: Long!
 		$page: Int!
@@ -298,10 +402,11 @@ export const getMessagesQuery = gql`
 					postsNumber
 					rank
 				}
+				dateModified
 				encodingFormat
 				friendlyUrlPath
 				id
-				messageBoardMessages {
+				messageBoardMessages(flatten: true) {
 					items {
 						actions
 						articleBody
@@ -310,15 +415,18 @@ export const getMessagesQuery = gql`
 							image
 							name
 						}
+						dateModified
 						encodingFormat
 						id
 						showAsAnswer
+						status
 					}
 				}
 				myRating {
 					ratingValue
 				}
 				showAsAnswer
+				status
 			}
 			pageSize
 			totalCount
@@ -326,7 +434,7 @@ export const getMessagesQuery = gql`
 	}
 `;
 
-export const hasListPermissionsQuery = gql`
+export const hasListPermissionsQuery = `
 	query messageBoardThreads($siteKey: String!) {
 		messageBoardThreads(siteKey: $siteKey) {
 			actions
@@ -334,94 +442,54 @@ export const hasListPermissionsQuery = gql`
 	}
 `;
 
-export const getQuestionThreads = (
-	creatorId = '',
-	filter,
-	keywords = '',
-	page = 1,
-	pageSize = 30,
-	search = '',
-	section,
-	siteKey
-) => {
-	if (filter === 'latest-edited') {
-		return getThreads(
-			creatorId,
-			keywords,
-			page,
-			pageSize,
-			search,
-			section,
-			siteKey,
-			'dateModified:desc'
-		);
+export const getSectionThreadsQuery = `
+	query messageBoardSectionMessageBoardThreads(
+		$messageBoardSectionId: Long!
+		$page: Int!
+		$pageSize: Int!
+	) {
+		messageBoardSectionMessageBoardThreads(
+			messageBoardSectionId: $messageBoardSectionId
+			page: $page
+			pageSize: $pageSize
+		) {
+			items {
+				aggregateRating {
+					ratingAverage
+					ratingCount
+					ratingValue
+				}
+				articleBody
+				creator {
+					id
+					image
+					name
+				}
+				dateModified
+				friendlyUrlPath
+				hasValidAnswer
+				headline
+				id
+				keywords
+				locked
+				messageBoardSection {
+					numberOfMessageBoardSections
+					parentMessageBoardSectionId
+					title
+				}
+				numberOfMessageBoardMessages
+				seen
+				status
+				viewCount
+			}
+			page
+			pageSize
+			totalCount
+		}
 	}
-	else if (filter === 'week') {
-		const date = new Date();
-		date.setDate(date.getDate() - 7);
+`;
 
-		return getRankedThreads(date, page, pageSize, section);
-	}
-	else if (filter === 'month') {
-		const date = new Date();
-		date.setDate(date.getDate() - 31);
-
-		return getRankedThreads(date, page, pageSize, section);
-	}
-
-	return getThreads(
-		creatorId,
-		keywords,
-		page,
-		pageSize,
-		search,
-		section,
-		siteKey,
-		'dateCreated:desc'
-	);
-};
-
-export const getThreads = (
-	creatorId = '',
-	keywords = '',
-	page = 1,
-	pageSize = 30,
-	search = '',
-	section,
-	siteKey,
-	sort = 'dateCreated:desc'
-) => {
-	let filter = `(messageBoardSectionId eq ${section.id} `;
-
-	for (let i = 0; i < section.messageBoardSections.items.length; i++) {
-		filter += `or messageBoardSectionId eq ${section.messageBoardSections.items[i].id} `;
-	}
-
-	filter += ')';
-
-	if (keywords) {
-		filter = `keywords/any(x:x eq '${keywords}')`;
-	}
-	else if (creatorId) {
-		filter = `creator/id eq ${creatorId}`;
-	}
-
-	return client
-		.query({
-			query: getThreadsQuery,
-			variables: {
-				filter,
-				page,
-				pageSize,
-				search,
-				siteKey,
-				sort,
-			},
-		})
-		.then((result) => ({...result, data: result.data.messageBoardThreads}));
-};
-
-export const getThreadsQuery = gql`
+export const getThreadsQuery = `
 	query messageBoardThreads(
 		$filter: String!
 		$page: Int!
@@ -456,12 +524,16 @@ export const getThreadsQuery = gql`
 				hasValidAnswer
 				headline
 				id
+				keywords
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
+					parentMessageBoardSectionId
 					title
 				}
 				numberOfMessageBoardMessages
-				keywords
+				seen
+				status
 				viewCount
 			}
 			page
@@ -471,64 +543,10 @@ export const getThreadsQuery = gql`
 	}
 `;
 
-export const getSectionQuery = gql`
-	query messageBoardSections($filter: String!, $siteKey: String!) {
-		messageBoardSections(
-			filter: $filter
-			flatten: true
-			pageSize: 1
-			siteKey: $siteKey
-			sort: "title:desc"
-		) {
-			items {
-				actions
-				id
-				messageBoardSections(sort: "title:asc") {
-					items {
-						id
-						numberOfMessageBoardSections
-						parentMessageBoardSectionId
-						subscribed
-						title
-					}
-				}
-				numberOfMessageBoardSections
-				parentMessageBoardSectionId
-				subscribed
-				title
-			}
-		}
-	}
-`;
-
-export const getRankedThreads = (
-	dateModified,
-	page = 1,
-	pageSize = 20,
-	section,
-	sort = ''
-) => {
-	return client
-		.query({
-			query: getRankedThreadsQuery,
-			variables: {
-				dateModified: dateModified.toISOString(),
-				messageBoardSectionId: section.id,
-				page,
-				pageSize,
-				sort,
-			},
-		})
-		.then((result) => ({
-			...result,
-			data: result.data.messageBoardThreadsRanked,
-		}));
-};
-
-export const getRankedThreadsQuery = gql`
+export const getRankedThreadsQuery = `
 	query messageBoardThreadsRanked(
-		$dateModified: Date!
-		$messageBoardSectionId: Long!
+		$dateModified: Date
+		$messageBoardSectionId: Long
 		$page: Int!
 		$pageSize: Int!
 		$sort: String!
@@ -558,11 +576,15 @@ export const getRankedThreadsQuery = gql`
 				headline
 				id
 				keywords
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
+					parentMessageBoardSectionId
 					title
 				}
 				numberOfMessageBoardMessages
+				seen
+				status
 				viewCount
 			}
 			page
@@ -572,7 +594,73 @@ export const getRankedThreadsQuery = gql`
 	}
 `;
 
-export const getRelatedThreadsQuery = gql`
+export const getSectionsQuery = `
+	query messageBoardSections($siteKey: String!) {
+		messageBoardSections(siteKey: $siteKey, sort: "title:asc") {
+			actions
+			items {
+				description
+				id
+				numberOfMessageBoardThreads
+				parentMessageBoardSectionId
+				subscribed
+				title
+			}
+		}
+	}
+`;
+
+export const getSectionBySectionTitleQuery = `
+	query messageBoardSections($filter: String!, $siteKey: String!) {
+		messageBoardSections(
+			filter: $filter
+			flatten: true
+			pageSize: 1
+			siteKey: $siteKey
+			sort: "title:asc"
+		) {
+			actions
+			items {
+				actions
+				id
+				messageBoardSections(sort: "title:asc") {
+					actions
+					items {
+						id
+						description
+						numberOfMessageBoardSections
+						numberOfMessageBoardThreads
+						parentMessageBoardSectionId
+						subscribed
+						title
+					}
+				}
+				numberOfMessageBoardSections
+				parentMessageBoardSection {
+					id
+					messageBoardSections {
+						items {
+							id
+							numberOfMessageBoardSections
+							parentMessageBoardSectionId
+							subscribed
+							title
+						}
+					}
+					numberOfMessageBoardSections
+					parentMessageBoardSectionId
+					subscribed
+					title
+				}
+				parentMessageBoardSectionId
+				subscribed
+				title
+			}
+		}
+	}
+`;
+
+export const getRelatedThreadsQuery = `
 	query messageBoardThreads($search: String!, $siteKey: String!) {
 		messageBoardThreads(
 			page: 1
@@ -596,10 +684,14 @@ export const getRelatedThreadsQuery = gql`
 				friendlyUrlPath
 				headline
 				id
+				locked
 				messageBoardSection {
 					numberOfMessageBoardSections
+					parentMessageBoardSectionId
 					title
 				}
+				seen
+				status
 			}
 			page
 			pageSize
@@ -608,29 +700,58 @@ export const getRelatedThreadsQuery = gql`
 	}
 `;
 
-export const getSectionsQuery = gql`
-	query messageBoardSections($siteKey: String!) {
-		messageBoardSections(siteKey: $siteKey, sort: "title:desc") {
-			items {
-				description
-				id
-				numberOfMessageBoardThreads
-				parentMessageBoardSectionId
-				subscribed
-				title
+export const getSectionQuery = `
+	query messageBoardSection($messageBoardSectionId: Long!) {
+		messageBoardSection(messageBoardSectionId: $messageBoardSectionId) {
+			actions
+			id
+			messageBoardSections(sort: "title:asc") {
+				items {
+					id
+					numberOfMessageBoardSections
+					parentMessageBoardSectionId
+					subscribed
+					title
+				}
 			}
+			numberOfMessageBoardThreads
+			parentMessageBoardSectionId
+			subscribed
+			title
 		}
 	}
 `;
 
-export const getUserActivityQuery = gql`
-	query messageBoardThreads(
+export function getThread(friendlyUrlPath, siteKey) {
+	return clientNestedFields.request({
+		query: getThreadQuery,
+		variables: {
+			friendlyUrlPath,
+			siteKey,
+		},
+	});
+}
+
+export function getMessages(messageBoardThreadId, page, pageSize) {
+	return clientNestedFields.request({
+		query: getMessagesQuery,
+		variables: {
+			messageBoardThreadId,
+			page,
+			pageSize,
+			sort: 'dateCreated:asc',
+		},
+	});
+}
+
+export const getUserActivityQuery = `
+	query messageBoardMessages(
 		$filter: String
 		$page: Int!
 		$pageSize: Int!
 		$siteKey: String!
 	) {
-		messageBoardThreads(
+		messageBoardMessages(
 			filter: $filter
 			flatten: true
 			page: $page
@@ -647,8 +768,8 @@ export const getUserActivityQuery = gql`
 				articleBody
 				creator {
 					id
-					name
 					image
+					name
 				}
 				creatorStatistics {
 					postsNumber
@@ -656,19 +777,16 @@ export const getUserActivityQuery = gql`
 				}
 				dateModified
 				friendlyUrlPath
-				hasValidAnswer
 				headline
 				id
 				keywords
-				messageBoardSection {
-					numberOfMessageBoardSections
-					title
+				messageBoardThread {
+					messageBoardSection {
+						id
+						title
+					}
 				}
 				numberOfMessageBoardMessages
-				taxonomyCategoryBriefs {
-					taxonomyCategoryId
-					taxonomyCategoryName
-				}
 			}
 			page
 			pageSize
@@ -677,7 +795,7 @@ export const getUserActivityQuery = gql`
 	}
 `;
 
-export const markAsAnswerMessageBoardMessageQuery = gql`
+export const markAsAnswerMessageBoardMessageQuery = `
 	mutation patchMessageBoardMessage(
 		$messageBoardMessageId: Long!
 		$showAsAnswer: Boolean!
@@ -692,7 +810,7 @@ export const markAsAnswerMessageBoardMessageQuery = gql`
 	}
 `;
 
-export const updateMessageQuery = gql`
+export const updateMessageQuery = `
 	mutation patchMessageBoardMessage(
 		$articleBody: String!
 		$messageBoardMessageId: Long!
@@ -709,7 +827,7 @@ export const updateMessageQuery = gql`
 	}
 `;
 
-export const updateThreadQuery = gql`
+export const updateThreadQuery = `
 	mutation patchMessageBoardThread(
 		$articleBody: String!
 		$headline: String!
@@ -732,7 +850,7 @@ export const updateThreadQuery = gql`
 	}
 `;
 
-export const subscribeQuery = gql`
+export const subscribeQuery = `
 	mutation updateMessageBoardThreadSubscribe($messageBoardThreadId: Long!) {
 		updateMessageBoardThreadSubscribe(
 			messageBoardThreadId: $messageBoardThreadId
@@ -740,7 +858,7 @@ export const subscribeQuery = gql`
 	}
 `;
 
-export const unsubscribeQuery = gql`
+export const unsubscribeQuery = `
 	mutation updateMessageBoardThreadUnsubscribe($messageBoardThreadId: Long!) {
 		updateMessageBoardThreadUnsubscribe(
 			messageBoardThreadId: $messageBoardThreadId
@@ -748,7 +866,7 @@ export const unsubscribeQuery = gql`
 	}
 `;
 
-export const subscribeSectionQuery = gql`
+export const subscribeSectionQuery = `
 	mutation updateMessageBoardSectionSubscribe($messageBoardSectionId: Long!) {
 		updateMessageBoardSectionSubscribe(
 			messageBoardSectionId: $messageBoardSectionId
@@ -756,12 +874,89 @@ export const subscribeSectionQuery = gql`
 	}
 `;
 
-export const unsubscribeSectionQuery = gql`
+export const unsubscribeSectionQuery = `
 	mutation updateMessageBoardSectionUnsubscribe(
 		$messageBoardSectionId: Long!
 	) {
 		updateMessageBoardSectionUnsubscribe(
 			messageBoardSectionId: $messageBoardSectionId
 		)
+	}
+`;
+
+export const subscribeTagQuery = `
+	mutation updateKeywordSubscribe($keywordId: Long!) {
+		updateKeywordSubscribe(
+			keywordId: $keywordId
+		)
+	}
+`;
+
+export const unsubscribeTagQuery = `
+	mutation updateKeywordUnsubscribe($keywordId: Long!) {
+		updateKeywordUnsubscribe(
+			keywordId: $keywordId
+		)
+	}
+`;
+
+export const getSubscriptionsQuery = `
+	query myUserAccountSubscriptions($contentType: String!) {
+		myUserAccountSubscriptions(contentType: $contentType) {
+			items {
+				id
+				contentType
+				graphQLNode {
+					... on MessageBoardSection {
+						id
+						title
+					}
+					... on MessageBoardThread {
+						actions
+						aggregateRating {
+							ratingAverage
+							ratingCount
+							ratingValue
+						}
+						articleBody
+						creator {
+							id
+							image
+							name
+						}
+						creatorStatistics {
+							joinDate
+							lastPostDate
+							postsNumber
+							rank
+						}
+						dateCreated
+						dateModified
+						encodingFormat
+						friendlyUrlPath
+						headline
+						id
+						keywords
+						messageBoardSection {
+							id
+							numberOfMessageBoardSections
+							parentMessageBoardSectionId
+							title
+						}
+						myRating {
+							ratingValue
+						}
+						subscribed
+						viewCount
+					}
+				}
+			}
+		}
+	}
+`;
+
+export const unsubscribeMyUserAccountQuery = `
+	mutation deleteMyUserAccountSubscription($subscriptionId: Long!) {
+		deleteMyUserAccountSubscription(subscriptionId: $subscriptionId)
 	}
 `;

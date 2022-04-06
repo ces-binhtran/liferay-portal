@@ -12,40 +12,26 @@
  * details.
  */
 
-import {useIsMounted} from 'frontend-js-react-web';
-import {debounce} from 'frontend-js-web';
-import {closest} from 'metal-dom';
+import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef} from 'react';
 
 import {
 	LayoutDataPropTypes,
 	getLayoutDataItemPropTypes,
 } from '../../prop-types/index';
 import {LAYOUT_DATA_ITEM_TYPES} from '../config/constants/layoutDataItemTypes';
-import {config} from '../config/index';
-import {useSelector} from '../store/index';
-import {useGetFieldValue} from './CollectionItemContext';
-import {useSelectItem} from './Controls';
+import {useSelectItem} from '../contexts/ControlsContext';
+import {useSelector} from '../contexts/StoreContext';
 import Layout from './Layout';
-import UnsafeHTML from './UnsafeHTML';
-import getAllEditables from './fragment-content/getAllEditables';
-import resolveEditableValue from './fragment-content/resolveEditableValue';
-import {
-	Collection,
-	Column,
-	Container,
-	Row,
-	Section,
-} from './layout-data-items/index';
+import FragmentContent from './fragment-content/FragmentContent';
+import {Collection, Column, Container, Row} from './layout-data-items/index';
 
 const LAYOUT_DATA_ITEMS = {
 	[LAYOUT_DATA_ITEM_TYPES.collection]: Collection,
 	[LAYOUT_DATA_ITEM_TYPES.collectionItem]: CollectionItem,
-	[LAYOUT_DATA_ITEM_TYPES.column]: Column,
-	[LAYOUT_DATA_ITEM_TYPES.container]: config.containerItemEnabled
-		? Container
-		: Section,
+	[LAYOUT_DATA_ITEM_TYPES.column]: MasterColumn,
+	[LAYOUT_DATA_ITEM_TYPES.container]: Container,
 	[LAYOUT_DATA_ITEM_TYPES.dropZone]: DropZoneContainer,
 	[LAYOUT_DATA_ITEM_TYPES.fragment]: Fragment,
 	[LAYOUT_DATA_ITEM_TYPES.fragmentDropZone]: Root,
@@ -55,7 +41,9 @@ const LAYOUT_DATA_ITEMS = {
 
 export default function MasterPage() {
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
-	const masterLayoutData = useSelector((state) => state.masterLayoutData);
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
 
 	const mainItem = masterLayoutData.items[masterLayoutData.rootItems.main];
 
@@ -116,17 +104,9 @@ function Root({children}) {
 function CollectionItem({children}) {
 	return <div>{children}</div>;
 }
-
-const FragmentContent = React.memo(function FragmentContent({
-	content: defaultContent,
-	editableValues,
-	languageId,
-}) {
+function Fragment({item}) {
 	const ref = useRef(null);
-	const isMounted = useIsMounted();
-	const [content, setContent] = useState(defaultContent);
 	const selectItem = useSelectItem();
-	const getFieldValue = useGetFieldValue();
 
 	useEffect(() => {
 		const element = ref.current;
@@ -138,11 +118,11 @@ const FragmentContent = React.memo(function FragmentContent({
 		const handler = (event) => {
 			const element = event.target;
 
-			if (closest(element, '[href]')) {
+			if (element.closest('[href]')) {
 				event.preventDefault();
 			}
 
-			if (!closest(event.target, '.page-editor')) {
+			if (!event.target.closest('.page-editor')) {
 				selectItem(null);
 			}
 		};
@@ -154,49 +134,10 @@ const FragmentContent = React.memo(function FragmentContent({
 		};
 	});
 
-	useEffect(() => {
-		let element = document.createElement('div');
-		element.innerHTML = content;
-
-		const updateContent = debounce(() => {
-			if (isMounted() && element) {
-				setContent(element.innerHTML);
-			}
-		}, 50);
-
-		getAllEditables(element).forEach((editable) => {
-			resolveEditableValue(
-				editableValues,
-				editable.editableId,
-				editable.editableValueNamespace,
-				languageId,
-				null,
-				getFieldValue
-			).then(([value, editableConfig]) => {
-				editable.processor.render(
-					editable.element,
-					value,
-					editableConfig
-				);
-			});
-		});
-
-		updateContent();
-
-		return () => {
-			element = null;
-		};
-	}, [
-		defaultContent,
-		content,
-		isMounted,
-		editableValues,
-		languageId,
-		getFieldValue,
-	]);
-
 	const fragmentEntryLinks = useSelector((state) => state.fragmentEntryLinks);
-	const masterLayoutData = useSelector((state) => state.masterLayoutData);
+	const masterLayoutData = useSelector(
+		(state) => state.masterLayout?.masterLayoutData
+	);
 
 	const getPortals = useCallback(
 		(element) =>
@@ -226,32 +167,12 @@ const FragmentContent = React.memo(function FragmentContent({
 	);
 
 	return (
-		<UnsafeHTML
-			className="page-editor__fragment-content page-editor__fragment-content--master"
-			contentRef={ref}
-			getPortals={getPortals}
-			markup={content}
-		/>
-	);
-});
-
-FragmentContent.propTypes = {
-	content: PropTypes.string.isRequired,
-	editableValues: PropTypes.object.isRequired,
-	languageId: PropTypes.string,
-};
-
-function Fragment({fragmentEntryLinks, item}) {
-	const fragmentEntryLink =
-		fragmentEntryLinks[item.config.fragmentEntryLinkId];
-
-	const languageId = useSelector((state) => state.languageId);
-
-	return (
 		<FragmentContent
-			content={fragmentEntryLink.content}
-			editableValues={fragmentEntryLink.editableValues}
-			languageId={languageId || config.defaultLanguageId}
+			className="page-editor__fragment-content--master"
+			elementRef={ref}
+			fragmentEntryLinkId={item.config.fragmentEntryLinkId}
+			getPortals={getPortals}
+			item={item}
 		/>
 	);
 }
@@ -264,3 +185,14 @@ Fragment.propTypes = {
 		}),
 	}).isRequired,
 };
+
+function MasterColumn({children, className, ...otherProps}) {
+	return (
+		<Column
+			{...otherProps}
+			className={classNames(className, 'page-editor__col--master')}
+		>
+			{children}
+		</Column>
+	);
+}

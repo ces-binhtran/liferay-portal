@@ -49,7 +49,7 @@ if (WebFormUtil.getTableRowsCount(company.getCompanyId(), databaseTableName) > 0
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
 
 	<div class="portlet-configuration-body-content">
-		<div class="container-fluid-1280">
+		<div class="container-fluid container-fluid-max-xl">
 			<liferay-ui:error exception="<%= ColumnNameException.class %>" message="please-enter-valid-field-names" />
 			<liferay-ui:error exception="<%= DuplicateColumnNameException.class %>" message="please-enter-unique-field-names" />
 
@@ -162,7 +162,7 @@ if (WebFormUtil.getTableRowsCount(company.getCompanyId(), databaseTableName) > 0
 								</liferay-portlet:actionURL>
 
 								<%
-								String taglibDelete = "submitForm(document." + renderResponse.getNamespace() + "fm, '" + deleteURL + "');";
+								String taglibDelete = "submitForm(document." + liferayPortletResponse.getNamespace() + "fm, '" + deleteURL + "');";
 								%>
 
 								<aui:button onClick="<%= taglibDelete %>" value="delete-data" />

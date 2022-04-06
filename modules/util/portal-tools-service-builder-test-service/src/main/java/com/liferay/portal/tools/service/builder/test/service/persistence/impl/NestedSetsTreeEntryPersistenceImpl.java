@@ -29,7 +29,10 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
 import com.liferay.portal.kernel.service.persistence.impl.NestedSetsTreeManager;
 import com.liferay.portal.kernel.service.persistence.impl.PersistenceNestedSetsTreeManager;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.spring.extender.service.ServiceReference;
 import com.liferay.portal.tools.service.builder.test.exception.NoSuchNestedSetsTreeEntryException;
@@ -38,13 +41,16 @@ import com.liferay.portal.tools.service.builder.test.model.NestedSetsTreeEntryTa
 import com.liferay.portal.tools.service.builder.test.model.impl.NestedSetsTreeEntryImpl;
 import com.liferay.portal.tools.service.builder.test.model.impl.NestedSetsTreeEntryModelImpl;
 import com.liferay.portal.tools.service.builder.test.service.persistence.NestedSetsTreeEntryPersistence;
+import com.liferay.portal.tools.service.builder.test.service.persistence.NestedSetsTreeEntryUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -88,8 +94,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 
 		setModelImplClass(NestedSetsTreeEntryImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(NestedSetsTreeEntryTable.INSTANCE);
 	}
@@ -102,12 +106,11 @@ public class NestedSetsTreeEntryPersistenceImpl
 	@Override
 	public void cacheResult(NestedSetsTreeEntry nestedSetsTreeEntry) {
 		entityCache.putResult(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
 			NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry.getPrimaryKey(),
 			nestedSetsTreeEntry);
-
-		nestedSetsTreeEntry.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the nested sets tree entries in the entity cache if it is enabled.
@@ -116,16 +119,20 @@ public class NestedSetsTreeEntryPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<NestedSetsTreeEntry> nestedSetsTreeEntries) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (nestedSetsTreeEntries.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (NestedSetsTreeEntry nestedSetsTreeEntry : nestedSetsTreeEntries) {
 			if (entityCache.getResult(
-					NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
 					NestedSetsTreeEntryImpl.class,
 					nestedSetsTreeEntry.getPrimaryKey()) == null) {
 
 				cacheResult(nestedSetsTreeEntry);
-			}
-			else {
-				nestedSetsTreeEntry.resetOriginalValues();
 			}
 		}
 	}
@@ -141,9 +148,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 	public void clearCache() {
 		entityCache.clearCache(NestedSetsTreeEntryImpl.class);
 
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(NestedSetsTreeEntryImpl.class);
 	}
 
 	/**
@@ -156,36 +161,23 @@ public class NestedSetsTreeEntryPersistenceImpl
 	@Override
 	public void clearCache(NestedSetsTreeEntry nestedSetsTreeEntry) {
 		entityCache.removeResult(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry.getPrimaryKey());
-
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry);
 	}
 
 	@Override
 	public void clearCache(List<NestedSetsTreeEntry> nestedSetsTreeEntries) {
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (NestedSetsTreeEntry nestedSetsTreeEntry : nestedSetsTreeEntries) {
 			entityCache.removeResult(
-				NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-				NestedSetsTreeEntryImpl.class,
-				nestedSetsTreeEntry.getPrimaryKey());
+				NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		finderCache.clearCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		finderCache.clearCache(NestedSetsTreeEntryImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			entityCache.removeResult(
-				NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-				NestedSetsTreeEntryImpl.class, primaryKey);
+			entityCache.removeResult(NestedSetsTreeEntryImpl.class, primaryKey);
 		}
 	}
 
@@ -349,15 +341,20 @@ public class NestedSetsTreeEntryPersistenceImpl
 							nestedSetsTreeEntry.
 								getParentNestedSetsTreeEntryId()));
 				}
-				else if (nestedSetsTreeEntry.getParentNestedSetsTreeEntryId() !=
-							nestedSetsTreeEntryModelImpl.
-								getOriginalParentNestedSetsTreeEntryId()) {
+				else if ((nestedSetsTreeEntryModelImpl.getColumnOriginalValue(
+							"parentNestedSetsTreeEntryId") != null) &&
+						 !Objects.equals(
+							 nestedSetsTreeEntry.
+								 getParentNestedSetsTreeEntryId(),
+							 nestedSetsTreeEntryModelImpl.
+								 getColumnOriginalValue(
+									 "parentNestedSetsTreeEntryId"))) {
 
 					nestedSetsTreeManager.move(
 						nestedSetsTreeEntry,
 						fetchByPrimaryKey(
-							nestedSetsTreeEntryModelImpl.
-								getOriginalParentNestedSetsTreeEntryId()),
+							nestedSetsTreeEntryModelImpl.getColumnOriginalValue(
+								"parentNestedSetsTreeEntryId")),
 						fetchByPrimaryKey(
 							nestedSetsTreeEntry.
 								getParentNestedSetsTreeEntryId()));
@@ -368,10 +365,8 @@ public class NestedSetsTreeEntryPersistenceImpl
 				session.clear();
 			}
 
-			if (nestedSetsTreeEntry.isNew()) {
+			if (isNew) {
 				session.save(nestedSetsTreeEntry);
-
-				nestedSetsTreeEntry.setNew(false);
 			}
 			else {
 				nestedSetsTreeEntry = (NestedSetsTreeEntry)session.merge(
@@ -385,18 +380,12 @@ public class NestedSetsTreeEntryPersistenceImpl
 			closeSession(session);
 		}
 
-		finderCache.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
+		entityCache.putResult(
+			NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry, false, true);
 
 		if (isNew) {
-			finderCache.removeResult(_finderPathCountAll, FINDER_ARGS_EMPTY);
-			finderCache.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
+			nestedSetsTreeEntry.setNew(false);
 		}
-
-		entityCache.putResult(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class, nestedSetsTreeEntry.getPrimaryKey(),
-			nestedSetsTreeEntry, false);
 
 		nestedSetsTreeEntry.resetOriginalValues();
 
@@ -538,7 +527,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<NestedSetsTreeEntry>)finderCache.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -579,10 +568,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					finderCache.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -612,7 +597,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)finderCache.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -629,9 +614,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				finderCache.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -671,7 +653,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountAncestors, finderArgs, this);
+			_finderPathWithPaginationCountAncestors, finderArgs);
 
 		if (count == null) {
 			try {
@@ -682,9 +664,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 					_finderPathWithPaginationCountAncestors, finderArgs, count);
 			}
 			catch (SystemException systemException) {
-				finderCache.removeResult(
-					_finderPathWithPaginationCountAncestors, finderArgs);
-
 				throw systemException;
 			}
 		}
@@ -701,7 +680,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 		};
 
 		Long count = (Long)finderCache.getResult(
-			_finderPathWithPaginationCountDescendants, finderArgs, this);
+			_finderPathWithPaginationCountDescendants, finderArgs);
 
 		if (count == null) {
 			try {
@@ -713,9 +692,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 					count);
 			}
 			catch (SystemException systemException) {
-				finderCache.removeResult(
-					_finderPathWithPaginationCountDescendants, finderArgs);
-
 				throw systemException;
 			}
 		}
@@ -735,7 +711,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 
 		List<NestedSetsTreeEntry> list =
 			(List<NestedSetsTreeEntry>)finderCache.getResult(
-				_finderPathWithPaginationGetAncestors, finderArgs, this);
+				_finderPathWithPaginationGetAncestors, finderArgs);
 
 		if ((list != null) && !list.isEmpty()) {
 			for (NestedSetsTreeEntry tempNestedSetsTreeEntry : list) {
@@ -763,9 +739,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 					_finderPathWithPaginationGetAncestors, finderArgs, list);
 			}
 			catch (SystemException systemException) {
-				finderCache.removeResult(
-					_finderPathWithPaginationGetAncestors, finderArgs);
-
 				throw systemException;
 			}
 		}
@@ -785,7 +758,7 @@ public class NestedSetsTreeEntryPersistenceImpl
 
 		List<NestedSetsTreeEntry> list =
 			(List<NestedSetsTreeEntry>)finderCache.getResult(
-				_finderPathWithPaginationGetDescendants, finderArgs, this);
+				_finderPathWithPaginationGetDescendants, finderArgs);
 
 		if ((list != null) && !list.isEmpty()) {
 			for (NestedSetsTreeEntry tempNestedSetsTreeEntry : list) {
@@ -814,9 +787,6 @@ public class NestedSetsTreeEntryPersistenceImpl
 					_finderPathWithPaginationGetDescendants, finderArgs, list);
 			}
 			catch (SystemException systemException) {
-				finderCache.removeResult(
-					_finderPathWithPaginationGetDescendants, finderArgs);
-
 				throw systemException;
 			}
 		}
@@ -942,65 +912,88 @@ public class NestedSetsTreeEntryPersistenceImpl
 	 * Initializes the nested sets tree entry persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationCountAncestors = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countAncestors",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "leftNestedSetsTreeEntryId",
+				"rightNestedSetsTreeEntryId"
+			},
+			false);
 
 		_finderPathWithPaginationCountDescendants = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "countDescendants",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "leftNestedSetsTreeEntryId",
+				"rightNestedSetsTreeEntryId"
+			},
+			false);
 
 		_finderPathWithPaginationGetAncestors = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "getAncestors",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "leftNestedSetsTreeEntryId",
+				"rightNestedSetsTreeEntryId"
+			},
+			true);
 
 		_finderPathWithPaginationGetDescendants = new FinderPath(
-			NestedSetsTreeEntryModelImpl.ENTITY_CACHE_ENABLED,
-			NestedSetsTreeEntryModelImpl.FINDER_CACHE_ENABLED,
-			NestedSetsTreeEntryImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "getDescendants",
 			new String[] {
 				Long.class.getName(), Long.class.getName(), Long.class.getName()
-			});
+			},
+			new String[] {
+				"groupId", "leftNestedSetsTreeEntryId",
+				"rightNestedSetsTreeEntryId"
+			},
+			true);
+
+		_setNestedSetsTreeEntryUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setNestedSetsTreeEntryUtilPersistence(null);
+
 		entityCache.removeCache(NestedSetsTreeEntryImpl.class.getName());
-		finderCache.removeCache(FINDER_CLASS_NAME_ENTITY);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		finderCache.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setNestedSetsTreeEntryUtilPersistence(
+		NestedSetsTreeEntryPersistence nestedSetsTreeEntryPersistence) {
+
+		try {
+			Field field = NestedSetsTreeEntryUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, nestedSetsTreeEntryPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	@ServiceReference(type = EntityCache.class)
@@ -1029,5 +1022,10 @@ public class NestedSetsTreeEntryPersistenceImpl
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		NestedSetsTreeEntryPersistenceImpl.class);
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return finderCache;
+	}
 
 }

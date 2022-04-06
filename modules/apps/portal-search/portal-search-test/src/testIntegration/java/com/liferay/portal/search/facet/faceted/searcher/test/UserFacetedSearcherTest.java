@@ -70,11 +70,10 @@ public class UserFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 
 		SearchContext searchContext = getSearchContext(keyword);
 
-		String[] entryClassNames = {
-			JournalArticle.class.getName(), User.class.getName()
-		};
-
-		searchContext.setEntryClassNames(entryClassNames);
+		searchContext.setEntryClassNames(
+			new String[] {
+				JournalArticle.class.getName(), User.class.getName()
+			});
 
 		searchContext.setLocale(_locale);
 
@@ -101,7 +100,7 @@ public class UserFacetedSearcherTest extends BaseFacetedSearcherTestCase {
 		String content = DDMStructureTestUtil.getSampleStructuredContent();
 
 		JournalArticle article = _journalArticleLocalService.addArticle(
-			user.getUserId(), group.getGroupId(), 0,
+			null, user.getUserId(), group.getGroupId(), 0,
 			Collections.singletonMap(_locale, title), null, content,
 			"BASIC-WEB-CONTENT", "BASIC-WEB-CONTENT", serviceContext);
 

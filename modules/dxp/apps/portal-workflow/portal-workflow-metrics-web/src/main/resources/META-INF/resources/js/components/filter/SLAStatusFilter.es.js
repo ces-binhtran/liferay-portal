@@ -16,51 +16,6 @@ import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.
 import {useFilterStatic} from '../../shared/components/filter/hooks/useFilterStatic.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 
-const SLAStatusFilter = ({
-	className,
-	filterKey = filterConstants.slaStatus.key,
-	options = {},
-	prefixKey = '',
-}) => {
-	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
-		withSelectionTitle: true,
-		withoutRouteParams: false,
-		...options,
-	};
-
-	const {items, selectedItems} = useFilterStatic({
-		filterKey,
-		prefixKey,
-		staticItems: slaStatuses,
-		...options,
-	});
-
-	const defaultItem = useMemo(() => (items ? items[0] : undefined), [items]);
-
-	const filterName = useFilterName(
-		options.multiple,
-		selectedItems,
-		Liferay.Language.get('sla-status'),
-		options.withSelectionTitle
-	);
-
-	return (
-		<Filter
-			data-testid="slaStatusFilter"
-			defaultItem={defaultItem}
-			elementClasses={className}
-			filterKey={filterKey}
-			items={items}
-			name={filterName}
-			prefixKey={prefixKey}
-			{...options}
-		/>
-	);
-};
-
 const slaStatusConstants = {
 	onTime: 'OnTime',
 	overdue: 'Overdue',
@@ -82,5 +37,45 @@ const slaStatuses = [
 	},
 ];
 
-export default SLAStatusFilter;
+export default function SLAStatusFilter({
+	className,
+	filterKey = filterConstants.slaStatus.key,
+	options = {},
+	prefixKey = '',
+}) {
+	options = {
+		withSelectionTitle: true,
+		withoutRouteParams: false,
+		...options,
+	};
+
+	const {items, selectedItems} = useFilterStatic({
+		filterKey,
+		prefixKey,
+		staticItems: slaStatuses,
+		...options,
+	});
+
+	const defaultItem = useMemo(() => items[0], [items]);
+
+	const filterName = useFilterName(
+		options.multiple,
+		selectedItems,
+		Liferay.Language.get('sla-status'),
+		options.withSelectionTitle
+	);
+
+	return (
+		<Filter
+			defaultItem={defaultItem}
+			elementClasses={className}
+			filterKey={filterKey}
+			items={items}
+			name={filterName}
+			prefixKey={prefixKey}
+			{...options}
+		/>
+	);
+}
+
 export {slaStatusConstants};

@@ -1,12 +1,13 @@
 @component-name = "portal-document-management"
 definition {
 
-	property osgi.app.includes = "oauth, oauth-api, oauth-service, oauth-web, sync-encryptor, sync-oauth, sync-security, sync-service, sync-web";
+	property custom.properties = "default.layout.template.id=1_column";
+	property osgi.app.includes = "oauth,oauth-api,oauth-service,oauth-web,sync-encryptor,sync-oauth,sync-security,sync-service,sync-web";
 	property portal.release = "false";
 	property portal.upstream = "true";
-	property custom.properties = "default.layout.template.id=1_column";
 	property test.run.environment = "EE";
 	property testray.main.component.name = "Sync";
+
 	var pageName = "Sync Page";
 	var portletName = "Documents and Media";
 
@@ -15,22 +16,23 @@ definition {
 
 		User.firstLoginPG();
 
-		GlobalMenu.gotoPortlet(
+		ApplicationsMenu.gotoPortlet(
 			category = "Configuration",
 			panel = "Control Panel",
 			portlet = "Sync Connector Admin");
 
+		var siteName = TestCase.getSiteName(siteName = "${siteName}");
+
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages",
-			site = "Guest");
+			site = "${siteName}");
 
-		SitePages.addPublicPage(
+		PagesAdmin.addPublicPage(
 			pageName = "Sync Page",
 			sitePageType = "Widget Page");
 
-		SitePages.configurePage(
+		PagesAdmin.configurePage(
 			columnName = "1 Column",
 			pageName = "Sync Page",
 			privacy = "Public Pages",
@@ -60,11 +62,12 @@ definition {
 
 			DMDocumentType.tearDownCP();
 
-			Page.tearDownCP();
+			PagesAdmin.tearDownCP();
 		}
 	}
 
 	@priority = "5"
+	@refactorneeded
 	test AddDocument {
 		property portal.acceptance = "false";
 		property testray.component.names = "Training";

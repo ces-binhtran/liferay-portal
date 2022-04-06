@@ -17,9 +17,15 @@ import {useToaster} from '../../../../shared/components/toaster/hooks/useToaster
 import {useDelete} from '../../../../shared/hooks/useDelete.es';
 import {SLAListPageContext} from '../SLAListPage.es';
 
-const DeleteSLAModal = () => {
+export default function DeleteSLAModal() {
 	const {itemToRemove, setVisible, visible} = useContext(SLAListPageContext);
-	const deleteSLA = useDelete({url: `/slas/${itemToRemove}`});
+	const deleteSLA = useDelete({
+		callback: () => {
+			onClose();
+			toaster.success(Liferay.Language.get('sla-was-deleted'));
+		},
+		url: `/slas/${itemToRemove}`,
+	});
 	const toaster = useToaster();
 
 	const {observer, onClose} = useModal({
@@ -29,19 +35,14 @@ const DeleteSLAModal = () => {
 	});
 
 	const removeItem = () => {
-		deleteSLA()
-			.then(() => {
-				onClose();
-				toaster.success(Liferay.Language.get('sla-was-deleted'));
-			})
-			.catch(() =>
-				toaster.danger(Liferay.Language.get('your-request-has-failed'))
-			);
+		deleteSLA().catch(() =>
+			toaster.danger(Liferay.Language.get('your-request-has-failed'))
+		);
 	};
 
 	return (
 		visible && (
-			<ClayModal data-testid="deleteModal" observer={observer} size="lg">
+			<ClayModal observer={observer} size="lg">
 				<ClayModal.Body>
 					<p>
 						{Liferay.Language.get(
@@ -49,18 +50,18 @@ const DeleteSLAModal = () => {
 						)}
 					</p>
 				</ClayModal.Body>
+
 				<ClayModal.Footer
 					last={
 						<ClayButton.Group spaced>
 							<ClayButton
-								data-testid="cancelButton"
 								displayType="secondary"
 								onClick={onClose}
 							>
 								{Liferay.Language.get('cancel')}
 							</ClayButton>
+
 							<ClayButton
-								data-testid="deleteButton"
 								id="removeSlaButton"
 								onClick={removeItem}
 							>
@@ -72,6 +73,4 @@ const DeleteSLAModal = () => {
 			</ClayModal>
 		)
 	);
-};
-
-export default DeleteSLAModal;
+}

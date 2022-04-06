@@ -13,38 +13,50 @@
  */
 
 CKEDITOR.on('dialogDefinition', (event) => {
-	if (event.editor === ckEditor) {
-		var dialogDefinition = event.data.definition;
+	var boundingWindow = event.editor.window;
 
-		var onShow = dialogDefinition.onShow;
+	var dialogDefinition = event.data.definition;
 
-		dialogDefinition.onShow = function () {
-			if (typeof onShow === 'function') {
-				onShow.apply(this, arguments);
-			}
+	var dialog = event.data.dialog;
 
-			var editorElement = this.getParentEditor().container;
+	var onShow = dialogDefinition.onShow;
 
-			var documentPosition = editorElement
-				.getLast()
-				.getDocumentPosition();
+	var centerDialog = function () {
+		var dialogSize = dialog.getSize();
 
-			var dialogSize = this.getSize();
+		var x = window.innerWidth / 2 - dialogSize.width / 2;
+		var y = window.innerHeight / 2 - dialogSize.height / 2;
 
-			var x =
-				documentPosition.x +
-				((editorElement.getLast().getSize('width', true) -
-					dialogSize.width) /
-					2 -
-					window.scrollX);
-			var y =
-				documentPosition.y +
-				((editorElement.getLast().getSize('height', true) -
-					dialogSize.height) /
-					2 -
-					window.scrollY);
+		dialog.move(x, y, false);
+	};
 
-			this.move(x, y, false);
+	dialogDefinition.onShow = function () {
+		if (typeof onShow === 'function') {
+			onShow.apply(this, arguments);
+		}
+
+		centerDialog();
+	};
+
+	var debounce = function (fn, delay) {
+		return function debounced() {
+			clearTimeout(debounced.id);
+			debounced.id = setTimeout(() => {
+				fn();
+			}, delay);
 		};
-	}
+	};
+
+	var debounced = boundingWindow.on(
+		'resize',
+		debounce(() => {
+			centerDialog();
+		}, 250)
+	);
+
+	var clearEventHandler = function () {
+		clearTimeout(debounced.id);
+	};
+
+	Liferay.once('destroyPortlet', clearEventHandler);
 });

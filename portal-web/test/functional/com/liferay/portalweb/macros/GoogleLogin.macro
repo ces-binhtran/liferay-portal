@@ -14,10 +14,8 @@ definition {
 				locator1 = "TextInput#ANSWER",
 				value1 = "test");
 
-			Button.clickSave();
+			Button.click(button = "Save");
 		}
-
-		SelectWindow.selectWindowTopNoSPARefresh();
 	}
 
 	macro accountSignIn {

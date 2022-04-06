@@ -12,29 +12,27 @@
  * details.
  */
 
-import {ClayInput, ClayRadio} from '@clayui/form';
+import {ClayRadio} from '@clayui/form';
 import ClayTable from '@clayui/table';
-import React, {useState} from 'react';
+import React from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
+import {useSyncValue} from '../hooks/useSyncValue.es';
 
 const TableHead = ({columns}) => (
 	<ClayTable.Head>
 		<ClayTable.Row>
 			<ClayTable.Cell headingCell />
+
 			{columns.map((column, colIndex) => {
-				if (column.value) {
-					return (
-						<ClayTable.Cell
-							headingCell
-							key={`column-${column.value}-${colIndex}`}
-						>
-							{column.label}
-						</ClayTable.Cell>
-					);
-				}
+				return (
+					<ClayTable.Cell
+						headingCell
+						key={`column-${column.value}-${colIndex}`}
+					>
+						{column.label}
+					</ClayTable.Cell>
+				);
 			})}
 		</ClayTable.Row>
 	</ClayTable.Head>
@@ -43,40 +41,43 @@ const TableHead = ({columns}) => (
 const TableBodyColumns = ({
 	columns,
 	disabled,
+	name,
 	onBlur,
 	onChange,
 	onFocus,
 	row,
-	rowIndex,
 	value,
-}) =>
-	columns.map((column, colIndex) => {
-		if (column.value) {
-			return (
-				<ClayTable.Cell key={`cell-${column.value}-${colIndex}`}>
-					<ClayRadio
-						aria-label={`grid_${rowIndex}_${colIndex}`}
-						checked={column.value === value[row.value]}
-						className="form-builder-grid-field"
-						disabled={disabled}
-						name={row.value}
-						onBlur={onBlur}
-						onChange={onChange}
-						onFocus={onFocus}
-						value={column.value}
-					/>
-				</ClayTable.Cell>
-			);
-		}
+}) => {
+	const columnLabel = Liferay.Language.get('column');
+	const rowLabel = Liferay.Language.get('row');
+
+	return columns.map((column, colIndex) => {
+		return (
+			<ClayTable.Cell key={`cell-${column.value}-${colIndex}`}>
+				<ClayRadio
+					aria-label={`${rowLabel}: ${row.label}, ${columnLabel}: ${column.label}`}
+					checked={column.value === value[row.value]}
+					className="form-builder-grid-field"
+					data-name={row.value}
+					disabled={disabled}
+					name={name}
+					onBlur={onBlur}
+					onChange={onChange}
+					onFocus={onFocus}
+					value={column.value}
+				/>
+			</ClayTable.Cell>
+		);
 	});
+};
 
 const Grid = ({
 	columns = [{label: 'col1', value: 'fieldId'}],
 	disabled,
 	name,
-	onBlur = () => {},
-	onChange = () => {},
-	onFocus = () => {},
+	onBlur,
+	onChange,
+	onFocus,
 	rows = [{label: 'row', value: 'jehf'}],
 	value,
 	...otherProps
@@ -89,8 +90,7 @@ const Grid = ({
 					: '';
 
 				return (
-					<ClayInput
-						aria-label="grid_hidden"
+					<input
 						key={`row-${row.value}-${rowIndex}`}
 						name={name}
 						type="hidden"
@@ -104,73 +104,71 @@ const Grid = ({
 
 			<ClayTable.Body>
 				{rows.map((row, rowIndex) => {
-					if (row.value) {
-						return (
-							<ClayTable.Row
-								key={`row-${row.value}-${rowIndex}`}
-								name={row.value}
-							>
-								<ClayTable.Cell>{row.label}</ClayTable.Cell>
+					return (
+						<ClayTable.Row
+							key={`row-${row.value}-${rowIndex}`}
+							name={row.value}
+						>
+							<ClayTable.Cell>{row.label}</ClayTable.Cell>
 
-								<TableBodyColumns
-									columns={columns}
-									disabled={disabled}
-									onBlur={onBlur}
-									onChange={onChange}
-									onFocus={onFocus}
-									row={row}
-									rowIndex={rowIndex}
-									value={value}
-								/>
-							</ClayTable.Row>
-						);
-					}
-
-					return null;
+							<TableBodyColumns
+								columns={columns}
+								disabled={disabled}
+								name={`${name}_${row.value}`}
+								onBlur={onBlur}
+								onChange={onChange}
+								onFocus={onFocus}
+								row={row}
+								value={value}
+							/>
+						</ClayTable.Row>
+					);
 				})}
 			</ClayTable.Body>
 		</ClayTable>
 	</div>
 );
 
-const GridProxy = connectStore(
-	({columns, emit, name, readOnly, rows, value = {}, ...otherProps}) => {
-		const [state, setState] = useState(value);
+const Main = ({
+	columns,
+	name,
+	readOnly,
+	rows,
+	onChange,
+	onFocus,
+	onBlur,
+	value = {},
+	...otherProps
+}) => {
+	const [state, setState] = useSyncValue(value, false);
 
-		return (
-			<FieldBaseProxy name={name} readOnly={readOnly} {...otherProps}>
-				<Grid
-					columns={columns}
-					disabled={readOnly}
-					name={name}
-					onBlur={(event) =>
-						emit('fieldBlurred', event, event.target.value)
-					}
-					onChange={(event) => {
-						const {target} = event;
-						const value = {
-							[target.name]: target.value,
-						};
+	return (
+		<FieldBase name={name} readOnly={readOnly} {...otherProps}>
+			<Grid
+				columns={columns}
+				disabled={readOnly}
+				name={name}
+				onBlur={onBlur}
+				onChange={(event) => {
+					const {target} = event;
+					const value = {
+						[target.dataset.name]: target.value,
+					};
 
-						const newState = {...state, ...value};
+					const newState = {...state, ...value};
 
-						setState(newState);
+					setState(newState);
 
-						emit('fieldEdited', event, newState);
-					}}
-					onFocus={(event) =>
-						emit('fieldFocused', event, event.target.value)
-					}
-					rows={rows}
-					value={state}
-				/>
-			</FieldBaseProxy>
-		);
-	}
-);
+					onChange(event, newState);
+				}}
+				onFocus={onFocus}
+				rows={rows}
+				value={state}
+			/>
+		</FieldBase>
+	);
+};
 
-const ReactGridAdapter = getConnectedReactComponentAdapter(GridProxy, 'grid');
+Main.displayName = 'Grid';
 
-export {ReactGridAdapter};
-
-export default ReactGridAdapter;
+export default Main;

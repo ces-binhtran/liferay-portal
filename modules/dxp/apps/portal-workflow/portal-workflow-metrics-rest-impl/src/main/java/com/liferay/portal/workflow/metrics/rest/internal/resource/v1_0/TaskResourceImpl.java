@@ -15,6 +15,7 @@
 package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
 import com.liferay.portal.kernel.language.Language;
+import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.ArrayUtil;
@@ -48,6 +49,12 @@ import com.liferay.portal.search.sort.Sorts;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+import com.liferay.portal.workflow.metrics.model.AddTaskRequest;
+import com.liferay.portal.workflow.metrics.model.Assignment;
+import com.liferay.portal.workflow.metrics.model.CompleteTaskRequest;
+import com.liferay.portal.workflow.metrics.model.DeleteTaskRequest;
+import com.liferay.portal.workflow.metrics.model.UpdateTaskRequest;
+import com.liferay.portal.workflow.metrics.model.UserAssignment;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Assignee;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Task;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.TaskBulkSelection;
@@ -59,6 +66,7 @@ import com.liferay.portal.workflow.metrics.search.index.TaskWorkflowMetricsIndex
 import com.liferay.portal.workflow.metrics.search.index.name.WorkflowMetricsIndexNameBuilder;
 import com.liferay.portal.workflow.metrics.sla.processor.WorkflowMetricsSLAStatus;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -84,8 +92,15 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	public void deleteProcessTask(Long processId, Long taskId)
 		throws Exception {
 
+		DeleteTaskRequest.Builder deleteTaskRequestBuilder =
+			new DeleteTaskRequest.Builder();
+
 		_taskWorkflowMetricsIndexer.deleteTask(
-			contextCompany.getCompanyId(), taskId);
+			deleteTaskRequestBuilder.companyId(
+				contextCompany.getCompanyId()
+			).taskId(
+				taskId
+			).build());
 	}
 
 	@Override
@@ -139,21 +154,36 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		getProcessTask(processId, taskId);
 
-		Long[] assigneeIds = null;
-		String assigneeType = null;
+		List<Assignment> assignments = new ArrayList<>();
 
 		Assignee assignee = task.getAssignee();
 
 		if ((assignee != null) && (assignee.getId() != null)) {
-			assigneeIds = new Long[] {assignee.getId()};
-			assigneeType = User.class.getName();
+			User user = _userLocalService.fetchUser(assignee.getId());
+
+			assignments.add(
+				new UserAssignment(assignee.getId(), user.getFullName()));
 		}
 
+		UpdateTaskRequest.Builder updateTaskRequestBuilder =
+			new UpdateTaskRequest.Builder();
+
 		_taskWorkflowMetricsIndexer.updateTask(
-			LocalizedMapUtil.getLocalizedMap(task.getAssetTitle_i18n()),
-			LocalizedMapUtil.getLocalizedMap(task.getAssetType_i18n()),
-			assigneeIds, assigneeType, contextCompany.getCompanyId(),
-			task.getDateModified(), task.getId(), contextUser.getUserId());
+			updateTaskRequestBuilder.assetTitleMap(
+				LocalizedMapUtil.getLocalizedMap(task.getAssetTitle_i18n())
+			).assetTypeMap(
+				LocalizedMapUtil.getLocalizedMap(task.getAssetType_i18n())
+			).assignments(
+				assignments
+			).companyId(
+				contextCompany.getCompanyId()
+			).modifiedDate(
+				task.getDateModified()
+			).taskId(
+				task.getId()
+			).userId(
+				contextUser.getUserId()
+			).build());
 	}
 
 	@Override
@@ -162,34 +192,32 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		getProcessTask(processId, taskId);
 
+		CompleteTaskRequest.Builder completeTaskRequestBuilder =
+			new CompleteTaskRequest.Builder();
+
 		_taskWorkflowMetricsIndexer.completeTask(
-			contextCompany.getCompanyId(), task.getDateCompletion(),
-			task.getCompletionUserId(), task.getDuration(),
-			task.getDateModified(), taskId, contextUser.getUserId());
+			completeTaskRequestBuilder.companyId(
+				contextCompany.getCompanyId()
+			).completionDate(
+				task.getDateCompletion()
+			).completionUserId(
+				task.getCompletionUserId()
+			).duration(
+				task.getDuration()
+			).modifiedDate(
+				task.getDateModified()
+			).taskId(
+				taskId
+			).userId(
+				contextUser.getUserId()
+			).build());
 	}
 
 	@Override
 	public Task postProcessTask(Long processId, Task task) throws Exception {
-		Assignee assignee = task.getAssignee();
-
-		Long[] assigneeIds = null;
-		String assigneeType = null;
-
-		if ((assignee != null) && (assignee.getId() != null)) {
-			assigneeIds = new Long[] {assignee.getId()};
-			assigneeType = User.class.getName();
-		}
-
 		return TaskUtil.toTask(
 			_taskWorkflowMetricsIndexer.addTask(
-				LocalizedMapUtil.getLocalizedMap(task.getAssetTitle_i18n()),
-				LocalizedMapUtil.getLocalizedMap(task.getAssetType_i18n()),
-				assigneeIds, assigneeType, task.getClassName(),
-				task.getClassPK(), contextCompany.getCompanyId(), false, null,
-				null, task.getDateCreated(), false, null, task.getInstanceId(),
-				task.getDateModified(), task.getName(), task.getNodeId(),
-				processId, task.getProcessVersion(), task.getId(),
-				contextUser.getUserId()),
+				_toAddTaskRequest(processId, task)),
 			_language, contextAcceptLanguage.getPreferredLocale(), _portal,
 			ResourceBundleUtil.getModuleAndPortalResourceBundle(
 				contextAcceptLanguage.getPreferredLocale(),
@@ -198,9 +226,14 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	}
 
 	@Override
-	public Page<Task> postProcessTasksPage(
+	public Page<Task> postTasksPage(
 			Pagination pagination, TaskBulkSelection taskBulkSelection)
 		throws Exception {
+
+		if (ArrayUtil.isEmpty(taskBulkSelection.getAssigneeIds())) {
+			taskBulkSelection.setAssigneeIds(
+				new Long[] {-1L, contextUser.getUserId()});
+		}
 
 		SearchSearchResponse searchSearchResponse = _getSearchSearchResponse(
 			taskBulkSelection.getAssigneeIds(),
@@ -249,37 +282,56 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		return Page.of(Collections.emptyList());
 	}
 
-	private BooleanQuery _createAssigneeIdsExistsBooleanQuery(
-		Long[] assigneeIds) {
-
-		BooleanQuery booleanQuery = _queries.booleanQuery();
-
-		if (ArrayUtil.contains(assigneeIds, -1L)) {
-			booleanQuery.addMustNotQueryClauses(_queries.exists("assigneeIds"));
-		}
-
-		return booleanQuery;
-	}
-
 	private BooleanQuery _createAssigneeIdsTermsBooleanQuery(
 		Long[] assigneeIds) {
 
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
-		TermsQuery termsQuery = _queries.terms("assigneeIds");
+		if (ArrayUtil.contains(assigneeIds, -1L)) {
+			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
 
-		termsQuery.addValues(
-			Stream.of(
-				assigneeIds
-			).filter(
-				assigneeId -> assigneeId > 0
-			).map(
-				String::valueOf
-			).toArray(
-				Object[]::new
-			));
+			TermsQuery termsQuery = _queries.terms("assigneeIds");
 
-		return booleanQuery.addMustQueryClauses(termsQuery);
+			termsQuery.addValues(
+				Stream.of(
+					ArrayUtil.toArray(contextUser.getRoleIds())
+				).map(
+					String::valueOf
+				).toArray(
+					Object[]::new
+				));
+
+			shouldBooleanQuery.addMustQueryClauses(
+				termsQuery,
+				_queries.term("assigneeType", Role.class.getName()));
+
+			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
+		}
+
+		if (!ArrayUtil.contains(assigneeIds, -1L) || (assigneeIds.length > 1)) {
+			BooleanQuery shouldBooleanQuery = _queries.booleanQuery();
+
+			TermsQuery termsQuery = _queries.terms("assigneeIds");
+
+			termsQuery.addValues(
+				Stream.of(
+					assigneeIds
+				).filter(
+					assigneeId -> assigneeId > 0
+				).map(
+					String::valueOf
+				).toArray(
+					Object[]::new
+				));
+
+			shouldBooleanQuery.addMustQueryClauses(
+				termsQuery,
+				_queries.term("assigneeType", User.class.getName()));
+
+			booleanQuery.addShouldQueryClauses(shouldBooleanQuery);
+		}
+
+		return booleanQuery;
 	}
 
 	private BooleanQuery _createBooleanQuery(long processId) {
@@ -305,9 +357,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 	private BooleanQuery _createBooleanQuery(
 		Long[] assigneeIds, Long[] instanceIds, Long processId) {
 
-		BooleanQuery booleanQuery = _queries.booleanQuery();
+		BooleanQuery filterBooleanQuery = _queries.booleanQuery();
 
-		booleanQuery.setMinimumShouldMatch(1);
+		BooleanQuery booleanQuery = _queries.booleanQuery();
 
 		BooleanQuery slaTaskResultsBooleanQuery = _queries.booleanQuery();
 
@@ -329,8 +381,9 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		tasksBooleanQuery.addMustQueryClauses(
 			_createTasksBooleanQuery(assigneeIds, instanceIds, processId));
 
-		return booleanQuery.addShouldQueryClauses(
-			slaTaskResultsBooleanQuery, tasksBooleanQuery);
+		return filterBooleanQuery.addFilterQueryClauses(
+			booleanQuery.addShouldQueryClauses(
+				slaTaskResultsBooleanQuery, tasksBooleanQuery));
 	}
 
 	private BucketSelectorPipelineAggregation
@@ -425,6 +478,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		BooleanQuery booleanQuery = _queries.booleanQuery();
 
 		return booleanQuery.addMustQueryClauses(
+			_queries.term("active", Boolean.TRUE),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("deleted", Boolean.FALSE),
 			_queries.term("processId", processId),
@@ -451,12 +505,6 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 
 		booleanQuery.addMustNotQueryClauses(_queries.term("taskId", 0));
 
-		if (assigneeIds != null) {
-			booleanQuery.addShouldQueryClauses(
-				_createAssigneeIdsExistsBooleanQuery(assigneeIds),
-				_createAssigneeIdsTermsBooleanQuery(assigneeIds));
-		}
-
 		if (instanceIds != null) {
 			booleanQuery.addMustQueryClauses(
 				_createInstanceIdsTermsBooleanQuery(instanceIds));
@@ -468,6 +516,7 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		}
 
 		return booleanQuery.addMustQueryClauses(
+			_createAssigneeIdsTermsBooleanQuery(assigneeIds),
 			_queries.term("companyId", contextCompany.getCompanyId()),
 			_queries.term("completed", Boolean.FALSE),
 			_queries.term("deleted", Boolean.FALSE),
@@ -649,6 +698,61 @@ public class TaskResourceImpl extends BaseTaskResourceImpl {
 		).collect(
 			Collectors.toCollection(LinkedList::new)
 		);
+	}
+
+	private AddTaskRequest _toAddTaskRequest(Long processId, Task task) {
+		AddTaskRequest.Builder addTaskRequestBuilder =
+			new AddTaskRequest.Builder();
+
+		return addTaskRequestBuilder.assetTitleMap(
+			LocalizedMapUtil.getLocalizedMap(task.getAssetTitle_i18n())
+		).assetTypeMap(
+			LocalizedMapUtil.getLocalizedMap(task.getAssetType_i18n())
+		).assignments(
+			() -> {
+				List<Assignment> assignments = new ArrayList<>();
+
+				Assignee assignee = task.getAssignee();
+
+				if ((assignee != null) && (assignee.getId() != null)) {
+					User user = _userLocalService.fetchUser(assignee.getId());
+
+					assignments.add(
+						new UserAssignment(
+							assignee.getId(), user.getFullName()));
+				}
+
+				return assignments;
+			}
+		).className(
+			task.getClassName()
+		).classPK(
+			task.getClassPK()
+		).companyId(
+			contextCompany.getCompanyId()
+		).completed(
+			false
+		).createDate(
+			task.getDateCreated()
+		).instanceCompleted(
+			false
+		).instanceId(
+			task.getInstanceId()
+		).modifiedDate(
+			task.getDateModified()
+		).name(
+			task.getName()
+		).nodeId(
+			task.getNodeId()
+		).processId(
+			processId
+		).processVersion(
+			task.getProcessVersion()
+		).taskId(
+			task.getId()
+		).userId(
+			contextUser.getUserId()
+		).build();
 	}
 
 	@Reference

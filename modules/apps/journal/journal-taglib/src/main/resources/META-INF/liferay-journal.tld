@@ -15,9 +15,20 @@
 		<tag-class>com.liferay.journal.taglib.servlet.taglib.JournalArticleTag</tag-class>
 		<body-content>JSP</body-content>
 		<attribute>
-			<name>articleId</name>
-			<required>true</required>
+			<name>article</name>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>articleId</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>dataAnalyticsTrackingEnabled</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 		<attribute>
 			<name>ddmTemplateKey</name>
@@ -26,7 +37,7 @@
 		</attribute>
 		<attribute>
 			<name>groupId</name>
-			<required>true</required>
+			<required>false</required>
 			<rtexprvalue>true</rtexprvalue>
 			<type>long</type>
 		</attribute>
@@ -56,6 +67,12 @@
 			<name>articleDisplay</name>
 			<required>true</required>
 			<rtexprvalue>true</rtexprvalue>
+		</attribute>
+		<attribute>
+			<name>dataAnalyticsTrackingEnabled</name>
+			<required>false</required>
+			<rtexprvalue>true</rtexprvalue>
+			<type>boolean</type>
 		</attribute>
 		<attribute>
 			<name>showTitle</name>

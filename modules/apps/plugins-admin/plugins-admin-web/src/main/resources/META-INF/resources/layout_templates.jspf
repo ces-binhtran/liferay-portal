@@ -17,7 +17,7 @@
 <c:if test="<%= marketplaceURL != null %>">
 
 	<%
-	String taglibOnClick = "submitForm(document." + renderResponse.getNamespace() + "fm , '" + marketplaceURL.toString() + "');";
+	String taglibOnClick = "submitForm(document." + liferayPortletResponse.getNamespace() + "fm , '" + marketplaceURL.toString() + "');";
 	%>
 
 	<aui:button onClick="<%= taglibOnClick %>" value="install-more-layout-templates" />
@@ -30,6 +30,13 @@ List<LayoutTemplate> layoutTemplates = LayoutTemplateLocalServiceUtil.getLayoutT
 %>
 
 <div class="container-fluid container-fluid-max-xl container-view">
+	<div class="float-right">
+		<liferay-learn:message
+			key="general"
+			resource="plugins-admin-web"
+		/>
+	</div>
+
 	<liferay-ui:search-container
 		iteratorURL="<%= portletURL %>"
 		total="<%= layoutTemplates.size() %>"
@@ -47,10 +54,13 @@ List<LayoutTemplate> layoutTemplates = LayoutTemplateLocalServiceUtil.getLayoutT
 			PluginPackage pluginPackage = layoutTemplate.getPluginPackage();
 			PluginSetting pluginSetting = PluginSettingLocalServiceUtil.getPluginSetting(company.getCompanyId(), layoutTemplate.getLayoutTemplateId(), Plugin.TYPE_LAYOUT_TEMPLATE);
 
-			PortletURL rowURL = renderResponse.createRenderURL();
-
-			rowURL.setParameter("mvcRenderCommandName", "/plugins_admin/edit_plugin");
-			rowURL.setParameter("redirect", currentURL);
+			PortletURL rowURL = PortletURLBuilder.createRenderURL(
+				renderResponse
+			).setMVCRenderCommandName(
+				"/plugins_admin/edit_plugin"
+			).setRedirect(
+				currentURL
+			).buildPortletURL();
 
 			if (pluginPackage != null) {
 				rowURL.setParameter("moduleId", pluginPackage.getModuleId());
@@ -66,7 +76,7 @@ List<LayoutTemplate> layoutTemplates = LayoutTemplateLocalServiceUtil.getLayoutT
 				name="layout-template"
 			>
 				<aui:a href="<%= showEditPluginHREF ? rowURL.toString() : null %>">
-					<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />' class="plugin-thumbnail" src="<%= layoutTemplate.getStaticResourcePath() + HtmlUtil.escapeAttribute(layoutTemplate.getThumbnailPath()) %>" />
+					<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="thumbnail" />" class="plugin-thumbnail" src="<%= layoutTemplate.getStaticResourcePath() + HtmlUtil.escapeAttribute(layoutTemplate.getThumbnailPath()) %>" />
 
 					<strong><%= HtmlUtil.escape(layoutTemplate.getName(locale)) %></strong>
 				</aui:a>

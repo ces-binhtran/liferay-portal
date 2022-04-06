@@ -24,7 +24,8 @@ taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 
-<%@ page import="com.liferay.portal.kernel.exception.NoSuchUserException" %><%@
+<%@ page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
+page import="com.liferay.portal.kernel.exception.NoSuchUserException" %><%@
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.log.Log" %><%@
 page import="com.liferay.portal.kernel.log.LogFactoryUtil" %><%@
@@ -50,6 +51,7 @@ page import="com.liferay.portal.util.PropsValues" %>
 page import="java.util.Enumeration" %><%@
 page import="java.util.List" %><%@
 page import="java.util.Map" %><%@
+page import="java.util.Objects" %><%@
 page import="java.util.Set" %><%@
 page import="java.util.TreeSet" %>
 

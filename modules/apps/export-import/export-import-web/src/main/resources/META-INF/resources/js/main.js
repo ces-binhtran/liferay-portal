@@ -823,13 +823,13 @@ AUI.add(
 
 						if (instance._exportLAR) {
 							params.mvcRenderCommandName =
-								'editExportConfiguration';
+								'/export_import/edit_export_configuration';
 							params.tabs2 = 'new-export-process';
 							params.exportConfigurationButtons = 'custom';
 						}
 						else {
 							params.mvcRenderCommandName =
-								'editPublishConfiguration';
+								'/export_import/edit_publish_configuration';
 							params.publishConfigurationButtons = 'custom';
 						}
 
@@ -849,12 +849,6 @@ AUI.add(
 
 						if (privateLayoutNode) {
 							params.privateLayout = privateLayoutNode.val();
-						}
-
-						var rootNodeNameNode = instance.byId('rootNodeName');
-
-						if (rootNodeNameNode) {
-							params.rootNodeName = rootNodeNameNode.val();
 						}
 
 						var portletURL = Liferay.Util.PortletURL.createPortletURL(
@@ -919,21 +913,15 @@ AUI.add(
 								instance._scheduleRenderProcess();
 							})
 							.catch(() => {
-								new Liferay.Notice({
-									closeText: false,
-									content:
-										Liferay.Language.get(
-											'your-request-failed-to-complete'
-										) +
-										'<button aria-label="' +
-										Liferay.Language.get('close') +
-										'" type="button" class="close">&times;</button>',
-									noticeClass: 'hide',
-									timeout: FAILURE_TIMEOUT,
-									toggleText: false,
+								Liferay.Util.openToast({
+									message: Liferay.Language.get(
+										'your-request-failed-to-complete'
+									),
+									toastProps: {
+										autoClose: FAILURE_TIMEOUT,
+									},
 									type: 'warning',
-									useAnimation: true,
-								}).show();
+								});
 							});
 					}
 				},
@@ -1134,7 +1122,7 @@ AUI.add(
 											controlCheckbox.disabled &&
 											controlCheckbox.checked
 										) {
-											portletURL.setParameter(
+											portletURL.searchParams.set(
 												controlCheckbox.name.replace(
 													instance.NS,
 													''
@@ -1379,35 +1367,19 @@ AUI.add(
 				showNotification(dateChecker, rangeEndsLater) {
 					var instance = this;
 
-					if (instance._notice) {
-						instance._notice.remove();
-					}
-
 					var message = instance._getNotificationMessage(
 						dateChecker,
 						rangeEndsLater
 					);
 
-					instance._notice = new Liferay.Notice({
-						animationConfig: {
-							duration: 2,
-							left: '0px',
-							top: '0px',
+					Liferay.Util.openToast({
+						message,
+						toastProps: {
+							autoClose: 10000,
+							style: {left: 0, top: 0},
 						},
-						closeText: false,
-						content:
-							message +
-							'<button aria-label="' +
-							Liferay.Language.get('close') +
-							'" type="button" class="close">&times;</button>',
-						noticeClass: 'hide',
-						timeout: 10000,
-						toggleText: false,
 						type: 'warning',
-						useAnimation: true,
 					});
-
-					instance._notice.show();
 				},
 			},
 		});
@@ -1423,7 +1395,6 @@ AUI.add(
 			'aui-parse-content',
 			'aui-toggler',
 			'aui-tree-view',
-			'liferay-notice',
 			'liferay-portlet-base',
 			'liferay-util-window',
 		],

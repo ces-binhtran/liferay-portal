@@ -14,11 +14,11 @@
 
 package com.liferay.frontend.taglib.servlet.taglib;
 
+import com.liferay.frontend.taglib.form.navigator.FormNavigatorCategoryProvider;
+import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntry;
+import com.liferay.frontend.taglib.form.navigator.FormNavigatorEntryProvider;
 import com.liferay.frontend.taglib.internal.servlet.ServletContextUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
-import com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorCategoryUtil;
-import com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorEntry;
-import com.liferay.portal.kernel.servlet.taglib.ui.FormNavigatorEntryUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.portlet.PortletResponse;
-import javax.portlet.PortletURL;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.PageContext;
@@ -88,7 +87,7 @@ public class FormNavigatorTag extends IncludeTag {
 	public void setPageContext(PageContext pageContext) {
 		super.setPageContext(pageContext);
 
-		servletContext = ServletContextUtil.getServletContext();
+		setServletContext(ServletContextUtil.getServletContext());
 	}
 
 	public void setShowButtons(boolean showButtons) {
@@ -132,34 +131,43 @@ public class FormNavigatorTag extends IncludeTag {
 	private String _getBackURL() {
 		String backURL = _backURL;
 
+		HttpServletRequest httpServletRequest = getRequest();
+
 		if (Validator.isNull(backURL)) {
-			backURL = ParamUtil.getString(request, "redirect");
+			backURL = ParamUtil.getString(httpServletRequest, "redirect");
 		}
 
-		PortletResponse portletResponse = (PortletResponse)request.getAttribute(
-			JavaConstants.JAVAX_PORTLET_RESPONSE);
-
-		LiferayPortletResponse liferayPortletResponse =
-			PortalUtil.getLiferayPortletResponse(portletResponse);
-
-		PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
 		if (Validator.isNull(backURL)) {
-			backURL = portletURL.toString();
+			PortletResponse portletResponse =
+				(PortletResponse)httpServletRequest.getAttribute(
+					JavaConstants.JAVAX_PORTLET_RESPONSE);
+
+			LiferayPortletResponse liferayPortletResponse =
+				PortalUtil.getLiferayPortletResponse(portletResponse);
+
+			backURL = String.valueOf(liferayPortletResponse.createRenderURL());
 		}
 
 		return backURL;
 	}
 
 	private String[] _getCategoryKeys() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
 		List<String> categoryKeys = new ArrayList<>();
 
-		for (String categoryKey : FormNavigatorCategoryUtil.getKeys(_id)) {
+		FormNavigatorCategoryProvider formNavigatorCategoryProvider =
+			ServletContextUtil.getFormNavigatorCategoryProvider();
+		FormNavigatorEntryProvider formNavigatorEntryProvider =
+			ServletContextUtil.getFormNavigatorEntryProvider();
+
+		HttpServletRequest httpServletRequest = getRequest();
+
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
+
+		for (String categoryKey : formNavigatorCategoryProvider.getKeys(_id)) {
 			List<FormNavigatorEntry<Object>> formNavigatorEntries =
-				FormNavigatorEntryUtil.getFormNavigatorEntries(
+				formNavigatorEntryProvider.getFormNavigatorEntries(
 					_id, categoryKey, themeDisplay.getUser(), _formModelBean);
 
 			if (ListUtil.isNotEmpty(formNavigatorEntries)) {

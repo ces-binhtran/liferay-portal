@@ -27,6 +27,10 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	implements BatchEngineExportTaskLocalService,
 			   ServiceWrapper<BatchEngineExportTaskLocalService> {
 
+	public BatchEngineExportTaskLocalServiceWrapper() {
+		this(null);
+	}
+
 	public BatchEngineExportTaskLocalServiceWrapper(
 		BatchEngineExportTaskLocalService batchEngineExportTaskLocalService) {
 
@@ -35,6 +39,10 @@ public class BatchEngineExportTaskLocalServiceWrapper
 
 	/**
 	 * Adds the batch engine export task to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was added
@@ -52,15 +60,16 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	@Override
 	public com.liferay.batch.engine.model.BatchEngineExportTask
 		addBatchEngineExportTask(
-			long companyId, long userId, String callbackURL, String className,
-			String contentType, String executeStatus,
-			java.util.List<String> fieldNamesList,
+			String externalReferenceCode, long companyId, long userId,
+			String callbackURL, String className, String contentType,
+			String executeStatus, java.util.List<String> fieldNamesList,
 			java.util.Map<String, java.io.Serializable> parameters,
 			String taskItemDelegateName) {
 
 		return _batchEngineExportTaskLocalService.addBatchEngineExportTask(
-			companyId, userId, callbackURL, className, contentType,
-			executeStatus, fieldNamesList, parameters, taskItemDelegateName);
+			externalReferenceCode, companyId, userId, callbackURL, className,
+			contentType, executeStatus, fieldNamesList, parameters,
+			taskItemDelegateName);
 	}
 
 	/**
@@ -92,6 +101,10 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	/**
 	 * Deletes the batch engine export task from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was removed
 	 */
@@ -107,6 +120,10 @@ public class BatchEngineExportTaskLocalServiceWrapper
 
 	/**
 	 * Deletes the batch engine export task with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTaskId the primary key of the batch engine export task
 	 * @return the batch engine export task that was removed
@@ -136,6 +153,13 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _batchEngineExportTaskLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _batchEngineExportTaskLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -239,6 +263,37 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	}
 
 	/**
+	 * Returns the batch engine export task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine export task's external reference code
+	 * @return the matching batch engine export task, or <code>null</code> if a matching batch engine export task could not be found
+	 */
+	@Override
+	public com.liferay.batch.engine.model.BatchEngineExportTask
+		fetchBatchEngineExportTaskByExternalReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _batchEngineExportTaskLocalService.
+			fetchBatchEngineExportTaskByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchBatchEngineExportTaskByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public com.liferay.batch.engine.model.BatchEngineExportTask
+		fetchBatchEngineExportTaskByReferenceCode(
+			long companyId, String externalReferenceCode) {
+
+		return _batchEngineExportTaskLocalService.
+			fetchBatchEngineExportTaskByReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
 	 * Returns the batch engine export task with the matching UUID and company.
 	 *
 	 * @param uuid the batch engine export task's UUID
@@ -275,6 +330,25 @@ public class BatchEngineExportTaskLocalServiceWrapper
 
 		return _batchEngineExportTaskLocalService.getBatchEngineExportTask(
 			batchEngineExportTaskId);
+	}
+
+	/**
+	 * Returns the batch engine export task with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the batch engine export task's external reference code
+	 * @return the matching batch engine export task
+	 * @throws PortalException if a matching batch engine export task could not be found
+	 */
+	@Override
+	public com.liferay.batch.engine.model.BatchEngineExportTask
+			getBatchEngineExportTaskByExternalReferenceCode(
+				long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _batchEngineExportTaskLocalService.
+			getBatchEngineExportTaskByExternalReferenceCode(
+				companyId, externalReferenceCode);
 	}
 
 	/**
@@ -316,6 +390,26 @@ public class BatchEngineExportTaskLocalServiceWrapper
 
 	@Override
 	public java.util.List<com.liferay.batch.engine.model.BatchEngineExportTask>
+		getBatchEngineExportTasks(long companyId, int start, int end) {
+
+		return _batchEngineExportTaskLocalService.getBatchEngineExportTasks(
+			companyId, start, end);
+	}
+
+	@Override
+	public java.util.List<com.liferay.batch.engine.model.BatchEngineExportTask>
+		getBatchEngineExportTasks(
+			long companyId, int start, int end,
+			com.liferay.portal.kernel.util.OrderByComparator
+				<com.liferay.batch.engine.model.BatchEngineExportTask>
+					orderByComparator) {
+
+		return _batchEngineExportTaskLocalService.getBatchEngineExportTasks(
+			companyId, start, end, orderByComparator);
+	}
+
+	@Override
+	public java.util.List<com.liferay.batch.engine.model.BatchEngineExportTask>
 		getBatchEngineExportTasks(String executeStatus) {
 
 		return _batchEngineExportTaskLocalService.getBatchEngineExportTasks(
@@ -331,6 +425,12 @@ public class BatchEngineExportTaskLocalServiceWrapper
 	public int getBatchEngineExportTasksCount() {
 		return _batchEngineExportTaskLocalService.
 			getBatchEngineExportTasksCount();
+	}
+
+	@Override
+	public int getBatchEngineExportTasksCount(long companyId) {
+		return _batchEngineExportTaskLocalService.
+			getBatchEngineExportTasksCount(companyId);
 	}
 
 	@Override
@@ -391,6 +491,10 @@ public class BatchEngineExportTaskLocalServiceWrapper
 
 	/**
 	 * Updates the batch engine export task in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect BatchEngineExportTaskLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param batchEngineExportTask the batch engine export task
 	 * @return the batch engine export task that was updated

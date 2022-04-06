@@ -16,39 +16,29 @@ import ListHeadItem from '../../shared/components/list/ListHeadItem.es';
 import UserAvatar from '../../shared/components/user-avatar/UserAvatar.es';
 import {formatDuration} from '../../shared/util/duration.es';
 
-const Item = ({assignee: {image, name}, durationTaskAvg, id, taskCount}) => {
+function Item({assignee: {image, name}, durationTaskAvg, id, taskCount}) {
 	const formattedDuration = formatDuration(durationTaskAvg);
 
 	return (
 		<ClayTable.Row>
-			<ClayTable.Cell data-testid="assigneeProfileInfo">
+			<ClayTable.Cell>
 				<UserAvatar className="mr-3" image={image} />
 
-				<span data-testid="assigneeName">{name || id}</span>
+				<span>{name || id}</span>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell>
-				<span
-					className="task-count-value text-right"
-					data-testid="taskCount"
-				>
-					{taskCount}
-				</span>
+			<ClayTable.Cell className="text-right">
+				<span>{taskCount}</span>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell>
-				<span
-					className="task-count-value text-right"
-					data-testid="durationTaskAvg"
-				>
-					{formattedDuration}
-				</span>
+			<ClayTable.Cell className="text-right">
+				<span>{formattedDuration}</span>
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
-};
+}
 
-const Table = ({items}) => {
+function Table({items}) {
 	return (
 		<ClayTable>
 			<ClayTable.Head>
@@ -57,14 +47,22 @@ const Table = ({items}) => {
 						{Liferay.Language.get('assignee-name')}
 					</ClayTable.Cell>
 
-					<ClayTable.Cell headingCell style={{width: '20%'}}>
+					<ClayTable.Cell
+						className="text-right"
+						headingCell
+						style={{width: '20%'}}
+					>
 						<ListHeadItem
 							name="taskCount"
 							title={Liferay.Language.get('completed-tasks')}
 						/>
 					</ClayTable.Cell>
 
-					<ClayTable.Cell headingCell style={{width: '20%'}}>
+					<ClayTable.Cell
+						className="text-right"
+						headingCell
+						style={{width: '20%'}}
+					>
 						<ListHeadItem
 							name="durationTaskAvg"
 							title={Liferay.Language.get(
@@ -82,8 +80,8 @@ const Table = ({items}) => {
 			</ClayTable.Body>
 		</ClayTable>
 	);
-};
+}
 
 Table.Item = Item;
 
-export {Table};
+export default Table;

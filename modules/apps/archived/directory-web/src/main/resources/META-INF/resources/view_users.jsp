@@ -19,16 +19,11 @@
 <%
 String viewUsersRedirect = ParamUtil.getString(request, "viewUsersRedirect");
 
-String orderByCol = ParamUtil.getString(request, "orderByCol", "first-name");
-String orderByType = ParamUtil.getString(request, "orderByType", "asc");
-
 PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
 
 if (Validator.isNotNull(viewUsersRedirect)) {
 	portletURL.setParameter("viewUsersRedirect", viewUsersRedirect);
 }
-
-boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 %>
 
 <c:if test="<%= Validator.isNotNull(viewUsersRedirect) %>">
@@ -51,13 +46,13 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		/>
 
 		<liferay-frontend:management-bar-sort
-			orderByCol="<%= orderByCol %>"
-			orderByType="<%= orderByType %>"
+			orderByCol='<%= ParamUtil.getString(request, "orderByCol", "first-name") %>'
+			orderByType='<%= ParamUtil.getString(request, "orderByType", "asc") %>'
 			orderColumns='<%= new String[] {"first-name", "last-name", "screen-name", "job-title"} %>'
 			portletURL="<%= portletURL %>"
 		/>
 
-		<c:if test="<%= showSearch %>">
+		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
 			<li>
 				<liferay-util:include page="/user_search.jsp" servletContext="<%= application %>" />
 			</li>
@@ -65,7 +60,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container
 		searchContainer="<%= new UserSearch(renderRequest, portletURL) %>"
 		var="userSearchContainer"
@@ -76,13 +71,14 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		UserSearchTerms searchTerms = (UserSearchTerms)userSearchContainer.getSearchTerms();
 
 		long organizationId = searchTerms.getOrganizationId();
-		long userGroupId = searchTerms.getUserGroupId();
 
 		Organization organization = null;
 
 		if (organizationId > 0) {
 			organization = OrganizationLocalServiceUtil.fetchOrganization(organizationId);
 		}
+
+		long userGroupId = searchTerms.getUserGroupId();
 
 		UserGroup userGroup = null;
 
@@ -122,17 +118,18 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 			userParams.put("socialRelationType", new Long[] {themeDisplay.getUserId(), Long.valueOf(SocialRelationConstants.TYPE_BI_FRIEND)});
 		}
 		else if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY) && (organizationId == 0) && (userGroupId == 0)) {
-			LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.FALSE
-			).put(
-				"site", Boolean.TRUE
-			).put(
-				"usersGroups", user.getUserId()
-			).build();
-
 			userParams.put("inherit", Boolean.TRUE);
 
-			List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			List<Group> groups = GroupLocalServiceUtil.search(
+				user.getCompanyId(),
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", Boolean.FALSE
+				).put(
+					"site", Boolean.TRUE
+				).put(
+					"usersGroups", user.getUserId()
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			userParams.put("usersGroups", SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 		}
@@ -142,9 +139,21 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		}
 		%>
 
-		<liferay-ui:user-search-container-results
-			userParams="<%= userParams %>"
-		/>
+		<liferay-ui:search-container-results>
+
+			<%
+			long companyId = company.getCompanyId();
+			SearchContainer<User> searchContainer = userSearchContainer;
+
+			if (searchTerms.isAdvancedSearch()) {
+				userSearchContainer.setResultsAndTotal(() -> UserLocalServiceUtil.search(companyId, searchTerms.getFirstName(), searchTerms.getMiddleName(), searchTerms.getLastName(), searchTerms.getScreenName(), searchTerms.getEmailAddress(), searchTerms.getStatus(), userParams, searchTerms.isAndOperator(), searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()), UserLocalServiceUtil.searchCount(companyId, searchTerms.getFirstName(), searchTerms.getMiddleName(), searchTerms.getLastName(), searchTerms.getScreenName(), searchTerms.getEmailAddress(), searchTerms.getStatus(), userParams, searchTerms.isAndOperator()));
+			}
+			else {
+				userSearchContainer.setResultsAndTotal(() -> UserLocalServiceUtil.search(companyId, searchTerms.getKeywords(), searchTerms.getStatus(), userParams, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()), UserLocalServiceUtil.searchCount(companyId, searchTerms.getKeywords(), searchTerms.getStatus(), userParams));
+			}
+			%>
+
+		</liferay-ui:search-container-results>
 
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.model.User"

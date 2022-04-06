@@ -20,11 +20,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,16 +46,22 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentField")
+@GraphQLName(
+	description = "Represents a fragment field.", value = "FragmentField"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentField")
-public class FragmentField {
+public class FragmentField implements Serializable {
 
 	public static FragmentField toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentField.class, json);
 	}
 
-	@Schema
+	public static FragmentField unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(FragmentField.class, json);
+	}
+
+	@Schema(description = "The fragment field's ID.")
 	public String getId() {
 		return id;
 	}
@@ -73,11 +83,11 @@ public class FragmentField {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment field's ID.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String id;
 
-	@Schema
+	@Schema(description = "The fragment field's value.")
 	@Valid
 	public Object getValue() {
 		return value;
@@ -102,7 +112,7 @@ public class FragmentField {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The fragment field's value.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object value;
 
@@ -154,7 +164,17 @@ public class FragmentField {
 
 			sb.append("\"value\": ");
 
-			sb.append(String.valueOf(value));
+			if (value instanceof Map) {
+				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)value));
+			}
+			else if (value instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)value));
+				sb.append("\"");
+			}
+			else {
+				sb.append(value);
+			}
 		}
 
 		sb.append("}");
@@ -163,15 +183,26 @@ public class FragmentField {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentField",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -187,14 +218,12 @@ public class FragmentField {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -221,7 +250,7 @@ public class FragmentField {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -229,7 +258,7 @@ public class FragmentField {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -237,5 +266,10 @@ public class FragmentField {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

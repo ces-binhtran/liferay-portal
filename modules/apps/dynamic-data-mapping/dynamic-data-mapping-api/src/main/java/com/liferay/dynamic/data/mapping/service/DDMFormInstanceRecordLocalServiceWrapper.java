@@ -30,6 +30,10 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 	implements DDMFormInstanceRecordLocalService,
 			   ServiceWrapper<DDMFormInstanceRecordLocalService> {
 
+	public DDMFormInstanceRecordLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DDMFormInstanceRecordLocalServiceWrapper(
 		DDMFormInstanceRecordLocalService ddmFormInstanceRecordLocalService) {
 
@@ -38,6 +42,10 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 
 	/**
 	 * Adds the ddm form instance record to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceRecord the ddm form instance record
 	 * @return the ddm form instance record that was added
@@ -91,6 +99,10 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 	/**
 	 * Deletes the ddm form instance record from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmFormInstanceRecord the ddm form instance record
 	 * @return the ddm form instance record that was removed
 	 */
@@ -104,6 +116,10 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm form instance record with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param formInstanceRecordId the primary key of the ddm form instance record
 	 * @return the ddm form instance record that was removed
@@ -159,6 +175,13 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmFormInstanceRecordLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmFormInstanceRecordLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -431,11 +454,11 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 
 	@Override
 	public DDMFormInstanceRecord getFormInstanceRecord(
-			long ddmFormInstanceRecordId)
+			long formInstanceRecordId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ddmFormInstanceRecordLocalService.getFormInstanceRecord(
-			ddmFormInstanceRecordId);
+			formInstanceRecordId);
 	}
 
 	@Override
@@ -529,6 +552,17 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 	@Override
 	public com.liferay.portal.kernel.search.BaseModelSearchResult
 		<DDMFormInstanceRecord> searchFormInstanceRecords(
+				long formInstanceId, String[] notEmptyFields, int status,
+				int start, int end, com.liferay.portal.kernel.search.Sort sort)
+			throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _ddmFormInstanceRecordLocalService.searchFormInstanceRecords(
+			formInstanceId, notEmptyFields, status, start, end, sort);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.search.BaseModelSearchResult
+		<DDMFormInstanceRecord> searchFormInstanceRecords(
 			com.liferay.portal.kernel.search.SearchContext searchContext) {
 
 		return _ddmFormInstanceRecordLocalService.searchFormInstanceRecords(
@@ -537,6 +571,10 @@ public class DDMFormInstanceRecordLocalServiceWrapper
 
 	/**
 	 * Updates the ddm form instance record in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMFormInstanceRecordLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmFormInstanceRecord the ddm form instance record
 	 * @return the ddm form instance record that was updated

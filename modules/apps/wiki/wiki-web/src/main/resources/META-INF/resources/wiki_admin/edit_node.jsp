@@ -31,8 +31,10 @@ renderResponse.setTitle((node == null) ? LanguageUtil.get(request, "new-wiki-nod
 
 <portlet:actionURL name="/wiki/edit_node" var="editNodeURL" />
 
-<clay:container-fluid>
-	<aui:form action="<%= editNodeURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveNode();" %>'>
+<clay:container-fluid
+	cssClass="container-form-lg"
+>
+	<aui:form action="<%= editNodeURL %>" method="post" name="fm" onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveNode();" %>'>
 		<aui:input name="<%= Constants.CMD %>" type="hidden" />
 		<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 		<aui:input name="nodeId" type="hidden" value="<%= nodeId %>" />
@@ -62,13 +64,13 @@ renderResponse.setTitle((node == null) ? LanguageUtil.get(request, "new-wiki-nod
 					/>
 				</aui:fieldset>
 			</c:if>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </clay:container-fluid>
 

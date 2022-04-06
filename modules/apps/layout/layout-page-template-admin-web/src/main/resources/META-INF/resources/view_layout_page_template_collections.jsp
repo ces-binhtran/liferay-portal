@@ -27,7 +27,7 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 	navigationItems="<%= layoutPageTemplatesAdminDisplayContext.getNavigationItems() %>"
 />
 
-<liferay-ui:success key="layoutPageTemplatePublished" message="the-page-template-was-published-succesfully" />
+<liferay-ui:success key="layoutPageTemplatePublished" message="the-page-template-was-published-successfully" />
 
 <clay:container-fluid
 	cssClass="container-view"
@@ -40,42 +40,62 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 				<ul class="nav nav-nested">
 					<li class="nav-item">
 						<portlet:renderURL var="editLayoutPageTemplateCollectionURL">
-							<portlet:param name="mvcRenderCommandName" value="/layout_page_template/edit_layout_page_template_collection" />
+							<portlet:param name="mvcRenderCommandName" value="/layout_page_template_admin/edit_layout_page_template_collection" />
 							<portlet:param name="redirect" value="<%= currentURL %>" />
 						</portlet:renderURL>
 
 						<c:choose>
 							<c:when test="<%= ListUtil.isNotEmpty(layoutPageTemplateCollections) %>">
 								<clay:content-row
-									verticaAlign="center"
+									verticalAlign="center"
 								>
 									<clay:content-col
-										expand="true"
+										expand="<%= true %>"
 									>
 										<strong class="text-uppercase">
-											<liferay-ui:message key="collections" />
+											<liferay-ui:message key="page-template-sets" />
 										</strong>
 									</clay:content-col>
 
 									<clay:content-col
-										verticaAlign="end"
+										verticalAlign="end"
 									>
 										<ul class="navbar-nav">
 											<c:if test="<%= layoutPageTemplateDisplayContext.isShowAddButton(LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_COLLECTION) %>">
 												<li>
-													<liferay-ui:icon
+													<clay:link
+														borderless="<%= true %>"
+														cssClass="component-action"
+														href="<%= editLayoutPageTemplateCollectionURL.toString() %>"
 														icon="plus"
-														iconCssClass="btn btn-monospaced btn-outline-borderless btn-outline-secondary"
-														markupView="lexicon"
-														url="<%= editLayoutPageTemplateCollectionURL %>"
+														type="button"
 													/>
 												</li>
 											</c:if>
 
 											<li>
+												<portlet:renderURL var="viewLayoutPageTemplateCollectionURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+													<portlet:param name="mvcRenderCommandName" value="/layout_page_template_admin/select_layout_page_template_collections" />
+												</portlet:renderURL>
+
+												<portlet:renderURL var="redirectURL">
+													<portlet:param name="tabs1" value="page-templates" />
+												</portlet:renderURL>
+
+												<liferay-portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/layout_page_template_admin/delete_layout_page_template_collection" var="deleteLayoutPageTemplateCollectionURL">
+													<portlet:param name="redirect" value="<%= redirectURL %>" />
+												</liferay-portlet:actionURL>
+
 												<clay:dropdown-actions
-													componentId="actionsComponent"
+													additionalProps='<%=
+														HashMapBuilder.<String, Object>put(
+															"deleteLayoutPageTemplateCollectionURL", deleteLayoutPageTemplateCollectionURL.toString()
+														).put(
+															"viewLayoutPageTemplateCollectionURL", viewLayoutPageTemplateCollectionURL.toString()
+														).build()
+													%>'
 													dropdownItems="<%= layoutPageTemplateDisplayContext.getCollectionsDropdownItems() %>"
+													propsTransformer="js/ActionsComponentPropsTransformer"
 												/>
 											</li>
 										</ul>
@@ -89,15 +109,18 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 									%>
 
 										<li class="nav-item">
-
-											<%
-											PortletURL layoutPageTemplateCollectionURL = renderResponse.createRenderURL();
-
-											layoutPageTemplateCollectionURL.setParameter("layoutPageTemplateCollectionId", String.valueOf(layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()));
-											layoutPageTemplateCollectionURL.setParameter("tabs1", "page-templates");
-											%>
-
-											<a class='nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>' href="<%= layoutPageTemplateCollectionURL.toString() %>">
+											<a
+												class="nav-link text-truncate <%= (layoutPageTemplateCollection.getLayoutPageTemplateCollectionId() == layoutPageTemplateDisplayContext.getLayoutPageTemplateCollectionId()) ? "active" : StringPool.BLANK %>"
+												href="<%=
+													PortletURLBuilder.createRenderURL(
+														renderResponse
+													).setTabs1(
+														"page-templates"
+													).setParameter(
+														"layoutPageTemplateCollectionId", layoutPageTemplateCollection.getLayoutPageTemplateCollectionId()
+													).buildString()
+												%>"
+											>
 												<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
 											</a>
 										</li>
@@ -110,14 +133,14 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 							</c:when>
 							<c:otherwise>
 								<p class="text-uppercase">
-									<strong><liferay-ui:message key="collections" /></strong>
+									<strong><liferay-ui:message key="page-template-sets" /></strong>
 								</p>
 
 								<liferay-frontend:empty-result-message
 									actionDropdownItems="<%= layoutPageTemplateDisplayContext.isShowAddButton(LayoutPageTemplateActionKeys.ADD_LAYOUT_PAGE_TEMPLATE_COLLECTION) ? layoutPageTemplateDisplayContext.getActionDropdownItems() : null %>"
 									animationType="<%= EmptyResultMessageKeys.AnimationType.NONE %>"
-									description='<%= LanguageUtil.get(request, "collections-are-needed-to-create-page-templates") %>'
-									elementType='<%= LanguageUtil.get(request, "collections") %>'
+									description='<%= LanguageUtil.get(request, "page-template-sets-are-needed-to-create-page-templates") %>'
+									elementType='<%= LanguageUtil.get(request, "page-template-sets") %>'
 								/>
 							</c:otherwise>
 						</c:choose>
@@ -135,13 +158,15 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 			%>
 
 			<c:if test="<%= layoutPageTemplateCollection != null %>">
-				<clay:sheet>
+				<clay:sheet
+					size="full"
+				>
 					<h2 class="sheet-title">
 						<clay:content-row
-							verticaAlign="center"
+							verticalAlign="center"
 						>
 							<clay:content-col
-								expand="true"
+								expand="<%= true %>"
 							>
 								<span class="text-uppercase">
 									<%= HtmlUtil.escape(layoutPageTemplateCollection.getName()) %>
@@ -150,9 +175,17 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 
 							<clay:content-col
 								cssClass="inline-item-after"
-								verticaAlign="end"
+								verticalAlign="end"
 							>
-								<liferay-util:include page="/layout_page_template_collection_action.jsp" servletContext="<%= application %>" />
+
+								<%
+								LayoutPageTemplateCollectionActionDropdownItem layoutPageTemplateCollectionActionDropdownItem = new LayoutPageTemplateCollectionActionDropdownItem(request, renderResponse);
+								%>
+
+								<clay:dropdown-actions
+									dropdownItems="<%= layoutPageTemplateCollectionActionDropdownItem.getActionDropdownItems(layoutPageTemplateCollection) %>"
+									propsTransformer="js/propsTransformers/LayoutPageTemplateCollectionPropsTransformer"
+								/>
 							</clay:content-col>
 						</clay:content-row>
 					</h2>
@@ -165,78 +198,3 @@ List<LayoutPageTemplateCollection> layoutPageTemplateCollections = layoutPageTem
 		</clay:col>
 	</clay:row>
 </clay:container-fluid>
-
-<aui:form cssClass="hide" name="layoutPageTemplateCollectionsFm">
-</aui:form>
-
-<aui:script require="metal-dom/src/dom as dom, frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
-	var deleteCollections = function () {
-		var layoutPageTemplateCollectionsFm =
-			document.<portlet:namespace />layoutPageTemplateCollectionsFm;
-
-		if (layoutPageTemplateCollectionsFm) {
-			var itemSelectorDialog = new ItemSelectorDialog.default({
-				buttonAddLabel: '<liferay-ui:message key="delete" />',
-				eventName: '<portlet:namespace />selectCollections',
-				title: '<liferay-ui:message key="delete-collection" />',
-				url:
-					'<portlet:renderURL windowState="<%= LiferayWindowState.POP_UP.toString() %>"><portlet:param name="mvcRenderCommandName" value="/layout_page_template/select_layout_page_template_collections" /></portlet:renderURL>',
-			});
-
-			itemSelectorDialog.on('selectedItemChange', function (event) {
-				var selectedItems = event.selectedItem;
-
-				if (selectedItems) {
-					if (
-						confirm(
-							'<liferay-ui:message key="are-you-sure-you-want-to-delete-the-selected-entries" />'
-						)
-					) {
-						Array.prototype.forEach.call(selectedItems, function (
-							item,
-							index
-						) {
-							dom.append(layoutPageTemplateCollectionsFm, item);
-						});
-
-						<portlet:renderURL var="redirectURL">
-							<portlet:param name="tabs1" value="page-templates" />
-						</portlet:renderURL>
-
-						<liferay-portlet:actionURL copyCurrentRenderParameters="<%= false %>" name="/layout_page_template/delete_layout_page_template_collection" var="deleteLayoutPageTemplateCollectionURL">
-							<portlet:param name="redirect" value="<%= redirectURL %>" />
-						</liferay-portlet:actionURL>
-
-						submitForm(
-							layoutPageTemplateCollectionsFm,
-							'<%= deleteLayoutPageTemplateCollectionURL %>'
-						);
-					}
-				}
-			});
-
-			itemSelectorDialog.open();
-		}
-	};
-
-	var ACTIONS = {
-		deleteCollections: deleteCollections,
-	};
-
-	Liferay.componentReady('actionsComponent').then(function (actionsComponent) {
-		actionsComponent.on(['click', 'itemClicked'], function (event, facade) {
-			var itemData;
-
-			if (event.data && event.data.item) {
-				itemData = event.data.item.data;
-			}
-			else if (!event.data && facade && facade.target) {
-				itemData = facade.target.data;
-			}
-
-			if (itemData && itemData.action && ACTIONS[itemData.action]) {
-				ACTIONS[itemData.action]();
-			}
-		});
-	});
-</aui:script>

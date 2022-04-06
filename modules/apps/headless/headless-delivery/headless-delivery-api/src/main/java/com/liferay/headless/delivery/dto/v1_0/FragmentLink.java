@@ -22,11 +22,15 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -44,16 +48,22 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("FragmentLink")
+@GraphQLName(
+	description = "Represents a fragment link.", value = "FragmentLink"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "FragmentLink")
-public class FragmentLink {
+public class FragmentLink implements Serializable {
 
 	public static FragmentLink toDTO(String json) {
 		return ObjectMapperUtil.readValue(FragmentLink.class, json);
 	}
 
-	@Schema
+	public static FragmentLink unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(FragmentLink.class, json);
+	}
+
+	@Schema(deprecated = true)
 	@Valid
 	public Object getHref() {
 		return href;
@@ -76,11 +86,12 @@ public class FragmentLink {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object href;
 
-	@Schema
+	@Schema(deprecated = true)
 	@Valid
 	public Target getTarget() {
 		return target;
@@ -114,9 +125,69 @@ public class FragmentLink {
 		}
 	}
 
+	@Deprecated
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Target target;
+
+	@Schema(description = "The fragment link's value.")
+	@Valid
+	public FragmentLinkValue getValue() {
+		return value;
+	}
+
+	public void setValue(FragmentLinkValue value) {
+		this.value = value;
+	}
+
+	@JsonIgnore
+	public void setValue(
+		UnsafeSupplier<FragmentLinkValue, Exception> valueUnsafeSupplier) {
+
+		try {
+			value = valueUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The fragment link's value.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected FragmentLinkValue value;
+
+	@Schema(description = "The localized fragment link's values.")
+	@Valid
+	public Map<String, FragmentLinkValue> getValue_i18n() {
+		return value_i18n;
+	}
+
+	public void setValue_i18n(Map<String, FragmentLinkValue> value_i18n) {
+		this.value_i18n = value_i18n;
+	}
+
+	@JsonIgnore
+	public void setValue_i18n(
+		UnsafeSupplier<Map<String, FragmentLinkValue>, Exception>
+			value_i18nUnsafeSupplier) {
+
+		try {
+			value_i18n = value_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The localized fragment link's values.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, FragmentLinkValue> value_i18n;
 
 	@Override
 	public boolean equals(Object object) {
@@ -152,7 +223,17 @@ public class FragmentLink {
 
 			sb.append("\"href\": ");
 
-			sb.append(String.valueOf(href));
+			if (href instanceof Map) {
+				sb.append(JSONFactoryUtil.createJSONObject((Map<?, ?>)href));
+			}
+			else if (href instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)href));
+				sb.append("\"");
+			}
+			else {
+				sb.append(href);
+			}
 		}
 
 		if (target != null) {
@@ -169,12 +250,33 @@ public class FragmentLink {
 			sb.append("\"");
 		}
 
+		if (value != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"value\": ");
+
+			sb.append(String.valueOf(value));
+		}
+
+		if (value_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"value_i18n\": ");
+
+			sb.append(_toJSON(value_i18n));
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.FragmentLink",
 		name = "x-class-name"
 	)
@@ -187,13 +289,17 @@ public class FragmentLink {
 
 		@JsonCreator
 		public static Target create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (Target target : values()) {
 				if (Objects.equals(target.getValue(), value)) {
 					return target;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -215,9 +321,19 @@ public class FragmentLink {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -233,14 +349,12 @@ public class FragmentLink {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -267,7 +381,7 @@ public class FragmentLink {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -275,7 +389,7 @@ public class FragmentLink {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -283,5 +397,10 @@ public class FragmentLink {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

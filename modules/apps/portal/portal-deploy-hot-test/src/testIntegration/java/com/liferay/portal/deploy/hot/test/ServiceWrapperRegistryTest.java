@@ -56,10 +56,10 @@ public class ServiceWrapperRegistryTest {
 			_emailAddressLocalService.createEmailAddress(
 				_TEST_EMAIL_ADDRESS_ID);
 
-		ServiceRegistration<ServiceWrapper> serviceRegistration =
+		ServiceRegistration<ServiceWrapper<?>> serviceRegistration =
 			bundleContext.registerService(
-				ServiceWrapper.class,
-				new EmailAddressLocalServiceWrapper(null) {
+				(Class<ServiceWrapper<?>>)(Class<?>)ServiceWrapper.class,
+				new EmailAddressLocalServiceWrapper() {
 
 					@Override
 					public EmailAddress getEmailAddress(long emailAddressId) {

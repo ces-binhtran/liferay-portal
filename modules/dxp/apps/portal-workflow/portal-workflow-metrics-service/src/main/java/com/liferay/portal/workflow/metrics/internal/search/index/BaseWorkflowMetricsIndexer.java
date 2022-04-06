@@ -22,7 +22,6 @@ import com.liferay.portal.kernel.util.DateUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.PortalRunMode;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
 import com.liferay.portal.search.document.DocumentBuilderFactory;
@@ -34,9 +33,12 @@ import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchResponse;
 import com.liferay.portal.search.hits.SearchHit;
 import com.liferay.portal.search.hits.SearchHits;
+import com.liferay.portal.search.query.BooleanQuery;
 import com.liferay.portal.search.query.Queries;
 import com.liferay.portal.search.query.Query;
+import com.liferay.portal.search.script.Scripts;
 import com.liferay.portal.workflow.metrics.internal.petra.executor.WorkflowMetricsPortalExecutor;
+import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
 
 import java.io.Serializable;
 
@@ -49,8 +51,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import org.apache.commons.codec.digest.DigestUtils;
 
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.component.annotations.ReferenceCardinality;
@@ -123,14 +123,7 @@ public abstract class BaseWorkflowMetricsIndexer {
 	}
 
 	protected String digest(Serializable... parts) {
-		StringBuilder sb = new StringBuilder();
-
-		for (Serializable part : parts) {
-			sb.append(part);
-		}
-
-		return StringUtil.removeSubstring(getIndexType(), "Type") +
-			DigestUtils.sha256Hex(sb.toString());
+		return WorkflowMetricsIndexerUtil.digest(getIndexType(), parts);
 	}
 
 	protected String formatLocalDateTime(LocalDateTime localDateTime) {
@@ -144,7 +137,7 @@ public abstract class BaseWorkflowMetricsIndexer {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 
 			return null;
@@ -173,13 +166,15 @@ public abstract class BaseWorkflowMetricsIndexer {
 		);
 	}
 
-	@Reference(target = ModuleServiceLifecycle.PORTAL_INITIALIZED, unbind = "-")
+	@Reference(
+		target = ModuleServiceLifecycle.PORTLETS_INITIALIZED, unbind = "-"
+	)
 	protected void setModuleServiceLifecycle(
 		ModuleServiceLifecycle moduleServiceLifecycle) {
 	}
 
 	protected void updateDocuments(
-		long companyId, Map<String, Object> fieldsMap, Query query) {
+		long companyId, Map<String, Object> fieldsMap, Query filterQuery) {
 
 		if (searchEngineAdapter == null) {
 			return;
@@ -188,10 +183,15 @@ public abstract class BaseWorkflowMetricsIndexer {
 		SearchSearchRequest searchSearchRequest = new SearchSearchRequest();
 
 		searchSearchRequest.setIndexNames(getIndexName(companyId));
-		searchSearchRequest.setQuery(query);
-		searchSearchRequest.setTypes(getIndexType());
+
+		BooleanQuery booleanQuery = queries.booleanQuery();
+
+		searchSearchRequest.setQuery(
+			booleanQuery.addFilterQueryClauses(filterQuery));
+
 		searchSearchRequest.setSelectedFieldNames("uid");
 		searchSearchRequest.setSize(10000);
+		searchSearchRequest.setTypes(getIndexType());
 
 		SearchSearchResponse searchSearchResponse = searchEngineAdapter.execute(
 			searchSearchRequest);
@@ -210,28 +210,26 @@ public abstract class BaseWorkflowMetricsIndexer {
 			List::stream
 		).map(
 			SearchHit::getDocument
-		).map(
+		).forEach(
 			document -> {
 				DocumentBuilder documentBuilder =
 					documentBuilderFactory.builder();
 
 				documentBuilder.setString("uid", document.getString("uid"));
 
-				fieldsMap.forEach(
-					(name, value) -> documentBuilder.setValue(name, value));
+				fieldsMap.forEach(documentBuilder::setValue);
 
-				return new UpdateDocumentRequest(
-					getIndexName(companyId), document.getString("uid"),
-					documentBuilder.build()) {
+				UpdateDocumentRequest updateDocumentRequest =
+					new UpdateDocumentRequest(
+						getIndexName(companyId), document.getString("uid"),
+						documentBuilder.build());
 
-					{
-						setType(getIndexType());
-						setUpsert(true);
-					}
-				};
+				updateDocumentRequest.setType(getIndexType());
+				updateDocumentRequest.setUpsert(true);
+
+				bulkDocumentRequest.addBulkableDocumentRequest(
+					updateDocumentRequest);
 			}
-		).forEach(
-			bulkDocumentRequest::addBulkableDocumentRequest
 		);
 
 		if (ListUtil.isNotEmpty(
@@ -250,6 +248,9 @@ public abstract class BaseWorkflowMetricsIndexer {
 
 	@Reference
 	protected Queries queries;
+
+	@Reference
+	protected Scripts scripts;
 
 	@Reference(
 		cardinality = ReferenceCardinality.OPTIONAL,

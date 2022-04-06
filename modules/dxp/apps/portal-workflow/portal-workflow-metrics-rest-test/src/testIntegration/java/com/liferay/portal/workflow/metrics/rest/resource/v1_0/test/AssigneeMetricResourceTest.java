@@ -24,10 +24,12 @@ import com.liferay.portal.kernel.service.UserGroupRoleLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.test.rule.DataGuard;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.search.test.util.SearchTestRule;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.workflow.metrics.rest.client.dto.v1_0.Assignee;
@@ -207,6 +209,10 @@ public class AssigneeMetricResourceTest
 					overdueInstanceCount = 1L;
 				}
 			});
+
+		_userLocalService.updateStatus(
+			assignee2.getId(), WorkflowConstants.STATUS_INACTIVE,
+			ServiceContextTestUtil.getServiceContext());
 
 		Page<AssigneeMetric> page =
 			assigneeMetricResource.postProcessAssigneeMetricsPage(
@@ -535,8 +541,9 @@ public class AssigneeMetricResourceTest
 
 		for (NodeMetric nodeMetric : nodeMetrics) {
 			_workflowMetricsRESTTestHelper.addNodeMetric(
-				assignee, testGroup.getCompanyId(), instanceSupplier, processId,
-				status, nodeMetric, "1.0");
+				assignee, testGroup.getCompanyId(), instanceSupplier,
+				nodeMetric, processId, status, TestPropsValues.getUser(),
+				"1.0");
 		}
 	}
 

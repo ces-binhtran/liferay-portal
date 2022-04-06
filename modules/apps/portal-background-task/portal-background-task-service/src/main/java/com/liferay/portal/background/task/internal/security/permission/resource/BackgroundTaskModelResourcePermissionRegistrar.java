@@ -23,9 +23,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionFactory;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermissionLogic;
-import com.liferay.portal.kernel.util.HashMapDictionary;
-
-import java.util.Dictionary;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
@@ -44,12 +42,10 @@ public class BackgroundTaskModelResourcePermissionRegistrar {
 	protected void activate(BundleContext bundleContext) {
 		_backgroundTaskModelResourcePermissionLogics =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, ModelResourcePermissionLogic.class,
+				bundleContext,
+				(Class<ModelResourcePermissionLogic<BackgroundTask>>)
+					(Class<?>)ModelResourcePermissionLogic.class,
 				"background.task.executor.class.name");
-
-		Dictionary<String, Object> properties = new HashMapDictionary<>();
-
-		properties.put("model.class.name", BackgroundTask.class.getName());
 
 		_serviceRegistration = bundleContext.registerService(
 			(Class<ModelResourcePermission<BackgroundTask>>)
@@ -59,7 +55,9 @@ public class BackgroundTaskModelResourcePermissionRegistrar {
 				_backgroundTaskLocalService::getBackgroundTask, null,
 				(modelResourcePermission, consumer) -> consumer.accept(
 					new BackgroundTaskModelResourcePermissionLogic())),
-			properties);
+			HashMapDictionaryBuilder.<String, Object>put(
+				"model.class.name", BackgroundTask.class.getName()
+			).build());
 	}
 
 	@Deactivate
@@ -72,8 +70,9 @@ public class BackgroundTaskModelResourcePermissionRegistrar {
 	@Reference
 	private BackgroundTaskLocalService _backgroundTaskLocalService;
 
-	private ServiceTrackerMap<String, ModelResourcePermissionLogic>
-		_backgroundTaskModelResourcePermissionLogics;
+	private ServiceTrackerMap
+		<String, ModelResourcePermissionLogic<BackgroundTask>>
+			_backgroundTaskModelResourcePermissionLogics;
 	private ServiceRegistration<ModelResourcePermission<BackgroundTask>>
 		_serviceRegistration;
 

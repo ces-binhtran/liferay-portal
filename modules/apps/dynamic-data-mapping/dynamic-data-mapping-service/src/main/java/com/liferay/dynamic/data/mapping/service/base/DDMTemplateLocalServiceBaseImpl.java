@@ -16,10 +16,9 @@ package com.liferay.dynamic.data.mapping.service.base;
 
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
+import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplateFinder;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplateLinkPersistence;
 import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplatePersistence;
-import com.liferay.dynamic.data.mapping.service.persistence.DDMTemplateVersionPersistence;
 import com.liferay.exportimport.kernel.lar.ExportImportHelperUtil;
 import com.liferay.exportimport.kernel.lar.ManifestSummary;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
@@ -58,10 +57,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -82,11 +84,15 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>DDMTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.dynamic.data.mapping.service.DDMTemplateLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>DDMTemplateLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>DDMTemplateLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the ddm template to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMTemplateLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmTemplate the ddm template
 	 * @return the ddm template that was added
@@ -114,6 +120,10 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm template with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMTemplateLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param templateId the primary key of the ddm template
 	 * @return the ddm template that was removed
 	 * @throws PortalException if a ddm template with the primary key could not be found
@@ -129,6 +139,10 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/**
 	 * Deletes the ddm template from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMTemplateLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmTemplate the ddm template
 	 * @return the ddm template that was removed
 	 */
@@ -141,6 +155,13 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ddmTemplatePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -399,6 +420,7 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -416,6 +438,7 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 			(DDMTemplate)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<DDMTemplate> getBasePersistence() {
 		return ddmTemplatePersistence;
 	}
@@ -507,6 +530,10 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	/**
 	 * Updates the ddm template in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMTemplateLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmTemplate the ddm template
 	 * @return the ddm template that was updated
 	 */
@@ -514,6 +541,11 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	@Override
 	public DDMTemplate updateDDMTemplate(DDMTemplate ddmTemplate) {
 		return ddmTemplatePersistence.update(ddmTemplate);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -527,6 +559,8 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ddmTemplateLocalService = (DDMTemplateLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ddmTemplateLocalService);
 	}
 
 	/**
@@ -586,6 +620,22 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		DDMTemplateLocalService ddmTemplateLocalService) {
+
+		try {
+			Field field = DDMTemplateLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ddmTemplateLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected DDMTemplateLocalService ddmTemplateLocalService;
 
 	@Reference
@@ -597,23 +647,5 @@ public abstract class DDMTemplateLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ImageLocalService
-		imageLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected DDMTemplateLinkPersistence ddmTemplateLinkPersistence;
-
-	@Reference
-	protected DDMTemplateVersionPersistence ddmTemplateVersionPersistence;
 
 }

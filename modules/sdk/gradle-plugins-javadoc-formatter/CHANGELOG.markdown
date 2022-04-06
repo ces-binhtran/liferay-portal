@@ -1,5 +1,34 @@
 # Liferay Gradle Plugins Javadoc Formatter Change Log
 
+## 1.0.33 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+
+## 1.0.32 - 2020-09-04
+
+### Commits
+- [LPS-108328] Remove version number check (69092ebf90)
+
+### Dependencies
+- [LPS-95828] Update the com.liferay.javadoc.formatter dependency to version
+1.0.36.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 1.0.31 - 2020-03-04
 
 ### Commits
@@ -394,8 +423,10 @@ version 2.4.
 [LPS-87192]: https://issues.liferay.com/browse/LPS-87192
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
 [LPS-87936]: https://issues.liferay.com/browse/LPS-87936
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-91967]: https://issues.liferay.com/browse/LPS-91967
 [LPS-95096]: https://issues.liferay.com/browse/LPS-95096
+[LPS-95828]: https://issues.liferay.com/browse/LPS-95828
 [LPS-96247]: https://issues.liferay.com/browse/LPS-96247
 [LPS-97516]: https://issues.liferay.com/browse/LPS-97516
 [LPS-100515]: https://issues.liferay.com/browse/LPS-100515
@@ -403,3 +434,9 @@ version 2.4.
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
 [LPS-106226]: https://issues.liferay.com/browse/LPS-106226
 [LPS-108328]: https://issues.liferay.com/browse/LPS-108328
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020

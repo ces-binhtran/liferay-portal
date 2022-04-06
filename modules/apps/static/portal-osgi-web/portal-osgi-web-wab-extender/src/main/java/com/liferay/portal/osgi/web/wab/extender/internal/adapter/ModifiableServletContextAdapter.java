@@ -14,8 +14,10 @@
 
 package com.liferay.portal.osgi.web.wab.extender.internal.adapter;
 
+import com.liferay.petra.io.BigEndianCodec;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.osgi.web.servlet.JSPServletFactory;
 import com.liferay.portal.osgi.web.servlet.context.helper.definition.FilterDefinition;
@@ -25,9 +27,14 @@ import com.liferay.portal.osgi.web.servlet.context.helper.definition.WebXMLDefin
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.FilterRegistrationImpl;
 import com.liferay.portal.osgi.web.wab.extender.internal.registration.ServletRegistrationImpl;
 
+import java.io.File;
+import java.io.IOException;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,6 +45,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -62,8 +70,7 @@ public class ModifiableServletContextAdapter
 		JSPServletFactory jspServletFactory,
 		WebXMLDefinition webXMLDefinition) {
 
-		return (ServletContext)Proxy.newProxyInstance(
-			ModifiableServletContextAdapter.class.getClassLoader(), _INTERFACES,
+		return _servletContextProxyProviderFunction.apply(
 			new ModifiableServletContextAdapter(
 				servletContext, bundleContext, jspServletFactory,
 				webXMLDefinition));
@@ -266,11 +273,11 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			_log.error(
 				"Bundle " + _bundle + " is unable to load filter " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
@@ -280,11 +287,11 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			_log.error(
 				"Bundle " + _bundle + " is unable to load listener " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
@@ -294,31 +301,64 @@ public class ModifiableServletContextAdapter
 		try {
 			return clazz.newInstance();
 		}
-		catch (Throwable t) {
+		catch (Throwable throwable) {
 			_log.error(
 				"Bundle " + _bundle + " is unable to load servlet " + clazz);
 
-			throw new ServletException(t);
+			throw new ServletException(throwable);
 		}
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof ServletContext)) {
+	public boolean equals(Object object) {
+		if (!(object instanceof ServletContext)) {
 			return true;
 		}
 
-		ServletContext servletContext = (ServletContext)obj;
+		ServletContext servletContext = (ServletContext)object;
 
-		if (obj instanceof ModifiableServletContext) {
+		if (object instanceof ModifiableServletContext) {
 			ModifiableServletContext modifiableServletContext =
-				(ModifiableServletContext)obj;
+				(ModifiableServletContext)object;
 
 			servletContext =
 				modifiableServletContext.getWrappedServletContext();
 		}
 
 		return _servletContext.equals(servletContext);
+	}
+
+	public Object getAttribute(String name) {
+		if (_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED.equals(name)) {
+			File file = _bundle.getDataFile(
+				_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED);
+
+			if ((file != null) && file.exists()) {
+				try {
+					byte[] data = Files.readAllBytes(file.toPath());
+
+					if (data.length == 16) {
+						long bundleLastModified = BigEndianCodec.getLong(
+							data, 0);
+
+						if (bundleLastModified == _bundle.getLastModified()) {
+							return BigEndianCodec.getLong(data, 8);
+						}
+					}
+
+					file.delete();
+				}
+				catch (IOException ioException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(ioException);
+					}
+				}
+
+				return null;
+			}
+		}
+
+		return _servletContext.getAttribute(name);
 	}
 
 	@Override
@@ -388,7 +428,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load listener " +
-						eventListenerClass);
+						eventListenerClass,
+					exception);
 			}
 		}
 
@@ -505,7 +546,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load filter " +
-						filterClassName);
+						filterClassName,
+					exception);
 			}
 		}
 
@@ -569,7 +611,8 @@ public class ModifiableServletContextAdapter
 			catch (Exception exception) {
 				_log.error(
 					"Bundle " + _bundle + " is unable to load servlet " +
-						servletClassName);
+						servletClassName,
+					exception);
 			}
 		}
 
@@ -582,6 +625,36 @@ public class ModifiableServletContextAdapter
 				addServlet(servletDefinition.getName(), servlet);
 			}
 		}
+	}
+
+	public void setAttribute(String name, Object value) {
+		if (_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED.equals(name)) {
+			File file = _bundle.getDataFile(
+				_LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED);
+
+			if (file != null) {
+				byte[] data = new byte[16];
+
+				BigEndianCodec.putLong(data, 0, _bundle.getLastModified());
+				BigEndianCodec.putLong(data, 8, (Long)value);
+
+				try {
+					Files.write(
+						file.toPath(), data, StandardOpenOption.CREATE,
+						StandardOpenOption.TRUNCATE_EXISTING,
+						StandardOpenOption.WRITE);
+				}
+				catch (IOException ioException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(ioException);
+					}
+				}
+			}
+
+			return;
+		}
+
+		_servletContext.setAttribute(name, value);
 	}
 
 	public boolean setInitParameter(String name, String value)
@@ -648,19 +721,25 @@ public class ModifiableServletContextAdapter
 			methods.put(hashCodeMethod, hashCodeHandlerMethod);
 		}
 		catch (NoSuchMethodException noSuchMethodException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(noSuchMethodException);
+			}
 		}
 
 		return Collections.unmodifiableMap(methods);
 	}
 
-	private static final Class<?>[] _INTERFACES = new Class<?>[] {
-		ModifiableServletContext.class, ServletContext.class
-	};
+	private static final String _LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED =
+		"LIFERAY_WAB_BUNDLE_RESOURCES_LAST_MODIFIED";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		ModifiableServletContextAdapter.class);
 
 	private static final Map<Method, Method> _contextAdapterMethods;
+	private static final Function<InvocationHandler, ServletContext>
+		_servletContextProxyProviderFunction =
+			ProxyUtil.getProxyProviderFunction(
+				ModifiableServletContext.class, ServletContext.class);
 
 	static {
 		_contextAdapterMethods = _createContextAdapterMethods();

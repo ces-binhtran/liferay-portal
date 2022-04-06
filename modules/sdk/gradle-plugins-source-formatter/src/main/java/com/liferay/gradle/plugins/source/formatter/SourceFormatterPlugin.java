@@ -91,10 +91,10 @@ public class SourceFormatterPlugin implements Plugin<Project> {
 		formatSourceTask.setAutoFix(false);
 		formatSourceTask.setDescription(
 			"Checks the source formatting of this project.");
+		formatSourceTask.setFailOnAutoFix(true);
+		formatSourceTask.setFailOnHasWarning(true);
 		formatSourceTask.setGroup(LifecycleBasePlugin.VERIFICATION_GROUP);
 		formatSourceTask.setPrintErrors(true);
-		formatSourceTask.setShowStatusUpdates(false);
-		formatSourceTask.setThrowException(true);
 
 		return formatSourceTask;
 	}
@@ -107,7 +107,6 @@ public class SourceFormatterPlugin implements Plugin<Project> {
 		formatSourceTask.setDescription(
 			"Runs Liferay Source Formatter to format the project files.");
 		formatSourceTask.setGroup("formatting");
-		formatSourceTask.setShowStatusUpdates(true);
 
 		return formatSourceTask;
 	}
@@ -153,6 +152,13 @@ public class SourceFormatterPlugin implements Plugin<Project> {
 		if (Validator.isNotNull(formatLocalChanges)) {
 			formatSourceTask.setFormatLocalChanges(
 				Boolean.parseBoolean(formatLocalChanges));
+		}
+
+		String sourceBaseDir = GradleUtil.getTaskPrefixedProperty(
+			formatSourceTask, "source.base.dir");
+
+		if (Validator.isNotNull(sourceBaseDir)) {
+			formatSourceTask.setBaseDirName(sourceBaseDir);
 		}
 	}
 

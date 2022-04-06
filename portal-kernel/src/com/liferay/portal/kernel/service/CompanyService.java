@@ -14,6 +14,7 @@
 
 package com.liferay.portal.kernel.service;
 
+import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.jsonwebservice.JSONWebService;
@@ -56,8 +57,28 @@ public interface CompanyService extends BaseService {
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link CompanyServiceUtil} to access the company remote service. Add custom service methods to <code>com.liferay.portal.service.impl.CompanyServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.CompanyServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the company remote service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link CompanyServiceUtil} if injection and service tracking are not available.
 	 */
+
+	/**
+	 * Adds a company.
+	 *
+	 * @param companyId the primary key of the company (optionally <code>null</code> or
+	 *         <code>0</code> to generate a key automatically)
+	 * @param webId the company's web domain
+	 * @param virtualHost the company's virtual host name
+	 * @param mx the company's mail domain
+	 * @param system whether the company is the very first company (i.e., the
+	 * @param maxUsers the max number of company users (optionally
+	 <code>0</code>)
+	 * @param active whether the company is active
+	 * @return the company
+	 */
+	@JSONWebService(mode = JSONWebServiceMode.IGNORE)
+	public Company addCompany(
+			long companyId, String webId, String virtualHost, String mx,
+			boolean system, int maxUsers, boolean active)
+		throws PortalException;
 
 	/**
 	 * Adds a company.
@@ -86,6 +107,10 @@ public interface CompanyService extends BaseService {
 	 * @param companyId the primary key of the company
 	 */
 	public void deleteLogo(long companyId) throws PortalException;
+
+	public void forEachCompany(
+			UnsafeConsumer<Company, Exception> unsafeConsumer)
+		throws Exception;
 
 	/**
 	 * Returns all the companies.
@@ -291,7 +316,8 @@ public interface CompanyService extends BaseService {
 	 * found in portal.properties.
 	 *
 	 * @param companyId the primary key of the company
-	 * @param unicodeProperties the company's properties. See {@link UnicodeProperties}
+	 * @param unicodeProperties the company's properties. See {@link
+	 UnicodeProperties}
 	 */
 	public void updatePreferences(
 			long companyId, UnicodeProperties unicodeProperties)

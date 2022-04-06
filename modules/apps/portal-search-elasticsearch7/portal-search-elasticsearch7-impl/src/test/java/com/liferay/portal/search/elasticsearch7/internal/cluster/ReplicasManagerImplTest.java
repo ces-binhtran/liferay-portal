@@ -18,17 +18,20 @@ import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.service.CompanyLocalService;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
+import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
+import com.liferay.portal.search.elasticsearch7.internal.connection.HealthExpectations;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexCreator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.IndexName;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.util.Collections;
 
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.cluster.health.ClusterHealthStatus;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -42,10 +45,12 @@ import org.mockito.MockitoAnnotations;
  */
 public class ReplicasManagerImplTest {
 
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() throws Exception {
-		Assume.assumeTrue(ClusterAssert.isClusterTestingEnabled());
-
 		MockitoAnnotations.initMocks(this);
 
 		_replicasClusterContext = createReplicasClusterContext();
@@ -64,32 +69,34 @@ public class ReplicasManagerImplTest {
 
 		setUpCompanyLocalService(companyId);
 
-		ElasticsearchConnectionFixture elasticsearchFixture0 = createNode(0);
-
-		IndexCreator indexCreator0 = new IndexCreator() {
-			{
-				setElasticsearchClientResolver(elasticsearchFixture0);
-			}
-		};
-
-		indexCreator0.createIndex(getTestIndexName(CompanyConstants.SYSTEM));
-
-		ElasticsearchConnectionFixture elasticsearchFixture1 = createNode(1);
-
-		ClusterAssert.assert1PrimaryShardAnd2Nodes(elasticsearchFixture0);
+		ElasticsearchClientResolver elasticsearchClientResolver1 = createNode(
+			1);
 
 		IndexCreator indexCreator1 = new IndexCreator() {
 			{
-				setElasticsearchClientResolver(elasticsearchFixture1);
+				setElasticsearchClientResolver(elasticsearchClientResolver1);
 			}
 		};
 
-		indexCreator1.createIndex(getTestIndexName(companyId));
+		indexCreator1.createIndex(getTestIndexName(CompanyConstants.SYSTEM));
 
-		ClusterAssert.assert2PrimaryShardsAnd2Nodes(elasticsearchFixture1);
+		ElasticsearchClientResolver elasticsearchClientResolver2 = createNode(
+			2);
+
+		assert1PrimaryShardAnd2Nodes(elasticsearchClientResolver1);
+
+		IndexCreator indexCreator2 = new IndexCreator() {
+			{
+				setElasticsearchClientResolver(elasticsearchClientResolver2);
+			}
+		};
+
+		indexCreator2.createIndex(getTestIndexName(companyId));
+
+		_assert2PrimaryShardsAnd2Nodes(elasticsearchClientResolver2);
 
 		RestHighLevelClient restHighLevelClient =
-			elasticsearchFixture0.getRestHighLevelClient();
+			elasticsearchClientResolver1.getRestHighLevelClient();
 
 		ReplicasManager replicasManager = new ReplicasManagerImpl(
 			restHighLevelClient.indices());
@@ -97,24 +104,42 @@ public class ReplicasManagerImplTest {
 		replicasManager.updateNumberOfReplicas(
 			1, _replicasClusterContext.getTargetIndexNames());
 
-		ClusterAssert.assert2PrimaryShards1ReplicaAnd2Nodes(
-			elasticsearchFixture0);
+		_assert2PrimaryShards1ReplicaAnd2Nodes(elasticsearchClientResolver1);
 
-		_testCluster.destroyNode(0);
+		createNode(3);
+		createNode(4);
 
-		ClusterAssert.assert2Primary2UnassignedShardsAnd1Node(
-			elasticsearchFixture1);
+		_testCluster.destroyNode(1);
+
+		_waitForShardReroute();
+
+		_assert2PrimaryShards1ReplicaAnd3Nodes(elasticsearchClientResolver2);
 	}
 
 	@Rule
 	public TestName testName = new TestName();
 
-	protected ElasticsearchConnectionFixture createNode(int index)
-		throws Exception {
+	protected static void assert1PrimaryShardAnd2Nodes(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
 
-		_testCluster.createNode(index);
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(1);
+					setActiveShards(1);
+					setNumberOfDataNodes(2);
+					setNumberOfNodes(2);
+					setStatus(ClusterHealthStatus.GREEN);
+					setUnassignedShards(0);
+				}
+			});
+	}
 
-		return _testCluster.getNode(index);
+	protected ElasticsearchClientResolver createNode(int number) {
+		_testCluster.createNode(number);
+
+		return _testCluster.getNode(number);
 	}
 
 	protected ReplicasClusterContext createReplicasClusterContext() {
@@ -151,10 +176,65 @@ public class ReplicasManagerImplTest {
 		);
 	}
 
+	private void _assert2PrimaryShards1ReplicaAnd2Nodes(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(2);
+					setActiveShards(4);
+					setNumberOfDataNodes(2);
+					setNumberOfNodes(2);
+					setStatus(ClusterHealthStatus.GREEN);
+					setUnassignedShards(0);
+				}
+			});
+	}
+
+	private void _assert2PrimaryShards1ReplicaAnd3Nodes(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(2);
+					setActiveShards(4);
+					setNumberOfDataNodes(3);
+					setNumberOfNodes(3);
+					setStatus(ClusterHealthStatus.GREEN);
+					setUnassignedShards(0);
+				}
+			});
+	}
+
+	private void _assert2PrimaryShardsAnd2Nodes(
+		ElasticsearchClientResolver elasticsearchClientResolver) {
+
+		ClusterAssert.assertHealth(
+			elasticsearchClientResolver,
+			new HealthExpectations() {
+				{
+					setActivePrimaryShards(2);
+					setActiveShards(2);
+					setNumberOfDataNodes(2);
+					setNumberOfNodes(2);
+					setStatus(ClusterHealthStatus.GREEN);
+					setUnassignedShards(0);
+				}
+			});
+	}
+
+	private void _waitForShardReroute() throws Exception {
+		Thread.sleep(60000);
+	}
+
 	@Mock
 	private CompanyLocalService _companyLocalService;
 
 	private ReplicasClusterContext _replicasClusterContext;
-	private final TestCluster _testCluster = new TestCluster(2, this);
+	private final TestCluster _testCluster = new TestCluster(4, this);
 
 }

@@ -77,7 +77,7 @@ if (fixedHeader) {
 					}
 
 					if (Validator.isNotNull(normalizedHeaderName)) {
-						cssClass = (normalizedHeaderName.equals("rowChecker")) ? "lfr-checkbox-column" : "lfr-" + normalizedHeaderName + "-column";
+						cssClass = normalizedHeaderName.equals("rowChecker") ? "lfr-checkbox-column" : "lfr-" + normalizedHeaderName + "-column";
 					}
 					else {
 						normalizedHeaderName = String.valueOf(i + 1);
@@ -98,7 +98,7 @@ if (fixedHeader) {
 									if (entry.isTruncate()) {
 										truncate = true;
 
-										cssClass += " table-cell-content";
+										cssClass += " table-cell-expand";
 									}
 
 									if (!Validator.isBlank(entry.getAlign())) {
@@ -120,7 +120,7 @@ if (fixedHeader) {
 								if (entry.isTruncate()) {
 									truncate = true;
 
-									cssClass += " table-cell-content";
+									cssClass += " table-cell-expand";
 								}
 							}
 						}
@@ -136,7 +136,7 @@ if (fixedHeader) {
 							headerNameValue = LanguageUtil.get(resourceBundle, HtmlUtil.escape(headerName));
 						}
 						else {
-							headerNameValue = headerName;
+							headerNameValue = HtmlUtil.escape(headerName);
 						}
 
 						if (Validator.isNull(headerNameValue)) {
@@ -276,7 +276,14 @@ if (fixedHeader) {
 					}
 				%>
 
-					<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" <%= AUIUtil.buildData(data) %>>
+					<c:choose>
+						<c:when test="<%= Validator.isNotNull(rowIdProperty) %>">
+							<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" id="<portlet:namespace /><%= id %>_<%= row.getRowId() %>" <%= AUIUtil.buildData(data) %>>
+						</c:when>
+						<c:otherwise>
+							<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "active" : StringPool.BLANK %>" data-qa-id="row" <%= AUIUtil.buildData(data) %>>
+						</c:otherwise>
+					</c:choose>
 
 						<%
 						for (int j = 0; j < entries.size(); j++) {
@@ -301,7 +308,7 @@ if (fixedHeader) {
 							if (entry.isTruncate()) {
 								truncate = true;
 
-								columnClassName += " table-cell-content";
+								columnClassName += " table-cell-expand";
 							}
 
 							String normalizedColumnName = null;
@@ -310,7 +317,7 @@ if (fixedHeader) {
 								normalizedColumnName = normalizedHeaderNames.get(j);
 
 								if (!Validator.isBlank(normalizedColumnName)) {
-									columnClassName += (normalizedColumnName.equals("rowChecker")) ? " lfr-checkbox-column" : " lfr-" + normalizedColumnName + "-column";
+									columnClassName += normalizedColumnName.equals("rowChecker") ? " lfr-checkbox-column" : " lfr-" + normalizedColumnName + "-column";
 								}
 							}
 
@@ -338,7 +345,6 @@ if (fixedHeader) {
 
 									</c:otherwise>
 								</c:choose>
-
 							</td>
 
 						<%
@@ -357,7 +363,7 @@ if (fixedHeader) {
 			%>
 
 			<c:if test="<%= headerNames != null %>">
-				<tr class="lfr-template">
+				<tr class="d-none <%= searchContainerRowCssClass %>" data-qa-id="row">
 
 					<%
 					for (int i = 0; i < headerNames.size(); i++) {

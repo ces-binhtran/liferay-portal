@@ -112,15 +112,14 @@ public class SambaAuth implements Authenticator {
 		_userLocalService = userLocalService;
 	}
 
-	private static void _setSambaPasswords(User user, String password) {
+	private void _setSambaPasswords(User user, String password) {
 		try {
 			PortalSambaUtil.setSambaLMPassword(user, password);
 			PortalSambaUtil.setSambaNTPassword(user, password);
 		}
 		catch (UnsupportedEncodingException unsupportedEncodingException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(
-					unsupportedEncodingException, unsupportedEncodingException);
+				_log.warn(unsupportedEncodingException);
 			}
 		}
 	}

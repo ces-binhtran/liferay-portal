@@ -17,14 +17,10 @@ package com.liferay.layout.admin.web.internal.portlet.action;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
 import com.liferay.layout.admin.web.internal.handler.LayoutExceptionRequestHandler;
 import com.liferay.layout.util.LayoutCopyHelper;
-import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
-import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.log.Log;
-import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.JSONPortletResponseUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -49,7 +45,6 @@ import java.util.Objects;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -61,7 +56,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + LayoutAdminPortletKeys.GROUP_PAGES,
-		"mvc.command.name=/layout/copy_layout"
+		"mvc.command.name=/layout_admin/copy_layout"
 	},
 	service = MVCActionCommand.class
 )
@@ -87,49 +82,54 @@ public class CopyLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 		Map<Locale, String> nameMap = HashMapBuilder.put(
 			themeDisplay.getLocale(), name
+		).put(
+			LocaleUtil.getSiteDefault(),
+			() -> {
+				if (!Objects.equals(
+						themeDisplay.getLocale(),
+						LocaleUtil.getSiteDefault())) {
+
+					return name;
+				}
+
+				return null;
+			}
 		).build();
-
-		if (!Objects.equals(
-				themeDisplay.getLocale(), LocaleUtil.getSiteDefault())) {
-
-			nameMap.put(LocaleUtil.getSiteDefault(), name);
-		}
-
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			Layout.class.getName(), actionRequest);
 
 		UnicodeProperties typeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
-		JSONObject jsonObject = JSONFactoryUtil.createJSONObject();
+		Layout sourceLayout = _layoutLocalService.fetchLayout(sourcePlid);
+
+		UnicodeProperties sourceTypeSettingsUnicodeProperties =
+			sourceLayout.getTypeSettingsProperties();
+
+		sourceTypeSettingsUnicodeProperties.putAll(
+			typeSettingsUnicodeProperties);
+
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			Layout.class.getName(), actionRequest);
 
 		try {
-			Layout sourceLayout = _layoutLocalService.fetchLayout(sourcePlid);
-
-			UnicodeProperties sourceTypeSettingsUnicodeProperties =
-				sourceLayout.getTypeSettingsProperties();
-
-			sourceTypeSettingsUnicodeProperties.putAll(
-				typeSettingsUnicodeProperties);
-
 			Layout targetLayout = _layoutService.addLayout(
 				groupId, privateLayout, sourceLayout.getParentLayoutId(), 0, 0,
 				nameMap, sourceLayout.getTitleMap(),
 				sourceLayout.getDescriptionMap(), sourceLayout.getKeywordsMap(),
 				sourceLayout.getRobotsMap(), sourceLayout.getType(),
 				sourceTypeSettingsUnicodeProperties.toString(), false, false,
-				new HashMap<>(), serviceContext);
-
-			Layout draftLayout = _layoutLocalService.fetchLayout(
-				_portal.getClassNameId(Layout.class), targetLayout.getPlid());
-
-			if (draftLayout != null) {
-				targetLayout = draftLayout;
-			}
+				new HashMap<>(), sourceLayout.getMasterLayoutPlid(),
+				serviceContext);
 
 			targetLayout = _layoutCopyHelper.copyLayout(
 				sourceLayout, targetLayout);
+
+			Layout draftLayout = targetLayout.fetchDraftLayout();
+
+			if (draftLayout != null) {
+				targetLayout = _layoutCopyHelper.copyLayout(
+					targetLayout, draftLayout);
+			}
 
 			targetLayout.setNameMap(nameMap);
 
@@ -140,39 +140,29 @@ public class CopyLayoutMVCActionCommand extends BaseMVCActionCommand {
 
 			_layoutLocalService.updateLayout(targetLayout);
 
-			LiferayPortletResponse liferayPortletResponse =
-				_portal.getLiferayPortletResponse(actionResponse);
-
-			PortletURL redirectURL = liferayPortletResponse.createRenderURL();
-
-			redirectURL.setParameter(
-				"navigation", privateLayout ? "private-pages" : "public-pages");
-			redirectURL.setParameter(
-				"selPlid", String.valueOf(sourceLayout.getParentPlid()));
-			redirectURL.setParameter(
-				"privateLayout", String.valueOf(privateLayout));
-
-			jsonObject.put("redirectURL", redirectURL.toString());
-
 			JSONPortletResponseUtil.writeJSON(
-				actionRequest, actionResponse, jsonObject);
+				actionRequest, actionResponse,
+				JSONUtil.put(
+					"redirectURL",
+					PortletURLBuilder.createRenderURL(
+						_portal.getLiferayPortletResponse(actionResponse)
+					).setNavigation(
+						privateLayout ? "private-pages" : "public-pages"
+					).setParameter(
+						"privateLayout", privateLayout
+					).setParameter(
+						"selPlid", sourceLayout.getParentPlid()
+					).buildString()));
 		}
-		catch (PortalException portalException) {
-			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
-			}
-
+		catch (Exception exception) {
 			SessionErrors.add(actionRequest, "layoutNameInvalid");
 
 			hideDefaultErrorMessage(actionRequest);
 
-			_layoutExceptionRequestHandler.handlePortalException(
-				actionRequest, actionResponse, portalException);
+			_layoutExceptionRequestHandler.handleException(
+				actionRequest, actionResponse, exception);
 		}
 	}
-
-	private static final Log _log = LogFactoryUtil.getLog(
-		CopyLayoutMVCActionCommand.class);
 
 	@Reference
 	private LayoutCopyHelper _layoutCopyHelper;

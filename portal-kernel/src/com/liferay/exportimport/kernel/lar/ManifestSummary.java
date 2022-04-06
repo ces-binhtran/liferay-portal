@@ -307,15 +307,10 @@ public class ManifestSummary implements Serializable {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(5);
-
-		sb.append("{modelAdditionCounters=");
-		sb.append(MapUtil.toString(_modelAdditionCounters));
-		sb.append(", modelDeletionCounters=");
-		sb.append(MapUtil.toString(_modelDeletionCounters));
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"{modelAdditionCounters=", MapUtil.toString(_modelAdditionCounters),
+			", modelDeletionCounters=",
+			MapUtil.toString(_modelDeletionCounters), "}");
 	}
 
 	protected static String getManifestSummaryKey(
@@ -325,11 +320,8 @@ public class ManifestSummary implements Serializable {
 			return modelName;
 		}
 
-		return modelName.concat(
-			StringPool.POUND
-		).concat(
-			referrerModelName
-		);
+		return StringBundler.concat(
+			modelName, StringPool.POUND, referrerModelName);
 	}
 
 	protected long getModelAdditionCount(

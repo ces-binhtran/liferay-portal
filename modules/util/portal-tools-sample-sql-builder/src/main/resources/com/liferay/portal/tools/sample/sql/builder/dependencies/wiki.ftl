@@ -8,8 +8,6 @@
 	<#list wikiPageModels as wikiPageModel>
 		${dataFactory.toInsertSQL(wikiPageModel)}
 
-		${dataFactory.toInsertSQL(dataFactory.newMBDiscussionAssetEntryModel(wikiPageModel))}
-
 		${dataFactory.toInsertSQL(dataFactory.newSubscriptionModel(wikiPageModel))}
 
 		${dataFactory.toInsertSQL(dataFactory.newWikiPageResourceModel(wikiPageModel))}
@@ -19,10 +17,7 @@
 			_entry=wikiPageModel
 		/>
 
-		<#assign
-			mbRootMessageId = dataFactory.getCounterNext()
-			mbThreadId = dataFactory.getCounterNext()
-		/>
+		<#assign mbRootMessageId = dataFactory.getCounterNext() />
 
 		<@insertMBDiscussion
 			_classNameId=dataFactory.wikiPageClassNameId
@@ -30,9 +25,9 @@
 			_groupId=groupId
 			_maxCommentCount=dataFactory.maxWikiPageCommentCount
 			_mbRootMessageId=mbRootMessageId
-			_mbThreadId=mbThreadId
+			_mbThreadId=dataFactory.getCounterNext()
 		/>
 
-		${dataFactory.getCSVWriter("wiki").write(wikiNodeModel.nodeId + "," + wikiNodeModel.name + "," + wikiPageModel.resourcePrimKey + "," + wikiPageModel.title + "," + mbRootMessageId + "\n")}
+		${csvFileWriter.write("wiki", virtualHostModel.hostname + "," + wikiNodeModel.nodeId + "," + wikiNodeModel.name + "," + wikiPageModel.resourcePrimKey + "," + wikiPageModel.title + "," + mbRootMessageId + "\n")}
 	</#list>
 </#list>

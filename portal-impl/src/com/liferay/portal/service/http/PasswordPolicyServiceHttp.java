@@ -46,7 +46,6 @@ import com.liferay.portal.kernel.util.MethodKey;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see PasswordPolicyServiceSoap
  * @generated
  */
 public class PasswordPolicyServiceHttp {
@@ -188,7 +187,8 @@ public class PasswordPolicyServiceHttp {
 			HttpPrincipal httpPrincipal, long companyId, String name, int start,
 			int end,
 			com.liferay.portal.kernel.util.OrderByComparator
-				<com.liferay.portal.kernel.model.PasswordPolicy> obc) {
+				<com.liferay.portal.kernel.model.PasswordPolicy>
+					orderByComparator) {
 
 		try {
 			MethodKey methodKey = new MethodKey(
@@ -196,7 +196,7 @@ public class PasswordPolicyServiceHttp {
 				_searchParameterTypes3);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, companyId, name, start, end, obc);
+				methodKey, companyId, name, start, end, orderByComparator);
 
 			Object returnObj = null;
 

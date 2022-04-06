@@ -17,39 +17,13 @@ package com.liferay.jenkins.results.parser;
 import java.io.File;
 import java.io.IOException;
 
-import java.util.Arrays;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public class SubrepositoryGitRepositoryJob
 	extends GitRepositoryJob implements SubrepositoryTestClassJob {
-
-	@Override
-	public Set<String> getBatchNames() {
-		Properties jobProperties = getJobProperties();
-
-		String testBatchNames = JenkinsResultsParserUtil.getProperty(
-			jobProperties, "test.batch.names[" + getBranchName() + "]");
-
-		if (testBatchNames == null) {
-			testBatchNames = JenkinsResultsParserUtil.getProperty(
-				jobProperties, "test.batch.names");
-		}
-
-		return getSetFromString(testBatchNames);
-	}
-
-	@Override
-	public Set<String> getDistTypes() {
-		String distTypes = JenkinsResultsParserUtil.getProperty(
-			getJobProperties(), "subrepo.dist.app.servers");
-
-		return new TreeSet<>(Arrays.asList(distTypes.split(",")));
-	}
 
 	@Override
 	public GitWorkingDirectory getGitWorkingDirectory() {
@@ -60,9 +34,25 @@ public class SubrepositoryGitRepositoryJob
 		checkGitRepositoryDir();
 
 		gitWorkingDirectory = GitWorkingDirectoryFactory.newGitWorkingDirectory(
-			getBranchName(), gitRepositoryDir.getPath());
+			_upstreamBranchName, gitRepositoryDir.getPath());
 
 		return gitWorkingDirectory;
+	}
+
+	@Override
+	public JSONObject getJSONObject() {
+		if (jsonObject != null) {
+			return jsonObject;
+		}
+
+		jsonObject = super.getJSONObject();
+
+		jsonObject.put(
+			"portal_upstream_branch_name", _portalUpstreamBranchName);
+		jsonObject.put("repository_name", _repositoryName);
+		jsonObject.put("upstream_branch_name", _upstreamBranchName);
+
+		return jsonObject;
 	}
 
 	@Override
@@ -70,7 +60,7 @@ public class SubrepositoryGitRepositoryJob
 		if (portalGitWorkingDirectory == null) {
 			portalGitWorkingDirectory =
 				GitWorkingDirectoryFactory.newPortalGitWorkingDirectory(
-					getBranchName());
+					_portalUpstreamBranchName);
 		}
 
 		return portalGitWorkingDirectory;
@@ -92,8 +82,9 @@ public class SubrepositoryGitRepositoryJob
 		return (SubrepositoryGitWorkingDirectory)gitWorkingDirectory;
 	}
 
-	public boolean getTestRunValidation() {
-		return testRunValidation;
+	@Override
+	public boolean isValidationRequired() {
+		return validationRequired;
 	}
 
 	@Override
@@ -110,41 +101,72 @@ public class SubrepositoryGitRepositoryJob
 	}
 
 	protected SubrepositoryGitRepositoryJob(
-		String jobName, String repositoryName) {
+		BuildProfile buildProfile, String jobName,
+		String portalUpstreamBranchName, String repositoryName,
+		String upstreamBranchName) {
 
-		super(jobName);
+		super(buildProfile, jobName, upstreamBranchName);
 
+		_portalUpstreamBranchName = portalUpstreamBranchName;
+		_repositoryName = repositoryName;
+		_upstreamBranchName = upstreamBranchName;
+
+		_initialize();
+	}
+
+	protected SubrepositoryGitRepositoryJob(JSONObject jsonObject) {
+		super(jsonObject);
+
+		_repositoryName = jsonObject.getString("repository_name");
+		_portalUpstreamBranchName = jsonObject.getString(
+			"portal_upstream_branch_name");
+		_upstreamBranchName = jsonObject.getString("upstream_branch_name");
+
+		_initialize();
+	}
+
+	protected PortalGitWorkingDirectory portalGitWorkingDirectory;
+	protected boolean validationRequired;
+
+	private void _initialize() {
 		gitWorkingDirectory =
 			GitWorkingDirectoryFactory.newSubrepositoryGitWorkingDirectory(
-				jobName, repositoryName);
+				_upstreamBranchName, _repositoryName);
 
 		setGitRepositoryDir(gitWorkingDirectory.getWorkingDirectory());
 
 		checkGitRepositoryDir();
 
-		Properties buildProperties = null;
+		PortalGitWorkingDirectory portalGitWorkingDirectory =
+			getPortalGitWorkingDirectory();
+
+		jobPropertiesFiles.add(
+			new File(
+				portalGitWorkingDirectory.getWorkingDirectory(),
+				"test.properties"));
+
+		jobPropertiesFiles.add(
+			new File(
+				gitWorkingDirectory.getWorkingDirectory(), "test.properties"));
 
 		try {
-			buildProperties = JenkinsResultsParserUtil.getBuildProperties();
+			jobPropertiesFiles.add(
+				new File(
+					JenkinsResultsParserUtil.combine(
+						JenkinsResultsParserUtil.getProperty(
+							JenkinsResultsParserUtil.getBuildProperties(),
+							"base.repository.dir"),
+						"/liferay-jenkins-ee/commands/dependencies",
+						"/test-subrepository-batch.properties")));
 		}
 		catch (IOException ioException) {
 			throw new RuntimeException(
 				"Unable to get build properties", ioException);
 		}
-
-		jobPropertiesFiles.add(new File(gitRepositoryDir, "test.properties"));
-
-		jobPropertiesFiles.add(
-			new File(
-				JenkinsResultsParserUtil.combine(
-					buildProperties.getProperty("base.repository.dir"),
-					"/liferay-jenkins-ee/commands/dependencies",
-					"/test-subrepository-batch.properties")));
-
-		readJobProperties();
 	}
 
-	protected PortalGitWorkingDirectory portalGitWorkingDirectory;
-	protected boolean testRunValidation;
+	private final String _portalUpstreamBranchName;
+	private final String _repositoryName;
+	private final String _upstreamBranchName;
 
 }

@@ -49,24 +49,48 @@ JournalFileUploadsConfiguration journalFileUploadsConfiguration = (JournalFileUp
 	<aui:option label="from-your-computer" value="file" />
 </aui:select>
 
-<div class='<%= Objects.equals(smallImageSource, "url") ? "" : "hide" %>' id="<portlet:namespace/>smallImageURLContainer">
+<div class="<%= Objects.equals(smallImageSource, "url") ? "" : "hide" %>" id="<portlet:namespace />smallImageURLContainer">
 	<c:if test="<%= (article != null) && Validator.isNotNull(article.getArticleImageURL(themeDisplay)) %>">
 		<div class="aspect-ratio aspect-ratio-16-to-9">
-			<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />' class="aspect-ratio-item-fluid" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
+			<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />" class="aspect-ratio-item-fluid" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
 		</div>
 	</c:if>
 
 	<aui:input ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>" label="" name="smallImageURL" title="small-image-url" wrapperCssClass="mb-3" />
 </div>
 
-<div class='<%= Objects.equals(smallImageSource, "file") ? "" : "hide" %>' id="<portlet:namespace/>smallFileContainer">
-	<c:if test="<%= (article != null) && Validator.isNotNull(article.getArticleImageURL(themeDisplay)) %>">
-		<div class="aspect-ratio aspect-ratio-16-to-9">
-			<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="preview" />' class="aspect-ratio-item-fluid" src="<%= HtmlUtil.escapeAttribute(article.getArticleImageURL(themeDisplay)) %>" />
-		</div>
-	</c:if>
+<div class="<%= Objects.equals(smallImageSource, "file") ? "" : "hide" %>" id="<portlet:namespace />smallFileContainer">
+	<div>
 
-	<aui:input ignoreRequestValue="<%= journalEditArticleDisplayContext.isChangeStructure() %>" label="" name="smallFile" type="file" wrapperCssClass="mb-3" />
+		<%
+		ThemeDisplay finalThemeDisplay = themeDisplay;
+		%>
+
+		<react:component
+			module="js/ImageInput.es"
+			props='<%=
+				HashMapBuilder.<String, Object>put(
+					"name",
+					() -> {
+						if (!journalEditArticleDisplayContext.isChangeStructure()) {
+							return "smallFile";
+						}
+
+						return StringPool.BLANK;
+					}
+				).put(
+					"previewURL",
+					() -> {
+						if ((article != null) && Validator.isNotNull(article.getArticleImageURL(finalThemeDisplay))) {
+							return article.getArticleImageURL(finalThemeDisplay);
+						}
+
+						return StringPool.BLANK;
+					}
+				).build()
+			%>'
+		/>
+	</div>
 </div>
 
 <aui:script>

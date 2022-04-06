@@ -27,7 +27,6 @@ import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -42,7 +41,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/move_fragment_entry_link"
+		"mvc.command.name=/layout_content_page_editor/move_fragment_entry_link"
 	},
 	service = MVCActionCommand.class
 )
@@ -66,8 +65,7 @@ public class MoveFragmentEntryLinkMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 		String itemId = ParamUtil.getString(actionRequest, "itemId");
 		String parentItemId = ParamUtil.getString(
 			actionRequest, "parentItemId");
@@ -83,7 +81,7 @@ public class MoveFragmentEntryLinkMVCActionCommand
 					itemId, parentItemId, position));
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			jsonObject.put(
 				"error",

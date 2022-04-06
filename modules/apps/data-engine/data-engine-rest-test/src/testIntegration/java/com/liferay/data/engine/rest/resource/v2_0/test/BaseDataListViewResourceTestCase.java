@@ -35,7 +35,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -48,15 +47,11 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
@@ -78,7 +73,6 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -118,7 +112,9 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		DataListViewResource.Builder builder = DataListViewResource.builder();
 
-		dataListViewResource = builder.locale(
+		dataListViewResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -200,20 +196,40 @@ public abstract class BaseDataListViewResourceTestCase {
 	}
 
 	@Test
+	public void testDeleteDataDefinitionDataListView() throws Exception {
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		DataListView dataListView =
+			testDeleteDataDefinitionDataListView_addDataListView();
+
+		assertHttpResponseStatusCode(
+			204,
+			dataListViewResource.deleteDataDefinitionDataListViewHttpResponse(
+				dataListView.getDataDefinitionId()));
+	}
+
+	protected DataListView
+			testDeleteDataDefinitionDataListView_addDataListView()
+		throws Exception {
+
+		throw new UnsupportedOperationException(
+			"This method needs to be implemented");
+	}
+
+	@Test
 	public void testGetDataDefinitionDataListViewsPage() throws Exception {
-		Page<DataListView> page =
-			dataListViewResource.getDataDefinitionDataListViewsPage(
-				testGetDataDefinitionDataListViewsPage_getDataDefinitionId(),
-				RandomTestUtil.randomString(), Pagination.of(1, 2), null);
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long dataDefinitionId =
 			testGetDataDefinitionDataListViewsPage_getDataDefinitionId();
 		Long irrelevantDataDefinitionId =
 			testGetDataDefinitionDataListViewsPage_getIrrelevantDataDefinitionId();
 
-		if ((irrelevantDataDefinitionId != null)) {
+		Page<DataListView> page =
+			dataListViewResource.getDataDefinitionDataListViewsPage(
+				dataDefinitionId, RandomTestUtil.randomString(),
+				Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantDataDefinitionId != null) {
 			DataListView irrelevantDataListView =
 				testGetDataDefinitionDataListViewsPage_addDataListView(
 					irrelevantDataDefinitionId, randomIrrelevantDataListView());
@@ -238,7 +254,7 @@ public abstract class BaseDataListViewResourceTestCase {
 				dataDefinitionId, randomDataListView());
 
 		page = dataListViewResource.getDataDefinitionDataListViewsPage(
-			dataDefinitionId, null, Pagination.of(1, 2), null);
+			dataDefinitionId, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -316,6 +332,20 @@ public abstract class BaseDataListViewResourceTestCase {
 	}
 
 	@Test
+	public void testGetDataDefinitionDataListViewsPageWithSortDouble()
+		throws Exception {
+
+		testGetDataDefinitionDataListViewsPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, dataListView1, dataListView2) -> {
+				BeanUtils.setProperty(
+					dataListView1, entityField.getName(), 0.1);
+				BeanUtils.setProperty(
+					dataListView2, entityField.getName(), 0.5);
+			});
+	}
+
+	@Test
 	public void testGetDataDefinitionDataListViewsPageWithSortInteger()
 		throws Exception {
 
@@ -338,7 +368,7 @@ public abstract class BaseDataListViewResourceTestCase {
 
 				String entityFieldName = entityField.getName();
 
-				Method method = clazz.getMethod(
+				java.lang.reflect.Method method = clazz.getMethod(
 					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
 
 				Class<?> returnType = method.getReturnType();
@@ -516,25 +546,19 @@ public abstract class BaseDataListViewResourceTestCase {
 						})),
 				"JSONObject/data", "Object/deleteDataListView"));
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"dataListView",
+					new HashMap<String, Object>() {
+						{
+							put("dataListViewId", dataListView.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"dataListView",
-						new HashMap<String, Object>() {
-							{
-								put("dataListViewId", dataListView.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
-
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		Assert.assertTrue(errorsJSONArray.length() > 0);
 	}
 
 	@Test
@@ -631,6 +655,23 @@ public abstract class BaseDataListViewResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	protected void assertContains(
+		DataListView dataListView, List<DataListView> dataListViews) {
+
+		boolean contains = false;
+
+		for (DataListView item : dataListViews) {
+			if (equals(dataListView, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			dataListViews + " does not contain " + dataListView, contains);
+	}
+
 	protected void assertHttpResponseStatusCode(
 		int expectedHttpResponseStatusCode,
 		HttpInvoker.HttpResponse actualHttpResponse) {
@@ -682,7 +723,7 @@ public abstract class BaseDataListViewResourceTestCase {
 		}
 	}
 
-	protected void assertValid(DataListView dataListView) {
+	protected void assertValid(DataListView dataListView) throws Exception {
 		boolean valid = true;
 
 		if (dataListView.getDateCreated() == null) {
@@ -786,8 +827,8 @@ public abstract class BaseDataListViewResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.data.engine.rest.dto.v2_0.DataListView.class)) {
 
 			if (!ArrayUtil.contains(
@@ -802,12 +843,13 @@ public abstract class BaseDataListViewResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -821,7 +863,7 @@ public abstract class BaseDataListViewResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -975,9 +1017,24 @@ public abstract class BaseDataListViewResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1251,12 +1308,12 @@ public abstract class BaseDataListViewResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1266,10 +1323,10 @@ public abstract class BaseDataListViewResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1283,8 +1340,8 @@ public abstract class BaseDataListViewResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseDataListViewResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseDataListViewResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

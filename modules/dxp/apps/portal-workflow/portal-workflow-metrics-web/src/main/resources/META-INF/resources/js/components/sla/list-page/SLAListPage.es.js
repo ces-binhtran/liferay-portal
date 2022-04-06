@@ -10,6 +10,7 @@
  */
 
 import ClayAlert from '@clayui/alert';
+import ClayLayout from '@clayui/layout';
 import React, {createContext, useContext, useMemo, useState} from 'react';
 
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
@@ -17,11 +18,11 @@ import {useFetch} from '../../../shared/hooks/useFetch.es';
 import {usePageTitle} from '../../../shared/hooks/usePageTitle.es';
 import {SLAContext} from '../SLAContainer.es';
 import BlockedSLAInfo from './BlockedSLAInfo.es';
-import {Body} from './SLAListPageBody.es';
-import {Header} from './SLAListPageHeader.es';
+import Body from './SLAListPageBody.es';
+import Header from './SLAListPageHeader.es';
 import DeleteSLAModal from './modal/DeleteSLAModal.es';
 
-const SLAListPage = ({page, pageSize, processId}) => {
+function SLAListPage({page, pageSize, processId}) {
 	const {SLAUpdated, setSLAUpdated} = useContext(SLAContext);
 
 	const [itemToRemove, setItemToRemove] = useState(null);
@@ -50,18 +51,19 @@ const SLAListPage = ({page, pageSize, processId}) => {
 		}
 
 		return [];
-	}, [fetchData, visible]);
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [visible]);
 
 	return (
 		<SLAListPageContext.Provider value={slaContextState}>
 			<SLAListPage.Header processId={processId} />
 
-			<div className="container-fluid-1280">
+			<ClayLayout.ContainerFluid>
 				<BlockedSLAInfo processId={processId} />
 
 				{SLAUpdated && (
 					<ClayAlert
-						data-testid="updateAlert"
 						displayType="info"
 						onClose={() => setSLAUpdated(false)}
 						title={Liferay.Language.get('info')}
@@ -85,10 +87,10 @@ const SLAListPage = ({page, pageSize, processId}) => {
 				</PromisesResolver>
 
 				<SLAListPage.DeleteSLAModal />
-			</div>
+			</ClayLayout.ContainerFluid>
 		</SLAListPageContext.Provider>
 	);
-};
+}
 
 const SLAListPageContext = createContext();
 

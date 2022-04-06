@@ -15,11 +15,13 @@
 package com.liferay.headless.delivery.internal.odata.entity.v1_0;
 
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsMapFactory;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.odata.entity.CollectionEntityField;
 import com.liferay.portal.odata.entity.ComplexEntityField;
 import com.liferay.portal.odata.entity.DateTimeEntityField;
+import com.liferay.portal.odata.entity.DoubleEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IntegerEntityField;
@@ -59,9 +61,20 @@ public class StructuredContentEntityModel implements EntityModel {
 				"datePublished",
 				locale -> Field.getSortableFieldName(Field.DISPLAY_DATE),
 				locale -> Field.DISPLAY_DATE),
+			new DoubleEntityField(
+				"priority",
+				locale -> Field.getSortableFieldName(Field.PRIORITY)),
+			new IntegerEntityField("assetLibraryId", locale -> Field.GROUP_ID),
 			new IntegerEntityField(
 				"contentStructureId", locale -> Field.CLASS_TYPE_ID),
 			new IntegerEntityField("creatorId", locale -> Field.USER_ID),
+			new IntegerEntityField("siteId", locale -> Field.GROUP_ID),
+			new StringEntityField(
+				"friendlyUrlPath",
+				locale -> Field.getSortableFieldName(
+					StringBundler.concat(
+						"urlTitle_", LocaleUtil.toLanguageId(locale),
+						"_String"))),
 			new StringEntityField(
 				"title",
 				locale -> Field.getSortableFieldName(

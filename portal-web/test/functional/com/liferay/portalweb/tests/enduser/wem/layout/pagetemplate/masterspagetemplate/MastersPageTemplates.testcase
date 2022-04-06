@@ -3,8 +3,8 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.component.names = "Page Templates";
-	property testray.main.component.name = "Page Templates";
+	property testray.component.names = "Master Page Templates";
+	property testray.main.component.name = "Master Page Templates";
 
 	setUp {
 		task ("Set up instance and sign in") {
@@ -37,35 +37,53 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-102566 and LPS-109594. There's a custom masters page created in site, when add a new page, there's an option to select the created masters, and the common elements added in masters page are added in page. The header of drop zone is next to border of the management toolbar by default on master page template."
+	@description = "This is a test for LPS-102566, LPS-109594 and LPS-119634. Add a page based on custom master."
 	@priority = "5"
-	test AddPageBasedOnCustomMastersAndInheritElementsFromCustomMasters {
+	test AddPageBasedOnCustomMaster {
 		property portal.acceptance = "true";
 
 		task ("Assert header of Drop Zone is inside body by default") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-			Click.clickNoWaitForVisible(
-				key_fragmentName = "Drop Zone",
-				locator1 = "Fragment#FRAGMENT_HEADER");
+			PageEditor.clickConfigurableField(fragmentName = "Drop Zone");
 
 			AssertElementPresent(
 				key_fragmentName = "Drop Zone",
 				locator1 = "Fragment#FRAGMENT_HEADER_INSET_STYLE");
 		}
 
-		task ("Add a custom masters with Button fragment") {
+		task ("Add a Button fragment to master") {
 			PageEditor.addFragment(
 				collectionName = "Basic Components",
 				dropTarget = "Header",
 				fragmentName = "Button",
 				scope = "Master");
+		}
+
+		task ("Configure the Button fragment") {
+			PageEditor.gotoConfiguration(fragmentName = "Button");
+
+			PageEditor.configureFragment(
+				size = "Large",
+				type = "Link");
+
+			PageEditor.gotoStyle(fragmentName = "Button");
+
+			PageEditor.configureFragment(
+				alignment = "Center",
+				backgroundColor = "Gray 300");
+
+			PageEditor.viewFragmentStyle(
+				backgroundColor = "gray-300",
+				fragmentName = "button");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Assert custom masters as an option when add a new page") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -76,6 +94,15 @@ definition {
 			AssertVisible(
 				key_fragmentName = "button",
 				locator1 = "PageEditor#FRAGMENT_INHERITED_FROM_CUSTOM_MASTERS");
+
+			PageEditor.viewFragmentStyle(
+				fragmentName = "button",
+				size = "lg",
+				type = "link");
+
+			AssertElementPresent(locator1 = "//div[contains(@class,'fragment-content--master')][contains(@class,'text-center')][//div[contains(@class,'component-button')]]");
+
+			AssertElementPresent(locator1 = "//div[contains(@class,'fragment-content--master')][contains(@style,'color: var(--gray-300)')][//div[contains(@class,'component-button')]]");
 		}
 	}
 
@@ -84,14 +111,18 @@ definition {
 	test CanDuplicateMastersPageTemplate {
 		property portal.acceptance = "true";
 
-		MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
-			item = "Make a Copy",
-			masterLayoutName = "Custom Masters Page Template");
+		task ("Make a copy of master page template") {
+			MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
+				item = "Make a Copy",
+				masterLayoutName = "Custom Masters Page Template");
+		}
 
-		MastersPageTemplatesAdmin.viewMastersPresent(masterLayoutName = "Custom Masters Page Template (Copy)");
+		task ("Assert master page template's name") {
+			MastersPageTemplatesAdmin.viewMastersPresent(masterLayoutName = "Custom Masters Page Template (Copy)");
+		}
 	}
 
-	@description = "This is for LPS-103687. Validate if the Blank page template can not be deleted."
+	@description = "This is for LPS-102202. Validate if the Blank page template can not be edited and deleted."
 	@priority = "5"
 	test CannotDeleteBlankPageTemplate {
 		property portal.acceptance = "true";
@@ -103,35 +134,19 @@ definition {
 		task ("Assert the Blank page template without ellipsis icon button") {
 			AssertElementNotPresent(
 				key_card = "Blank",
-				locator1 = "LexiconCard#CARD_ELLIPSIS");
+				locator1 = "Card#CARD_ELLIPSIS");
 		}
 
 		task ("Assert the Blank page template without checkbox") {
 			AssertElementNotPresent(
 				key_card = "Blank",
-				locator1 = "LexiconCard#CARD_CHECKBOX");
+				locator1 = "Card#CARD_CHECKBOX");
 		}
 	}
 
-	@description = "This is for LPS-103687. Validate if the Blank page template can not be edited."
-	@priority = "5"
-	test CannotEditBlankPageTemplate {
-		property portal.acceptance = "true";
-
-		task ("Assert the Blank page template exist") {
-			MastersPageTemplatesAdmin.viewMastersPresent(masterLayoutName = "Blank");
-		}
-
-		task ("Assert the Blank page template without ellipsis icon button") {
-			AssertElementNotPresent(
-				key_card = "Blank",
-				locator1 = "LexiconCard#CARD_ELLIPSIS");
-		}
-	}
-
-	@description = "This is for LPS-102200. Can change master of a content page among any existing masters."
-	@priority = "5"
-	test ChangeMasterOfContentPageAmongExistingMasters {
+	@description = "This is for LPS-121979. Change the configuration of page won't break the connection with its master page."
+	@priority = "4"
+	test ChangeConfigurationOfPageBasedOnMasterPage {
 		task ("Add header and footer in custom master") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -148,6 +163,92 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Add a content page based on custom master") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(
+				masterLayoutName = "Custom Masters Page Template",
+				pageName = "Test Page Name");
+		}
+
+		task ("Add a Heading fragment to page") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
+
+			PageEditor.clickPublish();
+		}
+
+		task ("Assert the elements are shown in view mode") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			AssertVisible(
+				key_type = "dark",
+				locator1 = "PageEditor#NAVIGATION_BARS");
+
+			AssertVisible(
+				key_type = "dark",
+				locator1 = "PageEditor#FOOTERS");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Heading Example");
+		}
+
+		task ("Modify the page name") {
+			Navigator.gotoEditPageViaControlMenu(pageName = "Test Page Name");
+
+			PagesAdmin.editName(pageNameEdit = "New Test Page Name");
+		}
+
+		task ("Assert the elements are still shown in view mode") {
+			Navigator.gotoBack();
+
+			AssertVisible(
+				key_type = "dark",
+				locator1 = "PageEditor#NAVIGATION_BARS");
+
+			AssertVisible(
+				key_type = "dark",
+				locator1 = "PageEditor#FOOTERS");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				text = "Heading Example");
+		}
+	}
+
+	@description = "This is for LPS-102200. Can change master of a content page among any existing masters."
+	@priority = "5"
+	test ChangeMasterOfContentPageAmongExistingMasters {
+		property portal.acceptance = "true";
+
+		task ("Add header and footer in custom master") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			PageEditor.addFragment(
+				collectionName = "Navigation Bars",
+				dropTarget = "Header",
+				fragmentName = "Header Dark",
+				scope = "Master");
+
+			PageEditor.addFragment(
+				collectionName = "Footers",
+				dropTarget = "Footer",
+				fragmentName = "Footer Nav Dark",
+				scope = "Master");
+
+			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a content page based on Blank") {
@@ -162,11 +263,13 @@ definition {
 		}
 
 		task ("Assert can change master from Blank to custom master") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertClick(
@@ -178,12 +281,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertElementNotPresent(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			Button.clickSave();
 
@@ -204,12 +307,10 @@ definition {
 				locator1 = "PageEditor#FOOTERS");
 
 			PageEditor.clickPublish();
-
-			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a content page based on custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -217,11 +318,13 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -237,12 +340,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertVisible(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			AssertNotVisible(
 				key_text = "Edit Master",
@@ -267,6 +370,8 @@ definition {
 	@description = "This is for LPS-102200. Can change master of a content page template among any existing masters"
 	@priority = "5"
 	test ChangeMasterOfContentPageTemplateAmongExistingMasters {
+		property portal.acceptance = "true";
+
 		task ("Add header and footer in custom master") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -283,19 +388,14 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a page template collection") {
 			JSONLayoutpagetemplate.addLayoutPageTemplateCollection(
 				groupName = "Test Site Name",
 				layoutPageTemplateCollectionName = "Page Template Collection");
-
-			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
-				groupName = "Test Site Name",
-				layoutPageTemplateCollectionName = "Page Template Collection",
-				layoutPageTemplateEntryName = "Page Template Name 1",
-				layoutPageTemplateStatus = "Draft",
-				layoutPageTemplateType = "Content Page Template");
 		}
 
 		task ("Add a content page template based on Blank") {
@@ -316,11 +416,13 @@ definition {
 
 			PageEditor.assertFragmentSidebarLoaded();
 
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertClick(
@@ -332,12 +434,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertElementNotPresent(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			Button.clickSave();
 
@@ -358,8 +460,6 @@ definition {
 				locator1 = "PageEditor#FOOTERS");
 
 			PageEditor.clickPublish();
-
-			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a content page template based on custom master") {
@@ -381,11 +481,13 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -401,12 +503,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertVisible(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			AssertNotVisible(
 				key_text = "Edit Master",
@@ -428,9 +530,61 @@ definition {
 		}
 	}
 
+	@description = "This is a test for LPS-131982. Change master of content page with HTML title."
+	@priority = "3"
+	test ChangeMasterOfContentPageWithHTMLTitle {
+		task ("Add a page based on custom master") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
+
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(
+				masterLayoutName = "Custom Masters Page Template",
+				pageName = "Test Page Name");
+		}
+
+		task ("View the Custom Masters Page Template is selected") {
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			AssertElementPresent(
+				key_card = "Custom Masters Page Template",
+				locator1 = "Card#CARD_SELECTED");
+		}
+
+		task ("Type content in the HTML Title field") {
+			Navigator.gotoEditPageViaControlMenu(pageName = "Test Page Name");
+
+			Navigator.gotoNavTab(navTab = "SEO");
+
+			PortletEntry.inputText(
+				fieldLabel = "HTML Title",
+				text = "Page HTML Title");
+
+			PortletEntry.save();
+		}
+
+		task ("View the Custom Masters Page Template is still selected") {
+			Navigator.gotoBack();
+
+			ContentPages.gotoPageEditor();
+
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			AssertElementPresent(
+				key_card = "Custom Masters Page Template",
+				locator1 = "Card#CARD_SELECTED");
+		}
+	}
+
 	@description = "This is for LPS-102200. Can change master of a display page template among any existing masters."
 	@priority = "5"
 	test ChangeMasterOfDisplayPageTemplateAmongExistingMasters {
+		property portal.acceptance = "true";
+
 		task ("Add header and footer in custom master") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -447,6 +601,8 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a display page template based on Blank") {
@@ -462,11 +618,13 @@ definition {
 		}
 
 		task ("Assert can change master from Blank to custom master") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertClick(
@@ -478,12 +636,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertElementNotPresent(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			Button.clickSave();
 
@@ -504,8 +662,6 @@ definition {
 				locator1 = "PageEditor#FOOTERS");
 
 			PageEditor.clickPublish();
-
-			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a display page template based on custom masters") {
@@ -522,11 +678,13 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -542,12 +700,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertVisible(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			AssertNotVisible(
 				key_text = "Edit Master",
@@ -572,6 +730,8 @@ definition {
 	@description = "This is for LPS-105864. Can change master of a widget page among any existing masters."
 	@priority = "5"
 	test ChangeMasterOfWidgetPageAmongExistingMasters {
+		property portal.acceptance = "true";
+
 		task ("Add header and footer in custom master") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -588,6 +748,8 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a widget page") {
@@ -597,19 +759,17 @@ definition {
 		}
 
 		task ("Assert can change master from Blank to custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
-			Click.waitForMenuToggleJSClick(
-				key_pageName = "Test Page Name",
-				locator1 = "SitePages#LIST_GROUP_ITEM_ELLIPSIS_ICON");
-
-			MenuItem.click(menuItem = "Configure");
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
 
 			Navigator.gotoNavTab(navTab = "Look and Feel");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertClick(
@@ -621,12 +781,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertElementNotPresent(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			Button.clickSave();
 
@@ -650,19 +810,17 @@ definition {
 		}
 
 		task ("Assert can change master from custom master to Blank") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
-			Click.waitForMenuToggleJSClick(
-				key_pageName = "Test Page Name",
-				locator1 = "SitePages#LIST_GROUP_ITEM_ELLIPSIS_ICON");
-
-			MenuItem.click(menuItem = "Configure");
+			PagesAdmin.gotoPageEllipsisMenuItem(
+				menuItem = "Configure",
+				pageName = "Test Page Name");
 
 			Navigator.gotoNavTab(navTab = "Look and Feel");
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -678,12 +836,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertVisible(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			AssertNotVisible(
 				key_text = "Edit Master",
@@ -710,6 +868,8 @@ definition {
 	@description = "This is for LPS-105864. Can change master of a widget page template among any existing masters."
 	@priority = "5"
 	test ChangeMasterOfWidgetPageTemplateAmongExistingMasters {
+		property portal.acceptance = "true";
+
 		task ("Add header and footer in custom master") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
@@ -726,6 +886,8 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a page template collection") {
@@ -735,13 +897,22 @@ definition {
 		}
 
 		task ("Add a widget page template") {
+			JSONLayoutpagetemplate.addLayoutPageTemplateEntry(
+				groupName = "Test Site Name",
+				layoutPageTemplateCollectionName = "Page Template Collection",
+				layoutPageTemplateEntryName = "Page Template Name",
+				layoutPageTemplateStatus = "Approved",
+				layoutPageTemplateType = "Widget Page Template");
+
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
 
-			PageTemplatesAdmin.addPageTemplate(
-				pageTemplateName = "Page Template Name",
-				pageTemplateType = "Widget Page Template");
+			PageTemplatesAdmin.gotoPageTemplateEllipsisItem(
+				item = "Edit",
+				pageTemplateName = "Page Template Name");
+
+			WaitForPageLoad();
 		}
 
 		task ("Assert can change master from Blank to custom master") {
@@ -751,7 +922,7 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertClick(
@@ -763,12 +934,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertElementNotPresent(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			Button.clickSave();
 
@@ -802,7 +973,7 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			AssertVisible(
@@ -818,12 +989,12 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Blank",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Blank");
 
 			AssertVisible(
 				key_sectionTitle = "Theme",
-				locator1 = "SitePagesEditPage#SECTION_TITLE");
+				locator1 = "PagesAdmin#SECTION_TITLE");
 
 			AssertNotVisible(
 				key_text = "Edit Master",
@@ -848,15 +1019,17 @@ definition {
 	@description = "This is a test for LPS-102194. Assert contents in drop zone shouldn't be changed and available fragments should be changed in sidebar after changing master page which set allowed fragments in drop zone."
 	@priority = "4"
 	test ChangeMasterPageWithAllowedFragments {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		task ("Select Heading in master page template and publish") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
+			MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
 
-		Button.clickNoError(button = "Publish Master");
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a content page based on Blank") {
 			JSONLayout.addPublicLayout(
@@ -869,29 +1042,35 @@ definition {
 				siteName = "Test Site Name");
 		}
 
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			fragmentName = "Button");
+		task ("Add a Button and Heading fragment to page and view them") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Button");
 
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			fragmentName = "Heading",
-			targetFragmentName = "Button");
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading",
+				targetFragmentName = "Button");
 
-		PageEditor.viewFragment(fragmentName = "Button");
+			PageEditor.viewFragment(fragmentName = "Button");
 
-		PageEditor.viewFragment(fragmentName = "Heading");
+			PageEditor.viewFragment(fragmentName = "Heading");
+		}
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		task ("Change master page via more link and save") {
+			PageEditor.gotoTab(tabName = "Page Design Options");
 
-		AssertClick(
-			key_text = "Change Master",
-			locator1 = "Button#ANY",
-			value1 = "Change Master");
+			Click(locator1 = "PageEditor#MORE_LINK");
 
-		MastersPageTemplates.selectMaster(masterLayoutName = "Custom Masters Page Template");
+			AssertClick(
+				key_text = "Change Master",
+				locator1 = "Button#ANY",
+				value1 = "Change Master");
 
-		Button.clickSave();
+			MastersPageTemplates.selectMaster(masterLayoutName = "Custom Masters Page Template");
+
+			Button.clickSave();
+		}
 
 		task ("Assert the only Heading fragment exist in page editor sidebar") {
 			ContentPagesNavigator.openEditContentPage(
@@ -901,37 +1080,39 @@ definition {
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
 
 			AssertVisible(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
 
 			AssertElementNotPresent(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Button",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 		}
 	}
 
 	@description = "This is a test for LPS-102194. When checking the checkbox beside Select New Fragments Automatically, the new fragment will be available in content page."
 	@priority = "5"
 	test CheckSelectNewFragmentsAutomaticallyInAllowedFragments {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		property portal.acceptance = "true";
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+		task ("Uncheck Select New Fragments Automatically in master page and publish") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		Uncheck.uncheckToggleSwitch(locator1 = "Checkbox#ALL_FRAGMENTS");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		Uncheck.uncheckToggleSwitch(
-			key_fragmentName = "Select New Fragments Automatically",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			Uncheck.uncheckToggleSwitch(locator1 = "Checkbox#ALL_FRAGMENTS");
 
-		Button.clickSave();
+			Uncheck.uncheckToggleSwitch(
+				key_fragmentName = "Select New Fragments Automatically",
+				locator1 = "Checkbox#ALLOWED_FRAGMENT");
 
-		Button.clickNoError(button = "Publish Master");
+			Button.clickSave();
+
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a second custom master") {
 			JSONLayoutpagetemplate.addMasterPageTemplateEntry(
@@ -941,28 +1122,32 @@ definition {
 			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
 		}
 
-		MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
-			item = "Edit",
-			masterLayoutName = "Custom Masters Page Template 2");
+		task ("Edit second master page template and uncheck All Fragments") {
+			MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
+				item = "Edit",
+				masterLayoutName = "Custom Masters Page Template 2");
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		Uncheck.uncheckToggleSwitch(locator1 = "Checkbox#ALL_FRAGMENTS");
+			Uncheck.uncheckToggleSwitch(locator1 = "Checkbox#ALL_FRAGMENTS");
+		}
 
-		MastersPageTemplates.searchAllowedFragments(searchValue = "Select New Fragments Automatically");
+		task ("Add a second custom master") {
+			MastersPageTemplates.searchAllowedFragments(searchValue = "Select New Fragments Automatically");
 
-		AssertChecked.assertCheckedNotVisible(
-			key_fragmentName = "Select New Fragments Automatically",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			AssertChecked.assertCheckedNotVisible(
+				key_fragmentName = "Select New Fragments Automatically",
+				locator1 = "Checkbox#ALLOWED_FRAGMENT");
 
-		Button.clickSave();
+			Button.clickSave();
 
-		Button.clickNoError(button = "Publish Master");
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a page based on the first custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -972,7 +1157,7 @@ definition {
 		}
 
 		task ("Add a page based on the second custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template 2",
@@ -981,19 +1166,17 @@ definition {
 			PageEditor.clickPublish();
 		}
 
-		JSONFragment.addFragmentCollection(
-			groupName = "Test Site Name",
-			name = "Collection Name");
+		task ("Add a collection and frgament to the colletion") {
+			JSONFragment.addFragmentCollection(
+				groupName = "Test Site Name",
+				name = "Collection Name");
 
-		FragmentsAdminNavigator.openFragmentsAdmin(siteURLKey = "test-site-name");
-
-		FragmentsAdminNavigator.gotoCollection(collectionName = "Collection Name");
-
-		FragmentsAdmin.addFragment(fragmentName = "Fragment Name");
-
-		Alert.viewSuccessMessage();
-
-		PortletEntry.publish();
+			JSONFragment.addSection(
+				collectionName = "Collection Name",
+				fragmentStatus = "Approved",
+				groupName = "Test Site Name",
+				name = "Fragment Name");
+		}
 
 		task ("Assert the new fragment does not exist in page with the first custom master") {
 			ContentPagesNavigator.openEditContentPage(
@@ -1003,9 +1186,8 @@ definition {
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Fragment Name");
 
 			AssertElementNotPresent(
-				key_collectionName = "Collection Name",
 				key_fragmentName = "Fragment Name",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 		}
 
 		task ("Assert the new fragment exists in page with the second custom master") {
@@ -1016,27 +1198,30 @@ definition {
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Fragment Name");
 
 			AssertVisible(
-				key_collectionName = "Collection Name",
 				key_fragmentName = "Fragment Name",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 		}
 	}
 
 	@description = "This is a test for LPS-102194. Only can add allowed fragments to drop zone in fragment pages when set them in master."
 	@priority = "5"
 	test ConfigureAllowedFragmentsInDropZone {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		property portal.acceptance = "true";
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+		task ("Select Heading in master page template and publish") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		Button.clickNoError(button = "Publish Master");
+			MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
+
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a page based on custom masters") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -1053,51 +1238,53 @@ definition {
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
 
 			AssertVisible(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
 
 			AssertElementNotPresent(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Button",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 		}
 	}
 
 	@description = "This is a test for LPS-102194. Assert all fragments inside collection are available in fragment pages when check the checkbox beside collection"
 	@priority = "4"
 	test ConfigureBasicComponentsAsAllowedFragments {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		task ("Select Basic Components in master page template and publish") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Basic Components");
+			MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Basic Components");
 
-		Button.clickNoError(button = "Publish Master");
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a content page based on custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
 				pageName = "Test Page Name");
 		}
 
-		Pause(locator1 = "10000");
+		task ("Wait for page load and All the fragments in Basic Components are visible") {
+			WaitForPageLoad();
 
-		PageEditor.gotoTab(tabName = "Fragments");
+			PageEditor.gotoTab(tabName = "Fragments");
 
-		PageEditor.expandFragmentCollection(collectionName = "Basic Components");
+			PageEditor.expandFragmentCollection(collectionName = "Basic Components");
 
-		for (var fragmentName : list "Button,Card,Heading,HTML,Image,Paragraph,Separator,Slider,Social,Spacer,Video") {
-			AssertVisible(
-				key_collectionName = "Basic Components",
-				key_fragmentName = "${fragmentName}",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+			for (var fragmentName : list "Button,Card,Heading,HTML,Image,Paragraph,Separator,Slider,Social,Spacer,Video URL") {
+				AssertVisible(
+					key_collectionName = "Basic Components",
+					key_fragmentName = "${fragmentName}",
+					locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+			}
 		}
 	}
 
@@ -1120,10 +1307,12 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a content page based on custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -1145,7 +1334,9 @@ definition {
 		}
 
 		task ("Change master from custom master to Blank") {
-			PageEditor.gotoTab(tabName = "Look and Feel");
+			PageEditor.gotoTab(tabName = "Page Design Options");
+
+			Click(locator1 = "PageEditor#MORE_LINK");
 
 			AssertClick(
 				key_text = "Change Master",
@@ -1191,6 +1382,8 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Add a widget page and Add an Asset Publisher and Web Content Display portlet to page ") {
@@ -1220,11 +1413,11 @@ definition {
 		}
 
 		task ("Change master from Blank to custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			Click.waitForMenuToggleJSClick(
 				key_pageName = "Test Page Name",
-				locator1 = "SitePages#LIST_GROUP_ITEM_ELLIPSIS_ICON");
+				locator1 = "PagesAdmin#LIST_GROUP_ITEM_ELLIPSIS_ICON");
 
 			MenuItem.click(menuItem = "Configure");
 
@@ -1239,7 +1432,7 @@ definition {
 
 			AssertTextEquals(
 				key_masterLayoutName = "Custom Masters Page Template",
-				locator1 = "SitePagesEditPage#MASTER_LAYOUT_NAME",
+				locator1 = "PagesAdmin#MASTER_LAYOUT_NAME",
 				value1 = "Custom Masters Page Template");
 
 			Button.clickSave();
@@ -1269,63 +1462,67 @@ definition {
 	@description = "This is a test for LPS-102194. Assert contents in drop zone shouldn't be changed and available fragments should be changed in sidebar after editing allowed fragments."
 	@priority = "4"
 	test EditAllowedFragments {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		task ("Select Heading in allowed fragments and publish master page template") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
+			MastersPageTemplates.selectAllowedFragments(fragmentNameList = "Heading");
 
-		Button.clickNoError(button = "Publish Master");
+			Button.clickNoError(button = "Publish Master");
+		}
 
 		task ("Add a content page based on custom master") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
 				pageName = "Test Page Name");
 		}
 
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			fragmentName = "Heading");
+		task ("Add a Heading fragment") {
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				fragmentName = "Heading");
 
-		PageEditor.viewFragment(fragmentName = "Heading");
+			PageEditor.viewFragment(fragmentName = "Heading");
+		}
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		task ("Go to configure allowed frgaments and uncheck heading frgament") {
+			PageEditor.gotoTab(tabName = "Page Design Options");
 
-		Click(
-			key_text = "Edit Master",
-			locator1 = "Button#ANY");
+			Click(locator1 = "PageEditor#MORE_LINK");
 
-		AssertClick(
-			locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
-			value1 = "Configure Allowed Fragments");
+			Click(
+				key_text = "Edit Master",
+				locator1 = "Button#ANY");
 
-		SelectFrame(value1 = "relative=top");
+			AssertClick(
+				locator1 = "Button#CONFIGURE_ALLOWED_FRAGMENTS",
+				value1 = "Configure Allowed Fragments");
 
-		Uncheck.uncheckToggleSwitch(
-			key_fragmentName = "Heading",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			SelectFrame(value1 = "relative=top");
 
-		AssertNotChecked.assertNotCheckedNotVisible(
-			key_fragmentName = "Heading",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			Uncheck.uncheckToggleSwitch(
+				key_fragmentName = "Heading",
+				locator1 = "Checkbox#ALLOWED_FRAGMENT");
+		}
 
-		MastersPageTemplates.searchAllowedFragments(searchValue = "Button");
+		task ("Go to configure allowed frgaments and check button fragment") {
+			MastersPageTemplates.searchAllowedFragments(searchValue = "Button");
 
-		Check.checkToggleSwitch(
-			key_fragmentName = "Button",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			Check.checkToggleSwitch(
+				key_fragmentName = "Button",
+				locator1 = "Checkbox#ALLOWED_FRAGMENT");
 
-		AssertChecked.assertCheckedNotVisible(
-			key_fragmentName = "Button",
-			locator1 = "Checkbox#ALLOWED_FRAGMENT");
+			Button.clickSave();
+		}
 
-		Button.clickSave();
-
-		MastersPageTemplates.propagateChange();
+		task ("Propagate change to master page template") {
+			MastersPageTemplates.propagateChange();
+		}
 
 		task ("Assert Heading fragment exist and the could only add button fragment in page editor sidebar") {
 			ContentPagesNavigator.openEditContentPage(
@@ -1337,63 +1534,200 @@ definition {
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Button");
 
 			AssertVisible(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Button",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 
 			PageEditor.searchFragmentViaSidebar(fragmentName = "Heading");
 
 			AssertElementNotPresent(
-				key_collectionName = "Basic Components",
 				key_fragmentName = "Heading",
-				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_TAB_FRAGMENT");
+				locator1 = "PageEditor#FRAGMENTS_AND_WIDGETS_SEARCH_RESULTS");
 		}
 	}
 
 	@description = "This is for LPS-102200. Can edit master page template elements from  "Look and Feel" of page editor."
 	@priority = "5"
 	test EditMasterPageTemplateViaPageEditorLookAndFeel {
-		MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+		property portal.acceptance = "true";
 
-		PageEditor.addFragment(
-			collectionName = "Basic Components",
-			dropTarget = "Header",
-			fragmentName = "Button",
-			scope = "Master");
+		task ("Add a fragment and widget to custom master page and publish") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
 
-		PageEditor.addWidget(
-			dropTarget = "Footer",
-			portletName = "Asset Publisher",
-			scope = "Master");
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				dropTarget = "Header",
+				fragmentName = "Button",
+				scope = "Master");
 
-		Button.click(button = "Publish Master");
+			PageEditor.addWidget(
+				dropTarget = "Footer",
+				portletName = "Asset Publisher",
+				scope = "Master");
 
-		SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			Button.click(button = "Publish Master");
 
-		ContentPages.addPage(
-			masterLayoutName = "Custom Masters Page Template",
-			pageName = "Test Content Page Name");
+			Alert.viewSuccessMessage();
+		}
 
-		PageEditor.gotoTab(tabName = "Look and Feel");
+		task ("Add a content page based on custom master") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
-		Click(
-			key_text = "Edit Master",
-			locator1 = "Button#ANY");
+			ContentPages.addPage(
+				masterLayoutName = "Custom Masters Page Template",
+				pageName = "Test Content Page Name");
+		}
 
-		PageEditor.viewFragment(fragmentName = "Button");
+		task ("Edit master via more link") {
+			PageEditor.gotoTab(tabName = "Page Design Options");
 
-		PageEditor.viewFragment(fragmentName = "Asset Publisher");
+			Click(locator1 = "PageEditor#MORE_LINK");
 
-		PageEditor.addWidget(
-			dropTarget = "Header",
-			portletName = "Web Content Display",
-			scope = "Master");
+			Click(
+				key_text = "Edit Master",
+				locator1 = "Button#ANY");
+		}
 
-		MastersPageTemplates.propagateChange();
+		task ("View fragment and widget exist in page") {
+			PageEditor.viewFragment(fragmentName = "Button");
 
-		WebContentDisplayPortlet.viewDefaultMessage();
+			PageEditor.viewFragment(fragmentName = "Asset Publisher");
+		}
 
-		AssertVisible(locator1 = "PageEditor#FRAGMENT_SIDEBAR");
+		task ("Add Web Content Display to page and propagate change") {
+			PageEditor.addWidget(
+				dropTarget = "Header",
+				portletName = "Web Content Display",
+				scope = "Master");
+
+			MastersPageTemplates.propagateChange();
+
+			WebContentDisplayPortlet.viewMessage();
+		}
+
+		task ("Assert the user is in the content page editor page") {
+			AssertVisible(locator1 = "PageEditor#FRAGMENT_SIDEBAR_BODY");
+		}
+	}
+
+	@description = "This is a test for LPS-134844. Fragments hidden in master pages are hidden in pages that use it and visibility can not be changed."
+	@priority = "4"
+	test FragmentsHiddenInMasterPagesAreHiddenInPagesThatUseIt {
+		task ("Add two header fragments") {
+			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				dropTarget = "Header",
+				fragmentName = "Heading",
+				scope = "Master");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				text = "Heading Example 1");
+
+			PageEditor.addFragment(
+				collectionName = "Basic Components",
+				dropTarget = "Header",
+				fragmentName = "Heading",
+				scope = "Master");
+
+			PageEditor.editFragmentText(
+				fragmentName = "Heading",
+				id = "element-text",
+				index = "2",
+				text = "Heading Example 2");
+		}
+
+		task ("Hide Heading Example 1 and save master page") {
+			PageEditor.hideFragmentViaPageStructure(
+				fragmentName = "Heading",
+				index = "1");
+
+			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Add a new content page and use created master page") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
+
+			ContentPages.addPage(
+				masterLayoutName = "Custom Masters Page Template",
+				pageName = "Test Page Name");
+		}
+
+		task ("Assert Heading Example 1 is not shown even if we click on button and it appears with a gray background") {
+			AssertNotVisible(
+				fragmentName = "heading",
+				id = "element-text",
+				index = "1",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				position = "2",
+				text = "Heading Example 2");
+
+			PageEditor.gotoTab(tabName = "Browser");
+
+			Navigator.gotoNavTab(navTab = "Page Elements");
+
+			Click.clickNoWaitForVisible(
+				key_index = "1",
+				key_nodeName = "Heading",
+				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_HIDE_INDEX");
+
+			AssertElementPresent(
+				key_index = "1",
+				key_nodeName = "Heading",
+				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_MASTER_INDEX");
+
+			AssertNotVisible(
+				fragmentName = "heading",
+				id = "element-text",
+				index = "1",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
+		}
+
+		task ("Assert Heading Example 2 not hidden and there is no button to hide it") {
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				position = "2",
+				text = "Heading Example 2");
+
+			AssertElementNotPresent(
+				key_index = "2",
+				key_nodeName = "Heading",
+				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_HIDE_INDEX");
+
+			AssertElementPresent(
+				key_index = "2",
+				key_nodeName = "Heading",
+				locator1 = "Treeview#PAGE_STRUCTURE_TREE_NODE_MASTER_INDEX");
+		}
+
+		task ("Open the Preview modal") {
+			PageEditor.openPreviewMode();
+
+			SelectFrame.selectFrameNoLoading(locator1 = "IFrame#MODAL_BODY");
+		}
+
+		task ("Assert only Heading Example 2 is shown") {
+			AssertNotVisible(
+				fragmentName = "heading",
+				id = "element-text",
+				index = "1",
+				locator1 = "Fragment#CONTRIBUTED_FRAGMENT_TEXT");
+
+			ContentPages.viewFragmentText(
+				fragmentName = "heading",
+				id = "element-text",
+				position = "2",
+				text = "Heading Example 2");
+		}
 	}
 
 	@description = "This is a test for LPS-102566. The new elements can only be added into Drop Zone in a page based on custom master and the elements inherited from the custom master are changless."
@@ -1414,10 +1748,12 @@ definition {
 				scope = "Master");
 
 			Button.click(button = "Publish Master");
+
+			Alert.viewSuccessMessage();
 		}
 
 		task ("Assert elements inherited from custom masters are changeless") {
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
@@ -1457,21 +1793,83 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-102566. Master page can be used in page, page template and display page, changes in master page will be propagated to page, page template and display page"
+	@description = "This is a test for LPS-102566 and LPS-140318. Master page can be used in page, page template and display page, changes in master page will be propagated to page, page template and display page"
 	@priority = "5"
 	test PropagateChangesFromCustomMastersToAllBasedOnCustomMasters {
-		task ("Add a page based on custom masters") {
+		property portal.acceptance = "true";
+
+		task ("Add two navigation menus") {
+			for (var n : list "1,2") {
+				JSONSitenavigation.addSiteNavigationMenu(
+					groupName = "Test Site Name",
+					siteNavigationMenuName = "Navigation Menu Name ${n}");
+			}
+		}
+
+		task ("Add an URL type item to the first navigation menu") {
+			JSONSitenavigation.addSiteNavigationMenuItem(
+				groupName = "Test Site Name",
+				siteNavigationMenuItemName = "Liferay",
+				siteNavigationMenuName = "Navigation Menu Name 1",
+				type = "url",
+				url = "https://www.liferay.com",
+				useNewTab = "false");
+		}
+
+		task ("Add an URL type item to the second navigation menu") {
+			JSONSitenavigation.addSiteNavigationMenuItem(
+				groupName = "Test Site Name",
+				siteNavigationMenuItemName = "Google",
+				siteNavigationMenuName = "Navigation Menu Name 2",
+				type = "url",
+				url = "https://www.google.com",
+				useNewTab = "false");
+		}
+
+		task ("Add a Footer Nav Dark fragment to master page") {
 			MastersPageTemplatesAdmin.gotoMasters(masterLayoutName = "Custom Masters Page Template");
+
+			PageEditor.addFragment(
+				collectionName = "Footers",
+				dropTarget = "Footer",
+				fragmentName = "Footer Nav Dark",
+				scope = "Master");
+		}
+
+		task ("Select the first navigation menu in Footer Nav Dark fragment") {
+			NavigationMenusWidget.gotoNavigationMenuWidgetConfig();
+
+			NavigationMenusWidget.chooseMenu(menuName = "Navigation Menu Name 1");
+
+			Portlet.saveAndCloseConfig();
 
 			Button.click(button = "Publish Master");
 
-			SitePages.openPagesAdmin(siteURLKey = "test-site-name");
+			Alert.viewSuccessMessage();
+		}
+
+		task ("Add a page based on custom masters") {
+			PagesAdmin.openPagesAdmin(siteURLKey = "test-site-name");
 
 			ContentPages.addPage(
 				masterLayoutName = "Custom Masters Page Template",
 				pageName = "Test Page Name");
 
+			AssertVisible(
+				key_tab = "Liferay",
+				locator1 = "NavTab#TAB_LINK");
+
 			PageEditor.clickPublish();
+		}
+
+		task ("View the Liferay item is shown in page") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
+
+			AssertVisible(
+				key_tab = "Liferay",
+				locator1 = "NavTab#TAB_LINK");
 		}
 
 		task ("Add a content page template based on custom masters") {
@@ -1495,6 +1893,10 @@ definition {
 
 			PageEditor.assertFragmentSidebarLoaded();
 
+			AssertVisible(
+				key_tab = "Liferay",
+				locator1 = "NavTab#TAB_LINK");
+
 			PageEditor.clickPublish();
 		}
 
@@ -1510,40 +1912,54 @@ definition {
 
 			DisplayPageTemplatesAdmin.gotoDisplayPage(displayPageName = "Display Page Name");
 
+			AssertVisible(
+				key_tab = "Liferay",
+				locator1 = "NavTab#TAB_LINK");
+
 			PageEditor.clickPublish();
 		}
 
-		task ("Add a Heading fragment to custom masters") {
+		task ("Edit the master page") {
 			MastersPageTemplatesAdmin.openMastersAdmin(siteURLKey = "test-site-name");
 
 			MastersPageTemplatesAdmin.gotoMastersEllipsisItem(
 				item = "Edit",
 				masterLayoutName = "Custom Masters Page Template");
 
-			PageEditor.addFragment(
-				collectionName = "Basic Components",
-				dropTarget = "Header",
-				fragmentName = "Heading",
-				scope = "Master");
+			PageEditor.assertFragmentSidebarLoaded();
+		}
+
+		task ("Select the second navigation menu in Footer Nav Dark fragment") {
+			NavigationMenusWidget.gotoNavigationMenuWidgetConfig();
+
+			NavigationMenusWidget.chooseMenu(menuName = "Navigation Menu Name 2");
+
+			Portlet.saveAndCloseConfig();
 
 			MastersPageTemplates.propagateChange();
 		}
 
-		task ("Assert the Heading fragment exist in page based on custom masters") {
-			Navigator.openWithAppendToBaseURL(urlAppend = "web/test-site-name/test-page-name");
+		task ("View the Google item is shown in page based on custom masters") {
+			ContentPagesNavigator.openViewContentPage(
+				pageName = "Test Page Name",
+				siteName = "Test Site Name");
 
 			AssertVisible(
-				key_fragmentName = "heading",
-				locator1 = "Fragment#FRAGMENT_BASIC_COMPONENT");
+				key_tab = "Google",
+				locator1 = "NavTab#TAB_LINK");
 
-			ContentPages.clickPencil();
+			ContentPages.gotoPageEditor();
+
+			// Workaround until LPS-141214 is resolved
+
+			Refresh();
 
 			AssertVisible(
-				key_fragmentName = "heading",
-				locator1 = "PageEditor#FRAGMENT_INHERITED_FROM_CUSTOM_MASTERS");
+				key_tab = "Google",
+				locator1 = "NavTab#TAB_LINK");
 		}
 
-		task ("Assert the Heading fragment exist in content page template based on custom masters") {
+		task ("View the Google item is shown in content page template based on custom masters") {
 			PageTemplatesAdmin.openPageTemplatesAdmin(siteURLKey = "test-site-name");
 
 			Navigator.gotoNavNested(navNested = "Page Template Collection");
@@ -1552,21 +1968,33 @@ definition {
 				item = "Edit",
 				pageTemplateName = "Page Template Name");
 
+			// Workaround until LPS-141214 is resolved
+
+			PageEditor.assertFragmentSidebarLoaded();
+
+			Refresh();
+
 			AssertVisible(
-				key_fragmentName = "heading",
-				locator1 = "PageEditor#FRAGMENT_INHERITED_FROM_CUSTOM_MASTERS");
+				key_tab = "Google",
+				locator1 = "NavTab#TAB_LINK");
 		}
 
-		task ("Assert the Heading fragment exist in display page template based on custom masters") {
+		task ("View the Google item is shown in display page template based on custom masters") {
 			DisplayPageTemplatesAdmin.openDisplayPagesAdmin(siteURLKey = "test-site-name");
 
 			DisplayPageTemplatesAdmin.gotoDisplayPageEllipsisItem(
 				displayPageName = "Display Page Name",
 				item = "Edit");
 
+			// Workaround until LPS-141214 is resolved
+
+			PageEditor.assertFragmentSidebarLoaded();
+
+			Refresh();
+
 			AssertVisible(
-				key_fragmentName = "heading",
-				locator1 = "PageEditor#FRAGMENT_INHERITED_FROM_CUSTOM_MASTERS");
+				key_tab = "Google",
+				locator1 = "NavTab#TAB_LINK");
 		}
 	}
 

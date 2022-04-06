@@ -17,6 +17,7 @@ package com.liferay.project.templates.simulation.panel.entry;
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
+import com.liferay.project.templates.extensions.util.VersionUtil;
 import com.liferay.project.templates.util.FileTestUtil;
 
 import java.io.File;
@@ -48,7 +49,9 @@ public class ProjectTemplatesSimulationPanelEntryTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.2"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.1-1"}
+			});
 	}
 
 	@BeforeClass
@@ -90,8 +93,18 @@ public class ProjectTemplatesSimulationPanelEntryTest
 
 		testExists(gradleProjectDir, "bnd.bnd");
 
-		testContains(
-			gradleProjectDir, "build.gradle", DEPENDENCY_PORTAL_KERNEL);
+		if (VersionUtil.getMinorVersion(_liferayVersion) < 3) {
+			testContains(
+				gradleProjectDir, "build.gradle", DEPENDENCY_PORTAL_KERNEL,
+				DEPENDENCY_JAVAX_PORTLET_API, DEPENDENCY_JAVAX_SERVLET_API,
+				DEPENDENCY_ORG_OSGI_ANNOTATIONS);
+		}
+		else {
+			testContains(
+				gradleProjectDir, "build.gradle",
+				DEPENDENCY_RELEASE_PORTAL_API);
+		}
+
 		testContains(
 			gradleProjectDir,
 			"src/main/java/test/simulator/application/list" +
@@ -112,7 +125,7 @@ public class ProjectTemplatesSimulationPanelEntryTest
 			mavenExecutor, "-DclassName=Simulator", "-Dpackage=" + packageName,
 			"-DliferayVersion=" + _liferayVersion);
 
-		if (!_liferayVersion.equals("7.0.6")) {
+		if (!_liferayVersion.startsWith("7.0")) {
 			testContains(
 				mavenProjectDir, "bnd.bnd",
 				"-contract: JavaPortlet,JavaServlet");

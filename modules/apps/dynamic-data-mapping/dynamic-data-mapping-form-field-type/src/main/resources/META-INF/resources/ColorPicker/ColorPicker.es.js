@@ -15,9 +15,7 @@
 import ClayColorPicker from '@clayui/color-picker';
 import React, {useEffect, useState} from 'react';
 
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 
 const DEFAULT_COLORS = [
 	'000000',
@@ -56,45 +54,92 @@ const ClayColorPickerWithState = ({
 	}, [inputValue]);
 
 	return (
-		<ClayColorPicker
-			colors={customColors}
-			disabled={readOnly}
-			label={Liferay.Language.get('color-field-type-label')}
-			name={name}
-			onBlur={onBlur}
-			onColorsChange={setCustoms}
-			onFocus={onFocus}
-			onValueChange={(value) => {
-				if (value !== color) {
-					setColor(value);
-					onValueChange(value);
-				}
-			}}
-			spritemap={spritemap}
-			value={color}
-		/>
+		<>
+			<input name={name} type="hidden" value={color} />
+			<ClayColorPicker
+				colors={customColors}
+				disabled={readOnly}
+				label={Liferay.Language.get('color-field-type-label')}
+				onBlur={onBlur}
+				onColorsChange={setCustoms}
+				onFocus={onFocus}
+				onValueChange={(value) => {
+					if (value !== color) {
+						setColor(value);
+						onValueChange(value);
+					}
+				}}
+				spritemap={spritemap}
+				value={color}
+			/>
+		</>
 	);
 };
 
-/**
- * The Proxy is on the front line of `PageRenderer.RegisterFieldType`, communicates
- * directly with the store and issues events from the Metal instance. This should
- * be overridden when we have a Store/Provider React implementation.
- */
-const ColorPickerProxy = connectStore(
-	({
-		dispatch,
-		emit,
-		name,
-		predefinedValue = '000000',
-		readOnly,
-		spritemap,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy
-			dispatch={dispatch}
+const ColorPicker = ({
+	name,
+	onBlur,
+	onChange,
+	onFocus,
+	predefinedValue = '000000',
+	readOnly,
+	spritemap,
+	value,
+	...otherProps
+}) => {
+	let colorDropDownClickEvent;
+	let previousShow = false;
+
+	const observer = new MutationObserver((mutationsList, observer) => {
+		for (const mutation of mutationsList) {
+			if (
+				mutation.type === 'attributes' &&
+				mutation.attributeName === 'class'
+			) {
+				const show = mutation.target.classList.contains('show');
+
+				if (show === previousShow) {
+					return;
+				}
+
+				if (show) {
+					onFocus(colorDropDownClickEvent);
+				}
+				else {
+					onBlur(colorDropDownClickEvent);
+
+					observer.disconnect();
+				}
+
+				previousShow = show;
+			}
+		}
+	});
+
+	// watch dropdown click for sending to Analytics
+
+	const handleColorDropDownClicked = (event) => {
+		if (!event.target.classList.contains('dropdown-toggle')) {
+			return;
+		}
+
+		const colorDropdownNode = document.querySelector(
+			'.clay-color-dropdown-menu'
+		);
+
+		if (!colorDropdownNode) {
+			return;
+		}
+
+		colorDropDownClickEvent = event;
+
+		observer.observe(colorDropdownNode, {attributes: true});
+	};
+
+	return (
+		<FieldBase
 			name={name}
+			onClick={handleColorDropDownClicked}
 			readOnly={readOnly}
 			spritemap={spritemap}
 			{...otherProps}
@@ -102,24 +147,14 @@ const ColorPickerProxy = connectStore(
 			<ClayColorPickerWithState
 				inputValue={value ? value : predefinedValue}
 				name={name}
-				onBlur={(event) =>
-					emit('fieldBlurred', event, event.target.value)
-				}
-				onFocus={(event) =>
-					emit('fieldFocused', event, event.target.value)
-				}
-				onValueChange={(value) => emit('fieldEdited', {}, value)}
+				onBlur={onBlur}
+				onFocus={onFocus}
+				onValueChange={(value) => onChange({}, value)}
 				readOnly={readOnly}
 				spritemap={spritemap}
 			/>
-		</FieldBaseProxy>
-	)
-);
+		</FieldBase>
+	);
+};
 
-const ReactColorPickerAdapter = getConnectedReactComponentAdapter(
-	ColorPickerProxy,
-	'color'
-);
-
-export {ClayColorPickerWithState, ReactColorPickerAdapter};
-export default ReactColorPickerAdapter;
+export default ColorPicker;

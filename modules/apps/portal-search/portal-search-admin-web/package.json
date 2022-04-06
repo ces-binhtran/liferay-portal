@@ -1,11 +1,5 @@
 {
 	"dependencies": {
-		"@clayui/button": "3.3.1",
-		"@clayui/icon": "3.0.5",
-		"frontend-js-react-web": "*",
-		"frontend-js-web": "*",
-		"prop-types": "15.7.2",
-		"react": "16.12.0"
 	},
 	"name": "portal-search-admin-web",
 	"scripts": {
@@ -13,5 +7,5 @@
 		"checkFormat": "liferay-npm-scripts check",
 		"format": "liferay-npm-scripts fix"
 	},
-	"version": "3.0.15"
+	"version": "4.0.22"
 }

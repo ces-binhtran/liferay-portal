@@ -14,6 +14,7 @@
 
 package com.liferay.portlet.configuration.icon.maximize.internal;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -72,11 +73,9 @@ public class MaximizePortletConfigurationIcon
 
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 
-		return "submitForm(document.hrefFm, '".concat(
-			HtmlUtil.escapeJS(portletDisplay.getURLMax())
-		).concat(
-			"'); return false;"
-		);
+		return StringBundler.concat(
+			"submitForm(document.hrefFm, '",
+			HtmlUtil.escapeJS(portletDisplay.getURLMax()), "'); return false;");
 	}
 
 	@Override
@@ -138,7 +137,7 @@ public class MaximizePortletConfigurationIcon
 
 		if ((!themeDisplay.isSignedIn() ||
 			 (group.hasStagingGroup() && !group.isStagingGroup()) ||
-			 !hasUpdateLayoutPermission(themeDisplay)) &&
+			 !_hasUpdateLayoutPermission(themeDisplay)) &&
 			!PropsValues.LAYOUT_GUEST_SHOW_MAX_ICON) {
 
 			return false;
@@ -152,14 +151,14 @@ public class MaximizePortletConfigurationIcon
 		return false;
 	}
 
-	protected boolean hasUpdateLayoutPermission(ThemeDisplay themeDisplay) {
+	private boolean _hasUpdateLayoutPermission(ThemeDisplay themeDisplay) {
 		try {
 			return LayoutPermissionUtil.contains(
 				themeDisplay.getPermissionChecker(), themeDisplay.getLayout(),
 				ActionKeys.UPDATE);
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			return false;
 		}

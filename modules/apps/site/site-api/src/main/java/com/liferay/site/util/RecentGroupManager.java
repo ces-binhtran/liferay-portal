@@ -24,6 +24,7 @@ import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactoryUtil;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.service.LayoutLocalService;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.service.permission.LayoutPermissionUtil;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.JavaConstants;
@@ -32,6 +33,8 @@ import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.SessionClicks;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.util.PropsValues;
+import com.liferay.site.constants.SiteWebKeys;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -79,6 +82,9 @@ public class RecentGroupManager {
 		groupIds.remove(liveGroupId);
 
 		groupIds.add(0, liveGroupId);
+
+		groupIds = ListUtil.subList(
+			groupIds, 0, PropsValues.RECENT_GROUPS_MAX_ELEMENTS);
 
 		_setRecentGroupsValue(httpServletRequest, StringUtil.merge(groupIds));
 	}
@@ -146,7 +152,11 @@ public class RecentGroupManager {
 		for (long groupId : groupIds) {
 			Group group = _groupLocalService.fetchGroup(groupId);
 
-			if (!_groupLocalService.isLiveGroupActive(group)) {
+			if ((group == null) ||
+				!_groupPermission.contains(
+					permissionChecker, group.getGroupId(), ActionKeys.VIEW) ||
+				!_groupLocalService.isLiveGroupActive(group)) {
+
 				continue;
 			}
 
@@ -168,6 +178,9 @@ public class RecentGroupManager {
 					}
 				}
 			}
+
+			portletRequest.setAttribute(
+				SiteWebKeys.GROUP_URL_PROVIDER_CONTROL_PANEL, Boolean.TRUE);
 
 			String groupURL = _groupURLProvider.getGroupURL(
 				group, portletRequest);
@@ -220,6 +233,9 @@ public class RecentGroupManager {
 		RecentGroupManager.class);
 
 	private GroupLocalService _groupLocalService;
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference
 	private GroupURLProvider _groupURLProvider;

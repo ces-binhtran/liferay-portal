@@ -37,7 +37,7 @@ if (portletTitleBasedNavigation) {
 }
 %>
 
-<div <%= portletTitleBasedNavigation ? "class=\"container-fluid-1280\"" : StringPool.BLANK %>>
+<div <%= portletTitleBasedNavigation ? "class=\"container-fluid container-fluid-max-xl container-form-lg\"" : StringPool.BLANK %>>
 	<c:if test="<%= !portletTitleBasedNavigation %>">
 		<h3><%= LanguageUtil.format(request, "move-x", category.getName(), false) %></h3>
 	</c:if>
@@ -72,7 +72,7 @@ if (portletTitleBasedNavigation) {
 					<aui:button name="selectCategoryButton" value="select" />
 
 					<%
-					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentCategoryId', 'parentCategoryName', this, '" + renderResponse.getNamespace() + "');";
+					String taglibRemoveFolder = "Liferay.Util.removeEntitySelection('parentCategoryId', 'parentCategoryName', this, '" + liferayPortletResponse.getNamespace() + "');";
 					%>
 
 					<aui:button disabled="<%= parentCategoryId <= 0 %>" name="removeCategoryButton" onClick="<%= taglibRemoveFolder %>" value="remove" />
@@ -80,13 +80,13 @@ if (portletTitleBasedNavigation) {
 
 				<aui:input label="merge-with-parent-category" name="mergeWithParentCategory" type="checkbox" />
 			</aui:fieldset>
+
+			<div class="sheet-footer">
+				<aui:button type="submit" value="move" />
+
+				<aui:button href="<%= redirect %>" type="cancel" />
+			</div>
 		</aui:fieldset-group>
-
-		<aui:button-row>
-			<aui:button type="submit" value="move" />
-
-			<aui:button href="<%= redirect %>" type="cancel" />
-		</aui:button-row>
 	</aui:form>
 </div>
 
@@ -102,27 +102,9 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "move"),
 	);
 
 	if (selectCategoryButton) {
-		selectCategoryButton.addEventListener('click', function (event) {
-			Liferay.Util.selectEntity(
-				{
-					dialog: {
-						constrain: true,
-						modal: true,
-						width: 680,
-					},
-					id: '<portlet:namespace />selectCategory',
-					title:
-						'<liferay-ui:message arguments="category" key="select-x" />',
-
-					<portlet:renderURL var="selectCategoryURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-						<portlet:param name="mvcRenderCommandName" value="/message_boards/select_category" />
-						<portlet:param name="mbCategoryId" value="<%= String.valueOf((category == null) ? MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID : category.getParentCategoryId()) %>" />
-						<portlet:param name="excludedMBCategoryId" value="<%= String.valueOf(categoryId) %>" />
-					</portlet:renderURL>
-
-					uri: '<%= selectCategoryURL %>',
-				},
-				function (event) {
+		selectCategoryButton.addEventListener('click', (event) => {
+			Liferay.Util.openSelectionModal({
+				onSelect: function (event) {
 					var form = document.<portlet:namespace />fm;
 
 					Liferay.Util.setFormValues(form, {
@@ -137,8 +119,18 @@ PortalUtil.addPortletBreadcrumbEntry(request, LanguageUtil.get(request, "move"),
 					if (removeCategoryButton) {
 						Liferay.Util.toggleDisabled(removeCategoryButton, false);
 					}
-				}
-			);
+				},
+				selectEventName: '<portlet:namespace />selectCategory',
+				title: '<liferay-ui:message arguments="category" key="select-x" />',
+
+				<portlet:renderURL var="selectCategoryURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+					<portlet:param name="mvcRenderCommandName" value="/message_boards/select_category" />
+					<portlet:param name="mbCategoryId" value="<%= String.valueOf((category == null) ? MBCategoryConstants.DEFAULT_PARENT_CATEGORY_ID : category.getParentCategoryId()) %>" />
+					<portlet:param name="excludedMBCategoryId" value="<%= String.valueOf(categoryId) %>" />
+				</portlet:renderURL>
+
+				url: '<%= selectCategoryURL %>',
+			});
 		});
 	}
 </script>

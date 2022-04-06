@@ -42,7 +42,7 @@ public class ExpandoRowModelListener
 	extends BaseEntityModelListener<ExpandoRow> {
 
 	@Override
-	public List<String> getAttributeNames() {
+	public List<String> getAttributeNames(long companyId) {
 		return Collections.singletonList("modifiedDate");
 	}
 
@@ -65,9 +65,8 @@ public class ExpandoRowModelListener
 		}
 
 		if (isCustomField(User.class.getName(), expandoRow.getTableId())) {
-			User user = userLocalService.fetchUser(expandoRow.getClassPK());
-
-			return isUserExcluded(user);
+			return isUserExcluded(
+				userLocalService.fetchUser(expandoRow.getClassPK()));
 		}
 
 		return true;
@@ -101,7 +100,7 @@ public class ExpandoRowModelListener
 
 			if (user != null) {
 				JSONObject jsonObject = super.serialize(
-					user, getUserAttributeNames());
+					user, getUserAttributeNames(user.getCompanyId()));
 
 				jsonObject.remove(getPrimaryKeyName());
 

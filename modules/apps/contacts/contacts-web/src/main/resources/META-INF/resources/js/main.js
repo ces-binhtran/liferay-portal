@@ -157,6 +157,20 @@ AUI.add(
 			'<div class="clear"></div>' +
 			'</div>';
 
+		var ContactsResult = A.Base.create(
+			'contactsResult',
+			A.Base,
+			[A.AutoCompleteBase],
+			{
+				initializer(config) {
+					this._listNode = A.one(config.listNode);
+
+					this._bindUIACBase();
+					this._syncUIACBase();
+				},
+			}
+		);
+
 		var ContactsCenter = A.Component.create({
 			AUGMENTS: [Liferay.PortletBase],
 
@@ -221,11 +235,11 @@ AUI.add(
 						resultTextLocator(response) {
 							var result = '';
 
-							if (typeof response.toString != STR_UNDEFINED) {
+							if (typeof response.toString !== STR_UNDEFINED) {
 								result = response.toString();
 							}
 							else if (
-								typeof response.responseText != STR_UNDEFINED
+								typeof response.responseText !== STR_UNDEFINED
 							) {
 								result = response.responseText;
 							}
@@ -301,9 +315,9 @@ AUI.add(
 						var url = Liferay.Util.PortletURL.createActionURL(
 							config.baseActionURL,
 							{
-								entryId: contact.entryId,
+								'entryId': contact.entryId,
 								'javax.portlet.action': 'deleteEntry',
-								p_p_state: 'NORMAL',
+								'p_p_state': 'NORMAL',
 							}
 						);
 
@@ -449,7 +463,9 @@ AUI.add(
 							? TPL_CONNECTION_REQUESTED_IMG
 							: '',
 						cssClass:
-							instance._numSelectedContacts % 2 == 0 ? '' : 'alt',
+							instance._numSelectedContacts % 2 === 0
+								? ''
+								: 'alt',
 						emailAddress: user.emailAddress,
 						firstName: user.firstName,
 						following: user.following ? TPL_FOLLOWING_IMG : '',
@@ -523,7 +539,7 @@ AUI.add(
 
 					var buffer = [];
 
-					if (results.length == 0 && displayMessage) {
+					if (results.length === 0 && displayMessage) {
 						buffer.push(TPL_NO_RESULTS);
 					}
 					else {
@@ -564,7 +580,7 @@ AUI.add(
 										);
 									}
 
-									if (nameAnchor != lastNameAnchor) {
+									if (nameAnchor !== lastNameAnchor) {
 										displayLastNameAnchor = true;
 
 										lastNameAnchor = nameAnchor;
@@ -577,11 +593,11 @@ AUI.add(
 											checked:
 												selectedUsersIds.indexOf(
 													result.userId
-												) != -1
+												) !== -1
 													? 'checked="true"'
 													: '',
 											disabled:
-												themeDisplay.getUserId() ==
+												themeDisplay.getUserId() ===
 												result.userId
 													? 'disabled="true"'
 													: '',
@@ -1216,7 +1232,7 @@ AUI.add(
 					if (contacts && contacts.length > 0) {
 						if (
 							!instance._detailUserView.hasClass('hide') &&
-							contacts.length == 1
+							contacts.length === 1
 						) {
 							var user = contacts[0].user;
 
@@ -1254,7 +1270,7 @@ AUI.add(
 
 					if (instance._messageContainer) {
 						if (success) {
-							if (!message || message == '') {
+							if (!message || message === '') {
 								message = instance._defaultMessageSuccess;
 							}
 
@@ -1265,7 +1281,7 @@ AUI.add(
 							);
 						}
 						else {
-							if (!message || message == '') {
+							if (!message || message === '') {
 								message = instance._defaultMessageError;
 							}
 
@@ -1325,20 +1341,6 @@ AUI.add(
 		});
 
 		Liferay.ContactsCenter = ContactsCenter;
-
-		var ContactsResult = A.Base.create(
-			'contactsResult',
-			A.Base,
-			[A.AutoCompleteBase],
-			{
-				initializer(config) {
-					this._listNode = A.one(config.listNode);
-
-					this._bindUIACBase();
-					this._syncUIACBase();
-				},
-			}
-		);
 	},
 	'',
 	{

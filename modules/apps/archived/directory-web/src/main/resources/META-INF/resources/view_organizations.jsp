@@ -17,9 +17,6 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String orderByCol = ParamUtil.getString(request, "orderByCol", "name");
-String orderByType = ParamUtil.getString(request, "orderByType", "asc");
-
 PortletURL portletURL = (PortletURL)request.getAttribute("view.jsp-portletURL");
 
 long parentOrganizationId = ParamUtil.getLong(request, "parentOrganizationId", OrganizationConstants.DEFAULT_PARENT_ORGANIZATION_ID);
@@ -27,8 +24,6 @@ long parentOrganizationId = ParamUtil.getLong(request, "parentOrganizationId", O
 if (parentOrganizationId > 0) {
 	portletURL.setParameter("parentOrganizationId", String.valueOf(parentOrganizationId));
 }
-
-boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 %>
 
 <liferay-frontend:management-bar>
@@ -47,13 +42,13 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		/>
 
 		<liferay-frontend:management-bar-sort
-			orderByCol="<%= orderByCol %>"
-			orderByType="<%= orderByType %>"
+			orderByCol='<%= ParamUtil.getString(request, "orderByCol", "name") %>'
+			orderByType='<%= ParamUtil.getString(request, "orderByType", "asc") %>'
 			orderColumns='<%= new String[] {"name", "type"} %>'
 			portletURL="<%= portletURL %>"
 		/>
 
-		<c:if test="<%= showSearch %>">
+		<c:if test='<%= ParamUtil.getBoolean(request, "showSearch", true) %>'>
 			<li>
 				<liferay-util:include page="/organization_search.jsp" servletContext="<%= application %>" />
 			</li>
@@ -61,7 +56,7 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 	</liferay-frontend:management-bar-filters>
 </liferay-frontend:management-bar>
 
-<div class="container-fluid-1280">
+<div class="container-fluid container-fluid-max-xl">
 	<liferay-ui:search-container
 		searchContainer="<%= new OrganizationSearch(renderRequest, portletURL) %>"
 		var="organizationSearchContainer"
@@ -78,15 +73,16 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 		}
 
 		if (portletName.equals(PortletKeys.MY_SITES_DIRECTORY)) {
-			LinkedHashMap<String, Object> groupParams = LinkedHashMapBuilder.<String, Object>put(
-				"inherit", Boolean.FALSE
-			).put(
-				"site", Boolean.TRUE
-			).put(
-				"usersGroups", user.getUserId()
-			).build();
-
-			List<Group> groups = GroupLocalServiceUtil.search(user.getCompanyId(), groupParams, QueryUtil.ALL_POS, QueryUtil.ALL_POS);
+			List<Group> groups = GroupLocalServiceUtil.search(
+				user.getCompanyId(),
+				LinkedHashMapBuilder.<String, Object>put(
+					"inherit", Boolean.FALSE
+				).put(
+					"site", Boolean.TRUE
+				).put(
+					"usersGroups", user.getUserId()
+				).build(),
+				QueryUtil.ALL_POS, QueryUtil.ALL_POS);
 
 			organizationParams.put("organizationsGroups", SitesUtil.filterGroups(groups, PropsValues.MY_SITES_DIRECTORY_SITE_EXCLUDES));
 		}
@@ -96,18 +92,49 @@ boolean showSearch = ParamUtil.getBoolean(request, "showSearch", true);
 
 		if ((Validator.isNotNull(searchTerms.getKeywords()) || searchTerms.isAdvancedSearch()) && (parentOrganizationId != OrganizationConstants.ANY_PARENT_ORGANIZATION_ID)) {
 			organizationParams.put("excludedOrganizationIds", ListUtil.fromArray(parentOrganizationId));
-
-			Organization parentOrganization = OrganizationLocalServiceUtil.getOrganization(parentOrganizationId);
-
-			organizationParams.put("organizationsTree", ListUtil.fromArray(parentOrganization));
+			organizationParams.put("organizationsTree", ListUtil.fromArray(OrganizationLocalServiceUtil.getOrganization(parentOrganizationId)));
 		}
+
+		long companyId = company.getCompanyId();
+		long organizationParenOrganizationId = parentOrganizationId;
+
+		Indexer<?> indexer = IndexerRegistryUtil.nullSafeGetIndexer(Organization.class);
 		%>
 
-		<liferay-ui:organization-search-container-results
-			forceDatabase="<%= !portletName.equals(PortletKeys.DIRECTORY) %>"
-			organizationParams="<%= organizationParams %>"
-			parentOrganizationId="<%= parentOrganizationId %>"
-		/>
+		<liferay-ui:search-container-results>
+			<c:choose>
+				<c:when test="<%= portletName.equals(PortletKeys.DIRECTORY) && indexer.isIndexerEnabled() && PropsValues.ORGANIZATIONS_SEARCH_WITH_INDEX %>">
+
+					<%
+					organizationParams.put("expandoAttributes", searchTerms.getKeywords());
+
+					Sort sort = SortFactoryUtil.getSort(Organization.class, organizationSearchContainer.getOrderByCol(), organizationSearchContainer.getOrderByType());
+
+					if (searchTerms.isAdvancedSearch()) {
+						organizationSearchContainer.setResultsAndTotal(OrganizationLocalServiceUtil.searchOrganizations(companyId, organizationParenOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionName(), searchTerms.getCountryName(), organizationParams, searchTerms.isAndOperator(), organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), sort));
+					}
+					else {
+						organizationSearchContainer.setResultsAndTotal(OrganizationLocalServiceUtil.searchOrganizations(companyId, organizationParenOrganizationId, searchTerms.getKeywords(), organizationParams, organizationSearchContainer.getStart(), organizationSearchContainer.getEnd(), sort));
+					}
+					%>
+
+				</c:when>
+				<c:otherwise>
+
+					<%
+					SearchContainer<Organization> searchContainer = organizationSearchContainer;
+
+					if (searchTerms.isAdvancedSearch()) {
+						organizationSearchContainer.setResultsAndTotal(() -> OrganizationLocalServiceUtil.search(companyId, organizationParenOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, searchTerms.isAndOperator(), searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()), OrganizationLocalServiceUtil.searchCount(companyId, organizationParenOrganizationId, searchTerms.getName(), searchTerms.getType(), searchTerms.getStreet(), searchTerms.getCity(), searchTerms.getZip(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, searchTerms.isAndOperator()));
+					}
+					else {
+						organizationSearchContainer.setResultsAndTotal(() -> OrganizationLocalServiceUtil.search(companyId, organizationParenOrganizationId, searchTerms.getKeywords(), searchTerms.getType(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams, searchContainer.getStart(), searchContainer.getEnd(), searchContainer.getOrderByComparator()), OrganizationLocalServiceUtil.searchCount(companyId, organizationParenOrganizationId, searchTerms.getKeywords(), searchTerms.getType(), searchTerms.getRegionIdObj(), searchTerms.getCountryIdObj(), organizationParams));
+					}
+					%>
+
+				</c:otherwise>
+			</c:choose>
+		</liferay-ui:search-container-results>
 
 		<liferay-ui:search-container-row
 			className="com.liferay.portal.kernel.model.Organization"

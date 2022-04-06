@@ -22,6 +22,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.vulcan.fields.NestedField;
 import com.liferay.portal.vulcan.fields.NestedFieldId;
+import com.liferay.portal.vulcan.fields.NestedFieldSupport;
 import com.liferay.portal.vulcan.fields.NestedFieldsContext;
 import com.liferay.portal.vulcan.fields.NestedFieldsContextThreadLocal;
 import com.liferay.portal.vulcan.internal.fields.servlet.NestedFieldsHttpServletRequestWrapper;
@@ -53,16 +54,17 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.Provider;
 import javax.ws.rs.ext.WriterInterceptor;
 import javax.ws.rs.ext.WriterInterceptorContext;
 
 import org.apache.cxf.jaxrs.ext.ContextProvider;
+import org.apache.cxf.jaxrs.impl.UriInfoImpl;
 import org.apache.cxf.jaxrs.provider.ProviderFactory;
 import org.apache.cxf.message.Message;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceObjects;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
@@ -97,7 +99,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 				nestedFieldsContext.getFieldNames(), nestedFieldsContext);
 		}
 		catch (Exception exception) {
-			_log.error(exception.getMessage(), exception);
+			_log.error(exception);
 
 			throw new WebApplicationException(exception);
 		}
@@ -122,16 +124,9 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 		_nestedFieldServiceTrackerCustomizer =
 			nestedFieldServiceTrackerCustomizer;
 
-		try {
-			_serviceTracker = new ServiceTracker<>(
-				bundleContext,
-				bundleContext.createFilter(
-					"(&(api.version=*)(osgi.jaxrs.resource=true))"),
-				_nestedFieldServiceTrackerCustomizer);
-		}
-		catch (InvalidSyntaxException invalidSyntaxException) {
-			throw new RuntimeException(invalidSyntaxException);
-		}
+		_serviceTracker = new ServiceTracker<>(
+			bundleContext, NestedFieldSupport.class.getName(),
+			_nestedFieldServiceTrackerCustomizer);
 
 		_serviceTracker.open();
 	}
@@ -242,6 +237,10 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 		}
 
 		private <T> Object _getContext(Class<T> contextClass, Message message) {
+			if (contextClass.equals(UriInfo.class)) {
+				return new UriInfoImpl(message);
+			}
+
 			ContextProvider<?> contextProvider = _getContextProvider(
 				contextClass, message);
 
@@ -279,13 +278,13 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 					continue;
 				}
 
-				args[i] = _getMethodArgValueFromRequest(
-					fieldName, nestedFieldsContext, pathParameters,
-					queryParameters, resourceMethodArgNameTypeEntries[i]);
+				args[i] = _getMethodArgValueFromItem(
+					item, resourceMethodArgNameTypeEntries[i]);
 
 				if (args[i] == null) {
-					args[i] = _getMethodArgValueFromItem(
-						item, resourceMethodArgNameTypeEntries[i]);
+					args[i] = _getMethodArgValueFromRequest(
+						fieldName, nestedFieldsContext, pathParameters,
+						queryParameters, resourceMethodArgNameTypeEntries[i]);
 				}
 			}
 
@@ -318,7 +317,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 				}
 				catch (NoSuchFieldException noSuchFieldException) {
 					if (_log.isDebugEnabled()) {
-						_log.debug(noSuchFieldException.getMessage());
+						_log.debug(noSuchFieldException);
 					}
 				}
 			}
@@ -423,7 +422,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 			}
 			catch (NoSuchMethodException noSuchMethodException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(noSuchMethodException.getMessage());
+					_log.debug(noSuchMethodException);
 				}
 			}
 
@@ -547,7 +546,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 
 	private Object _adaptToFieldType(Class<?> fieldType, Object value) {
 		if (value instanceof Page) {
-			Page page = (Page)value;
+			Page<?> page = (Page)value;
 
 			value = page.getItems();
 		}
@@ -596,7 +595,7 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 			items.addAll((Collection)entity);
 		}
 		else if (entity instanceof Page) {
-			Page page = (Page)entity;
+			Page<?> page = (Page)entity;
 
 			items.addAll(page.getItems());
 		}
@@ -706,8 +705,8 @@ public class NestedFieldsWriterInterceptor implements WriterInterceptor {
 	private static class FactoryKey {
 
 		@Override
-		public boolean equals(Object obj) {
-			FactoryKey factoryKey = (FactoryKey)obj;
+		public boolean equals(Object object) {
+			FactoryKey factoryKey = (FactoryKey)object;
 
 			if (Objects.equals(factoryKey._nestedFieldName, _nestedFieldName) &&
 				Objects.equals(factoryKey._parentClass, _parentClass) &&

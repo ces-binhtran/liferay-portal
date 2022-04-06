@@ -15,6 +15,7 @@
 package com.liferay.portal.kernel.dao.orm;
 
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.io.Serializable;
@@ -47,50 +48,38 @@ public class EntityCacheUtil {
 	}
 
 	public static Serializable getResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey) {
+		Class<?> clazz, Serializable primaryKey) {
 
-		return _entityCache.getResult(entityCacheEnabled, clazz, primaryKey);
+		return _entityCache.getResult(clazz, primaryKey);
 	}
 
 	public static void invalidate() {
 		_entityCache.invalidate();
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public static Serializable loadResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		SessionFactory sessionFactory) {
+	public static void putResult(
+		Class<?> clazz, BaseModel<?> baseModel, boolean quiet,
+		boolean updateFinderCache) {
 
-		return _entityCache.loadResult(
-			entityCacheEnabled, clazz, primaryKey, sessionFactory);
+		_entityCache.putResult(clazz, baseModel, quiet, updateFinderCache);
 	}
 
 	public static void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result) {
+		Class<?> clazz, Serializable primaryKey, Serializable result) {
 
-		_entityCache.putResult(entityCacheEnabled, clazz, primaryKey, result);
-	}
-
-	public static void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result, boolean quiet) {
-
-		_entityCache.putResult(
-			entityCacheEnabled, clazz, primaryKey, result, quiet);
+		_entityCache.putResult(clazz, primaryKey, result);
 	}
 
 	public static void removeCache(String className) {
 		_entityCache.removeCache(className);
 	}
 
-	public static void removeResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey) {
+	public static void removeResult(Class<?> clazz, BaseModel<?> baseModel) {
+		_entityCache.removeResult(clazz, baseModel);
+	}
 
-		_entityCache.removeResult(entityCacheEnabled, clazz, primaryKey);
+	public static void removeResult(Class<?> clazz, Serializable primaryKey) {
+		_entityCache.removeResult(clazz, primaryKey);
 	}
 
 	private static volatile EntityCache _entityCache =

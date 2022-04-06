@@ -63,7 +63,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public java.util.List<Group> getChildrenWithLayouts(
 		boolean site, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Group> obc);
+		com.liferay.portal.kernel.util.OrderByComparator<Group>
+			orderByComparator);
 
 	public int getChildrenWithLayoutsCount(boolean site);
 
@@ -86,6 +87,10 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public String getDisplayURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
 		boolean privateLayout);
+
+	public String getDisplayURL(
+		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay,
+		boolean privateLayout, boolean controlPanel);
 
 	public String getIconCssClass();
 
@@ -131,6 +136,9 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public String getScopeLabel(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay);
 
+	public String getScopeSimpleName(
+		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay);
+
 	public Group getStagingGroup();
 
 	public String getTypeLabel();
@@ -160,6 +168,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 
 	public boolean isControlPanel();
 
+	public boolean isDepot();
+
 	public boolean isGuest();
 
 	public boolean isInStagingPortlet(String portletId);
@@ -173,6 +183,8 @@ public interface Group extends GroupModel, PersistedModel, TreeModel {
 	public boolean isLimitedToParentSiteMembers();
 
 	public boolean isOrganization();
+
+	public boolean isPrivateLayoutsEnabled();
 
 	public boolean isRegularSite();
 

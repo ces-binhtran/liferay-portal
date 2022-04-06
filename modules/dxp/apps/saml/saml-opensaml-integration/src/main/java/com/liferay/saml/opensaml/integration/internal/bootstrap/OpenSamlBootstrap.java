@@ -19,8 +19,6 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-import java.util.Map;
-
 import net.shibboleth.utilities.java.support.xml.BasicParserPool;
 import net.shibboleth.utilities.java.support.xml.ParserPool;
 
@@ -53,7 +51,7 @@ public class OpenSamlBootstrap {
 
 		InitializationService.initialize();
 
-		initializeParserPool();
+		_initializeParserPool();
 
 		Method method = Signer.class.getDeclaredMethod("getSignerProvider");
 
@@ -70,51 +68,6 @@ public class OpenSamlBootstrap {
 
 		if (XMLSecurityConstants.xmlOutputFactory == null) {
 			throw new IllegalStateException();
-		}
-	}
-
-	protected static void initializeParserPool()
-		throws InitializationException {
-
-		BasicParserPool parserPool = new BasicParserPool();
-
-		Map<String, Boolean> builderFeatures = HashMapBuilder.put(
-			"http://apache.org/xml/features/disallow-doctype-decl", Boolean.TRUE
-		).put(
-			"http://apache.org/xml/features/dom/defer-node-expansion",
-			Boolean.FALSE
-		).put(
-			"http://javax.xml.XMLConstants/feature/secure-processing",
-			Boolean.TRUE
-		).put(
-			"http://xml.org/sax/features/external-general-entities",
-			Boolean.FALSE
-		).put(
-			"http://xml.org/sax/features/external-parameter-entities",
-			Boolean.FALSE
-		).build();
-
-		parserPool.setBuilderFeatures(builderFeatures);
-
-		parserPool.setDTDValidating(false);
-		parserPool.setExpandEntityReferences(false);
-		parserPool.setMaxPoolSize(50);
-		parserPool.setNamespaceAware(true);
-
-		try {
-			parserPool.initialize();
-
-			parserPool.getBuilder();
-
-			XMLObjectProviderRegistry xmlObjectProviderRegistry =
-				ConfigurationService.get(XMLObjectProviderRegistry.class);
-
-			xmlObjectProviderRegistry.setParserPool(parserPool);
-		}
-		catch (Exception exception) {
-			throw new InitializationException(
-				"Unable to initialize parser pool: " + exception.getMessage(),
-				exception);
 		}
 	}
 
@@ -152,6 +105,49 @@ public class OpenSamlBootstrap {
 	protected void deactivate() {
 		if (_parserPoolServiceRegistration != null) {
 			_parserPoolServiceRegistration.unregister();
+		}
+	}
+
+	private static void _initializeParserPool() throws InitializationException {
+		BasicParserPool parserPool = new BasicParserPool();
+
+		parserPool.setBuilderFeatures(
+			HashMapBuilder.put(
+				"http://apache.org/xml/features/disallow-doctype-decl",
+				Boolean.TRUE
+			).put(
+				"http://apache.org/xml/features/dom/defer-node-expansion",
+				Boolean.FALSE
+			).put(
+				"http://javax.xml.XMLConstants/feature/secure-processing",
+				Boolean.TRUE
+			).put(
+				"http://xml.org/sax/features/external-general-entities",
+				Boolean.FALSE
+			).put(
+				"http://xml.org/sax/features/external-parameter-entities",
+				Boolean.FALSE
+			).build());
+
+		parserPool.setDTDValidating(false);
+		parserPool.setExpandEntityReferences(false);
+		parserPool.setMaxPoolSize(50);
+		parserPool.setNamespaceAware(true);
+
+		try {
+			parserPool.initialize();
+
+			parserPool.getBuilder();
+
+			XMLObjectProviderRegistry xmlObjectProviderRegistry =
+				ConfigurationService.get(XMLObjectProviderRegistry.class);
+
+			xmlObjectProviderRegistry.setParserPool(parserPool);
+		}
+		catch (Exception exception) {
+			throw new InitializationException(
+				"Unable to initialize parser pool: " + exception.getMessage(),
+				exception);
 		}
 	}
 

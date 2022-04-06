@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.model.Region;
 import com.liferay.portal.kernel.service.CountryService;
 import com.liferay.portal.kernel.service.RegionService;
 import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.segments.field.Field;
 import com.liferay.segments.field.customizer.SegmentsFieldCustomizer;
 
@@ -66,12 +67,14 @@ public class RegionSegmentsFieldCustomizer extends BaseSegmentsFieldCustomizer {
 
 		return stream.map(
 			region -> new Field.Option(
-				_getRegionLabel(region, locale), region.getName())
+				_getRegionLabel(region, locale),
+				StringUtil.toLowerCase(region.getName()))
 		).sorted(
-			(a, b) -> a.getLabel(
-			).compareTo(
-				b.getLabel()
-			)
+			(a, b) -> {
+				String aLabel = a.getLabel();
+
+				return aLabel.compareTo(b.getLabel());
+			}
 		).collect(
 			Collectors.toList()
 		);

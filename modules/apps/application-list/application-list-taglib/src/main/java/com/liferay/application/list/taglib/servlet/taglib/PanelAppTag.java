@@ -22,11 +22,12 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.servlet.PipingServletResponse;
+import com.liferay.taglib.servlet.PipingServletResponseFactory;
 
 import java.io.IOException;
 
@@ -47,12 +48,15 @@ public class PanelAppTag extends BasePanelTag {
 	@Override
 	public int doEndTag() throws JspException {
 		if (_panelApp != null) {
-			request.setAttribute(ApplicationListWebKeys.PANEL_APP, _panelApp);
+			HttpServletRequest httpServletRequest = getRequest();
+
+			httpServletRequest.setAttribute(
+				ApplicationListWebKeys.PANEL_APP, _panelApp);
 
 			try {
 				boolean include = _panelApp.include(
-					request,
-					PipingServletResponse.createPipingServletResponse(
+					httpServletRequest,
+					PipingServletResponseFactory.createPipingServletResponse(
 						pageContext));
 
 				if (include) {
@@ -177,11 +181,18 @@ public class PanelAppTag extends BasePanelTag {
 		}
 
 		if (Validator.isNull(_label) && (_panelApp != null)) {
-			Portlet portlet = PortletLocalServiceUtil.getPortletById(
-				themeDisplay.getCompanyId(), _panelApp.getPortletId());
+			_label = HtmlUtil.escape(
+				_panelApp.getLabel(themeDisplay.getLocale()));
 
-			_label = PortalUtil.getPortletTitle(
-				portlet, servletContext, themeDisplay.getLocale());
+			if (Validator.isNull(_label)) {
+				Portlet portlet = PortletLocalServiceUtil.getPortletById(
+					themeDisplay.getCompanyId(), _panelApp.getPortletId());
+
+				_label = HtmlUtil.escape(
+					PortalUtil.getPortletTitle(
+						portlet, getServletContext(),
+						themeDisplay.getLocale()));
+			}
 
 			if (!_data.containsKey("qa-id")) {
 				_data.put("qa-id", "app");

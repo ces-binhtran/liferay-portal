@@ -17,6 +17,7 @@ package com.liferay.change.tracking.store.service.base;
 import com.liferay.change.tracking.store.model.CTSContent;
 import com.liferay.change.tracking.store.model.CTSContentDataBlobModel;
 import com.liferay.change.tracking.store.service.CTSContentLocalService;
+import com.liferay.change.tracking.store.service.CTSContentLocalServiceUtil;
 import com.liferay.change.tracking.store.service.persistence.CTSContentPersistence;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.io.AutoDeleteFileInputStream;
@@ -54,6 +55,8 @@ import com.liferay.portal.kernel.util.PortalUtil;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.sql.Blob;
 
 import java.util.List;
@@ -61,6 +64,7 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -81,11 +85,15 @@ public abstract class CTSContentLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CTSContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.change.tracking.store.service.CTSContentLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CTSContentLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CTSContentLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the cts content to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTSContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctsContent the cts content
 	 * @return the cts content that was added
@@ -113,6 +121,10 @@ public abstract class CTSContentLocalServiceBaseImpl
 	/**
 	 * Deletes the cts content with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTSContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctsContentId the primary key of the cts content
 	 * @return the cts content that was removed
 	 * @throws PortalException if a cts content with the primary key could not be found
@@ -128,6 +140,10 @@ public abstract class CTSContentLocalServiceBaseImpl
 	/**
 	 * Deletes the cts content from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTSContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ctsContent the cts content
 	 * @return the cts content that was removed
 	 */
@@ -140,6 +156,13 @@ public abstract class CTSContentLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return ctsContentPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -291,6 +314,7 @@ public abstract class CTSContentLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -308,6 +332,7 @@ public abstract class CTSContentLocalServiceBaseImpl
 			(CTSContent)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<CTSContent> getBasePersistence() {
 		return ctsContentPersistence;
 	}
@@ -350,6 +375,10 @@ public abstract class CTSContentLocalServiceBaseImpl
 
 	/**
 	 * Updates the cts content in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CTSContentLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ctsContent the cts content
 	 * @return the cts content that was updated
@@ -418,6 +447,11 @@ public abstract class CTSContentLocalServiceBaseImpl
 		}
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
@@ -429,6 +463,8 @@ public abstract class CTSContentLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		ctsContentLocalService = (CTSContentLocalService)aopProxy;
+
+		_setLocalServiceUtilService(ctsContentLocalService);
 	}
 
 	/**
@@ -485,6 +521,22 @@ public abstract class CTSContentLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		CTSContentLocalService ctsContentLocalService) {
+
+		try {
+			Field field = CTSContentLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, ctsContentLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

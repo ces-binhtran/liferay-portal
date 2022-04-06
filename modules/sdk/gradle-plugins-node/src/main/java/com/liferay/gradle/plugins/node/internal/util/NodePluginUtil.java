@@ -31,6 +31,16 @@ public class NodePluginUtil {
 		return binDir;
 	}
 
+	public static int getNodeMajorVersion(String version) {
+		int index = version.indexOf('.');
+
+		if (index > 0) {
+			return Integer.parseInt(version.substring(0, index));
+		}
+
+		return Integer.parseInt(version);
+	}
+
 	public static File getNpmDir(File nodeDir) {
 		File nodeModulesDir = new File(nodeDir, "node_modules");
 
@@ -41,22 +51,14 @@ public class NodePluginUtil {
 		return new File(nodeModulesDir, "npm");
 	}
 
-	public static File getYarnScriptFile(File projectDir) {
-		File dir = projectDir;
+	public static File getYarnDir(File nodeDir) {
+		File nodeModulesDir = new File(nodeDir, "node_modules");
 
-		while (true) {
-			File[] files = FileUtil.getFiles(dir, "yarn-", ".js");
-
-			if ((files != null) && (files.length > 0)) {
-				return files[0];
-			}
-
-			dir = dir.getParentFile();
-
-			if (dir == null) {
-				return null;
-			}
+		if (!nodeModulesDir.exists()) {
+			nodeModulesDir = new File(nodeDir, "lib/node_modules");
 		}
+
+		return new File(nodeModulesDir, "yarn");
 	}
 
 }

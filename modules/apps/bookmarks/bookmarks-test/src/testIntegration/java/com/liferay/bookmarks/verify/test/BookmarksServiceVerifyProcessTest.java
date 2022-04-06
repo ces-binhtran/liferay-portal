@@ -21,7 +21,6 @@ import com.liferay.bookmarks.service.BookmarksEntryLocalServiceUtil;
 import com.liferay.bookmarks.service.BookmarksFolderLocalServiceUtil;
 import com.liferay.bookmarks.test.util.BookmarksTestUtil;
 import com.liferay.portal.kernel.model.Group;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
@@ -29,17 +28,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
+import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.verify.VerifyProcess;
 import com.liferay.portal.verify.test.util.BaseVerifyProcessTestCase;
-import com.liferay.registry.Filter;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceTracker;
 
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -59,24 +53,6 @@ public class BookmarksServiceVerifyProcessTest
 	public static final AggregateTestRule aggregateTestRule =
 		new LiferayIntegrationTestRule();
 
-	@BeforeClass
-	public static void setUpClass() {
-		Registry registry = RegistryUtil.getRegistry();
-
-		Filter filter = registry.getFilter(
-			"(&(objectClass=" + VerifyProcess.class.getName() +
-				")(verify.process.name=com.liferay.bookmarks.service))");
-
-		_serviceTracker = registry.trackServices(filter);
-
-		_serviceTracker.open();
-	}
-
-	@AfterClass
-	public static void tearDownClass() {
-		_serviceTracker.close();
-	}
-
 	@Before
 	@Override
 	public void setUp() throws Exception {
@@ -94,11 +70,9 @@ public class BookmarksServiceVerifyProcessTest
 		BookmarksFolder parentFolder = BookmarksTestUtil.addFolder(
 			_group.getGroupId(), RandomTestUtil.randomString());
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
 		BookmarksEntry entry = BookmarksTestUtil.addEntry(
-			parentFolder.getFolderId(), true, serviceContext);
+			parentFolder.getFolderId(), true,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		BookmarksEntryLocalServiceUtil.moveEntryToTrash(
 			TestPropsValues.getUserId(), entry.getEntryId());
@@ -120,11 +94,9 @@ public class BookmarksServiceVerifyProcessTest
 			_group.getGroupId(), grandparentFolder.getFolderId(),
 			RandomTestUtil.randomString());
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
 		BookmarksTestUtil.addEntry(
-			parentFolder.getFolderId(), true, serviceContext);
+			parentFolder.getFolderId(), true,
+			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		BookmarksFolderLocalServiceUtil.moveFolderToTrash(
 			TestPropsValues.getUserId(), parentFolder.getFolderId());
@@ -181,12 +153,13 @@ public class BookmarksServiceVerifyProcessTest
 
 	@Override
 	protected VerifyProcess getVerifyProcess() {
-		return _serviceTracker.getService();
+		return _verifyProcess;
 	}
-
-	private static ServiceTracker<VerifyProcess, VerifyProcess> _serviceTracker;
 
 	@DeleteAfterTestRun
 	private Group _group;
+
+	@Inject(filter = "verify.process.name=com.liferay.bookmarks.service")
+	private VerifyProcess _verifyProcess;
 
 }

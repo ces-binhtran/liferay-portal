@@ -279,7 +279,11 @@ public class LayoutPermissionImpl
 			}
 		}
 
-		if (permissionChecker.hasPermission(
+		if ((layout.isDraftLayout() &&
+			 permissionChecker.hasPermission(
+				 group, Layout.class.getName(), layout.getClassPK(),
+				 actionId)) ||
+			permissionChecker.hasPermission(
 				group, Layout.class.getName(), layout.getPlid(), actionId)) {
 
 			return true;
@@ -592,8 +596,6 @@ public class LayoutPermissionImpl
 				if (count >= 0) {
 					return true;
 				}
-
-				return false;
 			}
 			catch (PortalException | RuntimeException exception) {
 				throw exception;
@@ -610,16 +612,16 @@ public class LayoutPermissionImpl
 	private static class CacheKey {
 
 		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
+		public boolean equals(Object object) {
+			if (this == object) {
 				return true;
 			}
 
-			if (!(obj instanceof CacheKey)) {
+			if (!(object instanceof CacheKey)) {
 				return false;
 			}
 
-			CacheKey cacheKey = (CacheKey)obj;
+			CacheKey cacheKey = (CacheKey)object;
 
 			if ((_plid == cacheKey._plid) &&
 				(_mvccVersion == cacheKey._mvccVersion) &&

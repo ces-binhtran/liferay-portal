@@ -16,8 +16,11 @@ package com.liferay.jenkins.results.parser;
 
 import java.io.File;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
@@ -25,43 +28,74 @@ import java.util.TreeSet;
 public class PortalAcceptancePullRequestJob
 	extends PortalAcceptanceTestSuiteJob {
 
-	public PortalAcceptancePullRequestJob(String jobName) {
-		this(jobName, "default");
+	public boolean isCentralMergePullRequest() {
+		if (_centralMergePullRequest != null) {
+			return _centralMergePullRequest;
+		}
+
+		GitWorkingDirectory gitWorkingDirectory = getGitWorkingDirectory();
+
+		List<File> currentBranchModifiedFiles =
+			gitWorkingDirectory.getModifiedFilesList();
+
+		if (currentBranchModifiedFiles.size() == 1) {
+			File modifiedFile = currentBranchModifiedFiles.get(0);
+
+			String modifiedFileName = modifiedFile.getName();
+
+			if (modifiedFileName.equals("ci-merge")) {
+				_centralMergePullRequest = true;
+
+				return _centralMergePullRequest;
+			}
+		}
+
+		_centralMergePullRequest = false;
+
+		return _centralMergePullRequest;
 	}
 
-	public PortalAcceptancePullRequestJob(
-		String jobName, String testSuiteName) {
+	protected PortalAcceptancePullRequestJob(
+		BuildProfile buildProfile, String jobName,
+		PortalGitWorkingDirectory portalGitWorkingDirectory,
+		String testSuiteName, String upstreamBranchName) {
 
-		super(jobName, testSuiteName);
+		super(
+			buildProfile, jobName, portalGitWorkingDirectory, testSuiteName,
+			upstreamBranchName);
+	}
+
+	protected PortalAcceptancePullRequestJob(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
 	@Override
-	public Set<String> getBatchNames() {
-		Set<String> testBatchNamesSet = super.getBatchNames();
+	protected Set<String> getRawBatchNames() {
+		Set<String> batchNames = super.getRawBatchNames();
 
 		if (_isRelevantTestSuite() && _isPortalWebOnly()) {
 			String[] portalWebOnlyBatchNameMarkers = {
 				"compile-jsp", "functional", "portal-web", "source-format"
 			};
 
-			Set<String> portalWebOnlyBatchNamesSet = new TreeSet<>();
+			Set<String> portalWebOnlyBatchNames = new TreeSet<>();
 
-			for (String testBatchName : testBatchNamesSet) {
+			for (String batchName : batchNames) {
 				for (String portalWebOnlyBatchNameMarker :
 						portalWebOnlyBatchNameMarkers) {
 
-					if (testBatchName.contains(portalWebOnlyBatchNameMarker)) {
-						portalWebOnlyBatchNamesSet.add(testBatchName);
+					if (batchName.contains(portalWebOnlyBatchNameMarker)) {
+						portalWebOnlyBatchNames.add(batchName);
 
 						break;
 					}
 				}
 			}
 
-			return portalWebOnlyBatchNamesSet;
+			return portalWebOnlyBatchNames;
 		}
 
-		return testBatchNamesSet;
+		return batchNames;
 	}
 
 	private boolean _isPortalWebOnly() {
@@ -86,5 +120,7 @@ public class PortalAcceptancePullRequestJob
 
 		return testSuiteName.equals("relevant");
 	}
+
+	private Boolean _centralMergePullRequest;
 
 }

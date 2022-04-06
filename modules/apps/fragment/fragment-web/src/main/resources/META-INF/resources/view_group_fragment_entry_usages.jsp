@@ -25,20 +25,19 @@ portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(groupFragmentEntryLinkDisplayContext.getRedirect());
 
 renderResponse.setTitle(LanguageUtil.format(request, "usages-and-propagation-x", fragmentEntry.getName()));
-
-GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageManagementToolbarDisplayContext = new GroupFragmentEntryUsageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupFragmentEntryLinkDisplayContext.getSearchContainer());
 %>
 
 <clay:container-fluid
 	cssClass="container-form-lg"
 >
-	<div class="sheet">
+	<clay:sheet>
 		<clay:row>
 			<clay:col
 				lg="12"
 			>
 				<clay:management-toolbar
-					displayContext="<%= groupFragmentEntryUsageManagementToolbarDisplayContext %>"
+					managementToolbarDisplayContext="<%= new GroupFragmentEntryUsageManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, groupFragmentEntryLinkDisplayContext.getSearchContainer()) %>"
+					propsTransformer="js/FragmentEntryUsagesManagementToolbarPropsTransformer"
 				/>
 
 				<portlet:actionURL name="/fragment/propagate_group_fragment_entry_changes" var="propagateGroupFragmentEntryChangesURL">
@@ -77,10 +76,5 @@ GroupFragmentEntryUsageManagementToolbarDisplayContext groupFragmentEntryUsageMa
 				</aui:form>
 			</clay:col>
 		</clay:row>
-	</div>
+	</clay:sheet>
 </clay:container-fluid>
-
-<liferay-frontend:component
-	componentId="<%= groupFragmentEntryUsageManagementToolbarDisplayContext.getDefaultEventHandler() %>"
-	module="js/FragmentEntryUsageManagementToolbarDefaultEventHandler.es"
-/>

@@ -29,6 +29,10 @@ public class UserGroupRoleLocalServiceWrapper
 	implements ServiceWrapper<UserGroupRoleLocalService>,
 			   UserGroupRoleLocalService {
 
+	public UserGroupRoleLocalServiceWrapper() {
+		this(null);
+	}
+
 	public UserGroupRoleLocalServiceWrapper(
 		UserGroupRoleLocalService userGroupRoleLocalService) {
 
@@ -45,6 +49,10 @@ public class UserGroupRoleLocalServiceWrapper
 
 	/**
 	 * Adds the user group role to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroupRole the user group role
 	 * @return the user group role that was added
@@ -106,6 +114,10 @@ public class UserGroupRoleLocalServiceWrapper
 	/**
 	 * Deletes the user group role with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userGroupRoleId the primary key of the user group role
 	 * @return the user group role that was removed
 	 * @throws PortalException if a user group role with the primary key could not be found
@@ -119,6 +131,10 @@ public class UserGroupRoleLocalServiceWrapper
 
 	/**
 	 * Deletes the user group role from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroupRole the user group role
 	 * @return the user group role that was removed
@@ -185,6 +201,13 @@ public class UserGroupRoleLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _userGroupRoleLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _userGroupRoleLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -448,6 +471,10 @@ public class UserGroupRoleLocalServiceWrapper
 
 	/**
 	 * Updates the user group role in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserGroupRoleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userGroupRole the user group role
 	 * @return the user group role that was updated

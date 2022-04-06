@@ -1,16 +1,18 @@
+import com.liferay.gradle.plugins.defaults.tasks.ReplaceRegexTask
 import com.liferay.gradle.util.GradleUtil
 
 import java.util.regex.Matcher
 
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.util.GUtil
 
 buildscript {
 	dependencies {
-		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.defaults", version: "latest.release"
+		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.defaults", version: "7.0.308"
 		classpath group: "com.liferay", name: "com.liferay.gradle.plugins.maven.plugin.builder", version: "1.2.3"
 		classpath group: "de.undercouch", name: "gradle-download-task", version: "3.3.0"
 		classpath group: "gradle.plugin.org.ysb33r.gradle", name: "gradletest", version: "1.1"
-		classpath group: "xalan", name: "xalan", version: "2.7.2"
 	}
 
 	repositories {
@@ -51,6 +53,7 @@ poshiRunner {
 }
 
 task updateGradleCache
+task updatePoshiCore(type: ReplaceRegexTask)
 
 configurations {
 	sikuliComplete
@@ -69,22 +72,25 @@ dependencies {
 				String portalVersion = matcher.group("portalVersion")
 
 				if (portalVersion.startsWith("6.1")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.1.x", version: "20190325111923-20a286f"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.1.x", version: "202+"
 				}
 				else if (portalVersion.startsWith("6.2")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.2.x", version: "20190325111857-3731418"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-ee-6.2.x", version: "202+"
 				}
 				else if (portalVersion.startsWith("7.0")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.0.x", version: "20191031-756de9c"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.0.x", version: "202+"
 				}
 				else if (portalVersion.startsWith("7.1")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.1.x", version: "20191031-de8a7da"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.1.x", version: "202+"
 				}
 				else if (portalVersion.startsWith("7.2")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.2.x", version: "20191031-796bf3b"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.2.x", version: "202+"
 				}
 				else if (portalVersion.startsWith("7.3")) {
-					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-master", version: "20200203-b072f5d"
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-7.3.x", version: "202+"
+				}
+				else if (portalVersion.startsWith("7.4")) {
+					poshiRunnerResources group: "com.liferay.poshi.runner.resources", name: "portal-master", version: "202+"
 				}
 			}
 		}
@@ -99,7 +105,19 @@ dependencies {
 }
 
 poshiRunnerResources {
-	baseNameDir "portal", "test/functional/com/liferay/portalweb"
+	baseName "portal"
+
+	dirs = ["test/functional/com/liferay/portalweb"]
+
+	Properties testProperties = GUtil.loadProperties(file("../test.properties"))
+
+	String testSubrepoDirs = testProperties.getProperty("test.subrepo.dirs")
+
+	if ((testSubrepoDirs != null) && !testSubrepoDirs.isEmpty()) {
+		testSubrepoDirs = testSubrepoDirs.replace("\${project.dir}", "..");
+
+		dirs.addAll(testSubrepoDirs.split(","))
+	}
 }
 
 repositories {
@@ -129,14 +147,14 @@ updateGradleCache {
 	}
 }
 
-if (GradleUtil.getProperty(project, "local", false)) {
-	File localPoshiDir = file("../tools/sdk/dependencies/com.liferay.poshi.runner/lib")
+updatePoshiCore {
+	Configuration compileConfiguration = project.configurations.getByName("poshiRunner")
 
-	dependencies {
-		poshiRunner fileTree(dir: localPoshiDir, include: "*.jar")
+	ResolvedArtifact resolvedArtifact = compileConfiguration.resolvedConfiguration.resolvedArtifacts.find {
+		it.name.contains('com.liferay.poshi.core')
 	}
 
-	expandPoshiRunner {
-		from zipTree(new File(localPoshiDir, "com.liferay.poshi.runner.jar"))
-	}
+	setReplacement(resolvedArtifact.moduleVersion.id.version)
+
+	match(/group: "com\.liferay", name: "com\.liferay\.poshi\.core", version: "(\d.+)"/, "../modules/test/jenkins-results-parser/build.gradle", "../modules/util/source-formatter/build.gradle", "../modules/util/source-formatter-standalone/build.gradle")
 }

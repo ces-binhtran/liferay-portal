@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -33,6 +36,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -40,13 +45,20 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("OrganizationBrief")
+@GraphQLName(
+	description = "Represents an organization's basic information, to be embedded in other resources. This resource's ID can be used to query the organization's complete information.",
+	value = "OrganizationBrief"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "OrganizationBrief")
-public class OrganizationBrief {
+public class OrganizationBrief implements Serializable {
 
 	public static OrganizationBrief toDTO(String json) {
 		return ObjectMapperUtil.readValue(OrganizationBrief.class, json);
+	}
+
+	public static OrganizationBrief unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(OrganizationBrief.class, json);
 	}
 
 	@Schema(description = "The organization's ID.")
@@ -101,6 +113,35 @@ public class OrganizationBrief {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	protected String name;
 
+	@Schema(description = "A list of the user's roles.")
+	@Valid
+	public RoleBrief[] getRoleBriefs() {
+		return roleBriefs;
+	}
+
+	public void setRoleBriefs(RoleBrief[] roleBriefs) {
+		this.roleBriefs = roleBriefs;
+	}
+
+	@JsonIgnore
+	public void setRoleBriefs(
+		UnsafeSupplier<RoleBrief[], Exception> roleBriefsUnsafeSupplier) {
+
+		try {
+			roleBriefs = roleBriefsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "A list of the user's roles.")
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected RoleBrief[] roleBriefs;
+
 	@Override
 	public boolean equals(Object object) {
 		if (this == object) {
@@ -152,21 +193,52 @@ public class OrganizationBrief {
 			sb.append("\"");
 		}
 
+		if (roleBriefs != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"roleBriefs\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < roleBriefs.length; i++) {
+				sb.append(String.valueOf(roleBriefs[i]));
+
+				if ((i + 1) < roleBriefs.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.user.dto.v1_0.OrganizationBrief",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -182,14 +254,12 @@ public class OrganizationBrief {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -216,7 +286,7 @@ public class OrganizationBrief {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -224,7 +294,7 @@ public class OrganizationBrief {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -232,5 +302,10 @@ public class OrganizationBrief {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

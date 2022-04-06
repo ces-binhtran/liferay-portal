@@ -124,28 +124,28 @@ public class WebDAVServlet extends HttpServlet {
 			catch (WebDAVException webDAVException) {
 				boolean logError = false;
 
-				Throwable cause = webDAVException;
+				Throwable throwable = webDAVException;
 
-				while (cause != null) {
-					if (cause instanceof PrincipalException) {
+				while (throwable != null) {
+					if (throwable instanceof PrincipalException) {
 						logError = true;
 					}
 
-					cause = cause.getCause();
+					throwable = throwable.getCause();
 				}
 
 				if (logError) {
-					_log.error(webDAVException, webDAVException);
+					_log.error(webDAVException);
 				}
 				else if (_log.isWarnEnabled()) {
-					_log.warn(webDAVException, webDAVException);
+					_log.warn(webDAVException);
 				}
 
 				status = HttpServletResponse.SC_PRECONDITION_FAILED;
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 		finally {
 			httpServletResponse.setStatus(status);

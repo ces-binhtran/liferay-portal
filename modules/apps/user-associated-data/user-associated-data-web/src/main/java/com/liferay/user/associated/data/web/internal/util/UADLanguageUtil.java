@@ -15,8 +15,8 @@
 package com.liferay.user.associated.data.web.internal.util;
 
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
-import com.liferay.portal.kernel.util.ResourceBundleLoaderUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoaderUtil;
 import com.liferay.user.associated.data.component.UADComponent;
 import com.liferay.user.associated.data.web.internal.constants.UADConstants;
 
@@ -43,7 +43,8 @@ public class UADLanguageUtil {
 				getResourceBundleLoaderByBundleSymbolicName(applicationKey);
 
 		if (resourceBundleLoader == null) {
-			return applicationKey;
+			resourceBundleLoader =
+				ResourceBundleLoaderUtil.getPortalResourceBundleLoader();
 		}
 
 		ResourceBundle resourceBundle = resourceBundleLoader.loadResourceBundle(

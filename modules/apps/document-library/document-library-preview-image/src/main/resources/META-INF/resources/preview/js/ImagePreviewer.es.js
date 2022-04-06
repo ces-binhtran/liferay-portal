@@ -14,10 +14,12 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
-import {useEventListener, useIsMounted} from 'frontend-js-react-web';
+import {useEventListener, useIsMounted} from '@liferay/frontend-js-react-web';
 import {debounce} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useLayoutEffect, useRef, useState} from 'react';
+
+import '@liferay/document-library-preview-css';
 
 /**
  * Zoom ratio limit that fire the autocenter
@@ -41,7 +43,7 @@ const ZOOM_LEVELS_REVERSED = ZOOM_LEVELS.slice().reverse();
  * Component that create an image preview to allow zoom
  * @review
  */
-const ImagePreviewer = ({imageURL}) => {
+const ImagePreviewer = ({alt, imageURL}) => {
 	const [currentZoom, setCurrentZoom] = useState(1);
 	const [imageHeight, setImageHeight] = useState(null);
 	const [imageWidth, setImageWidth] = useState(null);
@@ -50,13 +52,19 @@ const ImagePreviewer = ({imageURL}) => {
 	const [zoomOutDisabled, setZoomOutDisabled] = useState(false);
 	const [zoomRatio, setZoomRatio] = useState(false);
 
-	const image = useRef();
-	const imageContainer = useRef();
+	const imageRef = useRef();
+	const imageContainerRef = useRef();
 
 	const isMounted = useIsMounted();
 
+	const updateToolbar = (zoom) => {
+		setCurrentZoom(zoom);
+		setZoomInDisabled(ZOOM_LEVELS_REVERSED[0] === zoom);
+		setZoomOutDisabled(ZOOM_LEVELS[0] >= zoom);
+	};
+
 	const applyZoom = (zoom) => {
-		const imageElement = image.current;
+		const imageElement = imageRef.current;
 
 		setImageHeight(imageElement.naturalHeight * zoom);
 		setImageWidth(imageElement.naturalWidth * zoom);
@@ -66,7 +74,7 @@ const ImagePreviewer = ({imageURL}) => {
 	};
 
 	const getFittingZoom = () => {
-		const imageElement = image.current;
+		const imageElement = imageRef.current;
 
 		return imageElement.width / imageElement.naturalWidth;
 	};
@@ -103,21 +111,15 @@ const ImagePreviewer = ({imageURL}) => {
 	};
 
 	const handleWindowResize = debounce(() => {
-		if (isMounted() && !image.current.style.width) {
+		if (isMounted() && !imageRef.current.style.width) {
 			updateToolbar(getFittingZoom());
 		}
 	}, 250);
 
-	const updateToolbar = (zoom) => {
-		setCurrentZoom(zoom);
-		setZoomInDisabled(ZOOM_LEVELS_REVERSED[0] === zoom);
-		setZoomOutDisabled(ZOOM_LEVELS[0] >= zoom);
-	};
-
 	useEventListener('resize', handleWindowResize, false, window);
 
 	useLayoutEffect(() => {
-		const imageContainerElement = imageContainer.current;
+		const imageContainerElement = imageContainerRef.current;
 
 		setImageMargin(
 			`${imageHeight > imageContainerElement.clientHeight ? 0 : 'auto'} ${
@@ -127,9 +129,10 @@ const ImagePreviewer = ({imageURL}) => {
 
 		if (
 			zoomRatio &&
-			(imageContainerElement.clientWidth < image.current.naturalWidth ||
+			(imageContainerElement.clientWidth <
+				imageRef.current.naturalWidth ||
 				imageContainerElement.clientHeight <
-					image.current.naturalHeight)
+					imageRef.current.naturalHeight)
 		) {
 			let scrollLeft;
 			let scrollTop;
@@ -155,7 +158,7 @@ const ImagePreviewer = ({imageURL}) => {
 			setZoomRatio(null);
 		}
 
-		if (!image.current.style.width) {
+		if (!imageRef.current.style.width) {
 			updateToolbar(getFittingZoom());
 		}
 	}, [imageHeight, imageWidth, zoomRatio, imageMargin]);
@@ -164,16 +167,18 @@ const ImagePreviewer = ({imageURL}) => {
 		<div className="preview-file">
 			<div
 				className="preview-file-container preview-file-max-height"
-				ref={imageContainer}
+				ref={imageContainerRef}
 			>
 				<img
+					alt={alt}
 					className="preview-file-image"
 					onLoad={handleImageLoad}
-					ref={image}
+					ref={imageRef}
 					src={imageURL}
 					style={getImageStyles()}
 				/>
 			</div>
+
 			<div className="preview-toolbar-container">
 				<ClayButton.Group className="floating-bar">
 					<ClayButton
@@ -192,6 +197,7 @@ const ImagePreviewer = ({imageURL}) => {
 					>
 						<ClayIcon symbol="hr" />
 					</ClayButton>
+
 					<ClayButton
 						className="btn-floating-bar btn-floating-bar-text"
 						displayType={null}
@@ -206,6 +212,7 @@ const ImagePreviewer = ({imageURL}) => {
 							{Math.round((currentZoom || 0) * 100)}%
 						</span>
 					</ClayButton>
+
 					<ClayButton
 						className="btn-floating-bar"
 						disabled={zoomInDisabled}

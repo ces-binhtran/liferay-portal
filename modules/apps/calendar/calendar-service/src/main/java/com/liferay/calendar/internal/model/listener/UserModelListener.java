@@ -26,8 +26,6 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.Portal;
 
-import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -40,13 +38,13 @@ import org.osgi.service.component.annotations.Reference;
 public class UserModelListener extends BaseModelListener<User> {
 
 	@Override
-	public void onAfterUpdate(User user) throws ModelListenerException {
-		try {
-			long classNameId = _portal.getClassNameId(User.class);
+	public void onAfterUpdate(User originalUser, User user)
+		throws ModelListenerException {
 
+		try {
 			CalendarResource calendarResource =
 				_calendarResourceLocalService.fetchCalendarResource(
-					classNameId, user.getUserId());
+					_portal.getClassNameId(User.class), user.getUserId());
 
 			if (calendarResource == null) {
 				return;
@@ -54,21 +52,17 @@ public class UserModelListener extends BaseModelListener<User> {
 
 			String name = calendarResource.getName(LocaleUtil.getSiteDefault());
 
-			if (Objects.equals(name, user.getFullName())) {
+			if (Objects.equals(name, user.getFullName()) ||
+				(user.isDefaultUser() && name.equals(GroupConstants.GUEST))) {
+
 				return;
 			}
-
-			if (user.isDefaultUser() && name.equals(GroupConstants.GUEST)) {
-				return;
-			}
-
-			Map<Locale, String> nameMap = HashMapBuilder.put(
-				LocaleUtil.getSiteDefault(), user.getFullName()
-			).build();
 
 			calendarResource.setNameMap(
 				LocalizationUtil.populateLocalizationMap(
-					nameMap,
+					HashMapBuilder.put(
+						LocaleUtil.getSiteDefault(), user.getFullName()
+					).build(),
 					LocaleUtil.toLanguageId(LocaleUtil.getSiteDefault()),
 					user.getGroupId()));
 

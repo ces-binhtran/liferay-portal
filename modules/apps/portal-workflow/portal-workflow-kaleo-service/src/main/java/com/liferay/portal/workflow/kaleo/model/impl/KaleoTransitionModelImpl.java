@@ -18,7 +18,9 @@ import com.liferay.expando.kernel.model.ExpandoBridge;
 import com.liferay.expando.kernel.util.ExpandoBridgeFactoryUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.bean.AutoEscapeBeanHandler;
+import com.liferay.portal.kernel.exception.LocaleException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.model.CacheModel;
 import com.liferay.portal.kernel.model.ModelWrapper;
 import com.liferay.portal.kernel.model.User;
@@ -26,7 +28,11 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
+import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.workflow.kaleo.model.KaleoTransition;
 import com.liferay.portal.workflow.kaleo.model.KaleoTransitionModel;
 
@@ -35,13 +41,18 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -74,7 +85,8 @@ public class KaleoTransitionModelImpl
 		{"kaleoDefinitionId", Types.BIGINT},
 		{"kaleoDefinitionVersionId", Types.BIGINT},
 		{"kaleoNodeId", Types.BIGINT}, {"name", Types.VARCHAR},
-		{"description", Types.VARCHAR}, {"sourceKaleoNodeId", Types.BIGINT},
+		{"label", Types.VARCHAR}, {"description", Types.VARCHAR},
+		{"sourceKaleoNodeId", Types.BIGINT},
 		{"sourceKaleoNodeName", Types.VARCHAR},
 		{"targetKaleoNodeId", Types.BIGINT},
 		{"targetKaleoNodeName", Types.VARCHAR},
@@ -97,6 +109,7 @@ public class KaleoTransitionModelImpl
 		TABLE_COLUMNS_MAP.put("kaleoDefinitionVersionId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("kaleoNodeId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("name", Types.VARCHAR);
+		TABLE_COLUMNS_MAP.put("label", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("description", Types.VARCHAR);
 		TABLE_COLUMNS_MAP.put("sourceKaleoNodeId", Types.BIGINT);
 		TABLE_COLUMNS_MAP.put("sourceKaleoNodeName", Types.VARCHAR);
@@ -106,7 +119,7 @@ public class KaleoTransitionModelImpl
 	}
 
 	public static final String TABLE_SQL_CREATE =
-		"create table KaleoTransition (mvccVersion LONG default 0 not null,kaleoTransitionId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,modifiedDate DATE null,kaleoDefinitionId LONG,kaleoDefinitionVersionId LONG,kaleoNodeId LONG,name VARCHAR(200) null,description STRING null,sourceKaleoNodeId LONG,sourceKaleoNodeName VARCHAR(200) null,targetKaleoNodeId LONG,targetKaleoNodeName VARCHAR(200) null,defaultTransition BOOLEAN)";
+		"create table KaleoTransition (mvccVersion LONG default 0 not null,kaleoTransitionId LONG not null primary key,groupId LONG,companyId LONG,userId LONG,userName VARCHAR(200) null,createDate DATE null,modifiedDate DATE null,kaleoDefinitionId LONG,kaleoDefinitionVersionId LONG,kaleoNodeId LONG,name VARCHAR(200) null,label STRING null,description STRING null,sourceKaleoNodeId LONG,sourceKaleoNodeName VARCHAR(200) null,targetKaleoNodeId LONG,targetKaleoNodeName VARCHAR(200) null,defaultTransition BOOLEAN)";
 
 	public static final String TABLE_SQL_DROP = "drop table KaleoTransition";
 
@@ -122,24 +135,55 @@ public class KaleoTransitionModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DEFAULTTRANSITION_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long KALEODEFINITIONVERSIONID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long KALEONODEID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long KALEOTRANSITIONID_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setEntityCacheEnabled(boolean entityCacheEnabled) {
-		_entityCacheEnabled = entityCacheEnabled;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	public static void setFinderCacheEnabled(boolean finderCacheEnabled) {
-		_finderCacheEnabled = finderCacheEnabled;
 	}
 
 	public KaleoTransitionModelImpl() {
@@ -193,9 +237,6 @@ public class KaleoTransitionModelImpl
 				attributeName,
 				attributeGetterFunction.apply((KaleoTransition)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -331,6 +372,10 @@ public class KaleoTransitionModelImpl
 		attributeSetterBiConsumers.put(
 			"name",
 			(BiConsumer<KaleoTransition, String>)KaleoTransition::setName);
+		attributeGetterFunctions.put("label", KaleoTransition::getLabel);
+		attributeSetterBiConsumers.put(
+			"label",
+			(BiConsumer<KaleoTransition, String>)KaleoTransition::setLabel);
 		attributeGetterFunctions.put(
 			"description", KaleoTransition::getDescription);
 		attributeSetterBiConsumers.put(
@@ -381,6 +426,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -391,7 +440,9 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setKaleoTransitionId(long kaleoTransitionId) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_kaleoTransitionId = kaleoTransitionId;
 	}
@@ -403,6 +454,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_groupId = groupId;
 	}
 
@@ -413,19 +468,21 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -435,6 +492,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setUserId(long userId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userId = userId;
 	}
 
@@ -466,6 +527,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setUserName(String userName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userName = userName;
 	}
 
@@ -476,6 +541,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setCreateDate(Date createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -492,6 +561,10 @@ public class KaleoTransitionModelImpl
 	public void setModifiedDate(Date modifiedDate) {
 		_setModifiedDate = true;
 
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_modifiedDate = modifiedDate;
 	}
 
@@ -502,6 +575,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setKaleoDefinitionId(long kaleoDefinitionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_kaleoDefinitionId = kaleoDefinitionId;
 	}
 
@@ -512,19 +589,21 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setKaleoDefinitionVersionId(long kaleoDefinitionVersionId) {
-		_columnBitmask |= KALEODEFINITIONVERSIONID_COLUMN_BITMASK;
-
-		if (!_setOriginalKaleoDefinitionVersionId) {
-			_setOriginalKaleoDefinitionVersionId = true;
-
-			_originalKaleoDefinitionVersionId = _kaleoDefinitionVersionId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_kaleoDefinitionVersionId = kaleoDefinitionVersionId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalKaleoDefinitionVersionId() {
-		return _originalKaleoDefinitionVersionId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("kaleoDefinitionVersionId"));
 	}
 
 	@Override
@@ -534,19 +613,21 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setKaleoNodeId(long kaleoNodeId) {
-		_columnBitmask |= KALEONODEID_COLUMN_BITMASK;
-
-		if (!_setOriginalKaleoNodeId) {
-			_setOriginalKaleoNodeId = true;
-
-			_originalKaleoNodeId = _kaleoNodeId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_kaleoNodeId = kaleoNodeId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalKaleoNodeId() {
-		return _originalKaleoNodeId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("kaleoNodeId"));
 	}
 
 	@Override
@@ -561,17 +642,128 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setName(String name) {
-		_columnBitmask |= NAME_COLUMN_BITMASK;
-
-		if (_originalName == null) {
-			_originalName = _name;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_name = name;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalName() {
-		return GetterUtil.getString(_originalName);
+		return getColumnOriginalValue("name");
+	}
+
+	@Override
+	public String getLabel() {
+		if (_label == null) {
+			return "";
+		}
+		else {
+			return _label;
+		}
+	}
+
+	@Override
+	public String getLabel(Locale locale) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		return getLabel(languageId);
+	}
+
+	@Override
+	public String getLabel(Locale locale, boolean useDefault) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+
+		return getLabel(languageId, useDefault);
+	}
+
+	@Override
+	public String getLabel(String languageId) {
+		return LocalizationUtil.getLocalization(getLabel(), languageId);
+	}
+
+	@Override
+	public String getLabel(String languageId, boolean useDefault) {
+		return LocalizationUtil.getLocalization(
+			getLabel(), languageId, useDefault);
+	}
+
+	@Override
+	public String getLabelCurrentLanguageId() {
+		return _labelCurrentLanguageId;
+	}
+
+	@JSON
+	@Override
+	public String getLabelCurrentValue() {
+		Locale locale = getLocale(_labelCurrentLanguageId);
+
+		return getLabel(locale);
+	}
+
+	@Override
+	public Map<Locale, String> getLabelMap() {
+		return LocalizationUtil.getLocalizationMap(getLabel());
+	}
+
+	@Override
+	public void setLabel(String label) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		_label = label;
+	}
+
+	@Override
+	public void setLabel(String label, Locale locale) {
+		setLabel(label, locale, LocaleUtil.getSiteDefault());
+	}
+
+	@Override
+	public void setLabel(String label, Locale locale, Locale defaultLocale) {
+		String languageId = LocaleUtil.toLanguageId(locale);
+		String defaultLanguageId = LocaleUtil.toLanguageId(defaultLocale);
+
+		if (Validator.isNotNull(label)) {
+			setLabel(
+				LocalizationUtil.updateLocalization(
+					getLabel(), "Label", label, languageId, defaultLanguageId));
+		}
+		else {
+			setLabel(
+				LocalizationUtil.removeLocalization(
+					getLabel(), "Label", languageId));
+		}
+	}
+
+	@Override
+	public void setLabelCurrentLanguageId(String languageId) {
+		_labelCurrentLanguageId = languageId;
+	}
+
+	@Override
+	public void setLabelMap(Map<Locale, String> labelMap) {
+		setLabelMap(labelMap, LocaleUtil.getSiteDefault());
+	}
+
+	@Override
+	public void setLabelMap(
+		Map<Locale, String> labelMap, Locale defaultLocale) {
+
+		if (labelMap == null) {
+			return;
+		}
+
+		setLabel(
+			LocalizationUtil.updateLocalization(
+				labelMap, getLabel(), "Label",
+				LocaleUtil.toLanguageId(defaultLocale)));
 	}
 
 	@Override
@@ -586,6 +778,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setDescription(String description) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_description = description;
 	}
 
@@ -596,6 +792,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setSourceKaleoNodeId(long sourceKaleoNodeId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sourceKaleoNodeId = sourceKaleoNodeId;
 	}
 
@@ -611,6 +811,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setSourceKaleoNodeName(String sourceKaleoNodeName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_sourceKaleoNodeName = sourceKaleoNodeName;
 	}
 
@@ -621,6 +825,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setTargetKaleoNodeId(long targetKaleoNodeId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_targetKaleoNodeId = targetKaleoNodeId;
 	}
 
@@ -636,6 +844,10 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setTargetKaleoNodeName(String targetKaleoNodeName) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_targetKaleoNodeName = targetKaleoNodeName;
 	}
 
@@ -651,22 +863,44 @@ public class KaleoTransitionModelImpl
 
 	@Override
 	public void setDefaultTransition(boolean defaultTransition) {
-		_columnBitmask |= DEFAULTTRANSITION_COLUMN_BITMASK;
-
-		if (!_setOriginalDefaultTransition) {
-			_setOriginalDefaultTransition = true;
-
-			_originalDefaultTransition = _defaultTransition;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_defaultTransition = defaultTransition;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalDefaultTransition() {
-		return _originalDefaultTransition;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("defaultTransition"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -681,6 +915,72 @@ public class KaleoTransitionModelImpl
 		ExpandoBridge expandoBridge = getExpandoBridge();
 
 		expandoBridge.setAttributes(serviceContext);
+	}
+
+	@Override
+	public String[] getAvailableLanguageIds() {
+		Set<String> availableLanguageIds = new TreeSet<String>();
+
+		Map<Locale, String> labelMap = getLabelMap();
+
+		for (Map.Entry<Locale, String> entry : labelMap.entrySet()) {
+			Locale locale = entry.getKey();
+			String value = entry.getValue();
+
+			if (Validator.isNotNull(value)) {
+				availableLanguageIds.add(LocaleUtil.toLanguageId(locale));
+			}
+		}
+
+		return availableLanguageIds.toArray(
+			new String[availableLanguageIds.size()]);
+	}
+
+	@Override
+	public String getDefaultLanguageId() {
+		String xml = getLabel();
+
+		if (xml == null) {
+			return "";
+		}
+
+		Locale defaultLocale = LocaleUtil.getSiteDefault();
+
+		return LocalizationUtil.getDefaultLanguageId(xml, defaultLocale);
+	}
+
+	@Override
+	public void prepareLocalizedFieldsForImport() throws LocaleException {
+		Locale defaultLocale = LocaleUtil.fromLanguageId(
+			getDefaultLanguageId());
+
+		Locale[] availableLocales = LocaleUtil.fromLanguageIds(
+			getAvailableLanguageIds());
+
+		Locale defaultImportLocale = LocalizationUtil.getDefaultImportLocale(
+			KaleoTransition.class.getName(), getPrimaryKey(), defaultLocale,
+			availableLocales);
+
+		prepareLocalizedFieldsForImport(defaultImportLocale);
+	}
+
+	@Override
+	@SuppressWarnings("unused")
+	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
+		throws LocaleException {
+
+		Locale defaultLocale = LocaleUtil.getSiteDefault();
+
+		String modelDefaultLanguageId = getDefaultLanguageId();
+
+		String label = getLabel(defaultLocale);
+
+		if (Validator.isNull(label)) {
+			setLabel(getLabel(modelDefaultLanguageId), defaultLocale);
+		}
+		else {
+			setLabel(getLabel(defaultLocale), defaultLocale, defaultLocale);
+		}
 	}
 
 	@Override
@@ -715,6 +1015,7 @@ public class KaleoTransitionModelImpl
 			getKaleoDefinitionVersionId());
 		kaleoTransitionImpl.setKaleoNodeId(getKaleoNodeId());
 		kaleoTransitionImpl.setName(getName());
+		kaleoTransitionImpl.setLabel(getLabel());
 		kaleoTransitionImpl.setDescription(getDescription());
 		kaleoTransitionImpl.setSourceKaleoNodeId(getSourceKaleoNodeId());
 		kaleoTransitionImpl.setSourceKaleoNodeName(getSourceKaleoNodeName());
@@ -723,6 +1024,52 @@ public class KaleoTransitionModelImpl
 		kaleoTransitionImpl.setDefaultTransition(isDefaultTransition());
 
 		kaleoTransitionImpl.resetOriginalValues();
+
+		return kaleoTransitionImpl;
+	}
+
+	@Override
+	public KaleoTransition cloneWithOriginalValues() {
+		KaleoTransitionImpl kaleoTransitionImpl = new KaleoTransitionImpl();
+
+		kaleoTransitionImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		kaleoTransitionImpl.setKaleoTransitionId(
+			this.<Long>getColumnOriginalValue("kaleoTransitionId"));
+		kaleoTransitionImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		kaleoTransitionImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		kaleoTransitionImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		kaleoTransitionImpl.setUserName(
+			this.<String>getColumnOriginalValue("userName"));
+		kaleoTransitionImpl.setCreateDate(
+			this.<Date>getColumnOriginalValue("createDate"));
+		kaleoTransitionImpl.setModifiedDate(
+			this.<Date>getColumnOriginalValue("modifiedDate"));
+		kaleoTransitionImpl.setKaleoDefinitionId(
+			this.<Long>getColumnOriginalValue("kaleoDefinitionId"));
+		kaleoTransitionImpl.setKaleoDefinitionVersionId(
+			this.<Long>getColumnOriginalValue("kaleoDefinitionVersionId"));
+		kaleoTransitionImpl.setKaleoNodeId(
+			this.<Long>getColumnOriginalValue("kaleoNodeId"));
+		kaleoTransitionImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		kaleoTransitionImpl.setLabel(
+			this.<String>getColumnOriginalValue("label"));
+		kaleoTransitionImpl.setDescription(
+			this.<String>getColumnOriginalValue("description"));
+		kaleoTransitionImpl.setSourceKaleoNodeId(
+			this.<Long>getColumnOriginalValue("sourceKaleoNodeId"));
+		kaleoTransitionImpl.setSourceKaleoNodeName(
+			this.<String>getColumnOriginalValue("sourceKaleoNodeName"));
+		kaleoTransitionImpl.setTargetKaleoNodeId(
+			this.<Long>getColumnOriginalValue("targetKaleoNodeId"));
+		kaleoTransitionImpl.setTargetKaleoNodeName(
+			this.<String>getColumnOriginalValue("targetKaleoNodeName"));
+		kaleoTransitionImpl.setDefaultTransition(
+			this.<Boolean>getColumnOriginalValue("defaultTransition"));
 
 		return kaleoTransitionImpl;
 	}
@@ -751,16 +1098,16 @@ public class KaleoTransitionModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof KaleoTransition)) {
+		if (!(object instanceof KaleoTransition)) {
 			return false;
 		}
 
-		KaleoTransition kaleoTransition = (KaleoTransition)obj;
+		KaleoTransition kaleoTransition = (KaleoTransition)object;
 
 		long primaryKey = kaleoTransition.getPrimaryKey();
 
@@ -777,45 +1124,31 @@ public class KaleoTransitionModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
-		return _entityCacheEnabled;
+		return true;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
-		return _finderCacheEnabled;
+		return true;
 	}
 
 	@Override
 	public void resetOriginalValues() {
-		KaleoTransitionModelImpl kaleoTransitionModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		kaleoTransitionModelImpl._originalCompanyId =
-			kaleoTransitionModelImpl._companyId;
+		_setModifiedDate = false;
 
-		kaleoTransitionModelImpl._setOriginalCompanyId = false;
-
-		kaleoTransitionModelImpl._setModifiedDate = false;
-
-		kaleoTransitionModelImpl._originalKaleoDefinitionVersionId =
-			kaleoTransitionModelImpl._kaleoDefinitionVersionId;
-
-		kaleoTransitionModelImpl._setOriginalKaleoDefinitionVersionId = false;
-
-		kaleoTransitionModelImpl._originalKaleoNodeId =
-			kaleoTransitionModelImpl._kaleoNodeId;
-
-		kaleoTransitionModelImpl._setOriginalKaleoNodeId = false;
-
-		kaleoTransitionModelImpl._originalName = kaleoTransitionModelImpl._name;
-
-		kaleoTransitionModelImpl._originalDefaultTransition =
-			kaleoTransitionModelImpl._defaultTransition;
-
-		kaleoTransitionModelImpl._setOriginalDefaultTransition = false;
-
-		kaleoTransitionModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -874,6 +1207,14 @@ public class KaleoTransitionModelImpl
 			kaleoTransitionCacheModel.name = null;
 		}
 
+		kaleoTransitionCacheModel.label = getLabel();
+
+		String label = kaleoTransitionCacheModel.label;
+
+		if ((label != null) && (label.length() == 0)) {
+			kaleoTransitionCacheModel.label = null;
+		}
+
 		kaleoTransitionCacheModel.description = getDescription();
 
 		String description = kaleoTransitionCacheModel.description;
@@ -921,7 +1262,7 @@ public class KaleoTransitionModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -932,9 +1273,26 @@ public class KaleoTransitionModelImpl
 			Function<KaleoTransition, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((KaleoTransition)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply((KaleoTransition)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -953,7 +1311,7 @@ public class KaleoTransitionModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -985,15 +1343,10 @@ public class KaleoTransitionModelImpl
 
 	}
 
-	private static boolean _entityCacheEnabled;
-	private static boolean _finderCacheEnabled;
-
 	private long _mvccVersion;
 	private long _kaleoTransitionId;
 	private long _groupId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
 	private String _userName;
 	private Date _createDate;
@@ -1001,21 +1354,118 @@ public class KaleoTransitionModelImpl
 	private boolean _setModifiedDate;
 	private long _kaleoDefinitionId;
 	private long _kaleoDefinitionVersionId;
-	private long _originalKaleoDefinitionVersionId;
-	private boolean _setOriginalKaleoDefinitionVersionId;
 	private long _kaleoNodeId;
-	private long _originalKaleoNodeId;
-	private boolean _setOriginalKaleoNodeId;
 	private String _name;
-	private String _originalName;
+	private String _label;
+	private String _labelCurrentLanguageId;
 	private String _description;
 	private long _sourceKaleoNodeId;
 	private String _sourceKaleoNodeName;
 	private long _targetKaleoNodeId;
 	private String _targetKaleoNodeName;
 	private boolean _defaultTransition;
-	private boolean _originalDefaultTransition;
-	private boolean _setOriginalDefaultTransition;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<KaleoTransition, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((KaleoTransition)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("kaleoTransitionId", _kaleoTransitionId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("userName", _userName);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("modifiedDate", _modifiedDate);
+		_columnOriginalValues.put("kaleoDefinitionId", _kaleoDefinitionId);
+		_columnOriginalValues.put(
+			"kaleoDefinitionVersionId", _kaleoDefinitionVersionId);
+		_columnOriginalValues.put("kaleoNodeId", _kaleoNodeId);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("label", _label);
+		_columnOriginalValues.put("description", _description);
+		_columnOriginalValues.put("sourceKaleoNodeId", _sourceKaleoNodeId);
+		_columnOriginalValues.put("sourceKaleoNodeName", _sourceKaleoNodeName);
+		_columnOriginalValues.put("targetKaleoNodeId", _targetKaleoNodeId);
+		_columnOriginalValues.put("targetKaleoNodeName", _targetKaleoNodeName);
+		_columnOriginalValues.put("defaultTransition", _defaultTransition);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("kaleoTransitionId", 2L);
+
+		columnBitmasks.put("groupId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userId", 16L);
+
+		columnBitmasks.put("userName", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("modifiedDate", 128L);
+
+		columnBitmasks.put("kaleoDefinitionId", 256L);
+
+		columnBitmasks.put("kaleoDefinitionVersionId", 512L);
+
+		columnBitmasks.put("kaleoNodeId", 1024L);
+
+		columnBitmasks.put("name", 2048L);
+
+		columnBitmasks.put("label", 4096L);
+
+		columnBitmasks.put("description", 8192L);
+
+		columnBitmasks.put("sourceKaleoNodeId", 16384L);
+
+		columnBitmasks.put("sourceKaleoNodeName", 32768L);
+
+		columnBitmasks.put("targetKaleoNodeId", 65536L);
+
+		columnBitmasks.put("targetKaleoNodeName", 131072L);
+
+		columnBitmasks.put("defaultTransition", 262144L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private KaleoTransition _escapedModel;
 

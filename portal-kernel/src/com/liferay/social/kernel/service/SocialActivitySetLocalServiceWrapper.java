@@ -30,6 +30,10 @@ public class SocialActivitySetLocalServiceWrapper
 	implements ServiceWrapper<SocialActivitySetLocalService>,
 			   SocialActivitySetLocalService {
 
+	public SocialActivitySetLocalServiceWrapper() {
+		this(null);
+	}
+
 	public SocialActivitySetLocalServiceWrapper(
 		SocialActivitySetLocalService socialActivitySetLocalService) {
 
@@ -45,6 +49,10 @@ public class SocialActivitySetLocalServiceWrapper
 
 	/**
 	 * Adds the social activity set to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivitySetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivitySet the social activity set
 	 * @return the social activity set that was added
@@ -111,6 +119,10 @@ public class SocialActivitySetLocalServiceWrapper
 	/**
 	 * Deletes the social activity set with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivitySetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param activitySetId the primary key of the social activity set
 	 * @return the social activity set that was removed
 	 * @throws PortalException if a social activity set with the primary key could not be found
@@ -126,6 +138,10 @@ public class SocialActivitySetLocalServiceWrapper
 	/**
 	 * Deletes the social activity set from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivitySetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param socialActivitySet the social activity set
 	 * @return the social activity set that was removed
 	 */
@@ -140,6 +156,13 @@ public class SocialActivitySetLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _socialActivitySetLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _socialActivitySetLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -457,6 +480,10 @@ public class SocialActivitySetLocalServiceWrapper
 
 	/**
 	 * Updates the social activity set in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect SocialActivitySetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param socialActivitySet the social activity set
 	 * @return the social activity set that was updated

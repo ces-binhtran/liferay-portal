@@ -26,6 +26,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -161,6 +161,8 @@ public class DDMFormInstanceRecordPersistenceTest {
 
 		newDDMFormInstanceRecord.setVersion(RandomTestUtil.randomString());
 
+		newDDMFormInstanceRecord.setIpAddress(RandomTestUtil.randomString());
+
 		newDDMFormInstanceRecord.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_ddmFormInstanceRecords.add(
@@ -220,6 +222,9 @@ public class DDMFormInstanceRecordPersistenceTest {
 		Assert.assertEquals(
 			existingDDMFormInstanceRecord.getVersion(),
 			newDDMFormInstanceRecord.getVersion());
+		Assert.assertEquals(
+			existingDDMFormInstanceRecord.getIpAddress(),
+			newDDMFormInstanceRecord.getIpAddress());
 		Assert.assertEquals(
 			Time.getShortTimestamp(
 				existingDDMFormInstanceRecord.getLastPublishDate()),
@@ -318,7 +323,8 @@ public class DDMFormInstanceRecordPersistenceTest {
 			"companyId", true, "userId", true, "userName", true,
 			"versionUserId", true, "versionUserName", true, "createDate", true,
 			"modifiedDate", true, "formInstanceId", true, "formInstanceVersion",
-			true, "storageId", true, "version", true, "lastPublishDate", true);
+			true, "storageId", true, "version", true, "ipAddress", true,
+			"lastPublishDate", true);
 	}
 
 	@Test
@@ -564,21 +570,66 @@ public class DDMFormInstanceRecordPersistenceTest {
 
 		_persistence.clearCache();
 
-		DDMFormInstanceRecord existingDDMFormInstanceRecord =
+		_assertOriginalValues(
 			_persistence.findByPrimaryKey(
-				newDDMFormInstanceRecord.getPrimaryKey());
+				newDDMFormInstanceRecord.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingDDMFormInstanceRecord.getUuid(),
-				ReflectionTestUtil.invoke(
-					existingDDMFormInstanceRecord, "getOriginalUuid",
-					new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		DDMFormInstanceRecord newDDMFormInstanceRecord =
+			addDDMFormInstanceRecord();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			DDMFormInstanceRecord.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"formInstanceRecordId",
+				newDDMFormInstanceRecord.getFormInstanceRecordId()));
+
+		List<DDMFormInstanceRecord> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(
+		DDMFormInstanceRecord ddmFormInstanceRecord) {
+
 		Assert.assertEquals(
-			Long.valueOf(existingDDMFormInstanceRecord.getGroupId()),
+			ddmFormInstanceRecord.getUuid(),
+			ReflectionTestUtil.invoke(
+				ddmFormInstanceRecord, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "uuid_"));
+		Assert.assertEquals(
+			Long.valueOf(ddmFormInstanceRecord.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingDDMFormInstanceRecord, "getOriginalGroupId",
-				new Class<?>[0]));
+				ddmFormInstanceRecord, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 	}
 
 	protected DDMFormInstanceRecord addDDMFormInstanceRecord()
@@ -618,6 +669,8 @@ public class DDMFormInstanceRecordPersistenceTest {
 		ddmFormInstanceRecord.setStorageId(RandomTestUtil.nextLong());
 
 		ddmFormInstanceRecord.setVersion(RandomTestUtil.randomString());
+
+		ddmFormInstanceRecord.setIpAddress(RandomTestUtil.randomString());
 
 		ddmFormInstanceRecord.setLastPublishDate(RandomTestUtil.nextDate());
 

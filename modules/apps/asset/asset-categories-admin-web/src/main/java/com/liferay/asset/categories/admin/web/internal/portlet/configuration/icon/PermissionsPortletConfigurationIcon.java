@@ -17,13 +17,15 @@ package com.liferay.asset.categories.admin.web.internal.portlet.configuration.ic
 import com.liferay.asset.categories.admin.web.constants.AssetCategoriesAdminPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
 import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfigurationIcon;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portlet.asset.service.permission.AssetCategoriesPermission;
@@ -33,6 +35,7 @@ import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
 
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Eudaldo Alonso
@@ -69,6 +72,9 @@ public class PermissionsPortletConfigurationIcon
 				themeDisplay.getRequest());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return url;
@@ -97,7 +103,7 @@ public class PermissionsPortletConfigurationIcon
 			if (!AssetCategoriesPermission.contains(
 					permissionChecker, themeDisplay.getSiteGroupId(),
 					ActionKeys.PERMISSIONS) ||
-				!GroupPermissionUtil.contains(
+				!_groupPermission.contains(
 					permissionChecker, themeDisplay.getSiteGroupId(),
 					ActionKeys.PERMISSIONS)) {
 
@@ -105,6 +111,10 @@ public class PermissionsPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 
@@ -120,5 +130,11 @@ public class PermissionsPortletConfigurationIcon
 	public boolean isUseDialog() {
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PermissionsPortletConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 }

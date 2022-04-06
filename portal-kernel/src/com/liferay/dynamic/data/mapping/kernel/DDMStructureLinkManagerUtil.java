@@ -43,10 +43,8 @@ public class DDMStructureLinkManagerUtil {
 		_ddmStructureLinkManager.deleteStructureLinks(classNameId, classPK);
 	}
 
-	public static List<DDMStructureLink> getClassNameStructureLinks(
-		long classNameId) {
-
-		return _ddmStructureLinkManager.getClassNameStructureLinks(classNameId);
+	public static List<DDMStructureLink> getStructureLinks(long structureId) {
+		return _ddmStructureLinkManager.getStructureLinks(structureId);
 	}
 
 	public static List<DDMStructureLink> getStructureLinks(

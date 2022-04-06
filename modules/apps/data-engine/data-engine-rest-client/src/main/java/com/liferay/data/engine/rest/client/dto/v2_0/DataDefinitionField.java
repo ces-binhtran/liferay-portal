@@ -17,6 +17,8 @@ package com.liferay.data.engine.rest.client.dto.v2_0;
 import com.liferay.data.engine.rest.client.function.UnsafeSupplier;
 import com.liferay.data.engine.rest.client.serdes.v2_0.DataDefinitionFieldSerDes;
 
+import java.io.Serializable;
+
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,7 +29,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class DataDefinitionField implements Cloneable {
+public class DataDefinitionField implements Cloneable, Serializable {
 
 	public static DataDefinitionField toDTO(String json) {
 		return DataDefinitionFieldSerDes.toDTO(json);
@@ -416,7 +418,9 @@ public class DataDefinitionField implements Cloneable {
 
 		public static IndexType create(String value) {
 			for (IndexType indexType : values()) {
-				if (Objects.equals(indexType.getValue(), value)) {
+				if (Objects.equals(indexType.getValue(), value) ||
+					Objects.equals(indexType.name(), value)) {
+
 					return indexType;
 				}
 			}

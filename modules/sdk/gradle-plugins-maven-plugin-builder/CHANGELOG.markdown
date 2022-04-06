@@ -1,5 +1,42 @@
 # Liferay Gradle Plugins Maven Plugin Builder Change Log
 
+## 1.2.8 - 2020-11-02
+
+### Commits
+- [LPS-111291] Import statements (d414bad0fa)
+- [LPS-111291] Skip dom4j transitive dependencies (04f4048d49)
+- [LPS-111291] Update readme (a87d2593e9)
+- [LPS-111291] Gradle 5.6.4 tests (40f4f9e2f3)
+- [LPS-111291] Update README.markdown (eea12b7f8f)
+- [LPS-111291] Update plugins Gradle version (003c3832b0)
+- [LPS-105380] Methods don't need to be static (c42da838cc)
+- [LPS-105380] Move variable inside if statement (4ba0e61ee5)
+
+### Dependencies
+- [LPS-111291] Update the com.liferay.gradle.util dependency to version 1.0.44.
+- [LPS-111291] Update the dom4j dependency to version 2.1.3.
+- [LPS-115020] Update the com.liferay.gradle.util dependency to version 1.0.43.
+- [LPS-114098] Update the dom4j dependency to version 2.1.3.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.42.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.41.
+- [LPS-113624] Update the com.liferay.gradle.util dependency to version 1.0.40.
+
+## 1.2.7 - 2020-04-28
+
+### Commits
+- [LPS-110422] Apply (9a704b4ca9)
+- [LPS-110422] Gradle plugins not compatible with gradle 6.0+ * Add OsgiHelper
+in gradle-util * Replace gradle osgi plugin dependency by local OsgiHelper
+(53e90cb8f3)
+- [LPS-111020] Run SF (467a74d38f)
+
+### Dependencies
+- [LPS-110422] Update the com.liferay.gradle.util dependency to version 1.0.39.
+- [LPS-111896] Update the com.liferay.gradle.util dependency to version 1.0.38.
+- [LPS-88645] Update the com.liferay.gradle.util dependency to version 1.0.37.
+- [LPS-111020] Update the dom4j dependency to version 2.1.1.
+- [LPS-110283] Update the com.liferay.gradle.util dependency to version 1.0.36.
+
 ## 1.2.6 - 2020-03-04
 
 ### Commits
@@ -393,8 +430,17 @@ version 2.4.
 [LPS-86589]: https://issues.liferay.com/browse/LPS-86589
 [LPS-87192]: https://issues.liferay.com/browse/LPS-87192
 [LPS-87466]: https://issues.liferay.com/browse/LPS-87466
+[LPS-88645]: https://issues.liferay.com/browse/LPS-88645
 [LPS-96247]: https://issues.liferay.com/browse/LPS-96247
 [LPS-100515]: https://issues.liferay.com/browse/LPS-100515
 [LPS-101026]: https://issues.liferay.com/browse/LPS-101026
 [LPS-105380]: https://issues.liferay.com/browse/LPS-105380
 [LPS-106149]: https://issues.liferay.com/browse/LPS-106149
+[LPS-110283]: https://issues.liferay.com/browse/LPS-110283
+[LPS-110422]: https://issues.liferay.com/browse/LPS-110422
+[LPS-111020]: https://issues.liferay.com/browse/LPS-111020
+[LPS-111291]: https://issues.liferay.com/browse/LPS-111291
+[LPS-111896]: https://issues.liferay.com/browse/LPS-111896
+[LPS-113624]: https://issues.liferay.com/browse/LPS-113624
+[LPS-114098]: https://issues.liferay.com/browse/LPS-114098
+[LPS-115020]: https://issues.liferay.com/browse/LPS-115020

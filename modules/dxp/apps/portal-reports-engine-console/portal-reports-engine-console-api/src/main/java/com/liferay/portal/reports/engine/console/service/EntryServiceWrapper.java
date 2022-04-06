@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class EntryServiceWrapper
 	implements EntryService, ServiceWrapper<EntryService> {
 
+	public EntryServiceWrapper() {
+		this(null);
+	}
+
 	public EntryServiceWrapper(EntryService entryService) {
 		_entryService = entryService;
 	}
@@ -68,7 +72,8 @@ public class EntryServiceWrapper
 				java.util.Date createDateGT, java.util.Date createDateLT,
 				boolean andSearch, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					orderByComparator)
+					<com.liferay.portal.reports.engine.console.model.Entry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _entryService.getEntries(

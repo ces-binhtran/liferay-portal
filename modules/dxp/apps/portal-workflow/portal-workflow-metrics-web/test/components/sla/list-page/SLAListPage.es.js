@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, fireEvent, render} from '@testing-library/react';
+import {act, cleanup, fireEvent, render} from '@testing-library/react';
 import React from 'react';
 
 import '@testing-library/jest-dom/extend-expect';
@@ -18,18 +18,21 @@ import {SLAContext} from '../../../../src/main/resources/META-INF/resources/js/c
 import SLAListPage from '../../../../src/main/resources/META-INF/resources/js/components/sla/list-page/SLAListPage.es';
 import ToasterProvider from '../../../../src/main/resources/META-INF/resources/js/shared/components/toaster/ToasterProvider.es';
 import {MockRouter} from '../../../mock/MockRouter.es';
+import FetchMock, {fetchMockResponse} from '../../../mock/fetch.es';
 
 describe('The SLAListPage component should', () => {
 	describe('Be rendered correctly with no items', () => {
-		let getByTestId;
+		let getByTitle;
+		let getByText;
 
-		const clientMock = {
-			get: jest.fn().mockResolvedValue({data: {items: []}}),
-		};
+		beforeAll(async () => {
+			fetch.mockImplementation(async () => ({
+				json: async () => ({items: []}),
+				ok: true,
+			}));
 
-		beforeAll(() => {
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<ToasterProvider>
 						<SLAContext.Provider value={{}}>
 							<SLAListPage
@@ -42,28 +45,34 @@ describe('The SLAListPage component should', () => {
 				</MockRouter>
 			);
 
-			getByTestId = renderResult.getByTestId;
+			getByText = renderResult.getByText;
+			getByTitle = renderResult.getByTitle;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show navbar with New SLA button with correct link', () => {
-			const childLink = getByTestId('newSLALink');
-			const newSLAButton = getByTestId('newSLA');
+		it('Show navbar with New SLA button with correct link', () => {
+			const newSLAButton = getByTitle('new-sla');
+			const childLink = newSLAButton.children[0];
 
 			expect(childLink.getAttribute('href')).toContain('/sla/36001/new');
-			expect(newSLAButton.title).toBe('new-sla');
 		});
 
-		test('Display empty state', () => {
-			const emptyStateMessage = getByTestId('emptyStateMsg');
-
-			expect(emptyStateMessage).toHaveTextContent(
+		it('Display empty state', () => {
+			const emptyStateMessage = getByText(
 				'sla-allows-to-define-and-measure-process-performance'
 			);
+
+			expect(emptyStateMessage).toBeTruthy();
 		});
 	});
 
 	describe('Be rendered correctly with items', () => {
-		let getAllByTestId, getByTestId;
+		let container;
+		let fetchMock;
+		let getByText;
 
 		const data = {
 			actions: {},
@@ -80,18 +89,26 @@ describe('The SLAListPage component should', () => {
 			totalCount: 1,
 		};
 
-		const clientMock = {
-			delete: jest.fn().mockRejectedValueOnce({}).mockResolvedValue({}),
-			get: jest.fn().mockResolvedValue({data}),
-		};
-
 		const contextMock = {SLAUpdated: true, setSLAUpdated: jest.fn()};
 
-		beforeAll(() => {
+		beforeAll(async () => {
 			cleanup();
+			fetch.mockReset();
+
+			fetchMock = new FetchMock({
+				DELETE: {
+					'/o/portal-workflow-metrics/v1.0/slas/37975': [
+						fetchMockResponse({}, false),
+						fetchMockResponse(),
+					],
+				},
+				GET: {
+					default: fetchMockResponse(data),
+				},
+			});
 
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<ToasterProvider>
 						<SLAContext.Provider value={contextMock}>
 							<SLAListPage
@@ -104,94 +121,120 @@ describe('The SLAListPage component should', () => {
 				</MockRouter>
 			);
 
-			getAllByTestId = renderResult.getAllByTestId;
-			getByTestId = renderResult.getByTestId;
+			container = renderResult.container;
+			getByText = renderResult.getByText;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show table columns', () => {
-			const slaDateModifiedHead = getByTestId('slaDateModifiedHead');
-			const slaDescriptionHead = getByTestId('slaDescriptionHead');
-			const slaDurationHead = getByTestId('slaDurationHead');
-			const slaNameHead = getByTestId('slaNameHead');
-			const slaStatusHead = getByTestId('slaStatusHead');
-
-			expect(slaDateModifiedHead).toHaveTextContent('last-modified');
-			expect(slaDescriptionHead).toHaveTextContent('description');
-			expect(slaDurationHead).toHaveTextContent('duration');
-			expect(slaNameHead).toHaveTextContent('sla-name');
-			expect(slaStatusHead).toHaveTextContent('status');
+		beforeEach(() => {
+			fetchMock.mock();
 		});
 
-		test('Show items info and kebab menu', () => {
-			const kebab = getByTestId('kebab');
-			const slaDateModified = getByTestId('slaDateModified');
-			const slaDescription = getByTestId('slaDescription');
-			const slaDuration = getByTestId('slaDuration');
-			const slaName = getByTestId('slaName');
-			const slaStatus = getByTestId('slaStatus');
+		afterEach(() => {
+			fetchMock.reset();
+		});
+
+		it('Show table columns', () => {
+			const slaDateModifiedHead = getByText('last-modified');
+			const slaDescriptionHead = getByText('description');
+			const slaDurationHead = getByText('duration');
+			const slaNameHead = getByText('sla-name');
+			const slaStatusHead = getByText('status');
+
+			expect(slaDateModifiedHead).toBeTruthy();
+			expect(slaDescriptionHead).toBeTruthy();
+			expect(slaDurationHead).toBeTruthy();
+			expect(slaNameHead).toBeTruthy();
+			expect(slaStatusHead).toBeTruthy();
+		});
+
+		it('Show items info and kebab menu', async () => {
+			const kebab = container.querySelector('.dropdown-toggle');
+			const slaDateModified = getByText('Apr 03');
+			const slaDescription = slaDateModified.parentNode.children[1];
+			const slaDuration = getByText('1min');
+			const slaName = container.querySelector('.table-list-title');
+			const slaStatus = getByText('running');
 
 			expect(slaName).toHaveTextContent('SLA');
 			expect(slaDescription).toHaveTextContent('');
-			expect(slaStatus).toHaveTextContent('running');
-			expect(slaDuration).toHaveTextContent('1min');
-			expect(slaDateModified).toHaveTextContent('Apr 03');
+			expect(slaStatus).toBeTruthy();
+			expect(slaDuration).toBeTruthy();
+			expect(slaDateModified).toBeTruthy();
+
 			fireEvent.click(kebab);
 
-			const dropDownItems = getAllByTestId('kebabDropItems');
+			const dropDownItems = document.querySelectorAll('.dropdown-item');
 
 			expect(dropDownItems[0]).toHaveTextContent('edit');
 			expect(dropDownItems[1]).toHaveTextContent('delete');
 
 			fireEvent.click(dropDownItems[1]);
 
-			jest.runAllTimers();
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Display modal after clicking on delete option of kebab menu', () => {
-			const cancelButton = getByTestId('cancelButton');
-			const deleteButton = getByTestId('deleteButton');
-			const deleteModal = getByTestId('deleteModal');
-
-			expect(deleteModal).toHaveTextContent(
+		it('Display modal after clicking on delete option of kebab menu', async () => {
+			const cancelButton = getByText('cancel');
+			const deleteButton = getByText('ok');
+			const deleteModal = getByText(
 				'deleting-slas-will-reflect-on-report-data'
 			);
-			expect(cancelButton).toHaveTextContent('cancel');
-			expect(deleteButton).toHaveTextContent('ok');
+
+			expect(deleteModal).toBeTruthy();
+			expect(cancelButton).toBeTruthy();
+			expect(deleteButton).toBeTruthy();
 
 			fireEvent.click(deleteButton);
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Display toast when failure occur while trying to confirm item delete', () => {
-			const alertToast = getByTestId('alertToast');
+		it('Display toast when failure occur while trying to confirm item delete', async () => {
+			const alertToast = document.querySelector('.alert-dismissible');
+
 			const alertClose = alertToast.children[1];
-			const deleteButton = getByTestId('deleteButton');
+
+			const deleteButton = getByText('ok');
 
 			expect(alertToast).toHaveTextContent('your-request-has-failed');
 
 			fireEvent.click(alertClose);
 
-			const alertContainer = getByTestId('alertContainer');
+			const alertContainer = document.querySelector('.alert-container');
 
 			expect(alertContainer.children[0].children.length).toBe(0);
 
 			fireEvent.click(deleteButton);
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Display toast when confirm item delete', () => {
-			const alertToast = getByTestId('alertToast');
+		it('Display toast when confirm item delete', () => {
+			const alertToast = document.querySelector('.alert-dismissible');
+
 			const alertClose = alertToast.children[1];
 
 			expect(alertToast).toHaveTextContent('sla-was-deleted');
 
 			fireEvent.click(alertClose);
 
-			const alertContainer = getByTestId('alertContainer');
+			const alertContainer = document.querySelector('.alert-container');
 
 			expect(alertContainer.children[0].children.length).toBe(0);
 		});
 
-		test('Display info alert and toast after a SLA is created or updated', () => {
-			const updateAlert = getByTestId('updateAlert');
+		it('Display info alert and toast after a SLA is created or updated', () => {
+			const updateAlert = container.querySelector('.alert-info');
 
 			expect(updateAlert).toHaveTextContent(
 				'one-or-more-slas-are-being-updated'
@@ -204,7 +247,8 @@ describe('The SLAListPage component should', () => {
 	});
 
 	describe('Be rendered correctly with blocked items', () => {
-		let container, getAllByTestId, getByTestId;
+		let container;
+		let getByText;
 
 		const data = {
 			actions: {},
@@ -263,15 +307,18 @@ describe('The SLAListPage component should', () => {
 			totalCount: 1,
 		};
 
-		const clientMock = {
-			get: jest.fn().mockResolvedValue({data}),
-		};
-
-		beforeAll(() => {
+		beforeAll(async () => {
 			cleanup();
 
+			fetch.mockReset();
+
+			fetch.mockImplementation(async () => ({
+				json: async () => data,
+				ok: true,
+			}));
+
 			const renderResult = render(
-				<MockRouter client={clientMock}>
+				<MockRouter>
 					<ToasterProvider>
 						<SLAContext.Provider value={{}}>
 							<SLAListPage
@@ -285,37 +332,42 @@ describe('The SLAListPage component should', () => {
 			);
 
 			container = renderResult.container;
-			getAllByTestId = renderResult.getAllByTestId;
-			getByTestId = renderResult.getByTestId;
+			getByText = renderResult.getByText;
+
+			await act(async () => {
+				jest.runAllTimers();
+			});
 		});
 
-		test('Show alert error', () => {
-			const alertBlockedSLA = getByTestId('alertBlockedSLA');
-
-			expect(alertBlockedSLA).toHaveTextContent(
+		it('Show alert error', () => {
+			const alertBlockedSLA = getByText(
 				'fix-blocked-slas-to-resume-accurate-reporting'
 			);
+
+			expect(alertBlockedSLA).toBeTruthy();
 
 			const alertClose = container.querySelector('button.close');
 
 			fireEvent.click(alertClose);
 		});
 
-		test('Show dividers', () => {
-			const slaBlockedDivider = getByTestId('slaBlockedDivider');
-			const slaRunningDivider = getByTestId('slaRunningDivider');
+		it('Show dividers', () => {
+			const slaBlockedDivider = getByText('BLOCKED');
+			const slaRunningDivider = getByText('RUNNING');
 
-			expect(slaBlockedDivider).toHaveTextContent('BLOCKED');
-			expect(slaRunningDivider).toHaveTextContent('RUNNING');
+			expect(slaBlockedDivider).toBeTruthy();
+			expect(slaRunningDivider).toBeTruthy();
 		});
 
-		test('Show blocked items info correctly', () => {
-			const slaNames = getAllByTestId('slaName');
-			const slaStatus = getAllByTestId('slaStatus');
+		it('Show blocked items info correctly', () => {
+			const dangerIcon = container.querySelector(
+				'.lexicon-icon-exclamation-full'
+			);
+			const slaStatusBlocked = getByText('blocked');
 
-			expect(slaNames[0].children[0].children.length).toBe(2);
-			expect(slaStatus[0]).toHaveTextContent('blocked');
-			expect(slaStatus[0].classList).toContain('text-danger');
+			expect(dangerIcon).toBeTruthy();
+			expect(dangerIcon.classList).toContain('text-danger');
+			expect(slaStatusBlocked.classList).toContain('text-danger');
 		});
 	});
 });

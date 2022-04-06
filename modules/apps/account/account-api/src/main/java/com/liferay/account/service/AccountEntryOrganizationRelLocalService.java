@@ -59,11 +59,15 @@ public interface AccountEntryOrganizationRelLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link AccountEntryOrganizationRelLocalServiceUtil} to access the account entry organization rel local service. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryOrganizationRelLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.account.service.impl.AccountEntryOrganizationRelLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the account entry organization rel local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link AccountEntryOrganizationRelLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the account entry organization rel to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was added
@@ -99,6 +103,10 @@ public interface AccountEntryOrganizationRelLocalService
 	/**
 	 * Deletes the account entry organization rel from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was removed
 	 */
@@ -108,6 +116,10 @@ public interface AccountEntryOrganizationRelLocalService
 
 	/**
 	 * Deletes the account entry organization rel with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntryOrganizationRelId the primary key of the account entry organization rel
 	 * @return the account entry organization rel that was removed
@@ -126,6 +138,12 @@ public interface AccountEntryOrganizationRelLocalService
 			long accountEntryId, long[] organizationIds)
 		throws PortalException;
 
+	public void deleteAccountEntryOrganizationRelsByAccountEntryId(
+		long accountEntryId);
+
+	public void deleteAccountEntryOrganizationRelsByOrganizationId(
+		long organizationId);
+
 	/**
 	 * @throws PortalException
 	 */
@@ -135,6 +153,9 @@ public interface AccountEntryOrganizationRelLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -206,6 +227,10 @@ public interface AccountEntryOrganizationRelLocalService
 	public AccountEntryOrganizationRel fetchAccountEntryOrganizationRel(
 		long accountEntryOrganizationRelId);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountEntryOrganizationRel fetchAccountEntryOrganizationRel(
+		long accountEntryId, long organizationId);
+
 	/**
 	 * Returns the account entry organization rel with the primary key.
 	 *
@@ -216,6 +241,11 @@ public interface AccountEntryOrganizationRelLocalService
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public AccountEntryOrganizationRel getAccountEntryOrganizationRel(
 			long accountEntryOrganizationRelId)
+		throws PortalException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public AccountEntryOrganizationRel getAccountEntryOrganizationRel(
+			long accountEntryId, long organizationId)
 		throws PortalException;
 
 	/**
@@ -238,8 +268,21 @@ public interface AccountEntryOrganizationRelLocalService
 		long accountEntryId);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountEntryOrganizationRel> getAccountEntryOrganizationRels(
+		long accountEntryId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public List<AccountEntryOrganizationRel>
 		getAccountEntryOrganizationRelsByOrganizationId(long organizationId);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public List<AccountEntryOrganizationRel>
+		getAccountEntryOrganizationRelsByOrganizationId(
+			long organizationId, int start, int end);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int getAccountEntryOrganizationRelsByOrganizationIdCount(
+		long organizationId);
 
 	/**
 	 * Returns the number of account entry organization rels.
@@ -294,6 +337,10 @@ public interface AccountEntryOrganizationRelLocalService
 
 	/**
 	 * Updates the account entry organization rel in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was updated

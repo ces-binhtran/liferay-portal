@@ -110,7 +110,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 
 	@Override
 	public List<FileEntry> getAttachmentsFileEntries(
-			int start, int end, OrderByComparator<FileEntry> obc)
+			int start, int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		long attachmentsFolderId = getAttachmentsFolderId();
@@ -121,13 +121,13 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 
 		return PortletFileRepositoryUtil.getPortletFileEntries(
 			getGroupId(), attachmentsFolderId,
-			WorkflowConstants.STATUS_APPROVED, start, end, obc);
+			WorkflowConstants.STATUS_APPROVED, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getAttachmentsFileEntries(
 			String[] mimeTypes, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		long attachmentsFolderId = getAttachmentsFolderId();
@@ -138,7 +138,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 
 		return PortletFileRepositoryUtil.getPortletFileEntries(
 			getGroupId(), attachmentsFolderId, mimeTypes,
-			WorkflowConstants.STATUS_APPROVED, start, end, obc);
+			WorkflowConstants.STATUS_APPROVED, start, end, orderByComparator);
 	}
 
 	@Override
@@ -203,6 +203,9 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 			_attachmentsFolderId = folder.getFolderId();
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return _attachmentsFolderId;
@@ -215,7 +218,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 				getNodeId(), true, getTitle());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return Collections.emptyList();
 		}
@@ -264,7 +267,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 			return WikiNodeLocalServiceUtil.getNode(getNodeId());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return new WikiNodeImpl();
 		}
@@ -328,7 +331,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 				getGroupId(), getNodeId(), true, getTitle());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return Collections.emptyList();
 		}
@@ -345,7 +348,7 @@ public class WikiPageImpl extends WikiPageBaseImpl {
 				getGroupId(), getNodeId(), getParentTitle());
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			return null;
 		}

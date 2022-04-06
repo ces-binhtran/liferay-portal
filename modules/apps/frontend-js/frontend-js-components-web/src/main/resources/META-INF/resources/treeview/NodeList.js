@@ -22,6 +22,7 @@ export default function NodeList({
 	nodes,
 	onBlur,
 	onFocus,
+	onMouseDown,
 	role = 'group',
 	tabIndex = -1,
 }) {
@@ -47,14 +48,19 @@ export default function NodeList({
 					onFocus(event);
 				}
 			}}
+			onMouseDown={(event) => {
+				if (onMouseDown) {
+					onMouseDown(event);
+				}
+			}}
 			role={role}
 			tabIndex={tabIndex}
 		>
 			{nodes.map((node) => (
 				<NodeListItem
+					NodeComponent={NodeComponent}
 					key={node.id}
 					node={node}
-					NodeComponent={NodeComponent}
 				/>
 			))}
 		</div>
@@ -72,5 +78,6 @@ NodeList.propTypes = {
 	).isRequired,
 	onBlur: PropTypes.func,
 	onFocus: PropTypes.func,
+	onMouseDown: PropTypes.func,
 	tabIndex: PropTypes.number,
 };

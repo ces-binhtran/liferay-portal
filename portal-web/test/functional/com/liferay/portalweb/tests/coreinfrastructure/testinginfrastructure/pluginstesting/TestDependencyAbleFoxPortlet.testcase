@@ -3,25 +3,24 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Test Plugins";
 	property portlet.plugins.includes = "test-dependency-able-portlet,test-dependency-baker-portlet,test-dependency-charlie-portlet,test-dependency-dog-portlet";
+	property testray.main.component.name = "Test Plugins";
 
 	setUp {
 		User.firstLoginPG();
 	}
 
 	tearDown {
-		Page.tearDownCP();
+		PagesAdmin.tearDownCP();
 	}
 
 	@priority = "4"
 	test ViewDependencyAbleFox {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Dependency Page");
+		PagesAdmin.addPublicPage(pageName = "Test Dependency Page");
 
 		Navigator.gotoPage(pageName = "Test Dependency Page");
 

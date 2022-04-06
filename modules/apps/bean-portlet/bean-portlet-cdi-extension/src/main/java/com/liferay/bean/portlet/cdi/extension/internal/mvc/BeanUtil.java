@@ -34,7 +34,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.mvc.binding.BindingResult;
 
 /**
- * @author  Neil Griffin
+ * @author Neil Griffin
  */
 public class BeanUtil {
 
@@ -94,7 +94,7 @@ public class BeanUtil {
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return null;

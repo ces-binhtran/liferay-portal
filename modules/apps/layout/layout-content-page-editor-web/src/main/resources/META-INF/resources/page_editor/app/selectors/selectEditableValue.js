@@ -13,20 +13,22 @@
  */
 
 import {EDITABLE_FRAGMENT_ENTRY_PROCESSOR} from '../config/constants/editableFragmentEntryProcessor';
+import selectEditableValues from './selectEditableValues';
 
 export default function selectEditableValue(
-	state,
+	{fragmentEntryLinks},
 	fragmentEntryLinkId,
 	editableId,
 	processorType = EDITABLE_FRAGMENT_ENTRY_PROCESSOR
 ) {
-	const fragmentEntryLink = state.fragmentEntryLinks[fragmentEntryLinkId];
+	const editableValues = selectEditableValues(
+		{fragmentEntryLinks},
+		fragmentEntryLinkId
+	);
 
 	return (
-		(fragmentEntryLink &&
-			fragmentEntryLink.editableValues &&
-			fragmentEntryLink.editableValues[processorType] &&
-			fragmentEntryLink.editableValues[processorType][editableId]) ||
+		(editableValues[processorType] &&
+			editableValues[processorType][editableId]) ||
 		{}
 	);
 }

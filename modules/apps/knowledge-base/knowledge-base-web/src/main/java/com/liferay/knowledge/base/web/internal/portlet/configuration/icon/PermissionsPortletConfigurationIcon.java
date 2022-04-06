@@ -18,6 +18,8 @@ import com.liferay.knowledge.base.constants.KBConstants;
 import com.liferay.knowledge.base.constants.KBPortletKeys;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.portlet.LiferayWindowState;
 import com.liferay.portal.kernel.portlet.configuration.icon.BasePortletConfigurationIcon;
@@ -25,7 +27,7 @@ import com.liferay.portal.kernel.portlet.configuration.icon.PortletConfiguration
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.resource.PortletResourcePermission;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.AggregateResourceBundle;
 import com.liferay.portal.kernel.util.ResourceBundleUtil;
@@ -86,6 +88,9 @@ public class PermissionsPortletConfigurationIcon
 				themeDisplay.getRequest());
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
 		return url;
@@ -114,7 +119,7 @@ public class PermissionsPortletConfigurationIcon
 			if (!_portletResourcePermission.contains(
 					permissionChecker, themeDisplay.getScopeGroup(),
 					ActionKeys.PERMISSIONS) ||
-				!GroupPermissionUtil.contains(
+				!_groupPermission.contains(
 					permissionChecker, themeDisplay.getScopeGroup(),
 					ActionKeys.PERMISSIONS)) {
 
@@ -122,6 +127,10 @@ public class PermissionsPortletConfigurationIcon
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return false;
 		}
 
@@ -132,6 +141,12 @@ public class PermissionsPortletConfigurationIcon
 	public boolean isUseDialog() {
 		return true;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		PermissionsPortletConfigurationIcon.class);
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference(
 		target = "(resource.name=" + KBConstants.RESOURCE_NAME_ADMIN + ")"

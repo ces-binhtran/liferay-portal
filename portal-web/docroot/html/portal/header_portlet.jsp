@@ -27,10 +27,10 @@ try {
 	}
 }
 catch (PortletException pe) {
-	_log.error(pe, pe);
+	_log.error(pe);
 }
 catch (RuntimeException re) {
-	_log.error(re, re);
+	_log.error(re);
 }
 
 if ((invokerPortlet == null) || !invokerPortlet.isHeaderPortlet()) {
@@ -59,9 +59,7 @@ boolean modeHelp = layoutTypePortlet.hasModeHelpPortletId(portletId);
 boolean modePreview = layoutTypePortlet.hasModePreviewPortletId(portletId);
 boolean modePrint = layoutTypePortlet.hasModePrintPortletId(portletId);
 
-PortletPreferencesIds portletPreferencesIds = PortletPreferencesFactoryUtil.getPortletPreferencesIds(request, portletId);
-
-PortletPreferences portletPreferences = PortletPreferencesLocalServiceUtil.getStrictPreferences(portletPreferencesIds);
+PortletPreferences portletPreferences = PortletPreferencesLocalServiceUtil.getStrictPreferences(PortletPreferencesFactoryUtil.getPortletPreferencesIds(request, portletId));
 
 PortletPreferences portletSetup = themeDisplay.getStrictLayoutPortletSetup(layout, portletId);
 
@@ -142,9 +140,11 @@ BufferCacheServletResponse bufferCacheServletResponse = new BufferCacheServletRe
 LiferayHeaderRequest liferayHeaderRequest = HeaderRequestFactory.create(request, portlet, invokerPortlet, portletCtx, windowState, portletMode, portletPreferences, plid);
 
 PortletRequest portletRequest = liferayHeaderRequest;
+
 LiferayHeaderResponse liferayHeaderResponse = HeaderResponseFactory.create(liferayHeaderRequest, bufferCacheServletResponse);
 
 liferayHeaderRequest.defineObjects(portletConfig, liferayHeaderResponse);
+
 String responseContentType = liferayHeaderRequest.getResponseContentType();
 
 String portletResource = ParamUtil.getString(request, "portletResource");
@@ -246,5 +246,5 @@ liferayHeaderRequest.cleanUp();
 %>
 
 <%!
-private static Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.header_portlet_jsp");
+private static final Log _log = LogFactoryUtil.getLog("portal_web.docroot.html.portal.header_portlet_jsp");
 %>

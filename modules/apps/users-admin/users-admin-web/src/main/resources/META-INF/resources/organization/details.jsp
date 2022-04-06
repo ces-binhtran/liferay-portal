@@ -88,7 +88,7 @@ if (organization != null) {
 
 		<liferay-ui:error exception="<%= NoSuchCountryException.class %>" message="please-select-a-country" />
 
-		<div class='<%= OrganizationLocalServiceUtil.isCountryEnabled(type) ? StringPool.BLANK : "hide" %>' id="<portlet:namespace />countryDiv">
+		<div class="<%= OrganizationLocalServiceUtil.isCountryEnabled(type) ? StringPool.BLANK : "hide" %>" id="<portlet:namespace />countryDiv">
 			<aui:select label="country" name="countryId" />
 
 			<aui:select label="region" name="regionId" />
@@ -100,21 +100,13 @@ if (organization != null) {
 	>
 		<div align="middle">
 			<c:if test="<%= organization != null %>">
-
-				<%
-				long logoId = organization.getLogoId();
-
-				UserFileUploadsConfiguration userFileUploadsConfiguration = (UserFileUploadsConfiguration)request.getAttribute(UserFileUploadsConfiguration.class.getName());
-				%>
-
 				<label class="control-label"></label>
 
 				<liferay-ui:logo-selector
-					currentLogoURL='<%= themeDisplay.getPathImage() + "/organization_logo?img_id=" + logoId + "&t=" + WebServerServletTokenUtil.getToken(logoId) %>'
-					defaultLogo="<%= logoId == 0 %>"
+					currentLogoURL="<%= organization.getLogoURL() %>"
+					defaultLogo="<%= organization.getLogoId() == 0 %>"
 					defaultLogoURL='<%= themeDisplay.getPathImage() + "/organization_logo?img_id=0" %>'
 					logoDisplaySelector=".organization-logo"
-					maxFileSize="<%= userFileUploadsConfiguration.imageMaxSize() %>"
 					tempImageFileName="<%= String.valueOf(groupId) %>"
 				/>
 			</c:if>
@@ -148,7 +140,7 @@ if (organization != null) {
 		var typeSelect = document.getElementById('<portlet:namespace />type');
 
 		if (typeSelect) {
-			typeSelect.addEventListener('change', function (event) {
+			typeSelect.addEventListener('change', (event) => {
 				var countryDiv = document.getElementById(
 					'<portlet:namespace />countryDiv'
 				);

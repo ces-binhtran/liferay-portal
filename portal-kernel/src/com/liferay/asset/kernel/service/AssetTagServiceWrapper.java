@@ -27,6 +27,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class AssetTagServiceWrapper
 	implements AssetTagService, ServiceWrapper<AssetTagService> {
 
+	public AssetTagServiceWrapper() {
+		this(null);
+	}
+
 	public AssetTagServiceWrapper(AssetTagService assetTagService) {
 		_assetTagService = assetTagService;
 	}
@@ -67,9 +71,11 @@ public class AssetTagServiceWrapper
 	@Override
 	public java.util.List<AssetTag> getGroupTags(
 		long groupId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetTag> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetTag>
+			orderByComparator) {
 
-		return _assetTagService.getGroupTags(groupId, start, end, obc);
+		return _assetTagService.getGroupTags(
+			groupId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -111,10 +117,11 @@ public class AssetTagServiceWrapper
 	@Override
 	public java.util.List<AssetTag> getTags(
 		long groupId, long classNameId, String name, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetTag> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetTag>
+			orderByComparator) {
 
 		return _assetTagService.getTags(
-			groupId, classNameId, name, start, end, obc);
+			groupId, classNameId, name, start, end, orderByComparator);
 	}
 
 	@Override
@@ -127,9 +134,11 @@ public class AssetTagServiceWrapper
 	@Override
 	public java.util.List<AssetTag> getTags(
 		long groupId, String name, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetTag> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetTag>
+			orderByComparator) {
 
-		return _assetTagService.getTags(groupId, name, start, end, obc);
+		return _assetTagService.getTags(
+			groupId, name, start, end, orderByComparator);
 	}
 
 	@Override
@@ -142,9 +151,11 @@ public class AssetTagServiceWrapper
 	@Override
 	public java.util.List<AssetTag> getTags(
 		long[] groupIds, String name, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetTag> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetTag>
+			orderByComparator) {
 
-		return _assetTagService.getTags(groupIds, name, start, end, obc);
+		return _assetTagService.getTags(
+			groupIds, name, start, end, orderByComparator);
 	}
 
 	@Override
@@ -201,6 +212,20 @@ public class AssetTagServiceWrapper
 		long[] groupIds, String name, int start, int end) {
 
 		return _assetTagService.search(groupIds, name, start, end);
+	}
+
+	@Override
+	public void subscribeTag(long userId, long groupId, long tagId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_assetTagService.subscribeTag(userId, groupId, tagId);
+	}
+
+	@Override
+	public void unsubscribeTag(long userId, long tagId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_assetTagService.unsubscribeTag(userId, tagId);
 	}
 
 	@Override

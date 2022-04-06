@@ -23,19 +23,20 @@ import com.liferay.dynamic.data.mapping.io.DDMFormFieldTypesSerializerSerializeR
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.json.JSONFactoryImpl;
 import com.liferay.portal.kernel.json.JSONArray;
-import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Matchers;
@@ -47,12 +48,17 @@ import org.skyscreamer.jsonassert.JSONAssert;
  */
 public class DDMFormFieldTypesJSONSerializerTest extends BaseDDMTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		setUpDDMFormFieldTypesJSONSerializer();
+		_setUpDDMFormFieldTypesJSONSerializer();
 	}
 
 	@Test
@@ -68,37 +74,13 @@ public class DDMFormFieldTypesJSONSerializerTest extends BaseDDMTestCase {
 	public void testSerializationWithNonemptyParameterList() throws Exception {
 		List<DDMFormFieldType> ddmFormFieldTypes = new ArrayList<>();
 
-		DDMFormFieldType ddmFormFieldType = getMockedDDMFormFieldType();
+		DDMFormFieldType ddmFormFieldType = _getMockedDDMFormFieldType();
 
 		ddmFormFieldTypes.add(ddmFormFieldType);
 
 		String actualJSON = serialize(ddmFormFieldTypes);
 
-		JSONAssert.assertEquals(createExpectedJSON(), actualJSON, false);
-	}
-
-	protected String createExpectedJSON() {
-		JSONObject jsonObject = JSONUtil.put(
-			"icon", "my-icon"
-		).put(
-			"javaScriptClass", "myJavaScriptClass"
-		).put(
-			"javaScriptModule", "myJavaScriptModule"
-		).put(
-			"name", "Text"
-		);
-
-		JSONArray jsonArray = JSONUtil.put(jsonObject);
-
-		return jsonArray.toString();
-	}
-
-	protected DDMFormFieldType getMockedDDMFormFieldType() {
-		DDMFormFieldType ddmFormFieldType = mock(DDMFormFieldType.class);
-
-		whenDDMFormFieldTypeGetName(ddmFormFieldType, "Text");
-
-		return ddmFormFieldType;
+		JSONAssert.assertEquals(_createExpectedJSON(), actualJSON, false);
 	}
 
 	protected DDMFormFieldTypeServicesTracker
@@ -117,19 +99,17 @@ public class DDMFormFieldTypesJSONSerializerTest extends BaseDDMTestCase {
 			ddmFormFieldRenderer
 		);
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"ddm.form.field.type.icon", "my-icon"
-		).put(
-			"ddm.form.field.type.js.class.name", "myJavaScriptClass"
-		).put(
-			"ddm.form.field.type.js.module", "myJavaScriptModule"
-		).build();
-
 		when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
 				Matchers.anyString())
 		).thenReturn(
-			properties
+			HashMapBuilder.<String, Object>put(
+				"ddm.form.field.type.icon", "my-icon"
+			).put(
+				"ddm.form.field.type.js.class.name", "myJavaScriptClass"
+			).put(
+				"ddm.form.field.type.js.module", "myJavaScriptModule"
+			).build()
 		);
 
 		return ddmFormFieldTypeServicesTracker;
@@ -147,7 +127,30 @@ public class DDMFormFieldTypesJSONSerializerTest extends BaseDDMTestCase {
 		return ddmFormFieldTypesSerializerSerializeResponse.getContent();
 	}
 
-	protected void setUpDDMFormFieldTypesJSONSerializer() throws Exception {
+	private String _createExpectedJSON() {
+		JSONArray jsonArray = JSONUtil.put(
+			JSONUtil.put(
+				"icon", "my-icon"
+			).put(
+				"javaScriptClass", "myJavaScriptClass"
+			).put(
+				"javaScriptModule", "myJavaScriptModule"
+			).put(
+				"name", "Text"
+			));
+
+		return jsonArray.toString();
+	}
+
+	private DDMFormFieldType _getMockedDDMFormFieldType() {
+		DDMFormFieldType ddmFormFieldType = mock(DDMFormFieldType.class);
+
+		_whenDDMFormFieldTypeGetName(ddmFormFieldType, "Text");
+
+		return ddmFormFieldType;
+	}
+
+	private void _setUpDDMFormFieldTypesJSONSerializer() throws Exception {
 		Field field = ReflectionUtil.getDeclaredField(
 			DDMFormFieldTypesJSONSerializer.class,
 			"_ddmFormFieldTypeServicesTracker");
@@ -162,7 +165,7 @@ public class DDMFormFieldTypesJSONSerializerTest extends BaseDDMTestCase {
 		field.set(_ddmFormFieldTypesSerializer, new JSONFactoryImpl());
 	}
 
-	protected void whenDDMFormFieldTypeGetName(
+	private void _whenDDMFormFieldTypeGetName(
 		DDMFormFieldType ddmFormFieldType, String returnName) {
 
 		when(

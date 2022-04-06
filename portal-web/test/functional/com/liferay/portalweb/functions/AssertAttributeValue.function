@@ -6,9 +6,7 @@ definition {
 
 		selenium.waitForElementPresent();
 
-		selenium.waitForVisible();
-
-		selenium.assertAttributeValue("${locator1}", "${locator2}", "${value1}");
+		selenium.assertAttributeValue("${attribute1}", "${locator1}", "${value1}");
 
 		selenium.assertJavaScriptErrors();
 

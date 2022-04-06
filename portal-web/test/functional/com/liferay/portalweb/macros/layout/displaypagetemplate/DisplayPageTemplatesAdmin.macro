@@ -2,21 +2,17 @@ definition {
 
 	@summary = "Select a content type and subtype when adding a display page. These locators should not be needed to be reused."
 	macro _selectMappingTypes {
-		if (!(isSet(contentType))) {
-			var contentType = "Web Content Article";
+		if (isSet(contentType)) {
+			Select(
+				locator1 = "//div[contains(.,'Content Type')]/select",
+				value1 = "${contentType}");
 		}
 
-		if (!(isSet(subType))) {
-			var subType = "Basic Web Content";
+		if (isSet(subType)) {
+			Select(
+				locator1 = "//div[contains(.,'Subtype')]/select",
+				value1 = "${subType}");
 		}
-
-		Select(
-			locator1 = "//div[contains(.,'Content Type')]/select",
-			value1 = "${contentType}");
-
-		Select(
-			locator1 = "//div[contains(.,'Subtype')]/select",
-			value1 = "${subType}");
 	}
 
 	macro addDisplayPage {
@@ -47,7 +43,7 @@ definition {
 	}
 
 	macro gotoDisplayPage {
-		LexiconCard.clickCardTitle(card = "${displayPageName}");
+		LexiconCard.clickCardTitleLink(card = "${displayPageName}");
 
 		PageEditor.assertFragmentSidebarLoaded();
 	}
@@ -65,7 +61,7 @@ definition {
 
 		MenuItem.click(menuItem = "Import");
 
-		SelectFrame(locator1 = "IFrame#DIALOG");
+		SelectFrame(locator1 = "IFrame#MODAL_BODY");
 
 		var displayPageTemplateZipFileName = TestCase.getDownloadedTempFileName(fileNamePattern = "display-page-template-*.zip");
 
@@ -73,7 +69,7 @@ definition {
 			locator1 = "TextInput#FILE",
 			value1 = "${displayPageTemplateZipFileName}");
 
-		Click(locator1 = "Button#IMPORT");
+		Button.clickImport();
 
 		Alert.viewSuccessMessage();
 
@@ -83,15 +79,15 @@ definition {
 	macro markDisplayPageAsDefault {
 		DisplayPageTemplatesAdmin.gotoDisplayPageEllipsisItem(
 			displayPageName = "${displayPageName}",
-			item = "Mark As Default");
+			item = "Mark as Default");
 
-		AssertVisible(
-			key_card = "${displayPageName}",
-			locator1 = "LexiconCard#CARD_STICKER");
+		LexiconCard.viewCardSticker(
+			card = "${displayPageName}",
+			icon = "check-circle");
 	}
 
 	macro openDisplayPagesAdmin {
-		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&amp;_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=display-page-templates");
+		Navigator.openWithAppendToBaseURL(urlAppend = "group/${siteURLKey}/~/control_panel/manage?p_p_id=com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet&_com_liferay_layout_page_template_admin_web_portlet_LayoutPageTemplatesPortlet_tabs1=display-page-templates");
 	}
 
 	macro renameDisplayPage {

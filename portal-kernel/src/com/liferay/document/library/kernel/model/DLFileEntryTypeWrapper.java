@@ -55,9 +55,11 @@ public class DLFileEntryTypeWrapper
 		attributes.put("userName", getUserName());
 		attributes.put("createDate", getCreateDate());
 		attributes.put("modifiedDate", getModifiedDate());
+		attributes.put("dataDefinitionId", getDataDefinitionId());
 		attributes.put("fileEntryTypeKey", getFileEntryTypeKey());
 		attributes.put("name", getName());
 		attributes.put("description", getDescription());
+		attributes.put("scope", getScope());
 		attributes.put("lastPublishDate", getLastPublishDate());
 
 		return attributes;
@@ -125,6 +127,12 @@ public class DLFileEntryTypeWrapper
 			setModifiedDate(modifiedDate);
 		}
 
+		Long dataDefinitionId = (Long)attributes.get("dataDefinitionId");
+
+		if (dataDefinitionId != null) {
+			setDataDefinitionId(dataDefinitionId);
+		}
+
 		String fileEntryTypeKey = (String)attributes.get("fileEntryTypeKey");
 
 		if (fileEntryTypeKey != null) {
@@ -143,11 +151,22 @@ public class DLFileEntryTypeWrapper
 			setDescription(description);
 		}
 
+		Integer scope = (Integer)attributes.get("scope");
+
+		if (scope != null) {
+			setScope(scope);
+		}
+
 		Date lastPublishDate = (Date)attributes.get("lastPublishDate");
 
 		if (lastPublishDate != null) {
 			setLastPublishDate(lastPublishDate);
 		}
+	}
+
+	@Override
+	public DLFileEntryType cloneWithOriginalValues() {
+		return wrap(model.cloneWithOriginalValues());
 	}
 
 	@Override
@@ -183,6 +202,16 @@ public class DLFileEntryTypeWrapper
 	@Override
 	public long getCtCollectionId() {
 		return model.getCtCollectionId();
+	}
+
+	/**
+	 * Returns the data definition ID of this document library file entry type.
+	 *
+	 * @return the data definition ID of this document library file entry type
+	 */
+	@Override
+	public long getDataDefinitionId() {
+		return model.getDataDefinitionId();
 	}
 
 	@Override
@@ -419,6 +448,16 @@ public class DLFileEntryTypeWrapper
 		return model.getPrimaryKey();
 	}
 
+	/**
+	 * Returns the scope of this document library file entry type.
+	 *
+	 * @return the scope of this document library file entry type
+	 */
+	@Override
+	public int getScope() {
+		return model.getScope();
+	}
+
 	@Override
 	public String getUnambiguousName(
 			java.util.List<DLFileEntryType> dlFileEntryTypes, long groupId,
@@ -521,6 +560,16 @@ public class DLFileEntryTypeWrapper
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
 		model.setCtCollectionId(ctCollectionId);
+	}
+
+	/**
+	 * Sets the data definition ID of this document library file entry type.
+	 *
+	 * @param dataDefinitionId the data definition ID of this document library file entry type
+	 */
+	@Override
+	public void setDataDefinitionId(long dataDefinitionId) {
+		model.setDataDefinitionId(dataDefinitionId);
 	}
 
 	/**
@@ -721,6 +770,16 @@ public class DLFileEntryTypeWrapper
 	@Override
 	public void setPrimaryKey(long primaryKey) {
 		model.setPrimaryKey(primaryKey);
+	}
+
+	/**
+	 * Sets the scope of this document library file entry type.
+	 *
+	 * @param scope the scope of this document library file entry type
+	 */
+	@Override
+	public void setScope(int scope) {
+		model.setScope(scope);
 	}
 
 	/**

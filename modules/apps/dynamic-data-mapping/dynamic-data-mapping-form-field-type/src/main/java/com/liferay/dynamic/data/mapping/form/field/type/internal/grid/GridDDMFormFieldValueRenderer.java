@@ -15,6 +15,7 @@
 package com.liferay.dynamic.data.mapping.form.field.type.internal.grid;
 
 import com.liferay.dynamic.data.mapping.form.field.type.DDMFormFieldValueRenderer;
+import com.liferay.dynamic.data.mapping.form.field.type.constants.DDMFormFieldTypeConstants;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMFormFieldOptions;
 import com.liferay.dynamic.data.mapping.model.LocalizedValue;
@@ -22,6 +23,7 @@ import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.util.HtmlUtil;
 
 import java.util.Locale;
 import java.util.Set;
@@ -33,7 +35,8 @@ import org.osgi.service.component.annotations.Reference;
  * @author Pedro Queiroz
  */
 @Component(
-	immediate = true, property = "ddm.form.field.type.name=grid",
+	immediate = true,
+	property = "ddm.form.field.type.name=" + DDMFormFieldTypeConstants.GRID,
 	service = DDMFormFieldValueRenderer.class
 )
 public class GridDDMFormFieldValueRenderer
@@ -95,7 +98,7 @@ public class GridDDMFormFieldValueRenderer
 		LocalizedValue label, String defaultLabel, Locale locale) {
 
 		if (label != null) {
-			return label.getString(locale);
+			return HtmlUtil.escape(label.getString(locale));
 		}
 
 		return defaultLabel;

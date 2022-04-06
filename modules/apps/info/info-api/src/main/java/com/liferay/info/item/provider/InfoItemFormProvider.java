@@ -14,23 +14,15 @@
 
 package com.liferay.info.item.provider;
 
-import com.liferay.info.field.InfoFieldValue;
-import com.liferay.info.field.InfoFormValues;
+import com.liferay.info.exception.NoSuchClassTypeException;
+import com.liferay.info.exception.NoSuchFormVariationException;
 import com.liferay.info.form.InfoForm;
-import com.liferay.info.item.NoSuchClassTypeException;
+import com.liferay.portal.kernel.util.GetterUtil;
 
 /**
  * @author Jorge Ferrer
  */
 public interface InfoItemFormProvider<T> {
-
-	public default InfoFieldValue<Object> getInfoFieldValue(
-		T t, String fieldName) {
-
-		InfoFormValues infoFormValues = getInfoFormValues(t);
-
-		return infoFormValues.getInfoFieldValue(fieldName);
-	}
 
 	public InfoForm getInfoForm();
 
@@ -40,10 +32,33 @@ public interface InfoItemFormProvider<T> {
 		return getInfoForm();
 	}
 
-	public default InfoForm getInfoForm(T t) {
+	public default InfoForm getInfoForm(String formVariationKey)
+		throws NoSuchFormVariationException {
+
+		long itemClassTypeId = GetterUtil.getLong(formVariationKey);
+
+		if (itemClassTypeId > 0) {
+			try {
+				return getInfoForm(itemClassTypeId);
+			}
+			catch (NoSuchClassTypeException noSuchClassTypeException) {
+				throw new NoSuchFormVariationException(
+					String.valueOf(noSuchClassTypeException.getClassTypeId()),
+					noSuchClassTypeException.getCause());
+			}
+		}
+
 		return getInfoForm();
 	}
 
-	public InfoFormValues getInfoFormValues(T t);
+	public default InfoForm getInfoForm(String formVariationKey, long groupId)
+		throws NoSuchFormVariationException {
+
+		return getInfoForm(formVariationKey);
+	}
+
+	public default InfoForm getInfoForm(T t) {
+		return getInfoForm();
+	}
 
 }

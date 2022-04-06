@@ -15,6 +15,7 @@
 package com.liferay.headless.delivery.client.serdes.v1_0;
 
 import com.liferay.headless.delivery.client.dto.v1_0.FragmentField;
+import com.liferay.headless.delivery.client.dto.v1_0.FragmentViewport;
 import com.liferay.headless.delivery.client.dto.v1_0.PageFragmentInstanceDefinition;
 import com.liferay.headless.delivery.client.dto.v1_0.WidgetInstance;
 import com.liferay.headless.delivery.client.json.BaseJSONParser;
@@ -112,6 +113,58 @@ public class PageFragmentInstanceDefinitionSerDes {
 			sb.append("]");
 		}
 
+		if (pageFragmentInstanceDefinition.getFragmentStyle() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentStyle\": ");
+
+			sb.append(
+				String.valueOf(
+					pageFragmentInstanceDefinition.getFragmentStyle()));
+		}
+
+		if (pageFragmentInstanceDefinition.getFragmentViewports() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"fragmentViewports\": ");
+
+			sb.append("[");
+
+			for (int i = 0;
+				 i <
+					 pageFragmentInstanceDefinition.
+						 getFragmentViewports().length;
+				 i++) {
+
+				sb.append(
+					String.valueOf(
+						pageFragmentInstanceDefinition.getFragmentViewports()
+							[i]));
+
+				if ((i + 1) < pageFragmentInstanceDefinition.
+						getFragmentViewports().length) {
+
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
+		if (pageFragmentInstanceDefinition.getIndexed() != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"indexed\": ");
+
+			sb.append(pageFragmentInstanceDefinition.getIndexed());
+		}
+
 		if (pageFragmentInstanceDefinition.getWidgetInstances() != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -191,6 +244,35 @@ public class PageFragmentInstanceDefinitionSerDes {
 					pageFragmentInstanceDefinition.getFragmentFields()));
 		}
 
+		if (pageFragmentInstanceDefinition.getFragmentStyle() == null) {
+			map.put("fragmentStyle", null);
+		}
+		else {
+			map.put(
+				"fragmentStyle",
+				String.valueOf(
+					pageFragmentInstanceDefinition.getFragmentStyle()));
+		}
+
+		if (pageFragmentInstanceDefinition.getFragmentViewports() == null) {
+			map.put("fragmentViewports", null);
+		}
+		else {
+			map.put(
+				"fragmentViewports",
+				String.valueOf(
+					pageFragmentInstanceDefinition.getFragmentViewports()));
+		}
+
+		if (pageFragmentInstanceDefinition.getIndexed() == null) {
+			map.put("indexed", null);
+		}
+		else {
+			map.put(
+				"indexed",
+				String.valueOf(pageFragmentInstanceDefinition.getIndexed()));
+		}
+
 		if (pageFragmentInstanceDefinition.getWidgetInstances() == null) {
 			map.put("widgetInstances", null);
 		}
@@ -247,6 +329,32 @@ public class PageFragmentInstanceDefinitionSerDes {
 						));
 				}
 			}
+			else if (Objects.equals(jsonParserFieldName, "fragmentStyle")) {
+				if (jsonParserFieldValue != null) {
+					pageFragmentInstanceDefinition.setFragmentStyle(
+						FragmentStyleSerDes.toDTO(
+							(String)jsonParserFieldValue));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "fragmentViewports")) {
+				if (jsonParserFieldValue != null) {
+					pageFragmentInstanceDefinition.setFragmentViewports(
+						Stream.of(
+							toStrings((Object[])jsonParserFieldValue)
+						).map(
+							object -> FragmentViewportSerDes.toDTO(
+								(String)object)
+						).toArray(
+							size -> new FragmentViewport[size]
+						));
+				}
+			}
+			else if (Objects.equals(jsonParserFieldName, "indexed")) {
+				if (jsonParserFieldValue != null) {
+					pageFragmentInstanceDefinition.setIndexed(
+						(Boolean)jsonParserFieldValue);
+				}
+			}
 			else if (Objects.equals(jsonParserFieldName, "widgetInstances")) {
 				if (jsonParserFieldValue != null) {
 					pageFragmentInstanceDefinition.setWidgetInstances(
@@ -258,10 +366,6 @@ public class PageFragmentInstanceDefinitionSerDes {
 							size -> new WidgetInstance[size]
 						));
 				}
-			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
 			}
 		}
 
@@ -291,7 +395,7 @@ public class PageFragmentInstanceDefinitionSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -327,7 +431,7 @@ public class PageFragmentInstanceDefinitionSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

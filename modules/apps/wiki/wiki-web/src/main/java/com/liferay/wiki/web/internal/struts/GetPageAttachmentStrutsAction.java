@@ -16,14 +16,12 @@ package com.liferay.wiki.web.internal.struts;
 
 import com.liferay.document.library.kernel.exception.NoSuchFileException;
 import com.liferay.petra.string.StringPool;
-import com.liferay.portal.kernel.flash.FlashMagicBytesUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
 import com.liferay.portal.kernel.struts.StrutsAction;
-import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
@@ -32,8 +30,6 @@ import com.liferay.wiki.exception.NoSuchPageException;
 import com.liferay.wiki.model.WikiPage;
 import com.liferay.wiki.service.WikiPageService;
 import com.liferay.wiki.web.internal.importer.MediaWikiImporter;
-
-import java.io.InputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -77,7 +73,7 @@ public class GetPageAttachmentStrutsAction implements StrutsAction {
 				httpServletRequest, "status",
 				WorkflowConstants.STATUS_APPROVED);
 
-			getFile(
+			_getFile(
 				nodeId, title, fileName, status, httpServletRequest,
 				httpServletResponse);
 
@@ -88,7 +84,7 @@ public class GetPageAttachmentStrutsAction implements StrutsAction {
 				exception instanceof NoSuchPageException) {
 
 				if (_log.isWarnEnabled()) {
-					_log.warn(exception, exception);
+					_log.warn(exception);
 				}
 			}
 			else {
@@ -100,7 +96,12 @@ public class GetPageAttachmentStrutsAction implements StrutsAction {
 		}
 	}
 
-	protected void getFile(
+	@Reference(unbind = "-")
+	protected void setWikiPageService(WikiPageService wikiPageService) {
+		_wikiPageService = wikiPageService;
+	}
+
+	private void _getFile(
 			long nodeId, String title, String fileName, int status,
 			HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse)
@@ -121,25 +122,10 @@ public class GetPageAttachmentStrutsAction implements StrutsAction {
 			fileName = _trashHelper.getOriginalTitle(fileEntry.getTitle());
 		}
 
-		InputStream is = fileEntry.getContentStream();
-
-		FlashMagicBytesUtil.Result flashMagicBytesUtilResult =
-			FlashMagicBytesUtil.check(is);
-
-		if (flashMagicBytesUtilResult.isFlash()) {
-			fileName = FileUtil.stripExtension(fileName) + ".swf";
-		}
-
-		is = flashMagicBytesUtilResult.getInputStream();
-
 		ServletResponseUtil.sendFile(
-			httpServletRequest, httpServletResponse, fileName, is,
-			fileEntry.getSize(), fileEntry.getMimeType());
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageService(WikiPageService wikiPageService) {
-		_wikiPageService = wikiPageService;
+			httpServletRequest, httpServletResponse, fileName,
+			fileEntry.getContentStream(), fileEntry.getSize(),
+			fileEntry.getMimeType());
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

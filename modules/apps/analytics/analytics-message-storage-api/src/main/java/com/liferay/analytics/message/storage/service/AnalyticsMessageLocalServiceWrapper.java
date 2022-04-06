@@ -27,6 +27,10 @@ public class AnalyticsMessageLocalServiceWrapper
 	implements AnalyticsMessageLocalService,
 			   ServiceWrapper<AnalyticsMessageLocalService> {
 
+	public AnalyticsMessageLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AnalyticsMessageLocalServiceWrapper(
 		AnalyticsMessageLocalService analyticsMessageLocalService) {
 
@@ -35,6 +39,10 @@ public class AnalyticsMessageLocalServiceWrapper
 
 	/**
 	 * Adds the analytics message to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnalyticsMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param analyticsMessage the analytics message
 	 * @return the analytics message that was added
@@ -87,6 +95,10 @@ public class AnalyticsMessageLocalServiceWrapper
 	/**
 	 * Deletes the analytics message from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnalyticsMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param analyticsMessage the analytics message
 	 * @return the analytics message that was removed
 	 */
@@ -102,6 +114,10 @@ public class AnalyticsMessageLocalServiceWrapper
 
 	/**
 	 * Deletes the analytics message with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnalyticsMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param analyticsMessageId the primary key of the analytics message
 	 * @return the analytics message that was removed
@@ -146,6 +162,13 @@ public class AnalyticsMessageLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _analyticsMessageLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _analyticsMessageLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -359,6 +382,10 @@ public class AnalyticsMessageLocalServiceWrapper
 
 	/**
 	 * Updates the analytics message in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnalyticsMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param analyticsMessage the analytics message
 	 * @return the analytics message that was updated

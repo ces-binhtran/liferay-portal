@@ -139,6 +139,14 @@ public class MavenExecutor extends ExternalResource {
 		return Paths.get(dirName);
 	}
 
+	public String getNexusPrivatePassword() {
+		return System.getProperty("repository.private.password");
+	}
+
+	public String getNexusPrivateUserName() {
+		return System.getProperty("repository.private.username");
+	}
+
 	public String getRepositoryUrl() {
 		return System.getProperty("repository.url");
 	}
@@ -271,13 +279,34 @@ public class MavenExecutor extends ExternalResource {
 				"<proxies>[\\s\\S]+<\\/proxies>", "");
 		}
 
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$LIFERAY_NEXUS_PROFILE_ID$]",
+			_LIFERAY_NEXUS_PROFILE_ID);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$XANADU_NEXUS_PROFILE_ID$]",
+			_XANADU_NEXUS_PROFILE_ID);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$LIFERAY_NEXUS_REPO_ID$]", _LIFERAY_NEXUS_REPO_ID);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$XANADU_NEXUS_REPO_ID$]", _XANADU_NEXUS_REPO_ID);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$LIFERAY_NEXUS_REPO_URL$]", _LIFERAY_NEXUS_REPO_URL);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$XANADU_NEXUS_REPO_URL$]", _XANADU_NEXUS_REPO_URL);
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$NEXUS_PRIVATE_USERNAME$]",
+			getNexusPrivateUserName());
+		settingsXml = _replaceSettingsXmlElement(
+			settingsXml, "[$NEXUS_PRIVATE_PASSWORD$]",
+			getNexusPrivatePassword());
+
 		Path settingsXmlPath = _mavenHomeDirPath.resolve("conf/settings.xml");
 
 		Files.write(
 			settingsXmlPath, settingsXml.getBytes(StandardCharsets.UTF_8));
 	}
 
-	private static void _append(StringBuilder sb, InputStream inputStream)
+	private void _append(StringBuilder sb, InputStream inputStream)
 		throws Exception {
 
 		try (BufferedReader bufferedReader = new BufferedReader(
@@ -295,7 +324,16 @@ public class MavenExecutor extends ExternalResource {
 		}
 	}
 
-	private static boolean _isWindows() {
+	private Path _checkMavenHomeDirPath() {
+		if (_mavenHomeDirPath == null) {
+			throw new IllegalStateException(
+				"The Maven home directory has not yet been created");
+		}
+
+		return _mavenHomeDirPath;
+	}
+
+	private boolean _isWindows() {
 		if (File.pathSeparatorChar == ';') {
 			return true;
 		}
@@ -303,7 +341,7 @@ public class MavenExecutor extends ExternalResource {
 		return false;
 	}
 
-	private static String _replaceSettingsXmlElement(
+	private String _replaceSettingsXmlElement(
 		String settingsXml, String placeholder, String value) {
 
 		if (Validator.isNotNull(value)) {
@@ -317,14 +355,24 @@ public class MavenExecutor extends ExternalResource {
 		return settingsXml;
 	}
 
-	private Path _checkMavenHomeDirPath() {
-		if (_mavenHomeDirPath == null) {
-			throw new IllegalStateException(
-				"The Maven home directory has not yet been created");
-		}
+	private static final String _LIFERAY_NEXUS_PROFILE_ID = "liferay";
 
-		return _mavenHomeDirPath;
-	}
+	private static final String _LIFERAY_NEXUS_REPO_ID =
+		_LIFERAY_NEXUS_PROFILE_ID + "Repo";
+
+	private static final String _LIFERAY_NEXUS_REPO_URL =
+		MavenExecutor._LIFERAY_NEXUS_URL + "public";
+
+	private static final String _LIFERAY_NEXUS_URL =
+		"https://repository.liferay.com/nexus/content/repositories/";
+
+	private static final String _XANADU_NEXUS_PROFILE_ID = "xanadu";
+
+	private static final String _XANADU_NEXUS_REPO_ID =
+		_XANADU_NEXUS_PROFILE_ID + "Repo";
+
+	private static final String _XANADU_NEXUS_REPO_URL =
+		_LIFERAY_NEXUS_URL + _XANADU_NEXUS_PROFILE_ID;
 
 	private Path _mavenHomeDirPath;
 

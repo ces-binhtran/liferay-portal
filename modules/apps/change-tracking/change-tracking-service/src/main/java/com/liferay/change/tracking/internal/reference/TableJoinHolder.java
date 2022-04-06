@@ -15,8 +15,10 @@
 package com.liferay.change.tracking.internal.reference;
 
 import com.liferay.petra.sql.dsl.Column;
+import com.liferay.petra.sql.dsl.expression.Predicate;
 import com.liferay.petra.sql.dsl.query.FromStep;
 import com.liferay.petra.sql.dsl.query.JoinStep;
+import com.liferay.petra.sql.dsl.query.WhereStep;
 import com.liferay.petra.string.StringBundler;
 
 import java.util.function.Function;
@@ -28,18 +30,22 @@ public class TableJoinHolder {
 
 	public static TableJoinHolder reverse(TableJoinHolder tableJoinHolder) {
 		return new TableJoinHolder(
-			tableJoinHolder.getChildPKColumn(),
 			tableJoinHolder.getParentPKColumn(),
-			tableJoinHolder.getJoinFunction());
+			tableJoinHolder.getJoinFunction(),
+			tableJoinHolder.getMissingRequirementWherePredicate(),
+			tableJoinHolder.getMissingRequirementWhereStep(),
+			tableJoinHolder.getChildPKColumn(), !tableJoinHolder.isReversed());
 	}
 
 	public TableJoinHolder(
-		Column<?, Long> parentPKColumn, Column<?, Long> childPKColumn,
-		Function<FromStep, JoinStep> joinFunction) {
+		Column<?, Long> childPKColumn,
+		Function<FromStep, JoinStep> joinFunction,
+		Predicate missingRequirementWherePredicate,
+		WhereStep missingRequirementWhereStep, Column<?, Long> parentPKColumn) {
 
-		_parentPKColumn = parentPKColumn;
-		_childPKColumn = childPKColumn;
-		_joinFunction = joinFunction;
+		this(
+			childPKColumn, joinFunction, missingRequirementWherePredicate,
+			missingRequirementWhereStep, parentPKColumn, false);
 	}
 
 	public Column<?, Long> getChildPKColumn() {
@@ -50,19 +56,52 @@ public class TableJoinHolder {
 		return _joinFunction;
 	}
 
+	public Predicate getMissingRequirementWherePredicate() {
+		return _missingRequirementWherePredicate;
+	}
+
+	public WhereStep getMissingRequirementWhereStep() {
+		return _missingRequirementWhereStep;
+	}
+
 	public Column<?, Long> getParentPKColumn() {
 		return _parentPKColumn;
+	}
+
+	public boolean isReversed() {
+		return _reversed;
 	}
 
 	@Override
 	public String toString() {
 		return StringBundler.concat(
 			"{childPKColumn=", _childPKColumn, ", joinFunction=", _joinFunction,
-			", parentPKColumn=", _parentPKColumn, "}");
+			", missingParentWhereStep", _missingRequirementWhereStep,
+			", _missingRequirementWherePredicate",
+			_missingRequirementWherePredicate, ", parentPKColumn=",
+			_parentPKColumn, ", reversed=", _reversed, "}");
+	}
+
+	private TableJoinHolder(
+		Column<?, Long> childPKColumn,
+		Function<FromStep, JoinStep> joinFunction,
+		Predicate missingRequirementWherePredicate,
+		WhereStep missingRequirementWhereStep, Column<?, Long> parentPKColumn,
+		boolean reversed) {
+
+		_childPKColumn = childPKColumn;
+		_joinFunction = joinFunction;
+		_missingRequirementWherePredicate = missingRequirementWherePredicate;
+		_missingRequirementWhereStep = missingRequirementWhereStep;
+		_parentPKColumn = parentPKColumn;
+		_reversed = reversed;
 	}
 
 	private final Column<?, Long> _childPKColumn;
 	private final Function<FromStep, JoinStep> _joinFunction;
+	private final Predicate _missingRequirementWherePredicate;
+	private final WhereStep _missingRequirementWhereStep;
 	private final Column<?, Long> _parentPKColumn;
+	private final boolean _reversed;
 
 }

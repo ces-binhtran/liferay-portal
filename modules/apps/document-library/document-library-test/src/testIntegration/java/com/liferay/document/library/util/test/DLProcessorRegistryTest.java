@@ -24,11 +24,11 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.FileVersion;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.xml.Element;
@@ -138,11 +138,11 @@ public class DLProcessorRegistryTest {
 	@Test
 	public void testCleanUp() throws PortalException {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
-			TestDataConstants.TEST_BYTE_ARRAY,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
 			ServiceContextTestUtil.getServiceContext());
 
 		_dlProcessorRegistry.cleanUp(fileEntry);
@@ -153,11 +153,11 @@ public class DLProcessorRegistryTest {
 	@Test
 	public void testCleanUpFileVersion() throws PortalException {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
-			TestDataConstants.TEST_BYTE_ARRAY,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
 			ServiceContextTestUtil.getServiceContext());
 
 		_dlProcessorRegistry.cleanUp(fileEntry.getFileVersion());
@@ -168,11 +168,11 @@ public class DLProcessorRegistryTest {
 	@Test
 	public void testTrigger() throws PortalException {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
-			TestDataConstants.TEST_BYTE_ARRAY,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
 			ServiceContextTestUtil.getServiceContext());
 
 		_dlProcessorRegistry.trigger(fileEntry, fileEntry.getFileVersion());
@@ -183,11 +183,11 @@ public class DLProcessorRegistryTest {
 	@Test
 	public void testTriggerAfterDeleteTheFile() throws PortalException {
 		FileEntry fileEntry = _dlAppLocalService.addFileEntry(
-			TestPropsValues.getUserId(), _group.getGroupId(),
+			null, TestPropsValues.getUserId(), _group.getGroupId(),
 			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			RandomTestUtil.randomString(),
 			ContentTypes.APPLICATION_OCTET_STREAM,
-			TestDataConstants.TEST_BYTE_ARRAY,
+			TestDataConstants.TEST_BYTE_ARRAY, null, null,
 			ServiceContextTestUtil.getServiceContext());
 
 		FileVersion fileVersion = fileEntry.getFileVersion();

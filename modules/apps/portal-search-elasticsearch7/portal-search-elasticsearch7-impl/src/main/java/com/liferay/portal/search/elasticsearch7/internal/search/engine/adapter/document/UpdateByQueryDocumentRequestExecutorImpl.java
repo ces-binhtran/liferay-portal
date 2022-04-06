@@ -15,16 +15,22 @@
 package com.liferay.portal.search.elasticsearch7.internal.search.engine.adapter.document;
 
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.search.query.QueryTranslator;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchClientResolver;
+import com.liferay.portal.search.elasticsearch7.internal.script.ScriptTranslator;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
 import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentResponse;
+import com.liferay.portal.search.query.QueryTranslator;
+import com.liferay.portal.search.script.ScriptBuilder;
+import com.liferay.portal.search.script.ScriptType;
+import com.liferay.portal.search.script.Scripts;
 
 import java.io.IOException;
 
+import java.util.Map;
+
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
@@ -66,21 +72,60 @@ public class UpdateByQueryDocumentRequestExecutorImpl
 		updateByQueryRequest.indices(
 			updateByQueryDocumentRequest.getIndexNames());
 
-		QueryBuilder queryBuilder = _queryTranslator.translate(
-			updateByQueryDocumentRequest.getQuery(), null);
+		if (updateByQueryDocumentRequest.getPortalSearchQuery() != null) {
+			QueryBuilder queryBuilder = _queryTranslator.translate(
+				updateByQueryDocumentRequest.getPortalSearchQuery());
 
-		updateByQueryRequest.setQuery(queryBuilder);
+			updateByQueryRequest.setQuery(queryBuilder);
+		}
+		else {
+			@SuppressWarnings("deprecation")
+			QueryBuilder queryBuilder = _legacyQueryTranslator.translate(
+				updateByQueryDocumentRequest.getQuery(), null);
+
+			updateByQueryRequest.setQuery(queryBuilder);
+		}
 
 		updateByQueryRequest.setRefresh(
 			updateByQueryDocumentRequest.isRefresh());
 
-		JSONObject jsonObject =
-			updateByQueryDocumentRequest.getScriptJSONObject();
-
-		if (jsonObject != null) {
-			Script script = new Script(jsonObject.toString());
+		if (updateByQueryDocumentRequest.getScript() != null) {
+			Script script = _scriptTranslator.translate(
+				updateByQueryDocumentRequest.getScript());
 
 			updateByQueryRequest.setScript(script);
+		}
+		else if (updateByQueryDocumentRequest.getScriptJSONObject() != null) {
+			ScriptBuilder scriptBuilder = _scripts.builder();
+
+			JSONObject scriptJSONObject =
+				updateByQueryDocumentRequest.getScriptJSONObject();
+
+			if (scriptJSONObject.has("idOrCode")) {
+				scriptBuilder.idOrCode(scriptJSONObject.getString("idOrCode"));
+			}
+
+			if (scriptJSONObject.has("language")) {
+				scriptBuilder.language(scriptJSONObject.getString("language"));
+			}
+
+			if (scriptJSONObject.has("optionsMap")) {
+				scriptBuilder.options(
+					(Map<String, String>)scriptJSONObject.get("optionsMap"));
+			}
+
+			if (scriptJSONObject.has("parametersMap")) {
+				scriptBuilder.parameters(
+					(Map<String, Object>)scriptJSONObject.get("parametersMap"));
+			}
+
+			if (scriptJSONObject.has("scriptType")) {
+				scriptBuilder.scriptType(
+					(ScriptType)scriptJSONObject.get("scriptType"));
+			}
+
+			updateByQueryRequest.setScript(
+				_scriptTranslator.translate(scriptBuilder.build()));
 		}
 
 		return updateByQueryRequest;
@@ -92,7 +137,8 @@ public class UpdateByQueryDocumentRequestExecutorImpl
 
 		RestHighLevelClient restHighLevelClient =
 			_elasticsearchClientResolver.getRestHighLevelClient(
-				updateByQueryDocumentRequest.getConnectionId(), false);
+				updateByQueryDocumentRequest.getConnectionId(),
+				updateByQueryDocumentRequest.isPreferLocalCluster());
 
 		try {
 			return restHighLevelClient.updateByQuery(
@@ -111,13 +157,30 @@ public class UpdateByQueryDocumentRequestExecutorImpl
 	}
 
 	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
+	protected void setLegacyQueryTranslator(
+		com.liferay.portal.kernel.search.query.QueryTranslator<QueryBuilder>
+			legacyQueryTranslator) {
+
+		_legacyQueryTranslator = legacyQueryTranslator;
+	}
+
+	@Reference(target = "(search.engine.impl=Elasticsearch)", unbind = "-")
 	protected void setQueryTranslator(
 		QueryTranslator<QueryBuilder> queryTranslator) {
 
 		_queryTranslator = queryTranslator;
 	}
 
+	@Reference(unbind = "-")
+	protected void setScripts(Scripts scripts) {
+		_scripts = scripts;
+	}
+
 	private ElasticsearchClientResolver _elasticsearchClientResolver;
+	private com.liferay.portal.kernel.search.query.QueryTranslator<QueryBuilder>
+		_legacyQueryTranslator;
 	private QueryTranslator<QueryBuilder> _queryTranslator;
+	private Scripts _scripts;
+	private final ScriptTranslator _scriptTranslator = new ScriptTranslator();
 
 }

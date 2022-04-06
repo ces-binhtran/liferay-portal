@@ -25,7 +25,8 @@ taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
-<%@ page import="com.liferay.portal.kernel.portlet.PortletProvider" %><%@
+<%@ page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
+page import="com.liferay.portal.kernel.portlet.PortletProvider" %><%@
 page import="com.liferay.portal.kernel.portlet.PortletProviderUtil" %><%@
 page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.permission.PortletPermissionUtil" %><%@
@@ -41,7 +42,7 @@ page import="com.liferay.wiki.model.WikiNode" %><%@
 page import="com.liferay.wiki.model.WikiPage" %><%@
 page import="com.liferay.wiki.navigation.web.internal.security.permission.resource.WikiPagePermission" %><%@
 page import="com.liferay.wiki.navigation.web.internal.util.MenuItem" %><%@
-page import="com.liferay.wiki.navigation.web.internal.util.WikiNavigationConstants" %><%@
+page import="com.liferay.wiki.navigation.web.internal.util.constants.WikiNavigationConstants" %><%@
 page import="com.liferay.wiki.service.WikiNodeLocalServiceUtil" %><%@
 page import="com.liferay.wiki.service.WikiNodeServiceUtil" %><%@
 page import="com.liferay.wiki.service.WikiPageServiceUtil" %>

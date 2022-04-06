@@ -17,18 +17,15 @@ package com.liferay.headless.delivery.internal.odata.entity.v1_0;
 import com.liferay.headless.common.spi.odata.entity.EntityFieldsMapFactory;
 import com.liferay.portal.kernel.search.Field;
 import com.liferay.portal.kernel.util.LocaleUtil;
-import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.CollectionEntityField;
 import com.liferay.portal.odata.entity.DateTimeEntityField;
+import com.liferay.portal.odata.entity.DoubleEntityField;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.odata.entity.IntegerEntityField;
 import com.liferay.portal.odata.entity.StringEntityField;
 import com.liferay.portal.vulcan.dto.converter.DTOConverter;
 import com.liferay.portal.vulcan.dto.converter.DTOConverterRegistry;
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 
 import java.util.Map;
 
@@ -55,6 +52,9 @@ public class ContentElementEntityModel implements EntityModel {
 				"dateModified",
 				locale -> Field.getSortableFieldName(Field.MODIFIED_DATE),
 				locale -> Field.MODIFIED_DATE),
+			new DoubleEntityField(
+				"priority",
+				locale -> Field.getSortableFieldName(Field.PRIORITY)),
 			new EntityField(
 				"contentType", EntityField.Type.STRING,
 				locale -> Field.ENTRY_CLASS_NAME,
@@ -78,36 +78,11 @@ public class ContentElementEntityModel implements EntityModel {
 		DTOConverterRegistry dtoConverterRegistry, Object object) {
 
 		for (String dtoClassName : dtoConverterRegistry.getDTOClassNames()) {
-			DTOConverter dtoConverter = dtoConverterRegistry.getDTOConverter(
-				dtoClassName);
+			DTOConverter<?, ?> dtoConverter =
+				dtoConverterRegistry.getDTOConverter(dtoClassName);
 
-			Class<? extends DTOConverter> clazz = dtoConverter.getClass();
-
-			Type[] types = clazz.getGenericInterfaces();
-
-			for (Type type : types) {
-				String typeName = type.getTypeName();
-
-				if (!typeName.contains(DTOConverter.class.getSimpleName())) {
-					continue;
-				}
-
-				ParameterizedType parameterizedType = (ParameterizedType)type;
-
-				Type[] argumentTypes =
-					parameterizedType.getActualTypeArguments();
-
-				Type actualType = argumentTypes[1];
-
-				String actualTypeName = StringUtil.toLowerCase(
-					actualType.getTypeName());
-
-				String simpleClassName = actualTypeName.substring(
-					actualTypeName.lastIndexOf(".") + 1);
-
-				if (object.equals(simpleClassName)) {
-					return argumentTypes[0].getTypeName();
-				}
+			if (object.equals(dtoConverter.getContentType())) {
+				return dtoConverter.getDTOClassName();
 			}
 		}
 

@@ -30,6 +30,10 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 	implements DDMDataProviderInstanceLocalService,
 			   ServiceWrapper<DDMDataProviderInstanceLocalService> {
 
+	public DDMDataProviderInstanceLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DDMDataProviderInstanceLocalServiceWrapper(
 		DDMDataProviderInstanceLocalService
 			ddmDataProviderInstanceLocalService) {
@@ -56,6 +60,10 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 
 	/**
 	 * Adds the ddm data provider instance to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMDataProviderInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmDataProviderInstance the ddm data provider instance
 	 * @return the ddm data provider instance that was added
@@ -122,6 +130,10 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 	/**
 	 * Deletes the ddm data provider instance from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMDataProviderInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmDataProviderInstance the ddm data provider instance
 	 * @return the ddm data provider instance that was removed
 	 */
@@ -135,6 +147,10 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm data provider instance with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMDataProviderInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param dataProviderInstanceId the primary key of the ddm data provider instance
 	 * @return the ddm data provider instance that was removed
@@ -164,6 +180,13 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmDataProviderInstanceLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmDataProviderInstanceLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -542,6 +565,10 @@ public class DDMDataProviderInstanceLocalServiceWrapper
 
 	/**
 	 * Updates the ddm data provider instance in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMDataProviderInstanceLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmDataProviderInstance the ddm data provider instance
 	 * @return the ddm data provider instance that was updated

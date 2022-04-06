@@ -44,7 +44,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.util.comparator.UserFirstNameComparator;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.portlet.ActionRequest;
@@ -99,17 +98,17 @@ public class InviteMembersPortlet extends MVCPortlet {
 			"count",
 			_getAvailableUsersCount(
 				themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
-				keywords));
-
-		JSONObject optionsJSONObject = JSONUtil.put(
-			"end", end
+				keywords)
 		).put(
-			"keywords", keywords
-		).put(
-			"start", start
+			"options",
+			JSONUtil.put(
+				"end", end
+			).put(
+				"keywords", keywords
+			).put(
+				"start", start
+			)
 		);
-
-		jsonObject.put("options", optionsJSONObject);
 
 		List<User> users = _getAvailableUsers(
 			themeDisplay.getCompanyId(), themeDisplay.getScopeGroupId(),
@@ -118,19 +117,18 @@ public class InviteMembersPortlet extends MVCPortlet {
 		JSONArray jsonArray = JSONFactoryUtil.createJSONArray();
 
 		for (User user : users) {
-			JSONObject userJSONObject = JSONUtil.put(
-				"hasPendingMemberRequest",
-				_memberRequestLocalService.hasPendingMemberRequest(
-					themeDisplay.getScopeGroupId(), user.getUserId())
-			).put(
-				"userEmailAddress", user.getEmailAddress()
-			).put(
-				"userFullName", user.getFullName()
-			).put(
-				"userId", user.getUserId()
-			);
-
-			jsonArray.put(userJSONObject);
+			jsonArray.put(
+				JSONUtil.put(
+					"hasPendingMemberRequest",
+					_memberRequestLocalService.hasPendingMemberRequest(
+						themeDisplay.getScopeGroupId(), user.getUserId())
+				).put(
+					"userEmailAddress", user.getEmailAddress()
+				).put(
+					"userFullName", user.getFullName()
+				).put(
+					"userId", user.getUserId()
+				));
 		}
 
 		jsonObject.put("users", jsonArray);
@@ -143,11 +141,11 @@ public class InviteMembersPortlet extends MVCPortlet {
 		throws Exception {
 
 		try {
-			doSendInvite(actionRequest);
+			_sendInvite(actionRequest);
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 	}
@@ -192,13 +190,81 @@ public class InviteMembersPortlet extends MVCPortlet {
 			jsonObject.put("success", Boolean.TRUE);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			jsonObject.put("success", Boolean.FALSE);
 		}
 
 		writeJSON(actionRequest, actionResponse, jsonObject);
 	}
 
-	protected void doSendInvite(ActionRequest actionRequest) throws Exception {
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.invitation.invite.members.service)(&(release.schema.version>=2.0.0)(!(release.schema.version>=3.0.0))))",
+		unbind = "-"
+	)
+	protected void setRelease(Release release) {
+	}
+
+	private List<User> _getAvailableUsers(
+			long companyId, long groupId, String keywords, int start, int end)
+		throws Exception {
+
+		return _userLocalService.search(
+			companyId, keywords, WorkflowConstants.STATUS_APPROVED,
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersInvited",
+				new CustomSQLParam(
+					_customSQL.get(
+						getClass(),
+						"com.liferay.portal.service.persistence.UserFinder." +
+							"filterByUsersGroupsGroupId"),
+					groupId)
+			).build(),
+			start, end, new UserFirstNameComparator(true));
+	}
+
+	private int _getAvailableUsersCount(
+			long companyId, long groupId, String keywords)
+		throws Exception {
+
+		return _userLocalService.searchCount(
+			companyId, keywords, WorkflowConstants.STATUS_APPROVED,
+			LinkedHashMapBuilder.<String, Object>put(
+				"usersInvited",
+				new CustomSQLParam(
+					_customSQL.get(
+						getClass(),
+						"com.liferay.portal.service.persistence.UserFinder." +
+							"filterByUsersGroupsGroupId"),
+					groupId)
+			).build());
+	}
+
+	private long[] _getLongArray(PortletRequest portletRequest, String name) {
+		String value = portletRequest.getParameter(name);
+
+		if (value == null) {
+			return null;
+		}
+
+		return StringUtil.split(GetterUtil.getString(value), 0L);
+	}
+
+	private String[] _getStringArray(
+		PortletRequest portletRequest, String name) {
+
+		String value = portletRequest.getParameter(name);
+
+		if (value == null) {
+			return null;
+		}
+
+		return StringUtil.split(GetterUtil.getString(value));
+	}
+
+	private void _sendInvite(ActionRequest actionRequest) throws Exception {
 		long groupId = ParamUtil.getLong(actionRequest, "groupId");
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
@@ -211,9 +277,10 @@ public class InviteMembersPortlet extends MVCPortlet {
 		}
 
 		long invitedTeamId = ParamUtil.getLong(actionRequest, "invitedTeamId");
-		long[] receiverUserIds = getLongArray(actionRequest, "receiverUserIds");
+		long[] receiverUserIds = _getLongArray(
+			actionRequest, "receiverUserIds");
 		long invitedRoleId = ParamUtil.getLong(actionRequest, "invitedRoleId");
-		String[] receiverEmailAddresses = getStringArray(
+		String[] receiverEmailAddresses = _getStringArray(
 			actionRequest, "receiverEmailAddresses");
 
 		ServiceContext serviceContext = ServiceContextFactory.getInstance(
@@ -239,75 +306,6 @@ public class InviteMembersPortlet extends MVCPortlet {
 		_memberRequestLocalService.addMemberRequests(
 			themeDisplay.getUserId(), groupId, receiverEmailAddresses,
 			invitedRoleId, invitedTeamId, serviceContext);
-	}
-
-	protected long[] getLongArray(PortletRequest portletRequest, String name) {
-		String value = portletRequest.getParameter(name);
-
-		if (value == null) {
-			return null;
-		}
-
-		return StringUtil.split(GetterUtil.getString(value), 0L);
-	}
-
-	protected String[] getStringArray(
-		PortletRequest portletRequest, String name) {
-
-		String value = portletRequest.getParameter(name);
-
-		if (value == null) {
-			return null;
-		}
-
-		return StringUtil.split(GetterUtil.getString(value));
-	}
-
-	@Reference(
-		target = "(&(release.bundle.symbolic.name=com.liferay.invitation.invite.members.service)(&(release.schema.version>=2.0.0)(!(release.schema.version>=3.0.0))))",
-		unbind = "-"
-	)
-	protected void setRelease(Release release) {
-	}
-
-	private List<User> _getAvailableUsers(
-			long companyId, long groupId, String keywords, int start, int end)
-		throws Exception {
-
-		LinkedHashMap<String, Object> usersParams =
-			LinkedHashMapBuilder.<String, Object>put(
-				"usersInvited",
-				new CustomSQLParam(
-					_customSQL.get(
-						getClass(),
-						"com.liferay.portal.service.persistence.UserFinder." +
-							"filterByUsersGroupsGroupId"),
-					groupId)
-			).build();
-
-		return _userLocalService.search(
-			companyId, keywords, WorkflowConstants.STATUS_APPROVED, usersParams,
-			start, end, new UserFirstNameComparator(true));
-	}
-
-	private int _getAvailableUsersCount(
-			long companyId, long groupId, String keywords)
-		throws Exception {
-
-		LinkedHashMap<String, Object> usersParams =
-			LinkedHashMapBuilder.<String, Object>put(
-				"usersInvited",
-				new CustomSQLParam(
-					_customSQL.get(
-						getClass(),
-						"com.liferay.portal.service.persistence.UserFinder." +
-							"filterByUsersGroupsGroupId"),
-					groupId)
-			).build();
-
-		return _userLocalService.searchCount(
-			companyId, keywords, WorkflowConstants.STATUS_APPROVED,
-			usersParams);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

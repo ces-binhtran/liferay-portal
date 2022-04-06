@@ -17,6 +17,7 @@ package com.liferay.mail.reader.internal.imap;
 import com.liferay.mail.reader.configuration.MailGroupServiceConfiguration;
 import com.liferay.mail.reader.exception.MailException;
 import com.liferay.mail.reader.model.Account;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.module.configuration.ConfigurationException;
@@ -70,7 +71,7 @@ public class IMAPConnection {
 
 		Properties properties = new Properties();
 
-		properties.put("mail.debug", String.valueOf(isJavaMailDebug()));
+		properties.put("mail.debug", String.valueOf(_isJavaMailDebug()));
 		properties.put("mail.imap.host", _incomingHostName);
 		properties.put("mail.imap.port", _incomingPort);
 		properties.put("mail.imaps.auth", "true");
@@ -92,7 +93,7 @@ public class IMAPConnection {
 
 		_session = Session.getInstance(properties);
 
-		_session.setDebug(isJavaMailDebug());
+		_session.setDebug(_isJavaMailDebug());
 
 		return _session;
 	}
@@ -101,11 +102,8 @@ public class IMAPConnection {
 		Store store = null;
 
 		try {
-			String storeKey = _incomingHostName.concat(
-				_outgoingHostName
-			).concat(
-				_login
-			);
+			String storeKey = StringBundler.concat(
+				_incomingHostName, _outgoingHostName, _login);
 
 			if (useOldStores) {
 				store = _allStores.get(storeKey);
@@ -175,7 +173,7 @@ public class IMAPConnection {
 		boolean failedIncomingConnection = false;
 
 		try {
-			testIncomingConnection();
+			_testIncomingConnection();
 		}
 		catch (MailException mailException2) {
 			mailException1 = mailException2;
@@ -186,7 +184,7 @@ public class IMAPConnection {
 		boolean failedOutgoingConnection = false;
 
 		try {
-			testOutgoingConnection();
+			_testOutgoingConnection();
 		}
 		catch (MailException mailException2) {
 			mailException1 = mailException2;
@@ -210,7 +208,7 @@ public class IMAPConnection {
 		}
 	}
 
-	protected boolean isJavaMailDebug() {
+	private boolean _isJavaMailDebug() {
 		if (_mailGroupServiceConfiguration == null) {
 			long companyId = PortalUtil.getDefaultCompanyId();
 
@@ -228,7 +226,7 @@ public class IMAPConnection {
 		return _mailGroupServiceConfiguration.javamailDebug();
 	}
 
-	protected void testIncomingConnection() throws MailException {
+	private void _testIncomingConnection() throws MailException {
 		StopWatch stopWatch = new StopWatch();
 
 		stopWatch.start();
@@ -253,7 +251,7 @@ public class IMAPConnection {
 		}
 	}
 
-	protected void testOutgoingConnection() throws MailException {
+	private void _testOutgoingConnection() throws MailException {
 		StopWatch stopWatch = new StopWatch();
 
 		stopWatch.start();

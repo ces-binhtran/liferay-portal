@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class SAPEntryServiceWrapper
 	implements SAPEntryService, ServiceWrapper<SAPEntryService> {
 
+	public SAPEntryServiceWrapper() {
+		this(null);
+	}
+
 	public SAPEntryServiceWrapper(SAPEntryService sapEntryService) {
 		_sapEntryService = sapEntryService;
 	}
@@ -85,10 +89,10 @@ public class SAPEntryServiceWrapper
 				long companyId, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
 					<com.liferay.portal.security.service.access.policy.model.
-						SAPEntry> obc) {
+						SAPEntry> orderByComparator) {
 
 		return _sapEntryService.getCompanySAPEntries(
-			companyId, start, end, obc);
+			companyId, start, end, orderByComparator);
 	}
 
 	@Override

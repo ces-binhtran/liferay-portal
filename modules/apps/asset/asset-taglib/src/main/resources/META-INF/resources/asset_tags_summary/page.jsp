@@ -63,7 +63,8 @@ if (assetTagNames.length == 0) {
 					<clay:label
 						displayType="secondary"
 						label="<%= assetTagNames[i] %>"
-						large="true"
+						large="<%= true %>"
+						translated="<%= false %>"
 					/>
 
 				<%

@@ -40,17 +40,33 @@ public class JournalDataLayoutBuilderDefinition
 
 	@Override
 	public boolean allowRules() {
-		return true;
+		return false;
 	}
 
 	@Override
 	public String[] getDisabledProperties() {
-		return new String[] {"predefinedValue"};
+		return new String[] {
+			"objectFieldName", "predefinedValue", "requiredErrorMessage"
+		};
 	}
 
 	@Override
 	public String[] getDisabledTabs() {
 		return new String[] {"Autocomplete"};
+	}
+
+	@Override
+	public String[] getUnimplementedProperties() {
+		return new String[] {
+			"allowGuestUsers", "fieldNamespace", "hideField", "inputMask",
+			"readOnly", "requireConfirmation", "validation",
+			"visibilityExpression"
+		};
+	}
+
+	@Override
+	public String[] getVisibleProperties() {
+		return new String[] {"localizable"};
 	}
 
 }

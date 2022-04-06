@@ -29,6 +29,10 @@ public class OrganizationLocalServiceWrapper
 	implements OrganizationLocalService,
 			   ServiceWrapper<OrganizationLocalService> {
 
+	public OrganizationLocalServiceWrapper() {
+		this(null);
+	}
+
 	public OrganizationLocalServiceWrapper(
 		OrganizationLocalService organizationLocalService) {
 
@@ -126,6 +130,10 @@ public class OrganizationLocalServiceWrapper
 	/**
 	 * Adds the organization to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param organization the organization
 	 * @return the organization that was added
 	 */
@@ -147,6 +155,31 @@ public class OrganizationLocalServiceWrapper
 
 		_organizationLocalService.addOrganizationResources(
 			userId, organization);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.User
+			addOrganizationUserByEmailAddress(
+				String emailAddress, long organizationId,
+				ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.addOrganizationUserByEmailAddress(
+			emailAddress, organizationId, serviceContext);
+	}
+
+	@Override
+	public Organization addOrUpdateOrganization(
+			String externalReferenceCode, long userId,
+			long parentOrganizationId, String name, String type, long regionId,
+			long countryId, long statusId, String comments, boolean hasLogo,
+			byte[] logoBytes, boolean site, ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.addOrUpdateOrganization(
+			externalReferenceCode, userId, parentOrganizationId, name, type,
+			regionId, countryId, statusId, comments, hasLogo, logoBytes, site,
+			serviceContext);
 	}
 
 	/**
@@ -172,6 +205,15 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public void addUserOrganization(long userId, Organization organization) {
 		_organizationLocalService.addUserOrganization(userId, organization);
+	}
+
+	@Override
+	public void addUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_organizationLocalService.addUserOrganizationByEmailAddress(
+			emailAddress, organizationId);
 	}
 
 	@Override
@@ -261,6 +303,10 @@ public class OrganizationLocalServiceWrapper
 	/**
 	 * Deletes the organization with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param organizationId the primary key of the organization
 	 * @return the organization that was removed
 	 * @throws PortalException if a organization with the primary key could not be found
@@ -274,6 +320,10 @@ public class OrganizationLocalServiceWrapper
 
 	/**
 	 * Deletes the organization from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param organization the organization
 	 * @return the organization that was removed
@@ -309,6 +359,15 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	@Override
+	public void deleteUserOrganizationByEmailAddress(
+			String emailAddress, long organizationId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		_organizationLocalService.deleteUserOrganizationByEmailAddress(
+			emailAddress, organizationId);
+	}
+
+	@Override
 	public void deleteUserOrganizations(
 		long userId, java.util.List<Organization> organizations) {
 
@@ -325,6 +384,13 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _organizationLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _organizationLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -442,6 +508,19 @@ public class OrganizationLocalServiceWrapper
 	 * @param externalReferenceCode the organization's external reference code
 	 * @return the matching organization, or <code>null</code> if a matching organization could not be found
 	 */
+	@Override
+	public Organization fetchOrganizationByExternalReferenceCode(
+		long companyId, String externalReferenceCode) {
+
+		return _organizationLocalService.
+			fetchOrganizationByExternalReferenceCode(
+				companyId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchOrganizationByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
 	@Override
 	public Organization fetchOrganizationByReferenceCode(
 		long companyId, String externalReferenceCode) {
@@ -576,6 +655,23 @@ public class OrganizationLocalServiceWrapper
 	}
 
 	/**
+	 * Returns the organization with the matching external reference code and company.
+	 *
+	 * @param companyId the primary key of the company
+	 * @param externalReferenceCode the organization's external reference code
+	 * @return the matching organization
+	 * @throws PortalException if a matching organization could not be found
+	 */
+	@Override
+	public Organization getOrganizationByExternalReferenceCode(
+			long companyId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _organizationLocalService.getOrganizationByExternalReferenceCode(
+			companyId, externalReferenceCode);
+	}
+
+	/**
 	 * Returns the organization with the matching UUID and company.
 	 *
 	 * @param uuid the organization's UUID
@@ -624,11 +720,12 @@ public class OrganizationLocalServiceWrapper
 	@Override
 	public java.util.List<Organization> getOrganizations(
 			long userId, int start, int end,
-			com.liferay.portal.kernel.util.OrderByComparator<Organization> obc)
+			com.liferay.portal.kernel.util.OrderByComparator<Organization>
+				orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _organizationLocalService.getOrganizations(
-			userId, start, end, obc);
+			userId, start, end, orderByComparator);
 	}
 
 	/**
@@ -719,17 +816,19 @@ public class OrganizationLocalServiceWrapper
 	 return
 	 * @param end the upper bound of the range of organizations and users to
 	 return (not inclusive)
-	 * @param obc the comparator to order the organizations and users
-	 (optionally <code>null</code>)
+	 * @param orderByComparator the comparator to order the organizations and
+	 users (optionally <code>null</code>)
 	 * @return the organizations and users belonging to the parent organization
 	 */
 	@Override
 	public java.util.List<Object> getOrganizationsAndUsers(
 		long companyId, long parentOrganizationId, int status, int start,
-		int end, com.liferay.portal.kernel.util.OrderByComparator<?> obc) {
+		int end,
+		com.liferay.portal.kernel.util.OrderByComparator<?> orderByComparator) {
 
 		return _organizationLocalService.getOrganizationsAndUsers(
-			companyId, parentOrganizationId, status, start, end, obc);
+			companyId, parentOrganizationId, status, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -1228,9 +1327,10 @@ public class OrganizationLocalServiceWrapper
 	 * @param start the lower bound of the range of organizations to return
 	 * @param end the upper bound of the range of organizations to return (not
 	 inclusive)
-	 * @param obc the comparator to order the organizations (optionally
-	 <code>null</code>)
-	 * @return the matching organizations ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the organizations
+	 (optionally <code>null</code>)
+	 * @return the matching organizations ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.OrganizationFinder
 	 */
 	@Override
@@ -1238,11 +1338,12 @@ public class OrganizationLocalServiceWrapper
 		long companyId, long parentOrganizationId, String keywords, String type,
 		Long regionId, Long countryId,
 		java.util.LinkedHashMap<String, Object> params, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Organization> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Organization>
+			orderByComparator) {
 
 		return _organizationLocalService.search(
 			companyId, parentOrganizationId, keywords, type, regionId,
-			countryId, params, start, end, obc);
+			countryId, params, start, end, orderByComparator);
 	}
 
 	/**
@@ -1339,9 +1440,10 @@ public class OrganizationLocalServiceWrapper
 	 * @param start the lower bound of the range of organizations to return
 	 * @param end the upper bound of the range of organizations to return (not
 	 inclusive)
-	 * @param obc the comparator to order the organizations (optionally
-	 <code>null</code>)
-	 * @return the matching organizations ordered by comparator <code>obc</code>
+	 * @param orderByComparator the comparator to order the organizations
+	 (optionally <code>null</code>)
+	 * @return the matching organizations ordered by comparator
+	 <code>orderByComparator</code>
 	 * @see com.liferay.portal.kernel.service.persistence.OrganizationFinder
 	 */
 	@Override
@@ -1350,11 +1452,13 @@ public class OrganizationLocalServiceWrapper
 		String street, String city, String zip, Long regionId, Long countryId,
 		java.util.LinkedHashMap<String, Object> params, boolean andOperator,
 		int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<Organization> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<Organization>
+			orderByComparator) {
 
 		return _organizationLocalService.search(
 			companyId, parentOrganizationId, name, type, street, city, zip,
-			regionId, countryId, params, andOperator, start, end, obc);
+			regionId, countryId, params, andOperator, start, end,
+			orderByComparator);
 	}
 
 	/**
@@ -1656,6 +1760,10 @@ public class OrganizationLocalServiceWrapper
 
 	/**
 	 * Updates the organization in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrganizationLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param organization the organization
 	 * @return the organization that was updated

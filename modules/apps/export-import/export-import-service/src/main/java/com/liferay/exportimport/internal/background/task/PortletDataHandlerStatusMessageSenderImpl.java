@@ -21,9 +21,9 @@ import com.liferay.exportimport.kernel.lar.PortletDataHandlerStatusMessageSender
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandler;
 import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerRegistryUtil;
 import com.liferay.exportimport.portlet.data.handler.provider.PortletDataHandlerProvider;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusMessageSender;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskThreadLocal;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.messaging.Message;
 import com.liferay.portal.kernel.model.StagedModel;
 
@@ -47,7 +47,7 @@ public class PortletDataHandlerStatusMessageSenderImpl
 
 		Message message = new Message();
 
-		init(message, messageType, manifestSummary);
+		_init(message, messageType, manifestSummary);
 
 		message.put("portletId", portletId);
 
@@ -83,7 +83,7 @@ public class PortletDataHandlerStatusMessageSenderImpl
 
 		Message message = new Message();
 
-		init(message, messageType, manifestSummary);
+		_init(message, messageType, manifestSummary);
 
 		message.put("portletIds", portletIds);
 
@@ -97,7 +97,7 @@ public class PortletDataHandlerStatusMessageSenderImpl
 
 		Message message = new Message();
 
-		init(message, messageType, manifestSummary);
+		_init(message, messageType, manifestSummary);
 
 		StagedModelDataHandler<T> stagedModelDataHandler =
 			(StagedModelDataHandler<T>)
@@ -117,7 +117,7 @@ public class PortletDataHandlerStatusMessageSenderImpl
 			message);
 	}
 
-	protected void init(
+	private void _init(
 		Message message, String messageType, ManifestSummary manifestSummary) {
 
 		message.put(

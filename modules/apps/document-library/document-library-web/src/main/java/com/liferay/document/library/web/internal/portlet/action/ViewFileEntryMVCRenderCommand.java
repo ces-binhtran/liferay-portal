@@ -15,22 +15,33 @@
 package com.liferay.document.library.web.internal.portlet.action;
 
 import com.liferay.asset.display.page.portlet.AssetDisplayPageFriendlyURLProvider;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.document.library.constants.DLPortletKeys;
+import com.liferay.document.library.display.context.DLDisplayContextProvider;
 import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.exception.NoSuchFileVersionException;
+import com.liferay.document.library.kernel.model.DLFileEntryConstants;
 import com.liferay.document.library.repository.authorization.capability.AuthorizationCapability;
+import com.liferay.document.library.util.DLAssetHelper;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContext;
+import com.liferay.document.library.web.internal.display.context.DLAdminDisplayContextProvider;
+import com.liferay.document.library.web.internal.display.context.DLViewFileEntryDisplayContext;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryEntryException;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
-import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderConstants;
+import com.liferay.portal.kernel.portlet.bridges.mvc.constants.MVCRenderConstants;
 import com.liferay.portal.kernel.repository.Repository;
 import com.liferay.portal.kernel.repository.RepositoryProviderUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Html;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.io.IOException;
@@ -57,7 +68,7 @@ import org.osgi.service.component.annotations.Reference;
 	service = MVCRenderCommand.class
 )
 public class ViewFileEntryMVCRenderCommand
-	extends GetFileEntryMVCRenderCommand {
+	extends BaseFileEntryMVCRenderCommand {
 
 	@Override
 	public String render(
@@ -87,20 +98,27 @@ public class ViewFileEntryMVCRenderCommand
 				}
 			}
 
-			ThemeDisplay themeDisplay =
-				(ThemeDisplay)renderRequest.getAttribute(WebKeys.THEME_DISPLAY);
+			if (!StringUtil.equals(
+					DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
+					_portal.getPortletId(renderRequest))) {
 
-			String assetDisplayPageFriendlyURL =
-				_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
-					FileEntry.class.getName(), fileEntryId, themeDisplay);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)renderRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
-			if (assetDisplayPageFriendlyURL != null) {
-				HttpServletResponse httpServletResponse =
-					_portal.getHttpServletResponse(renderResponse);
+				String assetDisplayPageFriendlyURL =
+					_assetDisplayPageFriendlyURLProvider.getFriendlyURL(
+						FileEntry.class.getName(), fileEntryId, themeDisplay);
 
-				httpServletResponse.sendRedirect(assetDisplayPageFriendlyURL);
+				if (assetDisplayPageFriendlyURL != null) {
+					HttpServletResponse httpServletResponse =
+						_portal.getHttpServletResponse(renderResponse);
 
-				return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
+					httpServletResponse.sendRedirect(
+						assetDisplayPageFriendlyURL);
+
+					return MVCRenderConstants.MVC_PATH_VALUE_SKIP_DISPATCH;
+				}
 			}
 
 			return super.render(renderRequest, renderResponse);
@@ -122,9 +140,59 @@ public class ViewFileEntryMVCRenderCommand
 		return "/document_library/view_file_entry.jsp";
 	}
 
+	@Override
+	protected void setAttributes(
+			RenderRequest renderRequest, RenderResponse renderResponse)
+		throws PortalException {
+
+		super.setAttributes(renderRequest, renderResponse);
+
+		DLAdminDisplayContext dlAdminDisplayContext =
+			_dlAdminDisplayContextProvider.getDLAdminDisplayContext(
+				_portal.getHttpServletRequest(renderRequest),
+				_portal.getHttpServletResponse(renderResponse));
+
+		DLViewFileEntryDisplayContext dlViewFileEntryDisplayContext =
+			new DLViewFileEntryDisplayContext(
+				dlAdminDisplayContext, _dlDisplayContextProvider, _html,
+				_portal.getHttpServletRequest(renderRequest), _language,
+				_portal, renderRequest, renderResponse);
+
+		renderRequest.setAttribute(
+			DLViewFileEntryDisplayContext.class.getName(),
+			dlViewFileEntryDisplayContext);
+
+		AssetEntry layoutAssetEntry = _assetEntryLocalService.fetchEntry(
+			DLFileEntryConstants.getClassName(),
+			_dlAssetHelper.getAssetClassPK(
+				dlViewFileEntryDisplayContext.getFileEntry(),
+				dlViewFileEntryDisplayContext.getFileVersion()));
+
+		renderRequest.setAttribute(
+			WebKeys.LAYOUT_ASSET_ENTRY, layoutAssetEntry);
+	}
+
 	@Reference
 	private AssetDisplayPageFriendlyURLProvider
 		_assetDisplayPageFriendlyURLProvider;
+
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
+
+	@Reference
+	private DLAdminDisplayContextProvider _dlAdminDisplayContextProvider;
+
+	@Reference
+	private DLAssetHelper _dlAssetHelper;
+
+	@Reference
+	private DLDisplayContextProvider _dlDisplayContextProvider;
+
+	@Reference
+	private Html _html;
+
+	@Reference
+	private Language _language;
 
 	@Reference
 	private Portal _portal;

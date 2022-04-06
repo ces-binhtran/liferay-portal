@@ -21,6 +21,8 @@ String tabs2 = ParamUtil.getString(request, "tabs2", "users");
 
 String redirect = ParamUtil.getString(request, "redirect");
 
+String backURL = ParamUtil.getString(request, "backURL", redirect);
+
 long roleId = ParamUtil.getLong(request, "roleId");
 
 Role role = RoleServiceUtil.fetchRole(roleId);
@@ -43,7 +45,7 @@ SearchContainer<?> searchContainer = editRoleAssignmentsManagementToolbarDisplay
 PortletURL portletURL = editRoleAssignmentsManagementToolbarDisplayContext.getPortletURL();
 
 portletDisplay.setShowBackIcon(true);
-portletDisplay.setURLBack(redirect);
+portletDisplay.setURLBack(backURL);
 
 renderResponse.setTitle(role.getTitle(locale));
 %>
@@ -54,12 +56,41 @@ renderResponse.setTitle(role.getTitle(locale));
 	navigationItems="<%= roleDisplayContext.getRoleAssignmentsNavigationItems(portletURL) %>"
 />
 
+<portlet:actionURL name="editRoleAssignments" var="editRoleAssignmentsURL">
+	<portlet:param name="mvcPath" value="/edit_role_assignments.jsp" />
+	<portlet:param name="tabs1" value="assignees" />
+</portlet:actionURL>
+
+<portlet:renderURL var="selectAssigneesURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
+	<portlet:param name="mvcPath" value="/select_assignees.jsp" />
+	<portlet:param name="tabs2" value="<%= tabs2 %>" />
+	<portlet:param name="tabs3" value="available" />
+	<portlet:param name="redirect" value="<%= currentURL %>" />
+	<portlet:param name="roleId" value="<%= String.valueOf(roleId) %>" />
+	<portlet:param name="displayStyle" value="<%= displayStyle %>" />
+</portlet:renderURL>
+
 <clay:management-toolbar
 	actionDropdownItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getActionDropdownItems() %>"
+	additionalProps='<%=
+		HashMapBuilder.<String, Object>put(
+			"assigneeType", HtmlUtil.escapeJS(tabs2)
+		).put(
+			"editRoleAssignmentsURL", editRoleAssignmentsURL.toString()
+		).put(
+			"modalSegmentState", RolesAdminWebKeys.MODAL_SEGMENT_STATE
+		).put(
+			"portletURL", portletURL.toString()
+		).put(
+			"roleName", role.getName()
+		).put(
+			"selectAssigneesURL", selectAssigneesURL.toString()
+		).build()
+	%>'
 	clearResultsURL="<%= editRoleAssignmentsManagementToolbarDisplayContext.getClearResultsURL() %>"
-	componentId="editRoleAssignmentsManagementToolbar"
 	filterDropdownItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getFilterDropdownItems() %>"
 	itemsTotal="<%= searchContainer.getTotal() %>"
+	propsTransformer="js/EditRoleAssignmentsManagementToolbarPropsTransformer"
 	searchActionURL="<%= editRoleAssignmentsManagementToolbarDisplayContext.getSearchActionURL() %>"
 	searchContainerId="assigneesSearch"
 	searchFormName="searchFm"
@@ -71,7 +102,16 @@ renderResponse.setTitle(role.getTitle(locale));
 	viewTypeItems="<%= editRoleAssignmentsManagementToolbarDisplayContext.getViewTypeItems() %>"
 />
 
-<aui:form action="<%= portletURL.toString() %>" cssClass="container-fluid container-fluid-max-xl container-form-view" method="post" name="fm">
+<c:if test='<%= !SegmentsEntryDisplayContext.isRoleSegmentationEnabled(themeDisplay.getCompanyId()) && tabs2.equals("segments") %>'>
+	<clay:stripe
+		elementClasses="assign-roles-segments-warning"
+		message="assigning-roles-by-segment-is-disabled-.to-enable,-go-to-system-settings-segments-segments-service"
+		style="warning"
+		title="Warning"
+	/>
+</c:if>
+
+<aui:form action="<%= portletURL %>" cssClass="container-fluid container-fluid-max-xl container-form-view" method="post" name="fm">
 	<aui:input name="tabs2" type="hidden" value="<%= tabs2 %>" />
 	<aui:input name="tabs3" type="hidden" value="current" />
 	<aui:input name="redirect" type="hidden" value="<%= currentURL %>" />
@@ -107,109 +147,21 @@ renderResponse.setTitle(role.getTitle(locale));
 	</c:choose>
 </aui:form>
 
-<portlet:actionURL name="editRoleAssignments" var="editRoleAssignmentsURL">
-	<portlet:param name="mvcPath" value="/edit_role_assignments.jsp" />
-	<portlet:param name="tabs1" value="assignees" />
-</portlet:actionURL>
+<aui:script require='<%= npmResolvedPackageName + "/js/add_assignees as addAssignees" %>'>
+	var modalSegmentState = '<%= RolesAdminWebKeys.MODAL_SEGMENT_STATE %>';
 
-<aui:script require="frontend-js-web/liferay/ItemSelectorDialog.es as ItemSelectorDialog">
-	var form = document.<portlet:namespace />fm;
+	var state = window.sessionStorage.getItem(modalSegmentState);
 
-	var addAssignees = function (event) {
-		var itemSelectorDialog = new ItemSelectorDialog.default({
-			eventName: '<portlet:namespace />selectAssignees',
-			title:
-				'<liferay-ui:message arguments="<%= HtmlUtil.escape(role.getName()) %>" key="add-assignees-to-x" />',
+	if (state === 'open') {
+		window.sessionStorage.removeItem(modalSegmentState);
 
-			<portlet:renderURL var="selectAssigneesURL" windowState="<%= LiferayWindowState.POP_UP.toString() %>">
-				<portlet:param name="mvcPath" value="/select_assignees.jsp" />
-				<portlet:param name="tabs2" value="<%= tabs2 %>" />
-				<portlet:param name="tabs3" value="available" />
-				<portlet:param name="redirect" value="<%= currentURL %>" />
-				<portlet:param name="roleId" value="<%= String.valueOf(roleId) %>" />
-				<portlet:param name="displayStyle" value="<%= displayStyle %>" />
-			</portlet:renderURL>
-
-			url: '<%= selectAssigneesURL %>',
+		addAssignees.default({
+			editRoleAssignmentsURL: '<%= editRoleAssignmentsURL.toString() %>',
+			modalSegmentState: modalSegmentState,
+			namespace: '<portlet:namespace />',
+			portletURL: '<%= portletURL.toString() %>',
+			roleName: '<%= role.getName() %>',
+			selectAssigneesURL: '<%= selectAssigneesURL.toString() %>',
 		});
-
-		itemSelectorDialog.on('selectedItemChange', function (event) {
-			var selectedItem = event.selectedItem;
-
-			if (selectedItem) {
-				var assignmentsRedirect = Liferay.Util.PortletURL.createPortletURL(
-					'<%= portletURL.toString() %>',
-					{
-						tabs2: selectedItem.type,
-					}
-				);
-
-				var data = {
-					redirect: assignmentsRedirect.toString(),
-				};
-
-				if (selectedItem.type == 'segments') {
-					data.addSegmentsEntryIds = selectedItem.value;
-				}
-				else if (selectedItem.type === 'users') {
-					data.addUserIds = selectedItem.value;
-				}
-				else {
-					data.addGroupIds = selectedItem.value;
-				}
-
-				Liferay.Util.postForm(form, {
-					data: data,
-					url: '<%= editRoleAssignmentsURL %>',
-				});
-			}
-		});
-
-		itemSelectorDialog.open();
-	};
-
-	<portlet:namespace />unsetRoleAssignments = function () {
-		var assigneeType = '<%= HtmlUtil.escapeJS(tabs2) %>';
-		var ids = Liferay.Util.listCheckedExcept(
-			form,
-			'<portlet:namespace />allRowIds'
-		);
-
-		var data = {
-			assignmentsRedirect: '<%= portletURL.toString() %>',
-		};
-
-		if (assigneeType == 'segments') {
-			data.removeSegmentsEntryIds = ids;
-		}
-		else if (assigneeType === 'users') {
-			data.removeUserIds = ids;
-		}
-		else {
-			data.removeGroupIds = ids;
-		}
-
-		Liferay.Util.postForm(form, {
-			data: data,
-			url: '<%= editRoleAssignmentsURL %>',
-		});
-	};
-
-	Liferay.componentReady('editRoleAssignmentsManagementToolbar').then(function (
-		managementToolbar
-	) {
-		managementToolbar.on('creationButtonClicked', addAssignees);
-	});
-
-	var state = window.sessionStorage.getItem(
-		'<%= RolesAdminWebKeys.MODAL_SEGMENT_STATE %>'
-	);
-
-	if (state == 'open') {
-		window.sessionStorage.removeItem(
-			'<%= RolesAdminWebKeys.MODAL_SEGMENT_STATE %>'
-		);
-
-		addAssignees();
 	}
 </aui:script>

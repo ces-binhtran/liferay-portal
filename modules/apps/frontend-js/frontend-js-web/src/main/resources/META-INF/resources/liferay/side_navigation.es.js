@@ -12,7 +12,35 @@
  * details.
  */
 
-import EventEmitter from 'metal-events';
+import EventEmitter from './events/EventEmitter';
+
+/**
+ * Options
+ *
+ * @property {String|Number}  breakpoint   The window width that defines the desktop size.
+ * @property {String}         content      The class or ID of the content container.
+ * @property {String}         container    The class or ID of the sidenav container.
+ * @property {String|Number}  gutter       The space between the sidenav-slider and the sidenav-content.
+ * @property {String}         navigation   The class or ID of the navigation container.
+ * @property {String}         position     The position of the sidenav-slider. Possible values: left, right
+ * @property {String}         type         The type of sidenav in desktop. Possible values: relative, fixed, fixed-push
+ * @property {String}         typeMobile   The type of sidenav in mobile. Possible values: relative, fixed, fixed-push
+ * @property {String|Object}  url          The URL to fetch the content to inject into .sidebar-body
+ * @property {String|Number}  width        The width of the side navigation.
+ */
+const DEFAULTS = {
+	breakpoint: 768,
+	content: '.sidenav-content',
+	gutter: '0px',
+	loadingIndicatorTPL:
+		'<div class="loading-animation loading-animation-md"></div>',
+	navigation: '.sidenav-menu-slider',
+	position: 'left',
+	type: 'relative',
+	typeMobile: 'relative',
+	url: null,
+	width: '225px',
+};
 
 /**
  * Map from toggler DOM nodes to sidenav instances.
@@ -393,8 +421,8 @@ SideNavigation.prototype = {
 
 					instance.setHeight();
 				})
-				.catch((err) => {
-					console.error(err);
+				.catch((error) => {
+					console.error(error);
 				});
 		}
 	},
@@ -530,7 +558,7 @@ SideNavigation.prototype = {
 
 			[content, navigation, menu].forEach((element) => {
 				setStyles(element, {
-					height: '',
+					'height': '',
 					'min-height': '',
 				});
 			});
@@ -674,7 +702,7 @@ SideNavigation.prototype = {
 		 */
 		const useDataAttribute = toggler.dataset.toggle === 'liferay-sidenav';
 
-		options = {...defaults, ...options};
+		options = {...DEFAULTS, ...options};
 
 		options.breakpoint = toInt(options.breakpoint);
 		options.container =
@@ -739,12 +767,12 @@ SideNavigation.prototype = {
 			});
 
 			setStyles(navigation, {
-				height: '100%',
+				'height': '100%',
 				'min-height': tallest,
 			});
 
 			setStyles(menu, {
-				height: '100%',
+				'height': '100%',
 				'min-height': tallest,
 			});
 		}
@@ -884,7 +912,7 @@ SideNavigation.prototype = {
 				'sidenav-transition': true,
 			});
 			setClasses(toggler, {
-				active: true,
+				'active': true,
 				[openClass]: true,
 				'sidenav-transition': true,
 			});
@@ -930,7 +958,7 @@ SideNavigation.prototype = {
 				instance.clearHeight();
 
 				setClasses(toggler, {
-					open: false,
+					'open': false,
 					'sidenav-transition': false,
 				});
 
@@ -938,7 +966,7 @@ SideNavigation.prototype = {
 			}
 			else {
 				setClasses(toggler, {
-					open: true,
+					'open': true,
 					'sidenav-transition': false,
 				});
 
@@ -1056,34 +1084,6 @@ SideNavigation.initialize = function initialize(toggler, options = {}) {
 };
 
 SideNavigation.instance = getInstance;
-
-/**
- * Options
- *
- * @property {String|Number}  breakpoint   The window width that defines the desktop size.
- * @property {String}         content      The class or ID of the content container.
- * @property {String}         container    The class or ID of the sidenav container.
- * @property {String|Number}  gutter       The space between the sidenav-slider and the sidenav-content.
- * @property {String}         navigation   The class or ID of the navigation container.
- * @property {String}         position     The position of the sidenav-slider. Possible values: left, right
- * @property {String}         type         The type of sidenav in desktop. Possible values: relative, fixed, fixed-push
- * @property {String}         typeMobile   The type of sidenav in mobile. Possible values: relative, fixed, fixed-push
- * @property {String|Object}  url          The URL to fetch the content to inject into .sidebar-body
- * @property {String|Number}  width        The width of the side navigation.
- */
-const defaults = {
-	breakpoint: 768,
-	content: '.sidenav-content',
-	gutter: '0px',
-	loadingIndicatorTPL:
-		'<div class="loading-animation loading-animation-md"></div>',
-	navigation: '.sidenav-menu-slider',
-	position: 'left',
-	type: 'relative',
-	typeMobile: 'relative',
-	url: null,
-	width: '225px',
-};
 
 function onReady() {
 	const togglers = document.querySelectorAll(

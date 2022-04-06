@@ -18,10 +18,7 @@
 
 <%@ page import="com.liferay.portal.kernel.util.ParamUtil" %>
 
-<%
-String testRuntimePortletId = ParamUtil.getString(request, "testRuntimePortletId");
-%>
-
 <liferay-portlet:runtime
-	portletName="<%= testRuntimePortletId %>"
+	persistSettings='<%= ParamUtil.getBoolean(request, "persistSettings", true) %>'
+	portletName='<%= ParamUtil.getString(request, "testRuntimePortletId", (String)request.getAttribute("testRuntimePortletId")) %>'
 />

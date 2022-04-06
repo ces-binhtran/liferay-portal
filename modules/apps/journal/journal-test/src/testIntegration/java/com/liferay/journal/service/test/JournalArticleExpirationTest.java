@@ -19,9 +19,9 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestUtil;
 import com.liferay.dynamic.data.mapping.test.util.DDMTemplateTestUtil;
+import com.liferay.journal.constants.JournalArticleConstants;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.model.JournalArticle;
-import com.liferay.journal.model.JournalArticleConstants;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -91,6 +91,31 @@ public class JournalArticleExpirationTest {
 		testExpireArticle(false, _MODE_POSTPONE_EXPIRIRATION);
 	}
 
+	@Test
+	public void testSetFutureExpirationDate() throws Exception {
+		JournalArticle article = addArticle(_group.getGroupId(), true);
+
+		Date modifiedDate = article.getModifiedDate();
+
+		JournalArticle updatedArticle = updateArticle(
+			article, _MODE_POSTPONE_EXPIRIRATION);
+
+		article = JournalArticleLocalServiceUtil.getArticle(article.getId());
+
+		Assert.assertEquals(modifiedDate, article.getModifiedDate());
+
+		updatedArticle.setExpirationDate(
+			new Date(System.currentTimeMillis() - (Time.HOUR * 2)));
+
+		JournalArticleLocalServiceUtil.updateJournalArticle(updatedArticle);
+
+		JournalArticleLocalServiceUtil.checkArticles();
+
+		article = JournalArticleLocalServiceUtil.getArticle(article.getId());
+
+		Assert.assertTrue(modifiedDate.before(article.getModifiedDate()));
+	}
+
 	protected JournalArticle addArticle(long groupId, boolean approved)
 		throws Exception {
 
@@ -129,11 +154,11 @@ public class JournalArticleExpirationTest {
 		Calendar expirationDateCalendar = getExpirationCalendar(Time.HOUR, 1);
 
 		return JournalArticleLocalServiceUtil.addArticle(
-			TestPropsValues.getUserId(), groupId,
+			null, TestPropsValues.getUserId(), groupId,
 			JournalFolderConstants.DEFAULT_PARENT_FOLDER_ID,
 			JournalArticleConstants.CLASS_NAME_ID_DEFAULT, 0, StringPool.BLANK,
 			true, JournalArticleConstants.VERSION_DEFAULT, titleMap,
-			descriptionMap, content, ddmStructure.getStructureKey(),
+			descriptionMap, titleMap, content, ddmStructure.getStructureKey(),
 			ddmTemplate.getTemplateKey(), null,
 			displayDateCalendar.get(Calendar.MONTH),
 			displayDateCalendar.get(Calendar.DAY_OF_MONTH),
@@ -154,7 +179,7 @@ public class JournalArticleExpirationTest {
 		Calendar calendar = new GregorianCalendar();
 
 		calendar.setTime(
-			new Date(System.currentTimeMillis() + timeUnit * timeValue));
+			new Date(System.currentTimeMillis() + (timeUnit * timeValue)));
 
 		User user = UserLocalServiceUtil.getUser(TestPropsValues.getUserId());
 

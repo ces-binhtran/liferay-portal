@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <%
-String portletId = portletDisplay.getRootPortletId();
+String portletId = portletDisplay.getId();
 
 boolean autoCreate = GetterUtil.getBoolean((String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":autoCreate"));
 String contents = (String)request.getAttribute(CKEditorConstants.ATTRIBUTE_NAMESPACE + ":contents");
@@ -105,7 +105,7 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 	var="editor"
 >
 	<c:if test="<%= Validator.isNotNull(placeholder) %>">
-		<label class="control-label" for="<%= name %>">
+		<label class="control-label" for="<%= HtmlUtil.escapeAttribute(name) %>">
 			<liferay-ui:message key="<%= placeholder %>" />
 		</label>
 	</c:if>
@@ -120,6 +120,10 @@ if (inlineEdit && Validator.isNotNull(inlineEditSaveURL)) {
 </div>
 
 <script type="text/javascript">
+	CKEDITOR.ADDITIONAL_RESOURCE_PARAMS = {
+		languageId: themeDisplay.getLanguageId(),
+	};
+
 	CKEDITOR.disableAutoInline = true;
 
 	CKEDITOR.dtd.$removeEmpty.i = 0;
@@ -136,7 +140,7 @@ name = HtmlUtil.escapeJS(name);
 	var windowNode = A.getWin();
 
 	var instanceDataReady = false;
-	var instancePendingData;
+	var instancePendingData = null;
 
 	var getInitialContent = function () {
 		var data;
@@ -162,7 +166,7 @@ name = HtmlUtil.escapeJS(name);
 		nativeEditor.config.contentsLangDirection = contentsLanguageDir;
 	};
 
-	var preventImageDragoverHandler = windowNode.on('dragover', function (event) {
+	var preventImageDragoverHandler = windowNode.on('dragover', (event) => {
 		var validDropTarget = event.target.getDOMNode().isContentEditable;
 
 		if (!validDropTarget) {
@@ -170,7 +174,7 @@ name = HtmlUtil.escapeJS(name);
 		}
 	});
 
-	var preventImageDropHandler = windowNode.on('drop', function (event) {
+	var preventImageDropHandler = windowNode.on('drop', (event) => {
 		var validDropTarget = event.target.getDOMNode().isContentEditable;
 
 		if (!validDropTarget) {
@@ -345,7 +349,7 @@ name = HtmlUtil.escapeJS(name);
 			if (!ckePanelDelegate) {
 				ckePanelDelegate = ckEditor.delegate(
 					'click',
-					function (event) {
+					(event) => {
 						var panelFrame = A.one('.cke_combopanel .cke_panel_frame');
 
 						addAUIClass(panelFrame);
@@ -370,7 +374,7 @@ name = HtmlUtil.escapeJS(name);
 	<c:if test="<%= inlineEdit && Validator.isNotNull(inlineEditSaveURL) %>">
 		var inlineEditor;
 
-		Liferay.on('toggleControls', function (event) {
+		Liferay.on('toggleControls', (event) => {
 			if (event.src === 'ui') {
 				var ckEditor = CKEDITOR.instances['<%= name %>'];
 
@@ -443,7 +447,7 @@ name = HtmlUtil.escapeJS(name);
 				ckEditorContent = getInitialContent();
 			}
 
-			ckEditor.setData(ckEditorContent, function () {
+			ckEditor.setData(ckEditorContent, () => {
 				ckEditor.resetDirty();
 
 				ckEditorContent = '';
@@ -477,7 +481,7 @@ name = HtmlUtil.escapeJS(name);
 
 		CKEDITOR.<%= inlineEdit ? "inline" : "replace" %>('<%= name %>', config);
 
-		Liferay.on('<%= name %>selectItem', function (event) {
+		Liferay.on('<%= name %>selectItem', (event) => {
 			CKEDITOR.tools.callFunction(event.ckeditorfuncnum, event.value);
 		});
 
@@ -503,18 +507,35 @@ name = HtmlUtil.escapeJS(name);
 		%>
 
 		<c:if test="<%= useCustomDataProcessor %>">
-			ckEditor.on('customDataProcessorLoaded', function () {
+			ckEditor.on('customDataProcessorLoaded', () => {
 				customDataProcessorLoaded = true;
 
 				if (instanceReady) {
 					initData();
 				}
+
+				// LPS-118801
+
+				var editorPath =
+					'<%= HtmlUtil.escapeJS(PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_CKEDITOR)) %>';
+
+				document
+					.querySelectorAll(
+						'link[href*="' +
+							editorPath +
+							'"],script[src*="' +
+							editorPath +
+							'"]'
+					)
+					.forEach((tag) => {
+						tag.setAttribute('data-senna-track', 'temporary');
+					});
 			});
 		</c:if>
 
 		var instanceReady = false;
 
-		ckEditor.on('instanceReady', function () {
+		ckEditor.on('instanceReady', () => {
 			<c:choose>
 				<c:when test="<%= useCustomDataProcessor %>">
 					instanceReady = true;
@@ -538,7 +559,7 @@ name = HtmlUtil.escapeJS(name);
 			</c:if>
 
 			<c:if test="<%= Validator.isNotNull(onChangeMethod) %>">
-				var contentChangeHandle = setInterval(function () {
+				var contentChangeHandle = setInterval(() => {
 					try {
 						window['<%= name %>'].onChangeCallback();
 					}
@@ -569,7 +590,7 @@ name = HtmlUtil.escapeJS(name);
 				eventHandles.push(
 					A.getWin().on(
 						'resize',
-						A.debounce(function () {
+						A.debounce(() => {
 							if (currentToolbarSet != getToolbarSet(initialToolbarSet)) {
 								var ckeditorInstance =
 									CKEDITOR.instances['<%= name %>'];
@@ -603,8 +624,8 @@ name = HtmlUtil.escapeJS(name);
 			</c:if>
 		});
 
-		ckEditor.on('dataReady', function (event) {
-			if (instancePendingData) {
+		ckEditor.on('dataReady', (event) => {
+			if (instancePendingData !== null) {
 				var pendingData = instancePendingData;
 
 				instancePendingData = null;
@@ -620,14 +641,23 @@ name = HtmlUtil.escapeJS(name);
 
 		ckEditor.on('drop', function (event) {
 			var data = event.data.dataTransfer.getData('text/html');
-			var fragment = CKEDITOR.htmlParser.fragment.fromHtml(data);
-			var name = fragment.children[0].name;
-			if (name) {
-				return this.pasteFilter.check(name);
+
+			if (data) {
+				var fragment = CKEDITOR.htmlParser.fragment.fromHtml(data);
+
+				var element = fragment.children[0];
+
+				if (element.hasClass('cke_widget_image')) {
+					element = element.children[0];
+				}
+
+				if (this.pasteFilter && element.name) {
+					return this.pasteFilter.check(element.name);
+				}
 			}
 		});
 
-		ckEditor.on('setData', function (event) {
+		ckEditor.on('setData', (event) => {
 			instanceDataReady = false;
 		});
 
@@ -657,7 +687,7 @@ name = HtmlUtil.escapeJS(name);
 			var onBlur = function (activeElement) {
 				resetActiveElementValidation(activeElement);
 
-				setTimeout(function () {
+				setTimeout(() => {
 					if (activeElement) {
 						ckEditor.focusManager.blur(true);
 						activeElement.focus();
@@ -665,7 +695,7 @@ name = HtmlUtil.escapeJS(name);
 				}, 0);
 			};
 
-			ckEditor.on('instanceReady', function () {
+			ckEditor.on('instanceReady', () => {
 				var editorWrapper = A.one('#cke_<%= name %>');
 
 				if (editorWrapper) {

@@ -17,16 +17,25 @@ package com.liferay.portal.search.elasticsearch7.internal.background.task;
 import com.liferay.portal.search.elasticsearch7.internal.ElasticsearchSearchEngineFixture;
 import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionFixture;
 import com.liferay.portal.search.elasticsearch7.internal.index.FieldMappingAssert;
-import com.liferay.portal.search.elasticsearch7.internal.index.LiferayTypeMappingsConstants;
+import com.liferay.portal.search.elasticsearch7.internal.index.constants.LiferayTypeMappingsConstants;
 import com.liferay.portal.search.test.util.background.task.BaseReindexSingleIndexerBackgroundTaskExecutorTestCase;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.elasticsearch.client.RestHighLevelClient;
+
+import org.junit.ClassRule;
+import org.junit.Rule;
 
 /**
  * @author Adam Brandizzi
  */
 public class ReindexSingleIndexerBackgroundTaskExecutorTest
 	extends BaseReindexSingleIndexerBackgroundTaskExecutorTestCase {
+
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	public ReindexSingleIndexerBackgroundTaskExecutorTest() {
 		ElasticsearchConnectionFixture elasticsearchConnectionFixture =

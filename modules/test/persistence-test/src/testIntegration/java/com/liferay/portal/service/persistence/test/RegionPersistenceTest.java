@@ -15,21 +15,27 @@
 package com.liferay.portal.service.persistence.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchRegionException;
 import com.liferay.portal.kernel.model.Region;
+import com.liferay.portal.kernel.service.RegionLocalServiceUtil;
 import com.liferay.portal.kernel.service.persistence.RegionPersistence;
 import com.liferay.portal.kernel.service.persistence.RegionUtil;
+import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.transaction.Propagation;
+import com.liferay.portal.kernel.util.IntegerWrapper;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.OrderByComparatorFactoryUtil;
+import com.liferay.portal.kernel.util.Time;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PersistenceTestRule;
 import com.liferay.portal.test.rule.TransactionalTestRule;
@@ -41,7 +47,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -121,13 +126,31 @@ public class RegionPersistenceTest {
 
 		newRegion.setMvccVersion(RandomTestUtil.nextLong());
 
+		newRegion.setUuid(RandomTestUtil.randomString());
+
+		newRegion.setDefaultLanguageId(RandomTestUtil.randomString());
+
+		newRegion.setCompanyId(RandomTestUtil.nextLong());
+
+		newRegion.setUserId(RandomTestUtil.nextLong());
+
+		newRegion.setUserName(RandomTestUtil.randomString());
+
+		newRegion.setCreateDate(RandomTestUtil.nextDate());
+
+		newRegion.setModifiedDate(RandomTestUtil.nextDate());
+
 		newRegion.setCountryId(RandomTestUtil.nextLong());
 
-		newRegion.setRegionCode(RandomTestUtil.randomString());
+		newRegion.setActive(RandomTestUtil.randomBoolean());
 
 		newRegion.setName(RandomTestUtil.randomString());
 
-		newRegion.setActive(RandomTestUtil.randomBoolean());
+		newRegion.setPosition(RandomTestUtil.nextDouble());
+
+		newRegion.setRegionCode(RandomTestUtil.randomString());
+
+		newRegion.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_regions.add(_persistence.update(newRegion));
 
@@ -136,14 +159,52 @@ public class RegionPersistenceTest {
 
 		Assert.assertEquals(
 			existingRegion.getMvccVersion(), newRegion.getMvccVersion());
+		Assert.assertEquals(existingRegion.getUuid(), newRegion.getUuid());
+		Assert.assertEquals(
+			existingRegion.getDefaultLanguageId(),
+			newRegion.getDefaultLanguageId());
 		Assert.assertEquals(
 			existingRegion.getRegionId(), newRegion.getRegionId());
 		Assert.assertEquals(
+			existingRegion.getCompanyId(), newRegion.getCompanyId());
+		Assert.assertEquals(existingRegion.getUserId(), newRegion.getUserId());
+		Assert.assertEquals(
+			existingRegion.getUserName(), newRegion.getUserName());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingRegion.getCreateDate()),
+			Time.getShortTimestamp(newRegion.getCreateDate()));
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingRegion.getModifiedDate()),
+			Time.getShortTimestamp(newRegion.getModifiedDate()));
+		Assert.assertEquals(
 			existingRegion.getCountryId(), newRegion.getCountryId());
+		Assert.assertEquals(existingRegion.isActive(), newRegion.isActive());
+		Assert.assertEquals(existingRegion.getName(), newRegion.getName());
+		AssertUtils.assertEquals(
+			existingRegion.getPosition(), newRegion.getPosition());
 		Assert.assertEquals(
 			existingRegion.getRegionCode(), newRegion.getRegionCode());
-		Assert.assertEquals(existingRegion.getName(), newRegion.getName());
-		Assert.assertEquals(existingRegion.isActive(), newRegion.isActive());
+		Assert.assertEquals(
+			Time.getShortTimestamp(existingRegion.getLastPublishDate()),
+			Time.getShortTimestamp(newRegion.getLastPublishDate()));
+	}
+
+	@Test
+	public void testCountByUuid() throws Exception {
+		_persistence.countByUuid("");
+
+		_persistence.countByUuid("null");
+
+		_persistence.countByUuid((String)null);
+	}
+
+	@Test
+	public void testCountByUuid_C() throws Exception {
+		_persistence.countByUuid_C("", RandomTestUtil.nextLong());
+
+		_persistence.countByUuid_C("null", 0L);
+
+		_persistence.countByUuid_C((String)null, 0L);
 	}
 
 	@Test
@@ -161,20 +222,20 @@ public class RegionPersistenceTest {
 	}
 
 	@Test
+	public void testCountByC_A() throws Exception {
+		_persistence.countByC_A(
+			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
+
+		_persistence.countByC_A(0L, RandomTestUtil.randomBoolean());
+	}
+
+	@Test
 	public void testCountByC_R() throws Exception {
 		_persistence.countByC_R(RandomTestUtil.nextLong(), "");
 
 		_persistence.countByC_R(0L, "null");
 
 		_persistence.countByC_R(0L, (String)null);
-	}
-
-	@Test
-	public void testCountByC_A() throws Exception {
-		_persistence.countByC_A(
-			RandomTestUtil.nextLong(), RandomTestUtil.randomBoolean());
-
-		_persistence.countByC_A(0L, RandomTestUtil.randomBoolean());
 	}
 
 	@Test
@@ -202,8 +263,11 @@ public class RegionPersistenceTest {
 
 	protected OrderByComparator<Region> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"Region", "mvccVersion", true, "regionId", true, "countryId", true,
-			"regionCode", true, "name", true, "active", true);
+			"Region", "mvccVersion", true, "uuid", true, "defaultLanguageId",
+			true, "regionId", true, "companyId", true, "userId", true,
+			"userName", true, "createDate", true, "modifiedDate", true,
+			"countryId", true, "active", true, "name", true, "position", true,
+			"regionCode", true, "lastPublishDate", true);
 	}
 
 	@Test
@@ -312,6 +376,30 @@ public class RegionPersistenceTest {
 	}
 
 	@Test
+	public void testActionableDynamicQuery() throws Exception {
+		final IntegerWrapper count = new IntegerWrapper();
+
+		ActionableDynamicQuery actionableDynamicQuery =
+			RegionLocalServiceUtil.getActionableDynamicQuery();
+
+		actionableDynamicQuery.setPerformActionMethod(
+			new ActionableDynamicQuery.PerformActionMethod<Region>() {
+
+				@Override
+				public void performAction(Region region) {
+					Assert.assertNotNull(region);
+
+					count.increment();
+				}
+
+			});
+
+		actionableDynamicQuery.performActions();
+
+		Assert.assertEquals(count.getValue(), _persistence.countAll());
+	}
+
+	@Test
 	public void testDynamicQueryByPrimaryKeyExisting() throws Exception {
 		Region newRegion = addRegion();
 
@@ -388,18 +476,59 @@ public class RegionPersistenceTest {
 
 		_persistence.clearCache();
 
-		Region existingRegion = _persistence.findByPrimaryKey(
-			newRegion.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newRegion.getPrimaryKey()));
+	}
 
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		Region newRegion = addRegion();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			Region.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq("regionId", newRegion.getRegionId()));
+
+		List<Region> result = _persistence.findWithDynamicQuery(dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(Region region) {
 		Assert.assertEquals(
-			Long.valueOf(existingRegion.getCountryId()),
+			Long.valueOf(region.getCountryId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingRegion, "getOriginalCountryId", new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingRegion.getRegionCode(),
-				ReflectionTestUtil.invoke(
-					existingRegion, "getOriginalRegionCode", new Class<?>[0])));
+				region, "getColumnOriginalValue", new Class<?>[] {String.class},
+				"countryId"));
+		Assert.assertEquals(
+			region.getRegionCode(),
+			ReflectionTestUtil.invoke(
+				region, "getColumnOriginalValue", new Class<?>[] {String.class},
+				"regionCode"));
 	}
 
 	protected Region addRegion() throws Exception {
@@ -409,13 +538,31 @@ public class RegionPersistenceTest {
 
 		region.setMvccVersion(RandomTestUtil.nextLong());
 
+		region.setUuid(RandomTestUtil.randomString());
+
+		region.setDefaultLanguageId(RandomTestUtil.randomString());
+
+		region.setCompanyId(RandomTestUtil.nextLong());
+
+		region.setUserId(RandomTestUtil.nextLong());
+
+		region.setUserName(RandomTestUtil.randomString());
+
+		region.setCreateDate(RandomTestUtil.nextDate());
+
+		region.setModifiedDate(RandomTestUtil.nextDate());
+
 		region.setCountryId(RandomTestUtil.nextLong());
 
-		region.setRegionCode(RandomTestUtil.randomString());
+		region.setActive(RandomTestUtil.randomBoolean());
 
 		region.setName(RandomTestUtil.randomString());
 
-		region.setActive(RandomTestUtil.randomBoolean());
+		region.setPosition(RandomTestUtil.nextDouble());
+
+		region.setRegionCode(RandomTestUtil.randomString());
+
+		region.setLastPublishDate(RandomTestUtil.nextDate());
 
 		_regions.add(_persistence.update(region));
 

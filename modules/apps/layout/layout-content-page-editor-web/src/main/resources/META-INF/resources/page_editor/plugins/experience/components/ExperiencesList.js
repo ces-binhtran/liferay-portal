@@ -12,20 +12,22 @@
  * details.
  */
 
+import ClayList from '@clayui/list';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import {useDispatch} from '../../../app/store/index';
+import {useDispatch} from '../../../app/contexts/StoreContext';
 import selectExperience from '../thunks/selectExperience';
 import {ExperienceType} from '../types';
 import ExperienceItem from './ExperienceItem';
 
 const ExperiencesList = ({
 	activeExperienceId,
+	canUpdateExperiences,
 	defaultExperienceId,
 	experiences,
-	hasUpdatePermissions,
 	onDeleteExperience,
+	onDuplicateExperience,
 	onEditExperience,
 	onPriorityDecrease,
 	onPriorityIncrease,
@@ -34,16 +36,28 @@ const ExperiencesList = ({
 
 	const handleExperienceSelection = (id) => dispatch(selectExperience({id}));
 
+	/* We cannot increase priority if the experiencie above has an experimente running and it's 
+	   for the same audience or the audience of experience is anyone */
+	const calculateIfLockedIncreasePriority = (experience, i) => {
+		return (
+			experiences[i - 1].hasLockedSegmentsExperiment &&
+			(experience.segmentsEntryId ===
+				experiences[i - 1].segmentsEntryId ||
+				experience.segmentsEntryId === '0')
+		);
+	};
+
 	return (
-		<ul className="list-unstyled mt-4" role="list">
+		<ClayList className="mt-3">
 			{experiences.map((experience, i) => {
 				const active =
 					experience.segmentsExperienceId === activeExperienceId;
-				const lockedDecreasePriority = experiences.length - 2 === i;
-				const lockedIncreasePriority = i === 0;
+				const lockedDecreasePriority = experiences.length - 1 === i;
+				const lockedIncreasePriority =
+					i === 0 || calculateIfLockedIncreasePriority(experience, i);
 
 				const editable =
-					hasUpdatePermissions &&
+					canUpdateExperiences &&
 					experience.segmentsExperienceId !== defaultExperienceId &&
 					!experience.hasLockedSegmentsExperiment;
 
@@ -56,6 +70,7 @@ const ExperiencesList = ({
 						lockedDecreasePriority={lockedDecreasePriority}
 						lockedIncreasePriority={lockedIncreasePriority}
 						onDeleteExperience={onDeleteExperience}
+						onDuplicateExperience={onDuplicateExperience}
 						onEditExperience={onEditExperience}
 						onPriorityDecrease={onPriorityDecrease}
 						onPriorityIncrease={onPriorityIncrease}
@@ -63,16 +78,17 @@ const ExperiencesList = ({
 					/>
 				);
 			})}
-		</ul>
+		</ClayList>
 	);
 };
 
 ExperiencesList.propTypes = {
 	activeExperienceId: PropTypes.string.isRequired,
+	canUpdateExperiences: PropTypes.bool.isRequired,
 	defaultExperienceId: PropTypes.string.isRequired,
 	experiences: PropTypes.arrayOf(PropTypes.shape(ExperienceType)).isRequired,
-	hasUpdatePermissions: PropTypes.bool.isRequired,
 	onDeleteExperience: PropTypes.func.isRequired,
+	onDuplicateExperience: PropTypes.func.isRequired,
 	onEditExperience: PropTypes.func.isRequired,
 	onPriorityDecrease: PropTypes.func.isRequired,
 	onPriorityIncrease: PropTypes.func.isRequired,

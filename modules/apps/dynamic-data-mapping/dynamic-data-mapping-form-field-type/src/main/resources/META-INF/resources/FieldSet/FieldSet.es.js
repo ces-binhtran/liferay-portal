@@ -14,89 +14,18 @@
 
 import './FieldSet.scss';
 
-import {getRepeatedIndex} from 'dynamic-data-mapping-form-renderer';
+import {Layout, getRepeatedIndex, usePage} from 'data-engine-js-components-web';
 import React, {useMemo} from 'react';
 
-import {PageRendererAdapter} from '../FieldBase/PageRendererAdapter.es';
-import {FieldBaseProxy} from '../FieldBase/ReactFieldBase.es';
-import getConnectedReactComponentAdapter from '../util/ReactComponentAdapter.es';
-import {connectStore} from '../util/connectStore.es';
+import {FieldBase} from '../FieldBase/ReactFieldBase.es';
 import Panel from './Panel.es';
-
-const FieldSet = ({
-	activePage,
-	collapsible,
-	context,
-	editable,
-	label,
-	onBlur,
-	onChange,
-	onFocus,
-	onRemoveButton,
-	onRepeatButton,
-	pageIndex,
-	readOnly,
-	repeatable,
-	rows,
-	showLabel,
-	showRepeatableRemoveButton,
-	spritemap,
-}) => (
-	<>
-		{showLabel && !collapsible && (
-			<>
-				<label className="text-uppercase">{label}</label>
-				<div className="ddm-field-types-fieldset__nested-separator">
-					<div className="mt-1 separator" />
-				</div>
-			</>
-		)}
-
-		{collapsible ? (
-			<Panel
-				onRemoveButton={onRemoveButton}
-				onRepeatButton={onRepeatButton}
-				readOnly={readOnly}
-				repeatable={repeatable}
-				showLabel={showLabel}
-				showRepeatableRemoveButton={showRepeatableRemoveButton}
-				spritemap={spritemap}
-				title={label}
-			>
-				<PageRendererAdapter
-					activePage={activePage}
-					context={context}
-					editable={editable}
-					onBlur={onBlur}
-					onChange={onChange}
-					onFocus={onFocus}
-					pageIndex={pageIndex}
-					rows={rows}
-					spritemap={spritemap}
-				/>
-			</Panel>
-		) : (
-			<PageRendererAdapter
-				activePage={activePage}
-				context={context}
-				editable={editable}
-				onBlur={onBlur}
-				onChange={onChange}
-				onFocus={onFocus}
-				pageIndex={pageIndex}
-				rows={rows}
-				spritemap={spritemap}
-			/>
-		)}
-	</>
-);
 
 const getRowsArray = (rows) => {
 	if (typeof rows === 'string') {
 		try {
 			return JSON.parse(rows);
 		}
-		catch (e) {
+		catch (error) {
 			return [];
 		}
 	}
@@ -109,80 +38,113 @@ const getRows = (rows, nestedFields) => {
 
 	return normalizedRows.map((row) => ({
 		...row,
-		columns: row.columns.map((column) => ({
-			...column,
-			fields: column.fields.map((fieldName) => {
-				return nestedFields.find(
-					(nestedField) => nestedField.fieldName === fieldName
-				);
-			}),
-		})),
+		columns: row.columns.map((column) => {
+			return {
+				...column,
+				fields: nestedFields.filter((nestedField) =>
+					column.fields.includes(nestedField.fieldName)
+				),
+			};
+		}),
 	}));
 };
 
-const FieldSetProxy = connectStore(
-	({
-		activePage,
-		collapsible,
-		context,
-		dispatch,
-		editable,
-		label,
-		name,
-		nestedFields = [],
-		pageIndex,
-		propagate,
-		readOnly,
-		repeatable,
-		rows,
-		showLabel,
-		spritemap,
-		...otherProps
-	}) => {
-		const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
+const FieldSet = ({
+	collapsible,
+	ddmStructureId,
+	label,
+	name,
+	nestedFields = [],
+	readOnly,
+	repeatable,
+	rows,
+	showLabel,
+	type,
+	...otherProps
+}) => {
+	let belongsToFieldSet = false;
+	let fieldInsidePage = null;
 
-		return (
-			<FieldBaseProxy
-				{...otherProps}
-				dispatch={dispatch}
-				name={name}
-				readOnly={readOnly}
-				repeatable={collapsible ? false : repeatable}
-				showLabel={false}
-				spritemap={spritemap}
-			>
-				<div className="ddm-field-types-fieldset__nested">
-					<FieldSet
-						activePage={activePage}
-						collapsible={collapsible}
-						context={context}
-						editable={editable}
-						label={label}
-						onBlur={(event) => propagate('fieldBlurred', event)}
-						onChange={(event) => propagate('fieldEdited', event)}
-						onFocus={(event) => propagate('fieldFocused', event)}
-						onRemoveButton={() => dispatch('fieldRemoved', name)}
-						onRepeatButton={() => dispatch('fieldRepeated', name)}
-						pageIndex={pageIndex}
+	const isFieldsGroup = type === 'fieldset' && !ddmStructureId;
+	const {editable, page} = usePage();
+	const repeatedIndex = useMemo(() => getRepeatedIndex(name), [name]);
+
+	const findFieldInsidePage = (fields) =>
+		fields?.find((field) => {
+			if (!belongsToFieldSet) {
+				belongsToFieldSet = !!field.ddmStructureId;
+			}
+
+			return field.name === name
+				? field
+				: findFieldInsidePage(field.nestedFields);
+		});
+
+	if (isFieldsGroup) {
+		page.rows.forEach((row) => {
+			row.columns.forEach((column) => {
+				if (!fieldInsidePage) {
+					belongsToFieldSet = false;
+					fieldInsidePage = findFieldInsidePage(column.fields);
+				}
+			});
+		});
+	}
+
+	return (
+		<FieldBase
+			{...otherProps}
+			name={name}
+			readOnly={readOnly}
+			repeatable={collapsible ? false : repeatable}
+			required={false}
+			showLabel={false}
+			tip={null}
+			type={type}
+		>
+			<div className="ddm-field-types-fieldset__nested">
+				{showLabel && !collapsible && (
+					<>
+						<label className="text-uppercase">{label}</label>
+						<div className="ddm-field-types-fieldset__nested-separator">
+							<hr className="mt-1 separator" />
+						</div>
+					</>
+				)}
+
+				{collapsible ? (
+					<Panel
+						name={name}
 						readOnly={readOnly}
 						repeatable={repeatable}
-						rows={getRows(rows, nestedFields)}
 						showLabel={showLabel}
 						showRepeatableRemoveButton={
 							repeatable && repeatedIndex > 0
 						}
-						spritemap={spritemap}
+						title={label}
+					>
+						<Layout
+							editable={
+								editable
+									? isFieldsGroup && !belongsToFieldSet
+									: editable
+							}
+							rows={getRows(rows, nestedFields)}
+						/>
+					</Panel>
+				) : (
+					<Layout
+						editable={
+							editable
+								? isFieldsGroup && !belongsToFieldSet
+								: editable
+						}
+						rows={getRows(rows, nestedFields)}
 					/>
-				</div>
-			</FieldBaseProxy>
-		);
-	}
-);
+				)}
+			</div>
+		</FieldBase>
+	);
+};
 
-const ReactFieldSetAdapter = getConnectedReactComponentAdapter(
-	FieldSetProxy,
-	'fieldset'
-);
-
-export {ReactFieldSetAdapter};
-export default ReactFieldSetAdapter;
+export default FieldSet;

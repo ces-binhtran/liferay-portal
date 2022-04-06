@@ -64,6 +64,7 @@ public class MessageBoardThreadResourceTest
 	}
 
 	@Override
+	@Test
 	public void testGetMessageBoardThreadsRankedPageWithSortString()
 		throws Exception {
 
@@ -102,8 +103,6 @@ public class MessageBoardThreadResourceTest
 	@Override
 	@Test
 	public void testGraphQLGetSiteMessageBoardThreadsPage() throws Exception {
-		Long siteId = testGetSiteMessageBoardThreadsPage_getSiteId();
-
 		MessageBoardThread messageBoardThread1 =
 			testGraphQLMessageBoardThread_addMessageBoardThread();
 		MessageBoardThread messageBoardThread2 =
@@ -121,7 +120,10 @@ public class MessageBoardThreadResourceTest
 						).put(
 							"pageSize", 2
 						).put(
-							"siteKey", "\"" + siteId + "\""
+							"siteKey",
+							"\"" +
+								testGetSiteMessageBoardThreadsPage_getSiteId() +
+									"\""
 						).build(),
 						new GraphQLField("items", getGraphQLFields()),
 						new GraphQLField("page"),
@@ -156,6 +158,7 @@ public class MessageBoardThreadResourceTest
 			super.randomMessageBoardThread();
 
 		messageBoardThread.setMessageBoardSectionId((Long)null);
+		messageBoardThread.setSubscribed(false);
 		messageBoardThread.setThreadType("Urgent");
 
 		return messageBoardThread;

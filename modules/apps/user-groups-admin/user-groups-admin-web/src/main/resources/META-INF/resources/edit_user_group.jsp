@@ -39,7 +39,7 @@ renderResponse.setTitle((userGroup == null) ? LanguageUtil.get(request, "new-use
 
 <portlet:actionURL name="editUserGroup" var="editUserGroupURL" />
 
-<aui:form action="<%= editUserGroupURL %>" cssClass="container-fluid-1280" method="post" name="fm">
+<aui:form action="<%= editUserGroupURL %>" cssClass="container-fluid container-fluid-max-xl" method="post" name="fm">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 	<aui:input name="userGroupId" type="hidden" value="<%= userGroupId %>" />
 	<aui:input name="deleteUserGroupIds" type="hidden" />
@@ -205,7 +205,7 @@ renderResponse.setTitle((userGroup == null) ? LanguageUtil.get(request, "new-use
 											<aui:input label='<%= LanguageUtil.format(request, "enable-propagation-of-changes-from-the-site-template-x", HtmlUtil.escape(publicLayoutSetPrototype.getName(locale)), false) %>' name="publicLayoutSetPrototypeLinkEnabled" type="checkbox" value="<%= publicLayoutSetPrototypeLinkEnabled %>" />
 										</c:when>
 										<c:when test="<%= publicLayoutSetPrototype != null %>">
-											<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(publicLayoutSetPrototype.getName(locale))} %>" key="these-pages-are-linked-to-site-template-x" translateArguments="<%= false %>" />
+											<liferay-ui:message arguments="<%= HtmlUtil.escape(publicLayoutSetPrototype.getName(locale)) %>" key="these-pages-are-linked-to-site-template-x" translateArguments="<%= false %>" />
 
 											<aui:input name="layoutSetPrototypeLinkEnabled" type="hidden" value="<%= true %>" />
 										</c:when>
@@ -269,7 +269,7 @@ renderResponse.setTitle((userGroup == null) ? LanguageUtil.get(request, "new-use
 											<aui:input label='<%= LanguageUtil.format(request, "enable-propagation-of-changes-from-the-site-template-x", HtmlUtil.escape(privateLayoutSetPrototype.getName(locale)), false) %>' name="privateLayoutSetPrototypeLinkEnabled" type="checkbox" value="<%= privateLayoutSetPrototypeLinkEnabled %>" />
 										</c:when>
 										<c:when test="<%= privateLayoutSetPrototype != null %>">
-											<liferay-ui:message arguments="<%= new Object[] {HtmlUtil.escape(privateLayoutSetPrototype.getName(locale))} %>" key="these-pages-are-linked-to-site-template-x" translateArguments="<%= false %>" />
+											<liferay-ui:message arguments="<%= HtmlUtil.escape(privateLayoutSetPrototype.getName(locale)) %>" key="these-pages-are-linked-to-site-template-x" translateArguments="<%= false %>" />
 
 											<aui:input name="layoutSetPrototypeLinkEnabled" type="hidden" value="<%= true %>" />
 										</c:when>

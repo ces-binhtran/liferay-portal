@@ -17,6 +17,8 @@ package com.liferay.portal.workflow.metrics.rest.client.dto.v1_0;
 import com.liferay.portal.workflow.metrics.rest.client.function.UnsafeSupplier;
 import com.liferay.portal.workflow.metrics.rest.client.serdes.v1_0.SLAResultSerDes;
 
+import java.io.Serializable;
+
 import java.util.Date;
 import java.util.Objects;
 
@@ -27,11 +29,32 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class SLAResult implements Cloneable {
+public class SLAResult implements Cloneable, Serializable {
 
 	public static SLAResult toDTO(String json) {
 		return SLAResultSerDes.toDTO(json);
 	}
+
+	public Date getDateModified() {
+		return dateModified;
+	}
+
+	public void setDateModified(Date dateModified) {
+		this.dateModified = dateModified;
+	}
+
+	public void setDateModified(
+		UnsafeSupplier<Date, Exception> dateModifiedUnsafeSupplier) {
+
+		try {
+			dateModified = dateModifiedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Date dateModified;
 
 	public Date getDateOverdue() {
 		return dateOverdue;
@@ -196,11 +219,13 @@ public class SLAResult implements Cloneable {
 
 	public static enum Status {
 
-		PAUSED("Paused"), RUNNING("Running"), STOPPED("Stopped");
+		NEW("NEW"), PAUSED("PAUSED"), RUNNING("RUNNING"), STOPPED("STOPPED");
 
 		public static Status create(String value) {
 			for (Status status : values()) {
-				if (Objects.equals(status.getValue(), value)) {
+				if (Objects.equals(status.getValue(), value) ||
+					Objects.equals(status.name(), value)) {
+
 					return status;
 				}
 			}

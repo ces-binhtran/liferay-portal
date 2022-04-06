@@ -23,11 +23,15 @@
 	<c:otherwise>
 
 		<%
+		Date date = new Date();
+
 		for (int i = 0; i < results.size(); i++) {
 			BlogsEntry entry = (BlogsEntry)results.get(i);
 
-			if (entry.getDisplayDate().after(new Date())) {
-				searchContainer.setTotal(searchContainer.getTotal() - 1);
+			Date displayDate = entry.getDisplayDate();
+
+			if (displayDate.after(date)) {
+				searchContainer.setResultsAndTotal(searchContainer::getResults, searchContainer.getTotal() - 1);
 
 				continue;
 			}

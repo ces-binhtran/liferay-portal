@@ -15,6 +15,7 @@
 package com.liferay.wiki.web.internal.portlet.action;
 
 import com.liferay.document.library.kernel.document.conversion.DocumentConversionUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.io.unsync.UnsyncByteArrayInputStream;
@@ -82,7 +83,6 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 
 		try {
 			long nodeId = ParamUtil.getLong(actionRequest, "nodeId");
-			String nodeName = ParamUtil.getString(actionRequest, "nodeName");
 			String title = ParamUtil.getString(actionRequest, "title");
 			double version = ParamUtil.getDouble(actionRequest, "version");
 
@@ -92,27 +92,39 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
-			PortletURL viewPageURL = PortletURLFactoryUtil.create(
-				actionRequest, portletConfig.getPortletName(),
-				PortletRequest.RENDER_PHASE);
+			PortletURL viewPageURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					actionRequest, portletConfig.getPortletName(),
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/wiki/view"
+			).setParameter(
+				"nodeName", ParamUtil.getString(actionRequest, "nodeName")
+			).setParameter(
+				"title", title
+			).setPortletMode(
+				PortletMode.VIEW
+			).setWindowState(
+				WindowState.MAXIMIZED
+			).buildPortletURL();
 
-			viewPageURL.setParameter("mvcRenderCommandName", "/wiki/view");
-			viewPageURL.setParameter("nodeName", nodeName);
-			viewPageURL.setParameter("title", title);
-			viewPageURL.setPortletMode(PortletMode.VIEW);
-			viewPageURL.setWindowState(WindowState.MAXIMIZED);
+			PortletURL editPageURL = PortletURLBuilder.create(
+				PortletURLFactoryUtil.create(
+					actionRequest, portletConfig.getPortletName(),
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/wiki/edit_page"
+			).setParameter(
+				"nodeId", nodeId
+			).setParameter(
+				"title", title
+			).setPortletMode(
+				PortletMode.VIEW
+			).setWindowState(
+				WindowState.MAXIMIZED
+			).buildPortletURL();
 
-			PortletURL editPageURL = PortletURLFactoryUtil.create(
-				actionRequest, portletConfig.getPortletName(),
-				PortletRequest.RENDER_PHASE);
-
-			editPageURL.setParameter("mvcRenderCommandName", "/wiki/edit_page");
-			editPageURL.setParameter("nodeId", String.valueOf(nodeId));
-			editPageURL.setParameter("title", title);
-			editPageURL.setPortletMode(PortletMode.VIEW);
-			editPageURL.setWindowState(WindowState.MAXIMIZED);
-
-			getFile(
+			_getFile(
 				nodeId, title, version, targetExtension, viewPageURL,
 				editPageURL, themeDisplay,
 				_portal.getHttpServletRequest(actionRequest),
@@ -121,13 +133,13 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 			actionResponse.setRenderParameter("mvcPath", "/null.jsp");
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			_portal.sendError(exception, actionRequest, actionResponse);
 		}
 	}
 
-	protected void getFile(
+	private void _getFile(
 			long nodeId, String title, double version, String targetExtension,
 			PortletURL viewPageURL, PortletURL editPageURL,
 			ThemeDisplay themeDisplay, HttpServletRequest httpServletRequest,
@@ -180,16 +192,13 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 
 		String s = sb.toString();
 
-		InputStream is = new UnsyncByteArrayInputStream(
+		InputStream inputStream = new UnsyncByteArrayInputStream(
 			s.getBytes(StringPool.UTF8));
 
 		String sourceExtension = "html";
 
-		String fileName = title.concat(
-			StringPool.PERIOD
-		).concat(
-			sourceExtension
-		);
+		String fileName = StringBundler.concat(
+			title, StringPool.PERIOD, sourceExtension);
 
 		if (Validator.isNotNull(targetExtension)) {
 			String id =
@@ -197,34 +206,19 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 					page.getUuid();
 
 			File convertedFile = DocumentConversionUtil.convert(
-				id, is, sourceExtension, targetExtension);
+				id, inputStream, sourceExtension, targetExtension);
 
 			if (convertedFile != null) {
-				fileName = title.concat(
-					StringPool.PERIOD
-				).concat(
-					targetExtension
-				);
+				fileName = StringBundler.concat(
+					title, StringPool.PERIOD, targetExtension);
 
-				is = new FileInputStream(convertedFile);
+				inputStream = new FileInputStream(convertedFile);
 			}
 		}
 
 		ServletResponseUtil.sendFile(
-			httpServletRequest, httpServletResponse, fileName, is,
+			httpServletRequest, httpServletResponse, fileName, inputStream,
 			MimeTypesUtil.getContentType(fileName));
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiEngineRenderer(
-		WikiEngineRenderer wikiEngineRenderer) {
-
-		_wikiEngineRenderer = wikiEngineRenderer;
-	}
-
-	@Reference(unbind = "-")
-	protected void setWikiPageService(WikiPageService wikiPageService) {
-		_wikiPageService = wikiPageService;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
@@ -233,7 +227,10 @@ public class ExportPageMVCActionCommand extends BaseMVCActionCommand {
 	@Reference
 	private Portal _portal;
 
+	@Reference
 	private WikiEngineRenderer _wikiEngineRenderer;
+
+	@Reference
 	private WikiPageService _wikiPageService;
 
 }

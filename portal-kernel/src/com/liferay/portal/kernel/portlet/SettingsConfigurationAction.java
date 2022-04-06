@@ -16,7 +16,6 @@ package com.liferay.portal.kernel.portlet;
 
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.Portlet;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.service.PortletLocalServiceUtil;
@@ -109,14 +108,13 @@ public abstract class SettingsConfigurationAction
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		Layout layout = PortletConfigurationLayoutUtil.getLayout(themeDisplay);
-
 		String portletResource = ParamUtil.getString(
 			actionRequest, "portletResource");
 
 		PortletPermissionUtil.check(
 			themeDisplay.getPermissionChecker(), themeDisplay.getScopeGroupId(),
-			layout, portletResource, ActionKeys.CONFIGURATION);
+			PortletConfigurationLayoutUtil.getLayout(themeDisplay),
+			portletResource, ActionKeys.CONFIGURATION);
 
 		UnicodeProperties unicodeProperties = PropertiesParamUtil.getProperties(
 			actionRequest, _parameterNamePrefix);
@@ -322,6 +320,10 @@ public abstract class SettingsConfigurationAction
 		boolean emailEnabled = GetterUtil.getBoolean(
 			getParameter(actionRequest, emailParam + "Enabled"));
 
+		if (!emailEnabled) {
+			return;
+		}
+
 		String languageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getSiteDefault());
 
@@ -330,13 +332,11 @@ public abstract class SettingsConfigurationAction
 		String emailBody = getLocalizedParameter(
 			actionRequest, emailParam + "Body", languageId);
 
-		if (emailEnabled) {
-			if (Validator.isNull(emailSubject)) {
-				SessionErrors.add(actionRequest, emailParam + "Subject");
-			}
-			else if (Validator.isNull(emailBody)) {
-				SessionErrors.add(actionRequest, emailParam + "Body");
-			}
+		if (Validator.isNull(emailSubject)) {
+			SessionErrors.add(actionRequest, emailParam + "Subject");
+		}
+		else if (Validator.isNull(emailBody)) {
+			SessionErrors.add(actionRequest, emailParam + "Body");
 		}
 	}
 

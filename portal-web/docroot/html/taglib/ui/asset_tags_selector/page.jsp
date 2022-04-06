@@ -30,9 +30,7 @@ boolean ignoreRequestValue = GetterUtil.getBoolean(request.getAttribute("liferay
 String removeCallback = GetterUtil.getString((String)request.getAttribute("liferay-ui:asset-tags-selector:removeCallback"));
 
 if (Validator.isNotNull(className) && (classPK > 0)) {
-	List<AssetTag> tags = AssetTagServiceUtil.getTags(className, classPK);
-
-	curTags = ListUtil.toString(tags, AssetTag.NAME_ACCESSOR);
+	curTags = ListUtil.toString(AssetTagServiceUtil.getTags(className, classPK), AssetTag.NAME_ACCESSOR);
 }
 
 if (!ignoreRequestValue) {
@@ -48,7 +46,7 @@ if (!ignoreRequestValue) {
 	<aui:input name="<%= hiddenInput %>" type="hidden" />
 
 	<c:if test="<%= allowAddEntry %>">
-		<input class="form-control lfr-tag-selector-input" id="<%= id %>assetTagNames" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" size="15" title='<liferay-ui:message key="add-tags" />' type="text" />
+		<input class="form-control lfr-tag-selector-input" id="<%= id %>assetTagNames" maxlength="<%= ModelHintsConstants.TEXT_MAX_LENGTH %>" size="15" title="<liferay-ui:message key="add-tags" />" type="text" />
 	</c:if>
 </div>
 

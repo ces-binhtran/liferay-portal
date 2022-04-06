@@ -24,9 +24,6 @@ import com.liferay.asset.kernel.model.BaseAssetRendererFactory;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.ContentTypes;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,6 +40,11 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 
 /**
  * @author Cristina González
@@ -136,28 +138,32 @@ public class OpenNLPDocumentAssetAutoTaggerTest
 	private void _registerAssetRendererFactory(
 		AssetRendererFactory<?> assetRendererFactory) {
 
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			OpenNLPDocumentAssetAutoTaggerTest.class);
 
-		_assetRendererFactoryServiceRegistration = registry.registerService(
-			(Class<AssetRendererFactory<?>>)
-				(Class<?>)AssetRendererFactory.class,
-			assetRendererFactory);
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_assetRendererFactoryServiceRegistration =
+			bundleContext.registerService(
+				AssetRendererFactory.class, assetRendererFactory, null);
 	}
 
-	private void _registerTextExtractor(TextExtractor textExtractor) {
-		Registry registry = RegistryUtil.getRegistry();
+	private void _registerTextExtractor(TextExtractor<?> textExtractor) {
+		Bundle bundle = FrameworkUtil.getBundle(
+			OpenNLPDocumentAssetAutoTaggerTest.class);
 
-		_textExtractorServiceRegistration = registry.registerService(
-			TextExtractor.class, textExtractor);
+		BundleContext bundleContext = bundle.getBundleContext();
+
+		_textExtractorServiceRegistration = bundleContext.registerService(
+			TextExtractor.class, textExtractor, null);
 	}
 
-	private ServiceRegistration<AssetRendererFactory<?>>
-		_assetRendererFactoryServiceRegistration;
+	private ServiceRegistration<?> _assetRendererFactoryServiceRegistration;
 	private String _className = RandomTestUtil.randomString();
-	private ServiceRegistration<TextExtractor>
-		_textExtractorServiceRegistration;
+	private ServiceRegistration<?> _textExtractorServiceRegistration;
 
-	private class TestAssetRendererFactory extends BaseAssetRendererFactory {
+	private class TestAssetRendererFactory
+		extends BaseAssetRendererFactory<Object> {
 
 		public TestAssetRendererFactory(
 			long groupId, String className, Object assetObject) {
@@ -168,7 +174,7 @@ public class OpenNLPDocumentAssetAutoTaggerTest
 		}
 
 		@Override
-		public AssetRenderer<?> getAssetRenderer(long classPK, int type) {
+		public AssetRenderer<Object> getAssetRenderer(long classPK, int type) {
 			return new BaseAssetRenderer() {
 
 				@Override

@@ -29,18 +29,22 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -113,37 +117,77 @@ public class UserNotificationEventModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.UserNotificationEvent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.UserNotificationEvent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.UserNotificationEvent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ACTIONREQUIRED_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ARCHIVED_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long COMPANYID_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DELIVERED_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long DELIVERYTYPE_COLUMN_BITMASK = 16L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long TYPE_COLUMN_BITMASK = 32L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 64L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long UUID_COLUMN_BITMASK = 128L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long TIMESTAMP_COLUMN_BITMASK = 256L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
@@ -201,9 +245,6 @@ public class UserNotificationEventModelImpl
 				attributeName,
 				attributeGetterFunction.apply((UserNotificationEvent)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -373,6 +414,10 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -388,17 +433,20 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setUuid(String uuid) {
-		_columnBitmask |= UUID_COLUMN_BITMASK;
-
-		if (_originalUuid == null) {
-			_originalUuid = _uuid;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_uuid = uuid;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalUuid() {
-		return GetterUtil.getString(_originalUuid);
+		return getColumnOriginalValue("uuid_");
 	}
 
 	@Override
@@ -408,6 +456,10 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setUserNotificationEventId(long userNotificationEventId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_userNotificationEventId = userNotificationEventId;
 	}
 
@@ -418,19 +470,21 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
-		_columnBitmask |= COMPANYID_COLUMN_BITMASK;
-
-		if (!_setOriginalCompanyId) {
-			_setOriginalCompanyId = true;
-
-			_originalCompanyId = _companyId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_companyId = companyId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalCompanyId() {
-		return _originalCompanyId;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("companyId"));
 	}
 
 	@Override
@@ -440,12 +494,8 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setUserId(long userId) {
-		_columnBitmask |= USERID_COLUMN_BITMASK;
-
-		if (!_setOriginalUserId) {
-			_setOriginalUserId = true;
-
-			_originalUserId = _userId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_userId = userId;
@@ -467,8 +517,13 @@ public class UserNotificationEventModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalUserId() {
-		return _originalUserId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
 	@Override
@@ -483,17 +538,20 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setType(String type) {
-		_columnBitmask |= TYPE_COLUMN_BITMASK;
-
-		if (_originalType == null) {
-			_originalType = _type;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_type = type;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalType() {
-		return GetterUtil.getString(_originalType);
+		return getColumnOriginalValue("type_");
 	}
 
 	@Override
@@ -503,7 +561,9 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setTimestamp(long timestamp) {
-		_columnBitmask = -1L;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
 
 		_timestamp = timestamp;
 	}
@@ -515,19 +575,21 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setDeliveryType(int deliveryType) {
-		_columnBitmask |= DELIVERYTYPE_COLUMN_BITMASK;
-
-		if (!_setOriginalDeliveryType) {
-			_setOriginalDeliveryType = true;
-
-			_originalDeliveryType = _deliveryType;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_deliveryType = deliveryType;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public int getOriginalDeliveryType() {
-		return _originalDeliveryType;
+		return GetterUtil.getInteger(
+			this.<Integer>getColumnOriginalValue("deliveryType"));
 	}
 
 	@Override
@@ -537,6 +599,10 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setDeliverBy(long deliverBy) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_deliverBy = deliverBy;
 	}
 
@@ -552,19 +618,21 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setDelivered(boolean delivered) {
-		_columnBitmask |= DELIVERED_COLUMN_BITMASK;
-
-		if (!_setOriginalDelivered) {
-			_setOriginalDelivered = true;
-
-			_originalDelivered = _delivered;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_delivered = delivered;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalDelivered() {
-		return _originalDelivered;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("delivered"));
 	}
 
 	@Override
@@ -579,6 +647,10 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setPayload(String payload) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_payload = payload;
 	}
 
@@ -594,19 +666,21 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setActionRequired(boolean actionRequired) {
-		_columnBitmask |= ACTIONREQUIRED_COLUMN_BITMASK;
-
-		if (!_setOriginalActionRequired) {
-			_setOriginalActionRequired = true;
-
-			_originalActionRequired = _actionRequired;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_actionRequired = actionRequired;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalActionRequired() {
-		return _originalActionRequired;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("actionRequired"));
 	}
 
 	@Override
@@ -621,22 +695,44 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void setArchived(boolean archived) {
-		_columnBitmask |= ARCHIVED_COLUMN_BITMASK;
-
-		if (!_setOriginalArchived) {
-			_setOriginalArchived = true;
-
-			_originalArchived = _archived;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_archived = archived;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalArchived() {
-		return _originalArchived;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("archived"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -695,6 +791,41 @@ public class UserNotificationEventModelImpl
 	}
 
 	@Override
+	public UserNotificationEvent cloneWithOriginalValues() {
+		UserNotificationEventImpl userNotificationEventImpl =
+			new UserNotificationEventImpl();
+
+		userNotificationEventImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		userNotificationEventImpl.setUuid(
+			this.<String>getColumnOriginalValue("uuid_"));
+		userNotificationEventImpl.setUserNotificationEventId(
+			this.<Long>getColumnOriginalValue("userNotificationEventId"));
+		userNotificationEventImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		userNotificationEventImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		userNotificationEventImpl.setType(
+			this.<String>getColumnOriginalValue("type_"));
+		userNotificationEventImpl.setTimestamp(
+			this.<Long>getColumnOriginalValue("timestamp"));
+		userNotificationEventImpl.setDeliveryType(
+			this.<Integer>getColumnOriginalValue("deliveryType"));
+		userNotificationEventImpl.setDeliverBy(
+			this.<Long>getColumnOriginalValue("deliverBy"));
+		userNotificationEventImpl.setDelivered(
+			this.<Boolean>getColumnOriginalValue("delivered"));
+		userNotificationEventImpl.setPayload(
+			this.<String>getColumnOriginalValue("payload"));
+		userNotificationEventImpl.setActionRequired(
+			this.<Boolean>getColumnOriginalValue("actionRequired"));
+		userNotificationEventImpl.setArchived(
+			this.<Boolean>getColumnOriginalValue("archived"));
+
+		return userNotificationEventImpl;
+	}
+
+	@Override
 	public int compareTo(UserNotificationEvent userNotificationEvent) {
 		int value = 0;
 
@@ -718,17 +849,17 @@ public class UserNotificationEventModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof UserNotificationEvent)) {
+		if (!(object instanceof UserNotificationEvent)) {
 			return false;
 		}
 
 		UserNotificationEvent userNotificationEvent =
-			(UserNotificationEvent)obj;
+			(UserNotificationEvent)object;
 
 		long primaryKey = userNotificationEvent.getPrimaryKey();
 
@@ -745,11 +876,19 @@ public class UserNotificationEventModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -757,45 +896,9 @@ public class UserNotificationEventModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		UserNotificationEventModelImpl userNotificationEventModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		userNotificationEventModelImpl._originalUuid =
-			userNotificationEventModelImpl._uuid;
-
-		userNotificationEventModelImpl._originalCompanyId =
-			userNotificationEventModelImpl._companyId;
-
-		userNotificationEventModelImpl._setOriginalCompanyId = false;
-
-		userNotificationEventModelImpl._originalUserId =
-			userNotificationEventModelImpl._userId;
-
-		userNotificationEventModelImpl._setOriginalUserId = false;
-
-		userNotificationEventModelImpl._originalType =
-			userNotificationEventModelImpl._type;
-
-		userNotificationEventModelImpl._originalDeliveryType =
-			userNotificationEventModelImpl._deliveryType;
-
-		userNotificationEventModelImpl._setOriginalDeliveryType = false;
-
-		userNotificationEventModelImpl._originalDelivered =
-			userNotificationEventModelImpl._delivered;
-
-		userNotificationEventModelImpl._setOriginalDelivered = false;
-
-		userNotificationEventModelImpl._originalActionRequired =
-			userNotificationEventModelImpl._actionRequired;
-
-		userNotificationEventModelImpl._setOriginalActionRequired = false;
-
-		userNotificationEventModelImpl._originalArchived =
-			userNotificationEventModelImpl._archived;
-
-		userNotificationEventModelImpl._setOriginalArchived = false;
-
-		userNotificationEventModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -857,7 +960,7 @@ public class UserNotificationEventModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -868,10 +971,27 @@ public class UserNotificationEventModelImpl
 			Function<UserNotificationEvent, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((UserNotificationEvent)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(UserNotificationEvent)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -890,7 +1010,7 @@ public class UserNotificationEventModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -925,31 +1045,114 @@ public class UserNotificationEventModelImpl
 
 	private long _mvccVersion;
 	private String _uuid;
-	private String _originalUuid;
 	private long _userNotificationEventId;
 	private long _companyId;
-	private long _originalCompanyId;
-	private boolean _setOriginalCompanyId;
 	private long _userId;
-	private long _originalUserId;
-	private boolean _setOriginalUserId;
 	private String _type;
-	private String _originalType;
 	private long _timestamp;
 	private int _deliveryType;
-	private int _originalDeliveryType;
-	private boolean _setOriginalDeliveryType;
 	private long _deliverBy;
 	private boolean _delivered;
-	private boolean _originalDelivered;
-	private boolean _setOriginalDelivered;
 	private String _payload;
 	private boolean _actionRequired;
-	private boolean _originalActionRequired;
-	private boolean _setOriginalActionRequired;
 	private boolean _archived;
-	private boolean _originalArchived;
-	private boolean _setOriginalArchived;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<UserNotificationEvent, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((UserNotificationEvent)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("uuid_", _uuid);
+		_columnOriginalValues.put(
+			"userNotificationEventId", _userNotificationEventId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("type_", _type);
+		_columnOriginalValues.put("timestamp", _timestamp);
+		_columnOriginalValues.put("deliveryType", _deliveryType);
+		_columnOriginalValues.put("deliverBy", _deliverBy);
+		_columnOriginalValues.put("delivered", _delivered);
+		_columnOriginalValues.put("payload", _payload);
+		_columnOriginalValues.put("actionRequired", _actionRequired);
+		_columnOriginalValues.put("archived", _archived);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("uuid_", "uuid");
+		attributeNames.put("type_", "type");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("uuid_", 2L);
+
+		columnBitmasks.put("userNotificationEventId", 4L);
+
+		columnBitmasks.put("companyId", 8L);
+
+		columnBitmasks.put("userId", 16L);
+
+		columnBitmasks.put("type_", 32L);
+
+		columnBitmasks.put("timestamp", 64L);
+
+		columnBitmasks.put("deliveryType", 128L);
+
+		columnBitmasks.put("deliverBy", 256L);
+
+		columnBitmasks.put("delivered", 512L);
+
+		columnBitmasks.put("payload", 1024L);
+
+		columnBitmasks.put("actionRequired", 2048L);
+
+		columnBitmasks.put("archived", 4096L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private UserNotificationEvent _escapedModel;
 

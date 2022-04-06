@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.BaseModel;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -37,7 +38,6 @@ import com.liferay.segments.provider.SegmentsEntryProvider;
 import com.liferay.segments.service.SegmentsEntryLocalService;
 import com.liferay.segments.service.SegmentsEntryRelLocalService;
 
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -152,12 +152,6 @@ public abstract class BaseSegmentsEntryProvider
 		return stream.filter(
 			segmentsEntry -> isMember(
 				className, classPK, context, segmentsEntry, segmentsEntryIds)
-		).sorted(
-			(segmentsEntry1, segmentsEntry2) -> {
-				Date modifiedDate = segmentsEntry2.getModifiedDate();
-
-				return modifiedDate.compareTo(segmentsEntry1.getModifiedDate());
-			}
 		).mapToLong(
 			SegmentsEntry::getSegmentsEntryId
 		).toArray();
@@ -214,9 +208,13 @@ public abstract class BaseSegmentsEntryProvider
 		String className, long classPK, Context context,
 		SegmentsEntry segmentsEntry, long[] segmentsEntryIds) {
 
+		String contextFilterString = getFilterString(
+			segmentsEntry, Criteria.Type.CONTEXT);
+
 		if (segmentsEntryRelLocalService.hasSegmentsEntryRel(
 				segmentsEntry.getSegmentsEntryId(),
-				portal.getClassNameId(className), classPK)) {
+				portal.getClassNameId(className), classPK) &&
+			Validator.isNull(contextFilterString)) {
 
 			return true;
 		}
@@ -229,56 +227,67 @@ public abstract class BaseSegmentsEntryProvider
 
 		Criteria.Conjunction contextConjunction = getConjunction(
 			segmentsEntry, Criteria.Type.CONTEXT);
-		String contextFilterString = getFilterString(
-			segmentsEntry, Criteria.Type.CONTEXT);
-
-		if ((context != null) && Validator.isNotNull(contextFilterString)) {
-			boolean matchesContext = false;
-
-			try {
-				matchesContext = oDataMatcher.matches(
-					contextFilterString, context);
-			}
-			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
-			}
-
-			if (matchesContext &&
-				contextConjunction.equals(Criteria.Conjunction.OR)) {
-
-				return true;
-			}
-
-			if (!matchesContext &&
-				contextConjunction.equals(Criteria.Conjunction.AND)) {
-
-				return false;
-			}
-		}
-
-		Criteria.Conjunction modelConjunction = getConjunction(
-			segmentsEntry, Criteria.Type.MODEL);
-		ODataRetriever<BaseModel<?>> oDataRetriever =
-			serviceTrackerMap.getService(className);
 		String modelFilterString = getFilterString(
 			segmentsEntry, Criteria.Type.MODEL);
 
+		if (context != null) {
+			boolean defaultUser = !GetterUtil.getBoolean(
+				context.get(Context.SIGNED_IN), true);
+
+			if (contextConjunction.equals(Criteria.Conjunction.AND) &&
+				defaultUser && Validator.isNotNull(modelFilterString)) {
+
+				return false;
+			}
+
+			boolean matchesContext = false;
+
+			if (Validator.isNotNull(contextFilterString)) {
+				try {
+					matchesContext = oDataMatcher.matches(
+						contextFilterString, context);
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+					else if (_log.isWarnEnabled()) {
+						_log.warn(portalException);
+					}
+				}
+
+				if (matchesContext &&
+					contextConjunction.equals(Criteria.Conjunction.OR)) {
+
+					return true;
+				}
+
+				if (!matchesContext &&
+					contextConjunction.equals(Criteria.Conjunction.AND)) {
+
+					return false;
+				}
+			}
+
+			if (defaultUser) {
+				return matchesContext;
+			}
+		}
+
+		ODataRetriever<BaseModel<?>> oDataRetriever =
+			serviceTrackerMap.getService(className);
+
 		if (Validator.isNotNull(modelFilterString) &&
 			(oDataRetriever != null)) {
-
-			StringBundler sb = new StringBundler(5);
-
-			sb.append("(");
-			sb.append(modelFilterString);
-			sb.append(") and (classPK eq '");
-			sb.append(classPK);
-			sb.append("')");
 
 			boolean matchesModel = false;
 
 			try {
 				int count = oDataRetriever.getResultsCount(
-					segmentsEntry.getCompanyId(), sb.toString(),
+					segmentsEntry.getCompanyId(),
+					StringBundler.concat(
+						"(", modelFilterString, ") and (classPK eq '", classPK,
+						"')"),
 					LocaleUtil.getDefault());
 
 				if (count > 0) {
@@ -286,8 +295,11 @@ public abstract class BaseSegmentsEntryProvider
 				}
 			}
 			catch (PortalException portalException) {
-				_log.error(portalException, portalException);
+				_log.error(portalException);
 			}
+
+			Criteria.Conjunction modelConjunction = getConjunction(
+				segmentsEntry, Criteria.Type.MODEL);
 
 			if (matchesModel &&
 				modelConjunction.equals(Criteria.Conjunction.OR)) {

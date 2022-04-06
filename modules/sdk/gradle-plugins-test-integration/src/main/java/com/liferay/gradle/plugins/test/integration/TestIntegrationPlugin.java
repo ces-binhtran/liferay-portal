@@ -145,29 +145,6 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 			testIntegrationTomcatExtension, startTestableTomcatTask);
 	}
 
-	private static int _updateStartedAppServerStopCounters(
-		File binDir, boolean increment) {
-
-		int originalCounter = 0;
-
-		if (_startedAppServerStopCounters.containsKey(binDir)) {
-			originalCounter = _startedAppServerStopCounters.get(binDir);
-		}
-
-		int counter = originalCounter;
-
-		if (increment) {
-			counter++;
-		}
-		else {
-			counter--;
-		}
-
-		_startedAppServerStopCounters.put(binDir, counter);
-
-		return originalCounter;
-	}
-
 	private Configuration _addConfigurationTestModules(final Project project) {
 		Configuration configuration = GradleUtil.addConfiguration(
 			project, TEST_MODULES_CONFIGURATION_NAME);
@@ -273,7 +250,7 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 	}
 
 	private SetUpArquillianTask _addTaskSetUpArquillian(
-		final Project project, final SourceSet testIntegrationSourceSet,
+		Project project, final SourceSet testIntegrationSourceSet,
 		TestIntegrationTomcatExtension testIntegrationTomcatExtension) {
 
 		SetUpArquillianTask setUpArquillianTask = GradleUtil.addTask(
@@ -729,9 +706,7 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 
 		test.dependsOn(closure);
 
-		test.jvmArgs(
-			"-Djava.net.preferIPv4Stack=true", "-Dliferay.mode=test",
-			"-Duser.timezone=GMT");
+		test.jvmArgs("-Djava.net.preferIPv4Stack=true", "-Duser.timezone=GMT");
 
 		Properties systemProperties = System.getProperties();
 
@@ -813,6 +788,29 @@ public class TestIntegrationPlugin implements Plugin<Project> {
 		}
 
 		return fileName;
+	}
+
+	private int _updateStartedAppServerStopCounters(
+		File binDir, boolean increment) {
+
+		int originalCounter = 0;
+
+		if (_startedAppServerStopCounters.containsKey(binDir)) {
+			originalCounter = _startedAppServerStopCounters.get(binDir);
+		}
+
+		int counter = originalCounter;
+
+		if (increment) {
+			counter++;
+		}
+		else {
+			counter--;
+		}
+
+		_startedAppServerStopCounters.put(binDir, counter);
+
+		return originalCounter;
 	}
 
 	private static final String _SKIP_MANAGED_APP_SERVER_FILE_NAME =

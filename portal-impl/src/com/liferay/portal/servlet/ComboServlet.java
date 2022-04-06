@@ -88,7 +88,7 @@ public class ComboServlet extends HttpServlet {
 			doService(httpServletRequest, httpServletResponse);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			PortalUtil.sendError(
 				HttpServletResponse.SC_INTERNAL_SERVER_ERROR, exception,
@@ -308,15 +308,9 @@ public class ComboServlet extends HttpServlet {
 			resourcePath = portlet.getContextPath() + resourcePath;
 		}
 
-		StringBundler sb = new StringBundler(5);
-
-		sb.append(resourcePath);
-		sb.append(StringPool.QUESTION);
-		sb.append(minifierType);
-		sb.append("&languageId=");
-		sb.append(ParamUtil.getString(httpServletRequest, "languageId"));
-
-		String fileContentKey = sb.toString();
+		String fileContentKey = StringBundler.concat(
+			resourcePath, StringPool.QUESTION, minifierType, "&languageId=",
+			ParamUtil.getString(httpServletRequest, "languageId"));
 
 		FileContentBag fileContentBag = _fileContentBagPortalCache.get(
 			fileContentKey);
@@ -390,6 +384,14 @@ public class ComboServlet extends HttpServlet {
 
 					baseURL = PortalUtil.getPathProxy() + baseURL;
 
+					if (StringUtil.contains(
+							stringFileContent, _CSS_CHARSET_UTF_8,
+							StringPool.BLANK)) {
+
+						stringFileContent = StringUtil.removeSubstring(
+							stringFileContent, _CSS_CHARSET_UTF_8);
+					}
+
 					stringFileContent = AggregateUtil.updateRelativeURLs(
 						stringFileContent, baseURL);
 
@@ -444,7 +446,9 @@ public class ComboServlet extends HttpServlet {
 
 		String resourcePath = getResourcePath(modulePath);
 
-		if (!PortalUtil.isValidResourceId(resourcePath)) {
+		if (!StringUtil.startsWith(resourcePath, CharPool.SLASH) ||
+			!PortalUtil.isValidResourceId(resourcePath)) {
+
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
@@ -503,6 +507,8 @@ public class ComboServlet extends HttpServlet {
 		return FileUtil.getExtension(resourcePath);
 	}
 
+	private static final String _CSS_CHARSET_UTF_8 = "@charset \"UTF-8\";";
+
 	private static final String _CSS_EXTENSION = "css";
 
 	private static final String _CSS_MINIFIED_DASH_SUFFIX = "-min.css";
@@ -526,9 +532,7 @@ public class ComboServlet extends HttpServlet {
 			PortalCacheManagerNames.SINGLE_VM, FileContentBag.class.getName());
 
 	private final Set<String> _protectedParameters = SetUtil.fromArray(
-		new String[] {
-			"b", "browserId", "minifierType", "languageId", "t", "themeId", "zx"
-		});
+		"browserId", "minifierType", "languageId", "t", "themeId", "zx");
 
 	private static class FileContentBag implements Serializable {
 

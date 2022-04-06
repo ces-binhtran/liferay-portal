@@ -416,17 +416,17 @@ public class NestedSetsTreeManagerTest {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
+		public boolean equals(Object object) {
+			if (this == object) {
 				return true;
 			}
 
-			if (!(obj instanceof SimpleNestedSetsTreeNode)) {
+			if (!(object instanceof SimpleNestedSetsTreeNode)) {
 				return false;
 			}
 
 			SimpleNestedSetsTreeNode simpleNestedSetsTreeNode =
-				(SimpleNestedSetsTreeNode)obj;
+				(SimpleNestedSetsTreeNode)object;
 
 			if (_primaryKey == simpleNestedSetsTreeNode._primaryKey) {
 				return true;
@@ -467,17 +467,10 @@ public class NestedSetsTreeManagerTest {
 
 		@Override
 		public String toString() {
-			StringBundler sb = new StringBundler(7);
-
-			sb.append(StringPool.OPEN_PARENTHESIS);
-			sb.append(_nestedSetsTreeNodeLeft);
-			sb.append(StringPool.POUND);
-			sb.append(_primaryKey);
-			sb.append(StringPool.COMMA_AND_SPACE);
-			sb.append(_nestedSetsTreeNodeRight);
-			sb.append(StringPool.CLOSE_PARENTHESIS);
-
-			return sb.toString();
+			return StringBundler.concat(
+				StringPool.OPEN_PARENTHESIS, _nestedSetsTreeNodeLeft,
+				StringPool.POUND, _primaryKey, StringPool.COMMA_AND_SPACE,
+				_nestedSetsTreeNodeRight, StringPool.CLOSE_PARENTHESIS);
 		}
 
 		private long _nestedSetsTreeNodeLeft;

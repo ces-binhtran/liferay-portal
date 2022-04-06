@@ -25,6 +25,10 @@ public class LayoutSetBranchLocalServiceWrapper
 	implements LayoutSetBranchLocalService,
 			   ServiceWrapper<LayoutSetBranchLocalService> {
 
+	public LayoutSetBranchLocalServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutSetBranchLocalServiceWrapper(
 		LayoutSetBranchLocalService layoutSetBranchLocalService) {
 
@@ -33,6 +37,10 @@ public class LayoutSetBranchLocalServiceWrapper
 
 	/**
 	 * Adds the layout set branch to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSetBranch the layout set branch
 	 * @return the layout set branch that was added
@@ -84,6 +92,10 @@ public class LayoutSetBranchLocalServiceWrapper
 	/**
 	 * Deletes the layout set branch from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSetBranch the layout set branch
 	 * @return the layout set branch that was removed
 	 * @throws PortalException
@@ -112,6 +124,10 @@ public class LayoutSetBranchLocalServiceWrapper
 	/**
 	 * Deletes the layout set branch with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSetBranchId the primary key of the layout set branch
 	 * @return the layout set branch that was removed
 	 * @throws PortalException if a layout set branch with the primary key could not be found
@@ -123,6 +139,28 @@ public class LayoutSetBranchLocalServiceWrapper
 
 		return _layoutSetBranchLocalService.deleteLayoutSetBranch(
 			layoutSetBranchId);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.LayoutSetBranch
+			deleteLayoutSetBranch(
+				long currentLayoutPlid,
+				com.liferay.portal.kernel.model.LayoutSetBranch layoutSetBranch,
+				boolean includeMaster)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutSetBranchLocalService.deleteLayoutSetBranch(
+			currentLayoutPlid, layoutSetBranch, includeMaster);
+	}
+
+	@Override
+	public com.liferay.portal.kernel.model.LayoutSetBranch
+			deleteLayoutSetBranch(
+				long currentLayoutPlid, long layoutSetBranchId)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _layoutSetBranchLocalService.deleteLayoutSetBranch(
+			currentLayoutPlid, layoutSetBranchId);
 	}
 
 	@Override
@@ -157,6 +195,13 @@ public class LayoutSetBranchLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _layoutSetBranchLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _layoutSetBranchLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -395,6 +440,10 @@ public class LayoutSetBranchLocalServiceWrapper
 
 	/**
 	 * Updates the layout set branch in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetBranchLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSetBranch the layout set branch
 	 * @return the layout set branch that was updated

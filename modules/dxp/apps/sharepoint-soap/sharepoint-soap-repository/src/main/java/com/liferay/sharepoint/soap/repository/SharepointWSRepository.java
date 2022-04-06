@@ -32,9 +32,12 @@ import com.liferay.document.library.repository.external.ExtRepositorySearchResul
 import com.liferay.document.library.repository.external.cache.ConnectionBuilder;
 import com.liferay.document.library.repository.external.cache.ConnectionCache;
 import com.liferay.document.library.repository.external.search.ExtRepositoryQueryMapper;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.CompanyConstants;
 import com.liferay.portal.kernel.repository.RepositoryException;
 import com.liferay.portal.kernel.search.Query;
@@ -906,6 +909,9 @@ public class SharepointWSRepository
 			throw new DuplicateFileEntryException(name);
 		}
 		catch (SharepointException sharepointException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(sharepointException);
+			}
 
 			// The Sharepoint object does not exist
 
@@ -942,9 +948,10 @@ public class SharepointWSRepository
 		if (sharepointObject.isFile()) {
 			if (extRepositoryObjectType == ExtRepositoryObjectType.FOLDER) {
 				throw new NoSuchFolderException(
-					"Invalid external repository object type " +
-						extRepositoryObjectType + " for Sharepoint object " +
-							sharepointObject);
+					StringBundler.concat(
+						"Invalid external repository object type ",
+						extRepositoryObjectType, " for Sharepoint object ",
+						sharepointObject));
 			}
 
 			return (T)new SharepointWSFileEntry(sharepointObject);
@@ -952,9 +959,10 @@ public class SharepointWSRepository
 
 		if (extRepositoryObjectType == ExtRepositoryObjectType.FILE) {
 			throw new NoSuchFileEntryException(
-				"Invalid external repository object type " +
-					extRepositoryObjectType + " for Sharepoint object " +
-						sharepointObject);
+				StringBundler.concat(
+					"Invalid external repository object type ",
+					extRepositoryObjectType, " for Sharepoint object ",
+					sharepointObject));
 		}
 
 		return (T)new SharepointWSFolder(sharepointObject);
@@ -1014,6 +1022,9 @@ public class SharepointWSRepository
 	private static final String[][] _SUPPORTED_PARAMETERS = {
 		{_LIBRARY_NAME, _LIBRARY_PATH, _SERVER_VERSION, _SITE_URL}
 	};
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		SharepointWSRepository.class);
 
 	private static final Map
 		<ExtRepositoryObjectType<?>, SharepointConnection.ObjectTypeFilter>

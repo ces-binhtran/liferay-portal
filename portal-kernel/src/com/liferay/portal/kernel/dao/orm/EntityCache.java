@@ -15,12 +15,16 @@
 package com.liferay.portal.kernel.dao.orm;
 
 import com.liferay.portal.kernel.cache.PortalCache;
+import com.liferay.portal.kernel.model.BaseModel;
 
 import java.io.Serializable;
+
+import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
  */
+@ProviderType
 public interface EntityCache {
 
 	public void clearCache();
@@ -32,30 +36,21 @@ public interface EntityCache {
 	public PortalCache<Serializable, Serializable> getPortalCache(
 		Class<?> clazz);
 
-	public Serializable getResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey);
+	public Serializable getResult(Class<?> clazz, Serializable primaryKey);
 
 	public void invalidate();
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public Serializable loadResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		SessionFactory sessionFactory);
+	public void putResult(
+		Class<?> clazz, BaseModel<?> baseModel, boolean quiet,
+		boolean updateFinderCache);
 
 	public void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result);
-
-	public void putResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey,
-		Serializable result, boolean quiet);
+		Class<?> clazz, Serializable primaryKey, Serializable result);
 
 	public void removeCache(String className);
 
-	public void removeResult(
-		boolean entityCacheEnabled, Class<?> clazz, Serializable primaryKey);
+	public void removeResult(Class<?> clazz, BaseModel<?> baseModel);
+
+	public void removeResult(Class<?> clazz, Serializable primaryKey);
 
 }

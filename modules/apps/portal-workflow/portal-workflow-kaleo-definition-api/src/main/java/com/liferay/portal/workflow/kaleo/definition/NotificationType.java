@@ -14,6 +14,8 @@
 
 package com.liferay.portal.workflow.kaleo.definition;
 
+import com.liferay.portal.workflow.kaleo.definition.exception.KaleoDefinitionValidationException;
+
 import java.util.Objects;
 
 /**
@@ -21,19 +23,25 @@ import java.util.Objects;
  */
 public enum NotificationType {
 
-	EMAIL("email"), IM("im"), PRIVATE_MESSAGE("private-message"),
+	EMAIL("email"),
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
+	IM("im"),
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), with no direct replacement
+	 */
+	@Deprecated
+	PRIVATE_MESSAGE("private-message"),
 	PUSH_NOTIFICATION("push-notification"),
 	USER_NOTIFICATION("user-notification");
 
-	public static NotificationType parse(String value) {
+	public static NotificationType parse(String value)
+		throws KaleoDefinitionValidationException {
+
 		if (Objects.equals(EMAIL.getValue(), value)) {
 			return EMAIL;
-		}
-		else if (Objects.equals(IM.getValue(), value)) {
-			return IM;
-		}
-		else if (Objects.equals(PRIVATE_MESSAGE.getValue(), value)) {
-			return PRIVATE_MESSAGE;
 		}
 		else if (Objects.equals(PUSH_NOTIFICATION.getValue(), value)) {
 			return PUSH_NOTIFICATION;
@@ -42,7 +50,8 @@ public enum NotificationType {
 			return USER_NOTIFICATION;
 		}
 
-		throw new IllegalArgumentException("Invalid value " + value);
+		throw new KaleoDefinitionValidationException.InvalidNotificationType(
+			value);
 	}
 
 	public String getValue() {

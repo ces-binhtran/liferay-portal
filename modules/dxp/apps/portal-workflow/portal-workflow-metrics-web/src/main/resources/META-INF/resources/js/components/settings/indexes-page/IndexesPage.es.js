@@ -9,29 +9,35 @@
  * distribution rights of the Software.
  */
 
+import ClayLayout from '@clayui/layout';
 import React, {useMemo} from 'react';
 
 import PromisesResolver from '../../../shared/components/promises-resolver/PromisesResolver.es';
 import {useFetch} from '../../../shared/hooks/useFetch.es';
-import {Body} from './IndexesPageBody.es';
+import Body from './IndexesPageBody.es';
 
-const IndexesPage = () => {
+function IndexesPage() {
 	const {data, fetchData} = useFetch({url: '/indexes'});
 
-	const promises = useMemo(() => [fetchData()], [fetchData]);
+	const promises = useMemo(
+		() => [fetchData()],
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[]
+	);
 
 	return (
-		<div className="container-fluid-1280">
-			<h3 className="font-weight-semi-bold my-4" data-testid="pageTitle">
+		<ClayLayout.ContainerFluid>
+			<h3 className="font-weight-semi-bold my-4">
 				{Liferay.Language.get('workflow-index-actions')}
 			</h3>
 
 			<PromisesResolver promises={promises}>
 				<IndexesPage.Body {...data} />
 			</PromisesResolver>
-		</div>
+		</ClayLayout.ContainerFluid>
 	);
-};
+}
 
 IndexesPage.Body = Body;
 

@@ -24,19 +24,21 @@ SamlIdpSpConnection samlIdpSpConnection = (SamlIdpSpConnection)request.getAttrib
 long assertionLifetime = GetterUtil.getLong(request.getAttribute(SamlWebKeys.SAML_ASSERTION_LIFETIME), samlProviderConfiguration.defaultAssertionLifetime());
 %>
 
-<clay:container-fluid>
+<clay:container-fluid
+	cssClass="container-fluid container-fluid-max-xl sheet"
+>
 	<liferay-ui:header
 		backURL="<%= redirect %>"
 		title='<%= (samlIdpSpConnection != null) ? samlIdpSpConnection.getName() : "new-service-provider" %>'
 	/>
 </clay:container-fluid>
 
-<portlet:actionURL name="/admin/updateServiceProviderConnection" var="updateServiceProviderConnectionURL">
+<portlet:actionURL name="/admin/update_service_provider_connection" var="updateServiceProviderConnectionURL">
 	<portlet:param name="mvcRenderCommandName" value="/admin/edit_service_provider_connection" />
 	<portlet:param name="samlIdpSpConnectionId" value='<%= (samlIdpSpConnection != null) ? String.valueOf(samlIdpSpConnection.getSamlIdpSpConnectionId()) : "" %>' />
 </portlet:actionURL>
 
-<aui:form action="<%= updateServiceProviderConnectionURL %>" cssClass="container-fluid-1280" enctype="multipart/form-data">
+<aui:form action="<%= updateServiceProviderConnectionURL %>" cssClass="container-fluid container-fluid-max-xl sheet" enctype="multipart/form-data">
 	<aui:input name="redirect" type="hidden" value="<%= redirect %>" />
 
 	<liferay-ui:error exception="<%= DuplicateSamlIdpSpConnectionSamlSpEntityIdException.class %>" message="please-enter-a-unique-service-provider-entity-id" />
@@ -66,8 +68,8 @@ long assertionLifetime = GetterUtil.getLong(request.getAttribute(SamlWebKeys.SAM
 	<aui:fieldset helpMessage="service-provider-metadata-help" label="metadata">
 		<aui:input name="metadataUrl" />
 
-		<aui:button-row>
-			<aui:button onClick='<%= renderResponse.getNamespace() + "uploadMetadataXml();" %>' value="upload-metadata-xml" />
+		<aui:button-row cssClass="sheet-footer">
+			<aui:button onClick='<%= liferayPortletResponse.getNamespace() + "uploadMetadataXml();" %>' value="upload-metadata-xml" />
 		</aui:button-row>
 
 		<div class="hide" id="<portlet:namespace />uploadMetadataXmlForm">
@@ -109,20 +111,15 @@ long assertionLifetime = GetterUtil.getLong(request.getAttribute(SamlWebKeys.SAM
 </aui:form>
 
 <aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />uploadMetadataXml',
-		function () {
-			var A = AUI();
+	window['<portlet:namespace />uploadMetadataXml'] = function () {
+		var uploadMetadataXmlForm = document.getElementById(
+			'<portlet:namespace />uploadMetadataXmlForm'
+		);
 
-			var uploadMetadataXmlForm = A.one(
-				'#<portlet:namespace />uploadMetadataXmlForm'
-			);
-
-			if (uploadMetadataXmlForm) {
-				uploadMetadataXmlForm.show();
-			}
-		},
-		['aui-base']
-	);
+		if (uploadMetadataXmlForm) {
+			uploadMetadataXmlForm.classList.remove('hide');
+			uploadMetadataXmlForm.removeAttribute('hidden');
+			uploadMetadataXmlForm.style.display = '';
+		}
+	};
 </aui:script>

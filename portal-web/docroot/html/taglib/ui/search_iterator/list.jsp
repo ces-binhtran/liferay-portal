@@ -46,14 +46,14 @@ if (iteratorURL != null) {
 %>
 
 <c:if test="<%= emptyResultsMessage != null %>">
-	<div class='alert alert-info <%= resultRows.isEmpty() ? StringPool.BLANK : "hide" %>' id="<%= namespace + id %>EmptyResultsMessage">
+	<div class="alert alert-info <%= resultRows.isEmpty() ? StringPool.BLANK : "hide" %>" id="<%= namespace + id %>EmptyResultsMessage">
 		<%= LanguageUtil.get(resourceBundle, emptyResultsMessage) %>
 	</div>
 </c:if>
 
-<div class='lfr-search-container lfr-search-container-wrapper <%= resultRows.isEmpty() ? "hide" : StringPool.BLANK %> <%= searchContainer.getCssClass() %>'>
+<div class="lfr-search-container lfr-search-container-wrapper <%= resultRows.isEmpty() ? "hide" : StringPool.BLANK %> <%= searchContainer.getCssClass() %>">
 	<c:if test="<%= PropsValues.SEARCH_CONTAINER_SHOW_PAGINATION_TOP && (resultRows.size() > PropsValues.SEARCH_CONTAINER_SHOW_PAGINATION_TOP_DELTA) && paginate %>">
-		<div class="taglib-search-iterator-page-iterator-top">
+		<div class="mb-3 taglib-search-iterator-page-iterator-top">
 			<liferay-ui:search-paginator
 				id='<%= id + "PageIteratorTop" %>'
 				searchContainer="<%= searchContainer %>"
@@ -118,7 +118,7 @@ if (iteratorURL != null) {
 					if (orderCurrentHeader) {
 						cssClass += " table-sorted";
 
-						if (HtmlUtil.escapeAttribute(orderByType).equals("desc")) {
+						if (Objects.equals(HtmlUtil.escapeAttribute(orderByType), "desc")) {
 							cssClass += " table-sorted-desc";
 						}
 					}
@@ -164,7 +164,7 @@ if (iteratorURL != null) {
 										<a href="<%= url %>">
 									</c:when>
 									<c:otherwise>
-										<a href='<%= StringUtil.replace(orderByJS, new String[] {"orderKey", "orderByType"}, new String[] {orderKey, orderByType}) %>'>
+										<a href="<%= StringUtil.replace(orderByJS, new String[] {"orderKey", "orderByType"}, new String[] {orderKey, orderByType}) %>">
 									</c:otherwise>
 								</c:choose>
 						</c:if>
@@ -172,11 +172,11 @@ if (iteratorURL != null) {
 							<%
 							String headerNameValue = null;
 
-							if ((rowChecker == null) || (i > 0)) {
-								headerNameValue = LanguageUtil.get(resourceBundle, HtmlUtil.escape(headerName));
+							if ((rowChecker != null) && (i == 0)) {
+								headerNameValue = headerName;
 							}
 							else {
-								headerNameValue = headerName;
+								headerNameValue = LanguageUtil.get(resourceBundle, HtmlUtil.escape(headerName));
 							}
 							%>
 
@@ -243,7 +243,14 @@ if (iteratorURL != null) {
 			Map<String, Object> data = row.getData();
 		%>
 
-			<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "info" : StringPool.BLANK %>" <%= AUIUtil.buildData(data) %>>
+			<c:choose>
+				<c:when test="<%= Validator.isNotNull(rowIdProperty) %>">
+					<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "info" : StringPool.BLANK %>" id="<portlet:namespace /><%= id %>_<%= row.getRowId() %>" <%= AUIUtil.buildData(data) %>>
+				</c:when>
+				<c:otherwise>
+					<tr class="<%= GetterUtil.getString(row.getClassName()) %> <%= row.getCssClass() %> <%= row.getState() %> <%= rowIsChecked ? "info" : StringPool.BLANK %>" <%= AUIUtil.buildData(data) %>>
+				</c:otherwise>
+			</c:choose>
 
 			<%
 			for (int j = 0; j < entries.size(); j++) {
@@ -307,7 +314,7 @@ if (iteratorURL != null) {
 		%>
 
 		<c:if test="<%= headerNames != null %>">
-			<tr class="lfr-template">
+			<tr class="d-none <%= searchContainerRowCssClass %>">
 
 				<%
 				for (int i = 0; i < headerNames.size(); i++) {

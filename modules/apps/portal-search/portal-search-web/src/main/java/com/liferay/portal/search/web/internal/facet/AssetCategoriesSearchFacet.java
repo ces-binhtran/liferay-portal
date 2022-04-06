@@ -48,17 +48,16 @@ public class AssetCategoriesSearchFacet extends BaseJSPSearchFacet {
 
 		facetConfiguration.setClassName(getFacetClassName());
 
-		JSONObject jsonObject = JSONUtil.put(
-			"displayStyle", "list"
-		).put(
-			"frequencyThreshold", 1
-		).put(
-			"maxTerms", 10
-		).put(
-			"showAssetCount", true
-		);
-
-		facetConfiguration.setDataJSONObject(jsonObject);
+		facetConfiguration.setDataJSONObject(
+			JSONUtil.put(
+				"displayStyle", "list"
+			).put(
+				"frequencyThreshold", 1
+			).put(
+				"maxTerms", 10
+			).put(
+				"showAssetCount", true
+			));
 
 		facetConfiguration.setFieldName(getFieldName());
 		facetConfiguration.setLabel(getLabel());
@@ -88,23 +87,21 @@ public class AssetCategoriesSearchFacet extends BaseJSPSearchFacet {
 
 	@Override
 	public JSONObject getJSONData(ActionRequest actionRequest) {
-		String displayStyleFacet = ParamUtil.getString(
-			actionRequest, getClassName() + "displayStyleFacet", "list");
-		int frequencyThreshold = ParamUtil.getInteger(
-			actionRequest, getClassName() + "frequencyThreshold", 1);
-		int maxTerms = ParamUtil.getInteger(
-			actionRequest, getClassName() + "maxTerms", 10);
-		boolean showAssetCount = ParamUtil.getBoolean(
-			actionRequest, getClassName() + "showAssetCount", true);
-
 		return JSONUtil.put(
-			"displayStyle", displayStyleFacet
+			"displayStyle",
+			ParamUtil.getString(
+				actionRequest, getClassName() + "displayStyleFacet", "list")
 		).put(
-			"frequencyThreshold", frequencyThreshold
+			"frequencyThreshold",
+			ParamUtil.getInteger(
+				actionRequest, getClassName() + "frequencyThreshold", 1)
 		).put(
-			"maxTerms", maxTerms
+			"maxTerms",
+			ParamUtil.getInteger(actionRequest, getClassName() + "maxTerms", 10)
 		).put(
-			"showAssetCount", showAssetCount
+			"showAssetCount",
+			ParamUtil.getBoolean(
+				actionRequest, getClassName() + "showAssetCount", true)
 		);
 	}
 

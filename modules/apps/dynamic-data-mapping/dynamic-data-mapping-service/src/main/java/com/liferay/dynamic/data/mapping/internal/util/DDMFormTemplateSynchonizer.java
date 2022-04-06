@@ -14,6 +14,7 @@
 
 package com.liferay.dynamic.data.mapping.internal.util;
 
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
@@ -22,8 +23,8 @@ import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormSerializerSerializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
+import com.liferay.dynamic.data.mapping.model.DDMFormFieldType;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateLocalService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.Validator;
@@ -148,8 +149,8 @@ public class DDMFormTemplateSynchonizer {
 
 		String fieldType = structureDDMFormField.getType();
 
-		if (fieldType.equals(DDMImpl.TYPE_SELECT) ||
-			fieldType.equals(DDMImpl.TYPE_RADIO)) {
+		if (fieldType.equals(DDMFormFieldType.SELECT) ||
+			fieldType.equals(DDMFormFieldType.RADIO)) {
 
 			templateDDMFormField.setDDMFormFieldOptions(
 				structureDDMFormField.getDDMFormFieldOptions());
@@ -160,11 +161,9 @@ public class DDMFormTemplateSynchonizer {
 		DDMFormField structureDDMFormField, DDMFormField templateDDMFormField,
 		String templateMode) {
 
-		if (structureDDMFormField == null) {
-			return;
-		}
+		if ((structureDDMFormField == null) ||
+			!templateMode.equals(DDMTemplateConstants.TEMPLATE_MODE_CREATE)) {
 
-		if (!templateMode.equals(DDMTemplateConstants.TEMPLATE_MODE_CREATE)) {
 			return;
 		}
 
@@ -206,9 +205,7 @@ public class DDMFormTemplateSynchonizer {
 	protected void updateDDMTemplate(
 		DDMTemplate ddmTemplate, DDMForm templateDDMForm) {
 
-		String script = serialize(templateDDMForm);
-
-		ddmTemplate.setScript(script);
+		ddmTemplate.setScript(serialize(templateDDMForm));
 
 		_ddmTemplateLocalService.updateDDMTemplate(ddmTemplate);
 	}

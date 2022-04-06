@@ -62,7 +62,7 @@ public class FirebasePushNotificationsSender
 					"properly");
 		}
 
-		_sender.send(buildMessage(tokens, payloadJSONObject));
+		_sender.send(_buildMessage(tokens, payloadJSONObject));
 	}
 
 	@Activate
@@ -83,7 +83,12 @@ public class FirebasePushNotificationsSender
 		_sender = new Sender(apiKey);
 	}
 
-	protected Message buildMessage(
+	@Deactivate
+	protected void deactivate() {
+		_sender = null;
+	}
+
+	private Message _buildMessage(
 		List<String> tokens, JSONObject payloadJSONObject) {
 
 		Message.Builder builder = new Message.Builder();
@@ -95,7 +100,7 @@ public class FirebasePushNotificationsSender
 			builder.contentAvailable(silent);
 		}
 
-		builder.notification(buildNotification(payloadJSONObject));
+		builder.notification(_buildNotification(payloadJSONObject));
 		builder.to(tokens);
 
 		JSONObject newPayloadJSONObject = JSONFactoryUtil.createJSONObject();
@@ -118,18 +123,17 @@ public class FirebasePushNotificationsSender
 		}
 
 		if (newPayloadJSONObject.length() > 0) {
-			Map<String, String> data = HashMapBuilder.put(
-				PushNotificationsConstants.KEY_PAYLOAD,
-				newPayloadJSONObject.toString()
-			).build();
-
-			builder.data(data);
+			builder.data(
+				HashMapBuilder.put(
+					PushNotificationsConstants.KEY_PAYLOAD,
+					newPayloadJSONObject.toString()
+				).build());
 		}
 
 		return builder.build();
 	}
 
-	protected Notification buildNotification(JSONObject payloadJSONObject) {
+	private Notification _buildNotification(JSONObject payloadJSONObject) {
 		Notification.Builder builder = new Notification.Builder();
 
 		if (payloadJSONObject.has(PushNotificationsConstants.KEY_BADGE)) {
@@ -205,11 +209,6 @@ public class FirebasePushNotificationsSender
 		}
 
 		return builder.build();
-	}
-
-	@Deactivate
-	protected void deactivate() {
-		_sender = null;
 	}
 
 	private volatile FirebasePushNotificationsSenderConfiguration

@@ -13,19 +13,22 @@
  */
 
 import PropTypes from 'prop-types';
-import {useEffect, useMemo} from 'react';
+import {useEffect} from 'react';
 
-import {config} from '../../config/index';
-import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
-import {useDispatch, useSelector} from '../../store/index';
-import updateEditableValues from '../../thunks/updateEditableValues';
+import {useToControlsId} from '../../contexts/CollectionItemContext';
 import {
 	useEditableProcessorClickPosition,
 	useEditableProcessorUniqueId,
-	useIsProcessorEnabled,
 	useSetEditableProcessorUniqueId,
-} from './EditableProcessorContext';
-import getEditableUniqueId from './getEditableUniqueId';
+} from '../../contexts/EditableProcessorContext';
+import {
+	useDispatch,
+	useSelector,
+	useSelectorCallback,
+} from '../../contexts/StoreContext';
+import selectLanguageId from '../../selectors/selectLanguageId';
+import selectSegmentsExperienceId from '../../selectors/selectSegmentsExperienceId';
+import updateEditableValues from '../../thunks/updateEditableValues';
 
 export default function FragmentContentProcessor({
 	editables,
@@ -34,44 +37,33 @@ export default function FragmentContentProcessor({
 	const dispatch = useDispatch();
 	const editableProcessorClickPosition = useEditableProcessorClickPosition();
 	const editableProcessorUniqueId = useEditableProcessorUniqueId();
-	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
-	const isProcessorEnabled = useIsProcessorEnabled();
-	const languageId = useSelector(
-		(state) => state.languageId || config.defaultLanguageId
-	);
+	const languageId = useSelector(selectLanguageId);
 	const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
+	const setEditableProcessorUniqueId = useSetEditableProcessorUniqueId();
+	const toControlsId = useToControlsId();
 
-	const editable = useMemo(() => {
-		let enabledEditable = {
-			editableId: null,
-			editableValueNamespace: null,
-			element: null,
-			processor: null,
-		};
+	const editable = editables.find(
+		(editable) =>
+			editableProcessorUniqueId === toControlsId(editable.itemId)
+	);
 
-		if (editables) {
-			enabledEditable =
-				editables.find((editable) =>
-					isProcessorEnabled(
-						getEditableUniqueId(
-							fragmentEntryLinkId,
-							editable.editableId
-						)
-					)
-				) || enabledEditable;
-		}
+	const editableCollectionItemId = toControlsId(
+		editable ? editable.itemId : ''
+	);
 
-		return enabledEditable;
-	}, [editables, isProcessorEnabled, fragmentEntryLinkId]);
-
-	const editableValues = useSelector(
+	const editableValues = useSelectorCallback(
 		(state) =>
 			state.fragmentEntryLinks[fragmentEntryLinkId] &&
-			state.fragmentEntryLinks[fragmentEntryLinkId].editableValues
+			state.fragmentEntryLinks[fragmentEntryLinkId].editableValues,
+		[fragmentEntryLinkId]
 	);
 
 	useEffect(() => {
-		if (!editable.element || !editableValues) {
+		if (
+			!editable ||
+			!editableValues ||
+			editableCollectionItemId !== editableProcessorUniqueId
+		) {
 			return;
 		}
 
@@ -82,30 +74,25 @@ export default function FragmentContentProcessor({
 
 		editable.processor.createEditor(
 			editable.element,
-			(value) => {
+			(value, config = {}) => {
+				const defaultValue =
+					editableValue.defaultValue?.replace(/\s+/g, ' ').trim() ??
+					'';
 				const previousValue = editableValue[languageId];
 
 				if (
-					!previousValue &&
-					value === editableValue.defaultValue.trim()
+					previousValue === value ||
+					(!previousValue && value === defaultValue)
 				) {
-					return;
+					return Promise.resolve();
 				}
 
-				if (previousValue === value) {
-					return;
-				}
-
-				let nextEditableValue = {
-					...editableValue,
+				const editableConfig = {
+					...(editableValue.config || {}),
+					...config,
 				};
 
-				nextEditableValue = {
-					...nextEditableValue,
-					[languageId]: value,
-				};
-
-				dispatch(
+				return dispatch(
 					updateEditableValues({
 						editableValues: {
 							...editableValues,
@@ -113,39 +100,35 @@ export default function FragmentContentProcessor({
 								...editableValues[
 									editable.editableValueNamespace
 								],
-								[editable.editableId]: nextEditableValue,
+								[editable.editableId]: {
+									...editableValue,
+									config: editableConfig,
+									[languageId]: value,
+								},
 							},
 						},
 						fragmentEntryLinkId,
+						languageId,
 						segmentsExperienceId,
 					})
 				);
 			},
 			() => {
+				if (editableCollectionItemId === editableProcessorUniqueId) {
+					setEditableProcessorUniqueId(null);
+				}
+
 				editable.processor.destroyEditor(
 					editable.element,
 					editableValue.config
 				);
-
-				setEditableProcessorUniqueId(null);
 			},
 			editableProcessorClickPosition
 		);
-
-		return () => {
-			if (!editableProcessorUniqueId) {
-				editable.processor.destroyEditor(
-					editable.element,
-					editableValue.config
-				);
-			}
-		};
 	}, [
 		dispatch,
-		editable.editableId,
-		editable.editableValueNamespace,
-		editable.element,
-		editable.processor,
+		editable,
+		editableCollectionItemId,
 		editableProcessorClickPosition,
 		editableProcessorUniqueId,
 		editableValues,
@@ -159,13 +142,5 @@ export default function FragmentContentProcessor({
 }
 
 FragmentContentProcessor.propTypes = {
-	editables: PropTypes.arrayOf(
-		PropTypes.shape({
-			editableId: PropTypes.string.isRequired,
-			editableValueNamespace: PropTypes.string.isRequired,
-			element: PropTypes.object.isRequired,
-			processor: PropTypes.object,
-		})
-	),
 	fragmentEntryLinkId: PropTypes.string.isRequired,
 };

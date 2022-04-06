@@ -16,8 +16,8 @@ package com.liferay.account.service.base;
 
 import com.liferay.account.model.AccountEntryOrganizationRel;
 import com.liferay.account.service.AccountEntryOrganizationRelLocalService;
+import com.liferay.account.service.AccountEntryOrganizationRelLocalServiceUtil;
 import com.liferay.account.service.persistence.AccountEntryOrganizationRelPersistence;
-import com.liferay.account.service.persistence.AccountEntryPersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -45,10 +45,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -70,11 +73,15 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>AccountEntryOrganizationRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.account.service.AccountEntryOrganizationRelLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>AccountEntryOrganizationRelLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>AccountEntryOrganizationRelLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the account entry organization rel to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was added
@@ -108,6 +115,10 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	/**
 	 * Deletes the account entry organization rel with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntryOrganizationRelId the primary key of the account entry organization rel
 	 * @return the account entry organization rel that was removed
 	 * @throws PortalException if a account entry organization rel with the primary key could not be found
@@ -125,6 +136,10 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	/**
 	 * Deletes the account entry organization rel from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was removed
 	 */
@@ -140,6 +155,13 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return accountEntryOrganizationRelPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -305,6 +327,7 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -324,6 +347,7 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 				(AccountEntryOrganizationRel)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<AccountEntryOrganizationRel> getBasePersistence() {
 		return accountEntryOrganizationRelPersistence;
 	}
@@ -370,6 +394,10 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	/**
 	 * Updates the account entry organization rel in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AccountEntryOrganizationRelLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param accountEntryOrganizationRel the account entry organization rel
 	 * @return the account entry organization rel that was updated
 	 */
@@ -380,6 +408,11 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 
 		return accountEntryOrganizationRelPersistence.update(
 			accountEntryOrganizationRel);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -394,6 +427,8 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		accountEntryOrganizationRelLocalService =
 			(AccountEntryOrganizationRelLocalService)aopProxy;
+
+		_setLocalServiceUtilService(accountEntryOrganizationRelLocalService);
 	}
 
 	/**
@@ -439,6 +474,24 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		AccountEntryOrganizationRelLocalService
+			accountEntryOrganizationRelLocalService) {
+
+		try {
+			Field field =
+				AccountEntryOrganizationRelLocalServiceUtil.class.
+					getDeclaredField("_service");
+
+			field.setAccessible(true);
+
+			field.set(null, accountEntryOrganizationRelLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected AccountEntryOrganizationRelLocalService
 		accountEntryOrganizationRelLocalService;
 
@@ -447,14 +500,7 @@ public abstract class AccountEntryOrganizationRelLocalServiceBaseImpl
 		accountEntryOrganizationRelPersistence;
 
 	@Reference
-	protected AccountEntryPersistence accountEntryPersistence;
-
-	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.OrganizationLocalService
-		organizationLocalService;
 
 }

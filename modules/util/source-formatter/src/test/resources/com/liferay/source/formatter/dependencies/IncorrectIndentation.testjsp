@@ -35,13 +35,11 @@ taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %>
 	<td>
 
 		<%
-			if (!fileEntries.isEmpty()) {
-				FileEntry fileEntry = (FileEntry)fileEntries.get(0);
-
+			for (FileEntry fileEntry : fileEntries) {
 				String largeSrc = DLUtil.getPreviewURL(fileEntry, fileEntry.getFileVersion(), themeDisplay, StringPool.BLANK);
 		%>
 
-		<img alt='<liferay-ui:message escapeAttribute="<%= true %>" key="slide-show" />' name="<portlet:namespace />slideShow" src="<%= StringUtil.trim(largeSrc) %>" />
+		<img alt="<liferay-ui:message escapeAttribute="<%= true %>" key="slide-show" />" name="<portlet:namespace />slideShow" src="<%= StringUtil.trim(largeSrc) %>" />
 
 		<%
 		}

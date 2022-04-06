@@ -22,7 +22,7 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 
 <clay:content-row>
 	<clay:content-col
-		expand="true"
+		expand="<%= true %>"
 	>
 		<h4 class="sheet-tertiary-title">
 			<liferay-ui:message key="custom-fields" />
@@ -33,27 +33,30 @@ User selUser = (User)request.getAttribute(UsersAdminWebKeys.SELECTED_USER);
 		<clay:content-col>
 
 			<%
-			boolean hasVisibleCustomFields = CustomFieldsUtil.hasVisibleCustomFields(company.getCompanyId(), User.class);
+			boolean hasVisibleAttributes = ExpandoAttributesUtil.hasVisibleAttributes(company.getCompanyId(), User.class);
 
 			PortletProvider.Action action = PortletProvider.Action.EDIT;
 
-			if (hasVisibleCustomFields) {
+			if (hasVisibleAttributes) {
 				action = PortletProvider.Action.MANAGE;
 			}
-
-			PortletURL customFieldsURL = PortletProviderUtil.getPortletURL(request, ExpandoColumn.class.getName(), action);
-
-			customFieldsURL.setParameter("redirect", currentURL);
-			customFieldsURL.setParameter("modelResource", User.class.getName());
 			%>
 
 			<liferay-ui:icon
 				cssClass="modify-link"
 				label="<%= true %>"
 				linkCssClass="btn btn-secondary btn-sm"
-				message='<%= hasVisibleCustomFields ? "manage" : "add" %>'
+				message='<%= hasVisibleAttributes ? "manage" : "add" %>'
 				method="get"
-				url="<%= customFieldsURL.toString() %>"
+				url='<%=
+					PortletURLBuilder.create(
+						PortletProviderUtil.getPortletURL(request, ExpandoColumn.class.getName(), action)
+					).setRedirect(
+						currentURL
+					).setParameter(
+						"modelResource", User.class.getName()
+					).buildString()
+				%>'
 			/>
 		</clay:content-col>
 	</c:if>

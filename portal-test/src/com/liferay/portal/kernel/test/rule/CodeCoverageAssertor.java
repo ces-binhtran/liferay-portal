@@ -62,11 +62,7 @@ public class CodeCoverageAssertor implements TestRule {
 	public Statement apply(
 		final Statement statement, final Description description) {
 
-		if (_skip) {
-			return statement;
-		}
-
-		if (description.getMethodName() != null) {
+		if (_skip || (description.getMethodName() != null)) {
 			return statement;
 		}
 
@@ -135,9 +131,8 @@ public class CodeCoverageAssertor implements TestRule {
 			className = className.substring(0, className.length() - 4);
 		}
 
-		String jvmClassPath = ClassPathUtil.getJVMClassPath(false);
-
-		URL[] urls = ClassPathUtil.getClassPathURLs(jvmClassPath);
+		URL[] urls = ClassPathUtil.getClassPathURLs(
+			ClassPathUtil.getJVMClassPath(false));
 
 		ClassLoader classLoader = new URLClassLoader(urls, null);
 

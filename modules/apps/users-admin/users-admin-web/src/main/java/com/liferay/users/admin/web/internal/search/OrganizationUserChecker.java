@@ -17,6 +17,8 @@ package com.liferay.users.admin.web.internal.search;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.dao.search.EmptyOnClickRowChecker;
 import com.liferay.portal.kernel.exception.NoSuchOrganizationException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
@@ -42,15 +44,15 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 	}
 
 	@Override
-	public boolean isDisabled(Object obj) {
+	public boolean isDisabled(Object object) {
 		Organization organization = null;
 		User user = null;
 
-		if (obj instanceof Organization) {
-			organization = (Organization)obj;
+		if (object instanceof Organization) {
+			organization = (Organization)object;
 		}
 		else {
-			user = (User)obj;
+			user = (User)object;
 		}
 
 		try {
@@ -72,9 +74,12 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 			}
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
 		}
 
-		return super.isDisabled(obj);
+		return super.isDisabled(object);
 	}
 
 	@Override
@@ -109,5 +114,8 @@ public class OrganizationUserChecker extends EmptyOnClickRowChecker {
 			httpServletRequest, checked, disabled, name, value, checkBoxRowIds,
 			checkBoxAllRowIds, checkBoxPostOnClick);
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		OrganizationUserChecker.class);
 
 }

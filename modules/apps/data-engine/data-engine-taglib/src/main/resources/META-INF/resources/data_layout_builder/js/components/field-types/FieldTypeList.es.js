@@ -12,13 +12,31 @@
  * details.
  */
 
+import ClayEmptyState from '@clayui/empty-state';
 import classNames from 'classnames';
+import {
+	EVENT_TYPES as CORE_EVENT_TYPES,
+	useConfig,
+	useForm,
+	useFormState,
+} from 'data-engine-js-components-web';
 import React from 'react';
 
+import {sub} from '../../utils/lang.es';
+import {getSearchRegex} from '../../utils/search.es';
 import CollapsablePanel from '../collapsable-panel/CollapsablePanel.es';
 import FieldType from './FieldType.es';
 
-const FieldTypeWrapper = ({expanded, fieldType, showArrows, ...otherProps}) => {
+const FieldTypeWrapper = ({
+	expanded,
+	fieldType,
+	fieldTypes,
+	showArrows,
+	...otherProps
+}) => {
+	const dispatch = useForm();
+	const {activePage, pages} = useFormState();
+
 	const getIcon = () => {
 		if (showArrows) {
 			return expanded ? 'angle-down' : 'angle-right';
@@ -27,29 +45,72 @@ const FieldTypeWrapper = ({expanded, fieldType, showArrows, ...otherProps}) => {
 		return fieldType.icon;
 	};
 
-	return <FieldType {...otherProps} {...fieldType} icon={getIcon()} />;
+	return (
+		<FieldType
+			{...otherProps}
+			{...fieldType}
+			icon={getIcon()}
+			onDoubleClick={({name}) => {
+				dispatch({
+					payload: {
+						fieldType: {
+							...fieldTypes.find(
+								({name: typeName}) => typeName === name
+							),
+							editable: true,
+						},
+						indexes: {
+							columnIndex: 0,
+							pageIndex: activePage,
+							rowIndex: pages[activePage].rows.length,
+						},
+					},
+					type: CORE_EVENT_TYPES.FIELD.ADD,
+				});
+			}}
+		/>
+	);
 };
 
-export default ({
+const FieldTypeList = ({
+	dataDefinition,
 	deleteLabel,
-	fieldTypes,
 	keywords,
 	onClick,
 	onDelete,
-	onDoubleClick,
+	showEmptyState = true,
 }) => {
-	const regex = new RegExp(keywords, 'ig');
-	const fieldTypeList = fieldTypes
-		.filter(({system}) => !system)
-		.filter(({description, label}) => {
+	const {fieldTypes} = useConfig();
+	const regex = getSearchRegex(keywords);
+
+	const filteredFieldTypes = fieldTypes
+		.filter(({description, label, system}) => {
+			if (system) {
+				return false;
+			}
 			if (!keywords) {
 				return true;
 			}
 
 			return regex.test(description) || regex.test(label);
-		});
+		})
+		.sort(({displayOrder: a}, {displayOrder: b}) => a - b);
 
-	return fieldTypeList.map((fieldType, index) => {
+	if (showEmptyState && !filteredFieldTypes.length) {
+		return (
+			<ClayEmptyState
+				description={sub(
+					Liferay.Language.get('there-are-no-results-for-x'),
+					[keywords]
+				)}
+				imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+				small
+				title={Liferay.Language.get('no-results-found')}
+			/>
+		);
+	}
+
+	return filteredFieldTypes.map((fieldType, index) => {
 		const {isFieldSet, nestedDataDefinitionFields = []} = fieldType;
 
 		const handleOnClick = (props) => {
@@ -63,43 +124,45 @@ export default ({
 		if (nestedDataDefinitionFields.length) {
 			const Header = ({expanded, setExpanded}) => (
 				<FieldTypeWrapper
+					dataDefinition={dataDefinition}
 					deleteLabel={deleteLabel}
 					expanded={expanded}
 					fieldType={{
 						...fieldType,
 						className: `${fieldType.className} field-type-header`,
 					}}
+					fieldTypes={filteredFieldTypes}
 					onClick={(props) => {
 						setExpanded(!expanded);
 
 						handleOnClick(props);
 					}}
 					onDelete={onDelete}
-					onDoubleClick={onDoubleClick}
 					setExpanded={setExpanded}
 					showArrows
 				/>
 			);
 
 			return (
-				<div className="field-type-list">
+				<div className="field-type-list" key={index}>
 					<CollapsablePanel
+						Header={Header}
 						className={classNames({
 							'field-type-fieldgroup': !isFieldSet,
 							'field-type-fieldset': isFieldSet,
 						})}
-						Header={Header}
-						key={index}
 					>
 						<div className="field-type-item position-relative">
 							{nestedDataDefinitionFields.map(
 								(nestedFieldType) => (
 									<FieldTypeWrapper
+										dataDefinition={dataDefinition}
 										draggable={false}
 										fieldType={{
 											...nestedFieldType,
 											disabled: fieldType.disabled,
 										}}
+										fieldTypes={filteredFieldTypes}
 										key={`${nestedFieldType.name}_${index}`}
 									/>
 								)
@@ -112,13 +175,17 @@ export default ({
 
 		return (
 			<FieldTypeWrapper
+				dataDefinition={dataDefinition}
 				deleteLabel={deleteLabel}
 				fieldType={fieldType}
+				fieldTypes={filteredFieldTypes}
 				key={index}
 				onClick={handleOnClick}
 				onDelete={onDelete}
-				onDoubleClick={onDoubleClick}
 			/>
 		);
 	});
 };
+
+FieldTypeList.displayName = 'FieldTypeList';
+export default FieldTypeList;

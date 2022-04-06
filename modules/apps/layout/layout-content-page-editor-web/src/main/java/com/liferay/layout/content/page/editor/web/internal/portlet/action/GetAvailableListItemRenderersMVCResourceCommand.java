@@ -47,7 +47,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/get_available_list_item_renderers"
+		"mvc.command.name=/layout_content_page_editor/get_available_list_item_renderers"
 	},
 	service = MVCResourceCommand.class
 )
@@ -67,26 +67,33 @@ public class GetAvailableListItemRenderersMVCResourceCommand
 
 		String listStyle = ParamUtil.getString(resourceRequest, "listStyle");
 
-		InfoListRenderer infoListRenderer =
+		InfoListRenderer<?> infoListRenderer =
 			_infoListRendererTracker.getInfoListRenderer(listStyle);
-
-		List<InfoItemRenderer> infoItemRenderers =
-			infoListRenderer.getAvailableInfoItemRenderers();
 
 		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		for (InfoItemRenderer infoItemRenderer : infoItemRenderers) {
+		for (InfoItemRenderer<?> infoItemRenderer :
+				infoListRenderer.getAvailableInfoItemRenderers()) {
+
+			if (!infoItemRenderer.isAvailable()) {
+				continue;
+			}
+
 			if (infoItemRenderer instanceof InfoItemTemplatedRenderer) {
 				JSONArray templatesJSONArray =
 					JSONFactoryUtil.createJSONArray();
 
-				InfoItemTemplatedRenderer infoItemTemplatedRenderer =
-					(InfoItemTemplatedRenderer)infoItemRenderer;
+				InfoItemTemplatedRenderer<Object> infoItemTemplatedRenderer =
+					(InfoItemTemplatedRenderer<Object>)infoItemRenderer;
 
 				List<InfoItemRendererTemplate> infoItemRendererTemplates =
 					infoItemTemplatedRenderer.getInfoItemRendererTemplates(
 						itemType, itemSubtype, themeDisplay.getLocale());
+
+				if (infoItemRendererTemplates.isEmpty()) {
+					continue;
+				}
 
 				Collections.sort(
 					infoItemRendererTemplates,

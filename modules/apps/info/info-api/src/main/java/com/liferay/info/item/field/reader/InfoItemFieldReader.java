@@ -22,7 +22,9 @@ import com.liferay.info.field.InfoField;
  */
 public interface InfoItemFieldReader<T> {
 
-	public InfoField getField();
+	public default InfoField getInfoField() {
+		return null;
+	}
 
 	public default String getKey() {
 		Class<?> clazz = getClass();

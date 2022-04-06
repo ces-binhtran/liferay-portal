@@ -14,7 +14,6 @@
 
 package com.liferay.dynamic.data.mapping.internal.report;
 
-import com.liferay.dynamic.data.mapping.constants.DDMFormInstanceReportConstants;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.report.DDMFormFieldTypeReportProcessor;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
@@ -43,7 +42,7 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessor
 	@Override
 	public JSONObject process(
 			DDMFormFieldValue ddmFormFieldValue, JSONObject fieldJSONObject,
-			long formInstanceRecordId, String formInstanceReportEvent)
+			long formInstanceRecordId, String ddmFormInstanceReportEvent)
 		throws Exception {
 
 		JSONObject valuesJSONObject = fieldJSONObject.getJSONObject("values");
@@ -58,21 +57,16 @@ public class CheckboxMultipleDDMFormFieldTypeReportProcessor
 		while (iterator.hasNext()) {
 			String key = iterator.next();
 
-			int count = valuesJSONObject.getInt(key, 0);
+			updateData(ddmFormInstanceReportEvent, valuesJSONObject, key);
+		}
 
-			if (formInstanceReportEvent.equals(
-					DDMFormInstanceReportConstants.EVENT_ADD_RECORD_VERSION)) {
-
-				count++;
-			}
-			else if (formInstanceReportEvent.equals(
-						DDMFormInstanceReportConstants.
-							EVENT_DELETE_RECORD_VERSION)) {
-
-				count--;
-			}
-
-			valuesJSONObject.put(key, count);
+		if (valueJSONArray.length() != 0) {
+			updateData(
+				ddmFormInstanceReportEvent, fieldJSONObject, "totalEntries");
+		}
+		else {
+			fieldJSONObject.put(
+				"totalEntries", fieldJSONObject.getInt("totalEntries"));
 		}
 
 		return fieldJSONObject;

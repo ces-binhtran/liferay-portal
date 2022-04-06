@@ -14,8 +14,8 @@
 
 import ClayButton from '@clayui/button';
 import ClayIcon from '@clayui/icon';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import classNames from 'classnames';
-import {useIsMounted} from 'frontend-js-react-web';
 import PropTypes from 'prop-types';
 import React, {useState} from 'react';
 
@@ -41,6 +41,14 @@ const RatingsLike = ({
 		setAnimatedButton(false);
 	};
 
+	const handleSendVoteRequest = (score) => {
+		sendVoteRequest(score).then(({totalScore} = {}) => {
+			if (isMounted() && totalScore) {
+				setTotalLikes(Math.round(totalScore));
+			}
+		});
+	};
+
 	const toggleLiked = () => {
 		if (!liked) {
 			setAnimatedButton(true);
@@ -63,16 +71,8 @@ const RatingsLike = ({
 			: Liferay.Language.get('like-this');
 	};
 
-	const handleSendVoteRequest = (score) => {
-		sendVoteRequest(score).then(({totalScore} = {}) => {
-			if (isMounted() && totalScore) {
-				setTotalLikes(Math.round(totalScore));
-			}
-		});
-	};
-
 	return (
-		<div className="ratings ratings-like">
+		<div className="ratings-like">
 			<ClayButton
 				aria-pressed={liked}
 				borderless
@@ -86,16 +86,23 @@ const RatingsLike = ({
 				title={getTitle()}
 				value={totalLikes}
 			>
-				<span className="inline-item inline-item-before">
-					<span className="off">
-						<ClayIcon symbol="heart" />
+				<span className="c-inner" tabIndex="-1">
+					<span className="inline-item inline-item-before">
+						<span className="off">
+							<ClayIcon symbol="heart" />
+						</span>
+
+						<span
+							className="on"
+							onAnimationEnd={HandleAnimationEnd}
+						>
+							<ClayIcon symbol="heart-full" />
+						</span>
 					</span>
-					<span className="on" onAnimationEnd={HandleAnimationEnd}>
-						<ClayIcon symbol="heart-full" />
+
+					<span className="inline-item likes">
+						<AnimatedCounter counter={totalLikes} />
 					</span>
-				</span>
-				<span className="inline-item likes">
-					<AnimatedCounter counter={totalLikes} />
 				</span>
 			</ClayButton>
 		</div>

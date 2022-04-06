@@ -1,7 +1,8 @@
 create table Calendar (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	calendarId LONG not null primary key,
+	calendarId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -16,13 +17,15 @@ create table Calendar (
 	defaultCalendar BOOLEAN,
 	enableComments BOOLEAN,
 	enableRatings BOOLEAN,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (calendarId, ctCollectionId)
 );
 
 create table CalendarBooking (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	calendarBookingId LONG not null primary key,
+	calendarBookingId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -49,13 +52,15 @@ create table CalendarBooking (
 	status INTEGER,
 	statusByUserId LONG,
 	statusByUserName VARCHAR(75) null,
-	statusDate DATE null
+	statusDate DATE null,
+	primary key (calendarBookingId, ctCollectionId)
 );
 
 create table CalendarNotificationTemplate (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	calendarNotificationTemplateId LONG not null primary key,
+	calendarNotificationTemplateId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -64,17 +69,19 @@ create table CalendarNotificationTemplate (
 	modifiedDate DATE null,
 	calendarId LONG,
 	notificationType VARCHAR(75) null,
-	notificationTypeSettings VARCHAR(75) null,
+	notificationTypeSettings VARCHAR(200) null,
 	notificationTemplateType VARCHAR(75) null,
 	subject VARCHAR(75) null,
 	body TEXT null,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (calendarNotificationTemplateId, ctCollectionId)
 );
 
 create table CalendarResource (
 	mvccVersion LONG default 0 not null,
+	ctCollectionId LONG default 0 not null,
 	uuid_ VARCHAR(75) null,
-	calendarResourceId LONG not null primary key,
+	calendarResourceId LONG not null,
 	groupId LONG,
 	companyId LONG,
 	userId LONG,
@@ -88,5 +95,6 @@ create table CalendarResource (
 	name STRING null,
 	description STRING null,
 	active_ BOOLEAN,
-	lastPublishDate DATE null
+	lastPublishDate DATE null,
+	primary key (calendarResourceId, ctCollectionId)
 );

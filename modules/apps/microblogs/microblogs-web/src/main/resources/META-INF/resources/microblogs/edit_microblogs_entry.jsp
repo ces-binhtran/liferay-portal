@@ -173,7 +173,7 @@ if (comment) {
 				</span>
 			</div>
 
-			<div class='highlighter-content <%= (comment || edit || repost) ? StringPool.BLANK : "textbox" %>' id="<portlet:namespace />highlighterContent<%= formId %>"></div>
+			<div class="highlighter-content <%= (comment || edit || repost) ? StringPool.BLANK : "textbox" %>" id="<portlet:namespace />highlighterContent<%= formId %>"></div>
 		</div>
 
 		<aui:input label="" name="content" type="hidden" />
@@ -210,7 +210,7 @@ if (comment) {
 			}
 			%>
 
-			<aui:select inlineLabel="<%= Boolean.TRUE.toString() %>" label="viewable-by" name="socialRelationType" onChange='<%= renderResponse.getNamespace() + "relationTypeOnChange(event);" %>' value="<%= socialRelationType %>">
+			<aui:select inlineLabel="<%= Boolean.TRUE.toString() %>" label="viewable-by" name="socialRelationType" onChange='<%= liferayPortletResponse.getNamespace() + "relationTypeOnChange(event);" %>' value="<%= socialRelationType %>">
 				<aui:option label="everyone" value="<%= MicroblogsEntryConstants.TYPE_EVERYONE %>" />
 				<aui:option label="connections" value="<%= SocialRelationConstants.TYPE_BI_CONNECTION %>" />
 				<aui:option label="followers" value="<%= SocialRelationConstants.TYPE_UNI_FOLLOWER %>" />

@@ -50,7 +50,7 @@ public class ModifiedFacetBuilder {
 	public Facet build() {
 		Facet facet = _modifiedFacetFactory.newInstance(_searchContext);
 
-		facet.setFacetConfiguration(buildFacetConfiguration(facet));
+		facet.setFacetConfiguration(_buildFacetConfiguration(facet));
 
 		String rangeString = _getSelectedRangeString(facet);
 
@@ -81,7 +81,15 @@ public class ModifiedFacetBuilder {
 		_selectedRanges = selectedRanges;
 	}
 
-	protected FacetConfiguration buildFacetConfiguration(Facet facet) {
+	protected JSONArray getRangesJSONArray(Calendar calendar) {
+		if (_rangesJSONArray == null) {
+			_rangesJSONArray = _getDefaultRangesJSONArray(calendar);
+		}
+
+		return _rangesJSONArray;
+	}
+
+	private FacetConfiguration _buildFacetConfiguration(Facet facet) {
 		FacetConfiguration facetConfiguration = new FacetConfiguration();
 
 		facetConfiguration.setDataJSONObject(_jsonFactory.createJSONObject());
@@ -101,36 +109,28 @@ public class ModifiedFacetBuilder {
 		return facetConfiguration;
 	}
 
-	protected JSONArray getDefaultRangesJSONArray(Calendar calendar) {
+	private JSONArray _getDefaultRangesJSONArray(Calendar calendar) {
 		JSONArray rangesJSONArray = _jsonFactory.createJSONArray();
 
 		Map<String, String> map = _dateRangeFactory.getRangeStrings(calendar);
 
 		map.forEach(
 			(key, value) -> {
-				JSONObject range = _jsonFactory.createJSONObject();
+				JSONObject rangeJSONObject = _jsonFactory.createJSONObject();
 
-				range.put(
+				rangeJSONObject.put(
 					"label", key
 				).put(
 					"range", value
 				);
 
-				rangesJSONArray.put(range);
+				rangesJSONArray.put(rangeJSONObject);
 			});
 
 		return rangesJSONArray;
 	}
 
-	protected JSONArray getRangesJSONArray(Calendar calendar) {
-		if (_rangesJSONArray == null) {
-			_rangesJSONArray = getDefaultRangesJSONArray(calendar);
-		}
-
-		return _rangesJSONArray;
-	}
-
-	protected Map<String, String> getRangesMap(JSONArray rangesJSONArray) {
+	private Map<String, String> _getRangesMap(JSONArray rangesJSONArray) {
 		Map<String, String> rangesMap = new HashMap<>();
 
 		for (int i = 0; i < rangesJSONArray.length(); i++) {
@@ -157,7 +157,7 @@ public class ModifiedFacetBuilder {
 		}
 
 		if (!ArrayUtil.isEmpty(_selectedRanges)) {
-			Map<String, String> rangesMap = getRangesMap(_rangesJSONArray);
+			Map<String, String> rangesMap = _getRangesMap(_rangesJSONArray);
 
 			String selectedRange = _selectedRanges[_selectedRanges.length - 1];
 

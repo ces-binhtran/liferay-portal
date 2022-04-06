@@ -14,48 +14,68 @@
 
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
+import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.model.AssetRendererFactory;
+import com.liferay.asset.kernel.model.ClassType;
+import com.liferay.asset.kernel.model.ClassTypeReader;
+import com.liferay.asset.list.constants.AssetListEntryTypeConstants;
+import com.liferay.asset.list.model.AssetListEntry;
+import com.liferay.asset.list.service.AssetListEntryLocalServiceUtil;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.item.provider.InfoItemFormProviderTracker;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.info.collection.provider.InfoCollectionProvider;
+import com.liferay.info.collection.provider.SingleFormVariationInfoCollectionProvider;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.criteria.InfoListItemSelectorReturnType;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.FFLayoutContentPageEditorConfiguration;
+import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
 import com.liferay.layout.content.page.editor.web.internal.constants.ContentPageEditorActionKeys;
+import com.liferay.layout.content.page.editor.web.internal.segments.SegmentsExperienceUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructure;
 import com.liferay.layout.page.template.model.LayoutPageTemplateStructureRel;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureLocalServiceUtil;
 import com.liferay.layout.page.template.service.LayoutPageTemplateStructureRelLocalServiceUtil;
+import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
+import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.portlet.PortletProvider;
 import com.liferay.portal.kernel.portlet.PortletProviderUtil;
+import com.liferay.portal.kernel.security.permission.ResourceActionsUtil;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
-import com.liferay.portal.kernel.service.LayoutLocalServiceUtil;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HttpUtil;
-import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.segments.constants.SegmentsEntryConstants;
 import com.liferay.segments.constants.SegmentsExperienceConstants;
-import com.liferay.segments.constants.SegmentsExperimentConstants;
 import com.liferay.segments.constants.SegmentsPortletKeys;
+import com.liferay.segments.manager.SegmentsExperienceManager;
 import com.liferay.segments.model.SegmentsEntry;
 import com.liferay.segments.model.SegmentsExperience;
-import com.liferay.segments.model.SegmentsExperiment;
+import com.liferay.segments.model.SegmentsExperimentRel;
+import com.liferay.segments.model.SegmentsExperimentRelTable;
 import com.liferay.segments.service.SegmentsEntryServiceUtil;
 import com.liferay.segments.service.SegmentsExperienceLocalServiceUtil;
-import com.liferay.segments.service.SegmentsExperienceServiceUtil;
-import com.liferay.segments.service.SegmentsExperimentLocalServiceUtil;
+import com.liferay.segments.service.SegmentsExperimentRelLocalServiceUtil;
 import com.liferay.staging.StagingGroupHelper;
 
 import java.util.ArrayList;
@@ -63,7 +83,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
@@ -87,22 +109,24 @@ public class ContentPageLayoutEditorDisplayContext
 		FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
 		FragmentRendererController fragmentRendererController,
 		FragmentRendererTracker fragmentRendererTracker,
+		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
-		InfoDisplayContributorTracker infoDisplayContributorTracker,
-		InfoItemFormProviderTracker infoItemFormProviderTracker,
-		ItemSelector itemSelector, PortletRequest portletRequest,
-		RenderResponse renderResponse, StagingGroupHelper stagingGroupHelper) {
+		InfoItemServiceTracker infoItemServiceTracker,
+		ItemSelector itemSelector,
+		PageEditorConfiguration pageEditorConfiguration,
+		PortletRequest portletRequest, RenderResponse renderResponse,
+		SegmentsExperienceManager segmentsExperienceManager,
+		StagingGroupHelper stagingGroupHelper) {
 
 		super(
 			commentManager, contentPageEditorSidebarPanels,
 			ffLayoutContentPageEditorConfiguration,
 			fragmentCollectionContributorTracker,
 			fragmentEntryConfigurationParser, fragmentRendererController,
-			fragmentRendererTracker, httpServletRequest,
-			infoDisplayContributorTracker, infoItemFormProviderTracker,
-			itemSelector, portletRequest, renderResponse);
-
-		_stagingGroupHelper = stagingGroupHelper;
+			fragmentRendererTracker, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceTracker, itemSelector,
+			pageEditorConfiguration, portletRequest, renderResponse,
+			segmentsExperienceManager, stagingGroupHelper);
 	}
 
 	@Override
@@ -122,20 +146,25 @@ public class ContentPageLayoutEditorDisplayContext
 		configContext.put(
 			"addSegmentsExperienceURL",
 			getFragmentEntryActionURL(
-				"/content_layout/add_segments_experience"));
+				"/layout_content_page_editor/add_segments_experience"));
 		configContext.put(
 			"availableSegmentsEntries", _getAvailableSegmentsEntries());
 		configContext.put(
 			"defaultSegmentsEntryId", SegmentsEntryConstants.ID_DEFAULT);
 		configContext.put(
-			"defaultSegmentsExperienceId",
-			String.valueOf(SegmentsExperienceConstants.ID_DEFAULT));
-		configContext.put(
 			"deleteSegmentsExperienceURL",
 			getFragmentEntryActionURL(
-				"/content_layout/delete_segments_experience"));
+				"/layout_content_page_editor/delete_segments_experience"));
 		configContext.put("editSegmentsEntryURL", _getEditSegmentsEntryURL());
 		configContext.put("plid", themeDisplay.getPlid());
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (Objects.equals(layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
+			configContext.put(
+				"selectedMappingTypes", _getSelectedMappingTypes());
+		}
+
 		configContext.put(
 			"selectedSegmentsEntryId", String.valueOf(_getSegmentsEntryId()));
 		configContext.put(
@@ -145,13 +174,14 @@ public class ContentPageLayoutEditorDisplayContext
 			(Map<String, Object>)editorContext.get("state");
 
 		stateContext.put(
-			"availableSegmentsExperiences", _getAvailableSegmentsExperiences());
+			"availableSegmentsExperiences",
+			SegmentsExperienceUtil.getAvailableSegmentsExperiences(
+				httpServletRequest));
 		stateContext.put("layoutDataList", _getLayoutDataList());
 		stateContext.put(
-			"segmentsExperienceId", String.valueOf(getSegmentsExperienceId()));
-		stateContext.put(
 			"segmentsExperimentStatus",
-			_getSegmentsExperimentStatus(getSegmentsExperienceId()));
+			SegmentsExperienceUtil.getSegmentsExperimentStatus(
+				themeDisplay, getSegmentsExperienceId()));
 
 		Map<String, Object> permissionsContext =
 			(Map<String, Object>)stateContext.get("permissions");
@@ -172,27 +202,118 @@ public class ContentPageLayoutEditorDisplayContext
 			return _segmentsExperienceId;
 		}
 
-		_segmentsExperienceId = SegmentsExperienceConstants.ID_DEFAULT;
-
-		long selectedSegmentsExperienceId = ParamUtil.getLong(
+		_segmentsExperienceId = ParamUtil.getLong(
 			PortalUtil.getOriginalServletRequest(httpServletRequest),
 			"segmentsExperienceId", -1);
 
-		if ((selectedSegmentsExperienceId != -1) &&
-			(selectedSegmentsExperienceId !=
-				SegmentsExperienceConstants.ID_DEFAULT)) {
+		if ((_segmentsExperienceId != -1) &&
+			(_segmentsExperienceId != SegmentsExperienceConstants.ID_DEFAULT)) {
 
-			SegmentsExperience segmentsExperience =
+			_segmentsExperienceId = Optional.ofNullable(
 				SegmentsExperienceLocalServiceUtil.fetchSegmentsExperience(
-					selectedSegmentsExperienceId);
-
-			if (segmentsExperience != null) {
-				_segmentsExperienceId =
-					segmentsExperience.getSegmentsExperienceId();
-			}
+					_segmentsExperienceId)
+			).map(
+				SegmentsExperience::getSegmentsExperienceId
+			).orElseGet(
+				super::getSegmentsExperienceId
+			);
+		}
+		else {
+			_segmentsExperienceId = super.getSegmentsExperienceId();
 		}
 
 		return _segmentsExperienceId;
+	}
+
+	private AssetListEntry _getAssetListEntry(String collectionPK) {
+		return AssetListEntryLocalServiceUtil.fetchAssetListEntry(
+			GetterUtil.getLong(collectionPK));
+	}
+
+	private String _getAssetListEntryItemTypeLabel(
+		AssetListEntry assetListEntry) {
+
+		if (Objects.equals(
+				assetListEntry.getAssetEntryType(),
+				AssetEntry.class.getName())) {
+
+			return LanguageUtil.get(httpServletRequest, "multiple-item-types");
+		}
+
+		String assetEntryTypeLabel = ResourceActionsUtil.getModelResource(
+			themeDisplay.getLocale(), assetListEntry.getAssetEntryType());
+
+		long classTypeId = GetterUtil.getLong(
+			assetListEntry.getAssetEntrySubtype(), -1);
+
+		if (classTypeId >= 0) {
+			AssetRendererFactory<?> assetRendererFactory =
+				AssetRendererFactoryRegistryUtil.
+					getAssetRendererFactoryByClassName(
+						assetListEntry.getAssetEntryType());
+
+			if ((assetRendererFactory != null) &&
+				assetRendererFactory.isSupportsClassTypes()) {
+
+				ClassTypeReader classTypeReader =
+					assetRendererFactory.getClassTypeReader();
+
+				try {
+					ClassType classType = classTypeReader.getClassType(
+						classTypeId, themeDisplay.getLocale());
+
+					assetEntryTypeLabel =
+						assetEntryTypeLabel + " - " + classType.getName();
+				}
+				catch (PortalException portalException) {
+					if (_log.isDebugEnabled()) {
+						_log.debug(portalException);
+					}
+				}
+			}
+		}
+
+		return assetEntryTypeLabel;
+	}
+
+	private String _getAssetListEntryItemTypeURL(AssetListEntry assetListEntry)
+		throws Exception {
+
+		PortletURL portletURL = PortletProviderUtil.getPortletURL(
+			portletRequest, AssetListEntry.class.getName(),
+			PortletProvider.Action.EDIT);
+
+		if (portletURL == null) {
+			return StringPool.BLANK;
+		}
+
+		portletURL.setParameter("redirect", themeDisplay.getURLCurrent());
+		portletURL.setParameter("backURL", themeDisplay.getURLCurrent());
+		portletURL.setParameter(
+			"assetListEntryId",
+			String.valueOf(assetListEntry.getAssetListEntryId()));
+
+		return portletURL.toString();
+	}
+
+	private JSONArray _getAssetListEntryLinkedCollectionJSONArray(
+		AssetListEntry assetListEntry) {
+
+		return JSONUtil.put(
+			JSONUtil.put(
+				"classNameId",
+				PortalUtil.getClassNameId(AssetListEntry.class.getName())
+			).put(
+				"classPK", String.valueOf(assetListEntry.getAssetListEntryId())
+			).put(
+				"itemSubtype", assetListEntry.getAssetEntrySubtype()
+			).put(
+				"itemType", assetListEntry.getAssetEntryType()
+			).put(
+				"title", assetListEntry.getTitle()
+			).put(
+				"type", InfoListItemSelectorReturnType.class.getName()
+			));
 	}
 
 	private Map<String, Object> _getAvailableSegmentsEntries() {
@@ -226,82 +347,6 @@ public class ContentPageLayoutEditorDisplayContext
 		return availableSegmentsEntries;
 	}
 
-	private Map<String, Object> _getAvailableSegmentsExperiences()
-		throws Exception {
-
-		Map<String, Object> availableSegmentsExperiences = new HashMap<>();
-
-		Layout draftLayout = themeDisplay.getLayout();
-
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			draftLayout.getClassPK());
-
-		String layoutFullURL = PortalUtil.getLayoutFullURL(
-			layout, themeDisplay);
-
-		List<SegmentsExperience> segmentsExperiences =
-			SegmentsExperienceServiceUtil.getSegmentsExperiences(
-				getGroupId(), PortalUtil.getClassNameId(Layout.class.getName()),
-				themeDisplay.getPlid(), true);
-
-		for (SegmentsExperience segmentsExperience : segmentsExperiences) {
-			availableSegmentsExperiences.put(
-				String.valueOf(segmentsExperience.getSegmentsExperienceId()),
-				HashMapBuilder.<String, Object>put(
-					"hasLockedSegmentsExperiment",
-					segmentsExperience.hasSegmentsExperiment()
-				).put(
-					"name", segmentsExperience.getName(themeDisplay.getLocale())
-				).put(
-					"priority", segmentsExperience.getPriority()
-				).put(
-					"segmentsEntryId",
-					String.valueOf(segmentsExperience.getSegmentsEntryId())
-				).put(
-					"segmentsExperienceId",
-					String.valueOf(segmentsExperience.getSegmentsExperienceId())
-				).put(
-					"segmentsExperimentStatus",
-					_getSegmentsExperimentStatus(
-						segmentsExperience.getSegmentsExperienceId())
-				).put(
-					"segmentsExperimentURL",
-					_getSegmentsExperimentURL(
-						layoutFullURL,
-						segmentsExperience.getSegmentsExperienceId())
-				).build());
-		}
-
-		availableSegmentsExperiences.put(
-			String.valueOf(SegmentsExperienceConstants.ID_DEFAULT),
-			HashMapBuilder.<String, Object>put(
-				"hasLockedSegmentsExperiment",
-				_hasDefaultSegmentsExperienceLockedSegmentsExperiment()
-			).put(
-				"name",
-				SegmentsExperienceConstants.getDefaultSegmentsExperienceName(
-					themeDisplay.getLocale())
-			).put(
-				"priority", SegmentsExperienceConstants.PRIORITY_DEFAULT
-			).put(
-				"segmentsEntryId",
-				String.valueOf(SegmentsEntryConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperienceId",
-				String.valueOf(SegmentsExperienceConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperimentStatus",
-				_getSegmentsExperimentStatus(
-					SegmentsExperienceConstants.ID_DEFAULT)
-			).put(
-				"segmentsExperimentURL",
-				_getSegmentsExperimentURL(
-					layoutFullURL, SegmentsExperienceConstants.ID_DEFAULT)
-			).build());
-
-		return availableSegmentsExperiences;
-	}
-
 	private String _getEditSegmentsEntryURL() throws Exception {
 		if (_editSegmentsEntryURL != null) {
 			return _editSegmentsEntryURL;
@@ -321,6 +366,80 @@ public class ContentPageLayoutEditorDisplayContext
 		}
 
 		return _editSegmentsEntryURL;
+	}
+
+	private InfoCollectionProvider<?> _getInfoCollectionProvider(
+		String collectionPK) {
+
+		List<InfoCollectionProvider<?>> infoCollectionProviders =
+			(List<InfoCollectionProvider<?>>)
+				(List<?>)infoItemServiceTracker.getAllInfoItemServices(
+					InfoCollectionProvider.class);
+
+		Stream<InfoCollectionProvider<?>> stream =
+			infoCollectionProviders.stream();
+
+		Optional<InfoCollectionProvider<?>> infoCollectionProviderOptional =
+			stream.filter(
+				infoCollectionProvider -> Objects.equals(
+					infoCollectionProvider.getKey(), collectionPK)
+			).findFirst();
+
+		if (infoCollectionProviderOptional.isPresent()) {
+			return infoCollectionProviderOptional.get();
+		}
+
+		return null;
+	}
+
+	private String _getInfoCollectionProviderItemTypeLabel(
+		InfoCollectionProvider<?> infoCollectionProvider) {
+
+		String className = infoCollectionProvider.getCollectionItemClassName();
+
+		if (Objects.equals(className, AssetEntry.class.getName())) {
+			return LanguageUtil.get(httpServletRequest, "multiple-item-types");
+		}
+
+		if (Validator.isNotNull(className)) {
+			return ResourceActionsUtil.getModelResource(
+				themeDisplay.getLocale(), className);
+		}
+
+		return StringPool.BLANK;
+	}
+
+	private JSONArray _getInfoCollectionProviderLinkedCollectionJSONArray(
+		InfoCollectionProvider<?> infoCollectionProvider) {
+
+		return JSONUtil.put(
+			JSONUtil.put(
+				"itemSubtype",
+				() -> {
+					if (infoCollectionProvider instanceof
+							SingleFormVariationInfoCollectionProvider) {
+
+						SingleFormVariationInfoCollectionProvider<?>
+							singleFormVariationInfoCollectionProvider =
+								(SingleFormVariationInfoCollectionProvider<?>)
+									infoCollectionProvider;
+
+						return singleFormVariationInfoCollectionProvider.
+							getFormVariationKey();
+					}
+
+					return null;
+				}
+			).put(
+				"itemType", infoCollectionProvider.getCollectionItemClassName()
+			).put(
+				"key", infoCollectionProvider.getKey()
+			).put(
+				"title",
+				infoCollectionProvider.getLabel(LocaleUtil.getDefault())
+			).put(
+				"type", InfoListProviderItemSelectorReturnType.class.getName()
+			));
 	}
 
 	private List<Map<String, Object>> _getLayoutDataList() throws Exception {
@@ -371,69 +490,120 @@ public class ContentPageLayoutEditorDisplayContext
 		return _segmentsEntryId;
 	}
 
-	private Optional<SegmentsExperiment> _getSegmentsExperimentOptional(
-			long segmentsExperienceId)
-		throws Exception {
+	private Map<String, Object> _getSelectedMappingTypes() throws Exception {
+		Layout layout = themeDisplay.getLayout();
 
-		Layout draftLayout = themeDisplay.getLayout();
+		if (!Objects.equals(
+				layout.getType(), LayoutConstants.TYPE_COLLECTION)) {
 
-		Layout layout = LayoutLocalServiceUtil.getLayout(
-			draftLayout.getClassPK());
-
-		return Optional.ofNullable(
-			SegmentsExperimentLocalServiceUtil.fetchSegmentsExperiment(
-				segmentsExperienceId, PortalUtil.getClassNameId(Layout.class),
-				layout.getPlid(),
-				SegmentsExperimentConstants.Status.getExclusiveStatusValues()));
-	}
-
-	private Map<String, Object> _getSegmentsExperimentStatus(
-			long segmentsExperienceId)
-		throws Exception {
-
-		Optional<SegmentsExperiment> segmentsExperimentOptional =
-			_getSegmentsExperimentOptional(segmentsExperienceId);
-
-		if (!segmentsExperimentOptional.isPresent()) {
-			return null;
+			return Collections.emptyMap();
 		}
 
-		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentOptional.get();
+		String collectionPK = layout.getTypeSettingsProperty("collectionPK");
+		String collectionType = layout.getTypeSettingsProperty(
+			"collectionType");
 
-		SegmentsExperimentConstants.Status status =
-			SegmentsExperimentConstants.Status.valueOf(
-				segmentsExperiment.getStatus());
+		if (Validator.isNull(collectionPK) ||
+			Validator.isNull(collectionType)) {
+
+			return Collections.emptyMap();
+		}
+
+		String itemTypeLabel = StringPool.BLANK;
+		JSONArray linkedCollectionJSONArray = JSONFactoryUtil.createJSONArray();
+		String subtypeLabel = StringPool.BLANK;
+		String typeLabel = StringPool.BLANK;
+		String subtypeURL = StringPool.BLANK;
+
+		if (Objects.equals(
+				collectionType,
+				InfoListProviderItemSelectorReturnType.class.getName())) {
+
+			InfoCollectionProvider<?> infoCollectionProvider =
+				_getInfoCollectionProvider(collectionPK);
+
+			if (infoCollectionProvider != null) {
+				itemTypeLabel = _getInfoCollectionProviderItemTypeLabel(
+					infoCollectionProvider);
+				linkedCollectionJSONArray =
+					_getInfoCollectionProviderLinkedCollectionJSONArray(
+						infoCollectionProvider);
+				subtypeLabel = infoCollectionProvider.getLabel(
+					themeDisplay.getLocale());
+			}
+
+			typeLabel = LanguageUtil.get(
+				httpServletRequest, "collection-provider");
+		}
+		else if (Objects.equals(
+					collectionType,
+					InfoListItemSelectorReturnType.class.getName())) {
+
+			AssetListEntry assetListEntry = _getAssetListEntry(collectionPK);
+
+			if (assetListEntry != null) {
+				itemTypeLabel = _getAssetListEntryItemTypeLabel(assetListEntry);
+				linkedCollectionJSONArray =
+					_getAssetListEntryLinkedCollectionJSONArray(assetListEntry);
+				subtypeLabel = assetListEntry.getTitle();
+				subtypeURL = _getAssetListEntryItemTypeURL(assetListEntry);
+			}
+
+			if (assetListEntry.getType() ==
+					AssetListEntryTypeConstants.TYPE_DYNAMIC) {
+
+				typeLabel = LanguageUtil.get(
+					httpServletRequest, "dynamic-collection");
+			}
+			else {
+				typeLabel = LanguageUtil.get(
+					httpServletRequest, "manual-collection");
+			}
+		}
 
 		return HashMapBuilder.<String, Object>put(
-			"label",
-			LanguageUtil.get(
-				ResourceBundleUtil.getBundle(
-					themeDisplay.getLocale(), getClass()),
-				status.getLabel())
+			"itemType",
+			HashMapBuilder.<String, Object>put(
+				"groupItemTypeTitle",
+				LanguageUtil.get(httpServletRequest, "item-type")
+			).put(
+				"label", itemTypeLabel
+			).build()
 		).put(
-			"value", status.getValue()
+			"linkedCollection", linkedCollectionJSONArray
+		).put(
+			"mappingDescription",
+			LanguageUtil.get(
+				httpServletRequest,
+				"this-page-is-associated-to-the-following-collection")
+		).put(
+			"type",
+			HashMapBuilder.<String, Object>put(
+				"groupTypeTitle", LanguageUtil.get(httpServletRequest, "type")
+			).put(
+				"label", typeLabel
+			).build()
+		).put(
+			"subtype",
+			HashMapBuilder.<String, Object>put(
+				"groupSubtypeTitle",
+				LanguageUtil.get(httpServletRequest, "name")
+			).put(
+				"label", subtypeLabel
+			).put(
+				"url", subtypeURL
+			).build()
 		).build();
-	}
-
-	private String _getSegmentsExperimentURL(
-		String layoutFullURL, long segmentsExperienceId) {
-
-		HttpUtil.addParameter(
-			layoutFullURL, "p_l_back_url", themeDisplay.getURLCurrent());
-
-		return HttpUtil.addParameter(
-			layoutFullURL, "segmentsExperienceId", segmentsExperienceId);
 	}
 
 	private long _getStagingAwareGroupId() {
 		long groupId = getGroupId();
 
-		if (_stagingGroupHelper.isStagingGroup(groupId) &&
-			!_stagingGroupHelper.isStagedPortlet(
+		if (stagingGroupHelper.isStagingGroup(groupId) &&
+			!stagingGroupHelper.isStagedPortlet(
 				groupId, SegmentsPortletKeys.SEGMENTS)) {
 
-			Group group = _stagingGroupHelper.fetchLiveGroup(groupId);
+			Group group = stagingGroupHelper.fetchLiveGroup(groupId);
 
 			if (group != null) {
 				groupId = group.getGroupId();
@@ -443,30 +613,8 @@ public class ContentPageLayoutEditorDisplayContext
 		return groupId;
 	}
 
-	private boolean _hasDefaultSegmentsExperienceLockedSegmentsExperiment()
-		throws Exception {
-
-		Optional<SegmentsExperiment> segmentsExperimentOptional =
-			_getSegmentsExperimentOptional(
-				SegmentsExperienceConstants.ID_DEFAULT);
-
-		if (!segmentsExperimentOptional.isPresent()) {
-			return false;
-		}
-
-		SegmentsExperiment segmentsExperiment =
-			segmentsExperimentOptional.get();
-
-		List<Integer> lockedStatusValuesList = ListUtil.fromArray(
-			SegmentsExperimentConstants.Status.getLockedStatusValues());
-
-		return lockedStatusValuesList.contains(segmentsExperiment.getStatus());
-	}
-
 	private boolean _hasEditSegmentsEntryPermission() throws Exception {
-		String editSegmentsEntryURL = _getEditSegmentsEntryURL();
-
-		if (Validator.isNull(editSegmentsEntryURL)) {
+		if (Validator.isNull(_getEditSegmentsEntryURL())) {
 			return false;
 		}
 
@@ -482,7 +630,9 @@ public class ContentPageLayoutEditorDisplayContext
 
 		if (SegmentsExperienceConstants.ID_DEFAULT == segmentsExperienceId) {
 			_lockedSegmentsExperience =
-				_hasDefaultSegmentsExperienceLockedSegmentsExperiment();
+				SegmentsExperienceUtil.
+					hasDefaultSegmentsExperienceLockedSegmentsExperiment(
+						themeDisplay);
 		}
 		else {
 			SegmentsExperience segmentsExperience =
@@ -522,14 +672,48 @@ public class ContentPageLayoutEditorDisplayContext
 			return false;
 		}
 
-		return true;
+		SegmentsExperience segmentsExperience =
+			SegmentsExperienceLocalServiceUtil.fetchSegmentsExperience(
+				segmentsExperienceId);
+
+		if (segmentsExperience != null) {
+			List<SegmentsExperimentRel> segmentsExperimentRels =
+				SegmentsExperimentRelLocalServiceUtil.dslQuery(
+					DSLQueryFactoryUtil.select(
+						SegmentsExperimentRelTable.INSTANCE
+					).from(
+						SegmentsExperimentRelTable.INSTANCE
+					).where(
+						SegmentsExperimentRelTable.INSTANCE.
+							segmentsExperienceId.eq(
+								segmentsExperience.getSegmentsExperienceId())
+					));
+
+			if (segmentsExperimentRels.isEmpty()) {
+				return false;
+			}
+
+			SegmentsExperimentRel segmentsExperimentRel =
+				segmentsExperimentRels.get(0);
+
+			try {
+				return !segmentsExperimentRel.isControl();
+			}
+			catch (PortalException portalException) {
+				_log.error(portalException);
+			}
+		}
+
+		return false;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		ContentPageLayoutEditorDisplayContext.class);
 
 	private String _editSegmentsEntryURL;
 	private Boolean _lockedSegmentsExperience;
 	private Long _segmentsEntryId;
 	private Long _segmentsExperienceId;
 	private Boolean _showSegmentsExperiences;
-	private final StagingGroupHelper _stagingGroupHelper;
 
 }

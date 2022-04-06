@@ -17,10 +17,12 @@ package com.liferay.fragment.model.impl;
 import com.liferay.document.library.kernel.util.DLUtil;
 import com.liferay.fragment.constants.FragmentConstants;
 import com.liferay.fragment.constants.FragmentExportImportConstants;
+import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.service.FragmentEntryLinkLocalServiceUtil;
-import com.liferay.fragment.util.FragmentEntryRenderUtil;
+import com.liferay.fragment.service.FragmentEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSON;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -29,6 +31,7 @@ import com.liferay.portal.kernel.portletfilerepository.PortletFileRepositoryUtil
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.zip.ZipWriter;
 
 /**
@@ -37,8 +40,17 @@ import com.liferay.portal.kernel.zip.ZipWriter;
 public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 	@Override
+	public FragmentEntry fetchDraftFragmentEntry() {
+		if (isDraft()) {
+			return null;
+		}
+
+		return FragmentEntryLocalServiceUtil.fetchDraft(getFragmentEntryId());
+	}
+
+	@Override
 	public String getContent() {
-		return FragmentEntryRenderUtil.renderFragmentEntry(this);
+		return StringPool.BLANK;
 	}
 
 	@Override
@@ -49,6 +61,15 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 	@Override
 	public String getIcon() {
+		if (Validator.isNull(_icon)) {
+			if (getType() == FragmentConstants.TYPE_REACT) {
+				_icon = "react";
+			}
+			else {
+				_icon = "code";
+			}
+		}
+
 		return _icon;
 	}
 
@@ -74,6 +95,16 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 		return StringPool.BLANK;
 	}
 
+	@JSON
+	@Override
+	public int getStatus() {
+		if (isHead()) {
+			return WorkflowConstants.STATUS_APPROVED;
+		}
+
+		return WorkflowConstants.STATUS_DRAFT;
+	}
+
 	@Override
 	public String getTypeLabel() {
 		return FragmentConstants.getTypeLabel(getType());
@@ -81,8 +112,27 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 
 	@Override
 	public int getUsageCount() {
-		return FragmentEntryLinkLocalServiceUtil.getFragmentEntryLinksCount(
-			getGroupId(), getFragmentEntryId());
+		return FragmentEntryLinkLocalServiceUtil.
+			getAllFragmentEntryLinksCountByFragmentEntryId(
+				getGroupId(), getFragmentEntryId());
+	}
+
+	@Override
+	public boolean isApproved() {
+		if (isHead()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean isDraft() {
+		if (isHead()) {
+			return false;
+		}
+
+		return true;
 	}
 
 	@Override
@@ -97,6 +147,15 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 			"cssPath", "index.css"
 		).put(
 			"htmlPath", "index.html"
+		).put(
+			"icon",
+			() -> {
+				if (Validator.isNotNull(_icon)) {
+					return _icon;
+				}
+
+				return null;
+			}
 		).put(
 			"jsPath", "index.js"
 		).put(
@@ -166,7 +225,7 @@ public class FragmentEntryImpl extends FragmentEntryBaseImpl {
 	private static final Log _log = LogFactoryUtil.getLog(
 		FragmentEntryImpl.class);
 
-	private String _icon = "code";
+	private String _icon;
 	private String _imagePreviewURL;
 
 }

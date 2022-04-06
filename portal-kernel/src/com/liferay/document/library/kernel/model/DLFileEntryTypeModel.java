@@ -244,6 +244,20 @@ public interface DLFileEntryTypeModel
 	public void setModifiedDate(Date modifiedDate);
 
 	/**
+	 * Returns the data definition ID of this document library file entry type.
+	 *
+	 * @return the data definition ID of this document library file entry type
+	 */
+	public long getDataDefinitionId();
+
+	/**
+	 * Sets the data definition ID of this document library file entry type.
+	 *
+	 * @param dataDefinitionId the data definition ID of this document library file entry type
+	 */
+	public void setDataDefinitionId(long dataDefinitionId);
+
+	/**
 	 * Returns the file entry type key of this document library file entry type.
 	 *
 	 * @return the file entry type key of this document library file entry type
@@ -459,6 +473,20 @@ public interface DLFileEntryTypeModel
 		Map<Locale, String> descriptionMap, Locale defaultLocale);
 
 	/**
+	 * Returns the scope of this document library file entry type.
+	 *
+	 * @return the scope of this document library file entry type
+	 */
+	public int getScope();
+
+	/**
+	 * Sets the scope of this document library file entry type.
+	 *
+	 * @param scope the scope of this document library file entry type
+	 */
+	public void setScope(int scope);
+
+	/**
 	 * Returns the last publish date of this document library file entry type.
 	 *
 	 * @return the last publish date of this document library file entry type
@@ -486,5 +514,8 @@ public interface DLFileEntryTypeModel
 	@Override
 	public void prepareLocalizedFieldsForImport(Locale defaultImportLocale)
 		throws LocaleException;
+
+	@Override
+	public DLFileEntryType cloneWithOriginalValues();
 
 }

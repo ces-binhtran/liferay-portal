@@ -23,11 +23,9 @@ import com.liferay.portal.security.ldap.configuration.CompanyScopedConfiguration
  * @author Michael C. Han
  */
 @ExtendedObjectClassDefinition(
-	category = "ldap", factoryInstanceLabelAttribute = "companyId",
-	scope = ExtendedObjectClassDefinition.Scope.COMPANY
+	category = "ldap", scope = ExtendedObjectClassDefinition.Scope.COMPANY
 )
 @Meta.OCD(
-	factory = true,
 	id = "com.liferay.portal.security.ldap.exportimport.configuration.LDAPImportConfiguration",
 	localization = "content/Language", name = "ldap-import-configuration-name"
 )
@@ -50,8 +48,8 @@ public interface LDAPImportConfiguration extends CompanyScopedConfiguration {
 
 	@Meta.AD(
 		deflt = "user", description = "import-method-help",
-		name = "import-method", optionValues = {"group", "user"},
-		required = false
+		name = "import-method", optionLabels = {"group", "user"},
+		optionValues = {"group", "user"}, required = false
 	)
 	public String importMethod();
 
@@ -62,7 +60,7 @@ public interface LDAPImportConfiguration extends CompanyScopedConfiguration {
 	public long importLockExpirationTime();
 
 	@Meta.AD(
-		deflt = "auth-type", name = "import-user-sync-strategy",
+		deflt = "auth-type", name = "import-user-synchronization-strategy",
 		optionValues = {"auth-type", "uuid"}, required = false
 	)
 	public String importUserSyncStrategy();

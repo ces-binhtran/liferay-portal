@@ -22,14 +22,14 @@ const items = [
 ];
 
 const ContainerMock = ({children}) => {
-	const [selectedItems, onChange] = useState([]);
+	const [selectedItems, setSelectedItems] = useState([]);
 
-	return cloneElement(children, {onChange, selectedItems});
+	return cloneElement(children, {onChange: setSelectedItems, selectedItems});
 };
 
 describe('The AutocompleteMultiSelect component should', () => {
-	let getByTestId;
-	let getAllByTestId;
+	let container;
+	let getByText;
 
 	afterEach(cleanup);
 
@@ -38,22 +38,24 @@ describe('The AutocompleteMultiSelect component should', () => {
 			wrapper: ContainerMock,
 		});
 
-		getAllByTestId = autocomplete.getAllByTestId;
-		getByTestId = autocomplete.getByTestId;
+		container = autocomplete.container;
+		getByText = autocomplete.getByText;
 	});
 
 	test('Show the dropdown list on focus input', () => {
-		const multiSelectInput = getByTestId('multiSelectInput');
-		const dropDownList = getByTestId('dropDownList');
+		const multiSelectInput = container.querySelector(
+			'input.form-control-inset'
+		);
+		const dropDownList = document.querySelector('#dropDownList');
+		const dropDownListItems = document.querySelectorAll('.dropdown-item');
+
 		const dropDown = dropDownList.parentNode;
-		const dropDownListItems = getAllByTestId('dropDownListItem');
 
 		expect(dropDown).not.toHaveClass('show');
 
 		fireEvent.focus(multiSelectInput);
 
 		expect(dropDown).toHaveClass('show');
-
 		expect(dropDownListItems[0]).toHaveTextContent('1test test1');
 		expect(dropDownListItems[1]).toHaveTextContent('2test test2');
 
@@ -63,16 +65,20 @@ describe('The AutocompleteMultiSelect component should', () => {
 
 		fireEvent.mouseDown(dropDownListItems[0]);
 
-		const multiSelectItems = getAllByTestId('multiSelectItem');
+		const multiSelectItems = container.querySelectorAll(
+			'.label-dismissible'
+		);
 
 		expect(multiSelectItems[0]).toHaveTextContent('1test test1');
 		expect(multiSelectItems[1]).toHaveTextContent('2test test2');
 
-		const dropDownEmpty = getByTestId('dropDownEmpty');
+		const dropDownEmpty = getByText('no-results-were-found');
 
-		expect(dropDownEmpty).toHaveTextContent('no-results-found');
+		expect(dropDownEmpty).toBeTruthy();
 
-		const multiSelectItemsRemove = getAllByTestId('multiSelectItemRemove');
+		const multiSelectItemsRemove = container.querySelectorAll(
+			'button.close'
+		);
 
 		fireEvent.click(multiSelectItemsRemove[1]);
 
@@ -80,14 +86,15 @@ describe('The AutocompleteMultiSelect component should', () => {
 	});
 
 	test('Render its items list and select any option', () => {
-		const multiSelectInput = getByTestId('multiSelectInput');
-		const dropDownListItems = getAllByTestId('dropDownListItem');
+		const multiSelectInput = container.querySelector(
+			'input.form-control-inset'
+		);
+		const dropDownListItems = document.querySelectorAll('.dropdown-item');
 
 		fireEvent.focus(multiSelectInput);
 
 		expect(dropDownListItems[0]).toHaveTextContent('1test test1');
 		expect(dropDownListItems[1]).toHaveTextContent('2test test2');
-
 		expect(dropDownListItems[0]).not.toHaveClass('active');
 		expect(dropDownListItems[1]).not.toHaveClass('active');
 
@@ -118,7 +125,9 @@ describe('The AutocompleteMultiSelect component should', () => {
 
 		fireEvent.keyDown(multiSelectInput, {keyCode: 13});
 
-		const multiSelectItems = getAllByTestId('multiSelectItem');
+		const multiSelectItems = container.querySelectorAll(
+			'.label-dismissible'
+		);
 
 		expect(multiSelectItems[0]).toHaveTextContent('2test test2');
 	});

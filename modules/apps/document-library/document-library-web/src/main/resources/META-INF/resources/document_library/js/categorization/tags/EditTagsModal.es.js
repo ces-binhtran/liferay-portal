@@ -17,17 +17,17 @@ import ClayButton from '@clayui/button';
 import {ClayRadio, ClayRadioGroup} from '@clayui/form';
 import ClayLoadingIndicator from '@clayui/loading-indicator';
 import ClayModal from '@clayui/modal';
+import {useIsMounted} from '@liferay/frontend-js-react-web';
 import {AssetTagsSelector} from 'asset-taglib';
-import {useIsMounted} from 'frontend-js-react-web';
 import {fetch} from 'frontend-js-web';
 import PropTypes from 'prop-types';
 import React, {useCallback, useContext, useEffect, useState} from 'react';
 
 import EditTagsContext from './EditTagsContext.es';
 
-const URL_SELECTION = '/bulk/v1.0/bulk-selection',
-	URL_TAGS = '/bulk/v1.0/keywords/common',
-	URL_UPDATE_TAGS = '/bulk/v1.0/keywords/batch';
+const URL_SELECTION = '/bulk/v1.0/bulk-selection';
+const URL_TAGS = '/bulk/v1.0/keywords/common';
+const URL_UPDATE_TAGS = '/bulk/v1.0/keywords/batch';
 
 const noop = () => {};
 
@@ -67,6 +67,40 @@ const EditTagsModal = ({
 	);
 
 	const fileEntriesLength = fileEntries && fileEntries.length;
+
+	const fetchTags = useCallback(
+		(url, method, bodyData) => {
+			const init = {
+				body: JSON.stringify(bodyData),
+				headers: {'Content-Type': 'application/json'},
+				method,
+			};
+
+			return fetch(`${pathModule}${url}`, init)
+				.then((response) =>
+					response.status === 204 ? '' : response.json()
+				)
+				.catch(() => {
+					onModalClose();
+				});
+		},
+		[onModalClose, pathModule]
+	);
+
+	const getDescription = (size) => {
+		if (size === 1) {
+			return Liferay.Language.get(
+				'you-are-editing-the-tags-for-the-selected-item'
+			);
+		}
+
+		return Liferay.Util.sub(
+			Liferay.Language.get(
+				'you-are-editing-the-common-tags-for-x-items.-select-edit-or-replace-current-tags'
+			),
+			size
+		);
+	};
 
 	// This makes the component fetch selected items only after mounting it
 	// (a.k.a. first render).
@@ -111,38 +145,6 @@ const EditTagsModal = ({
 		repositoryId,
 		selectAll,
 	]);
-
-	const fetchTags = useCallback(
-		(url, method, bodyData) => {
-			const init = {
-				body: JSON.stringify(bodyData),
-				headers: {'Content-Type': 'application/json'},
-				method,
-			};
-
-			return fetch(`${pathModule}${url}`, init)
-				.then((response) => response.json())
-				.catch(() => {
-					onModalClose();
-				});
-		},
-		[onModalClose, pathModule]
-	);
-
-	const getDescription = (size) => {
-		if (size === 1) {
-			return Liferay.Language.get(
-				'you-are-editing-the-tags-for-the-selected-item'
-			);
-		}
-
-		return Liferay.Util.sub(
-			Liferay.Language.get(
-				'you-are-editing-the-common-tags-for-x-items.-select-edit-or-replace-current-tags'
-			),
-			size
-		);
-	};
 
 	const handleMultipleSelectedOptionChange = (value) => {
 		setAppend(value === 'add');

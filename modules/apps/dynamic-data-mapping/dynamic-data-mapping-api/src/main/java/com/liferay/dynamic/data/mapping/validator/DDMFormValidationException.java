@@ -35,12 +35,12 @@ public class DDMFormValidationException extends PortalException {
 		super(msg);
 	}
 
-	public DDMFormValidationException(String msg, Throwable cause) {
-		super(msg, cause);
+	public DDMFormValidationException(String msg, Throwable throwable) {
+		super(msg, throwable);
 	}
 
-	public DDMFormValidationException(Throwable cause) {
-		super(cause);
+	public DDMFormValidationException(Throwable throwable) {
+		super(throwable);
 	}
 
 	public static class MustNotDuplicateFieldName
@@ -56,11 +56,12 @@ public class DDMFormValidationException extends PortalException {
 		}
 
 		/**
-		 * @deprecated As of Athanasius (7.3.x), replaced by {@link #MustNotDuplicateFieldName(Set)}
+		 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+		 *             #MustNotDuplicateFieldName(Set)}
 		 */
 		@Deprecated
 		public MustNotDuplicateFieldName(String fieldName) {
-			this(SetUtil.fromArray(new String[] {fieldName}));
+			this(SetUtil.fromArray(fieldName));
 		}
 
 		public Set<String> getDuplicatedFieldNames() {
@@ -68,7 +69,8 @@ public class DDMFormValidationException extends PortalException {
 		}
 
 		/**
-		 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getDuplicatedFieldNames()}
+		 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+		 *             #getDuplicatedFieldNames()}
 		 */
 		@Deprecated
 		public String getFieldName() {
@@ -160,15 +162,31 @@ public class DDMFormValidationException extends PortalException {
 		public MustSetOptionsForField(String fieldName) {
 			super(
 				String.format(
-					"At least one option must be set for field %s", fieldName));
+					"At least one option must be set for field name %s",
+					fieldName));
 
 			_fieldName = fieldName;
+		}
+
+		public MustSetOptionsForField(String fieldLabel, String fieldName) {
+			super(
+				String.format(
+					"At least one option must be set for field name %s",
+					fieldName));
+
+			_fieldLabel = fieldLabel;
+			_fieldName = fieldName;
+		}
+
+		public String getFieldLabel() {
+			return _fieldLabel;
 		}
 
 		public String getFieldName() {
 			return _fieldName;
 		}
 
+		private String _fieldLabel;
 		private String _fieldName;
 
 	}
@@ -273,13 +291,13 @@ public class DDMFormValidationException extends PortalException {
 		extends DDMFormValidationException {
 
 		public MustSetValidFormRuleExpression(
-			String expressionType, String expression, Throwable cause) {
+			String expressionType, String expression, Throwable throwable) {
 
 			super(
 				String.format(
 					"Invalid form rule %s expression set: \"%s\"",
 					expressionType, expression),
-				cause);
+				throwable);
 
 			_expression = expression;
 		}
@@ -298,7 +316,7 @@ public class DDMFormValidationException extends PortalException {
 		public MustSetValidIndexType(String fieldName) {
 			super(
 				String.format(
-					"Invalid index type set for field %s", fieldName));
+					"Invalid index type set for field name %s", fieldName));
 
 			_fieldName = fieldName;
 		}
@@ -308,6 +326,23 @@ public class DDMFormValidationException extends PortalException {
 		}
 
 		private String _fieldName;
+
+	}
+
+	public static class MustSetValidType extends DDMFormValidationException {
+
+		public MustSetValidType(String fieldType) {
+			super(
+				String.format("Invalid type set for field type %s", fieldType));
+
+			_fieldType = fieldType;
+		}
+
+		public String getFieldType() {
+			return _fieldType;
+		}
+
+		private final String _fieldType;
 
 	}
 

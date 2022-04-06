@@ -17,6 +17,7 @@ package com.liferay.project.templates.service;
 import com.liferay.maven.executor.MavenExecutor;
 import com.liferay.project.templates.BaseProjectTemplatesTestCase;
 import com.liferay.project.templates.extensions.util.Validator;
+import com.liferay.project.templates.extensions.util.VersionUtil;
 import com.liferay.project.templates.util.FileTestUtil;
 
 import java.io.BufferedWriter;
@@ -55,7 +56,9 @@ public class ProjectTemplatesServiceTest
 	@Parameterized.Parameters(name = "Testcase-{index}: testing {0}")
 	public static Iterable<Object[]> data() {
 		return Arrays.asList(
-			new Object[][] {{"7.0.6"}, {"7.1.3"}, {"7.2.1"}, {"7.3.2"}});
+			new Object[][] {
+				{"7.0.6-2"}, {"7.1.3-1"}, {"7.2.1-1"}, {"7.3.7"}, {"7.4.1-1"}
+			});
 	}
 
 	@BeforeClass
@@ -95,8 +98,16 @@ public class ProjectTemplatesServiceTest
 			_liferayVersion, "--class-name", "FooAction", "--service",
 			"com.liferay.portal.kernel.events.LifecycleAction");
 
-		testContains(
-			gradleProjectDir, "build.gradle", DEPENDENCY_PORTAL_KERNEL);
+		if (VersionUtil.getMinorVersion(_liferayVersion) < 3) {
+			testContains(
+				gradleProjectDir, "build.gradle",
+				DEPENDENCY_ORG_OSGI_ANNOTATIONS);
+		}
+		else {
+			testContains(
+				gradleProjectDir, "build.gradle",
+				DEPENDENCY_RELEASE_PORTAL_API);
+		}
 
 		testNotContains(gradleProjectDir, "build.gradle", "version: \"[0-9].*");
 

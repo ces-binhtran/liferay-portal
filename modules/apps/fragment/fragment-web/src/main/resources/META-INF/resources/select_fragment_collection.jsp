@@ -18,15 +18,13 @@
 
 <%
 SelectFragmentCollectionDisplayContext selectFragmentCollectionDisplayContext = new SelectFragmentCollectionDisplayContext(request, renderRequest, renderResponse);
-
-SelectFragmentCollectionManagementToolbarDisplayContext selectFragmentCollectionManagementToolbarDisplayContext = new SelectFragmentCollectionManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectFragmentCollectionDisplayContext.getFragmentCollectionsSearchContainer());
 %>
 
 <clay:management-toolbar
-	displayContext="<%= selectFragmentCollectionManagementToolbarDisplayContext %>"
+	managementToolbarDisplayContext="<%= new SelectFragmentCollectionManagementToolbarDisplayContext(request, liferayPortletRequest, liferayPortletResponse, selectFragmentCollectionDisplayContext.getFragmentCollectionsSearchContainer()) %>"
 />
 
-<aui:form cssClass="container-fluid-1280" name="selectFragmentCollectionFm">
+<aui:form cssClass="container-fluid container-fluid-max-xl" name="selectFragmentCollectionFm">
 	<liferay-ui:search-container
 		searchContainer="<%= selectFragmentCollectionDisplayContext.getFragmentCollectionsSearchContainer() %>"
 	>
@@ -35,14 +33,9 @@ SelectFragmentCollectionManagementToolbarDisplayContext selectFragmentCollection
 			keyProperty="fragmentCollectionId"
 			modelVar="fragmentCollection"
 		>
-
-			<%
-			row.setCssClass("card-page-item-asset " + row.getCssClass());
-			%>
-
 			<liferay-ui:search-container-column-text>
-				<clay:horizontal-card
-					horizontalCard="<%= new FragmentCollectionHorizontalCard(fragmentCollection) %>"
+				<clay:navigation-card
+					navigationCard="<%= new FragmentCollectionNavigationCard(fragmentCollection) %>"
 				/>
 			</liferay-ui:search-container-column-text>
 		</liferay-ui:search-container-row>
@@ -50,14 +43,6 @@ SelectFragmentCollectionManagementToolbarDisplayContext selectFragmentCollection
 		<liferay-ui:search-iterator
 			displayStyle="icon"
 			markupView="lexicon"
-			searchResultCssClass="card-page"
 		/>
 	</liferay-ui:search-container>
 </aui:form>
-
-<aui:script>
-	Liferay.Util.selectEntityHandler(
-		'#<portlet:namespace />selectFragmentCollectionFm',
-		'<%= HtmlUtil.escapeJS(selectFragmentCollectionDisplayContext.getEventName()) %>'
-	);
-</aui:script>

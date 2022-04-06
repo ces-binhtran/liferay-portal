@@ -16,7 +16,7 @@
 
 <%@ include file="/init.jsp" %>
 
-<div class="nav-menu sites-directory-taglib">
+<div class="nav-menu overflow-hidden sites-directory-taglib">
 	<c:choose>
 		<c:when test="<%= sitesDirectoryDisplayContext.isHidden() %>">
 			<div class="alert alert-info">
@@ -43,11 +43,6 @@
 								>
 									<c:choose>
 										<c:when test='<%= Objects.equals(sitesDirectoryDisplayContext.getDisplayStyle(), "icon") %>'>
-
-											<%
-											row.setCssClass("entry-card lfr-asset-item");
-											%>
-
 											<liferay-ui:search-container-column-text>
 												<clay:vertical-card
 													verticalCard="<%= new GroupVerticalCard(childGroup, renderRequest) %>"
@@ -55,9 +50,23 @@
 											</liferay-ui:search-container-column-text>
 										</c:when>
 										<c:otherwise>
-											<liferay-ui:search-container-column-image
-												src="<%= childGroup.getLogoURL(themeDisplay, true) %>"
-											/>
+
+											<%
+											String logoURL = childGroup.getLogoURL(themeDisplay, false);
+											%>
+
+											<c:choose>
+												<c:when test="<%= Validator.isNotNull(logoURL) %>">
+													<liferay-ui:search-container-column-image
+														src="<%= logoURL %>"
+													/>
+												</c:when>
+												<c:otherwise>
+													<liferay-ui:search-container-column-icon
+														icon="sites"
+													/>
+												</c:otherwise>
+											</c:choose>
 
 											<liferay-ui:search-container-column-text
 												colspan="<%= 2 %>"
@@ -73,14 +82,14 @@
 												</h6>
 
 												<h6 class="text-default">
-													<liferay-ui:asset-tags-summary
+													<liferay-asset:asset-tags-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>
 												</h6>
 
 												<h6 class="text-default">
-													<liferay-ui:asset-categories-summary
+													<liferay-asset:asset-categories-summary
 														className="<%= Group.class.getName() %>"
 														classPK="<%= childGroup.getGroupId() %>"
 													/>

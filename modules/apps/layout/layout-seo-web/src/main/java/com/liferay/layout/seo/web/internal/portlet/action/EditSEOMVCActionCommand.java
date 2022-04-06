@@ -14,15 +14,12 @@
 
 package com.liferay.layout.seo.web.internal.portlet.action;
 
+import com.liferay.asset.kernel.model.AssetEntry;
+import com.liferay.asset.kernel.service.AssetEntryLocalService;
 import com.liferay.layout.admin.constants.LayoutAdminPortletKeys;
-import com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants;
-import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
-import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalService;
 import com.liferay.layout.seo.service.LayoutSEOEntryService;
-import com.liferay.portal.events.EventsProcessorUtil;
+import com.liferay.layout.seo.web.internal.util.LayoutTypeSettingsUtil;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
-import com.liferay.portal.kernel.model.LayoutTypePortlet;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -31,15 +28,10 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
 import com.liferay.portal.kernel.servlet.MultiSessionMessages;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
-import com.liferay.portal.kernel.upload.UploadPortletRequest;
-import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.LocalizationUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
-import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -71,9 +63,6 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
 
-		UploadPortletRequest uploadPortletRequest =
-			_portal.getUploadPortletRequest(actionRequest);
-
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
@@ -85,29 +74,25 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		Layout layout = _layoutLocalService.getLayout(
 			groupId, privateLayout, layoutId);
 
-		Map<Locale, String> titleMap = _getLocalizationMap(
-			actionRequest, layout, "title");
-		Map<Locale, String> descriptionMap = _getLocalizationMap(
-			actionRequest, layout, "description");
+		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
+			actionRequest, "title");
+		Map<Locale, String> descriptionMap =
+			LocalizationUtil.getLocalizationMap(actionRequest, "description");
 
 		Map<Locale, String> keywordsMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "keywords");
 		Map<Locale, String> robotsMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "robots");
 
-		ServiceContext serviceContext = ServiceContextFactory.getInstance(
-			Layout.class.getName(), actionRequest);
-
-		if (layout.isTypeAssetDisplay()) {
-			serviceContext.setAttribute(
-				"layout.instanceable.allowed", Boolean.TRUE);
-		}
+		ServiceContext serviceContext = _getServiceContent(
+			actionRequest, layout);
 
 		layout = _layoutService.updateLayout(
 			groupId, privateLayout, layoutId, layout.getParentLayoutId(),
 			layout.getNameMap(), titleMap, descriptionMap, keywordsMap,
 			robotsMap, layout.getType(), layout.isHidden(),
 			layout.getFriendlyURLMap(), layout.isIconImage(), null,
+			layout.getMasterLayoutPlid(), layout.getStyleBookEntryId(),
 			serviceContext);
 
 		boolean canonicalURLEnabled = ParamUtil.getBoolean(
@@ -119,71 +104,14 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 			groupId, privateLayout, layoutId, canonicalURLEnabled,
 			canonicalURLMap, serviceContext);
 
-		Layout draftLayout = _layoutLocalService.fetchLayout(
-			_portal.getClassNameId(Layout.class), layout.getPlid());
-
-		if (draftLayout != null) {
-			_layoutService.updateLayout(
-				groupId, privateLayout, draftLayout.getLayoutId(),
-				draftLayout.getParentLayoutId(), draftLayout.getNameMap(),
-				titleMap, descriptionMap, keywordsMap, robotsMap,
-				draftLayout.getType(), draftLayout.isHidden(),
-				draftLayout.getFriendlyURLMap(), draftLayout.isIconImage(),
-				null, serviceContext);
-
-			_layoutSEOEntryService.updateLayoutSEOEntry(
-				groupId, privateLayout, draftLayout.getLayoutId(),
-				canonicalURLEnabled, canonicalURLMap, serviceContext);
-		}
-
-		themeDisplay.clearLayoutFriendlyURL(layout);
-
-		UnicodeProperties layoutTypeSettingsUnicodeProperties =
-			layout.getTypeSettingsProperties();
-
 		UnicodeProperties formTypeSettingsUnicodeProperties =
 			PropertiesParamUtil.getProperties(
 				actionRequest, "TypeSettingsProperties--");
 
-		LayoutTypePortlet layoutTypePortlet =
-			(LayoutTypePortlet)layout.getLayoutType();
+		themeDisplay.clearLayoutFriendlyURL(layout);
 
-		String type = layout.getType();
-
-		if (type.equals(LayoutConstants.TYPE_PORTLET)) {
-			layoutTypeSettingsUnicodeProperties.putAll(
-				formTypeSettingsUnicodeProperties);
-
-			boolean layoutCustomizable = GetterUtil.getBoolean(
-				layoutTypeSettingsUnicodeProperties.get(
-					LayoutConstants.CUSTOMIZABLE_LAYOUT));
-
-			if (!layoutCustomizable) {
-				layoutTypePortlet.removeCustomization(
-					layoutTypeSettingsUnicodeProperties);
-			}
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
-		}
-		else {
-			layoutTypeSettingsUnicodeProperties.putAll(
-				formTypeSettingsUnicodeProperties);
-
-			layoutTypeSettingsUnicodeProperties.putAll(
-				layout.getTypeSettingsProperties());
-
-			layout = _layoutService.updateLayout(
-				groupId, privateLayout, layoutId,
-				layoutTypeSettingsUnicodeProperties.toString());
-		}
-
-		EventsProcessorUtil.process(
-			PropsKeys.LAYOUT_CONFIGURATION_ACTION_UPDATE,
-			layoutTypePortlet.getConfigurationActionUpdate(),
-			uploadPortletRequest,
-			_portal.getHttpServletResponse(actionResponse));
+		layout = LayoutTypeSettingsUtil.updateTypeSettings(
+			layout, _layoutService, formTypeSettingsUnicodeProperties);
 
 		String redirect = ParamUtil.getString(actionRequest, "redirect");
 
@@ -200,40 +128,32 @@ public class EditSEOMVCActionCommand extends BaseMVCActionCommand {
 		actionRequest.setAttribute(WebKeys.REDIRECT, redirect);
 	}
 
-	private Map<Locale, String> _getLocalizationMap(
-		ActionRequest actionRequest, Layout layout, String name) {
+	private ServiceContext _getServiceContent(
+			ActionRequest actionRequest, Layout layout)
+		throws Exception {
 
-		if (_isDisplayPageTemplate(layout.getPlid())) {
-			return HashMapBuilder.put(
-				LocaleUtil.fromLanguageId(layout.getDefaultLanguageId()),
-				ParamUtil.getString(actionRequest, name)
-			).build();
+		ServiceContext serviceContext = ServiceContextFactory.getInstance(
+			Layout.class.getName(), actionRequest);
+
+		AssetEntry assetEntry = _assetEntryLocalService.getEntry(
+			Layout.class.getName(), layout.getPlid());
+
+		serviceContext.setAssetCategoryIds(assetEntry.getCategoryIds());
+		serviceContext.setAssetTagNames(assetEntry.getTagNames());
+
+		if (layout.isTypeAssetDisplay()) {
+			serviceContext.setAttribute(
+				"layout.instanceable.allowed", Boolean.TRUE);
 		}
 
-		return LocalizationUtil.getLocalizationMap(actionRequest, name);
+		return serviceContext;
 	}
 
-	private boolean _isDisplayPageTemplate(long plid) {
-		LayoutPageTemplateEntry layoutPageTemplateEntry =
-			_layoutPageTemplateEntryLocalService.
-				fetchLayoutPageTemplateEntryByPlid(plid);
-
-		if ((layoutPageTemplateEntry != null) &&
-			(layoutPageTemplateEntry.getType() ==
-				LayoutPageTemplateEntryTypeConstants.TYPE_DISPLAY_PAGE)) {
-
-			return true;
-		}
-
-		return false;
-	}
+	@Reference
+	private AssetEntryLocalService _assetEntryLocalService;
 
 	@Reference
 	private LayoutLocalService _layoutLocalService;
-
-	@Reference
-	private LayoutPageTemplateEntryLocalService
-		_layoutPageTemplateEntryLocalService;
 
 	@Reference
 	private LayoutSEOEntryService _layoutSEOEntryService;

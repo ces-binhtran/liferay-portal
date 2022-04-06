@@ -119,12 +119,11 @@ public class AssetListEntryServiceTest {
 		AssetListEntry assetListEntry2 = _addAssetListEntry(
 			"Asset List Title 2");
 
-		long[] assetListEntries = {
-			assetListEntry1.getAssetListEntryId(),
-			assetListEntry2.getAssetListEntryId()
-		};
-
-		_assetListEntryService.deleteAssetListEntries(assetListEntries);
+		_assetListEntryService.deleteAssetListEntries(
+			new long[] {
+				assetListEntry1.getAssetListEntryId(),
+				assetListEntry2.getAssetListEntryId()
+			});
 
 		Assert.assertNull(
 			_assetListEntryService.fetchAssetListEntry(
@@ -313,7 +312,8 @@ public class AssetListEntryServiceTest {
 			assetListEntry.getAssetListEntryId());
 
 		Assert.assertEquals(
-			assetListEntry.getAssetEntryType(), AssetEntry.class.getName());
+			assetListEntry.getAssetEntryType(),
+			TestAssetRendererFactory.class.getName());
 
 		_assetListEntryService.deleteAssetEntrySelection(
 			assetListEntry.getAssetListEntryId(), 0, 1);
@@ -339,12 +339,10 @@ public class AssetListEntryServiceTest {
 	private AssetListEntry _addAssetListEntry(String title)
 		throws PortalException {
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(
-				_group.getGroupId(), TestPropsValues.getUserId());
-
 		return _assetListEntryService.addAssetListEntry(
-			_group.getGroupId(), title, 0, serviceContext);
+			_group.getGroupId(), title, 0,
+			ServiceContextTestUtil.getServiceContext(
+				_group.getGroupId(), TestPropsValues.getUserId()));
 	}
 
 	@Inject

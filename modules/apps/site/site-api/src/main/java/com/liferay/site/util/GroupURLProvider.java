@@ -18,23 +18,30 @@ import com.liferay.application.list.PanelAppRegistry;
 import com.liferay.application.list.PanelCategoryRegistry;
 import com.liferay.application.list.constants.PanelCategoryKeys;
 import com.liferay.application.list.display.context.logic.PanelCategoryHelper;
+import com.liferay.depot.model.DepotEntry;
+import com.liferay.depot.service.DepotEntryLocalService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
-import com.liferay.portal.kernel.service.permission.GroupPermissionUtil;
+import com.liferay.portal.kernel.service.permission.GroupPermission;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
+import com.liferay.site.constants.SiteWebKeys;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
+import org.osgi.service.component.annotations.ReferencePolicyOption;
 
 /**
  * @author Julio Camarero
@@ -97,10 +104,23 @@ public class GroupURLProvider {
 		Group group, PortletRequest portletRequest,
 		boolean includeStagingGroup) {
 
+		if (group.isDepot()) {
+			String depotDashboardGroupURL = _getDepotDashboardGroupURL(
+				group, portletRequest);
+
+			if (depotDashboardGroupURL != null) {
+				return depotDashboardGroupURL;
+			}
+		}
+
 		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		String groupDisplayURL = group.getDisplayURL(themeDisplay, false);
+		String groupDisplayURL = group.getDisplayURL(
+			themeDisplay, false,
+			GetterUtil.getBoolean(
+				portletRequest.getAttribute(
+					SiteWebKeys.GROUP_URL_PROVIDER_CONTROL_PANEL)));
 
 		if (Validator.isNotNull(groupDisplayURL)) {
 			return _http.removeParameter(groupDisplayURL, "p_p_id");
@@ -114,7 +134,7 @@ public class GroupURLProvider {
 
 		if (includeStagingGroup && group.hasStagingGroup()) {
 			try {
-				if (GroupPermissionUtil.contains(
+				if (_groupPermission.contains(
 						themeDisplay.getPermissionChecker(), group,
 						ActionKeys.VIEW_STAGING)) {
 
@@ -143,8 +163,51 @@ public class GroupURLProvider {
 		_panelCategoryRegistry = panelCategoryRegistry;
 	}
 
+	private String _getDepotDashboardGroupURL(
+		Group group, PortletRequest portletRequest) {
+
+		try {
+			DepotEntryLocalService depotEntryLocalService =
+				_depotEntryLocalService;
+
+			if (depotEntryLocalService == null) {
+				return null;
+			}
+
+			DepotEntry depotEntry = depotEntryLocalService.getGroupDepotEntry(
+				group.getGroupId());
+
+			return PortletURLBuilder.create(
+				_portal.getControlPanelPortletURL(
+					portletRequest, group, _DEPOT_ADMIN_PORTLET_ID, 0, 0,
+					PortletRequest.RENDER_PHASE)
+			).setMVCRenderCommandName(
+				"/depot/view_depot_dashboard"
+			).setParameter(
+				"depotEntryId", depotEntry.getDepotEntryId()
+			).buildString();
+		}
+		catch (PortalException portalException) {
+			_log.error(portalException);
+
+			return null;
+		}
+	}
+
+	private static final String _DEPOT_ADMIN_PORTLET_ID =
+		"com_liferay_depot_web_portlet_DepotAdminPortlet";
+
 	private static final Log _log = LogFactoryUtil.getLog(
 		GroupURLProvider.class);
+
+	@Reference(
+		cardinality = ReferenceCardinality.OPTIONAL,
+		policyOption = ReferencePolicyOption.GREEDY
+	)
+	private volatile DepotEntryLocalService _depotEntryLocalService;
+
+	@Reference
+	private GroupPermission _groupPermission;
 
 	@Reference
 	private Http _http;

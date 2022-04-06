@@ -74,13 +74,7 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 				themeDisplay, fileEntry, "&imagePreview=1", false);
 		}
 
-		JSONObject fileEntryJSONObject = JSONUtil.put(
-			"defaultSource", previewURL
-		).put(
-			"fileEntryId", fileEntry.getFileEntryId()
-		);
-
-		JSONArray sourcesArray = JSONFactoryUtil.createJSONArray();
+		JSONArray sourcesJSONArray = JSONFactoryUtil.createJSONArray();
 
 		List<MediaQuery> mediaQueries = _mediaQueryProvider.getMediaQueries(
 			fileEntry);
@@ -90,24 +84,32 @@ public class FileEntryAMImageURLItemSelectorReturnTypeResolver
 		mediaQueryStream.map(
 			this::_getSourceJSONObject
 		).forEach(
-			sourcesArray::put
+			sourcesJSONArray::put
 		);
 
-		fileEntryJSONObject.put("sources", sourcesArray);
-
-		return fileEntryJSONObject.toString();
+		return JSONUtil.put(
+			"defaultSource", previewURL
+		).put(
+			"fileEntryId", String.valueOf(fileEntry.getFileEntryId())
+		).put(
+			"sources", sourcesJSONArray
+		).toString();
 	}
 
 	private JSONObject _getSourceJSONObject(MediaQuery mediaQuery) {
-		JSONObject attributesJSONObject = JSONFactoryUtil.createJSONObject();
-
-		for (Condition condition : mediaQuery.getConditions()) {
-			attributesJSONObject.put(
-				condition.getAttribute(), condition.getValue());
-		}
-
 		return JSONUtil.put(
-			"attributes", attributesJSONObject
+			"attributes",
+			() -> {
+				JSONObject attributesJSONObject =
+					JSONFactoryUtil.createJSONObject();
+
+				for (Condition condition : mediaQuery.getConditions()) {
+					attributesJSONObject.put(
+						condition.getAttribute(), condition.getValue());
+				}
+
+				return attributesJSONObject;
+			}
 		).put(
 			"src", mediaQuery.getSrc()
 		);

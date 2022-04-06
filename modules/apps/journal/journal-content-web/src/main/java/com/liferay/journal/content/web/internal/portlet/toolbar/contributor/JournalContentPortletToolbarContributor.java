@@ -17,10 +17,11 @@ package com.liferay.journal.content.web.internal.portlet.toolbar.contributor;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.journal.constants.JournalConstants;
 import com.liferay.journal.constants.JournalContentPortletKeys;
+import com.liferay.journal.constants.JournalFolderConstants;
 import com.liferay.journal.constants.JournalPortletKeys;
 import com.liferay.journal.content.web.internal.configuration.JournalContentPortletInstanceConfiguration;
-import com.liferay.journal.model.JournalFolderConstants;
 import com.liferay.journal.service.JournalFolderService;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
@@ -45,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import javax.portlet.PortletRequest;
 import javax.portlet.PortletResponse;
@@ -71,7 +71,35 @@ import org.osgi.service.component.annotations.Reference;
 public class JournalContentPortletToolbarContributor
 	extends BasePortletToolbarContributor {
 
-	protected void addPortletTitleAddJournalArticleMenuItems(
+	@Override
+	protected List<MenuItem> getPortletTitleMenuItems(
+		PortletRequest portletRequest, PortletResponse portletResponse) {
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
+
+		Layout layout = themeDisplay.getLayout();
+
+		if (!_hasAddArticlePermission(themeDisplay) ||
+			layout.isLayoutPrototypeLinkActive()) {
+
+			return Collections.emptyList();
+		}
+
+		List<MenuItem> menuItems = new ArrayList<>();
+
+		try {
+			_addPortletTitleAddJournalArticleMenuItems(
+				menuItems, themeDisplay, portletRequest);
+		}
+		catch (Exception exception) {
+			_log.error("Unable to add folder menu item", exception);
+		}
+
+		return menuItems;
+	}
+
+	private void _addPortletTitleAddJournalArticleMenuItems(
 			List<MenuItem> menuItems, ThemeDisplay themeDisplay,
 			PortletRequest portletRequest)
 		throws Exception {
@@ -80,16 +108,21 @@ public class JournalContentPortletToolbarContributor
 		PortletDisplay portletDisplay = themeDisplay.getPortletDisplay();
 		long scopeGroupId = themeDisplay.getScopeGroupId();
 
-		PortletURL portletURL = _portal.getControlPanelPortletURL(
-			portletRequest, JournalPortletKeys.JOURNAL,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcPath", "/edit_article.jsp");
-		portletURL.setParameter(
-			"redirect", _portal.getLayoutFullURL(themeDisplay));
-		portletURL.setParameter("portletResource", portletDisplay.getId());
-		portletURL.setParameter("refererPlid", String.valueOf(plid));
-		portletURL.setParameter("groupId", String.valueOf(scopeGroupId));
+		PortletURL portletURL = PortletURLBuilder.create(
+			_portal.getControlPanelPortletURL(
+				portletRequest, JournalPortletKeys.JOURNAL,
+				PortletRequest.RENDER_PHASE)
+		).setMVCPath(
+			"/edit_article.jsp"
+		).setRedirect(
+			_portal.getLayoutFullURL(themeDisplay)
+		).setPortletResource(
+			portletDisplay.getId()
+		).setParameter(
+			"groupId", scopeGroupId
+		).setParameter(
+			"refererPlid", plid
+		).buildPortletURL();
 
 		List<DDMStructure> ddmStructures =
 			_journalFolderService.getDDMStructures(
@@ -123,18 +156,17 @@ public class JournalContentPortletToolbarContributor
 
 			URLMenuItem urlMenuItem = new URLMenuItem();
 
-			Map<String, Object> data = HashMapBuilder.<String, Object>put(
-				"id",
-				HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset"
-			).put(
-				"title",
-				HtmlUtil.escape(
-					LanguageUtil.format(
-						themeDisplay.getLocale(), "new-x",
-						ddmStructure.getName(themeDisplay.getLocale())))
-			).build();
-
-			urlMenuItem.setData(data);
+			urlMenuItem.setData(
+				HashMapBuilder.<String, Object>put(
+					"id",
+					HtmlUtil.escape(portletDisplay.getNamespace()) + "editAsset"
+				).put(
+					"title",
+					HtmlUtil.escape(
+						LanguageUtil.format(
+							themeDisplay.getLocale(), "new-x",
+							ddmStructure.getName(themeDisplay.getLocale())))
+				).build());
 
 			String label = ddmStructure.getUnambiguousName(
 				ddmStructures, themeDisplay.getScopeGroupId(),
@@ -149,34 +181,6 @@ public class JournalContentPortletToolbarContributor
 
 			menuItems.add(urlMenuItem);
 		}
-	}
-
-	@Override
-	protected List<MenuItem> getPortletTitleMenuItems(
-		PortletRequest portletRequest, PortletResponse portletResponse) {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)portletRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
-
-		Layout layout = themeDisplay.getLayout();
-
-		if (!_hasAddArticlePermission(themeDisplay) ||
-			layout.isLayoutPrototypeLinkActive()) {
-
-			return Collections.emptyList();
-		}
-
-		List<MenuItem> menuItems = new ArrayList<>();
-
-		try {
-			addPortletTitleAddJournalArticleMenuItems(
-				menuItems, themeDisplay, portletRequest);
-		}
-		catch (Exception exception) {
-			_log.error("Unable to add folder menu item", exception);
-		}
-
-		return menuItems;
 	}
 
 	private boolean _hasAddArticlePermission(ThemeDisplay themeDisplay) {

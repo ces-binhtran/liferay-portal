@@ -42,6 +42,7 @@ import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.BooleanFilter;
 import com.liferay.portal.kernel.search.filter.Filter;
 import com.liferay.portal.kernel.search.filter.TermFilter;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -50,6 +51,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.odata.entity.EntityModel;
+import com.liferay.portal.vulcan.aggregation.Aggregation;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.vulcan.pagination.Pagination;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
@@ -88,8 +90,8 @@ public class CommentResourceImpl
 
 	@Override
 	public Page<Comment> getBlogPostingCommentsPage(
-			Long blogPostingId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long blogPostingId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		BlogsEntry blogsEntry = _blogsEntryService.getEntry(blogPostingId);
@@ -103,21 +105,21 @@ public class CommentResourceImpl
 			discussion.getRootDiscussionComment();
 
 		return _getComments(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-discussion",
 				addAction(
-					"ADD_DISCUSSION", blogPostingId, "postBlogPostingComment",
-					blogsEntry.getUserId(), BlogsEntry.class.getName(),
-					blogsEntry.getGroupId())
+					ActionKeys.ADD_DISCUSSION, blogPostingId,
+					"postBlogPostingComment", blogsEntry.getUserId(),
+					BlogsEntry.class.getName(), blogsEntry.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", blogPostingId, "getBlogPostingCommentsPage",
-					blogsEntry.getUserId(), BlogsEntry.class.getName(),
-					blogsEntry.getGroupId())
+					ActionKeys.VIEW, blogPostingId,
+					"getBlogPostingCommentsPage", blogsEntry.getUserId(),
+					BlogsEntry.class.getName(), blogsEntry.getGroupId())
 			).build(),
-			rootDiscussionComment.getCommentId(), search, filter, pagination,
-			sorts);
+			rootDiscussionComment.getCommentId(), search, aggregation, filter,
+			pagination, sorts);
 	}
 
 	@Override
@@ -141,19 +143,19 @@ public class CommentResourceImpl
 
 	@Override
 	public Page<Comment> getCommentCommentsPage(
-			Long parentCommentId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long parentCommentId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return _getComments(
-			Collections.emptyMap(), parentCommentId, search, filter, pagination,
-			sorts);
+			Collections.emptyMap(), parentCommentId, search, aggregation,
+			filter, pagination, sorts);
 	}
 
 	@Override
 	public Page<Comment> getDocumentCommentsPage(
-			Long documentId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long documentId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		DLFileEntry dlFileEntry = _dlFileEntryService.getFileEntry(documentId);
@@ -167,21 +169,21 @@ public class CommentResourceImpl
 			discussion.getRootDiscussionComment();
 
 		return _getComments(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-discussion",
 				addAction(
-					"ADD_DISCUSSION", documentId, "postDocumentComment",
-					dlFileEntry.getUserId(), DLFileEntry.class.getName(),
-					dlFileEntry.getGroupId())
+					ActionKeys.ADD_DISCUSSION, documentId,
+					"postDocumentComment", dlFileEntry.getUserId(),
+					DLFileEntry.class.getName(), dlFileEntry.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", documentId, "getDocumentCommentsPage",
+					ActionKeys.VIEW, documentId, "getDocumentCommentsPage",
 					dlFileEntry.getUserId(), DLFileEntry.class.getName(),
 					dlFileEntry.getGroupId())
 			).build(),
-			rootDiscussionComment.getCommentId(), search, filter, pagination,
-			sorts);
+			rootDiscussionComment.getCommentId(), search, aggregation, filter,
+			pagination, sorts);
 	}
 
 	@Override
@@ -191,8 +193,8 @@ public class CommentResourceImpl
 
 	@Override
 	public Page<Comment> getStructuredContentCommentsPage(
-			Long structuredContentId, String search, Filter filter,
-			Pagination pagination, Sort[] sorts)
+			Long structuredContentId, String search, Aggregation aggregation,
+			Filter filter, Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		JournalArticle journalArticle = _journalArticleService.getLatestArticle(
@@ -207,22 +209,22 @@ public class CommentResourceImpl
 			discussion.getRootDiscussionComment();
 
 		return _getComments(
-			HashMapBuilder.<String, Map<String, String>>put(
+			HashMapBuilder.put(
 				"add-discussion",
 				addAction(
-					"ADD_DISCUSSION", structuredContentId,
+					ActionKeys.ADD_DISCUSSION, structuredContentId,
 					"postStructuredContentComment", journalArticle.getUserId(),
 					JournalArticle.class.getName(), journalArticle.getGroupId())
 			).put(
 				"get",
 				addAction(
-					"VIEW", structuredContentId,
+					ActionKeys.VIEW, structuredContentId,
 					"getStructuredContentCommentsPage",
 					journalArticle.getUserId(), JournalArticle.class.getName(),
 					journalArticle.getGroupId())
 			).build(),
-			rootDiscussionComment.getCommentId(), search, filter, pagination,
-			sorts);
+			rootDiscussionComment.getCommentId(), search, aggregation, filter,
+			pagination, sorts);
 	}
 
 	@Override
@@ -322,7 +324,8 @@ public class CommentResourceImpl
 
 	private Page<Comment> _getComments(
 			Map<String, Map<String, String>> actions, Long commentId,
-			String search, Filter filter, Pagination pagination, Sort[] sorts)
+			String search, Aggregation aggregation, Filter filter,
+			Pagination pagination, Sort[] sorts)
 		throws Exception {
 
 		return SearchUtil.search(
@@ -336,10 +339,11 @@ public class CommentResourceImpl
 						"parentMessageId", String.valueOf(commentId)),
 					BooleanClauseOccur.MUST);
 			},
-			filter, MBMessage.class, search, pagination,
+			filter, MBMessage.class.getName(), search, pagination,
 			queryConfig -> queryConfig.setSelectedFieldNames(
 				Field.ENTRY_CLASS_PK),
 			searchContext -> {
+				searchContext.addVulcanAggregation(aggregation);
 				searchContext.setAttribute("discussion", Boolean.TRUE);
 				searchContext.setAttribute(
 					"searchPermissionContext", StringPool.BLANK);

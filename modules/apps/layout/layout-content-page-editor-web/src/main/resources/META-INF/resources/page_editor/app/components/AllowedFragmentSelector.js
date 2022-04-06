@@ -12,126 +12,29 @@
  * details.
  */
 
+import ClayEmptyState from '@clayui/empty-state';
 import {ClayCheckbox, ClayInput} from '@clayui/form';
 import {Treeview} from 'frontend-js-components-web';
 import PropTypes from 'prop-types';
 import React, {useEffect, useMemo, useState} from 'react';
 
-import {useSelector} from '../store/index';
+import {useSelector} from '../contexts/StoreContext';
 import AllowedFragmentTreeNode from './AllowedFragmentTreeNode';
 
-const AllowedFragmentSelector = ({dropZoneConfig, onSelectedFragment}) => {
-	const fragments = useSelector((state) => state.fragments);
+const toFragmentEntryKeysArray = (collections) => {
+	const fragmentEntryKeysArray = [];
 
-	const fragmentEntryKeysArray = useMemo(
-		() => toFragmentEntryKeysArray(fragments),
-		[fragments]
-	);
-
-	const initialAllowNewFragmentEntries =
-		dropZoneConfig.allowNewFragmentEntries == undefined
-			? true
-			: dropZoneConfig.allowNewFragmentEntries;
-
-	const initialFragmentEntryKeys = dropZoneConfig.fragmentEntryKeys || [];
-
-	const [filter, setFilter] = useState('');
-
-	const nodes = useMemo(() => toNodes(fragments), [fragments]);
-
-	const [allowNewFragmentEntries, setAllowNewFragmentEntries] = useState(
-		initialAllowNewFragmentEntries
-	);
-
-	const [fragmentEntryKeys, setFragmentEntryKeys] = useState(
-		getSelectedNodeIds(
-			allowNewFragmentEntries,
-			initialFragmentEntryKeys,
-			fragmentEntryKeysArray
-		)
-	);
-
-	useEffect(() => {
-		const newFragmentEntryKeys = getSelectedNodeIds(
-			allowNewFragmentEntries,
-			[...fragmentEntryKeys],
-			fragmentEntryKeysArray
+	collections.forEach((collection) => {
+		collection.fragmentEntries.forEach((fragmentEntry) =>
+			fragmentEntryKeysArray.push(fragmentEntry.fragmentEntryKey)
 		);
 
-		onSelectedFragment({
-			allowNewFragmentEntries,
-			selectedFragments: newFragmentEntryKeys,
-		});
-	}, [
-		fragmentEntryKeys,
-		allowNewFragmentEntries,
-		fragmentEntryKeysArray,
-		onSelectedFragment,
-	]);
+		fragmentEntryKeysArray.push(collection.fragmentCollectionId);
+	});
 
-	return (
-		<>
-			<div className="px-4">
-				<ClayInput
-					className="mb-4"
-					onChange={(event) => setFilter(event.target.value)}
-					placeholder={`${Liferay.Language.get('search')}...`}
-					sizing="sm"
-					type="text"
-				/>
+	fragmentEntryKeysArray.push('lfr-all-fragments-id');
 
-				<div className="mb-2 page-editor__allowed-fragment__tree">
-					<Treeview
-						filterQuery={filter}
-						inheritSelection
-						initialSelectedNodeIds={[...fragmentEntryKeys]}
-						NodeComponent={AllowedFragmentTreeNode}
-						nodes={nodes}
-						onSelectedNodesChange={setFragmentEntryKeys}
-					/>
-				</div>
-			</div>
-
-			<div className="page-editor__allowed-fragment__new-fragments-checkbox">
-				<ClayCheckbox
-					aria-label={Liferay.Language.get(
-						'select-new-fragments-automatically'
-					)}
-					checked={allowNewFragmentEntries}
-					label={Liferay.Language.get(
-						'select-new-fragments-automatically'
-					)}
-					onChange={(event) => {
-						setAllowNewFragmentEntries(event.target.checked);
-					}}
-				/>
-			</div>
-		</>
-	);
-};
-
-AllowedFragmentSelector.propTypes = {
-	dropZoneConfig: PropTypes.shape({
-		allowNewFragmentEntries: PropTypes.bool,
-		fragmentEntryKeys: PropTypes.array,
-	}).isRequired,
-	onSelectedFragment: PropTypes.func.isRequired,
-};
-
-export {AllowedFragmentSelector};
-export default AllowedFragmentSelector;
-
-const getSelectedNodeIds = (
-	allowNewFragmentEntries,
-	fragmentEntryKeys = [],
-	fragmentEntryKeysArray
-) => {
-	return allowNewFragmentEntries
-		? fragmentEntryKeysArray.filter(
-				(fragmentEntryKey) =>
-					!fragmentEntryKeys.includes(fragmentEntryKey)
-		  )
-		: fragmentEntryKeys;
+	return fragmentEntryKeysArray;
 };
 
 const toNodes = (collections) => {
@@ -168,18 +71,143 @@ const toNodes = (collections) => {
 	];
 };
 
-const toFragmentEntryKeysArray = (collections) => {
-	const fragmentEntryKeysArray = [];
+const getSelectedNodeIds = (
+	allowNewFragmentEntries,
+	fragmentEntryKeys = [],
+	fragmentEntryKeysArray
+) => {
+	return allowNewFragmentEntries
+		? fragmentEntryKeysArray.filter(
+				(fragmentEntryKey) =>
+					!fragmentEntryKeys.includes(fragmentEntryKey)
+		  )
+		: fragmentEntryKeys;
+};
 
-	collections.forEach((collection) => {
-		collection.fragmentEntries.forEach((fragmentEntry) =>
-			fragmentEntryKeysArray.push(fragmentEntry.fragmentEntryKey)
+const searchHasResults = (nodes = [], filter) => {
+	return (
+		!filter ||
+		nodes.some(
+			(node) =>
+				node.name?.toLowerCase().includes(filter.toLowerCase()) ||
+				searchHasResults(node.children, filter)
+		)
+	);
+};
+
+const AllowedFragmentSelector = ({dropZoneConfig, onSelectedFragment}) => {
+	const fragments = useSelector((state) => state.fragments);
+
+	const fragmentEntryKeysArray = useMemo(
+		() => toFragmentEntryKeysArray(fragments),
+		[fragments]
+	);
+
+	const initialAllowNewFragmentEntries =
+		dropZoneConfig.allowNewFragmentEntries === undefined ||
+		dropZoneConfig.allowNewFragmentEntries === null
+			? true
+			: dropZoneConfig.allowNewFragmentEntries;
+
+	const initialFragmentEntryKeys = dropZoneConfig.fragmentEntryKeys || [];
+
+	const [filter, setFilter] = useState('');
+
+	const nodes = useMemo(() => toNodes(fragments), [fragments]);
+
+	const [allowNewFragmentEntries, setAllowNewFragmentEntries] = useState(
+		initialAllowNewFragmentEntries
+	);
+
+	const [fragmentEntryKeys, setFragmentEntryKeys] = useState(
+		getSelectedNodeIds(
+			allowNewFragmentEntries,
+			initialFragmentEntryKeys,
+			fragmentEntryKeysArray
+		)
+	);
+
+	const hasResults = useMemo(() => searchHasResults(nodes, filter), [
+		nodes,
+		filter,
+	]);
+
+	useEffect(() => {
+		const newFragmentEntryKeys = getSelectedNodeIds(
+			allowNewFragmentEntries,
+			[...fragmentEntryKeys],
+			fragmentEntryKeysArray
 		);
 
-		fragmentEntryKeysArray.push(collection.fragmentCollectionId);
-	});
+		onSelectedFragment({
+			allowNewFragmentEntries,
+			selectedFragments: newFragmentEntryKeys,
+		});
+	}, [
+		fragmentEntryKeys,
+		allowNewFragmentEntries,
+		fragmentEntryKeysArray,
+		onSelectedFragment,
+	]);
 
-	fragmentEntryKeysArray.push('lfr-all-fragments-id');
+	return (
+		<>
+			<div className="px-4">
+				<ClayInput
+					className="mb-4"
+					onChange={(event) => setFilter(event.target.value)}
+					placeholder={`${Liferay.Language.get('search')}...`}
+					sizing="sm"
+					type="text"
+				/>
 
-	return fragmentEntryKeysArray;
+				{hasResults ? (
+					<div className="mb-2 page-editor__allowed-fragment__tree pl-2">
+						<Treeview
+							NodeComponent={AllowedFragmentTreeNode}
+							filter={filter}
+							inheritSelection
+							initialSelectedNodeIds={[...fragmentEntryKeys]}
+							nodes={nodes}
+							onSelectedNodesChange={setFragmentEntryKeys}
+						/>
+					</div>
+				) : (
+					<ClayEmptyState
+						description={Liferay.Language.get(
+							'try-again-with-a-different-search'
+						)}
+						imgSrc={`${themeDisplay.getPathThemeImages()}/states/search_state.gif`}
+						small
+						title={Liferay.Language.get('no-results-found')}
+					/>
+				)}
+			</div>
+			<div className="page-editor__allowed-fragment__new-fragments-checkbox px-4 py-3">
+				<ClayCheckbox
+					aria-label={Liferay.Language.get(
+						'select-new-fragments-automatically'
+					)}
+					checked={allowNewFragmentEntries}
+					label={Liferay.Language.get(
+						'select-new-fragments-automatically'
+					)}
+					onChange={(event) => {
+						setAllowNewFragmentEntries(event.target.checked);
+					}}
+				/>
+			</div>
+		</>
+	);
 };
+
+AllowedFragmentSelector.propTypes = {
+	dropZoneConfig: PropTypes.shape({
+		allowNewFragmentEntries: PropTypes.bool,
+		fragmentEntryKeys: PropTypes.array,
+	}).isRequired,
+	onSelectedFragment: PropTypes.func.isRequired,
+};
+
+export {AllowedFragmentSelector};
+export default AllowedFragmentSelector;

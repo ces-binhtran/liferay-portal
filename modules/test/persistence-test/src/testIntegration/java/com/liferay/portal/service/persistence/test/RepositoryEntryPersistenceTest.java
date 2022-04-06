@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.dao.orm.DynamicQueryFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
+import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.NoSuchRepositoryEntryException;
 import com.liferay.portal.kernel.model.RepositoryEntry;
 import com.liferay.portal.kernel.service.RepositoryEntryLocalServiceUtil;
@@ -45,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.junit.After;
@@ -125,6 +125,8 @@ public class RepositoryEntryPersistenceTest {
 
 		newRepositoryEntry.setMvccVersion(RandomTestUtil.nextLong());
 
+		newRepositoryEntry.setCtCollectionId(RandomTestUtil.nextLong());
+
 		newRepositoryEntry.setUuid(RandomTestUtil.randomString());
 
 		newRepositoryEntry.setGroupId(RandomTestUtil.nextLong());
@@ -156,6 +158,9 @@ public class RepositoryEntryPersistenceTest {
 		Assert.assertEquals(
 			existingRepositoryEntry.getMvccVersion(),
 			newRepositoryEntry.getMvccVersion());
+		Assert.assertEquals(
+			existingRepositoryEntry.getCtCollectionId(),
+			newRepositoryEntry.getCtCollectionId());
 		Assert.assertEquals(
 			existingRepositoryEntry.getUuid(), newRepositoryEntry.getUuid());
 		Assert.assertEquals(
@@ -262,10 +267,10 @@ public class RepositoryEntryPersistenceTest {
 
 	protected OrderByComparator<RepositoryEntry> getOrderByComparator() {
 		return OrderByComparatorFactoryUtil.create(
-			"RepositoryEntry", "mvccVersion", true, "uuid", true,
-			"repositoryEntryId", true, "groupId", true, "companyId", true,
-			"userId", true, "userName", true, "createDate", true,
-			"modifiedDate", true, "repositoryId", true, "mappedId", true,
+			"RepositoryEntry", "mvccVersion", true, "ctCollectionId", true,
+			"uuid", true, "repositoryEntryId", true, "groupId", true,
+			"companyId", true, "userId", true, "userName", true, "createDate",
+			true, "modifiedDate", true, "repositoryId", true, "mappedId", true,
 			"manualCheckInRequired", true, "lastPublishDate", true);
 	}
 
@@ -490,32 +495,73 @@ public class RepositoryEntryPersistenceTest {
 
 		_persistence.clearCache();
 
-		RepositoryEntry existingRepositoryEntry = _persistence.findByPrimaryKey(
-			newRepositoryEntry.getPrimaryKey());
+		_assertOriginalValues(
+			_persistence.findByPrimaryKey(newRepositoryEntry.getPrimaryKey()));
+	}
 
-		Assert.assertTrue(
-			Objects.equals(
-				existingRepositoryEntry.getUuid(),
-				ReflectionTestUtil.invoke(
-					existingRepositoryEntry, "getOriginalUuid",
-					new Class<?>[0])));
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromDatabase()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(true);
+	}
+
+	@Test
+	public void testResetOriginalValuesWithDynamicQueryLoadFromSession()
+		throws Exception {
+
+		_testResetOriginalValuesWithDynamicQuery(false);
+	}
+
+	private void _testResetOriginalValuesWithDynamicQuery(boolean clearSession)
+		throws Exception {
+
+		RepositoryEntry newRepositoryEntry = addRepositoryEntry();
+
+		if (clearSession) {
+			Session session = _persistence.openSession();
+
+			session.flush();
+
+			session.clear();
+		}
+
+		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
+			RepositoryEntry.class, _dynamicQueryClassLoader);
+
+		dynamicQuery.add(
+			RestrictionsFactoryUtil.eq(
+				"repositoryEntryId",
+				newRepositoryEntry.getRepositoryEntryId()));
+
+		List<RepositoryEntry> result = _persistence.findWithDynamicQuery(
+			dynamicQuery);
+
+		_assertOriginalValues(result.get(0));
+	}
+
+	private void _assertOriginalValues(RepositoryEntry repositoryEntry) {
 		Assert.assertEquals(
-			Long.valueOf(existingRepositoryEntry.getGroupId()),
+			repositoryEntry.getUuid(),
+			ReflectionTestUtil.invoke(
+				repositoryEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "uuid_"));
+		Assert.assertEquals(
+			Long.valueOf(repositoryEntry.getGroupId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingRepositoryEntry, "getOriginalGroupId",
-				new Class<?>[0]));
+				repositoryEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "groupId"));
 
 		Assert.assertEquals(
-			Long.valueOf(existingRepositoryEntry.getRepositoryId()),
+			Long.valueOf(repositoryEntry.getRepositoryId()),
 			ReflectionTestUtil.<Long>invoke(
-				existingRepositoryEntry, "getOriginalRepositoryId",
-				new Class<?>[0]));
-		Assert.assertTrue(
-			Objects.equals(
-				existingRepositoryEntry.getMappedId(),
-				ReflectionTestUtil.invoke(
-					existingRepositoryEntry, "getOriginalMappedId",
-					new Class<?>[0])));
+				repositoryEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "repositoryId"));
+		Assert.assertEquals(
+			repositoryEntry.getMappedId(),
+			ReflectionTestUtil.invoke(
+				repositoryEntry, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "mappedId"));
 	}
 
 	protected RepositoryEntry addRepositoryEntry() throws Exception {
@@ -524,6 +570,8 @@ public class RepositoryEntryPersistenceTest {
 		RepositoryEntry repositoryEntry = _persistence.create(pk);
 
 		repositoryEntry.setMvccVersion(RandomTestUtil.nextLong());
+
+		repositoryEntry.setCtCollectionId(RandomTestUtil.nextLong());
 
 		repositoryEntry.setUuid(RandomTestUtil.randomString());
 

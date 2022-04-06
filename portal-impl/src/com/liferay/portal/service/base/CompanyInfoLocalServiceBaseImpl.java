@@ -35,6 +35,7 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.CompanyInfoLocalService;
+import com.liferay.portal.kernel.service.CompanyInfoLocalServiceUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
 import com.liferay.portal.kernel.service.persistence.CompanyInfoPersistence;
@@ -43,6 +44,8 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -66,11 +69,15 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>CompanyInfoLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.CompanyInfoLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>CompanyInfoLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>CompanyInfoLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the company info to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CompanyInfoLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param companyInfo the company info
 	 * @return the company info that was added
@@ -98,6 +105,10 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 	/**
 	 * Deletes the company info with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CompanyInfoLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param companyInfoId the primary key of the company info
 	 * @return the company info that was removed
 	 * @throws PortalException if a company info with the primary key could not be found
@@ -113,6 +124,10 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 	/**
 	 * Deletes the company info from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CompanyInfoLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param companyInfo the company info
 	 * @return the company info that was removed
 	 */
@@ -125,6 +140,13 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return companyInfoPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -278,6 +300,7 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -295,6 +318,7 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 			(CompanyInfo)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<CompanyInfo> getBasePersistence() {
 		return companyInfoPersistence;
 	}
@@ -337,6 +361,10 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 
 	/**
 	 * Updates the company info in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect CompanyInfoLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param companyInfo the company info
 	 * @return the company info that was updated
@@ -414,11 +442,15 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.CompanyInfo",
 			companyInfoLocalService);
+
+		_setLocalServiceUtilService(companyInfoLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.CompanyInfo");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -460,6 +492,22 @@ public abstract class CompanyInfoLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		CompanyInfoLocalService companyInfoLocalService) {
+
+		try {
+			Field field = CompanyInfoLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, companyInfoLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

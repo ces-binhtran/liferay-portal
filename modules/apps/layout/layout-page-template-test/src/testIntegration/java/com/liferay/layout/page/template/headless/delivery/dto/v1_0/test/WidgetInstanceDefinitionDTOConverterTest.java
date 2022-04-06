@@ -21,11 +21,11 @@ import com.liferay.fragment.service.FragmentEntryLinkLocalService;
 import com.liferay.headless.delivery.dto.v1_0.WidgetInstance;
 import com.liferay.headless.delivery.dto.v1_0.WidgetPermission;
 import com.liferay.layout.page.template.importer.PortletPreferencesPortletConfigurationImporter;
+import com.liferay.layout.test.util.LayoutTestUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.Layout;
-import com.liferay.portal.kernel.model.LayoutConstants;
 import com.liferay.portal.kernel.model.ResourceAction;
 import com.liferay.portal.kernel.model.Role;
 import com.liferay.portal.kernel.portlet.PortletIdCodec;
@@ -44,12 +44,12 @@ import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.portal.kernel.util.HashMapDictionary;
-import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.test.rule.PermissionCheckerMethodTestRule;
+import com.liferay.segments.service.SegmentsExperienceLocalService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -134,20 +134,18 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 			"portletId", _testPortletName
 		);
 
-		Layout layout = _layoutLocalService.addLayout(
-			TestPropsValues.getUserId(), _group.getGroupId(), false,
-			LayoutConstants.DEFAULT_PARENT_LAYOUT_ID,
-			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			StringPool.BLANK, LayoutConstants.TYPE_CONTENT, false,
-			StringPool.BLANK, _serviceContext);
+		Layout layout = LayoutTestUtil.addTypeContentLayout(_group);
 
 		FragmentEntryLink fragmentEntryLink =
 			_fragmentEntryLinkLocalService.addFragmentEntryLink(
 				_serviceContext.getUserId(), _serviceContext.getScopeGroupId(),
-				0, 0, 0, _portal.getClassNameId(Layout.class), layout.getPlid(),
-				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-				StringPool.BLANK, editableValueJSONObject.toString(), namespace,
-				0, null, _serviceContext);
+				0, 0,
+				_segmentsExperienceLocalService.
+					fetchDefaultSegmentsExperienceId(layout.getPlid()),
+				layout.getPlid(), StringPool.BLANK, StringPool.BLANK,
+				StringPool.BLANK, StringPool.BLANK,
+				editableValueJSONObject.toString(), namespace, 0, null,
+				_serviceContext);
 
 		String testPortletId = PortletIdCodec.encode(
 			_testPortletName, instanceId);
@@ -155,15 +153,14 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 		String configProperty1Value = RandomTestUtil.randomString();
 		String configProperty2Value = RandomTestUtil.randomString();
 
-		Map<String, Object> portletConfig = HashMapBuilder.<String, Object>put(
-			"config-property-1", configProperty1Value
-		).put(
-			"config-property-2", configProperty2Value
-		).build();
-
 		_portletPreferencesPortletConfigurationImporter.
 			importPortletConfiguration(
-				layout.getPlid(), testPortletId, portletConfig);
+				layout.getPlid(), testPortletId,
+				HashMapBuilder.<String, Object>put(
+					"config-property-1", configProperty1Value
+				).put(
+					"config-property-2", configProperty2Value
+				).build());
 
 		ResourceAction resourceAction =
 			_resourceActionLocalService.addResourceAction(
@@ -172,12 +169,15 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 
 		Role role = _roleLocalService.getDefaultGroupRole(_group.getGroupId());
 
-		List<String> actionIds = new ArrayList<>();
-
-		actionIds.add(resourceAction.getActionId());
-
 		Map<Long, String[]> roleIdsToActionIds = HashMapBuilder.put(
-			role.getRoleId(), actionIds.toArray(new String[0])
+			role.getRoleId(),
+			() -> {
+				List<String> actionIds = new ArrayList<>();
+
+				actionIds.add(resourceAction.getActionId());
+
+				return actionIds.toArray(new String[0]);
+			}
 		).build();
 
 		String resourcePrimKey = _portletPermission.getPrimaryKey(
@@ -188,7 +188,7 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 			resourcePrimKey, roleIdsToActionIds);
 
 		WidgetInstance widgetInstance = ReflectionTestUtil.invoke(
-			_getService(), "toDTO",
+			_getService(), "getWidgetInstance",
 			new Class<?>[] {FragmentEntryLink.class, String.class},
 			fragmentEntryLink, testPortletId);
 
@@ -229,23 +229,21 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 	private Object _getService() {
 		ServiceReference<?> serviceReference =
 			_bundleContext.getServiceReference(
-				"com.liferay.layout.page.template.admin.web.internal." +
-					"headless.delivery.dto.v1_0.converter." +
-						"WidgetInstanceDTOConverter");
+				"com.liferay.headless.delivery.internal.dto.v1_0.mapper." +
+					"WidgetInstanceMapper");
 
 		return _bundleContext.getService(serviceReference);
 	}
 
-	private void _registerTestPortlet(final String portletId) throws Exception {
+	private void _registerTestPortlet(String portletId) throws Exception {
 		_serviceRegistrations.add(
 			_bundleContext.registerService(
 				Portlet.class, new TestPortlet(),
-				new HashMapDictionary<String, String>() {
-					{
-						put("com.liferay.portlet.instanceable", "true");
-						put("javax.portlet.name", portletId);
-					}
-				}));
+				HashMapDictionaryBuilder.put(
+					"com.liferay.portlet.instanceable", "true"
+				).put(
+					"javax.portlet.name", portletId
+				).build()));
 	}
 
 	private BundleContext _bundleContext;
@@ -263,9 +261,6 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 	private LayoutLocalService _layoutLocalService;
 
 	@Inject
-	private Portal _portal;
-
-	@Inject
 	private PortletPermission _portletPermission;
 
 	@Inject
@@ -280,6 +275,9 @@ public class WidgetInstanceDefinitionDTOConverterTest {
 
 	@Inject
 	private RoleLocalService _roleLocalService;
+
+	@Inject
+	private SegmentsExperienceLocalService _segmentsExperienceLocalService;
 
 	private ServiceContext _serviceContext;
 	private final List<ServiceRegistration<?>> _serviceRegistrations =

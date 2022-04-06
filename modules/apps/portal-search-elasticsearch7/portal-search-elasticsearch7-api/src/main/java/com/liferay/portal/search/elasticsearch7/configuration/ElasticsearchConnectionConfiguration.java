@@ -18,6 +18,8 @@ import aQute.bnd.annotation.metatype.Meta;
 
 import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClassDefinition;
 
+import org.osgi.annotation.versioning.ProviderType;
+
 /**
  * @author Bryan Engler
  */
@@ -31,21 +33,25 @@ import com.liferay.portal.configuration.metatype.annotations.ExtendedObjectClass
 	localization = "content/Language",
 	name = "elasticsearch-connection-configuration-name"
 )
+@ProviderType
 public interface ElasticsearchConnectionConfiguration {
 
 	@Meta.AD(
-		deflt = "false", description = "active-help", name = "active",
-		required = false
+		deflt = "false", description = "activate-or-deactivate-this-connection",
+		name = "active", required = false
 	)
 	public boolean active();
 
-	@Meta.AD(description = "connection-id-help", name = "connection-id")
+	@Meta.AD(
+		description = "connection-id-help[elasticsearch]",
+		name = "connection-id", required = false
+	)
 	public String connectionId();
 
 	@Meta.AD(
 		deflt = "http://localhost:9200",
 		description = "network-host-addresses-help",
-		name = "network-host-addresses"
+		name = "network-host-addresses", required = false
 	)
 	public String[] networkHostAddresses();
 
@@ -90,5 +96,30 @@ public interface ElasticsearchConnectionConfiguration {
 		required = false, type = Meta.Type.Password
 	)
 	public String truststorePassword();
+
+	@Meta.AD(
+		description = "set-the-proxy-host-to-be-used-for-the-client-connection",
+		name = "proxy-host", required = false
+	)
+	public String proxyHost();
+
+	@Meta.AD(
+		deflt = "0",
+		description = "set-the-proxy-port-to-be-used-for-the-client-connection",
+		name = "proxy-port", required = false
+	)
+	public int proxyPort();
+
+	@Meta.AD(
+		description = "proxy-username-help", name = "proxy-username",
+		required = false
+	)
+	public String proxyUserName();
+
+	@Meta.AD(
+		description = "set-the-password-for-connecting-to-the-proxy",
+		name = "proxy-password", required = false, type = Meta.Type.Password
+	)
+	public String proxyPassword();
 
 }

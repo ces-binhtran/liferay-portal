@@ -18,7 +18,6 @@ AUI.add(
 		var DEFAULTS_FORM_VALIDATOR = A.config.FormValidator;
 
 		var FacetUtil = Liferay.Search.FacetUtil;
-		var Language = Liferay.Language;
 		var Util = Liferay.Util;
 
 		var ModifiedFacetFilter = function (config) {
@@ -53,6 +52,58 @@ AUI.add(
 			}
 		};
 
+		var ModifiedFacetFilterUtil = {
+			clearSelections() {
+				var param = this.getParameterName();
+				var paramFrom = param + 'From';
+				var paramTo = param + 'To';
+
+				var parameterArray = document.location.search
+					.substr(1)
+					.split('&');
+
+				parameterArray = FacetUtil.removeURLParameters(
+					param,
+					parameterArray
+				);
+
+				parameterArray = FacetUtil.removeURLParameters(
+					paramFrom,
+					parameterArray
+				);
+
+				parameterArray = FacetUtil.removeURLParameters(
+					paramTo,
+					parameterArray
+				);
+
+				this.submitSearch(parameterArray.join('&'));
+			},
+
+			getParameterName() {
+				return 'modified';
+			},
+
+			submitSearch(parameterString) {
+				document.location.search = parameterString;
+			},
+
+			/**
+			 * Formats a date to 'YYYY-MM-DD' format.
+			 * @param {Date} date The date to format.
+			 * @returns {String} The date string.
+			 */
+			toLocaleDateStringFormatted(date) {
+				var localDate = new Date(date);
+
+				localDate.setMinutes(
+					date.getMinutes() - date.getTimezoneOffset()
+				);
+
+				return localDate.toISOString().split('T')[0];
+			},
+		};
+
 		A.mix(ModifiedFacetFilter.prototype, {
 			_initializeFormValidator() {
 				var instance = this;
@@ -62,7 +113,7 @@ AUI.add(
 				A.mix(
 					DEFAULTS_FORM_VALIDATOR.STRINGS,
 					{
-						[dateRangeRuleName]: Language.get(
+						[dateRangeRuleName]: Liferay.Language.get(
 							'search-custom-range-invalid-date-range'
 						),
 					},
@@ -172,6 +223,17 @@ AUI.add(
 					parameterArray
 				);
 
+				var startParameterNameElement = document.getElementById(
+					instance.namespace + 'start-parameter-name'
+				);
+
+				if (startParameterNameElement) {
+					parameterArray = FacetUtil.removeURLParameters(
+						startParameterNameElement.value,
+						parameterArray
+					);
+				}
+
 				parameterArray = FacetUtil.addURLParameter(
 					paramFrom,
 					modifiedFromParameter,
@@ -189,58 +251,6 @@ AUI.add(
 		});
 
 		Liferay.namespace('Search').ModifiedFacetFilter = ModifiedFacetFilter;
-
-		var ModifiedFacetFilterUtil = {
-			clearSelections() {
-				var param = this.getParameterName();
-				var paramFrom = param + 'From';
-				var paramTo = param + 'To';
-
-				var parameterArray = document.location.search
-					.substr(1)
-					.split('&');
-
-				parameterArray = FacetUtil.removeURLParameters(
-					param,
-					parameterArray
-				);
-
-				parameterArray = FacetUtil.removeURLParameters(
-					paramFrom,
-					parameterArray
-				);
-
-				parameterArray = FacetUtil.removeURLParameters(
-					paramTo,
-					parameterArray
-				);
-
-				this.submitSearch(parameterArray.join('&'));
-			},
-
-			getParameterName() {
-				return 'modified';
-			},
-
-			submitSearch(parameterString) {
-				document.location.search = parameterString;
-			},
-
-			/**
-			 * Formats a date to 'YYYY-MM-DD' format.
-			 * @param {Date} date The date to format.
-			 * @returns {String} The date string.
-			 */
-			toLocaleDateStringFormatted(date) {
-				var localDate = new Date(date);
-
-				localDate.setMinutes(
-					date.getMinutes() - date.getTimezoneOffset()
-				);
-
-				return localDate.toISOString().split('T')[0];
-			},
-		};
 
 		Liferay.namespace(
 			'Search'

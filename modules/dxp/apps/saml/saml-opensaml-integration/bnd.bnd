@@ -1,7 +1,15 @@
 Bundle-Name: Liferay SAML OpenSAML Integration
 Bundle-SymbolicName: com.liferay.saml.opensaml.integration
-Bundle-Version: 4.0.10
-Export-Package: com.liferay.saml.opensaml.integration.resolver
+Bundle-Version: 5.3.23
+Export-Package:\
+	com.liferay.saml.opensaml.integration.field.expression.handler,\
+	com.liferay.saml.opensaml.integration.field.expression.handler.registry,\
+	com.liferay.saml.opensaml.integration.field.expression.resolver,\
+	com.liferay.saml.opensaml.integration.field.expression.resolver.registry,\
+	com.liferay.saml.opensaml.integration.processor,\
+	com.liferay.saml.opensaml.integration.processor.context,\
+	com.liferay.saml.opensaml.integration.processor.factory,\
+	com.liferay.saml.opensaml.integration.resolver
 Import-Package:\
 	!bsh,\
 	\
@@ -18,6 +26,8 @@ Import-Package:\
 	\
 	!javax.annotation.*,\
 	\
+	!junit.*,\
+	\
 	!net.fortuna.*,\
 	\
 	!net.jcip.*,\
@@ -32,13 +42,19 @@ Import-Package:\
 	\
 	!org.apache.axis.*,\
 	!org.apache.commons.configuration,\
+	!org.apache.commons.httpclient.*,\
 	!org.apache.commons.ssl,\
 	!org.apache.log.*,\
 	!org.apache.oro.*,\
 	!org.apache.poi.*,\
 	!org.apache.tools.ant.*,\
+	!org.apache.xml.dtm.*,\
+	!org.apache.xml.utils.*,\
+	!org.apache.xpath.*,\
 	\
 	!org.checkerframework.*,\
+	\
+	!org.jdom.*,\
 	\
 	!org.joda.convert,\
 	\
@@ -51,6 +67,7 @@ Import-Package:\
 	!sun.io,\
 	\
 	*
+-fixupmessages: Classes found in the wrong directory: ...;is:=ignore
 -includeresource:\
 	opensaml-core-*;lib:=true,\
 	opensaml-messaging-api-*;lib:=true,\

@@ -43,15 +43,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.trash.model.TrashEntry;
 import com.liferay.trash.service.TrashEntryLocalService;
+import com.liferay.trash.service.TrashEntryLocalServiceUtil;
 import com.liferay.trash.service.persistence.TrashEntryPersistence;
-import com.liferay.trash.service.persistence.TrashVersionPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -72,11 +75,15 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>TrashEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.trash.service.TrashEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>TrashEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>TrashEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the trash entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was added
@@ -104,6 +111,10 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the trash entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param entryId the primary key of the trash entry
 	 * @return the trash entry that was removed
 	 * @throws PortalException if a trash entry with the primary key could not be found
@@ -117,6 +128,10 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the trash entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was removed
 	 */
@@ -129,6 +144,13 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return trashEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -279,6 +301,7 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -296,6 +319,7 @@ public abstract class TrashEntryLocalServiceBaseImpl
 			(TrashEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<TrashEntry> getBasePersistence() {
 		return trashEntryPersistence;
 	}
@@ -339,6 +363,10 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	/**
 	 * Updates the trash entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect TrashEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param trashEntry the trash entry
 	 * @return the trash entry that was updated
 	 */
@@ -346,6 +374,11 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Override
 	public TrashEntry updateTrashEntry(TrashEntry trashEntry) {
 		return trashEntryPersistence.update(trashEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -359,6 +392,8 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		trashEntryLocalService = (TrashEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(trashEntryLocalService);
 	}
 
 	/**
@@ -418,6 +453,22 @@ public abstract class TrashEntryLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		TrashEntryLocalService trashEntryLocalService) {
+
+		try {
+			Field field = TrashEntryLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, trashEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected TrashEntryLocalService trashEntryLocalService;
 
 	@Reference
@@ -426,24 +477,5 @@ public abstract class TrashEntryLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.SystemEventLocalService
-		systemEventLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected TrashVersionPersistence trashVersionPersistence;
 
 }

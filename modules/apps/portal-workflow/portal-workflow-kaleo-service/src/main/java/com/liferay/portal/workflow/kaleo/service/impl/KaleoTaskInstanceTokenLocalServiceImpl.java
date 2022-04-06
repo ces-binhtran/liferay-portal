@@ -96,7 +96,7 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 				kaleoInstanceTokenId);
 
 		User user = userLocalService.getUser(serviceContext.getGuestOrUserId());
-		Date now = new Date();
+		Date date = new Date();
 
 		long kaleoTaskInstanceTokenId = counterLocalService.increment();
 
@@ -111,8 +111,8 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 		kaleoTaskInstanceToken.setCompanyId(user.getCompanyId());
 		kaleoTaskInstanceToken.setUserId(user.getUserId());
 		kaleoTaskInstanceToken.setUserName(user.getFullName());
-		kaleoTaskInstanceToken.setCreateDate(now);
-		kaleoTaskInstanceToken.setModifiedDate(now);
+		kaleoTaskInstanceToken.setCreateDate(date);
+		kaleoTaskInstanceToken.setModifiedDate(date);
 		kaleoTaskInstanceToken.setKaleoDefinitionId(
 			kaleoInstanceToken.getKaleoDefinitionId());
 		kaleoTaskInstanceToken.setKaleoDefinitionVersionId(
@@ -519,44 +519,28 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 			OrderByComparator<KaleoTaskInstanceToken> orderByComparator,
 			ServiceContext serviceContext) {
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
-			KaleoTaskInstanceToken.class, getClassLoader());
+		if (completed == null) {
+			return kaleoTaskInstanceTokenPersistence.findByC_U(
+				serviceContext.getCompanyId(), userId, start, end,
+				orderByComparator);
+		}
 
-		Property companyIdProperty = PropertyFactoryUtil.forName("companyId");
-
-		dynamicQuery.add(companyIdProperty.eq(serviceContext.getCompanyId()));
-
-		Property workflowContextProperty = PropertyFactoryUtil.forName(
-			"workflowContext");
-
-		dynamicQuery.add(
-			workflowContextProperty.like("%\"userId\":\"" + userId + "\"%"));
-
-		addCompletedCriterion(dynamicQuery, completed);
-
-		return dynamicQuery(dynamicQuery, start, end, orderByComparator);
+		return kaleoTaskInstanceTokenPersistence.findByC_U_C(
+			serviceContext.getCompanyId(), userId, completed, start, end,
+			orderByComparator);
 	}
 
 	@Override
 	public int getSubmittingUserKaleoTaskInstanceTokensCount(
 		long userId, Boolean completed, ServiceContext serviceContext) {
 
-		DynamicQuery dynamicQuery = DynamicQueryFactoryUtil.forClass(
-			KaleoTaskInstanceToken.class, getClassLoader());
+		if (completed == null) {
+			return kaleoTaskInstanceTokenPersistence.countByC_U(
+				serviceContext.getCompanyId(), userId);
+		}
 
-		Property companyIdProperty = PropertyFactoryUtil.forName("companyId");
-
-		dynamicQuery.add(companyIdProperty.eq(serviceContext.getCompanyId()));
-
-		Property workflowContextProperty = PropertyFactoryUtil.forName(
-			"workflowContext");
-
-		dynamicQuery.add(
-			workflowContextProperty.like("%\"userId\":\"" + userId + "\"%"));
-
-		addCompletedCriterion(dynamicQuery, completed);
-
-		return (int)dynamicQueryCount(dynamicQuery);
+		return kaleoTaskInstanceTokenPersistence.countByC_U_C(
+			serviceContext.getCompanyId(), userId, completed);
 	}
 
 	@Override
@@ -666,7 +650,7 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 				baseModelSearchResult = searchKaleoTaskInstanceTokens(
 					assetTitle, taskNames, assetTypes, assetPrimaryKeys,
 					assigneeClassName, assigneeClassPKs, dueDateGT, dueDateLT,
-					completed, kaleoDefinitionId, kaleoInstanceIds,
+					completed, kaleoDefinitionId, kaleoInstanceIds, false,
 					searchByUserRoles, andOperator, start, end,
 					orderByComparator, serviceContext);
 
@@ -674,7 +658,7 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -792,35 +776,49 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 				Long[] assetPrimaryKeys, String assigneeClassName,
 				Long[] assigneeClassPKs, Date dueDateGT, Date dueDateLT,
 				Boolean completed, Long kaleoDefinitionId,
-				Long[] kaleoInstanceIds, Boolean searchByUserRoles,
-				boolean andOperator, int start, int end,
+				Long[] kaleoInstanceIds, boolean searchByActiveWorkflowHandlers,
+				Boolean searchByUserRoles, boolean andOperator, int start,
+				int end,
 				OrderByComparator<KaleoTaskInstanceToken> orderByComparator,
 				ServiceContext serviceContext)
 		throws PortalException {
 
-		KaleoTaskInstanceTokenQuery kaleoTaskInstanceTokenQuery =
-			new KaleoTaskInstanceTokenQuery(serviceContext);
-
-		kaleoTaskInstanceTokenQuery.setAndOperator(andOperator);
-		kaleoTaskInstanceTokenQuery.setAssetTitle(assetTitle);
-		kaleoTaskInstanceTokenQuery.setAssetTypes(assetTypes);
-		kaleoTaskInstanceTokenQuery.setAssetPrimaryKeys(assetPrimaryKeys);
-		kaleoTaskInstanceTokenQuery.setAssigneeClassName(assigneeClassName);
-		kaleoTaskInstanceTokenQuery.setAssigneeClassPKs(assigneeClassPKs);
-		kaleoTaskInstanceTokenQuery.setCompleted(completed);
-		kaleoTaskInstanceTokenQuery.setDueDateGT(dueDateGT);
-		kaleoTaskInstanceTokenQuery.setDueDateLT(dueDateLT);
-		kaleoTaskInstanceTokenQuery.setEnd(end);
-		kaleoTaskInstanceTokenQuery.setKaleoDefinitionId(kaleoDefinitionId);
-		kaleoTaskInstanceTokenQuery.setKaleoInstanceIds(kaleoInstanceIds);
-		kaleoTaskInstanceTokenQuery.setOrderByComparator(orderByComparator);
-		kaleoTaskInstanceTokenQuery.setSearchByUserRoles(searchByUserRoles);
-		kaleoTaskInstanceTokenQuery.setStart(start);
-		kaleoTaskInstanceTokenQuery.setTaskNames(taskNames);
-
 		Hits hits = doSearch(
 			HashMapBuilder.<String, Serializable>put(
-				"kaleoTaskInstanceTokenQuery", kaleoTaskInstanceTokenQuery
+				"kaleoTaskInstanceTokenQuery",
+				() -> {
+					KaleoTaskInstanceTokenQuery kaleoTaskInstanceTokenQuery =
+						new KaleoTaskInstanceTokenQuery(serviceContext);
+
+					kaleoTaskInstanceTokenQuery.setAndOperator(andOperator);
+					kaleoTaskInstanceTokenQuery.setAssetTitle(assetTitle);
+					kaleoTaskInstanceTokenQuery.setAssetTypes(assetTypes);
+					kaleoTaskInstanceTokenQuery.setAssetPrimaryKeys(
+						assetPrimaryKeys);
+					kaleoTaskInstanceTokenQuery.setAssigneeClassName(
+						assigneeClassName);
+					kaleoTaskInstanceTokenQuery.setAssigneeClassPKs(
+						assigneeClassPKs);
+					kaleoTaskInstanceTokenQuery.setCompleted(completed);
+					kaleoTaskInstanceTokenQuery.setDueDateGT(dueDateGT);
+					kaleoTaskInstanceTokenQuery.setDueDateLT(dueDateLT);
+					kaleoTaskInstanceTokenQuery.setEnd(end);
+					kaleoTaskInstanceTokenQuery.setKaleoDefinitionId(
+						kaleoDefinitionId);
+					kaleoTaskInstanceTokenQuery.setKaleoInstanceIds(
+						kaleoInstanceIds);
+					kaleoTaskInstanceTokenQuery.setOrderByComparator(
+						orderByComparator);
+					kaleoTaskInstanceTokenQuery.
+						setSearchByActiveWorkflowHandlers(
+							searchByActiveWorkflowHandlers);
+					kaleoTaskInstanceTokenQuery.setSearchByUserRoles(
+						searchByUserRoles);
+					kaleoTaskInstanceTokenQuery.setStart(start);
+					kaleoTaskInstanceTokenQuery.setTaskNames(taskNames);
+
+					return kaleoTaskInstanceTokenQuery;
+				}
 			).build(),
 			start, end, orderByComparator, serviceContext);
 
@@ -923,6 +921,7 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 		searchContext.setAttributes(searchAttributes);
 		searchContext.setCompanyId(serviceContext.getCompanyId());
 		searchContext.setEnd(end);
+		searchContext.setGroupIds(new long[] {-1L});
 		searchContext.setStart(start);
 
 		if (orderByComparator != null) {
@@ -966,7 +965,7 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -1051,9 +1050,6 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 			Field.CREATE_DATE,
 			_getSortableFieldName(Field.CREATE_DATE, "Number")
 		).put(
-			Field.MODIFIED_DATE,
-			_getSortableFieldName(Field.MODIFIED_DATE, "Number")
-		).put(
 			Field.USER_ID, _getSortableFieldName(Field.USER_ID, "Number")
 		).put(
 			KaleoTaskInstanceTokenField.COMPLETED,
@@ -1080,6 +1076,8 @@ public class KaleoTaskInstanceTokenLocalServiceImpl
 			_getSortableFieldName(
 				KaleoTaskInstanceTokenField.KALEO_TASK_INSTANCE_TOKEN_ID,
 				"Number")
+		).put(
+			"modifiedDate", _getSortableFieldName(Field.MODIFIED_DATE, "Number")
 		).put(
 			"name",
 			_getSortableFieldName(

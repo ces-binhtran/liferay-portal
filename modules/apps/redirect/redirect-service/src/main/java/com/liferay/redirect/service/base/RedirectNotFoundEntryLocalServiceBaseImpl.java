@@ -40,14 +40,18 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.redirect.model.RedirectNotFoundEntry;
 import com.liferay.redirect.service.RedirectNotFoundEntryLocalService;
+import com.liferay.redirect.service.RedirectNotFoundEntryLocalServiceUtil;
 import com.liferay.redirect.service.persistence.RedirectNotFoundEntryPersistence;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,11 +73,15 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>RedirectNotFoundEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.redirect.service.RedirectNotFoundEntryLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>RedirectNotFoundEntryLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>RedirectNotFoundEntryLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the redirect not found entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was added
@@ -105,6 +113,10 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the redirect not found entry with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param redirectNotFoundEntryId the primary key of the redirect not found entry
 	 * @return the redirect not found entry that was removed
 	 * @throws PortalException if a redirect not found entry with the primary key could not be found
@@ -121,6 +133,10 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	/**
 	 * Deletes the redirect not found entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was removed
 	 */
@@ -135,6 +151,13 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return redirectNotFoundEntryPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -300,6 +323,7 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -318,6 +342,7 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 			(RedirectNotFoundEntry)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<RedirectNotFoundEntry> getBasePersistence() {
 		return redirectNotFoundEntryPersistence;
 	}
@@ -363,6 +388,10 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	/**
 	 * Updates the redirect not found entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect RedirectNotFoundEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param redirectNotFoundEntry the redirect not found entry
 	 * @return the redirect not found entry that was updated
 	 */
@@ -372,6 +401,11 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 		RedirectNotFoundEntry redirectNotFoundEntry) {
 
 		return redirectNotFoundEntryPersistence.update(redirectNotFoundEntry);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -386,6 +420,8 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 	public void setAopProxy(Object aopProxy) {
 		redirectNotFoundEntryLocalService =
 			(RedirectNotFoundEntryLocalService)aopProxy;
+
+		_setLocalServiceUtilService(redirectNotFoundEntryLocalService);
 	}
 
 	/**
@@ -428,6 +464,23 @@ public abstract class RedirectNotFoundEntryLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		RedirectNotFoundEntryLocalService redirectNotFoundEntryLocalService) {
+
+		try {
+			Field field =
+				RedirectNotFoundEntryLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, redirectNotFoundEntryLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

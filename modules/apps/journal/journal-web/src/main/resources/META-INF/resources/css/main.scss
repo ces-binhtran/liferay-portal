@@ -1,8 +1,17 @@
 @import 'atlas-variables';
 
-$toolbarDesktopHeight: 64px;
-$toolbarHeight: 110px;
+@import '../ddm_template_editor/components/PortletIcon';
+@import '../ddm_template_editor/components/PropertiesPanel';
+
+$toolbarDesktopHeight: 4rem;
+$toolbarHeight: 6.875rem;
 $toolbarZIndex: 971;
+
+$controlMenuHeight: 56px;
+$sidebarHeaderHeight: 104px;
+$sidebarWidth: 398px;
+
+$portletLayoutMargin: 35px;
 
 $productMenuTransitionDuration: 0.5s;
 $productMenuWidth: 320px;
@@ -40,6 +49,10 @@ $productMenuWidth: 320px;
 
 		.alloy-editor-switch {
 			margin-top: -40px;
+		}
+
+		.ddm-form-builder-app .CodeMirror {
+			height: 100%;
 		}
 
 		.form-builder-field {
@@ -96,6 +109,10 @@ $productMenuWidth: 320px;
 
 				> .tbar-nav {
 					flex-wrap: wrap;
+
+					@include media-breakpoint-up(lg) {
+						flex-wrap: nowrap;
+					}
 
 					> .tbar-item {
 						padding: 0.5em;
@@ -172,16 +189,31 @@ $productMenuWidth: 320px;
 				margin-top: $toolbarDesktopHeight;
 			}
 
-			@media (max-width: 769px) {
+			@include media-breakpoint-down(md) {
 				> .container-fluid {
-					margin: 0;
+					margin: 0 auto;
 					padding: 0;
 
 					> .sheet {
 						border: none;
 						border-radius: 0;
-						min-height: calc(100vh - #{$toolbarHeight});
 					}
+				}
+			}
+
+			.contextual-sidebar-mr {
+				margin-right: $sidebarWidth;
+			}
+
+			.contextual-sidebar-mr-n {
+				margin-right: -$sidebarWidth;
+			}
+
+			.sidebar-body {
+				@include media-breakpoint-down(lg) {
+					height: calc(
+						100vh - #{$controlMenuHeight +$sidebarHeaderHeight} - #{$toolbarHeight}
+					);
 				}
 			}
 		}
@@ -190,16 +222,16 @@ $productMenuWidth: 320px;
 			border-left: 1px #e7e7ed solid;
 			box-shadow: none;
 			margin-top: $toolbarHeight;
+			max-width: 90vw;
 			overflow-y: scroll;
 			padding-top: 0;
 			position: fixed;
 			top: auto;
-			width: calc(100% - #{$productMenuWidth});
+			width: $productMenuWidth;
 			z-index: 1;
 
 			@include media-breakpoint-up(lg) {
 				margin-top: $toolbarDesktopHeight;
-				width: $productMenuWidth;
 			}
 
 			.article-content-description {
@@ -230,6 +262,19 @@ $productMenuWidth: 320px;
 		}
 
 		.sidebar-body {
+			.collapse-icon {
+				border-bottom: 1px solid $light;
+				color: $secondary;
+
+				&:hover {
+					color: $dark;
+				}
+
+				.collapse-icon-open {
+					color: $dark;
+				}
+			}
+
 			.panel {
 				margin-bottom: 0;
 			}

@@ -22,11 +22,14 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -52,10 +55,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("ExportTask")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "ExportTask")
-public class ExportTask {
+public class ExportTask implements Serializable {
 
 	public static ExportTask toDTO(String json) {
 		return ObjectMapperUtil.readValue(ExportTask.class, json);
+	}
+
+	public static ExportTask unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(ExportTask.class, json);
 	}
 
 	@Schema(
@@ -118,7 +125,7 @@ public class ExportTask {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String contentType;
 
-	@Schema(description = "The end time of import task operation.")
+	@Schema(description = "The end time of export task operation.")
 	public Date getEndTime() {
 		return endTime;
 	}
@@ -142,12 +149,12 @@ public class ExportTask {
 		}
 	}
 
-	@GraphQLField(description = "The end time of import task operation.")
+	@GraphQLField(description = "The end time of export task operation.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date endTime;
 
 	@Schema(
-		description = "The error message in case of import task's failed execution."
+		description = "The error message in case of export task's failed execution."
 	)
 	public String getErrorMessage() {
 		return errorMessage;
@@ -173,12 +180,12 @@ public class ExportTask {
 	}
 
 	@GraphQLField(
-		description = "The error message in case of import task's failed execution."
+		description = "The error message in case of export task's failed execution."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String errorMessage;
 
-	@Schema(description = "The status of import task's execution.")
+	@Schema(description = "The status of export task's execution.")
 	@Valid
 	public ExecuteStatus getExecuteStatus() {
 		return executeStatus;
@@ -212,9 +219,37 @@ public class ExportTask {
 		}
 	}
 
-	@GraphQLField(description = "The status of import task's execution.")
+	@GraphQLField(description = "The status of export task's execution.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected ExecuteStatus executeStatus;
+
+	@Schema(description = "The optional external key of this account.")
+	public String getExternalReferenceCode() {
+		return externalReferenceCode;
+	}
+
+	public void setExternalReferenceCode(String externalReferenceCode) {
+		this.externalReferenceCode = externalReferenceCode;
+	}
+
+	@JsonIgnore
+	public void setExternalReferenceCode(
+		UnsafeSupplier<String, Exception> externalReferenceCodeUnsafeSupplier) {
+
+		try {
+			externalReferenceCode = externalReferenceCodeUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The optional external key of this account.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String externalReferenceCode;
 
 	@DecimalMin("0")
 	@Schema(description = "The task's ID.")
@@ -243,7 +278,38 @@ public class ExportTask {
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Long id;
 
-	@Schema(description = "The start time of import task operation.")
+	@DecimalMin("0")
+	@Schema(description = "Number of items processed by export task opeartion.")
+	public Integer getProcessedItemsCount() {
+		return processedItemsCount;
+	}
+
+	public void setProcessedItemsCount(Integer processedItemsCount) {
+		this.processedItemsCount = processedItemsCount;
+	}
+
+	@JsonIgnore
+	public void setProcessedItemsCount(
+		UnsafeSupplier<Integer, Exception> processedItemsCountUnsafeSupplier) {
+
+		try {
+			processedItemsCount = processedItemsCountUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "Number of items processed by export task opeartion."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer processedItemsCount;
+
+	@Schema(description = "The start time of export task operation.")
 	public Date getStartTime() {
 		return startTime;
 	}
@@ -267,9 +333,42 @@ public class ExportTask {
 		}
 	}
 
-	@GraphQLField(description = "The start time of import task operation.")
+	@GraphQLField(description = "The start time of export task operation.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Date startTime;
+
+	@DecimalMin("0")
+	@Schema(
+		description = "Total number of items that will be processed by export task operation."
+	)
+	public Integer getTotalItemsCount() {
+		return totalItemsCount;
+	}
+
+	public void setTotalItemsCount(Integer totalItemsCount) {
+		this.totalItemsCount = totalItemsCount;
+	}
+
+	@JsonIgnore
+	public void setTotalItemsCount(
+		UnsafeSupplier<Integer, Exception> totalItemsCountUnsafeSupplier) {
+
+		try {
+			totalItemsCount = totalItemsCountUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "Total number of items that will be processed by export task operation."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Integer totalItemsCount;
 
 	@Override
 	public boolean equals(Object object) {
@@ -371,6 +470,20 @@ public class ExportTask {
 			sb.append("\"");
 		}
 
+		if (externalReferenceCode != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"externalReferenceCode\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(externalReferenceCode));
+
+			sb.append("\"");
+		}
+
 		if (id != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -379,6 +492,16 @@ public class ExportTask {
 			sb.append("\"id\": ");
 
 			sb.append(id);
+		}
+
+		if (processedItemsCount != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"processedItemsCount\": ");
+
+			sb.append(processedItemsCount);
 		}
 
 		if (startTime != null) {
@@ -395,12 +518,23 @@ public class ExportTask {
 			sb.append("\"");
 		}
 
+		if (totalItemsCount != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"totalItemsCount\": ");
+
+			sb.append(totalItemsCount);
+		}
+
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.batch.engine.dto.v1_0.ExportTask",
 		name = "x-class-name"
 	)
@@ -414,13 +548,17 @@ public class ExportTask {
 
 		@JsonCreator
 		public static ExecuteStatus create(String value) {
+			if ((value == null) || value.equals("")) {
+				return null;
+			}
+
 			for (ExecuteStatus executeStatus : values()) {
 				if (Objects.equals(executeStatus.getValue(), value)) {
 					return executeStatus;
 				}
 			}
 
-			return null;
+			throw new IllegalArgumentException("Invalid enum value: " + value);
 		}
 
 		@JsonValue
@@ -442,9 +580,19 @@ public class ExportTask {
 	}
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -460,14 +608,12 @@ public class ExportTask {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -494,7 +640,7 @@ public class ExportTask {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -502,7 +648,7 @@ public class ExportTask {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -510,5 +656,10 @@ public class ExportTask {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

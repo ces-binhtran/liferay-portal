@@ -34,6 +34,7 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.WebKeys;
 
 import java.util.Arrays;
@@ -62,7 +63,7 @@ import org.osgi.service.component.annotations.Reference;
 @Component(
 	property = {
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
-		"mvc.command.name=/analytics/edit_channel"
+		"mvc.command.name=/analytics_settings/edit_channel"
 	},
 	service = MVCActionCommand.class
 )
@@ -108,7 +109,7 @@ public class EditChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 				"name", group.getDescriptiveName(themeDisplay.getLocale()));
 		}
 		catch (PortalException portalException) {
-			_log.error(portalException, portalException);
+			_log.error(portalException);
 
 			ResourceBundle resourceBundle = ResourceBundleUtil.getBundle(
 				"content.Language", themeDisplay.getLocale(), getClass());
@@ -142,7 +143,7 @@ public class EditChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 			themeDisplay.getCompanyId(),
 			String.format(
 				"api/1.0/data-sources/%s/details",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())));
 
 		StatusLine statusLine = httpResponse.getStatusLine();
@@ -176,25 +177,24 @@ public class EditChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 
 		Stream<String> stream = Arrays.stream(selectedGroupIds);
 
-		List<Group> groups = stream.map(
-			Long::valueOf
-		).map(
-			groupLocalService::fetchGroup
-		).filter(
-			Objects::nonNull
-		).collect(
-			Collectors.toList()
-		);
-
 		HttpResponse httpResponse = AnalyticsSettingsUtil.doPatch(
 			JSONUtil.put(
 				"dataSourceId",
-				AnalyticsSettingsUtil.getAsahFaroBackendDataSourceId(
+				AnalyticsSettingsUtil.getDataSourceId(
 					themeDisplay.getCompanyId())
 			).put(
 				"groups",
 				JSONUtil.toJSONArray(
-					groups, group -> _buildGroupJSONObject(group, themeDisplay))
+					stream.map(
+						Long::valueOf
+					).map(
+						groupLocalService::fetchGroup
+					).filter(
+						Objects::nonNull
+					).collect(
+						Collectors.toList()
+					),
+					group -> _buildGroupJSONObject(group, themeDisplay))
 			),
 			themeDisplay.getCompanyId(), "api/1.0/channels/" + channelId);
 
@@ -224,14 +224,14 @@ public class EditChannelMVCActionCommand extends BaseAnalyticsMVCActionCommand {
 		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
 			WebKeys.THEME_DISPLAY);
 
-		UnicodeProperties unicodeProperties = new UnicodeProperties(true);
-
-		unicodeProperties.setProperty(
-			"liferayAnalyticsGroupIds",
-			StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA));
-
 		_companyService.updatePreferences(
-			themeDisplay.getCompanyId(), unicodeProperties);
+			themeDisplay.getCompanyId(),
+			UnicodePropertiesBuilder.create(
+				true
+			).put(
+				"liferayAnalyticsGroupIds",
+				StringUtil.merge(liferayAnalyticsGroupIds, StringPool.COMMA)
+			).build());
 
 		return liferayAnalyticsGroupIds;
 	}

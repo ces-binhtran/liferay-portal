@@ -17,6 +17,8 @@ package com.liferay.headless.delivery.client.dto.v1_0;
 import com.liferay.headless.delivery.client.function.UnsafeSupplier;
 import com.liferay.headless.delivery.client.serdes.v1_0.PageSectionDefinitionSerDes;
 
+import java.io.Serializable;
+
 import java.util.Objects;
 
 import javax.annotation.Generated;
@@ -26,7 +28,7 @@ import javax.annotation.Generated;
  * @generated
  */
 @Generated("")
-public class PageSectionDefinition implements Cloneable {
+public class PageSectionDefinition implements Cloneable, Serializable {
 
 	public static PageSectionDefinition toDTO(String json) {
 		return PageSectionDefinitionSerDes.toDTO(json);
@@ -53,16 +55,41 @@ public class PageSectionDefinition implements Cloneable {
 
 	protected String backgroundColor;
 
-	public FragmentImage getBackgroundImage() {
+	public FragmentImage getBackgroundFragmentImage() {
+		return backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		FragmentImage backgroundFragmentImage) {
+
+		this.backgroundFragmentImage = backgroundFragmentImage;
+	}
+
+	public void setBackgroundFragmentImage(
+		UnsafeSupplier<FragmentImage, Exception>
+			backgroundFragmentImageUnsafeSupplier) {
+
+		try {
+			backgroundFragmentImage =
+				backgroundFragmentImageUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentImage backgroundFragmentImage;
+
+	public BackgroundImage getBackgroundImage() {
 		return backgroundImage;
 	}
 
-	public void setBackgroundImage(FragmentImage backgroundImage) {
+	public void setBackgroundImage(BackgroundImage backgroundImage) {
 		this.backgroundImage = backgroundImage;
 	}
 
 	public void setBackgroundImage(
-		UnsafeSupplier<FragmentImage, Exception>
+		UnsafeSupplier<BackgroundImage, Exception>
 			backgroundImageUnsafeSupplier) {
 
 		try {
@@ -73,7 +100,114 @@ public class PageSectionDefinition implements Cloneable {
 		}
 	}
 
-	protected FragmentImage backgroundImage;
+	protected BackgroundImage backgroundImage;
+
+	public FragmentLink getFragmentLink() {
+		return fragmentLink;
+	}
+
+	public void setFragmentLink(FragmentLink fragmentLink) {
+		this.fragmentLink = fragmentLink;
+	}
+
+	public void setFragmentLink(
+		UnsafeSupplier<FragmentLink, Exception> fragmentLinkUnsafeSupplier) {
+
+		try {
+			fragmentLink = fragmentLinkUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentLink fragmentLink;
+
+	public FragmentStyle getFragmentStyle() {
+		return fragmentStyle;
+	}
+
+	public void setFragmentStyle(FragmentStyle fragmentStyle) {
+		this.fragmentStyle = fragmentStyle;
+	}
+
+	public void setFragmentStyle(
+		UnsafeSupplier<FragmentStyle, Exception> fragmentStyleUnsafeSupplier) {
+
+		try {
+			fragmentStyle = fragmentStyleUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentStyle fragmentStyle;
+
+	public FragmentViewport[] getFragmentViewports() {
+		return fragmentViewports;
+	}
+
+	public void setFragmentViewports(FragmentViewport[] fragmentViewports) {
+		this.fragmentViewports = fragmentViewports;
+	}
+
+	public void setFragmentViewports(
+		UnsafeSupplier<FragmentViewport[], Exception>
+			fragmentViewportsUnsafeSupplier) {
+
+		try {
+			fragmentViewports = fragmentViewportsUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected FragmentViewport[] fragmentViewports;
+
+	public HtmlProperties getHtmlProperties() {
+		return htmlProperties;
+	}
+
+	public void setHtmlProperties(HtmlProperties htmlProperties) {
+		this.htmlProperties = htmlProperties;
+	}
+
+	public void setHtmlProperties(
+		UnsafeSupplier<HtmlProperties, Exception>
+			htmlPropertiesUnsafeSupplier) {
+
+		try {
+			htmlProperties = htmlPropertiesUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected HtmlProperties htmlProperties;
+
+	public Boolean getIndexed() {
+		return indexed;
+	}
+
+	public void setIndexed(Boolean indexed) {
+		this.indexed = indexed;
+	}
+
+	public void setIndexed(
+		UnsafeSupplier<Boolean, Exception> indexedUnsafeSupplier) {
+
+		try {
+			indexed = indexedUnsafeSupplier.get();
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	protected Boolean indexed;
 
 	public Layout getLayout() {
 		return layout;

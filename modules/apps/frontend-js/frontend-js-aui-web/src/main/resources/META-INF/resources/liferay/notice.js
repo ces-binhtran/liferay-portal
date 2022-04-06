@@ -12,6 +12,9 @@
  * details.
  */
 
+/**
+ * @deprecated As of Athanasius (7.3.x), replaced by `Liferay.Util.openToast`.
+ */
 AUI.add(
 	'liferay-notice',
 	(A) => {
@@ -53,6 +56,11 @@ AUI.add(
 		 * onClose {function}: Called when the toolbar is closed.
 		 */
 
+		/**
+		 * @deprecated As of Athanasius (7.3.x), replaced by `Liferay.Util.openToast`.
+		 * @module liferay-notice
+		 */
+
 		var Notice = function (options) {
 			var instance = this;
 
@@ -83,6 +91,7 @@ AUI.add(
 
 			instance._timeout = options.timeout;
 
+			// eslint-disable-next-line @liferay/aui/no-get-body
 			instance._body = A.getBody();
 
 			instance._useToggleButton = false;
@@ -98,7 +107,7 @@ AUI.add(
 				instance._useToggleButton = true;
 			}
 
-			if (instance._noticeType == 'warning') {
+			if (instance._noticeType === 'warning') {
 				instance._noticeClass = 'alert-danger popup-alert-warning';
 			}
 
@@ -130,7 +139,7 @@ AUI.add(
 
 				if (instance._useCloseButton) {
 					var html =
-						'<button class="btn btn-secondary submit popup-alert-close">' +
+						'<button class="btn btn-secondary c-ml-1 submit">' +
 						instance._closeText +
 						'</button>';
 
@@ -243,6 +252,7 @@ AUI.add(
 				var returnVal;
 
 				if (instance._useAnimation) {
+					// eslint-disable-next-line @liferay/aui/no-merge
 					var animationConfig = A.merge(instance._animationConfig, {
 						top: -instance._notice.get('offsetHeight') + STR_PX,
 					});
@@ -349,6 +359,7 @@ AUI.add(
 					instance._useCloseButton = true;
 
 					if (!instance._body) {
+						// eslint-disable-next-line @liferay/aui/no-get-body
 						instance._body = A.getBody();
 					}
 

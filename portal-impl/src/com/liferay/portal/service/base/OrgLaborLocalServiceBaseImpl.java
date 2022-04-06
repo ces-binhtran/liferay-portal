@@ -35,15 +35,17 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.OrgLaborLocalService;
+import com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil;
 import com.liferay.portal.kernel.service.PersistedModelLocalServiceRegistry;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
-import com.liferay.portal.kernel.service.persistence.ListTypePersistence;
 import com.liferay.portal.kernel.service.persistence.OrgLaborPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
+
+import java.lang.reflect.Field;
 
 import java.util.List;
 
@@ -67,11 +69,15 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>OrgLaborLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.kernel.service.OrgLaborLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>OrgLaborLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>OrgLaborLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the org labor to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrgLaborLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param orgLabor the org labor
 	 * @return the org labor that was added
@@ -99,6 +105,10 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	/**
 	 * Deletes the org labor with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrgLaborLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param orgLaborId the primary key of the org labor
 	 * @return the org labor that was removed
 	 * @throws PortalException if a org labor with the primary key could not be found
@@ -112,6 +122,10 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	/**
 	 * Deletes the org labor from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrgLaborLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param orgLabor the org labor
 	 * @return the org labor that was removed
 	 */
@@ -124,6 +138,13 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return orgLaborPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -274,6 +295,7 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -290,6 +312,7 @@ public abstract class OrgLaborLocalServiceBaseImpl
 		return orgLaborLocalService.deleteOrgLabor((OrgLabor)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<OrgLabor> getBasePersistence() {
 		return orgLaborPersistence;
 	}
@@ -332,6 +355,10 @@ public abstract class OrgLaborLocalServiceBaseImpl
 
 	/**
 	 * Updates the org labor in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect OrgLaborLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param orgLabor the org labor
 	 * @return the org labor that was updated
@@ -405,57 +432,18 @@ public abstract class OrgLaborLocalServiceBaseImpl
 		this.counterLocalService = counterLocalService;
 	}
 
-	/**
-	 * Returns the list type local service.
-	 *
-	 * @return the list type local service
-	 */
-	public com.liferay.portal.kernel.service.ListTypeLocalService
-		getListTypeLocalService() {
-
-		return listTypeLocalService;
-	}
-
-	/**
-	 * Sets the list type local service.
-	 *
-	 * @param listTypeLocalService the list type local service
-	 */
-	public void setListTypeLocalService(
-		com.liferay.portal.kernel.service.ListTypeLocalService
-			listTypeLocalService) {
-
-		this.listTypeLocalService = listTypeLocalService;
-	}
-
-	/**
-	 * Returns the list type persistence.
-	 *
-	 * @return the list type persistence
-	 */
-	public ListTypePersistence getListTypePersistence() {
-		return listTypePersistence;
-	}
-
-	/**
-	 * Sets the list type persistence.
-	 *
-	 * @param listTypePersistence the list type persistence
-	 */
-	public void setListTypePersistence(
-		ListTypePersistence listTypePersistence) {
-
-		this.listTypePersistence = listTypePersistence;
-	}
-
 	public void afterPropertiesSet() {
 		persistedModelLocalServiceRegistry.register(
 			"com.liferay.portal.kernel.model.OrgLabor", orgLaborLocalService);
+
+		_setLocalServiceUtilService(orgLaborLocalService);
 	}
 
 	public void destroy() {
 		persistedModelLocalServiceRegistry.unregister(
 			"com.liferay.portal.kernel.model.OrgLabor");
+
+		_setLocalServiceUtilService(null);
 	}
 
 	/**
@@ -500,6 +488,22 @@ public abstract class OrgLaborLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		OrgLaborLocalService orgLaborLocalService) {
+
+		try {
+			Field field = OrgLaborLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, orgLaborLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	@BeanReference(type = OrgLaborLocalService.class)
 	protected OrgLaborLocalService orgLaborLocalService;
 
@@ -511,15 +515,6 @@ public abstract class OrgLaborLocalServiceBaseImpl
 	)
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@BeanReference(
-		type = com.liferay.portal.kernel.service.ListTypeLocalService.class
-	)
-	protected com.liferay.portal.kernel.service.ListTypeLocalService
-		listTypeLocalService;
-
-	@BeanReference(type = ListTypePersistence.class)
-	protected ListTypePersistence listTypePersistence;
 
 	@BeanReference(type = PersistedModelLocalServiceRegistry.class)
 	protected PersistedModelLocalServiceRegistry

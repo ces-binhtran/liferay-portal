@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
 import com.liferay.headless.delivery.client.dto.v1_0.BlogPostingImage;
+import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
 import com.liferay.headless.delivery.client.pagination.Pagination;
@@ -36,7 +37,6 @@ import com.liferay.portal.kernel.json.JSONDeserializer;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -50,17 +50,13 @@ import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
 import com.liferay.portal.search.test.util.SearchTestRule;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.io.File;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import java.text.DateFormat;
 
@@ -82,7 +78,6 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -123,7 +118,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		BlogPostingImageResource.Builder builder =
 			BlogPostingImageResource.builder();
 
-		blogPostingImageResource = builder.locale(
+		blogPostingImageResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -194,6 +191,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		BlogPostingImage blogPostingImage = randomBlogPostingImage();
 
 		blogPostingImage.setContentUrl(regex);
+		blogPostingImage.setContentValue(regex);
 		blogPostingImage.setEncodingFormat(regex);
 		blogPostingImage.setFileExtension(regex);
 		blogPostingImage.setTitle(regex);
@@ -205,6 +203,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		blogPostingImage = BlogPostingImageSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, blogPostingImage.getContentUrl());
+		Assert.assertEquals(regex, blogPostingImage.getContentValue());
 		Assert.assertEquals(regex, blogPostingImage.getEncodingFormat());
 		Assert.assertEquals(regex, blogPostingImage.getFileExtension());
 		Assert.assertEquals(regex, blogPostingImage.getTitle());
@@ -257,27 +256,19 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 						})),
 				"JSONObject/data", "Object/deleteBlogPostingImage"));
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"blogPostingImage",
+					new HashMap<String, Object>() {
+						{
+							put("blogPostingImageId", blogPostingImage.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"blogPostingImage",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"blogPostingImageId",
-									blogPostingImage.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
-
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		Assert.assertTrue(errorsJSONArray.length() > 0);
 	}
 
 	@Test
@@ -349,24 +340,23 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 	@Test
 	public void testGetSiteBlogPostingImagesPage() throws Exception {
-		Page<BlogPostingImage> page =
-			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				testGetSiteBlogPostingImagesPage_getSiteId(),
-				RandomTestUtil.randomString(), null, Pagination.of(1, 2), null);
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteBlogPostingImagesPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteBlogPostingImagesPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<BlogPostingImage> page =
+			blogPostingImageResource.getSiteBlogPostingImagesPage(
+				siteId, null, null, null, Pagination.of(1, 10), null);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			BlogPostingImage irrelevantBlogPostingImage =
 				testGetSiteBlogPostingImagesPage_addBlogPostingImage(
 					irrelevantSiteId, randomIrrelevantBlogPostingImage());
 
 			page = blogPostingImageResource.getSiteBlogPostingImagesPage(
-				irrelevantSiteId, null, null, Pagination.of(1, 2), null);
+				irrelevantSiteId, null, null, null, Pagination.of(1, 2), null);
 
 			Assert.assertEquals(1, page.getTotalCount());
 
@@ -385,7 +375,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				siteId, randomBlogPostingImage());
 
 		page = blogPostingImageResource.getSiteBlogPostingImagesPage(
-			siteId, null, null, Pagination.of(1, 2), null);
+			siteId, null, null, null, Pagination.of(1, 10), null);
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -423,8 +413,43 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> page =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null,
+					siteId, null, null,
 					getFilterString(entityField, "between", blogPostingImage1),
+					Pagination.of(1, 2), null);
+
+			assertEquals(
+				Collections.singletonList(blogPostingImage1),
+				(List<BlogPostingImage>)page.getItems());
+		}
+	}
+
+	@Test
+	public void testGetSiteBlogPostingImagesPageWithFilterDoubleEquals()
+		throws Exception {
+
+		List<EntityField> entityFields = getEntityFields(
+			EntityField.Type.DOUBLE);
+
+		if (entityFields.isEmpty()) {
+			return;
+		}
+
+		Long siteId = testGetSiteBlogPostingImagesPage_getSiteId();
+
+		BlogPostingImage blogPostingImage1 =
+			testGetSiteBlogPostingImagesPage_addBlogPostingImage(
+				siteId, randomBlogPostingImage());
+
+		@SuppressWarnings("PMD.UnusedLocalVariable")
+		BlogPostingImage blogPostingImage2 =
+			testGetSiteBlogPostingImagesPage_addBlogPostingImage(
+				siteId, randomBlogPostingImage());
+
+		for (EntityField entityField : entityFields) {
+			Page<BlogPostingImage> page =
+				blogPostingImageResource.getSiteBlogPostingImagesPage(
+					siteId, null, null,
+					getFilterString(entityField, "eq", blogPostingImage1),
 					Pagination.of(1, 2), null);
 
 			assertEquals(
@@ -458,7 +483,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> page =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null,
+					siteId, null, null,
 					getFilterString(entityField, "eq", blogPostingImage1),
 					Pagination.of(1, 2), null);
 
@@ -488,7 +513,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page1 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(1, 2), null);
+				siteId, null, null, null, Pagination.of(1, 2), null);
 
 		List<BlogPostingImage> blogPostingImages1 =
 			(List<BlogPostingImage>)page1.getItems();
@@ -498,7 +523,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page2 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(2, 2), null);
+				siteId, null, null, null, Pagination.of(2, 2), null);
 
 		Assert.assertEquals(3, page2.getTotalCount());
 
@@ -510,7 +535,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		Page<BlogPostingImage> page3 =
 			blogPostingImageResource.getSiteBlogPostingImagesPage(
-				siteId, null, null, Pagination.of(1, 3), null);
+				siteId, null, null, null, Pagination.of(1, 3), null);
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(
@@ -528,6 +553,20 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				BeanUtils.setProperty(
 					blogPostingImage1, entityField.getName(),
 					DateUtils.addMinutes(new Date(), -2));
+			});
+	}
+
+	@Test
+	public void testGetSiteBlogPostingImagesPageWithSortDouble()
+		throws Exception {
+
+		testGetSiteBlogPostingImagesPageWithSort(
+			EntityField.Type.DOUBLE,
+			(entityField, blogPostingImage1, blogPostingImage2) -> {
+				BeanUtils.setProperty(
+					blogPostingImage1, entityField.getName(), 0.1);
+				BeanUtils.setProperty(
+					blogPostingImage2, entityField.getName(), 0.5);
 			});
 	}
 
@@ -556,7 +595,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 				String entityFieldName = entityField.getName();
 
-				Method method = clazz.getMethod(
+				java.lang.reflect.Method method = clazz.getMethod(
 					"get" + StringUtil.upperCaseFirstLetter(entityFieldName));
 
 				Class<?> returnType = method.getReturnType();
@@ -632,7 +671,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		for (EntityField entityField : entityFields) {
 			Page<BlogPostingImage> ascPage =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":asc");
 
 			assertEquals(
@@ -641,7 +680,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			Page<BlogPostingImage> descPage =
 				blogPostingImageResource.getSiteBlogPostingImagesPage(
-					siteId, null, null, Pagination.of(1, 2),
+					siteId, null, null, null, Pagination.of(1, 2),
 					entityField.getName() + ":desc");
 
 			assertEquals(
@@ -680,7 +719,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -703,7 +742,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/blogPostingImages");
 
-		Assert.assertEquals(2, blogPostingImagesJSONObject.get("totalCount"));
+		Assert.assertEquals(
+			2, blogPostingImagesJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(blogPostingImage1, blogPostingImage2),
@@ -748,26 +788,25 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			for (Object object : (Object[])value) {
 				if (arraySB.length() > 1) {
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
 				arraySB.append("{");
 
 				Class<?> clazz = object.getClass();
 
-				for (Field field :
-						ReflectionUtil.getDeclaredFields(
-							clazz.getSuperclass())) {
+				for (java.lang.reflect.Field field :
+						getDeclaredFields(clazz.getSuperclass())) {
 
 					arraySB.append(field.getName());
 					arraySB.append(": ");
 
 					appendGraphQLFieldValue(arraySB, field.get(object));
 
-					arraySB.append(",");
+					arraySB.append(", ");
 				}
 
-				arraySB.setLength(arraySB.length() - 1);
+				arraySB.setLength(arraySB.length() - 2);
 
 				arraySB.append("}");
 			}
@@ -802,8 +841,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 		StringBuilder sb = new StringBuilder("{");
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(BlogPostingImage.class)) {
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(BlogPostingImage.class)) {
 
 			if (!ArrayUtil.contains(
 					getAdditionalAssertFieldNames(), field.getName())) {
@@ -843,6 +882,25 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 						graphQLFields)),
 				"JSONObject/data", "JSONObject/createSiteBlogPostingImage"),
 			BlogPostingImage.class);
+	}
+
+	protected void assertContains(
+		BlogPostingImage blogPostingImage,
+		List<BlogPostingImage> blogPostingImages) {
+
+		boolean contains = false;
+
+		for (BlogPostingImage item : blogPostingImages) {
+			if (equals(blogPostingImage, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			blogPostingImages + " does not contain " + blogPostingImage,
+			contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -901,7 +959,9 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		}
 	}
 
-	protected void assertValid(BlogPostingImage blogPostingImage) {
+	protected void assertValid(BlogPostingImage blogPostingImage)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (blogPostingImage.getId() == null) {
@@ -913,6 +973,14 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 			if (Objects.equals("contentUrl", additionalAssertFieldName)) {
 				if (blogPostingImage.getContentUrl() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (blogPostingImage.getContentValue() == null) {
 					valid = false;
 				}
 
@@ -1000,8 +1068,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.delivery.dto.v1_0.BlogPostingImage.
 						class)) {
 
@@ -1017,12 +1085,13 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -1036,7 +1105,7 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -1065,6 +1134,17 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 				if (!Objects.deepEquals(
 						blogPostingImage1.getContentUrl(),
 						blogPostingImage2.getContentUrl())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						blogPostingImage1.getContentValue(),
+						blogPostingImage2.getContentValue())) {
 
 					return false;
 				}
@@ -1164,9 +1244,24 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1223,6 +1318,14 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 		if (entityFieldName.equals("contentUrl")) {
 			sb.append("'");
 			sb.append(String.valueOf(blogPostingImage.getContentUrl()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("contentValue")) {
+			sb.append("'");
+			sb.append(String.valueOf(blogPostingImage.getContentValue()));
 			sb.append("'");
 
 			return sb.toString();
@@ -1318,6 +1421,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 			{
 				contentUrl = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				contentValue = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				encodingFormat = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				fileExtension = StringUtil.toLowerCase(
@@ -1386,12 +1491,12 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1401,10 +1506,10 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1418,8 +1523,8 @@ public abstract class BaseBlogPostingImageResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseBlogPostingImageResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseBlogPostingImageResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

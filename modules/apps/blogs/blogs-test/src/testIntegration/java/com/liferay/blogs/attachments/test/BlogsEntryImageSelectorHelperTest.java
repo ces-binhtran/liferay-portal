@@ -20,7 +20,6 @@ import com.liferay.document.library.kernel.service.DLAppLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.repository.model.FileEntry;
-import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.servlet.taglib.ui.ImageSelector;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
@@ -80,7 +79,7 @@ public class BlogsEntryImageSelectorHelperTest {
 		}
 
 		Class<?> clazz = bundle.loadClass(
-			"com.liferay.blogs.web.internal.util." +
+			"com.liferay.blogs.web.internal.helper." +
 				"BlogsEntryImageSelectorHelper");
 
 		_constructor = clazz.getConstructor(
@@ -123,14 +122,13 @@ public class BlogsEntryImageSelectorHelperTest {
 		try (InputStream inputStream = getInputStream()) {
 			byte[] bytes = FileUtil.getBytes(inputStream);
 
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
 			FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _IMAGE_TITLE,
 				MimeTypesUtil.getContentType(_IMAGE_TITLE), "image",
-				StringPool.BLANK, StringPool.BLANK, bytes, serviceContext);
+				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, bytes,
+				null, null,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 			Object blogsEntryImageSelectorHelper = _constructor.newInstance(
 				0, fileEntry.getFileEntryId(), fileEntry.getFileEntryId() + 1,
@@ -181,16 +179,13 @@ public class BlogsEntryImageSelectorHelperTest {
 		throws Exception {
 
 		try (InputStream inputStream = getInputStream()) {
-			byte[] bytes = FileUtil.getBytes(inputStream);
-
-			ServiceContext serviceContext =
-				ServiceContextTestUtil.getServiceContext(_group.getGroupId());
-
 			FileEntry fileEntry = DLAppLocalServiceUtil.addFileEntry(
-				TestPropsValues.getUserId(), _group.getGroupId(),
+				null, TestPropsValues.getUserId(), _group.getGroupId(),
 				DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, _IMAGE_TITLE,
 				MimeTypesUtil.getContentType(_IMAGE_TITLE), "image",
-				StringPool.BLANK, StringPool.BLANK, bytes, serviceContext);
+				StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
+				FileUtil.getBytes(inputStream), null, null,
+				ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 			Object blogsEntryImageSelectorHelper = _constructor.newInstance(
 				0, fileEntry.getFileEntryId(), fileEntry.getFileEntryId(),
@@ -271,7 +266,7 @@ public class BlogsEntryImageSelectorHelperTest {
 	private static final String _TEMP_FOLDER_NAME =
 		BlogsEntryImageSelectorHelperTest.class.getName();
 
-	private static Constructor _constructor;
+	private static Constructor<?> _constructor;
 	private static Method _getImageSelectorMethod;
 	private static Method _isFileEntryTempFileMethod;
 

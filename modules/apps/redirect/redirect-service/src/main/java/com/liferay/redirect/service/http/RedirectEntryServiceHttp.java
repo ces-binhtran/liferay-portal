@@ -46,7 +46,6 @@ import com.liferay.redirect.service.RedirectEntryServiceUtil;
  * </p>
  *
  * @author Brian Wing Shun Chan
- * @see RedirectEntryServiceSoap
  * @generated
  */
 public class RedirectEntryServiceHttp {
@@ -224,7 +223,8 @@ public class RedirectEntryServiceHttp {
 			getRedirectEntries(
 				HttpPrincipal httpPrincipal, long groupId, int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					<com.liferay.redirect.model.RedirectEntry> obc)
+					<com.liferay.redirect.model.RedirectEntry>
+						orderByComparator)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		try {
@@ -233,7 +233,7 @@ public class RedirectEntryServiceHttp {
 				_getRedirectEntriesParameterTypes4);
 
 			MethodHandler methodHandler = new MethodHandler(
-				methodKey, groupId, start, end, obc);
+				methodKey, groupId, start, end, orderByComparator);
 
 			Object returnObj = null;
 

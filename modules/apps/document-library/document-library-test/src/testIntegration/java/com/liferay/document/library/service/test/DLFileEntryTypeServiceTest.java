@@ -86,31 +86,35 @@ public class DLFileEntryTypeServiceTest {
 
 		_folder = DLAppLocalServiceUtil.addFolder(
 			TestPropsValues.getUserId(), _group.getGroupId(),
-			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Folder A", "",
+			DLFolderConstants.DEFAULT_PARENT_FOLDER_ID, "Folder A",
+			StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_subfolder = DLAppLocalServiceUtil.addFolder(
 			TestPropsValues.getUserId(), _group.getGroupId(),
-			_folder.getFolderId(), "SubFolder AA", "",
+			_folder.getFolderId(), "SubFolder AA", StringPool.BLANK,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_basicDocumentDLFileEntryType =
 			DLFileEntryTypeLocalServiceUtil.getFileEntryType(
 				DLFileEntryTypeConstants.FILE_ENTRY_TYPE_ID_BASIC_DOCUMENT);
 
-		DDMStructure ddmStructure = DDMStructureTestUtil.addStructure(
+		DDMStructure ddmStructure1 = DDMStructureTestUtil.addStructure(
 			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType1 = DLFileEntryTypeServiceUtil.addFileEntryType(
 			_group.getGroupId(), StringUtil.randomString(),
 			StringUtil.randomString(),
-			new long[] {ddmStructure.getStructureId()},
+			new long[] {ddmStructure1.getStructureId()},
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
+
+		DDMStructure ddmStructure2 = DDMStructureTestUtil.addStructure(
+			_group.getGroupId(), DLFileEntryMetadata.class.getName());
 
 		_dlFileEntryType2 = DLFileEntryTypeServiceUtil.addFileEntryType(
 			_group.getGroupId(), StringUtil.randomString(),
 			StringUtil.randomString(),
-			new long[] {ddmStructure.getStructureId()},
+			new long[] {ddmStructure2.getStructureId()},
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		_dlFileEntryTypes = DLFileEntryTypeLocalServiceUtil.getFileEntryTypes(
@@ -159,10 +163,10 @@ public class DLFileEntryTypeServiceTest {
 			ddmFormDeserializerDeserializeResponse =
 				_ddmFormDeserializer.deserialize(builder.build());
 
-		DDMForm ddmForm = ddmFormDeserializerDeserializeResponse.getDDMForm();
-
 		serviceContext.setAttribute(
-			"ddmForm", DDMBeanTranslatorUtil.translate(ddmForm));
+			"ddmForm",
+			DDMBeanTranslatorUtil.translate(
+				ddmFormDeserializerDeserializeResponse.getDDMForm()));
 
 		User user = TestPropsValues.getUser();
 
@@ -203,7 +207,7 @@ public class DLFileEntryTypeServiceTest {
 
 		Assert.assertTrue(hasUserLocale);
 
-		DLFileEntryTypeLocalServiceUtil.deleteDLFileEntryType(dlFileEntryType);
+		DLFileEntryTypeLocalServiceUtil.deleteFileEntryType(dlFileEntryType);
 	}
 
 	@Test
@@ -222,8 +226,9 @@ public class DLFileEntryTypeServiceTest {
 		byte[] bytes = _CONTENT.getBytes();
 
 		FileEntry fileEntry = DLAppServiceUtil.addFileEntry(
-			_group.getGroupId(), _folder.getFolderId(), name,
-			ContentTypes.TEXT_PLAIN, name, "", "", bytes,
+			null, _group.getGroupId(), _folder.getFolderId(), name,
+			ContentTypes.TEXT_PLAIN, name, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, bytes, null, null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		assertFileEntryType(fileEntry, _dlFileEntryType1);
@@ -231,8 +236,9 @@ public class DLFileEntryTypeServiceTest {
 		// Add file to subfolder
 
 		fileEntry = DLAppServiceUtil.addFileEntry(
-			_group.getGroupId(), _subfolder.getFolderId(), name,
-			ContentTypes.TEXT_PLAIN, name, "", "", bytes,
+			null, _group.getGroupId(), _subfolder.getFolderId(), name,
+			ContentTypes.TEXT_PLAIN, name, StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK, bytes, null, null,
 			ServiceContextTestUtil.getServiceContext(_group.getGroupId()));
 
 		assertFileEntryType(fileEntry, _dlFileEntryType1);
@@ -244,9 +250,9 @@ public class DLFileEntryTypeServiceTest {
 			_subfolder.getName(), _subfolder.getDescription(),
 			_getFolderServiceContext(_basicDocumentDLFileEntryType));
 
-		fileEntry = DLAppServiceUtil.getFileEntry(fileEntry.getFileEntryId());
-
-		assertFileEntryType(fileEntry, _basicDocumentDLFileEntryType);
+		assertFileEntryType(
+			DLAppServiceUtil.getFileEntry(fileEntry.getFileEntryId()),
+			_basicDocumentDLFileEntryType);
 	}
 
 	@Test
@@ -339,7 +345,7 @@ public class DLFileEntryTypeServiceTest {
 
 		DDMForm ddmForm = new DDMForm();
 
-		ddmForm.addDDMFormField(new DDMFormField("text", "Text"));
+		ddmForm.addDDMFormField(new DDMFormField("text", "text"));
 		ddmForm.setAvailableLocales(
 			Collections.singleton(LocaleUtil.getDefault()));
 		ddmForm.setDefaultLocale(LocaleUtil.getDefault());
@@ -349,9 +355,12 @@ public class DLFileEntryTypeServiceTest {
 
 		DLFileEntryType dlFileEntryType =
 			DLFileEntryTypeServiceUtil.addFileEntryType(
-				_group.getGroupId(), StringUtil.randomString(),
-				StringUtil.randomString(),
-				new long[] {ddmStructure.getStructureId()}, serviceContext);
+				_group.getGroupId(), ddmStructure.getStructureId(), null,
+				Collections.singletonMap(
+					LocaleUtil.US, StringUtil.randomString()),
+				Collections.singletonMap(
+					LocaleUtil.US, StringUtil.randomString()),
+				serviceContext);
 
 		serviceContext.setAttribute(
 			"ddmForm", DDMBeanTranslatorUtil.translate(new DDMForm()));

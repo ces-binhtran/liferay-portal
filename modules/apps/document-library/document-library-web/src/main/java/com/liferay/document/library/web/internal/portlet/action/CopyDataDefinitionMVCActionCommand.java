@@ -19,8 +19,8 @@ import com.liferay.data.engine.rest.dto.v2_0.DataDefinition;
 import com.liferay.data.engine.rest.resource.v2_0.DataDefinitionResource;
 import com.liferay.document.library.constants.DLPortletKeys;
 import com.liferay.document.library.kernel.model.DLFileEntryMetadata;
+import com.liferay.dynamic.data.mapping.constants.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMTemplateConstants;
 import com.liferay.dynamic.data.mapping.service.DDMTemplateService;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseTransactionalMVCActionCommand;
@@ -52,7 +52,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY,
 		"javax.portlet.name=" + DLPortletKeys.DOCUMENT_LIBRARY_ADMIN,
 		"javax.portlet.name=" + DLPortletKeys.MEDIA_GALLERY_DISPLAY,
-		"mvc.command.name=/document_library/ddm/copy_data_definition"
+		"mvc.command.name=/document_library/copy_data_definition"
 	},
 	service = MVCActionCommand.class
 )
@@ -75,9 +75,11 @@ public class CopyDataDefinitionMVCActionCommand
 		Map<Locale, String> nameMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "name");
 
+		DataDefinitionResource.Builder dataDefinitionResourceBuilder =
+			_dataDefinitionResourceFactory.create();
+
 		DataDefinitionResource dataDefinitionResource =
-			DataDefinitionResource.builder(
-			).user(
+			dataDefinitionResourceBuilder.user(
 				themeDisplay.getUser()
 			).build();
 
@@ -108,6 +110,9 @@ public class CopyDataDefinitionMVCActionCommand
 				DDMTemplateConstants.TEMPLATE_TYPE_DISPLAY, serviceContext);
 		}
 	}
+
+	@Reference
+	private DataDefinitionResource.Factory _dataDefinitionResourceFactory;
 
 	@Reference
 	private DDMTemplateService _ddmTemplateService;

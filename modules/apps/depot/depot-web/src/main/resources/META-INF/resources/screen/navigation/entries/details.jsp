@@ -34,12 +34,14 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 
 <liferay-frontend:fieldset-group>
 	<liferay-frontend:fieldset
-		collapsible="false"
+		collapsible="<%= false %>"
 		label='<%= LanguageUtil.get(request, "details") %>'
 	>
 		<aui:model-context bean="<%= depotAdminDetailsDisplayContext.getGroup() %>" model="<%= Group.class %>" />
 
 		<aui:input name="assetLibraryId" type="resource" value="<%= String.valueOf(depotAdminDetailsDisplayContext.getDepotEntryId()) %>" />
+
+		<aui:input name="groupId" type="resource" value="<%= String.valueOf(depotAdminDetailsDisplayContext.getGroupId()) %>" />
 
 		<aui:input name="name" placeholder="name" required="<%= true %>" value="<%= depotAdminDetailsDisplayContext.getDepotName(locale) %>" />
 
@@ -47,7 +49,7 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 	</liferay-frontend:fieldset>
 
 	<liferay-frontend:fieldset
-		collapsible="true"
+		collapsible="<%= true %>"
 		cssClass="panel-group-flush"
 		label='<%= LanguageUtil.get(request, "applications") %>'
 	>
@@ -72,7 +74,6 @@ DepotAdminDetailsDisplayContext depotAdminDetailsDisplayContext = (DepotAdminDet
 			%>
 
 		</clay:row>
-
 	</liferay-frontend:fieldset>
 
 	<liferay-util:include page="/screen/navigation/entries/sharing.jsp" servletContext="<%= application %>" />

@@ -57,12 +57,10 @@ if (assetRenderer != null) {
 	}
 }
 
-String headerTitle = workflowTaskDisplayContext.getHeaderTitle(workflowTask);
-
 portletDisplay.setShowBackIcon(true);
 portletDisplay.setURLBack(backURL);
 
-renderResponse.setTitle(headerTitle);
+renderResponse.setTitle(workflowTaskDisplayContext.getHeaderTitle(workflowTask));
 %>
 
 <clay:container-fluid>
@@ -89,10 +87,10 @@ renderResponse.setTitle(headerTitle);
 				>
 					<aui:field-wrapper label="assigned-to">
 						<aui:fieldset>
-							<div class="card-row">
+							<div class="align-items-center card-row">
 								<c:choose>
 									<c:when test="<%= workflowTask.isAssignedToSingleUser() %>">
-										<div class="card-col-field">
+										<div class="card-col-field mr-2">
 											<div class="list-group-card-icon">
 												<liferay-ui:user-portrait
 													userId="<%= workflowTask.getAssigneeUserId() %>"
@@ -130,7 +128,7 @@ renderResponse.setTitle(headerTitle);
 				>
 					<aui:field-wrapper label="create-date">
 						<aui:fieldset>
-							<%= workflowTaskDisplayContext.getCreateDate(workflowTask) %>
+							<%= workflowTaskDisplayContext.getCreateDateString(workflowTask) %>
 						</aui:fieldset>
 					</aui:field-wrapper>
 
@@ -162,13 +160,15 @@ renderResponse.setTitle(headerTitle);
 						markupView="lexicon"
 						title="<%= workflowTaskDisplayContext.getPreviewOfTitle(workflowTask) %>"
 					>
-						<div class="locale-actions">
-							<liferay-ui:language
-								formAction="<%= currentURL %>"
-								languageId="<%= languageId %>"
-								languageIds="<%= assetRenderer.getAvailableLanguageIds() %>"
-							/>
-						</div>
+						<c:if test="<%= assetRenderer.isLocalizable() %>">
+							<div class="locale-actions">
+								<liferay-ui:language
+									formAction="<%= currentURL %>"
+									languageId="<%= languageId %>"
+									languageIds="<%= assetRenderer.getAvailableLanguageIds() %>"
+								/>
+							</div>
+						</c:if>
 
 						<div class="task-content-actions">
 							<liferay-ui:icon-list>
@@ -198,11 +198,10 @@ renderResponse.setTitle(headerTitle);
 									/>
 
 									<c:if test="<%= workflowTaskDisplayContext.hasViewDiffsPortletURL(workflowTask) %>">
-										<liferay-ui:icon
+										<liferay-frontend:management-bar-button
+											href="<%= workflowTaskDisplayContext.getTaglibViewDiffsURL(workflowTask) %>"
 											icon="paste"
-											markupView="lexicon"
-											message="diffs"
-											url="<%= workflowTaskDisplayContext.getTaglibViewDiffsURL(workflowTask) %>"
+											label="diffs"
 										/>
 									</c:if>
 
@@ -249,7 +248,7 @@ renderResponse.setTitle(headerTitle);
 								icon="<%= workflowHandler.getIconCssClass() %>"
 								label="<%= true %>"
 								markupView="lexicon"
-								message="<%= workflowTaskDisplayContext.getAssetTitle(workflowTask) %>"
+								message="<%= HtmlUtil.escape(workflowTaskDisplayContext.getAssetTitle(workflowTask)) %>"
 							/>
 						</h3>
 
@@ -257,9 +256,26 @@ renderResponse.setTitle(headerTitle);
 							assetRenderer="<%= assetRenderer %>"
 							template="<%= AssetRenderer.TEMPLATE_ABSTRACT %>"
 						/>
+
+						<c:if test="<%= assetEntry != null %>">
+							<h4 class="task-content-author">
+								<liferay-ui:message key="author" />
+							</h4>
+
+							<liferay-asset:asset-metadata
+								className="<%= assetEntry.getClassName() %>"
+								classPK="<%= assetEntry.getClassPK() %>"
+								metadataFields='<%= new String[] {"author", "categories", "tags"} %>'
+							/>
+						</c:if>
 					</liferay-ui:panel>
 
-					<c:if test="<%= assetEntry != null %>">
+					<c:if test="<%= (assetEntry != null) && workflowHandler.isCommentable() %>">
+
+						<%
+						long discussionClassPK = workflowHandler.getDiscussionClassPK(workflowTask.getOptionalAttributes());
+						%>
+
 						<liferay-ui:panel
 							extended="<%= true %>"
 							markupView="lexicon"
@@ -268,8 +284,8 @@ renderResponse.setTitle(headerTitle);
 							<liferay-comment:discussion
 								assetEntryVisible="<%= false %>"
 								className="<%= assetRenderer.getClassName() %>"
-								classPK="<%= assetEntry.getClassPK() %>"
-								formName='<%= "fm" + assetEntry.getClassPK() %>'
+								classPK="<%= discussionClassPK %>"
+								formName='<%= "fm" + discussionClassPK %>'
 								ratingsEnabled="<%= false %>"
 								redirect="<%= currentURL %>"
 								userId="<%= user.getUserId() %>"

@@ -17,7 +17,7 @@
 <%@ include file="/init.jsp" %>
 
 <clay:row
-	id='<%= renderResponse.getNamespace() + "grouping" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "grouping" %>'
 >
 	<clay:col
 		md="4"
@@ -33,14 +33,16 @@
 
 			<%
 			Group companyGroup = company.getGroup();
-
-			if (scopeGroupId != companyGroup.getGroupId()) {
-				List<AssetVocabulary> assetVocabularies = AssetVocabularyLocalServiceUtil.getGroupVocabularies(scopeGroupId, false);
-
-				if (!assetVocabularies.isEmpty()) {
 			%>
 
-					<optgroup label='<liferay-ui:message key="vocabularies" />'>
+			<c:if test="<%= scopeGroupId != companyGroup.getGroupId() %>">
+
+				<%
+				List<AssetVocabulary> assetVocabularies = AssetVocabularyLocalServiceUtil.getGroupVocabularies(scopeGroupId, false);
+				%>
+
+				<c:if test="<%= !assetVocabularies.isEmpty() %>">
+					<optgroup label="<liferay-ui:message key="vocabularies" />">
 
 						<%
 						for (AssetVocabulary assetVocabulary : assetVocabularies) {
@@ -53,19 +55,15 @@
 						%>
 
 					</optgroup>
-
-			<%
-				}
-			}
-			%>
+				</c:if>
+			</c:if>
 
 			<%
 			List<AssetVocabulary> assetVocabularies = AssetVocabularyLocalServiceUtil.getGroupVocabularies(companyGroup.getGroupId(), false);
-
-			if (!assetVocabularies.isEmpty()) {
 			%>
 
-				<optgroup label='<liferay-ui:message key="vocabularies" /> (<liferay-ui:message key="global" />)'>
+			<c:if test="<%= !assetVocabularies.isEmpty() %>">
+				<optgroup label="<liferay-ui:message key="vocabularies" /> (<liferay-ui:message key="global" />)">
 
 					<%
 					for (AssetVocabulary assetVocabulary : assetVocabularies) {
@@ -78,11 +76,7 @@
 					%>
 
 				</optgroup>
-
-			<%
-			}
-			%>
-
+			</c:if>
 		</aui:select>
 	</clay:col>
 </clay:row>

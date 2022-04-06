@@ -74,11 +74,14 @@ public class MappingSerDes {
 
 			sb.append("\"itemReference\": ");
 
-			sb.append("\"");
-
-			sb.append(_escape(mapping.getItemReference()));
-
-			sb.append("\"");
+			if (mapping.getItemReference() instanceof String) {
+				sb.append("\"");
+				sb.append((String)mapping.getItemReference());
+				sb.append("\"");
+			}
+			else {
+				sb.append(mapping.getItemReference());
+			}
 		}
 
 		sb.append("}");
@@ -144,10 +147,6 @@ public class MappingSerDes {
 					mapping.setItemReference((Object)jsonParserFieldValue);
 				}
 			}
-			else {
-				throw new IllegalArgumentException(
-					"Unsupported field name " + jsonParserFieldName);
-			}
 		}
 
 	}
@@ -176,7 +175,7 @@ public class MappingSerDes {
 
 			sb.append("\"");
 			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
@@ -212,7 +211,7 @@ public class MappingSerDes {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 

@@ -30,9 +30,6 @@ page import="com.liferay.portal.search.web.internal.facet.display.context.AssetE
 page import="com.liferay.portal.search.web.internal.facet.display.context.AssetEntriesSearchFacetTermDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.type.facet.configuration.TypeFacetPortletInstanceConfiguration" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Map" %>
-
 <portlet:defineObjects />
 
 <%
@@ -43,14 +40,6 @@ if (assetEntriesSearchFacetDisplayContext.isRenderNothing()) {
 }
 
 TypeFacetPortletInstanceConfiguration typeFacetPortletInstanceConfiguration = assetEntriesSearchFacetDisplayContext.getTypeFacetPortletInstanceConfiguration();
-
-Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"assetEntriesSearchFacetDisplayContext", assetEntriesSearchFacetDisplayContext
-).put(
-	"namespace", renderResponse.getNamespace()
-).build();
-
-List<AssetEntriesSearchFacetTermDisplayContext> assetEntriesSearchFacetTermDisplayContexts = assetEntriesSearchFacetDisplayContext.getTermDisplayContexts();
 %>
 
 <c:choose>
@@ -58,27 +47,34 @@ List<AssetEntriesSearchFacetTermDisplayContext> assetEntriesSearchFacetTermDispl
 		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(assetEntriesSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= assetEntriesSearchFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
-		<aui:form method="post" name="fm">
+		<aui:form action="#" method="post" name="fm">
 			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(assetEntriesSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= assetEntriesSearchFacetDisplayContext.getParameterValue() %>" />
 			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= assetEntriesSearchFacetDisplayContext.getParameterName() %>" />
+			<aui:input cssClass="start-parameter-name" name="start-parameter-name" type="hidden" value="<%= assetEntriesSearchFacetDisplayContext.getPaginationStartParameterName() %>" />
 
 			<liferay-ddm:template-renderer
 				className="<%= AssetEntriesSearchFacetTermDisplayContext.class.getName() %>"
-				contextObjects="<%= contextObjects %>"
+				contextObjects='<%=
+					HashMapBuilder.<String, Object>put(
+						"assetEntriesSearchFacetDisplayContext", assetEntriesSearchFacetDisplayContext
+					).put(
+						"namespace", liferayPortletResponse.getNamespace()
+					).build()
+				%>'
 				displayStyle="<%= typeFacetPortletInstanceConfiguration.displayStyle() %>"
 				displayStyleGroupId="<%= assetEntriesSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
-				entries="<%= assetEntriesSearchFacetTermDisplayContexts %>"
+				entries="<%= assetEntriesSearchFacetDisplayContext.getTermDisplayContexts() %>"
 			>
 				<liferay-ui:panel-container
 					extended="<%= true %>"
-					id='<%= renderResponse.getNamespace() + "facetAssetEntriesPanelContainer" %>'
+					id='<%= liferayPortletResponse.getNamespace() + "facetAssetEntriesPanelContainer" %>'
 					markupView="lexicon"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
 						cssClass="search-facet"
-						id='<%= renderResponse.getNamespace() + "facetAssetEntriesPanel" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "facetAssetEntriesPanel" %>'
 						markupView="lexicon"
 						persistState="<%= true %>"
 						title="type"
@@ -107,7 +103,7 @@ List<AssetEntriesSearchFacetTermDisplayContext> assetEntriesSearchFacetTermDispl
 													<%= assetEntriesSearchFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
 												/>
 
-												<span class='custom-control-label term-name <%= assetEntriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>'>
+												<span class="custom-control-label term-name <%= assetEntriesSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 													<span class="custom-control-label-text"><%= HtmlUtil.escape(assetEntriesSearchFacetTermDisplayContext.getTypeName()) %></span>
 												</span>
 

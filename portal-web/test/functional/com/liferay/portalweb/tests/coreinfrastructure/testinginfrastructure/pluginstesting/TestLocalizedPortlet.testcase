@@ -3,25 +3,24 @@ definition {
 
 	property portal.release = "true";
 	property portal.upstream = "true";
-	property testray.main.component.name = "Test Plugins";
 	property portlet.plugins.includes = "test-localized-portlet";
+	property testray.main.component.name = "Test Plugins";
 
 	setUp {
-		User.firstLoginPG();
+		User.firstLoginUI();
 	}
 
 	tearDown {
-		Page.tearDownCP();
+		PagesAdmin.tearDownCP();
 	}
 
 	@priority = "4"
 	test ViewLocalizedChinese {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Localized Page");
+		PagesAdmin.addPublicPage(pageName = "Test Localized Page");
 
 		Navigator.gotoPage(pageName = "Test Localized Page");
 
@@ -40,10 +39,9 @@ definition {
 	test ViewLocalizedEnglish {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Localized Page");
+		PagesAdmin.addPublicPage(pageName = "Test Localized Page");
 
 		Navigator.gotoPage(pageName = "Test Localized Page");
 
@@ -64,10 +62,9 @@ definition {
 	test ViewLocalizedFrench {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Localized Page");
+		PagesAdmin.addPublicPage(pageName = "Test Localized Page");
 
 		Navigator.gotoPage(pageName = "Test Localized Page");
 
@@ -86,10 +83,9 @@ definition {
 	test ViewLocalizedSpanish {
 		ProductMenu.gotoPortlet(
 			category = "Site Builder",
-			panel = "Site Administration",
 			portlet = "Pages");
 
-		SitePages.addPublicPage(pageName = "Test Localized Page");
+		PagesAdmin.addPublicPage(pageName = "Test Localized Page");
 
 		Navigator.gotoPage(pageName = "Test Localized Page");
 

@@ -21,7 +21,7 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 %>
 
 <div class="sidebar-header">
-	<h1 class="sidebar-title">
+	<h1 class="component-title">
 		<liferay-ui:message key="info" />
 	</h1>
 </div>
@@ -33,7 +33,7 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 				add(
 					navigationItem -> {
 						navigationItem.setActive(true);
-						navigationItem.setLabel(LanguageUtil.get(request, "details"));
+						navigationItem.setLabel(LanguageUtil.get(httpServletRequest, "details"));
 					});
 			}
 		}
@@ -57,28 +57,32 @@ List<RedirectEntry> redirectEntries = (List<RedirectEntry>)GetterUtil.getObject(
 			RedirectEntry redirectEntry = redirectEntries.get(0);
 			%>
 
-			<dl class="sidebar-block">
+			<dl class="sidebar-dl sidebar-section">
 				<dt class="sidebar-dt">
 					<liferay-ui:message key="created-by" />
 				</dt>
 				<dd class="sidebar-dd">
-					<div class="autofit-row sidebar-panel widget-metadata">
-						<div class="autofit-col inline-item-before">
+					<clay:content-row
+						cssClass="sidebar-panel widget-metadata"
+					>
 
-							<%
-							User owner = UserLocalServiceUtil.fetchUser(redirectEntry.getUserId());
-							%>
+						<%
+						User owner = UserLocalServiceUtil.fetchUser(redirectEntry.getUserId());
+						%>
 
+						<clay:content-col
+							cssClass="inline-item-before"
+						>
 							<liferay-ui:user-portrait
 								size="sm"
 								user="<%= owner %>"
 							/>
-						</div>
+						</clay:content-col>
 
 						<div class="username">
 							<%= HtmlUtil.escape(owner.getFullName()) %>
 						</div>
-					</div>
+					</clay:content-row>
 				</dd>
 				<dt class="sidebar-dt">
 					<liferay-ui:message key="type" />

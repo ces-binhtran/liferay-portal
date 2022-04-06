@@ -20,6 +20,7 @@ import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.exportimport.kernel.lar.PortletDataContext;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
+import com.liferay.portal.kernel.change.tracking.CTAware;
 import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ExportActionableDynamicQuery;
@@ -61,6 +62,7 @@ import org.osgi.annotation.versioning.ProviderType;
  * @see DDMStructureLocalServiceUtil
  * @generated
  */
+@CTAware
 @ProviderType
 @Transactional(
 	isolation = Isolation.PORTAL,
@@ -73,11 +75,15 @@ public interface DDMStructureLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link DDMStructureLocalServiceUtil} to access the ddm structure local service. Add custom service methods to <code>com.liferay.dynamic.data.mapping.service.impl.DDMStructureLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.dynamic.data.mapping.service.impl.DDMStructureLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the ddm structure local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link DDMStructureLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the ddm structure to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStructure the ddm structure
 	 * @return the ddm structure that was added
@@ -154,11 +160,13 @@ public interface DDMStructureLocalService
 	 group permissions for the structure.
 	 * @return the new structure
 	 */
+	@Indexable(type = IndexableType.REINDEX)
 	public DDMStructure copyStructure(
 			long userId, long structureId, Map<Locale, String> nameMap,
 			Map<Locale, String> descriptionMap, ServiceContext serviceContext)
 		throws PortalException;
 
+	@Indexable(type = IndexableType.REINDEX)
 	public DDMStructure copyStructure(
 			long userId, long structureId, ServiceContext serviceContext)
 		throws PortalException;
@@ -181,6 +189,10 @@ public interface DDMStructureLocalService
 	/**
 	 * Deletes the ddm structure from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStructure the ddm structure
 	 * @return the ddm structure that was removed
 	 */
@@ -189,6 +201,10 @@ public interface DDMStructureLocalService
 
 	/**
 	 * Deletes the ddm structure with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param structureId the primary key of the ddm structure
 	 * @return the ddm structure that was removed
@@ -267,6 +283,9 @@ public interface DDMStructureLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -993,6 +1012,10 @@ public interface DDMStructureLocalService
 
 	/**
 	 * Updates the ddm structure in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStructureLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStructure the ddm structure
 	 * @return the ddm structure that was updated

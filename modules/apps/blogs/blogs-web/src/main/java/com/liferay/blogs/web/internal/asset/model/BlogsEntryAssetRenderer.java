@@ -22,6 +22,7 @@ import com.liferay.blogs.constants.BlogsPortletKeys;
 import com.liferay.blogs.model.BlogsEntry;
 import com.liferay.blogs.web.internal.security.permission.resource.BlogsEntryPermission;
 import com.liferay.blogs.web.internal.util.BlogsEntryUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -30,6 +31,7 @@ import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinder;
 import com.liferay.portal.kernel.portlet.PortletLayoutFinderRegistryUtil;
+import com.liferay.portal.kernel.resource.bundle.ResourceBundleLoader;
 import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.service.GroupLocalServiceUtil;
@@ -38,7 +40,6 @@ import com.liferay.portal.kernel.trash.TrashRenderer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HtmlUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
-import com.liferay.portal.kernel.util.ResourceBundleLoader;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -142,8 +143,8 @@ public class BlogsEntryAssetRenderer
 		String summary = HtmlUtil.escape(_entry.getDescription());
 
 		if (Validator.isNull(summary)) {
-			summary = HtmlUtil.stripHtml(
-				StringUtil.shorten(_entry.getContent(), abstractLength));
+			summary = StringUtil.shorten(
+				HtmlUtil.stripHtml(_entry.getContent()), abstractLength);
 		}
 
 		return summary;
@@ -174,14 +175,15 @@ public class BlogsEntryAssetRenderer
 			group = themeDisplay.getScopeGroup();
 		}
 
-		PortletURL portletURL = PortalUtil.getControlPanelPortletURL(
-			httpServletRequest, group, BlogsPortletKeys.BLOGS, 0, 0,
-			PortletRequest.RENDER_PHASE);
-
-		portletURL.setParameter("mvcRenderCommandName", "/blogs/edit_entry");
-		portletURL.setParameter("entryId", String.valueOf(_entry.getEntryId()));
-
-		return portletURL;
+		return PortletURLBuilder.create(
+			PortalUtil.getControlPanelPortletURL(
+				httpServletRequest, group, BlogsPortletKeys.BLOGS, 0, 0,
+				PortletRequest.RENDER_PHASE)
+		).setMVCRenderCommandName(
+			"/blogs/edit_entry"
+		).setParameter(
+			"entryId", _entry.getEntryId()
+		).buildPortletURL();
 	}
 
 	@Override
@@ -207,14 +209,15 @@ public class BlogsEntryAssetRenderer
 		AssetRendererFactory<BlogsEntry> assetRendererFactory =
 			getAssetRendererFactory();
 
-		PortletURL portletURL = assetRendererFactory.getURLView(
-			liferayPortletResponse, windowState);
-
-		portletURL.setParameter("mvcRenderCommandName", "/blogs/view_entry");
-		portletURL.setParameter("entryId", String.valueOf(_entry.getEntryId()));
-		portletURL.setWindowState(windowState);
-
-		return portletURL.toString();
+		return PortletURLBuilder.create(
+			assetRendererFactory.getURLView(liferayPortletResponse, windowState)
+		).setMVCRenderCommandName(
+			"/blogs/view_entry"
+		).setParameter(
+			"entryId", _entry.getEntryId()
+		).setWindowState(
+			windowState
+		).buildString();
 	}
 
 	@Override
@@ -325,7 +328,7 @@ public class BlogsEntryAssetRenderer
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 
 			return false;

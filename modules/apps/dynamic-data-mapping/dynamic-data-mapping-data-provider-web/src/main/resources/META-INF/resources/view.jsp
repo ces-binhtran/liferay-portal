@@ -20,8 +20,12 @@
 String backURL = ParamUtil.getString(request, "backURL");
 
 String displayStyle = ddmDataProviderDisplayContext.getDisplayStyle();
-PortletURL portletURL = ddmDataProviderDisplayContext.getPortletURL();
-portletURL.setParameter("displayStyle", displayStyle);
+
+PortletURL portletURL = PortletURLBuilder.create(
+	ddmDataProviderDisplayContext.getPortletURL()
+).setParameter(
+	"displayStyle", displayStyle
+).buildPortletURL();
 
 portletDisplay.setShowBackIcon(ddmDataProviderDisplayContext.isShowBackIcon());
 portletDisplay.setURLBack(backURL);
@@ -36,9 +40,9 @@ renderResponse.setTitle(ddmDataProviderDisplayContext.getTitle());
 <liferay-util:include page="/management_bar.jsp" servletContext="<%= application %>" />
 
 <clay:container-fluid
-	id='<%= renderResponse.getNamespace() + "formContainer" %>'
+	id='<%= liferayPortletResponse.getNamespace() + "formContainer" %>'
 >
-	<aui:form action="<%= portletURL.toString() %>" method="post" name="searchContainerForm">
+	<aui:form action="<%= portletURL %>" method="post" name="searchContainerForm">
 		<aui:input name="redirect" type="hidden" value="<%= portletURL.toString() %>" />
 		<aui:input name="deleteDataProviderInstanceIds" type="hidden" />
 
@@ -46,12 +50,11 @@ renderResponse.setTitle(ddmDataProviderDisplayContext.getTitle());
 			<c:when test="<%= ddmDataProviderDisplayContext.hasResults() %>">
 				<liferay-ui:search-container
 					id="<%= ddmDataProviderDisplayContext.getSearchContainerId() %>"
-					rowChecker="<%= new EmptyOnClickRowChecker(renderResponse) %>"
+					rowChecker="<%= new DDMDataProviderInstanceRowChecker(renderResponse) %>"
 					searchContainer="<%= ddmDataProviderDisplayContext.getSearch() %>"
 				>
 					<liferay-ui:search-container-row
 						className="com.liferay.dynamic.data.mapping.model.DDMDataProviderInstance"
-						cssClass="entry-display-style"
 						keyProperty="dataProviderInstanceId"
 						modelVar="dataProviderInstance"
 					>
@@ -81,14 +84,14 @@ renderResponse.setTitle(ddmDataProviderDisplayContext.getTitle());
 							</c:when>
 							<c:otherwise>
 								<liferay-ui:search-container-column-text
-									cssClass="table-cell-content"
+									cssClass="table-cell-expand"
 									href="<%= rowURL %>"
 									name="name"
 									value="<%= HtmlUtil.escape(dataProviderInstance.getName(locale)) %>"
 								/>
 
 								<liferay-ui:search-container-column-text
-									cssClass="table-cell-content"
+									cssClass="table-cell-expand"
 									name="description"
 									value="<%= HtmlUtil.escape(dataProviderInstance.getDescription(locale)) %>"
 								/>

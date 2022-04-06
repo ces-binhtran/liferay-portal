@@ -14,13 +14,13 @@
 
 package com.liferay.analytics.reports.web.internal.model;
 
-import com.liferay.portal.json.JSONFactoryImpl;
-import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 /**
@@ -28,12 +28,10 @@ import org.junit.Test;
  */
 public class SearchKeywordTest {
 
-	@BeforeClass
-	public static void setUpClass() {
-		JSONFactoryUtil jsonFactoryUtil = new JSONFactoryUtil();
-
-		jsonFactoryUtil.setJSONFactory(new JSONFactoryImpl());
-	}
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testToJSONObject() {
@@ -49,9 +47,18 @@ public class SearchKeywordTest {
 			).put(
 				"searchVolume", searchKeyword.getSearchVolume()
 			).put(
-				"traffic", searchKeyword.getTraffic()
+				"traffic", Math.toIntExact(searchKeyword.getTraffic())
 			).toString(),
 			String.valueOf(searchKeyword.toJSONObject()));
+	}
+
+	@Test(expected = ArithmeticException.class)
+	public void testToJSONObjectWithLongTraffic() {
+		SearchKeyword searchKeyword = new SearchKeyword(
+			RandomTestUtil.randomString(), RandomTestUtil.randomInt(),
+			RandomTestUtil.randomInt(), Long.MAX_VALUE);
+
+		searchKeyword.toJSONObject();
 	}
 
 }

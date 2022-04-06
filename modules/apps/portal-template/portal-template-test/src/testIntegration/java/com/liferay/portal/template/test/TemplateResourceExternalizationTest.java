@@ -119,7 +119,7 @@ public class TemplateResourceExternalizationTest {
 
 	@Test
 	public void testDDMTemplateResourceExternalization() throws Exception {
-		final long templateId = 100;
+		long templateId = 100;
 
 		Class<?> clazz = DDMTemplate.class;
 
@@ -326,7 +326,7 @@ public class TemplateResourceExternalizationTest {
 		}
 
 		@Override
-		public void writeObject(Object obj) {
+		public void writeObject(Object object) {
 			throw new UnsupportedOperationException();
 		}
 

@@ -20,6 +20,8 @@ import com.liferay.adaptive.media.exception.AMException;
 import com.liferay.adaptive.media.handler.AMRequestHandler;
 import com.liferay.adaptive.media.web.internal.constants.AMWebConstants;
 import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.servlet.ServletResponseUtil;
@@ -62,7 +64,7 @@ public class AMServlet extends HttpServlet {
 		throws IOException, ServletException {
 
 		try {
-			AMRequestHandler amRequestHandler =
+			AMRequestHandler<?> amRequestHandler =
 				_amRequestHandlerLocator.locateForPattern(
 					_getRequestHandlerPattern(httpServletRequest));
 
@@ -75,7 +77,8 @@ public class AMServlet extends HttpServlet {
 			}
 
 			Optional<AdaptiveMedia<?>> adaptiveMediaOptional =
-				amRequestHandler.handleRequest(httpServletRequest);
+				(Optional<AdaptiveMedia<?>>)amRequestHandler.handleRequest(
+					httpServletRequest);
 
 			AdaptiveMedia<?> adaptiveMedia = adaptiveMediaOptional.orElseThrow(
 				AMException.AMNotFound::new);
@@ -114,14 +117,22 @@ public class AMServlet extends HttpServlet {
 			}
 		}
 		catch (AMException.AMNotFound amException) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(amException, amException);
+			}
+
 			httpServletResponse.sendError(
 				HttpServletResponse.SC_NOT_FOUND,
 				httpServletRequest.getRequestURI());
 		}
 		catch (Exception exception) {
-			Throwable cause = exception.getCause();
+			if (_log.isWarnEnabled()) {
+				_log.warn(exception);
+			}
 
-			if (cause instanceof PrincipalException) {
+			Throwable throwable = exception.getCause();
+
+			if (throwable instanceof PrincipalException) {
 				httpServletResponse.sendError(
 					HttpServletResponse.SC_FORBIDDEN,
 					httpServletRequest.getRequestURI());
@@ -155,6 +166,8 @@ public class AMServlet extends HttpServlet {
 
 		return StringPool.BLANK;
 	}
+
+	private static final Log _log = LogFactoryUtil.getLog(AMServlet.class);
 
 	private static final Pattern _requestHandlerPattern = Pattern.compile(
 		"^/([^/]*)");

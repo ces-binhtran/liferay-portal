@@ -45,12 +45,12 @@ public class ThreadLocalCache<T> {
 		return _lifecycle;
 	}
 
-	public void put(String key, T obj) {
+	public void put(String key, T object) {
 		if (_cache == null) {
 			_cache = new HashMap<>();
 		}
 
-		_cache.put(key, obj);
+		_cache.put(key, object);
 	}
 
 	public void remove(String key) {
@@ -67,17 +67,9 @@ public class ThreadLocalCache<T> {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(7);
-
-		sb.append("{cache=");
-		sb.append(_cache.toString());
-		sb.append(", id=");
-		sb.append(_id);
-		sb.append(", lifecycle=");
-		sb.append(_lifecycle);
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"{cache=", _cache.toString(), ", id=", _id, ", lifecycle=",
+			_lifecycle, "}");
 	}
 
 	private Map<String, T> _cache;

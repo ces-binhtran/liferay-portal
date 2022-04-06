@@ -22,13 +22,13 @@
 taglib uri="http://liferay.com/tld/clay" prefix="clay" %><%@
 taglib uri="http://liferay.com/tld/frontend" prefix="liferay-frontend" %><%@
 taglib uri="http://liferay.com/tld/portlet" prefix="liferay-portlet" %><%@
-taglib uri="http://liferay.com/tld/security" prefix="liferay-security" %><%@
 taglib uri="http://liferay.com/tld/theme" prefix="liferay-theme" %><%@
 taglib uri="http://liferay.com/tld/ui" prefix="liferay-ui" %><%@
 taglib uri="http://liferay.com/tld/util" prefix="liferay-util" %>
 
 <%@ page import="com.liferay.frontend.taglib.servlet.taglib.util.EmptyResultMessageKeys" %><%@
-page import="com.liferay.layout.page.template.admin.web.internal.constants.LayoutPageTemplateAdminWebKeys" %><%@
+page import="com.liferay.layout.page.template.admin.web.internal.display.context.AssetDisplayPageUsagesDisplayContext" %><%@
+page import="com.liferay.layout.page.template.admin.web.internal.display.context.AssetDisplayPageUsagesManagementToolbarDisplayContext" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.DisplayPageDisplayContext" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.DisplayPageManagementToolbarDisplayContext" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.ImportDisplayContext" %><%@
@@ -42,17 +42,18 @@ page import="com.liferay.layout.page.template.admin.web.internal.display.context
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.MasterLayoutDisplayContext" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.MasterLayoutManagementToolbarDisplayContext" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.display.context.SelectDisplayPageMasterLayoutDisplayContext" %><%@
-page import="com.liferay.layout.page.template.admin.web.internal.security.permission.resource.LayoutPageTemplateCollectionPermission" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.DisplayPageVerticalCard" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.LayoutPageTemplateEntryVerticalCard" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.LayoutPrototypeVerticalCard" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.MasterLayoutVerticalCard" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.SelectDisplayPageMasterLayoutVerticalCard" %><%@
 page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.clay.SelectLayoutPageTemplateEntryMasterLayoutVerticalCard" %><%@
+page import="com.liferay.layout.page.template.admin.web.internal.servlet.taglib.util.LayoutPageTemplateCollectionActionDropdownItem" %><%@
 page import="com.liferay.layout.page.template.constants.LayoutPageTemplateActionKeys" %><%@
 page import="com.liferay.layout.page.template.constants.LayoutPageTemplateEntryTypeConstants" %><%@
 page import="com.liferay.layout.page.template.exception.DuplicateLayoutPageTemplateCollectionException" %><%@
 page import="com.liferay.layout.page.template.exception.LayoutPageTemplateCollectionNameException" %><%@
+page import="com.liferay.layout.page.template.exception.LayoutPageTemplateEntryNameException" %><%@
 page import="com.liferay.layout.page.template.exception.RequiredLayoutPageTemplateEntryException" %><%@
 page import="com.liferay.layout.page.template.importer.LayoutPageTemplatesImporterResultEntry" %><%@
 page import="com.liferay.layout.page.template.model.LayoutPageTemplateCollection" %><%@
@@ -60,7 +61,7 @@ page import="com.liferay.layout.page.template.model.LayoutPageTemplateEntry" %><
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateCollectionLocalServiceUtil" %><%@
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil" %><%@
 page import="com.liferay.layout.page.template.service.LayoutPageTemplateEntryServiceUtil" %><%@
-page import="com.liferay.petra.string.StringBundler" %><%@
+page import="com.liferay.petra.portlet.url.builder.PortletURLBuilder" %><%@
 page import="com.liferay.petra.string.StringPool" %><%@
 page import="com.liferay.portal.kernel.dao.orm.QueryUtil" %><%@
 page import="com.liferay.portal.kernel.exception.PortalException" %><%@
@@ -68,9 +69,11 @@ page import="com.liferay.portal.kernel.exception.RequiredLayoutPrototypeExceptio
 page import="com.liferay.portal.kernel.language.LanguageUtil" %><%@
 page import="com.liferay.portal.kernel.model.Group" %><%@
 page import="com.liferay.portal.kernel.model.LayoutPrototype" %><%@
+page import="com.liferay.portal.kernel.model.ModelHintsUtil" %><%@
 page import="com.liferay.portal.kernel.portlet.LiferayWindowState" %><%@
-page import="com.liferay.portal.kernel.security.permission.ActionKeys" %><%@
 page import="com.liferay.portal.kernel.service.LayoutPrototypeServiceUtil" %><%@
+page import="com.liferay.portal.kernel.servlet.MultiSessionMessages" %><%@
+page import="com.liferay.portal.kernel.util.GetterUtil" %><%@
 page import="com.liferay.portal.kernel.util.HashMapBuilder" %><%@
 page import="com.liferay.portal.kernel.util.HtmlUtil" %><%@
 page import="com.liferay.portal.kernel.util.ListUtil" %><%@

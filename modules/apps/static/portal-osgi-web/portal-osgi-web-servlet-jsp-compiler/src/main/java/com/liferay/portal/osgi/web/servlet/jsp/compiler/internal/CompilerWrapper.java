@@ -135,9 +135,7 @@ public class CompilerWrapper extends Compiler {
 		URL url = null;
 
 		if (PropsValues.WORK_DIR_OVERRIDE_ENABLED) {
-			File scratchDir = options.getScratchDir();
-
-			File classFile = new File(scratchDir, classNamePath);
+			File classFile = new File(options.getScratchDir(), classNamePath);
 
 			if (classFile.exists()) {
 				URI uri = classFile.toURI();
@@ -147,7 +145,7 @@ public class CompilerWrapper extends Compiler {
 				}
 				catch (MalformedURLException malformedURLException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(malformedURLException, malformedURLException);
+						_log.warn(malformedURLException);
 					}
 				}
 			}
@@ -187,7 +185,7 @@ public class CompilerWrapper extends Compiler {
 			}
 			catch (Exception exception) {
 				if (_log.isWarnEnabled()) {
-					_log.warn(exception, exception);
+					_log.warn(exception);
 				}
 			}
 

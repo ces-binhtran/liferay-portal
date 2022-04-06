@@ -19,8 +19,6 @@ import aQute.bnd.osgi.Constants;
 import com.liferay.gradle.plugins.cache.WriteDigestTask;
 import com.liferay.gradle.plugins.defaults.LiferayThemeDefaultsPlugin;
 import com.liferay.gradle.plugins.defaults.tasks.WriteArtifactPublishCommandsTask;
-import com.liferay.gradle.plugins.js.transpiler.JSTranspilerBasePlugin;
-import com.liferay.gradle.plugins.js.transpiler.JSTranspilerPlugin;
 import com.liferay.gradle.util.Validator;
 
 import java.io.File;
@@ -174,6 +172,52 @@ public class LiferayRelengUtil {
 		return false;
 	}
 
+	public static boolean hasStaleUnstyledTheme(
+		Project project, File artifactPropertiesFile) {
+
+		String projectName = project.getName();
+
+		if (!projectName.startsWith("frontend-theme") ||
+			!artifactPropertiesFile.exists()) {
+
+			return false;
+		}
+
+		Properties artifactProperties = GUtil.loadProperties(
+			artifactPropertiesFile);
+
+		String artifactGitId = artifactProperties.getProperty(
+			"artifact.git.id");
+
+		if (Validator.isNull(artifactGitId)) {
+			return false;
+		}
+
+		Project parentThemeUnstyledProject = GradleUtil.getProject(
+			project.getRootProject(),
+			GradlePluginsDefaultsUtil.PARENT_THEME_UNSTYLED_PROJECT_NAME);
+
+		if (parentThemeUnstyledProject == null) {
+			return false;
+		}
+
+		String result = GitUtil.getGitResult(
+			project, parentThemeUnstyledProject.getProjectDir(), "log",
+			"--format=%s", artifactGitId + "..HEAD", ":(exclude)test", ".");
+
+		for (String line : result.split("\\r?\\n")) {
+			if (Validator.isNull(line) ||
+				line.contains(_IGNORED_MESSAGE_PATTERN)) {
+
+				continue;
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public static boolean hasUnpublishedCommits(
 		Project project, File artifactProjectDir, File artifactPropertiesFile) {
 
@@ -200,12 +244,8 @@ public class LiferayRelengUtil {
 
 		Project rootProject = project.getRootProject();
 
-		String gitId = GitUtil.getGitResult(
-			project, rootProject.getProjectDir(), "rev-parse", "--short",
-			"HEAD");
-
 		File gitResultsDir = new File(
-			rootProject.getBuildDir(), "releng/git-results/" + gitId);
+			rootProject.getBuildDir(), "releng/git-results");
 
 		StringBuilder sb = new StringBuilder();
 
@@ -228,7 +268,7 @@ public class LiferayRelengUtil {
 
 		String result = GitUtil.getGitResult(
 			project, artifactProjectDir, "log", "--format=%s",
-			artifactGitId + "..HEAD", ".");
+			artifactGitId + "..HEAD", ":(exclude)test", ".");
 
 		String[] lines = result.split("\\r?\\n");
 
@@ -237,11 +277,9 @@ public class LiferayRelengUtil {
 				logger.info("Git Commit: {}", line);
 			}
 
-			if (Validator.isNull(line)) {
-				continue;
-			}
+			if (Validator.isNull(line) ||
+				line.contains(_IGNORED_MESSAGE_PATTERN)) {
 
-			if (line.contains(_IGNORED_MESSAGE_PATTERN)) {
 				continue;
 			}
 
@@ -338,10 +376,7 @@ public class LiferayRelengUtil {
 		for (Configuration configuration : project.getConfigurations()) {
 			String configurationName = configuration.getName();
 
-			if (configurationName.equals(_JS_COMPILE_CONFIGURATION_NAME) ||
-				configurationName.equals(_SOY_COMPILE_CONFIGURATION_NAME) ||
-				configurationName.startsWith("test")) {
-
+			if (configurationName.startsWith("test")) {
 				continue;
 			}
 
@@ -402,8 +437,8 @@ public class LiferayRelengUtil {
 		String url = (String)getUrlMethod.invoke(repository);
 
 		if (cdn) {
-			url = url.replace("http://", "http://cdn.");
-			url = url.replace("https://", "https://cdn.");
+			url = url.replace(
+				"repository.liferay.com", "repository-cdn.liferay.com");
 		}
 
 		StringBuilder sb = new StringBuilder(url);
@@ -476,14 +511,8 @@ public class LiferayRelengUtil {
 	private static final String _IGNORED_MESSAGE_PATTERN =
 		WriteArtifactPublishCommandsTask.IGNORED_MESSAGE_PATTERN;
 
-	private static final String _JS_COMPILE_CONFIGURATION_NAME =
-		JSTranspilerBasePlugin.JS_COMPILE_CONFIGURATION_NAME;
-
 	private static final String _MODULES_DIR_NAME = "modules";
 
 	private static final String _RELENG_DIR_NAME = ".releng";
-
-	private static final String _SOY_COMPILE_CONFIGURATION_NAME =
-		JSTranspilerPlugin.SOY_COMPILE_CONFIGURATION_NAME;
 
 }

@@ -33,7 +33,7 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(
 	configurationPid = "com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConfiguration",
-	immediate = true, property = "operation.mode=EMBEDDED",
+	enabled = false, immediate = true, property = "operation.mode=EMBEDDED",
 	service = SettingsContributor.class
 )
 public class UnicastSettingsContributor extends BaseSettingsContributor {
@@ -59,12 +59,6 @@ public class UnicastSettingsContributor extends BaseSettingsContributor {
 	protected void activate(Map<String, Object> properties) {
 		elasticsearchConfiguration = ConfigurableUtil.createConfigurable(
 			ElasticsearchConfiguration.class, properties);
-	}
-
-	protected void setClusterSettingsContext(
-		ClusterSettingsContext clusterSettingsContext) {
-
-		_clusterSettingsContext = clusterSettingsContext;
 	}
 
 	protected volatile ElasticsearchConfiguration elasticsearchConfiguration;

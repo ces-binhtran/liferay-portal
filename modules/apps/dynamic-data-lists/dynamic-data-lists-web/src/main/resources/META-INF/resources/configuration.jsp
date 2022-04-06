@@ -57,17 +57,13 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 			<liferay-ui:section>
 				<clay:container-fluid>
 					<div class="alert alert-info">
-						<span class='displaying-help-message-holder <%= (selRecordSet == null) ? StringPool.BLANK : "hide" %>'>
+						<span class="displaying-help-message-holder <%= (selRecordSet == null) ? StringPool.BLANK : "hide" %>">
 							<liferay-ui:message key="please-select-a-list-entry-from-the-list-below" />
 						</span>
-						<span class='displaying-record-set-id-holder <%= (selRecordSet == null) ? "hide" : StringPool.BLANK %>'>
+						<span class="displaying-record-set-id-holder <%= (selRecordSet == null) ? "hide" : StringPool.BLANK %>">
 							<liferay-ui:message key="displaying-list" />: <span class="displaying-record-set-id"><%= (selRecordSet != null) ? HtmlUtil.escape(selRecordSet.getName(locale)) : StringPool.BLANK %></span>
 						</span>
 					</div>
-
-					<%
-					int searchTotal = DDLRecordSetServiceUtil.searchCount(company.getCompanyId(), scopeGroupId, keywords, DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS);
-					%>
 
 					<aui:fieldset>
 						<div class="lfr-ddl-content">
@@ -75,7 +71,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 								<liferay-ui:search-container
 									emptyResultsMessage="no-lists-were-found"
 									iteratorURL="<%= configurationRenderURL %>"
-									total="<%= searchTotal %>"
+									total="<%= DDLRecordSetServiceUtil.searchCount(company.getCompanyId(), scopeGroupId, keywords, DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS) %>"
 								>
 									<div class="form-search input-append">
 										<liferay-ui:input-search
@@ -99,7 +95,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 										StringBundler sb = new StringBundler(7);
 
 										sb.append("javascript:");
-										sb.append(renderResponse.getNamespace());
+										sb.append(liferayPortletResponse.getNamespace());
 										sb.append("selectRecordSet('");
 										sb.append(recordSet.getRecordSetId());
 										sb.append("','");
@@ -131,7 +127,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 										/>
 									</liferay-ui:search-container-row>
 
-									<div class="separator"></div>
+									<hr class="separator" />
 
 									<liferay-ui:search-iterator
 										searchResultCssClass="show-quick-actions-on-hover table table-autofit"
@@ -146,14 +142,14 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 
 		<aui:form action="<%= configurationActionURL %>" method="post" name="fm">
 			<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
-			<aui:input name="redirect" type="hidden" value='<%= configurationRenderURL.toString() + StringPool.AMPERSAND + renderResponse.getNamespace() + "cur" + cur %>' />
+			<aui:input name="redirect" type="hidden" value='<%= configurationRenderURL.toString() + StringPool.AMPERSAND + liferayPortletResponse.getNamespace() + "cur" + cur %>' />
 			<aui:input name="preferences--recordSetId--" type="hidden" value="<%= recordSetId %>" />
 
 			<c:if test="<%= selRecordSet != null %>">
 				<liferay-ui:section>
 					<clay:container-fluid>
 						<div class="alert alert-info">
-							<span class='displaying-record-set-id-holder <%= (selRecordSet == null) ? "hide" : StringPool.BLANK %>'>
+							<span class="displaying-record-set-id-holder <%= (selRecordSet == null) ? "hide" : StringPool.BLANK %>">
 								<liferay-ui:message key="displaying-list" />: <span class="displaying-record-set-id"><%= (selRecordSet != null) ? HtmlUtil.escape(selRecordSet.getName(locale)) : StringPool.BLANK %></span>
 							</span>
 						</div>
@@ -161,7 +157,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 						<aui:fieldset>
 							<div class="lfr-ddl-content">
 								<clay:sheet>
-									<aui:select helpMessage="select-the-display-template-used-to-diplay-the-list-records" label="display-template" name="preferences--displayDDMTemplateId--">
+									<aui:select helpMessage="select-the-display-template-used-to-display-the-list-records" label="display-template" name="preferences--displayDDMTemplateId--">
 										<aui:option label="default" value="<%= 0 %>" />
 
 										<%
@@ -250,7 +246,7 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 	var submitButton = A.one('#<portlet:namespace />fm_submit');
 
 	if (submitButton) {
-		submitButton.on('click', function (event) {
+		submitButton.on('click', (event) => {
 			if (form) {
 				form.submit();
 			}
@@ -259,27 +255,33 @@ String orderByType = ParamUtil.getString(request, "orderByType", "asc");
 </aui:script>
 
 <aui:script>
-	Liferay.provide(
-		window,
-		'<portlet:namespace />selectRecordSet',
-		function (recordSetId, recordSetName) {
-			var A = AUI();
+	window['<portlet:namespace />selectRecordSet'] = function (
+		recordSetId,
+		recordSetName
+	) {
+		document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value = recordSetId;
 
-			document.<portlet:namespace />fm.<portlet:namespace />recordSetId.value = recordSetId;
+		var displayingRecordSetIdHolder = document.querySelector(
+			'.displaying-record-set-id-holder'
+		);
+		displayingRecordSetIdHolder.classList.remove('hide');
+		displayingRecordSetIdHolder.removeAttribute('hidden');
+		displayingRecordSetIdHolder.style.display = '';
 
-			A.one('.displaying-record-set-id-holder').show();
-			A.one('.displaying-help-message-holder').hide();
+		var displayingHelpMessageHolder = document.querySelector(
+			'.displaying-help-message-holder'
+		);
+		displayingHelpMessageHolder.classList.add('hide');
+		displayingHelpMessageHolder.setAttribute('hidden', 'hidden');
+		displayingHelpMessageHolder.style.display = 'none';
 
-			var displayRecordSetId = A.one('.displaying-record-set-id');
-
-			displayRecordSetId.set(
-				'innerHTML',
-				recordSetName + ' (<liferay-ui:message key="modified" />)'
-			);
-			displayRecordSetId.addClass('modified');
-		},
-		['aui-base']
-	);
+		var displayRecordSetId = document.querySelector(
+			'.displaying-record-set-id'
+		);
+		displayRecordSetId.innerHTML =
+			recordSetName + ' (<liferay-ui:message key="modified" />)';
+		displayRecordSetId.classList.add('modified');
+	};
 </aui:script>
 
 <%!

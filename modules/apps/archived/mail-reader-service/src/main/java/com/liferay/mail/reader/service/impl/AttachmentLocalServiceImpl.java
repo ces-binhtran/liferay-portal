@@ -18,6 +18,7 @@ import com.liferay.document.library.kernel.store.DLStoreUtil;
 import com.liferay.mail.reader.model.Attachment;
 import com.liferay.mail.reader.model.Message;
 import com.liferay.mail.reader.service.base.AttachmentLocalServiceBaseImpl;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -87,7 +88,7 @@ public class AttachmentLocalServiceImpl extends AttachmentLocalServiceBaseImpl {
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
-					_log.debug(portalException, portalException);
+					_log.debug(portalException);
 				}
 			}
 		}
@@ -108,11 +109,9 @@ public class AttachmentLocalServiceImpl extends AttachmentLocalServiceBaseImpl {
 
 		// File
 
-		String filePath = getFilePath(
-			attachment.getMessageId(), attachment.getFileName());
-
 		DLStoreUtil.deleteFile(
-			attachment.getCompanyId(), _REPOSITORY_ID, filePath);
+			attachment.getCompanyId(), _REPOSITORY_ID,
+			getFilePath(attachment.getMessageId(), attachment.getFileName()));
 
 		return attachment;
 	}
@@ -162,11 +161,9 @@ public class AttachmentLocalServiceImpl extends AttachmentLocalServiceBaseImpl {
 		Attachment attachment = attachmentPersistence.findByPrimaryKey(
 			attachmentId);
 
-		String filePath = getFilePath(
-			attachment.getMessageId(), attachment.getFileName());
-
 		return DLStoreUtil.getFileAsStream(
-			attachment.getCompanyId(), _REPOSITORY_ID, filePath);
+			attachment.getCompanyId(), _REPOSITORY_ID,
+			getFilePath(attachment.getMessageId(), attachment.getFileName()));
 	}
 
 	protected String getDirectoryPath(long messageId) {
@@ -174,13 +171,8 @@ public class AttachmentLocalServiceImpl extends AttachmentLocalServiceBaseImpl {
 	}
 
 	protected String getFilePath(long messageId, String fileName) {
-		return getDirectoryPath(
-			messageId
-		).concat(
-			StringPool.SLASH
-		).concat(
-			fileName
-		);
+		return StringBundler.concat(
+			getDirectoryPath(messageId), StringPool.SLASH, fileName);
 	}
 
 	private static final String _DIRECTORY_PATH_PREFIX = "mail/";

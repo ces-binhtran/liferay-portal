@@ -21,6 +21,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenu;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.CreationMenuBuilder;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItem;
 import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuilder;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.portlet.LiferayPortletRequest;
 import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
@@ -33,8 +34,6 @@ import com.liferay.portal.kernel.util.WebKeys;
 import java.util.List;
 import java.util.Map;
 
-import javax.portlet.ActionRequest;
-import javax.portlet.PortletURL;
 import javax.portlet.ResourceURL;
 
 import javax.servlet.http.HttpServletRequest;
@@ -59,8 +58,9 @@ public class BasicFragmentManagementToolbarDisplayContext
 
 	@Override
 	public List<DropdownItem> getActionDropdownItems() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		boolean hasManageFragmentEntriesPermission =
 			FragmentPermission.contains(
@@ -68,77 +68,88 @@ public class BasicFragmentManagementToolbarDisplayContext
 				themeDisplay.getScopeGroupId(),
 				FragmentActionKeys.MANAGE_FRAGMENT_ENTRIES);
 
-		return DropdownItemListBuilder.add(
-			dropdownItem -> {
-				dropdownItem.putData(
-					"action", "exportFragmentCompositionsAndFragmentEntries");
-				dropdownItem.setIcon("import-export");
-				dropdownItem.setLabel(LanguageUtil.get(request, "export"));
-				dropdownItem.setQuickAction(true);
+		return DropdownItemListBuilder.addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action",
+								"exportFragmentCompositionsAndFragmentEntries");
+							dropdownItem.setIcon("upload");
+							dropdownItem.setLabel(
+								LanguageUtil.get(httpServletRequest, "export"));
+							dropdownItem.setQuickAction(true);
+						}
+					).add(
+						() -> hasManageFragmentEntriesPermission,
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action", "copySelectedFragmentEntries");
+							dropdownItem.setIcon("copy");
+							dropdownItem.setLabel(
+								LanguageUtil.get(
+									httpServletRequest, "make-a-copy"));
+							dropdownItem.setQuickAction(true);
+						}
+					).add(
+						() -> hasManageFragmentEntriesPermission,
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action",
+								"moveFragmentCompositionsAndFragmentEntries");
+							dropdownItem.setIcon("move-folder");
+							dropdownItem.setLabel(
+								LanguageUtil.get(httpServletRequest, "move"));
+							dropdownItem.setQuickAction(true);
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
 			}
-		).add(
-			() -> hasManageFragmentEntriesPermission,
-			dropdownItem -> {
-				dropdownItem.putData(
-					"action", "moveFragmentCompositionsAndFragmentEntries");
-				dropdownItem.setIcon("move-folder");
-				dropdownItem.setLabel(LanguageUtil.get(request, "move"));
-				dropdownItem.setQuickAction(true);
-			}
-		).add(
-			() -> hasManageFragmentEntriesPermission,
-			dropdownItem -> {
-				dropdownItem.putData("action", "copySelectedFragmentEntries");
-				dropdownItem.setIcon("paste");
-				dropdownItem.setLabel(LanguageUtil.get(request, "make-a-copy"));
-				dropdownItem.setQuickAction(true);
-			}
-		).add(
-			() -> hasManageFragmentEntriesPermission,
-			dropdownItem -> {
-				dropdownItem.putData(
-					"action", "deleteFragmentCompositionsAndFragmentEntries");
-				dropdownItem.setIcon("times-circle");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
-				dropdownItem.setQuickAction(true);
+		).addGroup(
+			dropdownGroupItem -> {
+				dropdownGroupItem.setDropdownItems(
+					DropdownItemListBuilder.add(
+						() -> hasManageFragmentEntriesPermission,
+						dropdownItem -> {
+							dropdownItem.putData(
+								"action",
+								"deleteFragmentCompositionsAndFragmentEntries");
+							dropdownItem.setIcon("trash");
+							dropdownItem.setLabel(
+								LanguageUtil.get(httpServletRequest, "delete"));
+							dropdownItem.setQuickAction(true);
+						}
+					).build());
+				dropdownGroupItem.setSeparator(true);
 			}
 		).build();
 	}
 
 	@Override
 	public Map<String, Object> getComponentContext() throws Exception {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		return HashMapBuilder.<String, Object>put(
 			"copyFragmentEntryURL",
-			() -> {
-				PortletURL copyFragmentEntryURL =
-					liferayPortletResponse.createActionURL();
-
-				copyFragmentEntryURL.setParameter(
-					ActionRequest.ACTION_NAME, "/fragment/copy_fragment_entry");
-				copyFragmentEntryURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
-				return copyFragmentEntryURL.toString();
-			}
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/fragment/copy_fragment_entry"
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).buildString()
 		).put(
 			"deleteFragmentCompositionsAndFragmentEntriesURL",
-			() -> {
-				PortletURL deleteFragmentCompositionsAndFragmentEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				deleteFragmentCompositionsAndFragmentEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/fragment/delete_fragment_compositions_and_fragment_" +
-						"entries");
-				deleteFragmentCompositionsAndFragmentEntriesURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
-				return deleteFragmentCompositionsAndFragmentEntriesURL.
-					toString();
-			}
+			PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/fragment/delete_fragment_compositions_and_fragment_entries"
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).buildString()
 		).put(
 			"exportFragmentCompositionsAndFragmentEntriesURL",
 			() -> {
@@ -146,8 +157,8 @@ public class BasicFragmentManagementToolbarDisplayContext
 					liferayPortletResponse.createResourceURL();
 
 				exportFragmentCompositionsAndFragmentEntriesURL.setResourceID(
-					"/fragment/export_fragment_compositions_and_fragment_" +
-						"entries");
+					"/fragment" +
+						"/export_fragment_compositions_and_fragment_entries");
 
 				return exportFragmentCompositionsAndFragmentEntriesURL.
 					toString();
@@ -157,33 +168,22 @@ public class BasicFragmentManagementToolbarDisplayContext
 			ParamUtil.getLong(liferayPortletRequest, "fragmentCollectionId")
 		).put(
 			"moveFragmentCompositionsAndFragmentEntriesURL",
-			() -> {
-				PortletURL moveFragmentCompositionsAndFragmentEntriesURL =
-					liferayPortletResponse.createActionURL();
-
-				moveFragmentCompositionsAndFragmentEntriesURL.setParameter(
-					ActionRequest.ACTION_NAME,
-					"/fragment/move_fragment_compositions_and_fragment_" +
-						"entries");
-				moveFragmentCompositionsAndFragmentEntriesURL.setParameter(
-					"redirect", themeDisplay.getURLCurrent());
-
-				return moveFragmentCompositionsAndFragmentEntriesURL.toString();
-			}
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setActionName(
+				"/fragment/move_fragment_compositions_and_fragment_entries"
+			).setRedirect(
+				themeDisplay.getURLCurrent()
+			).buildString()
 		).put(
 			"selectFragmentCollectionURL",
-			() -> {
-				PortletURL selectFragmentCollectionURL =
-					liferayPortletResponse.createActionURL();
-
-				selectFragmentCollectionURL.setParameter(
-					"mvcRenderCommandName",
-					"/fragment/select_fragment_collection");
-				selectFragmentCollectionURL.setWindowState(
-					LiferayWindowState.POP_UP);
-
-				return selectFragmentCollectionURL.toString();
-			}
+			() -> PortletURLBuilder.createActionURL(
+				liferayPortletResponse
+			).setMVCRenderCommandName(
+				"/fragment/select_fragment_collection"
+			).setWindowState(
+				LiferayWindowState.POP_UP
+			).buildString()
 		).build();
 	}
 
@@ -193,35 +193,33 @@ public class BasicFragmentManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "addFragmentEntry");
 
-				PortletURL addFragmentEntryURL =
-					liferayPortletResponse.createActionURL();
-
-				addFragmentEntryURL.setParameter(
-					ActionRequest.ACTION_NAME, "/fragment/add_fragment_entry");
-				addFragmentEntryURL.setParameter(
-					"fragmentCollectionId",
-					String.valueOf(
-						fragmentDisplayContext.getFragmentCollectionId()));
-				addFragmentEntryURL.setParameter(
-					"type", String.valueOf(FragmentConstants.TYPE_COMPONENT));
-
 				dropdownItem.putData(
-					"addFragmentEntryURL", addFragmentEntryURL.toString());
+					"addFragmentEntryURL",
+					PortletURLBuilder.createActionURL(
+						liferayPortletResponse
+					).setActionName(
+						"/fragment/add_fragment_entry"
+					).setParameter(
+						"fragmentCollectionId",
+						fragmentDisplayContext.getFragmentCollectionId()
+					).setParameter(
+						"type", FragmentConstants.TYPE_COMPONENT
+					).buildString());
 
 				dropdownItem.putData(
 					"title",
-					LanguageUtil.format(
-						request, "add-x",
-						FragmentConstants.TYPE_COMPONENT_LABEL, true));
-				dropdownItem.setLabel(LanguageUtil.get(request, "add"));
+					LanguageUtil.get(httpServletRequest, "add-fragment"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add"));
 			}
 		).build();
 	}
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (FragmentPermission.contains(
 				themeDisplay.getPermissionChecker(),

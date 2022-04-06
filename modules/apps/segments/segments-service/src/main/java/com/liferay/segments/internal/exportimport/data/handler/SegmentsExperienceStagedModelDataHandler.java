@@ -154,6 +154,8 @@ public class SegmentsExperienceStagedModelDataHandler
 
 		importedSegmentsExperience.setGroupId(
 			portletDataContext.getScopeGroupId());
+		importedSegmentsExperience.setCompanyId(
+			portletDataContext.getCompanyId());
 		importedSegmentsExperience.setSegmentsEntryId(segmentsEntryId);
 		importedSegmentsExperience.setClassPK(referenceClassPK);
 
@@ -173,6 +175,8 @@ public class SegmentsExperienceStagedModelDataHandler
 				existingSegmentsExperience.getMvccVersion());
 			importedSegmentsExperience.setSegmentsExperienceId(
 				existingSegmentsExperience.getSegmentsExperienceId());
+			importedSegmentsExperience.setSegmentsExperienceKey(
+				existingSegmentsExperience.getSegmentsExperienceKey());
 
 			importedSegmentsExperience =
 				_stagedModelRepository.updateStagedModel(

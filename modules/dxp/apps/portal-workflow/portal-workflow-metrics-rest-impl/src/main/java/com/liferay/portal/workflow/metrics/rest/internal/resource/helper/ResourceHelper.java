@@ -225,7 +225,7 @@ public class ResourceHelper {
 	public ScriptedMetricAggregation
 		creatInstanceCountScriptedMetricAggregation(
 			List<Long> assigneeIds, Boolean completed, Date dateEnd,
-			Date dateStart, List<String> slaStatuses, List<String> taskNames) {
+			Date dateStart, List<String> taskNames) {
 
 		ScriptedMetricAggregation scriptedMetricAggregation =
 			_aggregations.scriptedMetric("instanceCount");
@@ -251,8 +251,8 @@ public class ResourceHelper {
 					).collect(
 						Collectors.toList()
 					)
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).put(
 				"assigneeType", Role.class.getName()
@@ -264,17 +264,8 @@ public class ResourceHelper {
 					dateEnd
 				).map(
 					Date::getTime
-				).orElseGet(
-					() -> null
-				)
-			).put(
-				"slaStatuses",
-				() -> Optional.ofNullable(
-					slaStatuses
-				).filter(
-					ListUtil::isNotEmpty
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).put(
 				"startDate",
@@ -282,8 +273,8 @@ public class ResourceHelper {
 					dateStart
 				).map(
 					Date::getTime
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).put(
 				"taskNames",
@@ -291,8 +282,8 @@ public class ResourceHelper {
 					taskNames
 				).filter(
 					ListUtil::isNotEmpty
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).build());
 		scriptedMetricAggregation.setReduceScript(
@@ -329,8 +320,8 @@ public class ResourceHelper {
 					).collect(
 						Collectors.toList()
 					)
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).put(
 				"assigneeType", Role.class.getName()
@@ -340,8 +331,8 @@ public class ResourceHelper {
 					slaStatuses
 				).filter(
 					ListUtil::isNotEmpty
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).put(
 				"taskNames",
@@ -349,8 +340,8 @@ public class ResourceHelper {
 					taskNames
 				).filter(
 					ListUtil::isNotEmpty
-				).orElseGet(
-					() -> null
+				).orElse(
+					null
 				)
 			).build());
 		scriptedMetricAggregation.setReduceScript(
@@ -389,7 +380,7 @@ public class ResourceHelper {
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 
 			return null;

@@ -16,7 +16,6 @@ components:
                     readOnly: true
                     type: string
 info:
-    description: ""
     title: "Change Tracking REST"
     version: v1.0
 openapi: 3.0.1
@@ -45,7 +44,6 @@ paths:
                 204:
                     content:
                         application/json: {}
-                    description: ""
             tags: ["Project"]
         put:
             parameters:
@@ -70,7 +68,6 @@ paths:
                 204:
                     content:
                         application/json: {}
-                    description: ""
             tags: ["Project"]
     "/sites/{siteId}/structured-contents/by-key/{key}":
         get:
@@ -178,19 +175,24 @@ paths:
                                 items:
                                     $ref: "#/components/schemas/Entry"
                                 type: array
-                    description: ""
             tags: ["Entry"]
 
 ---
 
 tasks:
+    # Install Git
     - name: Install Git
       package:
           state: present
           name: git
+    # Deploy SSH key
     - name: Deploy SSH key
       copy:
           content: "{{ id_rsa_continuous-integration }}"
           dest: /home/rancher/.ssh/id_rsa_continuous-integration@liferay.com
           mode: 384
           owner: rancher
+    - copy:
+          content: |-
+              {{ github_repos | sort | join(' ') }}
+          dest: "/data/slaves/{{ item.hostname }}/git/liferay/.repositories"

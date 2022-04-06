@@ -14,9 +14,9 @@
 
 package com.liferay.calendar.search.test;
 
+import com.liferay.calendar.constants.CalendarBookingConstants;
 import com.liferay.calendar.model.Calendar;
 import com.liferay.calendar.model.CalendarBooking;
-import com.liferay.calendar.model.CalendarBookingConstants;
 import com.liferay.calendar.model.CalendarResource;
 import com.liferay.calendar.service.CalendarBookingLocalService;
 import com.liferay.calendar.service.CalendarLocalService;
@@ -31,7 +31,6 @@ import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistry;
 import com.liferay.portal.kernel.search.QueryConfig;
 import com.liferay.portal.kernel.search.SearchContext;
-import com.liferay.portal.kernel.search.SearchEngineHelper;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
@@ -126,8 +125,7 @@ public abstract class BaseCalendarIndexerTestCase {
 	}
 
 	protected IndexedFieldsFixture createIndexedFieldsFixture() {
-		return new IndexedFieldsFixture(
-			resourcePermissionLocalService, searchEngineHelper);
+		return new IndexedFieldsFixture(resourcePermissionLocalService);
 	}
 
 	protected SearchContext getSearchContext(String keywords, Locale locale) {
@@ -189,9 +187,6 @@ public abstract class BaseCalendarIndexerTestCase {
 
 	@Inject
 	protected ResourcePermissionLocalService resourcePermissionLocalService;
-
-	@Inject
-	protected SearchEngineHelper searchEngineHelper;
 
 	protected User user;
 

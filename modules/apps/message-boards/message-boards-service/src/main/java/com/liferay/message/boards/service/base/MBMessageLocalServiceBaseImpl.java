@@ -23,10 +23,10 @@ import com.liferay.exportimport.kernel.lar.StagedModelDataHandlerUtil;
 import com.liferay.exportimport.kernel.lar.StagedModelType;
 import com.liferay.message.boards.model.MBMessage;
 import com.liferay.message.boards.service.MBMessageLocalService;
+import com.liferay.message.boards.service.MBMessageLocalServiceUtil;
 import com.liferay.message.boards.service.persistence.MBMessageFinder;
 import com.liferay.message.boards.service.persistence.MBMessagePersistence;
-import com.liferay.message.boards.service.persistence.MBThreadFinder;
-import com.liferay.message.boards.service.persistence.MBThreadPersistence;
+import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.db.DB;
@@ -54,7 +54,9 @@ import com.liferay.portal.kernel.search.Indexable;
 import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.service.BaseLocalServiceImpl;
 import com.liferay.portal.kernel.service.PersistedModelLocalService;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
+import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersistence;
 import com.liferay.portal.kernel.transaction.Transactional;
 import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -62,10 +64,13 @@ import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -86,11 +91,15 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>MBMessageLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.message.boards.service.MBMessageLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>MBMessageLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>MBMessageLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the message-boards message to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param mbMessage the message-boards message
 	 * @return the message-boards message that was added
@@ -118,6 +127,10 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/**
 	 * Deletes the message-boards message with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param messageId the primary key of the message-boards message
 	 * @return the message-boards message that was removed
 	 * @throws PortalException if a message-boards message with the primary key could not be found
@@ -131,6 +144,10 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/**
 	 * Deletes the message-boards message from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param mbMessage the message-boards message
 	 * @return the message-boards message that was removed
 	 */
@@ -143,6 +160,13 @@ public abstract class MBMessageLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return mbMessagePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -247,6 +271,49 @@ public abstract class MBMessageLocalServiceBaseImpl
 	@Override
 	public MBMessage fetchMBMessageByUuidAndGroupId(String uuid, long groupId) {
 		return mbMessagePersistence.fetchByUUID_G(uuid, groupId);
+	}
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message, or <code>null</code> if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage fetchMBMessageByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return mbMessagePersistence.fetchByG_ERC(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchMBMessageByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
+	public MBMessage fetchMBMessageByReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return fetchMBMessageByExternalReferenceCode(
+			groupId, externalReferenceCode);
+	}
+
+	/**
+	 * Returns the message-boards message with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the message-boards message's external reference code
+	 * @return the matching message-boards message
+	 * @throws PortalException if a matching message-boards message could not be found
+	 */
+	@Override
+	public MBMessage getMBMessageByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws PortalException {
+
+		return mbMessagePersistence.findByG_ERC(groupId, externalReferenceCode);
 	}
 
 	/**
@@ -457,6 +524,7 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -473,6 +541,7 @@ public abstract class MBMessageLocalServiceBaseImpl
 		return mbMessageLocalService.deleteMBMessage((MBMessage)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<MBMessage> getBasePersistence() {
 		return mbMessagePersistence;
 	}
@@ -564,6 +633,10 @@ public abstract class MBMessageLocalServiceBaseImpl
 	/**
 	 * Updates the message-boards message in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect MBMessageLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param mbMessage the message-boards message
 	 * @return the message-boards message that was updated
 	 */
@@ -573,17 +646,24 @@ public abstract class MBMessageLocalServiceBaseImpl
 		return mbMessagePersistence.update(mbMessage);
 	}
 
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
+	}
+
 	@Override
 	public Class<?>[] getAopInterfaces() {
 		return new Class<?>[] {
 			MBMessageLocalService.class, IdentifiableOSGiService.class,
-			PersistedModelLocalService.class
+			CTService.class, PersistedModelLocalService.class
 		};
 	}
 
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		mbMessageLocalService = (MBMessageLocalService)aopProxy;
+
+		_setLocalServiceUtilService(mbMessageLocalService);
 	}
 
 	/**
@@ -596,8 +676,22 @@ public abstract class MBMessageLocalServiceBaseImpl
 		return MBMessageLocalService.class.getName();
 	}
 
-	protected Class<?> getModelClass() {
+	@Override
+	public CTPersistence<MBMessage> getCTPersistence() {
+		return mbMessagePersistence;
+	}
+
+	@Override
+	public Class<MBMessage> getModelClass() {
 		return MBMessage.class;
+	}
+
+	@Override
+	public <R, E extends Throwable> R updateWithUnsafeFunction(
+			UnsafeFunction<CTPersistence<MBMessage>, R, E> updateUnsafeFunction)
+		throws E {
+
+		return updateUnsafeFunction.apply(mbMessagePersistence);
 	}
 
 	protected String getModelClassName() {
@@ -628,6 +722,22 @@ public abstract class MBMessageLocalServiceBaseImpl
 		}
 	}
 
+	private void _setLocalServiceUtilService(
+		MBMessageLocalService mbMessageLocalService) {
+
+		try {
+			Field field = MBMessageLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, mbMessageLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
+	}
+
 	protected MBMessageLocalService mbMessageLocalService;
 
 	@Reference
@@ -639,51 +749,5 @@ public abstract class MBMessageLocalServiceBaseImpl
 	@Reference
 	protected com.liferay.counter.kernel.service.CounterLocalService
 		counterLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ClassNameLocalService
-		classNameLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.CompanyLocalService
-		companyLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.GroupLocalService
-		groupLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.ResourceLocalService
-		resourceLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.UserLocalService
-		userLocalService;
-
-	@Reference
-	protected com.liferay.portal.kernel.service.WorkflowInstanceLinkLocalService
-		workflowInstanceLinkLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetEntryLocalService
-		assetEntryLocalService;
-
-	@Reference
-	protected com.liferay.asset.kernel.service.AssetLinkLocalService
-		assetLinkLocalService;
-
-	@Reference
-	protected com.liferay.expando.kernel.service.ExpandoRowLocalService
-		expandoRowLocalService;
-
-	@Reference
-	protected com.liferay.ratings.kernel.service.RatingsStatsLocalService
-		ratingsStatsLocalService;
-
-	@Reference
-	protected MBThreadPersistence mbThreadPersistence;
-
-	@Reference
-	protected MBThreadFinder mbThreadFinder;
 
 }

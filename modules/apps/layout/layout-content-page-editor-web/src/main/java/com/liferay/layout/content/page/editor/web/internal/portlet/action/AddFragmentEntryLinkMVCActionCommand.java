@@ -15,9 +15,11 @@
 package com.liferay.layout.content.page.editor.web.internal.portlet.action;
 
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
+import com.liferay.fragment.exception.FragmentEntryContentException;
 import com.liferay.fragment.exception.NoSuchEntryException;
 import com.liferay.fragment.model.FragmentEntry;
 import com.liferay.fragment.model.FragmentEntryLink;
+import com.liferay.fragment.renderer.DefaultFragmentRendererContext;
 import com.liferay.fragment.renderer.FragmentRenderer;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
@@ -37,7 +39,6 @@ import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
 import com.liferay.portal.kernel.language.LanguageUtil;
-import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.ServiceContextFactory;
@@ -46,7 +47,6 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.segments.constants.SegmentsExperienceConstants;
 
 import java.util.List;
 
@@ -63,7 +63,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ContentPageEditorPortletKeys.CONTENT_PAGE_EDITOR_PORTLET,
-		"mvc.command.name=/content_layout/add_fragment_entry_link"
+		"mvc.command.name=/layout_content_page_editor/add_fragment_entry_link"
 	},
 	service = MVCActionCommand.class
 )
@@ -93,8 +93,7 @@ public class AddFragmentEntryLinkMVCActionCommand
 		}
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 
 		if (fragmentEntry != null) {
 			String contributedRendererKey = null;
@@ -106,18 +105,22 @@ public class AddFragmentEntryLinkMVCActionCommand
 			return _fragmentEntryLinkService.addFragmentEntryLink(
 				serviceContext.getScopeGroupId(), 0,
 				fragmentEntry.getFragmentEntryId(), segmentsExperienceId,
-				_portal.getClassNameId(Layout.class), serviceContext.getPlid(),
-				fragmentEntry.getCss(), fragmentEntry.getHtml(),
-				fragmentEntry.getJs(), fragmentEntry.getConfiguration(), null,
-				StringPool.BLANK, 0, contributedRendererKey, serviceContext);
+				serviceContext.getPlid(), fragmentEntry.getCss(),
+				fragmentEntry.getHtml(), fragmentEntry.getJs(),
+				fragmentEntry.getConfiguration(), null, StringPool.BLANK, 0,
+				contributedRendererKey, serviceContext);
 		}
+
+		DefaultFragmentRendererContext defaultFragmentRendererContext =
+			new DefaultFragmentRendererContext(null);
 
 		return _fragmentEntryLinkService.addFragmentEntryLink(
 			serviceContext.getScopeGroupId(), 0, 0, segmentsExperienceId,
-			_portal.getClassNameId(Layout.class), serviceContext.getPlid(),
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK,
-			StringPool.BLANK, StringPool.BLANK, StringPool.BLANK, 0,
-			fragmentEntryKey, serviceContext);
+			serviceContext.getPlid(), StringPool.BLANK, StringPool.BLANK,
+			StringPool.BLANK,
+			fragmentRenderer.getConfiguration(defaultFragmentRendererContext),
+			StringPool.BLANK, StringPool.BLANK, 0, fragmentEntryKey,
+			serviceContext);
 	}
 
 	@Override
@@ -139,7 +142,10 @@ public class AddFragmentEntryLinkMVCActionCommand
 
 		String errorMessage = "an-unexpected-error-occurred";
 
-		if (exception instanceof NoSuchEntryException) {
+		if (exception instanceof FragmentEntryContentException) {
+			errorMessage = exception.getMessage();
+		}
+		else if (exception instanceof NoSuchEntryException) {
 			errorMessage =
 				"the-fragment-can-no-longer-be-added-because-it-has-been-" +
 					"deleted";
@@ -159,8 +165,7 @@ public class AddFragmentEntryLinkMVCActionCommand
 			WebKeys.THEME_DISPLAY);
 
 		long segmentsExperienceId = ParamUtil.getLong(
-			actionRequest, "segmentsExperienceId",
-			SegmentsExperienceConstants.ID_DEFAULT);
+			actionRequest, "segmentsExperienceId");
 		String parentItemId = ParamUtil.getString(
 			actionRequest, "parentItemId");
 		int position = ParamUtil.getInteger(actionRequest, "position");
@@ -172,7 +177,7 @@ public class AddFragmentEntryLinkMVCActionCommand
 			themeDisplay.getPlid(),
 			layoutStructure -> {
 				LayoutStructureItem layoutStructureItem =
-					layoutStructure.addFragmentLayoutStructureItem(
+					layoutStructure.addFragmentStyledLayoutStructureItem(
 						fragmentEntryLink.getFragmentEntryLinkId(),
 						parentItemId, position);
 

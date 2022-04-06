@@ -27,6 +27,7 @@ import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.social.kernel.model.SocialActivityAchievement;
 import com.liferay.social.kernel.model.SocialActivityAchievementModel;
 
@@ -35,12 +36,15 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -107,29 +111,53 @@ public class SocialActivityAchievementModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.social.kernel.model.SocialActivityAchievement"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.social.kernel.model.SocialActivityAchievement"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.social.kernel.model.SocialActivityAchievement"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long FIRSTINGROUP_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long GROUPID_COLUMN_BITMASK = 2L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long NAME_COLUMN_BITMASK = 4L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long USERID_COLUMN_BITMASK = 8L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *		#getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long ACTIVITYACHIEVEMENTID_COLUMN_BITMASK = 16L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
@@ -187,9 +215,6 @@ public class SocialActivityAchievementModelImpl
 				attributeName,
 				attributeGetterFunction.apply((SocialActivityAchievement)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -339,6 +364,10 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -349,6 +378,10 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setCtCollectionId(long ctCollectionId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_ctCollectionId = ctCollectionId;
 	}
 
@@ -359,6 +392,10 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setActivityAchievementId(long activityAchievementId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_activityAchievementId = activityAchievementId;
 	}
 
@@ -369,19 +406,20 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setGroupId(long groupId) {
-		_columnBitmask |= GROUPID_COLUMN_BITMASK;
-
-		if (!_setOriginalGroupId) {
-			_setOriginalGroupId = true;
-
-			_originalGroupId = _groupId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_groupId = groupId;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalGroupId() {
-		return _originalGroupId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("groupId"));
 	}
 
 	@Override
@@ -391,6 +429,10 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setCompanyId(long companyId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_companyId = companyId;
 	}
 
@@ -401,12 +443,8 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setUserId(long userId) {
-		_columnBitmask |= USERID_COLUMN_BITMASK;
-
-		if (!_setOriginalUserId) {
-			_setOriginalUserId = true;
-
-			_originalUserId = _userId;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_userId = userId;
@@ -428,8 +466,13 @@ public class SocialActivityAchievementModelImpl
 	public void setUserUuid(String userUuid) {
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalUserId() {
-		return _originalUserId;
+		return GetterUtil.getLong(this.<Long>getColumnOriginalValue("userId"));
 	}
 
 	@Override
@@ -439,6 +482,10 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setCreateDate(long createDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_createDate = createDate;
 	}
 
@@ -454,17 +501,20 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setName(String name) {
-		_columnBitmask |= NAME_COLUMN_BITMASK;
-
-		if (_originalName == null) {
-			_originalName = _name;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_name = name;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalName() {
-		return GetterUtil.getString(_originalName);
+		return getColumnOriginalValue("name");
 	}
 
 	@Override
@@ -479,22 +529,44 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void setFirstInGroup(boolean firstInGroup) {
-		_columnBitmask |= FIRSTINGROUP_COLUMN_BITMASK;
-
-		if (!_setOriginalFirstInGroup) {
-			_setOriginalFirstInGroup = true;
-
-			_originalFirstInGroup = _firstInGroup;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_firstInGroup = firstInGroup;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public boolean getOriginalFirstInGroup() {
-		return _originalFirstInGroup;
+		return GetterUtil.getBoolean(
+			this.<Boolean>getColumnOriginalValue("firstInGroup"));
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -549,6 +621,33 @@ public class SocialActivityAchievementModelImpl
 	}
 
 	@Override
+	public SocialActivityAchievement cloneWithOriginalValues() {
+		SocialActivityAchievementImpl socialActivityAchievementImpl =
+			new SocialActivityAchievementImpl();
+
+		socialActivityAchievementImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		socialActivityAchievementImpl.setCtCollectionId(
+			this.<Long>getColumnOriginalValue("ctCollectionId"));
+		socialActivityAchievementImpl.setActivityAchievementId(
+			this.<Long>getColumnOriginalValue("activityAchievementId"));
+		socialActivityAchievementImpl.setGroupId(
+			this.<Long>getColumnOriginalValue("groupId"));
+		socialActivityAchievementImpl.setCompanyId(
+			this.<Long>getColumnOriginalValue("companyId"));
+		socialActivityAchievementImpl.setUserId(
+			this.<Long>getColumnOriginalValue("userId"));
+		socialActivityAchievementImpl.setCreateDate(
+			this.<Long>getColumnOriginalValue("createDate"));
+		socialActivityAchievementImpl.setName(
+			this.<String>getColumnOriginalValue("name"));
+		socialActivityAchievementImpl.setFirstInGroup(
+			this.<Boolean>getColumnOriginalValue("firstInGroup"));
+
+		return socialActivityAchievementImpl;
+	}
+
+	@Override
 	public int compareTo(SocialActivityAchievement socialActivityAchievement) {
 		long primaryKey = socialActivityAchievement.getPrimaryKey();
 
@@ -564,17 +663,17 @@ public class SocialActivityAchievementModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SocialActivityAchievement)) {
+		if (!(object instanceof SocialActivityAchievement)) {
 			return false;
 		}
 
 		SocialActivityAchievement socialActivityAchievement =
-			(SocialActivityAchievement)obj;
+			(SocialActivityAchievement)object;
 
 		long primaryKey = socialActivityAchievement.getPrimaryKey();
 
@@ -591,11 +690,19 @@ public class SocialActivityAchievementModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -603,28 +710,9 @@ public class SocialActivityAchievementModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		SocialActivityAchievementModelImpl socialActivityAchievementModelImpl =
-			this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		socialActivityAchievementModelImpl._originalGroupId =
-			socialActivityAchievementModelImpl._groupId;
-
-		socialActivityAchievementModelImpl._setOriginalGroupId = false;
-
-		socialActivityAchievementModelImpl._originalUserId =
-			socialActivityAchievementModelImpl._userId;
-
-		socialActivityAchievementModelImpl._setOriginalUserId = false;
-
-		socialActivityAchievementModelImpl._originalName =
-			socialActivityAchievementModelImpl._name;
-
-		socialActivityAchievementModelImpl._originalFirstInGroup =
-			socialActivityAchievementModelImpl._firstInGroup;
-
-		socialActivityAchievementModelImpl._setOriginalFirstInGroup = false;
-
-		socialActivityAchievementModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -668,7 +756,7 @@ public class SocialActivityAchievementModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -679,10 +767,27 @@ public class SocialActivityAchievementModelImpl
 			Function<SocialActivityAchievement, Object>
 				attributeGetterFunction = entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(
-				attributeGetterFunction.apply((SocialActivityAchievement)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(SocialActivityAchievement)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -701,7 +806,7 @@ public class SocialActivityAchievementModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -740,18 +845,83 @@ public class SocialActivityAchievementModelImpl
 	private long _ctCollectionId;
 	private long _activityAchievementId;
 	private long _groupId;
-	private long _originalGroupId;
-	private boolean _setOriginalGroupId;
 	private long _companyId;
 	private long _userId;
-	private long _originalUserId;
-	private boolean _setOriginalUserId;
 	private long _createDate;
 	private String _name;
-	private String _originalName;
 	private boolean _firstInGroup;
-	private boolean _originalFirstInGroup;
-	private boolean _setOriginalFirstInGroup;
+
+	public <T> T getColumnValue(String columnName) {
+		Function<SocialActivityAchievement, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((SocialActivityAchievement)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("ctCollectionId", _ctCollectionId);
+		_columnOriginalValues.put(
+			"activityAchievementId", _activityAchievementId);
+		_columnOriginalValues.put("groupId", _groupId);
+		_columnOriginalValues.put("companyId", _companyId);
+		_columnOriginalValues.put("userId", _userId);
+		_columnOriginalValues.put("createDate", _createDate);
+		_columnOriginalValues.put("name", _name);
+		_columnOriginalValues.put("firstInGroup", _firstInGroup);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("ctCollectionId", 2L);
+
+		columnBitmasks.put("activityAchievementId", 4L);
+
+		columnBitmasks.put("groupId", 8L);
+
+		columnBitmasks.put("companyId", 16L);
+
+		columnBitmasks.put("userId", 32L);
+
+		columnBitmasks.put("createDate", 64L);
+
+		columnBitmasks.put("name", 128L);
+
+		columnBitmasks.put("firstInGroup", 256L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private SocialActivityAchievement _escapedModel;
 

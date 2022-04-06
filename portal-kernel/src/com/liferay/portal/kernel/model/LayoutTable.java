@@ -67,10 +67,10 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 		"classPK", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> name = createColumn(
 		"name", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-	public final Column<LayoutTable, String> title = createColumn(
-		"title", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
-	public final Column<LayoutTable, String> description = createColumn(
-		"description", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Clob> title = createColumn(
+		"title", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Clob> description = createColumn(
+		"description", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> keywords = createColumn(
 		"keywords", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> robots = createColumn(
@@ -91,6 +91,8 @@ public class LayoutTable extends BaseTable<LayoutTable> {
 		"themeId", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, String> colorSchemeId = createColumn(
 		"colorSchemeId", String.class, Types.VARCHAR, Column.FLAG_DEFAULT);
+	public final Column<LayoutTable, Long> styleBookEntryId = createColumn(
+		"styleBookEntryId", Long.class, Types.BIGINT, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Clob> css = createColumn(
 		"css", Clob.class, Types.CLOB, Column.FLAG_DEFAULT);
 	public final Column<LayoutTable, Integer> priority = createColumn(

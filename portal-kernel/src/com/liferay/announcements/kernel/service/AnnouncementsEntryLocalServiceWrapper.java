@@ -27,6 +27,10 @@ public class AnnouncementsEntryLocalServiceWrapper
 	implements AnnouncementsEntryLocalService,
 			   ServiceWrapper<AnnouncementsEntryLocalService> {
 
+	public AnnouncementsEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AnnouncementsEntryLocalServiceWrapper(
 		AnnouncementsEntryLocalService announcementsEntryLocalService) {
 
@@ -35,6 +39,10 @@ public class AnnouncementsEntryLocalServiceWrapper
 
 	/**
 	 * Adds the announcements entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param announcementsEntry the announcements entry
 	 * @return the announcements entry that was added
@@ -104,6 +112,10 @@ public class AnnouncementsEntryLocalServiceWrapper
 	/**
 	 * Deletes the announcements entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param announcementsEntry the announcements entry
 	 * @return the announcements entry that was removed
 	 */
@@ -119,6 +131,10 @@ public class AnnouncementsEntryLocalServiceWrapper
 
 	/**
 	 * Deletes the announcements entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param entryId the primary key of the announcements entry
 	 * @return the announcements entry that was removed
@@ -183,6 +199,13 @@ public class AnnouncementsEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _announcementsEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _announcementsEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -541,6 +564,10 @@ public class AnnouncementsEntryLocalServiceWrapper
 
 	/**
 	 * Updates the announcements entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AnnouncementsEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param announcementsEntry the announcements entry
 	 * @return the announcements entry that was updated

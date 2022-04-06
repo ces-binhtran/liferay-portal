@@ -19,10 +19,13 @@
 <%
 long groupId = ParamUtil.getLong(request, "groupId", themeDisplay.getScopeGroupId());
 
-PortletURL portletURL = currentURLObj;
-
-portletURL.setParameter("mvcRenderCommandName", "publishPortlet");
-portletURL.setParameter("tabs3", "current-and-previous");
+PortletURL portletURL = PortletURLBuilder.create(
+	currentURLObj
+).setMVCRenderCommandName(
+	"/export_import/publish_portlet"
+).setParameter(
+	"tabs3", "current-and-previous"
+).buildPortletURL();
 
 String orderByCol = ParamUtil.getString(request, "orderByCol");
 String orderByType = ParamUtil.getString(request, "orderByType");
@@ -35,16 +38,14 @@ else {
 	orderByCol = portalPreferences.getValue(PortletKeys.BACKGROUND_TASK, "entries-order-by-col", "create-date");
 	orderByType = portalPreferences.getValue(PortletKeys.BACKGROUND_TASK, "entries-order-by-type", "desc");
 }
-
-OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFactoryUtil.getBackgroundTaskOrderByComparator(orderByCol, orderByType);
 %>
 
 <clay:container-fluid>
 	<liferay-ui:search-container
-		emptyResultsMessage="no-publication-processes-were-found"
+		emptyResultsMessage="no-publish-processes-were-found"
 		iteratorURL="<%= portletURL %>"
 		orderByCol="<%= orderByCol %>"
-		orderByComparator="<%= orderByComparator %>"
+		orderByComparator="<%= BackgroundTaskComparatorFactoryUtil.getBackgroundTaskOrderByComparator(orderByCol, orderByType) %>"
 		orderByType="<%= orderByType %>"
 		total="<%= BackgroundTaskManagerUtil.getBackgroundTasksCount(StagingUtil.getStagingAndLiveGroupIds(groupId), selPortlet.getPortletId(), new String[] {BackgroundTaskExecutorNames.PORTLET_REMOTE_STAGING_BACKGROUND_TASK_EXECUTOR, BackgroundTaskExecutorNames.PORTLET_STAGING_BACKGROUND_TASK_EXECUTOR}) %>"
 	>
@@ -58,7 +59,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 			modelVar="backgroundTask"
 		>
 			<liferay-ui:search-container-column-text
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="user"
 			>
 				<liferay-ui:user-display
@@ -70,20 +71,20 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 			</liferay-ui:search-container-column-text>
 
 			<liferay-ui:search-container-column-jsp
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="status"
 				path="/publish_process_message.jsp"
 			/>
 
 			<liferay-ui:search-container-column-date
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="create-date"
 				orderable="<%= true %>"
 				value="<%= backgroundTask.getCreateDate() %>"
 			/>
 
 			<liferay-ui:search-container-column-date
-				cssClass="table-cell-content"
+				cssClass="table-cell-expand"
 				name="completion-date"
 				orderable="<%= true %>"
 				value="<%= backgroundTask.getCompletionDate() %>"
@@ -102,7 +103,7 @@ OrderByComparator<BackgroundTask> orderByComparator = BackgroundTaskComparatorFa
 						Date completionDate = backgroundTask.getCompletionDate();
 						%>
 
-						<liferay-portlet:actionURL name="deleteBackgroundTask" portletName="<%= PortletKeys.EXPORT_IMPORT %>" var="deleteBackgroundTaskURL">
+						<liferay-portlet:actionURL name="/export_import/delete_portlet_background_task" portletName="<%= PortletKeys.EXPORT_IMPORT %>" var="deleteBackgroundTaskURL">
 							<portlet:param name="redirect" value="<%= portletURL.toString() %>" />
 							<portlet:param name="backgroundTaskId" value="<%= String.valueOf(backgroundTask.getBackgroundTaskId()) %>" />
 						</liferay-portlet:actionURL>

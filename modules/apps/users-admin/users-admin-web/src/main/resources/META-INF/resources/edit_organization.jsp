@@ -27,17 +27,27 @@ Organization organization = OrganizationServiceUtil.fetchOrganization(organizati
 
 String type = BeanParamUtil.getString(organization, request, "type");
 
-PortletURL portletURL = liferayPortletResponse.createRenderURL();
-
-portletURL.setParameter("mvcRenderCommandName", "/users_admin/edit_organization");
+PortletURL portletURL = PortletURLBuilder.createRenderURL(
+	liferayPortletResponse
+).setMVCRenderCommandName(
+	"/users_admin/edit_organization"
+).buildPortletURL();
 
 if (Validator.isNotNull(redirect)) {
 	portletURL.setParameter("redirect", redirect);
 }
 
-if (Validator.isNotNull(backURL)) {
-	portletURL.setParameter("backURL", backURL);
+if (Validator.isNull(backURL)) {
+	backURL = PortletURLBuilder.createRenderURL(
+		liferayPortletResponse
+	).setParameter(
+		"toolbarItem", "view-all-organizations"
+	).setParameter(
+		"usersListView", UserConstants.LIST_VIEW_FLAT_ORGANIZATIONS
+	).buildString();
 }
+
+portletURL.setParameter("backURL", backURL);
 
 if (organization != null) {
 	portletURL.setParameter("organizationId", String.valueOf(organizationId));
@@ -65,8 +75,6 @@ renderResponse.setTitle(headerTitle);
 	containerCssClass="col-lg-8"
 	containerWrapperCssClass="container-fluid container-fluid-max-xl container-form-lg"
 	context="<%= organization %>"
-	headerContainerCssClass=""
-	inverted="<%= layout.isTypeControlPanel() %>"
 	key="<%= UserScreenNavigationEntryConstants.SCREEN_NAVIGATION_KEY_ORGANIZATIONS %>"
 	menubarCssClass="menubar menubar-transparent menubar-vertical-expand-lg"
 	navCssClass="col-lg-3"

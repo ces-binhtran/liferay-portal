@@ -37,16 +37,17 @@ public class AssetEntryCacheModel
 	implements CacheModel<AssetEntry>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof AssetEntryCacheModel)) {
+		if (!(object instanceof AssetEntryCacheModel)) {
 			return false;
 		}
 
-		AssetEntryCacheModel assetEntryCacheModel = (AssetEntryCacheModel)obj;
+		AssetEntryCacheModel assetEntryCacheModel =
+			(AssetEntryCacheModel)object;
 
 		if ((entryId == assetEntryCacheModel.entryId) &&
 			(mvccVersion == assetEntryCacheModel.mvccVersion)) {
@@ -298,7 +299,7 @@ public class AssetEntryCacheModel
 		publishDate = objectInput.readLong();
 		expirationDate = objectInput.readLong();
 		mimeType = objectInput.readUTF();
-		title = objectInput.readUTF();
+		title = (String)objectInput.readObject();
 		description = (String)objectInput.readObject();
 		summary = (String)objectInput.readObject();
 		url = objectInput.readUTF();
@@ -364,10 +365,10 @@ public class AssetEntryCacheModel
 		}
 
 		if (title == null) {
-			objectOutput.writeUTF("");
+			objectOutput.writeObject("");
 		}
 		else {
-			objectOutput.writeUTF(title);
+			objectOutput.writeObject(title);
 		}
 
 		if (description == null) {

@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -37,6 +40,8 @@ import java.util.Set;
 
 import javax.annotation.Generated;
 
+import javax.validation.Valid;
+
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -47,10 +52,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 @GraphQLName("WorkflowDefinition")
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "WorkflowDefinition")
-public class WorkflowDefinition {
+public class WorkflowDefinition implements Serializable {
 
 	public static WorkflowDefinition toDTO(String json) {
 		return ObjectMapperUtil.readValue(WorkflowDefinition.class, json);
+	}
+
+	public static WorkflowDefinition unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(WorkflowDefinition.class, json);
 	}
 
 	@Schema
@@ -108,6 +117,34 @@ public class WorkflowDefinition {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String content;
+
+	@Schema
+	public Date getDateCreated() {
+		return dateCreated;
+	}
+
+	public void setDateCreated(Date dateCreated) {
+		this.dateCreated = dateCreated;
+	}
+
+	@JsonIgnore
+	public void setDateCreated(
+		UnsafeSupplier<Date, Exception> dateCreatedUnsafeSupplier) {
+
+		try {
+			dateCreated = dateCreatedUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Date dateCreated;
 
 	@Schema
 	public Date getDateModified() {
@@ -192,6 +229,35 @@ public class WorkflowDefinition {
 	protected String name;
 
 	@Schema
+	@Valid
+	public Node[] getNodes() {
+		return nodes;
+	}
+
+	public void setNodes(Node[] nodes) {
+		this.nodes = nodes;
+	}
+
+	@JsonIgnore
+	public void setNodes(
+		UnsafeSupplier<Node[], Exception> nodesUnsafeSupplier) {
+
+		try {
+			nodes = nodesUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Node[] nodes;
+
+	@Schema
 	public String getTitle() {
 		return title;
 	}
@@ -218,6 +284,65 @@ public class WorkflowDefinition {
 	@GraphQLField
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String title;
+
+	@Schema
+	@Valid
+	public Map<String, String> getTitle_i18n() {
+		return title_i18n;
+	}
+
+	public void setTitle_i18n(Map<String, String> title_i18n) {
+		this.title_i18n = title_i18n;
+	}
+
+	@JsonIgnore
+	public void setTitle_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			title_i18nUnsafeSupplier) {
+
+		try {
+			title_i18n = title_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> title_i18n;
+
+	@Schema
+	@Valid
+	public Transition[] getTransitions() {
+		return transitions;
+	}
+
+	public void setTransitions(Transition[] transitions) {
+		this.transitions = transitions;
+	}
+
+	@JsonIgnore
+	public void setTransitions(
+		UnsafeSupplier<Transition[], Exception> transitionsUnsafeSupplier) {
+
+		try {
+			transitions = transitionsUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected Transition[] transitions;
 
 	@Schema
 	public String getVersion() {
@@ -301,6 +426,20 @@ public class WorkflowDefinition {
 			sb.append("\"");
 		}
 
+		if (dateCreated != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"dateCreated\": ");
+
+			sb.append("\"");
+
+			sb.append(liferayToJSONDateFormat.format(dateCreated));
+
+			sb.append("\"");
+		}
+
 		if (dateModified != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -343,6 +482,26 @@ public class WorkflowDefinition {
 			sb.append("\"");
 		}
 
+		if (nodes != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"nodes\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < nodes.length; i++) {
+				sb.append(String.valueOf(nodes[i]));
+
+				if ((i + 1) < nodes.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
+		}
+
 		if (title != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -355,6 +514,36 @@ public class WorkflowDefinition {
 			sb.append(_escape(title));
 
 			sb.append("\"");
+		}
+
+		if (title_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"title_i18n\": ");
+
+			sb.append(_toJSON(title_i18n));
+		}
+
+		if (transitions != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"transitions\": ");
+
+			sb.append("[");
+
+			for (int i = 0; i < transitions.length; i++) {
+				sb.append(String.valueOf(transitions[i]));
+
+				if ((i + 1) < transitions.length) {
+					sb.append(", ");
+				}
+			}
+
+			sb.append("]");
 		}
 
 		if (version != null) {
@@ -377,15 +566,26 @@ public class WorkflowDefinition {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.admin.workflow.dto.v1_0.WorkflowDefinition",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -401,14 +601,12 @@ public class WorkflowDefinition {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -435,7 +633,7 @@ public class WorkflowDefinition {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -443,7 +641,7 @@ public class WorkflowDefinition {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -451,5 +649,10 @@ public class WorkflowDefinition {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

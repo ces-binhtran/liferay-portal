@@ -37,16 +37,16 @@ public class UserAssignment extends Assignment {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof UserAssignment)) {
+		if (!(object instanceof UserAssignment)) {
 			return false;
 		}
 
-		UserAssignment userAssignment = (UserAssignment)obj;
+		UserAssignment userAssignment = (UserAssignment)object;
 
 		if (Objects.equals(_emailAddress, userAssignment._emailAddress) &&
 			Objects.equals(_screenName, userAssignment._screenName) &&
@@ -72,26 +72,16 @@ public class UserAssignment extends Assignment {
 
 	@Override
 	public int hashCode() {
-		return _emailAddress.concat(
-			_screenName
-		).concat(
-			String.valueOf(_userId)
-		).hashCode();
+		String s = StringBundler.concat(_emailAddress, _screenName, _userId);
+
+		return s.hashCode();
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(7);
-
-		sb.append("{emailAddress=");
-		sb.append(_emailAddress);
-		sb.append(", screenName=");
-		sb.append(_screenName);
-		sb.append(", userId=");
-		sb.append(_userId);
-		sb.append("}");
-
-		return sb.toString();
+		return StringBundler.concat(
+			"{emailAddress=", _emailAddress, ", screenName=", _screenName,
+			", userId=", _userId, "}");
 	}
 
 	private final String _emailAddress;

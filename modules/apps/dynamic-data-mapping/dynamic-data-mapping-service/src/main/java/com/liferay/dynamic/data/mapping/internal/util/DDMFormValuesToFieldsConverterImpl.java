@@ -14,26 +14,25 @@
 
 package com.liferay.dynamic.data.mapping.internal.util;
 
+import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMFormField;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.Value;
 import com.liferay.dynamic.data.mapping.storage.DDMFormFieldValue;
 import com.liferay.dynamic.data.mapping.storage.DDMFormValues;
 import com.liferay.dynamic.data.mapping.storage.Field;
-import com.liferay.dynamic.data.mapping.storage.FieldConstants;
 import com.liferay.dynamic.data.mapping.storage.Fields;
+import com.liferay.dynamic.data.mapping.storage.constants.FieldConstants;
+import com.liferay.dynamic.data.mapping.util.DDMFormValuesConverterUtil;
 import com.liferay.dynamic.data.mapping.util.DDMFormValuesToFieldsConverter;
+import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.util.ArrayUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
-
-import java.text.NumberFormat;
-import java.text.ParseException;
 
 import java.util.Locale;
 import java.util.Map;
@@ -52,15 +51,22 @@ public class DDMFormValuesToFieldsConverterImpl
 			DDMStructure ddmStructure, DDMFormValues ddmFormValues)
 		throws PortalException {
 
+		DDMForm ddmForm = ddmStructure.getDDMForm();
+
+		ddmFormValues.setDDMFormFieldValues(
+			DDMFormValuesConverterUtil.addMissingDDMFormFieldValues(
+				ddmForm.getDDMFormFields(),
+				ddmFormValues.getDDMFormFieldValuesMap(true)));
+
 		Map<String, DDMFormField> ddmFormFieldsMap =
 			ddmStructure.getFullHierarchyDDMFormFieldsMap(true);
 
-		Fields ddmFields = createDDMFields(ddmStructure);
+		Fields ddmFields = _createDDMFields(ddmStructure);
 
 		for (DDMFormFieldValue ddmFormFieldValue :
 				ddmFormValues.getDDMFormFieldValues()) {
 
-			addDDMFields(
+			_addDDMFields(
 				ddmStructure.getStructureId(), ddmFormFieldsMap,
 				ddmFormFieldValue, ddmFields, ddmFormValues.getDefaultLocale());
 		}
@@ -68,17 +74,19 @@ public class DDMFormValuesToFieldsConverterImpl
 		return ddmFields;
 	}
 
-	protected void addDDMField(
+	private void _addDDMField(
 			long ddmStructureId, DDMFormField ddmFormField,
 			DDMFormFieldValue ddmFormFieldValue, Fields ddmFields,
 			Locale defaultLocale)
 		throws PortalException {
 
-		if ((ddmFormField == null) || ddmFormField.isTransient()) {
+		if ((ddmFormField == null) || ddmFormField.isTransient() ||
+			(ddmFormFieldValue.getValue() == null)) {
+
 			return;
 		}
 
-		Field ddmField = createDDMField(
+		Field ddmField = _createDDMField(
 			ddmStructureId, ddmFormField, ddmFormFieldValue, defaultLocale);
 
 		Field existingDDMField = ddmFields.get(ddmField.getName());
@@ -87,11 +95,11 @@ public class DDMFormValuesToFieldsConverterImpl
 			ddmFields.put(ddmField);
 		}
 		else {
-			addDDMFieldValues(existingDDMField, ddmField);
+			_addDDMFieldValues(existingDDMField, ddmField);
 		}
 	}
 
-	protected void addDDMFields(
+	private void _addDDMFields(
 			long ddmStructureId, Map<String, DDMFormField> ddmFormFieldsMap,
 			DDMFormFieldValue ddmFormFieldValue, Fields ddmFields,
 			Locale defaultLocale)
@@ -100,33 +108,31 @@ public class DDMFormValuesToFieldsConverterImpl
 		DDMFormField ddmFormField = ddmFormFieldsMap.get(
 			ddmFormFieldValue.getName());
 
-		addDDMField(
+		_addDDMField(
 			ddmStructureId, ddmFormField, ddmFormFieldValue, ddmFields,
 			defaultLocale);
 
-		addFieldDisplayValue(
+		_addFieldDisplayValue(
 			ddmFields.get(DDMImpl.FIELDS_DISPLAY_NAME),
-			getFieldDisplayValue(ddmFormFieldValue));
+			_getFieldDisplayValue(ddmFormFieldValue));
 
 		for (DDMFormFieldValue nestedDDMFormFieldValue :
 				ddmFormFieldValue.getNestedDDMFormFieldValues()) {
 
-			addDDMFields(
+			_addDDMFields(
 				ddmStructureId, ddmFormFieldsMap, nestedDDMFormFieldValue,
 				ddmFields, defaultLocale);
 		}
 	}
 
-	protected void addDDMFieldValues(
-		Field existingDDMField, Field newDDMField) {
-
+	private void _addDDMFieldValues(Field existingDDMField, Field newDDMField) {
 		for (Locale availableLocale : newDDMField.getAvailableLocales()) {
 			existingDDMField.addValues(
 				availableLocale, newDDMField.getValues(availableLocale));
 		}
 	}
 
-	protected void addFieldDisplayValue(
+	private void _addFieldDisplayValue(
 		Field ddmFieldsDisplayField, String fieldDisplayValue) {
 
 		String[] fieldsDisplayValues = StringUtil.split(
@@ -138,7 +144,7 @@ public class DDMFormValuesToFieldsConverterImpl
 		ddmFieldsDisplayField.setValue(StringUtil.merge(fieldsDisplayValues));
 	}
 
-	protected Field createDDMField(
+	private Field _createDDMField(
 			long ddmStructureId, DDMFormField ddmFormField,
 			DDMFormFieldValue ddmFormFieldValue, Locale defaultLocale)
 		throws PortalException {
@@ -151,13 +157,13 @@ public class DDMFormValuesToFieldsConverterImpl
 
 		String type = ddmFormField.getDataType();
 
-		setDDMFieldValue(
+		_setDDMFieldValue(
 			ddmField, type, ddmFormFieldValue.getValue(), defaultLocale);
 
 		return ddmField;
 	}
 
-	protected Fields createDDMFields(DDMStructure ddmStructure) {
+	private Fields _createDDMFields(DDMStructure ddmStructure) {
 		Fields ddmFields = new Fields();
 
 		Field fieldsDisplayField = new Field(
@@ -169,71 +175,44 @@ public class DDMFormValuesToFieldsConverterImpl
 		return ddmFields;
 	}
 
-	protected String getFieldDisplayValue(DDMFormFieldValue ddmFormFieldValue) {
+	private String _getFieldDisplayValue(DDMFormFieldValue ddmFormFieldValue) {
 		String fieldName = ddmFormFieldValue.getName();
 
-		return fieldName.concat(
-			DDMImpl.INSTANCE_SEPARATOR
-		).concat(
-			ddmFormFieldValue.getInstanceId()
-		);
+		return StringBundler.concat(
+			fieldName, DDMImpl.INSTANCE_SEPARATOR,
+			ddmFormFieldValue.getInstanceId());
 	}
 
-	protected void setDDMFieldLocalizedValue(
+	private void _setDDMFieldLocalizedValue(
 		Field ddmField, String type, Value value) {
 
-		for (Locale availableLocales : value.getAvailableLocales()) {
-			Serializable serializable = null;
+		for (Locale availableLocale : value.getAvailableLocales()) {
+			Serializable serializable = FieldConstants.getSerializable(
+				availableLocale, availableLocale, type,
+				value.getString(availableLocale));
 
-			if (FieldConstants.isNumericType(type)) {
-				NumberFormat numberFormat = NumberFormat.getInstance(
-					availableLocales);
-
-				if (type.equals(FieldConstants.DOUBLE) ||
-					type.equals(FieldConstants.FLOAT)) {
-
-					numberFormat.setMinimumFractionDigits(1);
-				}
-
-				try {
-					Number number = numberFormat.parse(
-						GetterUtil.getString(
-							value.getString(availableLocales)));
-
-					serializable = FieldConstants.getSerializable(
-						type, number.toString());
-				}
-				catch (ParseException parseException) {
-					serializable = FieldConstants.getSerializable(
-						type, value.getString(availableLocales));
-				}
-			}
-			else {
-				serializable = FieldConstants.getSerializable(
-					type, value.getString(availableLocales));
-			}
-
-			ddmField.addValue(availableLocales, serializable);
+			ddmField.addValue(availableLocale, serializable);
 		}
 	}
 
-	protected void setDDMFieldUnlocalizedValue(
+	private void _setDDMFieldUnlocalizedValue(
 		Field ddmField, String type, Value value, Locale defaultLocale) {
 
 		Serializable serializable = FieldConstants.getSerializable(
-			type, value.getString(LocaleUtil.ROOT));
+			defaultLocale, LocaleUtil.ROOT, type,
+			value.getString(LocaleUtil.ROOT));
 
 		ddmField.addValue(defaultLocale, serializable);
 	}
 
-	protected void setDDMFieldValue(
+	private void _setDDMFieldValue(
 		Field ddmField, String type, Value value, Locale defaultLocale) {
 
 		if (value.isLocalized()) {
-			setDDMFieldLocalizedValue(ddmField, type, value);
+			_setDDMFieldLocalizedValue(ddmField, type, value);
 		}
 		else {
-			setDDMFieldUnlocalizedValue(ddmField, type, value, defaultLocale);
+			_setDDMFieldUnlocalizedValue(ddmField, type, value, defaultLocale);
 		}
 	}
 

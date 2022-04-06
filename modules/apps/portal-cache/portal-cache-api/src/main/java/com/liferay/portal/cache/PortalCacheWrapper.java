@@ -58,11 +58,6 @@ public class PortalCacheWrapper<K extends Serializable, V>
 	}
 
 	@Override
-	public boolean isBlocking() {
-		return portalCache.isBlocking();
-	}
-
-	@Override
 	public boolean isMVCC() {
 		return portalCache.isMVCC();
 	}

@@ -16,9 +16,9 @@ package com.liferay.portal.workflow.metrics.rest.internal.resource.v1_0;
 
 import com.liferay.portal.background.task.model.BackgroundTask;
 import com.liferay.portal.background.task.service.BackgroundTaskLocalService;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatus;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskStatusRegistry;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.vulcan.pagination.Page;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.ReindexStatus;
@@ -39,7 +39,7 @@ import org.osgi.service.component.annotations.ServiceScope;
 public class ReindexStatusResourceImpl extends BaseReindexStatusResourceImpl {
 
 	@Override
-	public Page<ReindexStatus> getReindexStatusPage() throws Exception {
+	public Page<ReindexStatus> getReindexStatusesPage() throws Exception {
 		return Page.of(
 			transform(
 				_backgroundTaskLocalService.getBackgroundTasks(

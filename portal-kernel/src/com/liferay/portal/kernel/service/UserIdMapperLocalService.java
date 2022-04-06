@@ -57,11 +57,15 @@ public interface UserIdMapperLocalService
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this interface directly. Always use {@link UserIdMapperLocalServiceUtil} to access the user ID mapper local service. Add custom service methods to <code>com.liferay.portal.service.impl.UserIdMapperLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface.
+	 * Never modify this interface directly. Add custom service methods to <code>com.liferay.portal.service.impl.UserIdMapperLocalServiceImpl</code> and rerun ServiceBuilder to automatically copy the method declarations to this interface. Consume the user ID mapper local service via injection or a <code>org.osgi.util.tracker.ServiceTracker</code>. Use {@link UserIdMapperLocalServiceUtil} if injection and service tracking are not available.
 	 */
 
 	/**
 	 * Adds the user ID mapper to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was added
@@ -94,6 +98,10 @@ public interface UserIdMapperLocalService
 	/**
 	 * Deletes the user ID mapper with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userIdMapperId the primary key of the user ID mapper
 	 * @return the user ID mapper that was removed
 	 * @throws PortalException if a user ID mapper with the primary key could not be found
@@ -105,6 +113,10 @@ public interface UserIdMapperLocalService
 	/**
 	 * Deletes the user ID mapper from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was removed
 	 */
@@ -115,6 +127,9 @@ public interface UserIdMapperLocalService
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public <T> T dslQuery(DSLQuery dslQuery);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public int dslQueryCount(DSLQuery dslQuery);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public DynamicQuery dynamicQuery();
@@ -256,6 +271,10 @@ public interface UserIdMapperLocalService
 
 	/**
 	 * Updates the user ID mapper in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was updated

@@ -16,11 +16,19 @@
 
 <%@ include file="/layout/edit_layout/init.jsp" %>
 
-<liferay-ui:success key="layoutAdded" message="the-page-was-created-succesfully" />
+<liferay-ui:success key="layoutAdded" message="the-page-was-created-successfully" />
 
-<liferay-ui:success key="layoutPageTemplateAdded" message="the-page-template-was-created-succesfully" />
+<liferay-ui:success key="layoutPageTemplateAdded" message="the-page-template-was-created-successfully" />
 
-<liferay-ui:success key="layoutPublished" message="the-page-was-published-succesfully" />
+<liferay-ui:success key="layoutPublished" message="the-page-was-published-successfully" />
+
+<%
+String portletResource = ParamUtil.getString(request, "portletResource");
+%>
+
+<c:if test="<%= Validator.isNotNull(portletResource) %>">
+	<liferay-ui:success key='<%= portletResource + "requestProcessed" %>' message="your-request-completed-successfully" />
+</c:if>
 
 <div class="layout-content portlet-layout" id="main-content" role="main">
 	<liferay-portlet:runtime

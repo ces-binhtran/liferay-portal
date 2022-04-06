@@ -37,7 +37,9 @@ import com.liferay.portal.kernel.settings.Settings;
 import com.liferay.portal.kernel.settings.SettingsDescriptor;
 import com.liferay.portal.kernel.settings.SettingsFactory;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
+import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.PrefsPropsUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
 import com.liferay.portal.kernel.util.Validator;
@@ -47,6 +49,7 @@ import java.nio.charset.Charset;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.portlet.ActionRequest;
@@ -64,17 +67,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 public abstract class BaseAnalyticsMVCActionCommand
 	extends BaseMVCActionCommand {
-
-	protected void checkPermissions(ThemeDisplay themeDisplay)
-		throws PrincipalException {
-
-		PermissionChecker permissionChecker =
-			PermissionThreadLocal.getPermissionChecker();
-
-		if (!permissionChecker.isCompanyAdmin(themeDisplay.getCompanyId())) {
-			throw new PrincipalException();
-		}
-	}
 
 	protected void checkResponse(long companyId, HttpResponse httpResponse)
 		throws Exception {
@@ -109,7 +101,7 @@ public abstract class BaseAnalyticsMVCActionCommand
 			PrefsPropsUtil.getStringArray(
 				companyId, "liferayAnalyticsGroupIds", StringPool.COMMA));
 
-		removeCompanyPreferences(companyId);
+		_removeCompanyPreferences(companyId);
 
 		configurationProvider.deleteCompanyConfiguration(
 			AnalyticsConfiguration.class, companyId);
@@ -124,12 +116,38 @@ public abstract class BaseAnalyticsMVCActionCommand
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)actionRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
-			checkPermissions(themeDisplay);
+			_checkPermissions(themeDisplay);
 
-			saveCompanyConfiguration(actionRequest, themeDisplay);
+			_saveCompanyConfiguration(actionRequest, themeDisplay);
+
+			String cmd = ParamUtil.getString(actionRequest, Constants.CMD);
+
+			if (Objects.equals(cmd, "update_synced_contacts_fields")) {
+				boolean exit = ParamUtil.getBoolean(actionRequest, "exit");
+
+				if (exit) {
+					SessionErrors.add(actionRequest, "unsavedContactsFields");
+
+					hideDefaultErrorMessage(actionRequest);
+				}
+
+				sendRedirect(
+					actionRequest, actionResponse,
+					ParamUtil.getString(actionRequest, "redirect"));
+			}
+
+			if (SessionErrors.contains(
+					actionRequest, "unableToNotifyAnalyticsCloud")) {
+
+				hideDefaultErrorMessage(actionRequest);
+
+				sendRedirect(
+					actionRequest, actionResponse,
+					ParamUtil.getString(actionRequest, "redirect"));
+			}
 		}
 		catch (PrincipalException principalException) {
-			_log.error(principalException, principalException);
+			_log.error(principalException);
 
 			SessionErrors.add(actionRequest, principalException.getClass());
 
@@ -139,13 +157,61 @@ public abstract class BaseAnalyticsMVCActionCommand
 			mutableRenderParameters.setValue("mvcPath", "/error.jsp");
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			throw exception;
 		}
 	}
 
-	protected String getConfigurationPid() {
+	protected void removeChannelId(String[] groupIds) {
+		for (String groupId : groupIds) {
+			Group group = groupLocalService.fetchGroup(
+				GetterUtil.getLong(groupId));
+
+			if (group == null) {
+				continue;
+			}
+
+			UnicodeProperties typeSettingsUnicodeProperties =
+				group.getTypeSettingsProperties();
+
+			typeSettingsUnicodeProperties.remove("analyticsChannelId");
+
+			group.setTypeSettingsProperties(typeSettingsUnicodeProperties);
+
+			groupLocalService.updateGroup(group);
+		}
+	}
+
+	protected abstract void updateConfigurationProperties(
+			ActionRequest actionRequest,
+			Dictionary<String, Object> configurationProperties)
+		throws Exception;
+
+	@Reference
+	protected CompanyService companyService;
+
+	@Reference
+	protected ConfigurationProvider configurationProvider;
+
+	@Reference
+	protected GroupLocalService groupLocalService;
+
+	@Reference
+	protected SettingsFactory settingsFactory;
+
+	private void _checkPermissions(ThemeDisplay themeDisplay)
+		throws PrincipalException {
+
+		PermissionChecker permissionChecker =
+			PermissionThreadLocal.getPermissionChecker();
+
+		if (!permissionChecker.isCompanyAdmin(themeDisplay.getCompanyId())) {
+			throw new PrincipalException();
+		}
+	}
+
+	private String _getConfigurationPid() {
 		Class<?> clazz = AnalyticsConfiguration.class;
 
 		Meta.OCD ocd = clazz.getAnnotation(Meta.OCD.class);
@@ -153,7 +219,7 @@ public abstract class BaseAnalyticsMVCActionCommand
 		return ocd.id();
 	}
 
-	protected Dictionary<String, Object> getConfigurationProperties(
+	private Dictionary<String, Object> _getConfigurationProperties(
 			String pid, long scopePK)
 		throws Exception {
 
@@ -189,27 +255,7 @@ public abstract class BaseAnalyticsMVCActionCommand
 		return configurationProperties;
 	}
 
-	protected void removeChannelId(String[] groupIds) {
-		for (String groupId : groupIds) {
-			Group group = groupLocalService.fetchGroup(
-				GetterUtil.getLong(groupId));
-
-			if (group == null) {
-				continue;
-			}
-
-			UnicodeProperties typeSettingsUnicodeProperties =
-				group.getTypeSettingsProperties();
-
-			typeSettingsUnicodeProperties.remove("analyticsChannelId");
-
-			group.setTypeSettingsProperties(typeSettingsUnicodeProperties);
-
-			groupLocalService.updateGroup(group);
-		}
-	}
-
-	protected void removeCompanyPreferences(long companyId) throws Exception {
+	private void _removeCompanyPreferences(long companyId) throws Exception {
 		companyService.removePreferences(
 			companyId,
 			new String[] {
@@ -217,17 +263,17 @@ public abstract class BaseAnalyticsMVCActionCommand
 				"liferayAnalyticsDataSourceId", "liferayAnalyticsEndpointURL",
 				"liferayAnalyticsFaroBackendSecuritySignature",
 				"liferayAnalyticsFaroBackendURL", "liferayAnalyticsGroupIds",
-				"liferayAnalyticsURL"
+				"liferayAnalyticsProjectId", "liferayAnalyticsURL"
 			});
 	}
 
-	protected void saveCompanyConfiguration(
+	private void _saveCompanyConfiguration(
 			ActionRequest actionRequest, ThemeDisplay themeDisplay)
 		throws Exception {
 
 		Dictionary<String, Object> configurationProperties =
-			getConfigurationProperties(
-				getConfigurationPid(), themeDisplay.getCompanyId());
+			_getConfigurationProperties(
+				_getConfigurationPid(), themeDisplay.getCompanyId());
 
 		updateConfigurationProperties(actionRequest, configurationProperties);
 
@@ -261,23 +307,6 @@ public abstract class BaseAnalyticsMVCActionCommand
 				configurationProperties);
 		}
 	}
-
-	protected abstract void updateConfigurationProperties(
-			ActionRequest actionRequest,
-			Dictionary<String, Object> configurationProperties)
-		throws Exception;
-
-	@Reference
-	protected CompanyService companyService;
-
-	@Reference
-	protected ConfigurationProvider configurationProvider;
-
-	@Reference
-	protected GroupLocalService groupLocalService;
-
-	@Reference
-	protected SettingsFactory settingsFactory;
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		BaseAnalyticsMVCActionCommand.class);

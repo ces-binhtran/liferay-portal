@@ -58,10 +58,8 @@ public class MetadataGeneratorTest extends BaseSamlTestCase {
 			getMockHttpServletRequest(
 				"http://localhost:8080/c/portal/saml/metadata");
 
-		EntityDescriptor entityDescriptor =
-			metadataManagerImpl.getEntityDescriptor(mockHttpServletRequest);
-
-		Assert.assertNotNull(entityDescriptor);
+		Assert.assertNotNull(
+			metadataManagerImpl.getEntityDescriptor(mockHttpServletRequest));
 	}
 
 	@Test
@@ -106,11 +104,8 @@ public class MetadataGeneratorTest extends BaseSamlTestCase {
 
 		prepareServiceProvider(SP_ENTITY_ID);
 
-		SecurityConfigurationBootstrap securityConfigurationBootstrap =
-			new SecurityConfigurationBootstrap();
-
 		ReflectionTestUtil.invoke(
-			securityConfigurationBootstrap, "activate",
+			new SecurityConfigurationBootstrap(), "activate",
 			new Class<?>[] {Map.class},
 			HashMapBuilder.<String, Object>put(
 				"blacklisted.algorithms",

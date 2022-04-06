@@ -14,8 +14,8 @@
 
 package com.liferay.dynamic.data.lists.internal.exportimport.staged.model.repository;
 
+import com.liferay.dynamic.data.lists.constants.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.model.DDLRecordSet;
-import com.liferay.dynamic.data.lists.model.DDLRecordSetConstants;
 import com.liferay.dynamic.data.lists.service.DDLRecordSetLocalService;
 import com.liferay.dynamic.data.lists.util.comparator.DDLRecordSetNameComparator;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
@@ -132,7 +132,7 @@ public class DDLRecordSetStagedModelRepository
 			_ddlRecordSetLocalService.deleteRecordSet(recordSet);
 		}
 
-		deleteDDMStructures(recordSetDDMStructureIds);
+		_deleteDDMStructures(recordSetDDMStructureIds);
 	}
 
 	@Override
@@ -160,20 +160,20 @@ public class DDLRecordSetStagedModelRepository
 
 	@Override
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
-		final PortletDataContext portletDataContext) {
+		PortletDataContext portletDataContext) {
 
 		return getExportActionableDynamicQuery(
 			portletDataContext, DDLRecordSetConstants.SCOPE_DYNAMIC_DATA_LISTS);
 	}
 
 	public ExportActionableDynamicQuery getExportActionableDynamicQuery(
-		final PortletDataContext portletDataContext, final int scope) {
+		PortletDataContext portletDataContext, int scope) {
 
 		ExportActionableDynamicQuery exportActionableDynamicQuery =
 			_ddlRecordSetLocalService.getExportActionableDynamicQuery(
 				portletDataContext);
 
-		final ActionableDynamicQuery.AddCriteriaMethod addCriteriaMethod =
+		ActionableDynamicQuery.AddCriteriaMethod addCriteriaMethod =
 			exportActionableDynamicQuery.getAddCriteriaMethod();
 
 		exportActionableDynamicQuery.setAddCriteriaMethod(
@@ -236,7 +236,7 @@ public class DDLRecordSetStagedModelRepository
 			ddlRecordSet.getMinDisplayRows(), serviceContext);
 	}
 
-	protected void deleteDDMStructures(Set<Long> ddmStructureIds)
+	private void _deleteDDMStructures(Set<Long> ddmStructureIds)
 		throws PortalException {
 
 		for (Long ddmStructureId : ddmStructureIds) {

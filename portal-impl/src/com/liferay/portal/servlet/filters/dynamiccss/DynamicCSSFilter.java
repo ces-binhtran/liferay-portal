@@ -84,8 +84,6 @@ public class DynamicCSSFilter extends IgnoreModuleRequestFilter {
 			HttpServletResponse httpServletResponse, FilterChain filterChain)
 		throws Exception {
 
-		String requestPath = getRequestPath(httpServletRequest);
-
 		String originalRequestPath = httpServletRequest.getRequestURI();
 
 		if (originalRequestPath.endsWith(_CSS_EXTENSION) &&
@@ -100,7 +98,8 @@ public class DynamicCSSFilter extends IgnoreModuleRequestFilter {
 
 		ObjectValuePair<ServletContext, URL> objectValuePair =
 			ResourceUtil.getObjectValuePair(
-				originalRequestPath, requestPath, _servletContext);
+				originalRequestPath, getRequestPath(httpServletRequest),
+				_servletContext);
 
 		if (objectValuePair == null) {
 			return null;
@@ -121,9 +120,8 @@ public class DynamicCSSFilter extends IgnoreModuleRequestFilter {
 			(cacheDataFile.lastModified() == lastModified)) {
 
 			if (cacheContentTypeFile.exists()) {
-				String contentType = FileUtil.read(cacheContentTypeFile);
-
-				httpServletResponse.setContentType(contentType);
+				httpServletResponse.setContentType(
+					FileUtil.read(cacheContentTypeFile));
 			}
 
 			return cacheDataFile;

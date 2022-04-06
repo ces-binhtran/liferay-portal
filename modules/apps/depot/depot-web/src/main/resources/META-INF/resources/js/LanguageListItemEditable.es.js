@@ -16,6 +16,7 @@ import ClayButton from '@clayui/button';
 import ClayDropDown from '@clayui/drop-down';
 import ClayIcon from '@clayui/icon';
 import ClayLabel from '@clayui/label';
+import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
@@ -153,29 +154,35 @@ const LanguageListItem = ({
 	return (
 		<ClayTable.Row
 			className={classNames('language-list-item', {
-				dragging: isDragging,
+				'dragging': isDragging,
 				'drop-bottom': isOver && dropZone === DROP_ZONES.BOTTOM,
 				'drop-top': isOver && dropZone === DROP_ZONES.TOP,
 			})}
 			ref={itemRef}
 		>
 			<ClayTable.Cell expanded>
-				<div className="autofit-row autofit-row-center">
-					<div className="autofit-col autofit-padded-no-gutters">
+				<ClayLayout.ContentRow verticalAlign="center">
+					<ClayLayout.ContentCol className="autofit-padded-no-gutters">
 						<div className="language-drag-handler">
 							<ClayIcon symbol="drag" />
 						</div>
-					</div>
-					<div className="align-items-center autofit-col autofit-col-expand autofit-padded-no-gutters flex-row justify-content-start">
+					</ClayLayout.ContentCol>
+
+					<ClayLayout.ContentCol
+						className="align-items-center autofit-padded-no-gutters flex-row justify-content-start"
+						expand
+					>
 						{displayName}
+
 						{isDefault && (
 							<ClayLabel className="ml-3" displayType="info">
 								{Liferay.Language.get('default')}
 							</ClayLabel>
 						)}
-					</div>
-				</div>
+					</ClayLayout.ContentCol>
+				</ClayLayout.ContentRow>
 			</ClayTable.Cell>
+
 			<ClayTable.Cell align="right">
 				<ClayDropDown
 					active={active}
@@ -199,11 +206,13 @@ const LanguageListItem = ({
 						>
 							{Liferay.Language.get('make-default')}
 						</ClayDropDown.Item>
+
 						{!isFirst && (
 							<ClayDropDown.Item onClick={moveUp}>
 								{Liferay.Language.get('move-up')}
 							</ClayDropDown.Item>
 						)}
+
 						{!isLast && (
 							<ClayDropDown.Item onClick={moveDown}>
 								{Liferay.Language.get('move-down')}

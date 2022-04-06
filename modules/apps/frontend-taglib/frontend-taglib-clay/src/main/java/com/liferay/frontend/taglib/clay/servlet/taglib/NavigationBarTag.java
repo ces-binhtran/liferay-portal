@@ -19,6 +19,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.NavigationItem;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.jsp.JspException;
@@ -46,14 +47,6 @@ public class NavigationBarTag extends BaseContainerTag {
 		return _navigationItems;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public String getSpritemap() {
-		return _spritemap;
-	}
-
 	public void setInverted(boolean inverted) {
 		_inverted = inverted;
 	}
@@ -62,21 +55,25 @@ public class NavigationBarTag extends BaseContainerTag {
 		_navigationItems = navigationItems;
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
-	 */
-	@Deprecated
-	public void setSpritemap(String spritemap) {
-		_spritemap = spritemap;
-	}
-
 	@Override
 	protected void cleanUp() {
 		super.cleanUp();
 
 		_inverted = false;
 		_navigationItems = null;
-		_spritemap = null;
+	}
+
+	@Override
+	protected String getHydratedModuleName() {
+		return "frontend-taglib-clay/NavigationBar";
+	}
+
+	@Override
+	protected Map<String, Object> prepareProps(Map<String, Object> props) {
+		props.put("inverted", _inverted);
+		props.put("navigationItems", _navigationItems);
+
+		return super.prepareProps(props);
 	}
 
 	@Override
@@ -103,8 +100,8 @@ public class NavigationBarTag extends BaseContainerTag {
 			jspWriter.write("<div class=\"container-fluid ");
 			jspWriter.write("container-fluid-max-xl\"><div ");
 			jspWriter.write("class=\"collapse navbar-collapse\"><div ");
-			jspWriter.write("class=\"container-fluid >");
-			jspWriter.write("container-fluid-max-xl\"<ul ");
+			jspWriter.write("class=\"container-fluid ");
+			jspWriter.write("container-fluid-max-xl\"><ul ");
 			jspWriter.write("class=\"navbar-nav\">");
 
 			for (int i = 0; i < _navigationItems.size(); i++) {
@@ -146,6 +143,5 @@ public class NavigationBarTag extends BaseContainerTag {
 
 	private boolean _inverted;
 	private List<NavigationItem> _navigationItems;
-	private String _spritemap;
 
 }

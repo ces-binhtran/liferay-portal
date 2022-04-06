@@ -166,8 +166,9 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 					repository.getRepositoryId());
 
 			return localRepository.addFileEntry(
-				userId, folderId, fileName, mimeType, fileName,
-				StringPool.BLANK, StringPool.BLANK, file, serviceContext);
+				null, userId, folderId, fileName, mimeType, fileName, fileName,
+				StringPool.BLANK, StringPool.BLANK, file, null, null,
+				serviceContext);
 		}
 		finally {
 			DLAppHelperThreadLocal.setEnabled(dlAppHelperEnabled);
@@ -225,8 +226,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 					// LPS-52675
 
 					if (_log.isDebugEnabled()) {
-						_log.debug(
-							noSuchFolderException, noSuchFolderException);
+						_log.debug(noSuchFolderException);
 					}
 
 					return localRepository.addFolder(
@@ -320,26 +320,22 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 				_repositoryProvider.getFileEntryLocalRepository(fileEntryId);
 
 			if (_isAttachment(localRepository.getFileEntry(fileEntryId))) {
-				_run(
-					FileEntry.class,
-					() -> {
-						localRepository.deleteFileEntry(fileEntryId);
+				try {
+					SystemEventHierarchyEntryThreadLocal.push(FileEntry.class);
 
-						return null;
-					});
+					localRepository.deleteFileEntry(fileEntryId);
+				}
+				finally {
+					SystemEventHierarchyEntryThreadLocal.pop(FileEntry.class);
+				}
 			}
 			else {
-				_run(
-					() -> {
-						localRepository.deleteFileEntry(fileEntryId);
-
-						return null;
-					});
+				localRepository.deleteFileEntry(fileEntryId);
 			}
 		}
 		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(noSuchFileEntryException, noSuchFileEntryException);
+				_log.warn(noSuchFileEntryException);
 			}
 		}
 	}
@@ -370,7 +366,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 				}
 				catch (NoSuchFolderException noSuchFolderException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(noSuchFolderException, noSuchFolderException);
+						_log.warn(noSuchFolderException);
 					}
 				}
 
@@ -400,7 +396,7 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		}
 		catch (PortalException portalException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -425,10 +421,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 		ThemeDisplay themeDisplay, FileEntry fileEntry, String queryString,
 		boolean absoluteURL) {
 
-		String portletFileEntryURL = getPortletFileEntryURL(
-			themeDisplay, fileEntry, queryString, absoluteURL);
-
-		return _http.addParameter(portletFileEntryURL, "download", true);
+		return _http.addParameter(
+			getPortletFileEntryURL(
+				themeDisplay, fileEntry, queryString, absoluteURL),
+			"download", true);
 	}
 
 	@Override
@@ -455,39 +451,40 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	@Override
 	public List<FileEntry> getPortletFileEntries(
 			long groupId, long folderId, int status, int start, int end,
-			OrderByComparator<FileEntry> obc)
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		LocalRepository localRepository =
 			_repositoryProvider.getLocalRepository(groupId);
 
 		return localRepository.getFileEntries(
-			folderId, status, start, end, obc);
+			folderId, status, start, end, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getPortletFileEntries(
-			long groupId, long folderId, OrderByComparator<FileEntry> obc)
+			long groupId, long folderId,
+			OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		LocalRepository localRepository =
 			_repositoryProvider.getLocalRepository(groupId);
 
 		return localRepository.getFileEntries(
-			folderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, obc);
+			folderId, QueryUtil.ALL_POS, QueryUtil.ALL_POS, orderByComparator);
 	}
 
 	@Override
 	public List<FileEntry> getPortletFileEntries(
 			long groupId, long folderId, String[] mimeTypes, int status,
-			int start, int end, OrderByComparator<FileEntry> obc)
+			int start, int end, OrderByComparator<FileEntry> orderByComparator)
 		throws PortalException {
 
 		LocalRepository localRepository =
 			_repositoryProvider.getLocalRepository(groupId);
 
 		return localRepository.getFileEntries(
-			folderId, mimeTypes, status, start, end, obc);
+			folderId, mimeTypes, status, start, end, orderByComparator);
 	}
 
 	@Override
@@ -651,6 +648,10 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 					fileName, String.valueOf(i));
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+
 				break;
 			}
 		}
@@ -799,13 +800,18 @@ public class PortletFileRepositoryImpl implements PortletFileRepository {
 	@Reference
 	private Http _http;
 
+	@Reference(
+		target = "(class.name=com.liferay.portal.repository.liferayrepository.LiferayRepository)"
+	)
+	private RepositoryFactory _liferayRepositoryFactory;
+
 	@Reference
 	private Portal _portal;
 
 	@Reference(
-		target = "(repository.target.class.name=com.liferay.portal.repository.portletrepository.PortletRepository)"
+		target = "(class.name=com.liferay.portal.repository.portletrepository.PortletRepository)"
 	)
-	private RepositoryFactory _repositoryFactory;
+	private RepositoryFactory _portletRepositoryFactory;
 
 	@Reference
 	private RepositoryLocalService _repositoryLocalService;

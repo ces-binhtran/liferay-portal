@@ -26,18 +26,22 @@ import com.liferay.portal.kernel.model.impl.BaseModelImpl;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import java.io.Serializable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 
+import java.sql.Blob;
 import java.sql.Types;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -97,23 +101,34 @@ public class ServiceComponentModelImpl
 
 	public static final String TX_MANAGER = "liferayTransactionManager";
 
-	public static final boolean ENTITY_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.entity.cache.enabled.com.liferay.portal.kernel.model.ServiceComponent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean ENTITY_CACHE_ENABLED = true;
 
-	public static final boolean FINDER_CACHE_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.finder.cache.enabled.com.liferay.portal.kernel.model.ServiceComponent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean FINDER_CACHE_ENABLED = true;
 
-	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(
-		com.liferay.portal.util.PropsUtil.get(
-			"value.object.column.bitmask.enabled.com.liferay.portal.kernel.model.ServiceComponent"),
-		true);
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
+	public static final boolean COLUMN_BITMASK_ENABLED = true;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long BUILDNAMESPACE_COLUMN_BITMASK = 1L;
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link #getColumnBitmask(String)}
+	 */
+	@Deprecated
 	public static final long BUILDNUMBER_COLUMN_BITMASK = 2L;
 
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(
@@ -171,9 +186,6 @@ public class ServiceComponentModelImpl
 				attributeName,
 				attributeGetterFunction.apply((ServiceComponent)this));
 		}
-
-		attributes.put("entityCacheEnabled", isEntityCacheEnabled());
-		attributes.put("finderCacheEnabled", isFinderCacheEnabled());
 
 		return attributes;
 	}
@@ -296,6 +308,10 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setMvccVersion(long mvccVersion) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_mvccVersion = mvccVersion;
 	}
 
@@ -306,6 +322,10 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setServiceComponentId(long serviceComponentId) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_serviceComponentId = serviceComponentId;
 	}
 
@@ -321,17 +341,20 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setBuildNamespace(String buildNamespace) {
-		_columnBitmask = -1L;
-
-		if (_originalBuildNamespace == null) {
-			_originalBuildNamespace = _buildNamespace;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_buildNamespace = buildNamespace;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public String getOriginalBuildNamespace() {
-		return GetterUtil.getString(_originalBuildNamespace);
+		return getColumnOriginalValue("buildNamespace");
 	}
 
 	@Override
@@ -341,19 +364,21 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setBuildNumber(long buildNumber) {
-		_columnBitmask = -1L;
-
-		if (!_setOriginalBuildNumber) {
-			_setOriginalBuildNumber = true;
-
-			_originalBuildNumber = _buildNumber;
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
 		}
 
 		_buildNumber = buildNumber;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 *             #getColumnOriginalValue(String)}
+	 */
+	@Deprecated
 	public long getOriginalBuildNumber() {
-		return _originalBuildNumber;
+		return GetterUtil.getLong(
+			this.<Long>getColumnOriginalValue("buildNumber"));
 	}
 
 	@Override
@@ -363,6 +388,10 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setBuildDate(long buildDate) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_buildDate = buildDate;
 	}
 
@@ -378,10 +407,34 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void setData(String data) {
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
 		_data = data;
 	}
 
 	public long getColumnBitmask() {
+		if (_columnBitmask > 0) {
+			return _columnBitmask;
+		}
+
+		if ((_columnOriginalValues == null) ||
+			(_columnOriginalValues == Collections.EMPTY_MAP)) {
+
+			return 0;
+		}
+
+		for (Map.Entry<String, Object> entry :
+				_columnOriginalValues.entrySet()) {
+
+			if (!Objects.equals(
+					entry.getValue(), getColumnValue(entry.getKey()))) {
+
+				_columnBitmask |= _columnBitmasks.get(entry.getKey());
+			}
+		}
+
 		return _columnBitmask;
 	}
 
@@ -430,6 +483,26 @@ public class ServiceComponentModelImpl
 	}
 
 	@Override
+	public ServiceComponent cloneWithOriginalValues() {
+		ServiceComponentImpl serviceComponentImpl = new ServiceComponentImpl();
+
+		serviceComponentImpl.setMvccVersion(
+			this.<Long>getColumnOriginalValue("mvccVersion"));
+		serviceComponentImpl.setServiceComponentId(
+			this.<Long>getColumnOriginalValue("serviceComponentId"));
+		serviceComponentImpl.setBuildNamespace(
+			this.<String>getColumnOriginalValue("buildNamespace"));
+		serviceComponentImpl.setBuildNumber(
+			this.<Long>getColumnOriginalValue("buildNumber"));
+		serviceComponentImpl.setBuildDate(
+			this.<Long>getColumnOriginalValue("buildDate"));
+		serviceComponentImpl.setData(
+			this.<String>getColumnOriginalValue("data_"));
+
+		return serviceComponentImpl;
+	}
+
+	@Override
 	public int compareTo(ServiceComponent serviceComponent) {
 		int value = 0;
 
@@ -462,16 +535,16 @@ public class ServiceComponentModelImpl
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof ServiceComponent)) {
+		if (!(object instanceof ServiceComponent)) {
 			return false;
 		}
 
-		ServiceComponent serviceComponent = (ServiceComponent)obj;
+		ServiceComponent serviceComponent = (ServiceComponent)object;
 
 		long primaryKey = serviceComponent.getPrimaryKey();
 
@@ -488,11 +561,19 @@ public class ServiceComponentModelImpl
 		return (int)getPrimaryKey();
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isEntityCacheEnabled() {
 		return ENTITY_CACHE_ENABLED;
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), with no direct replacement
+	 */
+	@Deprecated
 	@Override
 	public boolean isFinderCacheEnabled() {
 		return FINDER_CACHE_ENABLED;
@@ -500,17 +581,9 @@ public class ServiceComponentModelImpl
 
 	@Override
 	public void resetOriginalValues() {
-		ServiceComponentModelImpl serviceComponentModelImpl = this;
+		_columnOriginalValues = Collections.emptyMap();
 
-		serviceComponentModelImpl._originalBuildNamespace =
-			serviceComponentModelImpl._buildNamespace;
-
-		serviceComponentModelImpl._originalBuildNumber =
-			serviceComponentModelImpl._buildNumber;
-
-		serviceComponentModelImpl._setOriginalBuildNumber = false;
-
-		serviceComponentModelImpl._columnBitmask = 0;
+		_columnBitmask = 0;
 	}
 
 	@Override
@@ -551,7 +624,7 @@ public class ServiceComponentModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			4 * attributeGetterFunctions.size() + 2);
+			(5 * attributeGetterFunctions.size()) + 2);
 
 		sb.append("{");
 
@@ -562,9 +635,27 @@ public class ServiceComponentModelImpl
 			Function<ServiceComponent, Object> attributeGetterFunction =
 				entry.getValue();
 
+			sb.append("\"");
 			sb.append(attributeName);
-			sb.append("=");
-			sb.append(attributeGetterFunction.apply((ServiceComponent)this));
+			sb.append("\": ");
+
+			Object value = attributeGetterFunction.apply(
+				(ServiceComponent)this);
+
+			if (value == null) {
+				sb.append("null");
+			}
+			else if (value instanceof Blob || value instanceof Date ||
+					 value instanceof Map || value instanceof String) {
+
+				sb.append(
+					"\"" + StringUtil.replace(value.toString(), "\"", "'") +
+						"\"");
+			}
+			else {
+				sb.append(value);
+			}
+
 			sb.append(", ");
 		}
 
@@ -583,7 +674,7 @@ public class ServiceComponentModelImpl
 			attributeGetterFunctions = getAttributeGetterFunctions();
 
 		StringBundler sb = new StringBundler(
-			5 * attributeGetterFunctions.size() + 4);
+			(5 * attributeGetterFunctions.size()) + 4);
 
 		sb.append("<model><model-name>");
 		sb.append(getModelClassName());
@@ -618,12 +709,83 @@ public class ServiceComponentModelImpl
 	private long _mvccVersion;
 	private long _serviceComponentId;
 	private String _buildNamespace;
-	private String _originalBuildNamespace;
 	private long _buildNumber;
-	private long _originalBuildNumber;
-	private boolean _setOriginalBuildNumber;
 	private long _buildDate;
 	private String _data;
+
+	public <T> T getColumnValue(String columnName) {
+		columnName = _attributeNames.getOrDefault(columnName, columnName);
+
+		Function<ServiceComponent, Object> function =
+			_attributeGetterFunctions.get(columnName);
+
+		if (function == null) {
+			throw new IllegalArgumentException(
+				"No attribute getter function found for " + columnName);
+		}
+
+		return (T)function.apply((ServiceComponent)this);
+	}
+
+	public <T> T getColumnOriginalValue(String columnName) {
+		if (_columnOriginalValues == null) {
+			return null;
+		}
+
+		if (_columnOriginalValues == Collections.EMPTY_MAP) {
+			_setColumnOriginalValues();
+		}
+
+		return (T)_columnOriginalValues.get(columnName);
+	}
+
+	private void _setColumnOriginalValues() {
+		_columnOriginalValues = new HashMap<String, Object>();
+
+		_columnOriginalValues.put("mvccVersion", _mvccVersion);
+		_columnOriginalValues.put("serviceComponentId", _serviceComponentId);
+		_columnOriginalValues.put("buildNamespace", _buildNamespace);
+		_columnOriginalValues.put("buildNumber", _buildNumber);
+		_columnOriginalValues.put("buildDate", _buildDate);
+		_columnOriginalValues.put("data_", _data);
+	}
+
+	private static final Map<String, String> _attributeNames;
+
+	static {
+		Map<String, String> attributeNames = new HashMap<>();
+
+		attributeNames.put("data_", "data");
+
+		_attributeNames = Collections.unmodifiableMap(attributeNames);
+	}
+
+	private transient Map<String, Object> _columnOriginalValues;
+
+	public static long getColumnBitmask(String columnName) {
+		return _columnBitmasks.get(columnName);
+	}
+
+	private static final Map<String, Long> _columnBitmasks;
+
+	static {
+		Map<String, Long> columnBitmasks = new HashMap<>();
+
+		columnBitmasks.put("mvccVersion", 1L);
+
+		columnBitmasks.put("serviceComponentId", 2L);
+
+		columnBitmasks.put("buildNamespace", 4L);
+
+		columnBitmasks.put("buildNumber", 8L);
+
+		columnBitmasks.put("buildDate", 16L);
+
+		columnBitmasks.put("data_", 32L);
+
+		_columnBitmasks = Collections.unmodifiableMap(columnBitmasks);
+	}
+
 	private long _columnBitmask;
 	private ServiceComponent _escapedModel;
 

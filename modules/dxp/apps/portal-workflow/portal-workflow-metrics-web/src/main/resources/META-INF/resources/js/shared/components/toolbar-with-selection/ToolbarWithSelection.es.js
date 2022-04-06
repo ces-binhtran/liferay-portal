@@ -9,6 +9,7 @@
  * distribution rights of the Software.
  */
 
+import ClayButton from '@clayui/button';
 import {ClayCheckbox} from '@clayui/form';
 import ClayManagementToolbar from '@clayui/management-toolbar';
 import React from 'react';
@@ -32,11 +33,10 @@ const ToolbarWithSelection = ({
 			active={active}
 			className="mb-0 show-quick-actions-on-hover"
 		>
-			<ul className="navbar-nav" style={{width: '100%'}}>
+			<ClayManagementToolbar.ItemList expand>
 				<ClayManagementToolbar.Item className="ml-2">
 					<ClayCheckbox
 						checked={checked}
-						data-testid="checkAllButton"
 						indeterminate={indeterminate}
 						onChange={handleCheck}
 					/>
@@ -45,10 +45,7 @@ const ToolbarWithSelection = ({
 				{active && (
 					<>
 						<ClayManagementToolbar.Item>
-							<span
-								className="ml-0 mr-0 navbar-text"
-								data-testid="toolbarLabel"
-							>
+							<span className="ml-0 mr-0 navbar-text">
 								{selectAll
 									? Liferay.Language.get('all-selected')
 									: sub(
@@ -61,31 +58,33 @@ const ToolbarWithSelection = ({
 						</ClayManagementToolbar.Item>
 
 						<ClayManagementToolbar.Item>
-							<button
-								className="btn btn-sm btn-unstyled font-weight-bold nav-link"
-								data-testid="clear"
+							<ClayButton
+								className="font-weight-bold nav-link"
+								displayType="unstyled"
 								onClick={handleClear}
+								small
 							>
 								{Liferay.Language.get('clear')}
-							</button>
+							</ClayButton>
 						</ClayManagementToolbar.Item>
 
 						{!selectAll && checked && (
 							<ClayManagementToolbar.Item>
-								<button
-									className="btn btn-sm btn-unstyled font-weight-bold nav-link"
-									data-testid="selectAll"
+								<ClayButton
+									className="font-weight-bold nav-link"
+									displayType="unstyled"
 									onClick={handleSelectAll}
+									small
 								>
 									{Liferay.Language.get('select-all')}
-								</button>
+								</ClayButton>
 							</ClayManagementToolbar.Item>
 						)}
 					</>
 				)}
 
 				{children}
-			</ul>
+			</ClayManagementToolbar.ItemList>
 		</ClayManagementToolbar>
 	);
 };

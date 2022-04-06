@@ -21,6 +21,7 @@ import com.liferay.portal.kernel.captcha.CaptchaException;
 import com.liferay.portal.kernel.captcha.CaptchaTextException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Release;
 import com.liferay.portal.kernel.security.RandomUtil;
 import com.liferay.portal.kernel.util.ContentTypes;
 import com.liferay.portal.kernel.util.ParamUtil;
@@ -396,8 +397,10 @@ public class SimpleCaptchaImpl implements Captcha {
 
 		HttpSession httpSession = _getHttpSession(httpServletRequest);
 
-		String captchaText = (String)httpSession.getAttribute(
-			_getHttpSessionKey(WebKeys.CAPTCHA_TEXT, httpServletRequest));
+		String httpSessionKey = _getHttpSessionKey(
+			WebKeys.CAPTCHA_TEXT, httpServletRequest);
+
+		String captchaText = (String)httpSession.getAttribute(httpSessionKey);
 
 		if (captchaText == null) {
 			_log.error(
@@ -412,7 +415,7 @@ public class SimpleCaptchaImpl implements Captcha {
 			ParamUtil.getString(httpServletRequest, "captchaText"));
 
 		if (valid) {
-			httpSession.removeAttribute(WebKeys.CAPTCHA_TEXT);
+			httpSession.removeAttribute(httpSessionKey);
 		}
 
 		return valid;
@@ -426,6 +429,11 @@ public class SimpleCaptchaImpl implements Captcha {
 
 	@Reference
 	protected Portal portal;
+
+	@Reference(
+		target = "(&(release.bundle.symbolic.name=com.liferay.captcha.impl)(release.schema.version>=1.1.0))"
+	)
+	protected Release release;
 
 	private HttpSession _getHttpSession(HttpServletRequest httpServletRequest) {
 		HttpServletRequest originalHttpServletRequest =

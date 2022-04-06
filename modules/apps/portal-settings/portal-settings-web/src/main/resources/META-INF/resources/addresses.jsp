@@ -79,16 +79,13 @@
 		<liferay-ui:error key="<%= NoSuchListTypeException.class.getName() + className + ListTypeConstants.ADDRESS %>" message="please-select-a-type" />
 		<liferay-ui:error exception="<%= NoSuchRegionException.class %>" message="please-select-a-region" />
 
-		<aui:fieldset cssClass="addresses" id='<%= renderResponse.getNamespace() + "addresses" %>'>
+		<aui:fieldset cssClass="addresses" id='<%= liferayPortletResponse.getNamespace() + "addresses" %>'>
 
 			<%
 			for (int i = 0; i < addressesIndexes.length; i++) {
 				int addressesIndex = addressesIndexes[i];
 
 				Address address = addresses.get(i);
-
-				long countryId = ParamUtil.getLong(request, "addressCountryId" + addressesIndex, address.getCountryId());
-				long regionId = ParamUtil.getLong(request, "addressRegionId" + addressesIndex, address.getRegionId());
 			%>
 
 				<aui:model-context bean="<%= address %>" model="<%= Address.class %>" />
@@ -107,14 +104,16 @@
 							selectDesc: 'nameCurrentValue',
 							selectId: 'countryId',
 							selectSort: '<%= true %>',
-							selectVal: '<%= countryId %>',
+							selectVal:
+								'<%= ParamUtil.getLong(request, "addressCountryId" + addressesIndex, address.getCountryId()) %>',
 						},
 						{
 							select: '<portlet:namespace />addressRegionId<%= addressesIndex %>',
 							selectData: Liferay.Address.getRegions,
 							selectDesc: 'name',
 							selectId: 'regionId',
-							selectVal: '<%= regionId %>',
+							selectVal:
+								'<%= ParamUtil.getLong(request, "addressRegionId" + addressesIndex, address.getRegionId()) %>',
 						},
 					]);
 				</script>

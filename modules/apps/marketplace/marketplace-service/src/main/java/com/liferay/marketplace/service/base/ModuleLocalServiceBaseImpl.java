@@ -16,6 +16,7 @@ package com.liferay.marketplace.service.base;
 
 import com.liferay.marketplace.model.Module;
 import com.liferay.marketplace.service.ModuleLocalService;
+import com.liferay.marketplace.service.ModuleLocalServiceUtil;
 import com.liferay.marketplace.service.persistence.AppPersistence;
 import com.liferay.marketplace.service.persistence.ModulePersistence;
 import com.liferay.petra.sql.dsl.query.DSLQuery;
@@ -45,10 +46,13 @@ import com.liferay.portal.kernel.util.PortalUtil;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -69,11 +73,15 @@ public abstract class ModuleLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>ModuleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.marketplace.service.ModuleLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>ModuleLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>ModuleLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the module to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param module the module
 	 * @return the module that was added
@@ -101,6 +109,10 @@ public abstract class ModuleLocalServiceBaseImpl
 	/**
 	 * Deletes the module with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param moduleId the primary key of the module
 	 * @return the module that was removed
 	 * @throws PortalException if a module with the primary key could not be found
@@ -114,6 +126,10 @@ public abstract class ModuleLocalServiceBaseImpl
 	/**
 	 * Deletes the module from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param module the module
 	 * @return the module that was removed
 	 */
@@ -126,6 +142,13 @@ public abstract class ModuleLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return modulePersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -286,6 +309,7 @@ public abstract class ModuleLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -302,6 +326,7 @@ public abstract class ModuleLocalServiceBaseImpl
 		return moduleLocalService.deleteModule((Module)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<Module> getBasePersistence() {
 		return modulePersistence;
 	}
@@ -360,6 +385,10 @@ public abstract class ModuleLocalServiceBaseImpl
 	/**
 	 * Updates the module in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect ModuleLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param module the module
 	 * @return the module that was updated
 	 */
@@ -367,6 +396,11 @@ public abstract class ModuleLocalServiceBaseImpl
 	@Override
 	public Module updateModule(Module module) {
 		return modulePersistence.update(module);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -380,6 +414,8 @@ public abstract class ModuleLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		moduleLocalService = (ModuleLocalService)aopProxy;
+
+		_setLocalServiceUtilService(moduleLocalService);
 	}
 
 	/**
@@ -421,6 +457,22 @@ public abstract class ModuleLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		ModuleLocalService moduleLocalService) {
+
+		try {
+			Field field = ModuleLocalServiceUtil.class.getDeclaredField(
+				"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, moduleLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

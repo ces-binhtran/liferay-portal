@@ -66,16 +66,6 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 		return _cacheManager;
 	}
 
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 *             #reconfigurePortalCaches(URL, ClassLoader)}
-	 */
-	@Deprecated
-	@Override
-	public void reconfigurePortalCaches(URL configurationURL) {
-		reconfigurePortalCaches(configurationURL, null);
-	}
-
 	@Override
 	public void reconfigurePortalCaches(
 		URL configurationURL, ClassLoader classLoader) {
@@ -164,9 +154,6 @@ public class EhcachePortalCacheManager<K extends Serializable, V>
 
 	@Override
 	protected void initPortalCacheManager() {
-		setBlockingPortalCacheAllowed(
-			GetterUtil.getBoolean(
-				props.get(PropsKeys.EHCACHE_BLOCKING_CACHE_ALLOWED)));
 		setTransactionalPortalCacheEnabled(
 			GetterUtil.getBoolean(
 				props.get(PropsKeys.TRANSACTIONAL_CACHE_ENABLED)));

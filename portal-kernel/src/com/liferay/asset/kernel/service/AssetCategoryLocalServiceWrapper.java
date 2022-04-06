@@ -30,6 +30,10 @@ public class AssetCategoryLocalServiceWrapper
 	implements AssetCategoryLocalService,
 			   ServiceWrapper<AssetCategoryLocalService> {
 
+	public AssetCategoryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public AssetCategoryLocalServiceWrapper(
 		AssetCategoryLocalService assetCategoryLocalService) {
 
@@ -39,6 +43,10 @@ public class AssetCategoryLocalServiceWrapper
 	/**
 	 * Adds the asset category to the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was added
 	 */
@@ -47,34 +55,11 @@ public class AssetCategoryLocalServiceWrapper
 		return _assetCategoryLocalService.addAssetCategory(assetCategory);
 	}
 
-	@Override
-	public void addAssetEntryAssetCategories(
-		long entryId, java.util.List<AssetCategory> assetCategories) {
-
-		_assetCategoryLocalService.addAssetEntryAssetCategories(
-			entryId, assetCategories);
-	}
-
-	@Override
-	public void addAssetEntryAssetCategories(long entryId, long[] categoryIds) {
-		_assetCategoryLocalService.addAssetEntryAssetCategories(
-			entryId, categoryIds);
-	}
-
-	@Override
-	public void addAssetEntryAssetCategory(
-		long entryId, AssetCategory assetCategory) {
-
-		_assetCategoryLocalService.addAssetEntryAssetCategory(
-			entryId, assetCategory);
-	}
-
-	@Override
-	public void addAssetEntryAssetCategory(long entryId, long categoryId) {
-		_assetCategoryLocalService.addAssetEntryAssetCategory(
-			entryId, categoryId);
-	}
-
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #addCategory(String, long, long, long, Map, Map, long, String[], ServiceContext)}
+	 */
+	@Deprecated
 	@Override
 	public AssetCategory addCategory(
 			long userId, long groupId, long parentCategoryId,
@@ -100,6 +85,21 @@ public class AssetCategoryLocalServiceWrapper
 	}
 
 	@Override
+	public AssetCategory addCategory(
+			String externalReferenceCode, long userId, long groupId,
+			long parentCategoryId,
+			java.util.Map<java.util.Locale, String> titleMap,
+			java.util.Map<java.util.Locale, String> descriptionMap,
+			long vocabularyId, String[] categoryProperties,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetCategoryLocalService.addCategory(
+			externalReferenceCode, userId, groupId, parentCategoryId, titleMap,
+			descriptionMap, vocabularyId, categoryProperties, serviceContext);
+	}
+
+	@Override
 	public void addCategoryResources(
 			AssetCategory category, boolean addGroupPermissions,
 			boolean addGuestPermissions)
@@ -118,11 +118,6 @@ public class AssetCategoryLocalServiceWrapper
 
 		_assetCategoryLocalService.addCategoryResources(
 			category, modelPermissions);
-	}
-
-	@Override
-	public void clearAssetEntryAssetCategories(long entryId) {
-		_assetCategoryLocalService.clearAssetEntryAssetCategories(entryId);
 	}
 
 	/**
@@ -150,6 +145,10 @@ public class AssetCategoryLocalServiceWrapper
 	/**
 	 * Deletes the asset category from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was removed
 	 */
@@ -161,6 +160,10 @@ public class AssetCategoryLocalServiceWrapper
 	/**
 	 * Deletes the asset category with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param categoryId the primary key of the asset category
 	 * @return the asset category that was removed
 	 * @throws PortalException if a asset category with the primary key could not be found
@@ -170,36 +173,6 @@ public class AssetCategoryLocalServiceWrapper
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _assetCategoryLocalService.deleteAssetCategory(categoryId);
-	}
-
-	@Override
-	public void deleteAssetEntryAssetCategories(
-		long entryId, java.util.List<AssetCategory> assetCategories) {
-
-		_assetCategoryLocalService.deleteAssetEntryAssetCategories(
-			entryId, assetCategories);
-	}
-
-	@Override
-	public void deleteAssetEntryAssetCategories(
-		long entryId, long[] categoryIds) {
-
-		_assetCategoryLocalService.deleteAssetEntryAssetCategories(
-			entryId, categoryIds);
-	}
-
-	@Override
-	public void deleteAssetEntryAssetCategory(
-		long entryId, AssetCategory assetCategory) {
-
-		_assetCategoryLocalService.deleteAssetEntryAssetCategory(
-			entryId, assetCategory);
-	}
-
-	@Override
-	public void deleteAssetEntryAssetCategory(long entryId, long categoryId) {
-		_assetCategoryLocalService.deleteAssetEntryAssetCategory(
-			entryId, categoryId);
 	}
 
 	@Override
@@ -260,6 +233,13 @@ public class AssetCategoryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _assetCategoryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _assetCategoryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -359,18 +339,31 @@ public class AssetCategoryLocalServiceWrapper
 	}
 
 	/**
-	 * Returns the asset category with the matching external reference code and company.
+	 * Returns the asset category with the matching external reference code and group.
 	 *
-	 * @param companyId the primary key of the company
+	 * @param groupId the primary key of the group
 	 * @param externalReferenceCode the asset category's external reference code
 	 * @return the matching asset category, or <code>null</code> if a matching asset category could not be found
 	 */
 	@Override
+	public AssetCategory fetchAssetCategoryByExternalReferenceCode(
+		long groupId, String externalReferenceCode) {
+
+		return _assetCategoryLocalService.
+			fetchAssetCategoryByExternalReferenceCode(
+				groupId, externalReferenceCode);
+	}
+
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link #fetchAssetCategoryByExternalReferenceCode(long, String)}
+	 */
+	@Deprecated
+	@Override
 	public AssetCategory fetchAssetCategoryByReferenceCode(
-		long companyId, String externalReferenceCode) {
+		long groupId, String externalReferenceCode) {
 
 		return _assetCategoryLocalService.fetchAssetCategoryByReferenceCode(
-			companyId, externalReferenceCode);
+			groupId, externalReferenceCode);
 	}
 
 	/**
@@ -486,6 +479,24 @@ public class AssetCategoryLocalServiceWrapper
 	}
 
 	/**
+	 * Returns the asset category with the matching external reference code and group.
+	 *
+	 * @param groupId the primary key of the group
+	 * @param externalReferenceCode the asset category's external reference code
+	 * @return the matching asset category
+	 * @throws PortalException if a matching asset category could not be found
+	 */
+	@Override
+	public AssetCategory getAssetCategoryByExternalReferenceCode(
+			long groupId, String externalReferenceCode)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _assetCategoryLocalService.
+			getAssetCategoryByExternalReferenceCode(
+				groupId, externalReferenceCode);
+	}
+
+	/**
 	 * Returns the asset category matching the UUID and group.
 	 *
 	 * @param uuid the asset category's UUID
@@ -500,48 +511,6 @@ public class AssetCategoryLocalServiceWrapper
 
 		return _assetCategoryLocalService.getAssetCategoryByUuidAndGroupId(
 			uuid, groupId);
-	}
-
-	@Override
-	public java.util.List<AssetCategory> getAssetEntryAssetCategories(
-		long entryId) {
-
-		return _assetCategoryLocalService.getAssetEntryAssetCategories(entryId);
-	}
-
-	@Override
-	public java.util.List<AssetCategory> getAssetEntryAssetCategories(
-		long entryId, int start, int end) {
-
-		return _assetCategoryLocalService.getAssetEntryAssetCategories(
-			entryId, start, end);
-	}
-
-	@Override
-	public java.util.List<AssetCategory> getAssetEntryAssetCategories(
-		long entryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory>
-			orderByComparator) {
-
-		return _assetCategoryLocalService.getAssetEntryAssetCategories(
-			entryId, start, end, orderByComparator);
-	}
-
-	@Override
-	public int getAssetEntryAssetCategoriesCount(long entryId) {
-		return _assetCategoryLocalService.getAssetEntryAssetCategoriesCount(
-			entryId);
-	}
-
-	/**
-	 * Returns the entryIds of the asset entries associated with the asset category.
-	 *
-	 * @param categoryId the categoryId of the asset category
-	 * @return long[] the entryIds of asset entries associated with the asset category
-	 */
-	@Override
-	public long[] getAssetEntryPrimaryKeys(long categoryId) {
-		return _assetCategoryLocalService.getAssetEntryPrimaryKeys(categoryId);
 	}
 
 	@Override
@@ -616,10 +585,11 @@ public class AssetCategoryLocalServiceWrapper
 	@Override
 	public java.util.List<AssetCategory> getChildCategories(
 		long parentCategoryId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory>
+			orderByComparator) {
 
 		return _assetCategoryLocalService.getChildCategories(
-			parentCategoryId, start, end, obc);
+			parentCategoryId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -695,19 +665,21 @@ public class AssetCategoryLocalServiceWrapper
 	@Override
 	public java.util.List<AssetCategory> getVocabularyCategories(
 		long vocabularyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory>
+			orderByComparator) {
 
 		return _assetCategoryLocalService.getVocabularyCategories(
-			vocabularyId, start, end, obc);
+			vocabularyId, start, end, orderByComparator);
 	}
 
 	@Override
 	public java.util.List<AssetCategory> getVocabularyCategories(
 		long parentCategoryId, long vocabularyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory>
+			orderByComparator) {
 
 		return _assetCategoryLocalService.getVocabularyCategories(
-			parentCategoryId, vocabularyId, start, end, obc);
+			parentCategoryId, vocabularyId, start, end, orderByComparator);
 	}
 
 	@Override
@@ -719,27 +691,17 @@ public class AssetCategoryLocalServiceWrapper
 	@Override
 	public java.util.List<AssetCategory> getVocabularyRootCategories(
 		long vocabularyId, int start, int end,
-		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory> obc) {
+		com.liferay.portal.kernel.util.OrderByComparator<AssetCategory>
+			orderByComparator) {
 
 		return _assetCategoryLocalService.getVocabularyRootCategories(
-			vocabularyId, start, end, obc);
+			vocabularyId, start, end, orderByComparator);
 	}
 
 	@Override
 	public int getVocabularyRootCategoriesCount(long vocabularyId) {
 		return _assetCategoryLocalService.getVocabularyRootCategoriesCount(
 			vocabularyId);
-	}
-
-	@Override
-	public boolean hasAssetEntryAssetCategories(long entryId) {
-		return _assetCategoryLocalService.hasAssetEntryAssetCategories(entryId);
-	}
-
-	@Override
-	public boolean hasAssetEntryAssetCategory(long entryId, long categoryId) {
-		return _assetCategoryLocalService.hasAssetEntryAssetCategory(
-			entryId, categoryId);
 	}
 
 	@Override
@@ -817,14 +779,12 @@ public class AssetCategoryLocalServiceWrapper
 			end, sort);
 	}
 
-	@Override
-	public void setAssetEntryAssetCategories(long entryId, long[] categoryIds) {
-		_assetCategoryLocalService.setAssetEntryAssetCategories(
-			entryId, categoryIds);
-	}
-
 	/**
 	 * Updates the asset category in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect AssetCategoryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param assetCategory the asset category
 	 * @return the asset category that was updated

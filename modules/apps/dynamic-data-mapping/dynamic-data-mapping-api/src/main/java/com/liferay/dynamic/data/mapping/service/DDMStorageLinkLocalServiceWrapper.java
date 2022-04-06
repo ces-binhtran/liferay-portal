@@ -30,6 +30,10 @@ public class DDMStorageLinkLocalServiceWrapper
 	implements DDMStorageLinkLocalService,
 			   ServiceWrapper<DDMStorageLinkLocalService> {
 
+	public DDMStorageLinkLocalServiceWrapper() {
+		this(null);
+	}
+
 	public DDMStorageLinkLocalServiceWrapper(
 		DDMStorageLinkLocalService ddmStorageLinkLocalService) {
 
@@ -38,6 +42,10 @@ public class DDMStorageLinkLocalServiceWrapper
 
 	/**
 	 * Adds the ddm storage link to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was added
@@ -49,8 +57,9 @@ public class DDMStorageLinkLocalServiceWrapper
 
 	@Override
 	public DDMStorageLink addStorageLink(
-		long classNameId, long classPK, long structureVersionId,
-		com.liferay.portal.kernel.service.ServiceContext serviceContext) {
+			long classNameId, long classPK, long structureVersionId,
+			com.liferay.portal.kernel.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _ddmStorageLinkLocalService.addStorageLink(
 			classNameId, classPK, structureVersionId, serviceContext);
@@ -86,6 +95,10 @@ public class DDMStorageLinkLocalServiceWrapper
 	/**
 	 * Deletes the ddm storage link from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was removed
 	 */
@@ -96,6 +109,10 @@ public class DDMStorageLinkLocalServiceWrapper
 
 	/**
 	 * Deletes the ddm storage link with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param storageLinkId the primary key of the ddm storage link
 	 * @return the ddm storage link that was removed
@@ -137,6 +154,13 @@ public class DDMStorageLinkLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _ddmStorageLinkLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _ddmStorageLinkLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -228,6 +252,11 @@ public class DDMStorageLinkLocalServiceWrapper
 
 		return _ddmStorageLinkLocalService.dynamicQueryCount(
 			dynamicQuery, projection);
+	}
+
+	@Override
+	public DDMStorageLink fetchClassStorageLink(long classPK) {
+		return _ddmStorageLinkLocalService.fetchClassStorageLink(classPK);
 	}
 
 	@Override
@@ -388,6 +417,10 @@ public class DDMStorageLinkLocalServiceWrapper
 
 	/**
 	 * Updates the ddm storage link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect DDMStorageLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param ddmStorageLink the ddm storage link
 	 * @return the ddm storage link that was updated

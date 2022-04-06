@@ -27,6 +27,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class DDMStructureServiceWrapper
 	implements DDMStructureService, ServiceWrapper<DDMStructureService> {
 
+	public DDMStructureServiceWrapper() {
+		this(null);
+	}
+
 	public DDMStructureServiceWrapper(DDMStructureService ddmStructureService) {
 		_ddmStructureService = ddmStructureService;
 	}
@@ -327,7 +331,7 @@ public class DDMStructureServiceWrapper
 	 * @param keywords the keywords (space separated), which may occur in the
 	 structure's name or description (optionally <code>null</code>)
 	 * @param type the structure's type. For more information, see {@link
-	 com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
+	 com.liferay.dynamic.data.mapping.constants.DDMStructureConstants}.
 	 * @param status the workflow's status.
 	 * @param start the lower bound of the range of structures to return
 	 * @param end the upper bound of the range of structures to return (not
@@ -411,7 +415,7 @@ public class DDMStructureServiceWrapper
 	 "expando". For more information, see {@link
 	 com.liferay.dynamic.data.mapping.storage.StorageType}.
 	 * @param type the structure's type. For more information, see {@link
-	 com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
+	 com.liferay.dynamic.data.mapping.constants.DDMStructureConstants}.
 	 * @param status the workflow's status.
 	 * @param andOperator whether every field must match its keywords, or just
 	 one field
@@ -468,7 +472,7 @@ public class DDMStructureServiceWrapper
 	 * @param keywords the keywords (space separated), which may occur in the
 	 structure's name or description (optionally <code>null</code>)
 	 * @param type the structure's type. For more information, see {@link
-	 com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
+	 com.liferay.dynamic.data.mapping.constants.DDMStructureConstants}.
 	 * @param status the workflow's status.
 	 * @return the number of matching structures
 	 */
@@ -495,7 +499,7 @@ public class DDMStructureServiceWrapper
 	 "expando". For more information, see {@link
 	 com.liferay.dynamic.data.mapping.storage.StorageType}.
 	 * @param type the structure's type. For more information, see {@link
-	 com.liferay.dynamic.data.mapping.model.DDMStructureConstants}.
+	 com.liferay.dynamic.data.mapping.constants.DDMStructureConstants}.
 	 * @param andOperator whether every field must match its keywords, or just
 	 one field
 	 * @return the number of matching structures

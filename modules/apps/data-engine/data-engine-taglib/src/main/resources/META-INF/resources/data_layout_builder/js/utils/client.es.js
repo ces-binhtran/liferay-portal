@@ -15,55 +15,34 @@
 import {fetch} from 'frontend-js-web';
 
 const HEADERS = {
-	Accept: 'application/json',
+	'Accept': 'application/json',
 	'Accept-Language': Liferay.ThemeDisplay.getBCP47LanguageId(),
 	'Content-Type': 'application/json',
 };
 
-export const addItem = (endpoint, item) => {
-	return fetch(getURL(endpoint), {
-		body: JSON.stringify(item),
-		headers: HEADERS,
-		method: 'POST',
-	}).then((response) => response.json());
-};
+function fetchItem(url, options) {
+	return new Promise((resolve, reject) => {
+		let isOk;
 
-export const confirmDelete = (endpoint) => (item) =>
-	new Promise((resolve, reject) => {
-		const confirmed = confirm(
-			Liferay.Language.get('are-you-sure-you-want-to-delete-this')
-		);
+		fetch(url, options)
+			.then((response) => {
+				isOk = response.ok;
 
-		if (confirmed) {
-			deleteItem(endpoint + item.id)
-				.then(() => resolve(true))
-				.catch((error) => reject(error));
-		}
-		else {
-			resolve(false);
-		}
+				return response.json();
+			})
+			.then((data) => {
+				if (isOk) {
+					resolve(data);
+				}
+				else {
+					reject(data);
+				}
+			})
+			.catch((error) => reject(error));
 	});
+}
 
-export const deleteItem = (endpoint) => {
-	return fetch(getURL(endpoint), {
-		method: 'DELETE',
-	});
-};
-
-export const request = (endpoint, method = 'GET') =>
-	fetch(getURL(endpoint), {
-		headers: HEADERS,
-		method,
-	});
-
-export const getItem = (endpoint) => {
-	return fetch(getURL(endpoint), {
-		headers: HEADERS,
-		method: 'GET',
-	}).then((response) => response.json());
-};
-
-export const getURL = (path, params) => {
+export function getURL(path, params) {
 	params = {
 		['p_auth']: Liferay.authToken,
 		t: Date.now(),
@@ -76,14 +55,58 @@ export const getURL = (path, params) => {
 	keys.forEach((key) => uri.searchParams.set(key, params[key]));
 
 	return uri.toString();
-};
+}
 
-export const updateItem = (endpoint, item, params) => {
-	return fetch(getURL(endpoint, params), {
+export function addItem(endpoint, item) {
+	return fetchItem(getURL(endpoint), {
+		body: JSON.stringify(item),
+		headers: HEADERS,
+		method: 'POST',
+	});
+}
+
+export function deleteItem(endpoint) {
+	return fetch(getURL(endpoint), {
+		method: 'DELETE',
+	});
+}
+
+export function confirmDelete(endpoint) {
+	return (item) =>
+		new Promise((resolve, reject) => {
+			const confirmed = confirm(
+				Liferay.Language.get('are-you-sure-you-want-to-delete-this')
+			);
+
+			if (confirmed) {
+				deleteItem(endpoint + item.id)
+					.then(() => resolve(true))
+					.catch((error) => reject(error));
+			}
+			else {
+				resolve(false);
+			}
+		});
+}
+
+export function request(endpoint, method = 'GET') {
+	return fetch(getURL(endpoint), {
+		headers: HEADERS,
+		method,
+	});
+}
+
+export function getItem(endpoint) {
+	return fetch(getURL(endpoint), {
+		headers: HEADERS,
+		method: 'GET',
+	}).then((response) => response.json());
+}
+
+export function updateItem(endpoint, item, params) {
+	return fetchItem(getURL(endpoint, params), {
 		body: JSON.stringify(item),
 		headers: HEADERS,
 		method: 'PUT',
-	})
-		.then((response) => response.text())
-		.then((text) => (text ? JSON.parse(text) : {}));
-};
+	});
+}

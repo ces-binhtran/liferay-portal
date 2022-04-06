@@ -36,7 +36,6 @@ import com.liferay.portal.workflow.kaleo.model.KaleoDefinitionVersion;
 
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.ResourceBundle;
 
 import javax.portlet.ActionRequest;
@@ -52,7 +51,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + KaleoDesignerPortletKeys.KALEO_DESIGNER,
-		"mvc.command.name=publishKaleoDefinitionVersion"
+		"mvc.command.name=/kaleo_designer/publish_kaleo_definition_version"
 	},
 	service = MVCActionCommand.class
 )
@@ -63,9 +62,6 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 	protected void doProcessAction(
 			ActionRequest actionRequest, ActionResponse actionResponse)
 		throws Exception {
-
-		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
-			WebKeys.THEME_DISPLAY);
 
 		Map<Locale, String> titleMap = LocalizationUtil.getLocalizationMap(
 			actionRequest, "title");
@@ -78,6 +74,9 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 			throw new WorkflowDefinitionFileException(
 				"please-enter-a-valid-definition-before-publishing");
 		}
+
+		ThemeDisplay themeDisplay = (ThemeDisplay)actionRequest.getAttribute(
+			WebKeys.THEME_DISPLAY);
 
 		validateWorkflowDefinition(actionRequest, content.getBytes());
 
@@ -118,7 +117,7 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 		}
 		catch (WorkflowException workflowException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(workflowException, workflowException);
+				_log.debug(workflowException);
 			}
 		}
 
@@ -148,12 +147,7 @@ public class PublishKaleoDefinitionVersionMVCActionCommand
 
 		String title = titleMap.get(LocaleUtil.getDefault());
 
-		String defaultTitle = LanguageUtil.get(
-			getResourceBundle(actionRequest), "untitled-workflow");
-
-		if (titleMap.isEmpty() || Validator.isNull(title) ||
-			Objects.equals(title, defaultTitle)) {
-
+		if (titleMap.isEmpty() || Validator.isNull(title)) {
 			throw new WorkflowDefinitionTitleException();
 		}
 	}

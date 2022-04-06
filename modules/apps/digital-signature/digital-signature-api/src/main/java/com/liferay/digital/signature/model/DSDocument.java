@@ -14,30 +14,55 @@
 
 package com.liferay.digital.signature.model;
 
-import org.osgi.annotation.versioning.ProviderType;
-
 /**
- * @author Michael C. Han
+ * @author Brian Wing Shun Chan
  */
-@ProviderType
-public interface DSDocument {
+public class DSDocument {
 
-	public static final String PDF_EXTENSION = "pdf";
+	public String getData() {
+		return data;
+	}
 
-	public Boolean getAuthoritative();
+	public String getDSDocumentId() {
+		return dsDocumentId;
+	}
 
-	public String getBase64String();
+	public String getFileExtension() {
+		return fileExtension;
+	}
 
-	public String getDescription();
+	public String getName() {
+		return name;
+	}
 
-	public String getDocumentKey();
+	public String getURI() {
+		return uri;
+	}
 
-	public String getDocumentURL();
+	public void setData(String data) {
+		this.data = data;
+	}
 
-	public DSSupplementalDocumentInfo getDSSupplementalDocumentInfo();
+	public void setDSDocumentId(String dsDocumentId) {
+		this.dsDocumentId = dsDocumentId;
+	}
 
-	public String getExtension();
+	public void setFileExtension(String fileExtension) {
+		this.fileExtension = fileExtension;
+	}
 
-	public String getName();
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setURI(String uri) {
+		this.uri = uri;
+	}
+
+	protected String data;
+	protected String dsDocumentId;
+	protected String fileExtension;
+	protected String name;
+	protected String uri;
 
 }

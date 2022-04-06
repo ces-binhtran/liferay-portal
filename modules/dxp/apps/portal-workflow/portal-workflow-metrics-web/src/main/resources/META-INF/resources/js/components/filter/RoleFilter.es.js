@@ -16,18 +16,15 @@ import {useFilterFetch} from '../../shared/components/filter/hooks/useFilterFetc
 import {useFilterName} from '../../shared/components/filter/hooks/useFilterName.es';
 import filterConstants from '../../shared/components/filter/util/filterConstants.es';
 
-const RoleFilter = ({
+export default function RoleFilter({
 	completed = false,
 	className,
 	filterKey = filterConstants.roles.key,
 	options = {},
 	prefixKey = '',
 	processId,
-}) => {
+}) {
 	options = {
-		hideControl: false,
-		multiple: true,
-		position: 'left',
 		withSelectionTitle: false,
 		withoutRouteParams: false,
 		...options,
@@ -35,6 +32,7 @@ const RoleFilter = ({
 
 	const {items, selectedItems} = useFilterFetch({
 		filterKey,
+		labelPropertyName: 'name',
 		prefixKey,
 		propertyKey: 'id',
 		requestUrl: `/processes/${processId}/roles?completed=${completed}`,
@@ -50,7 +48,6 @@ const RoleFilter = ({
 
 	return (
 		<Filter
-			data-testid="RoleFilter"
 			elementClasses={className}
 			filterKey={filterKey}
 			items={items}
@@ -59,6 +56,4 @@ const RoleFilter = ({
 			{...options}
 		/>
 	);
-};
-
-export default RoleFilter;
+}

@@ -14,19 +14,19 @@
 
 package com.liferay.portal.repository.registry;
 
+import com.liferay.portal.kernel.module.util.SystemBundleUtil;
 import com.liferay.portal.kernel.repository.RepositoryFactory;
 import com.liferay.portal.kernel.repository.capabilities.PortalCapabilityLocator;
 import com.liferay.portal.kernel.repository.registry.RepositoryDefiner;
-import com.liferay.portal.kernel.util.HashMapBuilder;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceReference;
-import com.liferay.registry.ServiceRegistration;
-import com.liferay.registry.ServiceTracker;
-import com.liferay.registry.ServiceTrackerCustomizer;
+import com.liferay.portal.kernel.util.MapUtil;
 
-import java.util.Map;
 import java.util.function.BiFunction;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Shuyang Zhou
@@ -34,10 +34,10 @@ import java.util.function.BiFunction;
 public class RepositoryDefinerRegister {
 
 	public void afterPropertiesSet() {
-		final Registry registry = RegistryUtil.getRegistry();
+		BundleContext bundleContext = SystemBundleUtil.getBundleContext();
 
-		_serviceTracker = registry.trackServices(
-			PortalCapabilityLocator.class,
+		_serviceTracker = new ServiceTracker<>(
+			bundleContext, PortalCapabilityLocator.class,
 			new ServiceTrackerCustomizer
 				<PortalCapabilityLocator,
 				 ServiceRegistration<RepositoryDefiner>>() {
@@ -48,19 +48,16 @@ public class RepositoryDefinerRegister {
 						serviceReference) {
 
 					PortalCapabilityLocator portalCapabilityLocator =
-						registry.getService(serviceReference);
+						bundleContext.getService(serviceReference);
 
 					RepositoryDefiner repositoryDefiner =
 						_repositoryDefinerFactoryBiFunction.apply(
 							portalCapabilityLocator, _repositoryFactory);
 
-					Map<String, Object> properties =
-						HashMapBuilder.<String, Object>put(
-							"class.name", repositoryDefiner.getClassName()
-						).build();
-
-					return registry.registerService(
-						RepositoryDefiner.class, repositoryDefiner, properties);
+					return bundleContext.registerService(
+						RepositoryDefiner.class, repositoryDefiner,
+						MapUtil.singletonDictionary(
+							"class.name", repositoryDefiner.getClassName()));
 				}
 
 				@Override
@@ -77,6 +74,8 @@ public class RepositoryDefinerRegister {
 						serviceRegistration) {
 
 					serviceRegistration.unregister();
+
+					bundleContext.ungetService(serviceReference);
 				}
 
 			});

@@ -18,12 +18,10 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.servlet.BrowserSnifferUtil;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
-import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StreamUtil;
 import com.liferay.portal.kernel.util.StringUtil;
@@ -223,7 +221,7 @@ public class PortletResponseUtil {
 				}
 				catch (IOException ioException) {
 					if (_log.isWarnEnabled()) {
-						_log.warn(ioException, ioException);
+						_log.warn(ioException);
 					}
 				}
 			}
@@ -293,21 +291,13 @@ public class PortletResponseUtil {
 			if (!ascii) {
 				String encodedFileName = URLCodec.encodeURL(fileName, true);
 
-				if (BrowserSnifferUtil.isIe(
-						PortalUtil.getHttpServletRequest(portletRequest))) {
-
-					contentDispositionFileName =
-						"filename=\"" + encodedFileName + "\"";
-				}
-				else {
-					contentDispositionFileName =
-						"filename*=UTF-8''" + encodedFileName;
-				}
+				contentDispositionFileName =
+					"filename*=UTF-8''" + encodedFileName;
 			}
 		}
 		catch (Exception exception) {
 			if (_log.isWarnEnabled()) {
-				_log.warn(exception, exception);
+				_log.warn(exception);
 			}
 		}
 
@@ -324,6 +314,10 @@ public class PortletResponseUtil {
 					"mime.types.content.disposition.inline");
 			}
 			catch (Exception exception) {
+				if (_log.isDebugEnabled()) {
+					_log.debug(exception);
+				}
+
 				mimeTypesContentDispositionInline = new String[0];
 			}
 
@@ -338,15 +332,11 @@ public class PortletResponseUtil {
 			}
 		}
 
-		StringBundler sb = new StringBundler(4);
-
-		sb.append(contentDispositionType);
-		sb.append(StringPool.SEMICOLON);
-		sb.append(StringPool.SPACE);
-		sb.append(contentDispositionFileName);
-
 		mimeResponse.setProperty(
-			HttpHeaders.CONTENT_DISPOSITION, sb.toString());
+			HttpHeaders.CONTENT_DISPOSITION,
+			StringBundler.concat(
+				contentDispositionType, StringPool.SEMICOLON, StringPool.SPACE,
+				contentDispositionFileName));
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

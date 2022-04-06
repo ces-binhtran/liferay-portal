@@ -22,6 +22,7 @@ import com.liferay.frontend.taglib.clay.servlet.taglib.util.DropdownItemListBuil
 import com.liferay.journal.model.JournalFeed;
 import com.liferay.journal.web.internal.security.permission.resource.JournalFeedPermission;
 import com.liferay.journal.web.internal.security.permission.resource.JournalPermission;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.language.LanguageUtil;
@@ -52,6 +53,8 @@ public class JournalFeedsManagementToolbarDisplayContext
 		super(
 			httpServletRequest, liferayPortletRequest, liferayPortletResponse,
 			journalFeedsDisplayContext.getFeedsSearchContainer());
+
+		_journalFeedsDisplayContext = journalFeedsDisplayContext;
 	}
 
 	@Override
@@ -60,15 +63,17 @@ public class JournalFeedsManagementToolbarDisplayContext
 			dropdownItem -> {
 				dropdownItem.putData("action", "deleteFeeds");
 				dropdownItem.setIcon("trash");
-				dropdownItem.setLabel(LanguageUtil.get(request, "delete"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "delete"));
 				dropdownItem.setQuickAction(true);
 			}
 		).build();
 	}
 
 	public String getAvailableActions(JournalFeed feed) throws PortalException {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (JournalFeedPermission.contains(
 				themeDisplay.getPermissionChecker(), feed, ActionKeys.DELETE)) {
@@ -81,11 +86,11 @@ public class JournalFeedsManagementToolbarDisplayContext
 
 	@Override
 	public String getClearResultsURL() {
-		PortletURL clearResultsURL = getPortletURL();
-
-		clearResultsURL.setParameter("keywords", StringPool.BLANK);
-
-		return clearResultsURL.toString();
+		return PortletURLBuilder.create(
+			getPortletURL()
+		).setKeywords(
+			StringPool.BLANK
+		).buildString();
 	}
 
 	@Override
@@ -97,21 +102,18 @@ public class JournalFeedsManagementToolbarDisplayContext
 	public CreationMenu getCreationMenu() {
 		return CreationMenuBuilder.addPrimaryDropdownItem(
 			dropdownItem -> {
-				ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-					WebKeys.THEME_DISPLAY);
+				ThemeDisplay themeDisplay =
+					(ThemeDisplay)httpServletRequest.getAttribute(
+						WebKeys.THEME_DISPLAY);
 
 				dropdownItem.setHref(
 					liferayPortletResponse.createRenderURL(), "mvcPath",
 					"/edit_feed.jsp", "redirect", themeDisplay.getURLCurrent());
 
-				dropdownItem.setLabel(LanguageUtil.get(request, "add-feed"));
+				dropdownItem.setLabel(
+					LanguageUtil.get(httpServletRequest, "add-feed"));
 			}
 		).build();
-	}
-
-	@Override
-	public String getDefaultEventHandler() {
-		return "journalFeedsManagementToolbarDefaultEventHandler";
 	}
 
 	@Override
@@ -128,8 +130,9 @@ public class JournalFeedsManagementToolbarDisplayContext
 
 	@Override
 	public Boolean isShowCreationMenu() {
-		ThemeDisplay themeDisplay = (ThemeDisplay)request.getAttribute(
-			WebKeys.THEME_DISPLAY);
+		ThemeDisplay themeDisplay =
+			(ThemeDisplay)httpServletRequest.getAttribute(
+				WebKeys.THEME_DISPLAY);
 
 		if (JournalPermission.contains(
 				themeDisplay.getPermissionChecker(),
@@ -139,6 +142,11 @@ public class JournalFeedsManagementToolbarDisplayContext
 		}
 
 		return false;
+	}
+
+	@Override
+	protected String getDisplayStyle() {
+		return _journalFeedsDisplayContext.getDisplayStyle();
 	}
 
 	@Override
@@ -155,5 +163,7 @@ public class JournalFeedsManagementToolbarDisplayContext
 	protected String[] getOrderByKeys() {
 		return new String[] {"name", "id"};
 	}
+
+	private final JournalFeedsDisplayContext _journalFeedsDisplayContext;
 
 }

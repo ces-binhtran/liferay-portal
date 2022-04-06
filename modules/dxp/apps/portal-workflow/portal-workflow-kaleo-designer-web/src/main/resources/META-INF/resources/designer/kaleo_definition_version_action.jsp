@@ -30,8 +30,8 @@ String duplicateTitle = kaleoDesignerDisplayContext.getDuplicateTitle(kaleoDefin
 String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.KALEO_DESIGNER);
 %>
 
-<liferay-portlet:actionURL name="duplicateWorkflowDefinition" portletName="<%= KaleoDesignerPortletKeys.KALEO_DESIGNER %>" var="duplicateWorkflowDefinition">
-	<portlet:param name="mvcPath" value="/designer/edit_kaleo_definition_version.jsp" />
+<liferay-portlet:actionURL name="/kaleo_designer/duplicate_workflow_definition" portletName="<%= KaleoDesignerPortletKeys.KALEO_DESIGNER %>" var="duplicateWorkflowDefinition">
+	<portlet:param name="mvcPath" value="<%= KaleoDesignerUtil.getEditJspPath() %>" />
 	<portlet:param name="redirect" value="<%= currentURL %>" />
 </liferay-portlet:actionURL>
 
@@ -43,7 +43,7 @@ String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.
 	showWhenSingleIcon="<%= true %>"
 >
 	<liferay-portlet:renderURL portletName="<%= KaleoDesignerPortletKeys.KALEO_DESIGNER %>" var="viewURL">
-		<portlet:param name="mvcPath" value="/designer/edit_kaleo_definition_version.jsp" />
+		<portlet:param name="mvcPath" value="<%= KaleoDesignerUtil.getEditJspPath() %>" />
 		<portlet:param name="redirect" value="<%= currentURL %>" />
 		<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 		<portlet:param name="draftVersion" value="<%= kaleoDefinitionVersion.getVersion() %>" />
@@ -57,7 +57,7 @@ String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.
 
 	<c:if test="<%= KaleoDefinitionVersionPermission.contains(permissionChecker, kaleoDefinitionVersion, ActionKeys.UPDATE) %>">
 		<liferay-portlet:renderURL portletName="<%= KaleoDesignerPortletKeys.KALEO_DESIGNER %>" var="editURL">
-			<portlet:param name="mvcPath" value='<%= "/designer/edit_kaleo_definition_version.jsp" %>' />
+			<portlet:param name="mvcPath" value="<%= KaleoDesignerUtil.getEditJspPath() %>" />
 			<portlet:param name="redirect" value="<%= currentURL %>" />
 			<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 			<portlet:param name="draftVersion" value="<%= kaleoDefinitionVersion.getVersion() %>" />
@@ -98,7 +98,7 @@ String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.
 	<c:choose>
 		<c:when test="<%= (kaleoDefinition != null) && kaleoDefinition.isActive() %>">
 			<c:if test="<%= KaleoDefinitionVersionPermission.contains(permissionChecker, kaleoDefinitionVersion, ActionKeys.UPDATE) %>">
-				<liferay-portlet:actionURL name="unpublishKaleoDefinitionVersion" portletName="<%= KaleoDesignerPortletKeys.CONTROL_PANEL_WORKFLOW %>" var="unpublishURL">
+				<liferay-portlet:actionURL name="/kaleo_designer/unpublish_kaleo_definition_version" portletName="<%= KaleoDesignerPortletKeys.CONTROL_PANEL_WORKFLOW %>" var="unpublishURL">
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 					<portlet:param name="version" value="<%= String.valueOf(kaleoDefinition.getVersion()) %>" />
@@ -112,7 +112,7 @@ String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.
 		</c:when>
 		<c:otherwise>
 			<c:if test="<%= KaleoDefinitionVersionPermission.contains(permissionChecker, kaleoDefinitionVersion, ActionKeys.DELETE) %>">
-				<liferay-portlet:actionURL name="deleteWorkflowDefinition" portletName="<%= KaleoDesignerPortletKeys.CONTROL_PANEL_WORKFLOW %>" var="deleteURL">
+				<liferay-portlet:actionURL name="/portal_workflow/delete_workflow_definition" portletName="<%= KaleoDesignerPortletKeys.CONTROL_PANEL_WORKFLOW %>" var="deleteURL">
 					<portlet:param name="redirect" value="<%= currentURL %>" />
 					<portlet:param name="name" value="<%= kaleoDefinitionVersion.getName() %>" />
 					<portlet:param name="version" value="<%= kaleoDefinitionVersion.getVersion() %>" />
@@ -120,7 +120,7 @@ String kaleoNamespace = PortalUtil.getPortletNamespace(KaleoDesignerPortletKeys.
 
 				<liferay-ui:icon
 					message="delete"
-					onClick="<%= renderResponse.getNamespace() + "confirmDeleteDefinition('" + deleteURL + "'); return false;" %>"
+					onClick='<%= liferayPortletResponse.getNamespace() + "confirmDeleteDefinition('" + deleteURL + "'); return false;" %>'
 					url="<%= deleteURL %>"
 				/>
 			</c:if>

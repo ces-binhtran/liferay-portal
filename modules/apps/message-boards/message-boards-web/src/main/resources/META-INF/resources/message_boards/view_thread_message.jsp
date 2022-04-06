@@ -39,7 +39,7 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 	<div class="panel-heading">
 		<clay:content-row
 			cssClass="card-body"
-			padded="true"
+			padded="<%= true %>"
 		>
 			<clay:content-col>
 				<div class="list-group-card-icon">
@@ -50,7 +50,7 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 			</clay:content-col>
 
 			<clay:content-col
-				expand="true"
+				expand="<%= true %>"
 			>
 
 				<%
@@ -67,14 +67,14 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 				String userDisplayText = LanguageUtil.format(request, "x-modified-x-ago", new Object[] {messageUserName, modifiedDateDescription});
 				%>
 
-				<h5 class="message-user-display text-default" title="<%= HtmlUtil.escapeAttribute(userDisplayText) %>">
+				<span class="message-user-display text-default" title="<%= HtmlUtil.escapeAttribute(userDisplayText) %>">
 					<%= HtmlUtil.escape(userDisplayText) %>
-				</h5>
+				</span>
 
 				<h4 title="<%= HtmlUtil.escape(message.getSubject()) %>">
 					<c:choose>
 						<c:when test="<%= showPermanentLink %>">
-							<a href="#<portlet:namespace />message_<%= message.getMessageId() %>" title='<liferay-ui:message key="permanent-link-to-this-item" />'>
+							<a href="#<portlet:namespace />message_<%= message.getMessageId() %>" title="<liferay-ui:message key="permanent-link-to-this-item" />">
 								<%= HtmlUtil.escape(message.getSubject()) %>
 							</a>
 						</c:when>
@@ -89,13 +89,13 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 				</h4>
 
 				<%
-				MBStatsUser statsUser = null;
+				int messageCount = 0;
 
 				if (!message.isAnonymous()) {
-					statsUser = MBStatsUserLocalServiceUtil.getStatsUser(scopeGroupId, message.getUserId());
+					messageCount = MBStatsUserLocalServiceUtil.getMessageCount(scopeGroupId, message.getUserId());
 				}
 
-				int posts = message.isAnonymous() ? 1 : statsUser.getMessageCount();
+				int posts = message.isAnonymous() ? 1 : messageCount;
 
 				String[] ranks = {StringPool.BLANK, StringPool.BLANK};
 
@@ -408,13 +408,9 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 			<%= msgBody %>
 		</div>
 
-		<%
-		String assetTagNames = (String)request.getAttribute("edit_message.jsp-assetTagNames");
-		%>
-
 		<div class="card-body tags">
 			<liferay-asset:asset-tags-summary
-				assetTagNames="<%= assetTagNames %>"
+				assetTagNames='<%= (String)request.getAttribute("edit_message.jsp-assetTagNames") %>'
 				className="<%= MBMessage.class.getName() %>"
 				classPK="<%= message.getMessageId() %>"
 				portletURL="<%= liferayPortletResponse.createRenderURL() %>"
@@ -449,7 +445,7 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 
 			<c:if test="<%= attachmentsFileEntriesCount > 0 %>">
 				<div class="card-body message-attachments">
-					<h3><liferay-ui:message key="attachments" />:</h3>
+					<p class="h3"><liferay-ui:message key="attachments" />:</p>
 
 					<ul>
 
@@ -477,7 +473,7 @@ User messageUser = UserLocalServiceUtil.fetchUser(message.getUserId());
 									icon="<%= assetRenderer.getIconCssClass() %>"
 									label="<%= true %>"
 									markupView="lexicon"
-									message="<%= sb.toString() %>"
+									message="<%= HtmlUtil.escape(sb.toString()) %>"
 									method="get"
 									url="<%= PortletFileRepositoryUtil.getDownloadPortletFileEntryURL(themeDisplay, fileEntry, StringPool.BLANK) %>"
 								/>

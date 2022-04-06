@@ -14,28 +14,36 @@
 
 import ClayButton from '@clayui/button';
 import ClayForm, {ClayInput} from '@clayui/form';
-import {
-	FieldBaseProxy,
-	connectStore,
-	getConnectedReactComponentAdapter,
-} from 'dynamic-data-mapping-form-field-type';
-import {ItemSelectorDialog} from 'frontend-js-web';
+import {FieldBase} from 'dynamic-data-mapping-form-field-type/FieldBase/ReactFieldBase.es';
+import {openSelectionModal} from 'frontend-js-web';
 import React, {useEffect, useState} from 'react';
+
+function parseInputValue(inputValue) {
+	if (!inputValue) {
+		return {};
+	}
+
+	if (typeof inputValue === 'object') {
+		return inputValue;
+	}
+
+	return JSON.parse(inputValue);
+}
 
 const JournalArticleSelector = ({
 	disabled,
+	editingLanguageId,
 	inputValue,
 	itemSelectorURL,
+	message,
 	name,
 	onChange,
 	portletNamespace,
 }) => {
-	const [article, setArticle] = useState(() =>
-		JSON.parse(inputValue || '{}')
-	);
+	const [article, setArticle] = useState(() => parseInputValue(inputValue));
 
 	useEffect(() => {
-		setArticle(JSON.parse(inputValue || '{}'));
+		setArticle(parseInputValue(inputValue));
 	}, [inputValue]);
 
 	const handleClearClick = () => {
@@ -43,9 +51,7 @@ const JournalArticleSelector = ({
 		onChange('');
 	};
 
-	const handleFieldChanged = (event) => {
-		const selectedItem = event.selectedItem;
-
+	const handleFieldChanged = (selectedItem) => {
 		if (selectedItem && selectedItem.value) {
 			setArticle(JSON.parse(selectedItem.value));
 			onChange(selectedItem.value);
@@ -55,16 +61,12 @@ const JournalArticleSelector = ({
 	const handleItemSelectorTriggerClick = (event) => {
 		event.preventDefault();
 
-		const itemSelectorDialog = new ItemSelectorDialog({
-			eventName: `${portletNamespace}selectJournalArticle`,
-			singleSelect: true,
+		openSelectionModal({
+			onSelect: handleFieldChanged,
+			selectEventName: `${portletNamespace}selectJournalArticle`,
 			title: Liferay.Language.get('journal-article'),
 			url: itemSelectorURL,
 		});
-
-		itemSelectorDialog.on('selectedItemChange', handleFieldChanged);
-
-		itemSelectorDialog.open();
 	};
 
 	return (
@@ -79,7 +81,9 @@ const JournalArticleSelector = ({
 
 					<ClayInput
 						className="bg-light"
+						dir={Liferay.Language.direction[editingLanguageId]}
 						disabled={disabled}
+						lang={editingLanguageId}
 						onClick={handleItemSelectorTriggerClick}
 						readOnly
 						type="text"
@@ -111,38 +115,38 @@ const JournalArticleSelector = ({
 					</ClayInput.GroupItem>
 				)}
 			</ClayInput.Group>
+
+			{message && <div className="form-feedback-item">{message}</div>}
 		</ClayForm.Group>
 	);
 };
 
-const JournalArticleSelectorProxy = connectStore(
-	({
-		emit,
-		itemSelectorURL,
-		name,
-		portletNamespace,
-		predefinedValue,
-		readOnly,
-		value,
-		...otherProps
-	}) => (
-		<FieldBaseProxy {...otherProps} name={name} readOnly={readOnly}>
-			<JournalArticleSelector
-				disabled={readOnly}
-				inputValue={value && value !== '' ? value : predefinedValue}
-				itemSelectorURL={itemSelectorURL}
-				name={name}
-				onChange={(value) => emit('fieldEdited', {}, value)}
-				portletNamespace={portletNamespace}
-			/>
-		</FieldBaseProxy>
-	)
+const Main = ({
+	editingLanguageId,
+	itemSelectorURL,
+	message,
+	name,
+	onChange,
+	portletNamespace,
+	predefinedValue,
+	readOnly,
+	value,
+	...otherProps
+}) => (
+	<FieldBase {...otherProps} name={name} readOnly={readOnly}>
+		<JournalArticleSelector
+			disabled={readOnly}
+			editingLanguageId={editingLanguageId}
+			inputValue={value && value !== '' ? value : predefinedValue}
+			itemSelectorURL={itemSelectorURL}
+			message={message}
+			name={name}
+			onChange={(value) => onChange({}, value)}
+			portletNamespace={portletNamespace}
+		/>
+	</FieldBase>
 );
 
-const ReactJournalArticleSelectorAdapter = getConnectedReactComponentAdapter(
-	JournalArticleSelectorProxy,
-	'journal_article'
-);
+Main.displayName = 'JournalArticleSelector';
 
-export {ReactJournalArticleSelectorAdapter};
-export default ReactJournalArticleSelectorAdapter;
+export default Main;

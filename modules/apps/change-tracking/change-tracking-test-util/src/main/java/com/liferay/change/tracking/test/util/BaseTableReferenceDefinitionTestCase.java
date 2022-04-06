@@ -15,9 +15,11 @@
 package com.liferay.change.tracking.test.util;
 
 import com.liferay.change.tracking.model.CTCollection;
+import com.liferay.change.tracking.model.CTEntry;
+import com.liferay.change.tracking.service.CTCollectionLocalService;
 import com.liferay.change.tracking.service.CTCollectionService;
 import com.liferay.change.tracking.service.CTEntryLocalService;
-import com.liferay.petra.lang.SafeClosable;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.change.tracking.CTModel;
@@ -27,6 +29,8 @@ import com.liferay.portal.kernel.test.util.GroupTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.test.rule.Inject;
+
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,8 +52,8 @@ public abstract class BaseTableReferenceDefinitionTestCase {
 			TestPropsValues.getCompanyId(), TestPropsValues.getUserId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString());
 
-		try (SafeClosable safeClosable =
-				CTCollectionThreadLocal.setCTCollectionId(
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
 					_ctCollection.getCtCollectionId())) {
 
 			CTModel<?> ctModel = addCTModel();
@@ -58,6 +62,23 @@ public abstract class BaseTableReferenceDefinitionTestCase {
 				_ctCollection.getCtCollectionId());
 
 			Assert.assertTrue(count > 0);
+
+			long modelClassNameId = _classNameLocalService.getClassNameId(
+				ctModel.getModelClass());
+
+			CTEntry ctEntry = _ctEntryLocalService.fetchCTEntry(
+				_ctCollection.getCtCollectionId(), modelClassNameId,
+				ctModel.getPrimaryKey());
+
+			Assert.assertNotNull(ctEntry);
+
+			List<CTEntry> ctEntries =
+				_ctCollectionLocalService.getDiscardCTEntries(
+					_ctCollection.getCtCollectionId(), modelClassNameId,
+					ctModel.getPrimaryKey());
+
+			Assert.assertTrue(
+				ctEntries.toString(), ctEntries.contains(ctEntry));
 
 			_ctCollectionService.discardCTEntry(
 				_ctCollection.getCtCollectionId(),
@@ -78,6 +99,9 @@ public abstract class BaseTableReferenceDefinitionTestCase {
 
 	@Inject
 	private static ClassNameLocalService _classNameLocalService;
+
+	@Inject
+	private static CTCollectionLocalService _ctCollectionLocalService;
 
 	@Inject
 	private static CTCollectionService _ctCollectionService;

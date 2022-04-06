@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,14 +45,154 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("RenderedContent")
+@GraphQLName(
+	description = "Rendered content, which results from using a template or display page to process the content and return HTML.",
+	value = "RenderedContent"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "RenderedContent")
-public class RenderedContent {
+public class RenderedContent implements Serializable {
 
 	public static RenderedContent toDTO(String json) {
 		return ObjectMapperUtil.readValue(RenderedContent.class, json);
 	}
+
+	public static RenderedContent unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(RenderedContent.class, json);
+	}
+
+	@Schema(
+		description = "The ID of the template or display page used to render the content."
+	)
+	public String getContentTemplateId() {
+		return contentTemplateId;
+	}
+
+	public void setContentTemplateId(String contentTemplateId) {
+		this.contentTemplateId = contentTemplateId;
+	}
+
+	@JsonIgnore
+	public void setContentTemplateId(
+		UnsafeSupplier<String, Exception> contentTemplateIdUnsafeSupplier) {
+
+		try {
+			contentTemplateId = contentTemplateIdUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The ID of the template or display page used to render the content."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	protected String contentTemplateId;
+
+	@Schema(
+		description = "The name of the template or display page used to render the content."
+	)
+	public String getContentTemplateName() {
+		return contentTemplateName;
+	}
+
+	public void setContentTemplateName(String contentTemplateName) {
+		this.contentTemplateName = contentTemplateName;
+	}
+
+	@JsonIgnore
+	public void setContentTemplateName(
+		UnsafeSupplier<String, Exception> contentTemplateNameUnsafeSupplier) {
+
+		try {
+			contentTemplateName = contentTemplateNameUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The name of the template or display page used to render the content."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected String contentTemplateName;
+
+	@Schema(
+		description = "The localized names of the template or display page used to render the content."
+	)
+	@Valid
+	public Map<String, String> getContentTemplateName_i18n() {
+		return contentTemplateName_i18n;
+	}
+
+	public void setContentTemplateName_i18n(
+		Map<String, String> contentTemplateName_i18n) {
+
+		this.contentTemplateName_i18n = contentTemplateName_i18n;
+	}
+
+	@JsonIgnore
+	public void setContentTemplateName_i18n(
+		UnsafeSupplier<Map<String, String>, Exception>
+			contentTemplateName_i18nUnsafeSupplier) {
+
+		try {
+			contentTemplateName_i18n =
+				contentTemplateName_i18nUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "The localized names of the template or display page used to render the content."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Map<String, String> contentTemplateName_i18n;
+
+	@Schema(
+		description = "Specifies if the template or display page are marked as default to display the content."
+	)
+	public Boolean getMarkedAsDefault() {
+		return markedAsDefault;
+	}
+
+	public void setMarkedAsDefault(Boolean markedAsDefault) {
+		this.markedAsDefault = markedAsDefault;
+	}
+
+	@JsonIgnore
+	public void setMarkedAsDefault(
+		UnsafeSupplier<Boolean, Exception> markedAsDefaultUnsafeSupplier) {
+
+		try {
+			markedAsDefault = markedAsDefaultUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(
+		description = "Specifies if the template or display page are marked as default to display the content."
+	)
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected Boolean markedAsDefault;
 
 	@Schema(description = "An absolute URL to the rendered content.")
 	public String getRenderedContentURL() {
@@ -80,22 +223,22 @@ public class RenderedContent {
 	protected String renderedContentURL;
 
 	@Schema(
-		description = "The name of the template used to render the content."
+		description = "Optional field with the rendered content, can be embedded with nestedFields."
 	)
-	public String getTemplateName() {
-		return templateName;
+	public String getRenderedContentValue() {
+		return renderedContentValue;
 	}
 
-	public void setTemplateName(String templateName) {
-		this.templateName = templateName;
+	public void setRenderedContentValue(String renderedContentValue) {
+		this.renderedContentValue = renderedContentValue;
 	}
 
 	@JsonIgnore
-	public void setTemplateName(
-		UnsafeSupplier<String, Exception> templateNameUnsafeSupplier) {
+	public void setRenderedContentValue(
+		UnsafeSupplier<String, Exception> renderedContentValueUnsafeSupplier) {
 
 		try {
-			templateName = templateNameUnsafeSupplier.get();
+			renderedContentValue = renderedContentValueUnsafeSupplier.get();
 		}
 		catch (RuntimeException re) {
 			throw re;
@@ -106,40 +249,10 @@ public class RenderedContent {
 	}
 
 	@GraphQLField(
-		description = "The name of the template used to render the content."
+		description = "Optional field with the rendered content, can be embedded with nestedFields."
 	)
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected String templateName;
-
-	@Schema
-	@Valid
-	public Map<String, String> getTemplateName_i18n() {
-		return templateName_i18n;
-	}
-
-	public void setTemplateName_i18n(Map<String, String> templateName_i18n) {
-		this.templateName_i18n = templateName_i18n;
-	}
-
-	@JsonIgnore
-	public void setTemplateName_i18n(
-		UnsafeSupplier<Map<String, String>, Exception>
-			templateName_i18nUnsafeSupplier) {
-
-		try {
-			templateName_i18n = templateName_i18nUnsafeSupplier.get();
-		}
-		catch (RuntimeException re) {
-			throw re;
-		}
-		catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@GraphQLField
-	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
-	protected Map<String, String> templateName_i18n;
+	protected String renderedContentValue;
 
 	@Override
 	public boolean equals(Object object) {
@@ -168,6 +281,54 @@ public class RenderedContent {
 
 		sb.append("{");
 
+		if (contentTemplateId != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentTemplateId\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentTemplateId));
+
+			sb.append("\"");
+		}
+
+		if (contentTemplateName != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentTemplateName\": ");
+
+			sb.append("\"");
+
+			sb.append(_escape(contentTemplateName));
+
+			sb.append("\"");
+		}
+
+		if (contentTemplateName_i18n != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"contentTemplateName_i18n\": ");
+
+			sb.append(_toJSON(contentTemplateName_i18n));
+		}
+
+		if (markedAsDefault != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"markedAsDefault\": ");
+
+			sb.append(markedAsDefault);
+		}
+
 		if (renderedContentURL != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -182,28 +343,18 @@ public class RenderedContent {
 			sb.append("\"");
 		}
 
-		if (templateName != null) {
+		if (renderedContentValue != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
 			}
 
-			sb.append("\"templateName\": ");
+			sb.append("\"renderedContentValue\": ");
 
 			sb.append("\"");
 
-			sb.append(_escape(templateName));
+			sb.append(_escape(renderedContentValue));
 
 			sb.append("\"");
-		}
-
-		if (templateName_i18n != null) {
-			if (sb.length() > 1) {
-				sb.append(", ");
-			}
-
-			sb.append("\"templateName_i18n\": ");
-
-			sb.append(_toJSON(templateName_i18n));
 		}
 
 		sb.append("}");
@@ -212,15 +363,26 @@ public class RenderedContent {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.RenderedContent",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -236,14 +398,12 @@ public class RenderedContent {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -270,7 +430,7 @@ public class RenderedContent {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -278,7 +438,7 @@ public class RenderedContent {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -286,5 +446,10 @@ public class RenderedContent {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

@@ -69,10 +69,10 @@ public class DLAppServiceWhenDeletingAFolderTest extends BaseDLAppTestCase {
 
 		DLAppServiceUtil.deleteFolder(folder.getFolderId());
 
-		int foldersCount = DLAppServiceUtil.getFoldersCount(
-			group.getGroupId(), parentFolder.getFolderId());
-
-		Assert.assertEquals(initialFoldersCount, foldersCount);
+		Assert.assertEquals(
+			initialFoldersCount,
+			DLAppServiceUtil.getFoldersCount(
+				group.getGroupId(), parentFolder.getFolderId()));
 	}
 
 	@Test
@@ -81,13 +81,10 @@ public class DLAppServiceWhenDeletingAFolderTest extends BaseDLAppTestCase {
 			DLAppServiceTestUtil.registerDLSyncEventProcessorMessageListener(
 				DLSyncConstants.EVENT_DELETE);
 
-		ServiceContext serviceContext =
-			ServiceContextTestUtil.getServiceContext(group.getGroupId());
-
 		Folder folder = DLAppServiceUtil.addFolder(
 			group.getGroupId(), parentFolder.getFolderId(),
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),
-			serviceContext);
+			ServiceContextTestUtil.getServiceContext(group.getGroupId()));
 
 		DLAppServiceUtil.deleteFolder(folder.getFolderId());
 

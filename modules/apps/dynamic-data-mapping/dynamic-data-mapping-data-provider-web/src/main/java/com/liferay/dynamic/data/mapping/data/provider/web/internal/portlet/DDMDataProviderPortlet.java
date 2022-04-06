@@ -48,6 +48,7 @@ import org.osgi.service.component.annotations.Reference;
 		"com.liferay.portlet.header-portlet-css=/css/main.css",
 		"com.liferay.portlet.instanceable=false",
 		"com.liferay.portlet.preferences-owned-by-group=true",
+		"com.liferay.portlet.preferences-unique-per-layout=false",
 		"com.liferay.portlet.private-request-attributes=false",
 		"com.liferay.portlet.private-session-attributes=false",
 		"com.liferay.portlet.render-weight=50",
@@ -73,17 +74,13 @@ public class DDMDataProviderPortlet extends MVCPortlet {
 			new DDMDataProviderDisplayContext(
 				renderRequest, renderResponse, _ddmDataProviderDisplayTracker,
 				_ddmDataProviderInstanceService, _ddmDataProviderTracker,
-				_ddmFormRenderer, getDDMFormValuesDeserializer(),
+				_ddmFormRenderer, _jsonDDMFormValuesDeserializer,
 				_userLocalService);
 
 		renderRequest.setAttribute(
 			WebKeys.PORTLET_DISPLAY_CONTEXT, ddmDataProviderDisplayContext);
 
 		super.render(renderRequest, renderResponse);
-	}
-
-	protected DDMFormValuesDeserializer getDDMFormValuesDeserializer() {
-		return _jsonDDMFormValuesDeserializer;
 	}
 
 	@Reference(unbind = "-")

@@ -144,13 +144,10 @@ public class ImageProcessorImpl
 
 	@Override
 	public boolean hasImages(FileVersion fileVersion) {
-		if (!PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED &&
-			!PropsValues.DL_FILE_ENTRY_THUMBNAIL_ENABLED) {
+		if ((!PropsValues.DL_FILE_ENTRY_PREVIEW_ENABLED &&
+			 !PropsValues.DL_FILE_ENTRY_THUMBNAIL_ENABLED) ||
+			(fileVersion.getSize() == 0)) {
 
-			return false;
-		}
-
-		if (fileVersion.getSize() == 0) {
 			return false;
 		}
 
@@ -166,7 +163,7 @@ public class ImageProcessorImpl
 			}
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 		}
 
 		return hasImages;
@@ -190,13 +187,13 @@ public class ImageProcessorImpl
 	@Override
 	public void storeThumbnail(
 			long companyId, long groupId, long fileEntryId, long fileVersionId,
-			long custom1ImageId, long custom2ImageId, InputStream is,
+			long custom1ImageId, long custom2ImageId, InputStream inputStream,
 			String type)
 		throws Exception {
 
 		_storeThumbnail(
 			companyId, groupId, fileEntryId, fileVersionId, custom1ImageId,
-			custom2ImageId, is, type);
+			custom2ImageId, inputStream, type);
 	}
 
 	@Override
@@ -338,7 +335,7 @@ public class ImageProcessorImpl
 		}
 		catch (NoSuchFileEntryException noSuchFileEntryException) {
 			if (_log.isDebugEnabled()) {
-				_log.debug(noSuchFileEntryException, noSuchFileEntryException);
+				_log.debug(noSuchFileEntryException);
 			}
 
 			_fileVersionPreviewEventListener.onFailure(destinationFileVersion);
@@ -384,11 +381,9 @@ public class ImageProcessorImpl
 
 			String type = getPreviewType(fileVersion);
 
-			String previewFilePath = getPreviewFilePath(fileVersion, type);
-
 			if (!DLStoreUtil.hasFile(
 					fileVersion.getCompanyId(), REPOSITORY_ID,
-					previewFilePath)) {
+					getPreviewFilePath(fileVersion, type))) {
 
 				return false;
 			}
@@ -435,8 +430,10 @@ public class ImageProcessorImpl
 		try {
 			file = FileUtil.createTempFile(type);
 
-			try (FileOutputStream fos = new FileOutputStream(file)) {
-				ImageToolUtil.write(renderedImage, type, fos);
+			try (FileOutputStream fileOutputStream = new FileOutputStream(
+					file)) {
+
+				ImageToolUtil.write(renderedImage, type, fileOutputStream);
 			}
 
 			addFileToStore(
@@ -450,7 +447,7 @@ public class ImageProcessorImpl
 
 	private void _storeThumbnail(
 			long companyId, long groupId, long fileEntryId, long fileVersionId,
-			long custom1ImageId, long custom2ImageId, InputStream is,
+			long custom1ImageId, long custom2ImageId, InputStream inputStream,
 			String type)
 		throws Exception {
 
@@ -477,7 +474,7 @@ public class ImageProcessorImpl
 		File file = null;
 
 		try {
-			file = FileUtil.createTempFile(is);
+			file = FileUtil.createTempFile(inputStream);
 
 			addFileToStore(companyId, THUMBNAIL_PATH, filePath, file);
 		}

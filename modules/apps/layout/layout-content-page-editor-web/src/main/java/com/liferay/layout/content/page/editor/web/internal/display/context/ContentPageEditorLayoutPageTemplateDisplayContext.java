@@ -15,33 +15,55 @@
 package com.liferay.layout.content.page.editor.web.internal.display.context;
 
 import com.liferay.asset.kernel.AssetRendererFactoryRegistryUtil;
+import com.liferay.asset.kernel.model.AssetEntry;
 import com.liferay.asset.kernel.model.AssetRendererFactory;
-import com.liferay.asset.kernel.model.ClassType;
-import com.liferay.asset.kernel.model.ClassTypeReader;
+import com.liferay.document.library.kernel.model.DLFileEntry;
+import com.liferay.dynamic.data.mapping.model.DDMStructure;
+import com.liferay.dynamic.data.mapping.service.DDMStructureLocalServiceUtil;
 import com.liferay.fragment.contributor.FragmentCollectionContributorTracker;
 import com.liferay.fragment.renderer.FragmentRendererController;
 import com.liferay.fragment.renderer.FragmentRendererTracker;
 import com.liferay.fragment.util.configuration.FragmentEntryConfigurationParser;
-import com.liferay.info.display.contributor.InfoDisplayContributor;
-import com.liferay.info.display.contributor.InfoDisplayContributorTracker;
-import com.liferay.info.item.provider.InfoItemFormProviderTracker;
+import com.liferay.frontend.token.definition.FrontendTokenDefinitionRegistry;
+import com.liferay.info.collection.provider.item.selector.criterion.RelatedInfoItemCollectionProviderItemSelectorCriterion;
+import com.liferay.info.item.InfoItemClassDetails;
+import com.liferay.info.item.InfoItemFormVariation;
+import com.liferay.info.item.InfoItemServiceTracker;
+import com.liferay.info.item.provider.InfoItemDetailsProvider;
+import com.liferay.info.item.provider.InfoItemFormProvider;
+import com.liferay.info.item.provider.InfoItemFormVariationsProvider;
+import com.liferay.info.list.provider.item.selector.criterion.InfoListProviderItemSelectorReturnType;
 import com.liferay.item.selector.ItemSelector;
+import com.liferay.item.selector.ItemSelectorCriterion;
+import com.liferay.item.selector.criteria.InfoItemItemSelectorReturnType;
+import com.liferay.item.selector.criteria.info.item.criterion.InfoItemItemSelectorCriterion;
 import com.liferay.layout.content.page.editor.sidebar.panel.ContentPageEditorSidebarPanel;
 import com.liferay.layout.content.page.editor.web.internal.configuration.FFLayoutContentPageEditorConfiguration;
+import com.liferay.layout.content.page.editor.web.internal.configuration.PageEditorConfiguration;
+import com.liferay.layout.content.page.editor.web.internal.util.MappingContentUtil;
 import com.liferay.layout.page.template.model.LayoutPageTemplateEntry;
 import com.liferay.layout.page.template.service.LayoutPageTemplateEntryLocalServiceUtil;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.comment.CommentManager;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONObject;
+import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.model.Layout;
+import com.liferay.portal.kernel.portlet.RequestBackedPortletURLFactoryUtil;
+import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.Validator;
+import com.liferay.segments.manager.SegmentsExperienceManager;
+import com.liferay.staging.StagingGroupHelper;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.portlet.PortletRequest;
+import javax.portlet.PortletURL;
 import javax.portlet.RenderResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -62,22 +84,29 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		FragmentEntryConfigurationParser fragmentEntryConfigurationParser,
 		FragmentRendererController fragmentRendererController,
 		FragmentRendererTracker fragmentRendererTracker,
+		FrontendTokenDefinitionRegistry frontendTokenDefinitionRegistry,
 		HttpServletRequest httpServletRequest,
-		InfoDisplayContributorTracker infoDisplayContributorTracker,
-		InfoItemFormProviderTracker infoItemFormProviderTracker,
-		ItemSelector itemSelector, boolean pageIsDisplayPage,
-		PortletRequest portletRequest, RenderResponse renderResponse) {
+		InfoItemServiceTracker infoItemServiceTracker,
+		ItemSelector itemSelector,
+		PageEditorConfiguration pageEditorConfiguration,
+		boolean pageIsDisplayPage, PortletRequest portletRequest,
+		RenderResponse renderResponse,
+		SegmentsExperienceManager segmentsExperienceManager,
+		StagingGroupHelper stagingGroupHelper) {
 
 		super(
 			commentManager, contentPageEditorSidebarPanels,
 			ffLayoutContentPageEditorConfiguration,
 			fragmentCollectionContributorTracker,
 			fragmentEntryConfigurationParser, fragmentRendererController,
-			fragmentRendererTracker, httpServletRequest,
-			infoDisplayContributorTracker, infoItemFormProviderTracker,
-			itemSelector, portletRequest, renderResponse);
+			fragmentRendererTracker, frontendTokenDefinitionRegistry,
+			httpServletRequest, infoItemServiceTracker, itemSelector,
+			pageEditorConfiguration, portletRequest, renderResponse,
+			segmentsExperienceManager, stagingGroupHelper);
 
+		_itemSelector = itemSelector;
 		_pageIsDisplayPage = pageIsDisplayPage;
+		_renderResponse = renderResponse;
 	}
 
 	@Override
@@ -94,6 +123,17 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		Map<String, Object> configContext =
 			(Map<String, Object>)editorContext.get("config");
 
+		configContext.put(
+			"infoItemPreviewSelectorURL", _getInfoItemPreviewSelectorURL());
+
+		Map<String, Object> stateContext =
+			(Map<String, Object>)editorContext.get("state");
+
+		stateContext.put(
+			"mappingFields",
+			_addDisplayPageMappingFields(
+				(JSONObject)stateContext.get("mappingFields")));
+
 		configContext.put("selectedMappingTypes", _getSelectedMappingTypes());
 
 		return editorContext;
@@ -102,17 +142,135 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 	@Override
 	public String getPublishURL() {
 		return getFragmentEntryActionURL(
-			"/content_layout/publish_layout_page_template_entry");
-	}
-
-	@Override
-	public List<Map<String, Object>> getSidebarPanels() {
-		return getSidebarPanels(_pageIsDisplayPage);
+			"/layout_content_page_editor/publish_layout_page_template_entry");
 	}
 
 	@Override
 	public boolean isWorkflowEnabled() {
 		return false;
+	}
+
+	@Override
+	protected List<ItemSelectorCriterion>
+		getCollectionItemSelectorCriterions() {
+
+		List<ItemSelectorCriterion> collectionItemSelectorCriterions =
+			super.getCollectionItemSelectorCriterions();
+
+		if (!_pageIsDisplayPage) {
+			return collectionItemSelectorCriterions;
+		}
+
+		RelatedInfoItemCollectionProviderItemSelectorCriterion
+			relatedInfoItemCollectionProviderItemSelectorCriterion =
+				new RelatedInfoItemCollectionProviderItemSelectorCriterion();
+
+		relatedInfoItemCollectionProviderItemSelectorCriterion.
+			setDesiredItemSelectorReturnTypes(
+				new InfoListProviderItemSelectorReturnType());
+
+		List<String> sourceItemTypes = new ArrayList<>();
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry();
+
+		String className = layoutPageTemplateEntry.getClassName();
+
+		sourceItemTypes.add(className);
+
+		if (Objects.equals(className, FileEntry.class.getName())) {
+
+			// LPS-111037
+
+			className = DLFileEntry.class.getName();
+		}
+
+		AssetRendererFactory<?> assetRendererFactory =
+			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+				className);
+
+		if (assetRendererFactory != null) {
+			sourceItemTypes.add(AssetEntry.class.getName());
+		}
+
+		relatedInfoItemCollectionProviderItemSelectorCriterion.
+			setSourceItemTypes(sourceItemTypes);
+
+		return ListUtil.concat(
+			collectionItemSelectorCriterions,
+			Collections.singletonList(
+				relatedInfoItemCollectionProviderItemSelectorCriterion));
+	}
+
+	private JSONObject _addDisplayPageMappingFields(
+			JSONObject mappingFieldsJSONObject)
+		throws Exception {
+
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry();
+
+		String key =
+			layoutPageTemplateEntry.getClassNameId() + StringPool.DASH +
+				layoutPageTemplateEntry.getClassTypeId();
+
+		if (!mappingFieldsJSONObject.has(key)) {
+			mappingFieldsJSONObject.put(
+				key,
+				MappingContentUtil.getMappingFieldsJSONArray(
+					String.valueOf(layoutPageTemplateEntry.getClassTypeId()),
+					themeDisplay.getScopeGroupId(), infoItemServiceTracker,
+					layoutPageTemplateEntry.getClassName(),
+					themeDisplay.getLocale()));
+		}
+
+		return mappingFieldsJSONObject;
+	}
+
+	private String _getInfoItemPreviewSelectorURL() {
+		LayoutPageTemplateEntry layoutPageTemplateEntry =
+			_getLayoutPageTemplateEntry();
+
+		if ((layoutPageTemplateEntry == null) ||
+			(layoutPageTemplateEntry.getClassNameId() <= 0)) {
+
+			return StringPool.BLANK;
+		}
+
+		InfoItemItemSelectorCriterion itemSelectorCriterion =
+			new InfoItemItemSelectorCriterion();
+
+		itemSelectorCriterion.setDesiredItemSelectorReturnTypes(
+			new InfoItemItemSelectorReturnType());
+		itemSelectorCriterion.setItemType(
+			layoutPageTemplateEntry.getClassName());
+		itemSelectorCriterion.setItemSubtype(
+			_getItemSubtype(layoutPageTemplateEntry.getClassTypeId()));
+
+		PortletURL infoItemSelectorURL = _itemSelector.getItemSelectorURL(
+			RequestBackedPortletURLFactoryUtil.create(httpServletRequest),
+			_renderResponse.getNamespace() + "selectInfoItem",
+			itemSelectorCriterion);
+
+		if (infoItemSelectorURL == null) {
+			return StringPool.BLANK;
+		}
+
+		return infoItemSelectorURL.toString();
+	}
+
+	private String _getItemSubtype(long classTypeId) {
+		if (classTypeId <= 0) {
+			return StringPool.BLANK;
+		}
+
+		DDMStructure ddmStructure =
+			DDMStructureLocalServiceUtil.fetchDDMStructure(classTypeId);
+
+		if (ddmStructure != null) {
+			return ddmStructure.getStructureKey();
+		}
+
+		return String.valueOf(classTypeId);
 	}
 
 	private LayoutPageTemplateEntry _getLayoutPageTemplateEntry() {
@@ -129,42 +287,57 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		return _layoutPageTemplateEntry;
 	}
 
-	private String _getMappingSubtypeLabel() throws PortalException {
+	private String _getMappingSubtypeLabel() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
-		AssetRendererFactory<?> assetRendererFactory =
-			AssetRendererFactoryRegistryUtil.getAssetRendererFactoryByClassName(
+		InfoItemFormVariationsProvider<?> infoItemFormVariationsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormVariationsProvider.class,
 				layoutPageTemplateEntry.getClassName());
 
-		if ((assetRendererFactory == null) ||
-			!assetRendererFactory.isSupportsClassTypes()) {
-
+		if (infoItemFormVariationsProvider == null) {
 			return null;
 		}
 
-		ClassTypeReader classTypeReader =
-			assetRendererFactory.getClassTypeReader();
+		InfoItemFormVariation infoItemFormVariation =
+			infoItemFormVariationsProvider.getInfoItemFormVariation(
+				layoutPageTemplateEntry.getGroupId(),
+				String.valueOf(layoutPageTemplateEntry.getClassTypeId()));
 
-		ClassType classType = classTypeReader.getClassType(
-			layoutPageTemplateEntry.getClassTypeId(), themeDisplay.getLocale());
+		if (infoItemFormVariation != null) {
+			return infoItemFormVariation.getLabel(themeDisplay.getLocale());
+		}
 
-		return classType.getName();
+		return null;
 	}
 
 	private String _getMappingTypeLabel() {
 		LayoutPageTemplateEntry layoutPageTemplateEntry =
 			_getLayoutPageTemplateEntry();
 
-		InfoDisplayContributor<?> infoDisplayContributor =
-			infoDisplayContributorTracker.getInfoDisplayContributor(
+		InfoItemFormProvider<?> infoItemFormProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemFormProvider.class,
 				layoutPageTemplateEntry.getClassName());
 
-		if (infoDisplayContributor == null) {
+		if (infoItemFormProvider == null) {
 			return null;
 		}
 
-		return infoDisplayContributor.getLabel(themeDisplay.getLocale());
+		InfoItemDetailsProvider<?> infoItemDetailsProvider =
+			infoItemServiceTracker.getFirstInfoItemService(
+				InfoItemDetailsProvider.class,
+				layoutPageTemplateEntry.getClassName());
+
+		if (infoItemDetailsProvider == null) {
+			return null;
+		}
+
+		InfoItemClassDetails infoItemClassDetails =
+			infoItemDetailsProvider.getInfoItemClassDetails();
+
+		return infoItemClassDetails.getLabel(themeDisplay.getLocale());
 	}
 
 	private Map<String, Object> _getSelectedMappingTypes() {
@@ -178,8 +351,16 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		}
 
 		return HashMapBuilder.<String, Object>put(
+			"mappingDescription",
+			LanguageUtil.get(
+				httpServletRequest,
+				"content-source-selected-for-this-display-page-template")
+		).put(
 			"type",
 			HashMapBuilder.<String, Object>put(
+				"groupTypeTitle",
+				LanguageUtil.get(httpServletRequest, "content-type")
+			).put(
 				"id", layoutPageTemplateEntry.getClassNameId()
 			).put(
 				"label", _getMappingTypeLabel()
@@ -194,6 +375,9 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 				}
 
 				return HashMapBuilder.<String, Object>put(
+					"groupSubtypeTitle",
+					LanguageUtil.get(httpServletRequest, "subtype")
+				).put(
 					"id", layoutPageTemplateEntry.getClassTypeId()
 				).put(
 					"label", subtypeLabel
@@ -202,7 +386,9 @@ public class ContentPageEditorLayoutPageTemplateDisplayContext
 		).build();
 	}
 
+	private final ItemSelector _itemSelector;
 	private LayoutPageTemplateEntry _layoutPageTemplateEntry;
 	private final boolean _pageIsDisplayPage;
+	private final RenderResponse _renderResponse;
 
 }

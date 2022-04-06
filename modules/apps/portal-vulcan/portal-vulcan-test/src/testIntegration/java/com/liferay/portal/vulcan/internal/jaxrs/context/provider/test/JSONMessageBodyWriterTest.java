@@ -19,14 +19,10 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
-import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.HashMapDictionaryBuilder;
 import com.liferay.portal.vulcan.internal.test.util.URLConnectionUtil;
-import com.liferay.registry.Registry;
-import com.liferay.registry.RegistryUtil;
-import com.liferay.registry.ServiceRegistration;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -41,6 +37,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+
 /**
  * @author Alejandro Hernández
  */
@@ -49,22 +50,25 @@ public class JSONMessageBodyWriterTest {
 
 	@Before
 	public void setUp() {
-		Registry registry = RegistryUtil.getRegistry();
+		Bundle bundle = FrameworkUtil.getBundle(
+			JSONMessageBodyWriterTest.class);
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"liferay.auth.verifier", true
-		).put(
-			"liferay.jackson", false
-		).put(
-			"liferay.oauth2", false
-		).put(
-			"osgi.jaxrs.application.base", "/test-vulcan"
-		).put(
-			"osgi.jaxrs.extension.select", "(osgi.jaxrs.name=Liferay.Vulcan)"
-		).build();
+		BundleContext bundleContext = bundle.getBundleContext();
 
-		_serviceRegistration = registry.registerService(
-			Application.class, new TestApplication(), properties);
+		_serviceRegistration = bundleContext.registerService(
+			Application.class, new TestApplication(),
+			HashMapDictionaryBuilder.<String, Object>put(
+				"liferay.auth.verifier", true
+			).put(
+				"liferay.jackson", false
+			).put(
+				"liferay.oauth2", false
+			).put(
+				"osgi.jaxrs.application.base", "/test-vulcan"
+			).put(
+				"osgi.jaxrs.extension.select",
+				"(osgi.jaxrs.name=Liferay.Vulcan)"
+			).build());
 	}
 
 	@After

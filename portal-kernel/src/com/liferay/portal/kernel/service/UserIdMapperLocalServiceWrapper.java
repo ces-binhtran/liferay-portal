@@ -25,6 +25,10 @@ public class UserIdMapperLocalServiceWrapper
 	implements ServiceWrapper<UserIdMapperLocalService>,
 			   UserIdMapperLocalService {
 
+	public UserIdMapperLocalServiceWrapper() {
+		this(null);
+	}
+
 	public UserIdMapperLocalServiceWrapper(
 		UserIdMapperLocalService userIdMapperLocalService) {
 
@@ -33,6 +37,10 @@ public class UserIdMapperLocalServiceWrapper
 
 	/**
 	 * Adds the user ID mapper to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was added
@@ -82,6 +90,10 @@ public class UserIdMapperLocalServiceWrapper
 	/**
 	 * Deletes the user ID mapper with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param userIdMapperId the primary key of the user ID mapper
 	 * @return the user ID mapper that was removed
 	 * @throws PortalException if a user ID mapper with the primary key could not be found
@@ -96,6 +108,10 @@ public class UserIdMapperLocalServiceWrapper
 
 	/**
 	 * Deletes the user ID mapper from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was removed
@@ -115,6 +131,13 @@ public class UserIdMapperLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _userIdMapperLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _userIdMapperLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -328,6 +351,10 @@ public class UserIdMapperLocalServiceWrapper
 
 	/**
 	 * Updates the user ID mapper in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect UserIdMapperLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param userIdMapper the user ID mapper
 	 * @return the user ID mapper that was updated

@@ -28,6 +28,10 @@ import com.liferay.portal.kernel.service.persistence.change.tracking.CTPersisten
 public class LayoutSetLocalServiceWrapper
 	implements LayoutSetLocalService, ServiceWrapper<LayoutSetLocalService> {
 
+	public LayoutSetLocalServiceWrapper() {
+		this(null);
+	}
+
 	public LayoutSetLocalServiceWrapper(
 		LayoutSetLocalService layoutSetLocalService) {
 
@@ -36,6 +40,10 @@ public class LayoutSetLocalServiceWrapper
 
 	/**
 	 * Adds the layout set to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSet the layout set
 	 * @return the layout set that was added
@@ -77,6 +85,10 @@ public class LayoutSetLocalServiceWrapper
 	/**
 	 * Deletes the layout set from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSet the layout set
 	 * @return the layout set that was removed
 	 */
@@ -87,6 +99,10 @@ public class LayoutSetLocalServiceWrapper
 
 	/**
 	 * Deletes the layout set with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param layoutSetId the primary key of the layout set
 	 * @return the layout set that was removed
@@ -122,6 +138,13 @@ public class LayoutSetLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _layoutSetLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _layoutSetLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -342,6 +365,10 @@ public class LayoutSetLocalServiceWrapper
 	/**
 	 * Updates the layout set in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect LayoutSetLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param layoutSet the layout set
 	 * @return the layout set that was updated
 	 */
@@ -394,21 +421,21 @@ public class LayoutSetLocalServiceWrapper
 	@Override
 	public LayoutSet updateLogo(
 			long groupId, boolean privateLayout, boolean hasLogo,
-			java.io.InputStream is)
+			java.io.InputStream inputStream)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutSetLocalService.updateLogo(
-			groupId, privateLayout, hasLogo, is);
+			groupId, privateLayout, hasLogo, inputStream);
 	}
 
 	@Override
 	public LayoutSet updateLogo(
 			long groupId, boolean privateLayout, boolean hasLogo,
-			java.io.InputStream is, boolean cleanUpStream)
+			java.io.InputStream inputStream, boolean cleanUpStream)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _layoutSetLocalService.updateLogo(
-			groupId, privateLayout, hasLogo, is, cleanUpStream);
+			groupId, privateLayout, hasLogo, inputStream, cleanUpStream);
 	}
 
 	@Override
@@ -437,20 +464,6 @@ public class LayoutSetLocalServiceWrapper
 
 		return _layoutSetLocalService.updateSettings(
 			groupId, privateLayout, settings);
-	}
-
-	/**
-	 * @deprecated As of Mueller (7.2.x), replaced by {@link
-	 #updateVirtualHosts(long, boolean, TreeMap)}
-	 */
-	@Deprecated
-	@Override
-	public LayoutSet updateVirtualHost(
-			long groupId, boolean privateLayout, String virtualHostname)
-		throws com.liferay.portal.kernel.exception.PortalException {
-
-		return _layoutSetLocalService.updateVirtualHost(
-			groupId, privateLayout, virtualHostname);
 	}
 
 	@Override

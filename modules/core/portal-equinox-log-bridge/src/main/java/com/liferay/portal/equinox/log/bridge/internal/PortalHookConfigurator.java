@@ -38,7 +38,6 @@ public class PortalHookConfigurator
 
 	public PortalHookConfigurator() {
 		_bundleStartStopLogger = new BundleStartStopLogger(_portalStarted);
-		_portalSynchronousLogListener = new PortalSynchronousLogListener();
 	}
 
 	@Override
@@ -100,11 +99,10 @@ public class PortalHookConfigurator
 
 		bundleContext.removeBundleListener(_bundleStartStopLogger);
 
-		ServiceReference<ExtendedLogReaderService> serviceReference =
-			bundleContext.getServiceReference(ExtendedLogReaderService.class);
-
 		ExtendedLogReaderService extendedLogReaderService =
-			bundleContext.getService(serviceReference);
+			bundleContext.getService(
+				bundleContext.getServiceReference(
+					ExtendedLogReaderService.class));
 
 		extendedLogReaderService.removeLogListener(
 			_portalSynchronousLogListener);
@@ -112,7 +110,8 @@ public class PortalHookConfigurator
 
 	private final BundleStartStopLogger _bundleStartStopLogger;
 	private final AtomicBoolean _portalStarted = new AtomicBoolean();
-	private final PortalSynchronousLogListener _portalSynchronousLogListener;
+	private final PortalSynchronousLogListener _portalSynchronousLogListener =
+		new PortalSynchronousLogListener();
 	private ServiceTracker<Object, Void> _serviceTracker;
 
 }

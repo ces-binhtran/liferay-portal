@@ -29,6 +29,7 @@ import com.liferay.portal.kernel.util.MapUtil;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.kernel.util.PropertiesParamUtil;
 import com.liferay.portal.kernel.util.UnicodeProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.site.navigation.menu.item.layout.constants.SiteNavigationMenuItemTypeConstants;
@@ -115,10 +116,9 @@ public class SiteNavigationMenuItemUtil {
 		}
 
 		UnicodeProperties typeSettingsUnicodeProperties =
-			new UnicodeProperties();
-
-		typeSettingsUnicodeProperties.fastLoad(
-			siteNavigationMenuItem.getTypeSettings());
+			UnicodePropertiesBuilder.fastLoad(
+				siteNavigationMenuItem.getTypeSettings()
+			).build();
 
 		Set<Locale> availableLocales = LanguageUtil.getAvailableLocales(
 			siteNavigationMenuItem.getGroupId());
@@ -139,14 +139,13 @@ public class SiteNavigationMenuItemUtil {
 
 			for (Map.Entry<Locale, String> nameEntry : nameMap.entrySet()) {
 				String languageId = LocaleUtil.toLanguageId(nameEntry.getKey());
-				String value = nameEntry.getValue();
 
 				if (Validator.isNull(
 						typeSettingsUnicodeProperties.getProperty(
 							"name_" + languageId))) {
 
 					typeSettingsUnicodeProperties.setProperty(
-						"name_" + languageId, value);
+						"name_" + languageId, nameEntry.getValue());
 				}
 			}
 		}

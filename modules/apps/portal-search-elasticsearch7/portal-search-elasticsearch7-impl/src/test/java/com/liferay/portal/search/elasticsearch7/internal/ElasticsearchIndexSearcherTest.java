@@ -19,14 +19,18 @@ import com.liferay.portal.kernel.search.SearchContext;
 import com.liferay.portal.kernel.search.SearchException;
 import com.liferay.portal.search.constants.SearchContextAttributes;
 import com.liferay.portal.search.elasticsearch7.constants.ElasticsearchSearchContextAttributes;
+import com.liferay.portal.search.elasticsearch7.internal.configuration.ElasticsearchConfigurationWrapper;
 import com.liferay.portal.search.engine.adapter.search.SearchSearchRequest;
 import com.liferay.portal.search.internal.legacy.searcher.SearchRequestBuilderFactoryImpl;
 import com.liferay.portal.search.legacy.searcher.SearchRequestBuilderFactory;
 import com.liferay.portal.search.test.util.indexing.DocumentFixture;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -36,6 +40,11 @@ import org.mockito.Mockito;
  */
 public class ElasticsearchIndexSearcherTest {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	public void setUp() {
 		_documentFixture.setUp();
@@ -43,7 +52,7 @@ public class ElasticsearchIndexSearcherTest {
 		SearchRequestBuilderFactory searchRequestBuilderFactory =
 			new SearchRequestBuilderFactoryImpl();
 
-		_elasticsearchIndexSearcher = createElasticsearchIndexSearcher(
+		_elasticsearchIndexSearcher = _createElasticsearchIndexSearcher(
 			searchRequestBuilderFactory);
 		_searchRequestBuilderFactory = searchRequestBuilderFactory;
 	}
@@ -80,12 +89,13 @@ public class ElasticsearchIndexSearcherTest {
 		Assert.assertEquals("testValue", searchSearchRequest.getPreference());
 	}
 
-	protected static ElasticsearchIndexSearcher
-		createElasticsearchIndexSearcher(
-			SearchRequestBuilderFactory searchRequestBuilderFactory) {
+	private ElasticsearchIndexSearcher _createElasticsearchIndexSearcher(
+		SearchRequestBuilderFactory searchRequestBuilderFactory) {
 
 		return new ElasticsearchIndexSearcher() {
 			{
+				setElasticsearchConfigurationWrapper(
+					Mockito.mock(ElasticsearchConfigurationWrapper.class));
 				setIndexNameBuilder(String::valueOf);
 				setSearchRequestBuilderFactory(searchRequestBuilderFactory);
 			}

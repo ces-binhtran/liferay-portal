@@ -14,20 +14,36 @@
 
 package com.liferay.portal.workflow.metrics.internal.search.index;
 
-import com.liferay.petra.string.StringBundler;
-import com.liferay.petra.string.StringPool;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.search.Field;
+import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.util.HashMapBuilder;
+import com.liferay.portal.kernel.util.ListUtil;
+import com.liferay.portal.kernel.util.PortalRunMode;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.search.document.Document;
 import com.liferay.portal.search.document.DocumentBuilder;
+import com.liferay.portal.search.engine.adapter.document.UpdateByQueryDocumentRequest;
+import com.liferay.portal.search.engine.adapter.document.UpdateDocumentRequest;
 import com.liferay.portal.search.query.BooleanQuery;
+import com.liferay.portal.search.script.ScriptBuilder;
+import com.liferay.portal.search.script.ScriptType;
+import com.liferay.portal.workflow.metrics.internal.search.index.util.WorkflowMetricsIndexerUtil;
+import com.liferay.portal.workflow.metrics.model.AddTaskRequest;
+import com.liferay.portal.workflow.metrics.model.Assignment;
+import com.liferay.portal.workflow.metrics.model.CompleteTaskRequest;
+import com.liferay.portal.workflow.metrics.model.DeleteTaskRequest;
+import com.liferay.portal.workflow.metrics.model.RoleAssignment;
+import com.liferay.portal.workflow.metrics.model.UpdateTaskRequest;
+import com.liferay.portal.workflow.metrics.model.UserAssignment;
 import com.liferay.portal.workflow.metrics.search.index.TaskWorkflowMetricsIndexer;
 
 import java.time.Duration;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 
 import org.osgi.service.component.annotations.Component;
@@ -41,115 +57,180 @@ public class TaskWorkflowMetricsIndexerImpl
 	extends BaseWorkflowMetricsIndexer implements TaskWorkflowMetricsIndexer {
 
 	@Override
-	public Document addTask(
-		Map<Locale, String> assetTitleMap, Map<Locale, String> assetTypeMap,
-		Long[] assigneeIds, String assigneeType, String className, long classPK,
-		long companyId, boolean completed, Date completionDate,
-		Long completionUserId, Date createDate, boolean instanceCompleted,
-		Date instanceCompletionDate, long instanceId, Date modifiedDate,
-		String name, long nodeId, long processId, String processVersion,
-		long taskId, long userId) {
-
+	public Document addTask(AddTaskRequest addTaskRequest) {
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		if (assigneeIds != null) {
-			documentBuilder.setLongs("assigneeIds", assigneeIds);
-			documentBuilder.setString("assigneeType", assigneeType);
+		documentBuilder.setValue("active", Boolean.TRUE);
+
+		List<Long> assignmentGroupIds = new ArrayList<>();
+		List<Long> assignmentIds = new ArrayList<>();
+
+		_populateTaskAssignments(
+			assignmentGroupIds, assignmentIds, addTaskRequest.getAssignments());
+
+		String assignmentType = _getAssignmentType(
+			addTaskRequest.getAssignments());
+
+		if (!assignmentIds.isEmpty()) {
+			documentBuilder.setLongs(
+				"assigneeIds", assignmentIds.toArray(new Long[0]));
+			documentBuilder.setString("assigneeType", assignmentType);
 		}
 
 		documentBuilder.setString(
-			"className", className
+			"className", addTaskRequest.getClassName()
 		).setLong(
-			"classPK", classPK
+			"classPK", addTaskRequest.getClassPK()
 		).setLong(
-			"companyId", companyId
+			"companyId", addTaskRequest.getCompanyId()
 		).setValue(
-			"completed", completed
+			"completed", addTaskRequest.isCompleted()
 		);
 
-		if (completed) {
+		if (addTaskRequest.isCompleted()) {
 			documentBuilder.setDate(
-				"completionDate", getDate(completionDate)
+				"completionDate", getDate(addTaskRequest.getCompletionDate())
 			).setLong(
-				"completionUserId", completionUserId
+				"completionUserId", addTaskRequest.getCompletionUserId()
 			);
 		}
+
+		Date createDate = addTaskRequest.getCreateDate();
 
 		documentBuilder.setDate(
 			"createDate", getDate(createDate)
 		).setValue(
-			Field.getSortableFieldName(
-				StringBundler.concat(
-					"createDate", StringPool.UNDERLINE, "Number")),
+			Field.getSortableFieldName("createDate_Number"),
 			createDate.getTime()
 		).setValue(
 			"deleted", false
 		);
 
-		if (completed) {
+		if (addTaskRequest.isCompleted()) {
 			documentBuilder.setLong(
-				"duration", _getDuration(completionDate, createDate));
+				"duration",
+				_getDuration(addTaskRequest.getCompletionDate(), createDate));
 		}
 
 		documentBuilder.setValue(
-			"instanceCompleted", instanceCompleted
+			"instanceCompleted", addTaskRequest.isInstanceCompleted()
 		).setDate(
-			"instanceCompletionDate", getDate(instanceCompletionDate)
+			"instanceCompletionDate",
+			getDate(addTaskRequest.getInstanceCompletionDate())
 		).setLong(
-			"instanceId", instanceId
+			"instanceId", addTaskRequest.getInstanceId()
 		).setDate(
-			"modifiedDate", getDate(modifiedDate)
+			"modifiedDate", getDate(addTaskRequest.getModifiedDate())
 		).setString(
-			"name", name
-		).setLong(
-			"nodeId", nodeId
-		).setLong(
-			"processId", processId
-		).setLong(
-			"taskId", taskId
+			"name", addTaskRequest.getName()
 		).setString(
-			"uid", digest(companyId, taskId)
+			Field.getSortableFieldName("name"),
+			StringUtil.toLowerCase(addTaskRequest.getName())
 		).setLong(
-			"userId", userId
+			"nodeId", addTaskRequest.getNodeId()
+		).setLong(
+			"processId", addTaskRequest.getProcessId()
+		).setLong(
+			"taskId", addTaskRequest.getTaskId()
 		).setString(
-			"version", processVersion
+			"uid",
+			digest(addTaskRequest.getCompanyId(), addTaskRequest.getTaskId())
+		).setLong(
+			"userId", addTaskRequest.getUserId()
+		).setString(
+			"version", addTaskRequest.getProcessVersion()
 		);
 
-		setLocalizedField(documentBuilder, "assetTitle", assetTitleMap);
-		setLocalizedField(documentBuilder, "assetType", assetTypeMap);
+		setLocalizedField(
+			documentBuilder, "assetTitle", addTaskRequest.getAssetTitleMap());
+		setLocalizedField(
+			documentBuilder, "assetType", addTaskRequest.getAssetTypeMap());
 
 		Document document = documentBuilder.build();
 
-		workflowMetricsPortalExecutor.execute(() -> addDocument(document));
+		workflowMetricsPortalExecutor.execute(
+			() -> {
+				addDocument(document);
+
+				if (addTaskRequest.isCompleted()) {
+					return;
+				}
+
+				ScriptBuilder scriptBuilder = scripts.builder();
+
+				UpdateDocumentRequest updateDocumentRequest =
+					new UpdateDocumentRequest(
+						_instanceWorkflowMetricsIndex.getIndexName(
+							addTaskRequest.getCompanyId()),
+						WorkflowMetricsIndexerUtil.digest(
+							_instanceWorkflowMetricsIndex.getIndexType(),
+							addTaskRequest.getCompanyId(),
+							addTaskRequest.getInstanceId()),
+						scriptBuilder.idOrCode(
+							StringUtil.read(
+								getClass(),
+								"dependencies/workflow-metrics-add-task-" +
+									"script.painless")
+						).language(
+							"painless"
+						).putParameter(
+							"task",
+							HashMapBuilder.<String, Object>put(
+								"assigneeGroupIds", assignmentGroupIds
+							).put(
+								"assigneeIds", assignmentIds
+							).put(
+								"assigneeName",
+								_getAssigneeName(
+									addTaskRequest.getAssignments())
+							).put(
+								"assigneeType", assignmentType
+							).put(
+								"taskId", addTaskRequest.getTaskId()
+							).put(
+								"taskName", addTaskRequest.getName()
+							).build()
+						).scriptType(
+							ScriptType.INLINE
+						).build());
+
+				updateDocumentRequest.setScriptedUpsert(true);
+
+				if (PortalRunMode.isTestMode()) {
+					updateDocumentRequest.setRefresh(true);
+				}
+
+				searchEngineAdapter.execute(updateDocumentRequest);
+			});
 
 		return document;
 	}
 
 	@Override
-	public Document completeTask(
-		long companyId, Date completionDate, long completionUserId,
-		long duration, Date modifiedDate, long taskId, long userId) {
-
+	public Document completeTask(CompleteTaskRequest completeTaskRequest) {
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
 		documentBuilder.setLong(
-			"companyId", companyId
+			"companyId", completeTaskRequest.getCompanyId()
 		).setValue(
 			"completed", true
 		).setDate(
-			"completionDate", getDate(completionDate)
+			"completionDate", getDate(completeTaskRequest.getCompletionDate())
 		).setLong(
-			"completionUserId", completionUserId
+			"completionUserId", completeTaskRequest.getCompletionUserId()
 		).setLong(
-			"duration", duration
+			"duration", completeTaskRequest.getDuration()
 		).setDate(
-			"modifiedDate", getDate(modifiedDate)
+			"modifiedDate", getDate(completeTaskRequest.getModifiedDate())
 		).setLong(
-			"taskId", taskId
+			"taskId", completeTaskRequest.getTaskId()
 		).setString(
-			"uid", digest(companyId, taskId)
+			"uid",
+			digest(
+				completeTaskRequest.getCompanyId(),
+				completeTaskRequest.getTaskId())
 		).setLong(
-			"userId", userId
+			"userId", completeTaskRequest.getUserId()
 		);
 
 		Document document = documentBuilder.build();
@@ -158,14 +239,19 @@ public class TaskWorkflowMetricsIndexerImpl
 			() -> {
 				updateDocument(document);
 
+				_deleteTask(
+					completeTaskRequest.getCompanyId(),
+					completeTaskRequest.getTaskId());
+
 				BooleanQuery booleanQuery = queries.booleanQuery();
 
 				booleanQuery.addMustQueryClauses(
-					queries.term("companyId", companyId),
-					queries.term("taskId", taskId));
+					queries.term(
+						"companyId", completeTaskRequest.getCompanyId()),
+					queries.term("taskId", completeTaskRequest.getTaskId()));
 
 				_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
-					companyId,
+					completeTaskRequest.getCompanyId(),
 					HashMapBuilder.<String, Object>put(
 						"completionDate", document.getDate("completionDate")
 					).put(
@@ -178,19 +264,27 @@ public class TaskWorkflowMetricsIndexerImpl
 	}
 
 	@Override
-	public void deleteTask(long companyId, long taskId) {
+	public void deleteTask(DeleteTaskRequest deleteTaskRequest) {
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
 		documentBuilder.setLong(
-			"companyId", companyId
+			"companyId", deleteTaskRequest.getCompanyId()
 		).setLong(
-			"taskId", taskId
+			"taskId", deleteTaskRequest.getTaskId()
 		).setString(
-			"uid", digest(companyId, taskId)
+			"uid",
+			digest(
+				deleteTaskRequest.getCompanyId(), deleteTaskRequest.getTaskId())
 		);
 
 		workflowMetricsPortalExecutor.execute(
-			() -> deleteDocument(documentBuilder));
+			() -> {
+				deleteDocument(documentBuilder);
+
+				_deleteTask(
+					deleteTaskRequest.getCompanyId(),
+					deleteTaskRequest.getTaskId());
+			});
 	}
 
 	@Override
@@ -204,32 +298,44 @@ public class TaskWorkflowMetricsIndexerImpl
 	}
 
 	@Override
-	public Document updateTask(
-		Map<Locale, String> assetTitleMap, Map<Locale, String> assetTypeMap,
-		Long[] assigneeIds, String assigneeType, long companyId,
-		Date modifiedDate, long taskId, long userId) {
-
+	public Document updateTask(UpdateTaskRequest updateTaskRequest) {
 		DocumentBuilder documentBuilder = documentBuilderFactory.builder();
 
-		if (assigneeIds != null) {
-			documentBuilder.setLongs("assigneeIds", assigneeIds);
-			documentBuilder.setString("assigneeType", assigneeType);
+		List<Long> assignmentGroupIds = new ArrayList<>();
+		List<Long> assignmentIds = new ArrayList<>();
+
+		_populateTaskAssignments(
+			assignmentGroupIds, assignmentIds,
+			updateTaskRequest.getAssignments());
+
+		String assignmentType = _getAssignmentType(
+			updateTaskRequest.getAssignments());
+
+		if (!assignmentIds.isEmpty()) {
+			documentBuilder.setLongs(
+				"assigneeIds", assignmentIds.toArray(new Long[0]));
+			documentBuilder.setString("assigneeType", assignmentType);
 		}
 
 		documentBuilder.setLong(
-			"companyId", companyId
+			"companyId", updateTaskRequest.getCompanyId()
 		).setDate(
-			"modifiedDate", getDate(modifiedDate)
+			"modifiedDate", getDate(updateTaskRequest.getModifiedDate())
 		).setLong(
-			"taskId", taskId
+			"taskId", updateTaskRequest.getTaskId()
 		).setString(
-			"uid", digest(companyId, taskId)
+			"uid",
+			digest(
+				updateTaskRequest.getCompanyId(), updateTaskRequest.getTaskId())
 		).setLong(
-			"userId", userId
+			"userId", updateTaskRequest.getUserId()
 		);
 
-		setLocalizedField(documentBuilder, "assetTitle", assetTitleMap);
-		setLocalizedField(documentBuilder, "assetType", assetTypeMap);
+		setLocalizedField(
+			documentBuilder, "assetTitle",
+			updateTaskRequest.getAssetTitleMap());
+		setLocalizedField(
+			documentBuilder, "assetType", updateTaskRequest.getAssetTypeMap());
 
 		Document document = documentBuilder.build();
 
@@ -248,16 +354,104 @@ public class TaskWorkflowMetricsIndexerImpl
 					queries.term("taskId", document.getLong("taskId")));
 
 				_slaTaskResultWorkflowMetricsIndexer.updateDocuments(
-					companyId,
+					updateTaskRequest.getCompanyId(),
 					HashMapBuilder.<String, Object>put(
-						"assigneeIds", assigneeIds
+						"assigneeIds", assignmentIds
 					).put(
-						"assigneeType", assigneeType
+						"assigneeType", assignmentType
 					).build(),
 					booleanQuery);
+
+				ScriptBuilder scriptBuilder = scripts.builder();
+
+				scriptBuilder.idOrCode(
+					StringUtil.read(
+						getClass(),
+						"dependencies/workflow-metrics-update-task-" +
+							"script.painless")
+				).language(
+					"painless"
+				).putParameter(
+					"task",
+					HashMapBuilder.<String, Object>put(
+						"assigneeGroupIds", assignmentGroupIds
+					).put(
+						"assigneeIds", assignmentIds
+					).put(
+						"assigneeName",
+						_getAssigneeName(updateTaskRequest.getAssignments())
+					).put(
+						"assigneeType", assignmentType
+					).put(
+						"taskId", updateTaskRequest.getTaskId()
+					).build()
+				).scriptType(
+					ScriptType.INLINE
+				);
+
+				UpdateByQueryDocumentRequest updateByQueryDocumentRequest =
+					new UpdateByQueryDocumentRequest(
+						queries.nested(
+							"tasks",
+							queries.term(
+								"tasks.taskId", updateTaskRequest.getTaskId())),
+						scriptBuilder.build(),
+						_instanceWorkflowMetricsIndex.getIndexName(
+							updateTaskRequest.getCompanyId()));
+
+				updateByQueryDocumentRequest.setRefresh(true);
+
+				searchEngineAdapter.execute(updateByQueryDocumentRequest);
 			});
 
 		return document;
+	}
+
+	private void _deleteTask(long companyId, long taskId) {
+		ScriptBuilder scriptBuilder = scripts.builder();
+
+		searchEngineAdapter.execute(
+			new UpdateByQueryDocumentRequest(
+				queries.nested("tasks", queries.term("tasks.taskId", taskId)),
+				scriptBuilder.idOrCode(
+					StringUtil.read(
+						getClass(),
+						"dependencies/workflow-metrics-delete-task-" +
+							"script.painless")
+				).language(
+					"painless"
+				).putParameter(
+					"taskId", taskId
+				).scriptType(
+					ScriptType.INLINE
+				).build(),
+				_instanceWorkflowMetricsIndex.getIndexName(companyId)));
+	}
+
+	private String _getAssigneeName(List<Assignment> assignments) {
+		if (ListUtil.isEmpty(assignments) ||
+			(assignments.get(0) instanceof RoleAssignment)) {
+
+			return null;
+		}
+
+		UserAssignment userAssignment = (UserAssignment)assignments.get(0);
+
+		return userAssignment.getName();
+	}
+
+	private String _getAssignmentType(List<Assignment> assignments) {
+		if (ListUtil.isEmpty(assignments)) {
+			return null;
+		}
+
+		Assignment assignment = assignments.get(0);
+
+		if (assignment instanceof RoleAssignment) {
+			return Role.class.getName();
+		}
+
+		return User.class.getName();
 	}
 
 	private long _getDuration(Date completionDate, Date createDate) {
@@ -267,11 +461,41 @@ public class TaskWorkflowMetricsIndexerImpl
 		return duration.toMillis();
 	}
 
+	private void _populateTaskAssignments(
+		List<Long> assignmentGroupIds, List<Long> assignmentIds,
+		List<Assignment> assignments) {
+
+		if (ListUtil.isEmpty(assignments)) {
+			return;
+		}
+
+		Assignment firstAssignment = assignments.get(0);
+
+		if (firstAssignment instanceof RoleAssignment) {
+			for (Assignment assignment : assignments) {
+				assignmentIds.add(assignment.getAssignmentId());
+
+				RoleAssignment roleAssignment = (RoleAssignment)assignment;
+
+				assignmentGroupIds.addAll(roleAssignment.getGroupIds());
+			}
+		}
+		else {
+			assignmentIds.add(firstAssignment.getAssignmentId());
+		}
+	}
+
+	@Reference(target = "(workflow.metrics.index.entity.name=instance)")
+	private WorkflowMetricsIndex _instanceWorkflowMetricsIndex;
+
 	@Reference
 	private SLATaskResultWorkflowMetricsIndexer
 		_slaTaskResultWorkflowMetricsIndexer;
 
 	@Reference(target = "(workflow.metrics.index.entity.name=task)")
 	private WorkflowMetricsIndex _taskWorkflowMetricsIndex;
+
+	@Reference
+	private UserLocalService _userLocalService;
 
 }

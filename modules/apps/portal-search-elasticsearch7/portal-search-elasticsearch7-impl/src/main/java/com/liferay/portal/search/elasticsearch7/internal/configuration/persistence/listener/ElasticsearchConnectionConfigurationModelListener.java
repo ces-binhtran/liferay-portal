@@ -14,6 +14,7 @@
 
 package com.liferay.portal.search.elasticsearch7.internal.configuration.persistence.listener;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
 import com.liferay.portal.kernel.log.Log;
@@ -24,6 +25,8 @@ import com.liferay.portal.kernel.util.ResourceBundleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.search.elasticsearch7.configuration.ElasticsearchConnectionConfiguration;
+import com.liferay.portal.search.elasticsearch7.internal.connection.ElasticsearchConnectionManager;
+import com.liferay.portal.search.elasticsearch7.internal.connection.constants.ConnectionConstants;
 
 import java.util.Dictionary;
 import java.util.ResourceBundle;
@@ -43,6 +46,21 @@ import org.osgi.service.component.annotations.Reference;
 )
 public class ElasticsearchConnectionConfigurationModelListener
 	implements ConfigurationModelListener {
+
+	@Override
+	public void onBeforeDelete(String pid)
+		throws ConfigurationModelListenerException {
+
+		try {
+			elasticsearchConnectionManager.removeElasticsearchConnection(
+				_getConnectionId(pid));
+		}
+		catch (Exception exception) {
+			throw new ConfigurationModelListenerException(
+				exception.getMessage(),
+				ElasticsearchConnectionConfiguration.class, getClass(), null);
+		}
+	}
 
 	@Override
 	public void onBeforeSave(String pid, Dictionary<String, Object> properties)
@@ -67,13 +85,35 @@ public class ElasticsearchConnectionConfigurationModelListener
 	@Reference
 	protected ConfigurationAdmin configurationAdmin;
 
-	private String _getCauseMessage(String key, Object... arguments) {
-		try {
-			ResourceBundle resourceBundle = _getResourceBundle();
+	@Reference
+	protected ElasticsearchConnectionManager elasticsearchConnectionManager;
 
-			return ResourceBundleUtil.getString(resourceBundle, key, arguments);
+	private String _getConnectionId(String pid) throws Exception {
+		Configuration configuration = configurationAdmin.getConfiguration(
+			pid, StringPool.QUESTION);
+
+		Dictionary<String, Object> properties = configuration.getProperties();
+
+		String connectionId = null;
+
+		if (properties != null) {
+			connectionId = StringUtil.unquote(
+				(String)properties.get("connectionId"));
+		}
+
+		return connectionId;
+	}
+
+	private String _getMessage(String key, Object... arguments) {
+		try {
+			return ResourceBundleUtil.getString(
+				_getResourceBundle(), key, arguments);
 		}
 		catch (Exception exception) {
+			if (_log.isDebugEnabled()) {
+				_log.debug(exception);
+			}
+
 			return null;
 		}
 	}
@@ -100,18 +140,25 @@ public class ElasticsearchConnectionConfigurationModelListener
 		_log.error("Unable to validate network host addresses");
 
 		throw new Exception(
-			_getCauseMessage("please-set-at-least-one-network-host-address"));
+			_getMessage("please-set-at-least-one-network-host-address"));
 	}
 
 	private void _validateUniqueConnectionId(String pid, String connectionId)
 		throws Exception {
 
-		if (connectionId.equals("embedded")) {
+		if (Validator.isBlank(connectionId)) {
+			_log.error("Connection ID is blank");
+
+			throw new Exception(_getMessage("please-set-a-connection-id"));
+		}
+
+		if (connectionId.equals(ConnectionConstants.REMOTE_CONNECTION_ID) ||
+			connectionId.equals(ConnectionConstants.SIDECAR_CONNECTION_ID)) {
+
 			_log.error("The ID you entered is reserved: " + connectionId);
 
 			throw new Exception(
-				_getCauseMessage(
-					"the-id-you-entered-is-reserved-x", connectionId));
+				_getMessage("the-id-you-entered-is-reserved-x", connectionId));
 		}
 
 		String filterString = String.format(
@@ -122,6 +169,15 @@ public class ElasticsearchConnectionConfigurationModelListener
 			filterString);
 
 		if (configurations == null) {
+			String previousConnectionId = _getConnectionId(pid);
+
+			if ((previousConnectionId != null) &&
+				!previousConnectionId.equals(connectionId)) {
+
+				elasticsearchConnectionManager.removeElasticsearchConnection(
+					previousConnectionId);
+			}
+
 			return;
 		}
 
@@ -135,7 +191,7 @@ public class ElasticsearchConnectionConfigurationModelListener
 			"There is already a connection with the ID: " + connectionId);
 
 		throw new Exception(
-			_getCauseMessage(
+			_getMessage(
 				"there-is-already-a-connection-with-the-id-x", connectionId));
 	}
 

@@ -15,12 +15,12 @@
 package com.liferay.headless.delivery.resource.v1_0.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
+import com.liferay.dynamic.data.mapping.constants.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializer;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeRequest;
 import com.liferay.dynamic.data.mapping.io.DDMFormDeserializerDeserializeResponse;
 import com.liferay.dynamic.data.mapping.model.DDMForm;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
-import com.liferay.dynamic.data.mapping.model.DDMStructureConstants;
 import com.liferay.dynamic.data.mapping.storage.StorageType;
 import com.liferay.dynamic.data.mapping.test.util.DDMStructureTestHelper;
 import com.liferay.headless.delivery.client.dto.v1_0.ContentStructure;
@@ -50,11 +50,46 @@ public class ContentStructureResourceTest
 	}
 
 	@Override
+	protected ContentStructure
+			testGetAssetLibraryContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testGetAssetLibraryContentStructuresPage_addContentStructure(
+				Long assetLibraryId, ContentStructure contentStructure)
+		throws Exception {
+
+		return _toContentStructure(
+			_addDDMStructure(
+				testDepotEntry.getGroup(), contentStructure.getName()));
+	}
+
+	@Override
 	protected ContentStructure testGetContentStructure_addContentStructure()
 		throws Exception {
 
 		return _toContentStructure(
 			_addDDMStructure(testGroup, RandomTestUtil.randomString()));
+	}
+
+	@Override
+	protected ContentStructure
+			testGetContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testGetSiteContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
 	}
 
 	@Override
@@ -76,6 +111,30 @@ public class ContentStructureResourceTest
 		return testGetContentStructure_addContentStructure();
 	}
 
+	@Override
+	protected ContentStructure
+			testPutAssetLibraryContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testPutContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
+	@Override
+	protected ContentStructure
+			testPutSiteContentStructurePermissionsPage_addContentStructure()
+		throws Exception {
+
+		return testGetContentStructure_addContentStructure();
+	}
+
 	private DDMStructure _addDDMStructure(Group group, String name)
 		throws Exception {
 
@@ -86,8 +145,8 @@ public class ContentStructureResourceTest
 		return ddmStructureTestHelper.addStructure(
 			PortalUtil.getClassNameId(JournalArticle.class),
 			RandomTestUtil.randomString(), name,
-			_deserialize(_read("test-structured-content-structure.json")),
-			StorageType.JSON.getValue(), DDMStructureConstants.TYPE_DEFAULT);
+			_deserialize(_read("test-ddm-structure.json")),
+			StorageType.DEFAULT.getValue(), DDMStructureConstants.TYPE_DEFAULT);
 	}
 
 	private DDMForm _deserialize(String content) {

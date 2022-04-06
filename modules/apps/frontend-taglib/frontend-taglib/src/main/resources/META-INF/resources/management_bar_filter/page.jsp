@@ -23,9 +23,9 @@ List<ManagementBarFilterItem> managementBarFilterItems = (List<ManagementBarFilt
 String value = (String)request.getAttribute("liferay-frontend:management-bar-filter:value");
 %>
 
-<c:if test="<%= managementBarFilterItems.size() > 0 %>">
-	<li class='dropdown <%= disabled ? "disabled" : StringPool.BLANK %>'>
-		<a aria-expanded="true" class="dropdown-toggle" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>" data-toggle='<%= disabled ? StringPool.BLANK : "dropdown" %>' href="javascript:;">
+<c:if test="<%= !managementBarFilterItems.isEmpty() %>">
+	<li class="dropdown <%= disabled ? "disabled" : StringPool.BLANK %>">
+		<a aria-expanded="true" class="dropdown-toggle" data-qa-id="filter<%= Validator.isNotNull(label) ? label : StringPool.BLANK %>" data-toggle="<%= disabled ? StringPool.BLANK : "liferay-dropdown" %>" href="javascript:;">
 			<span class="management-bar-item-title">
 				<c:if test="<%= Validator.isNotNull(label) %>">
 					<liferay-ui:message key="<%= label %>" />:
@@ -43,8 +43,8 @@ String value = (String)request.getAttribute("liferay-frontend:management-bar-fil
 			for (ManagementBarFilterItem managementBarFilterItem : managementBarFilterItems) {
 			%>
 
-				<li class='<%= managementBarFilterItem.isActive() ? "active" : StringPool.BLANK %>'>
-					<aui:a cssClass="dropdown-item" href="<%= managementBarFilterItem.getUrl() %>" id="<%= Validator.isNotNull(managementBarFilterItem.getId()) ? managementBarFilterItem.getId() : StringPool.BLANK %>" label="<%= managementBarFilterItem.getLabel() %>" />
+				<li class="<%= managementBarFilterItem.isActive() ? "active" : StringPool.BLANK %>">
+					<aui:a cssClass="dropdown-item" href="<%= managementBarFilterItem.getUrl() %>" id="<%= Validator.isNotNull(managementBarFilterItem.getId()) ? managementBarFilterItem.getId() : StringPool.BLANK %>" label="<%= HtmlUtil.escape(managementBarFilterItem.getLabel()) %>" />
 				</li>
 
 			<%

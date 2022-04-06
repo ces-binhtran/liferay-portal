@@ -33,7 +33,6 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -50,7 +49,6 @@ import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
@@ -109,7 +107,9 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		FormStructureResource.Builder builder = FormStructureResource.builder();
 
-		formStructureResource = builder.locale(
+		formStructureResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -259,17 +259,17 @@ public abstract class BaseFormStructureResourceTestCase {
 
 	@Test
 	public void testGetSiteFormStructuresPage() throws Exception {
-		Page<FormStructure> page =
-			formStructureResource.getSiteFormStructuresPage(
-				testGetSiteFormStructuresPage_getSiteId(), Pagination.of(1, 2));
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long siteId = testGetSiteFormStructuresPage_getSiteId();
 		Long irrelevantSiteId =
 			testGetSiteFormStructuresPage_getIrrelevantSiteId();
 
-		if ((irrelevantSiteId != null)) {
+		Page<FormStructure> page =
+			formStructureResource.getSiteFormStructuresPage(
+				siteId, Pagination.of(1, 10));
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantSiteId != null) {
 			FormStructure irrelevantFormStructure =
 				testGetSiteFormStructuresPage_addFormStructure(
 					irrelevantSiteId, randomIrrelevantFormStructure());
@@ -294,7 +294,7 @@ public abstract class BaseFormStructureResourceTestCase {
 				siteId, randomFormStructure());
 
 		page = formStructureResource.getSiteFormStructuresPage(
-			siteId, Pagination.of(1, 2));
+			siteId, Pagination.of(1, 10));
 
 		Assert.assertEquals(2, page.getTotalCount());
 
@@ -378,7 +378,7 @@ public abstract class BaseFormStructureResourceTestCase {
 			new HashMap<String, Object>() {
 				{
 					put("page", 1);
-					put("pageSize", 2);
+					put("pageSize", 10);
 
 					put("siteKey", "\"" + siteId + "\"");
 				}
@@ -401,7 +401,7 @@ public abstract class BaseFormStructureResourceTestCase {
 			invokeGraphQLQuery(graphQLField), "JSONObject/data",
 			"JSONObject/formStructures");
 
-		Assert.assertEquals(2, formStructuresJSONObject.get("totalCount"));
+		Assert.assertEquals(2, formStructuresJSONObject.getLong("totalCount"));
 
 		assertEqualsIgnoringOrder(
 			Arrays.asList(formStructure1, formStructure2),
@@ -415,6 +415,23 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		throw new UnsupportedOperationException(
 			"This method needs to be implemented");
+	}
+
+	protected void assertContains(
+		FormStructure formStructure, List<FormStructure> formStructures) {
+
+		boolean contains = false;
+
+		for (FormStructure item : formStructures) {
+			if (equals(formStructure, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			formStructures + " does not contain " + formStructure, contains);
 	}
 
 	protected void assertHttpResponseStatusCode(
@@ -470,7 +487,7 @@ public abstract class BaseFormStructureResourceTestCase {
 		}
 	}
 
-	protected void assertValid(FormStructure formStructure) {
+	protected void assertValid(FormStructure formStructure) throws Exception {
 		boolean valid = true;
 
 		if (formStructure.getDateCreated() == null) {
@@ -594,8 +611,8 @@ public abstract class BaseFormStructureResourceTestCase {
 
 		graphQLFields.add(new GraphQLField("siteId"));
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.form.dto.v1_0.FormStructure.class)) {
 
 			if (!ArrayUtil.contains(
@@ -610,12 +627,13 @@ public abstract class BaseFormStructureResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -629,7 +647,7 @@ public abstract class BaseFormStructureResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -807,9 +825,24 @@ public abstract class BaseFormStructureResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -1095,12 +1128,12 @@ public abstract class BaseFormStructureResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1110,10 +1143,10 @@ public abstract class BaseFormStructureResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1127,8 +1160,8 @@ public abstract class BaseFormStructureResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseFormStructureResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseFormStructureResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

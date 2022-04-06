@@ -1,12 +1,6 @@
 {
 	"dependencies": {
-		"@clayui/card": "3.2.1",
-		"@clayui/icon": "3.0.5",
-		"@clayui/sticker": "3.1.1",
-		"classnames": "2.2.6",
-		"frontend-js-react-web": "*",
-		"prop-types": "15.7.2",
-		"react": "16.12.0"
+		"@liferay/frontend-js-state-web": "*"
 	},
 	"main": "index.js",
 	"name": "frontend-js-components-web",
@@ -16,5 +10,5 @@
 		"format": "liferay-npm-scripts fix",
 		"test": "liferay-npm-scripts test"
 	},
-	"version": "1.0.11"
+	"version": "2.0.28"
 }

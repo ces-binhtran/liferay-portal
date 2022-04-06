@@ -9,7 +9,7 @@
  * distribution rights of the Software.
  */
 
-import {fireEvent, render} from '@testing-library/react';
+import {act, fireEvent, render} from '@testing-library/react';
 import React, {useState} from 'react';
 
 import {InstanceListContext} from '../../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/InstanceListPageProvider.es';
@@ -17,12 +17,11 @@ import {ModalContext} from '../../../../../../src/main/resources/META-INF/resour
 import SingleTransitionModal from '../../../../../../src/main/resources/META-INF/resources/js/components/instance-list-page/modal/transition/single/SingleTransitionModal.es';
 import ToasterProvider from '../../../../../../src/main/resources/META-INF/resources/js/shared/components/toaster/ToasterProvider.es';
 import {MockRouter} from '../../../../../mock/MockRouter.es';
+import FetchMock, {fetchMockResponse} from '../../../../../mock/fetch.es';
 
 import '@testing-library/jest-dom/extend-expect';
 
 const ContainerMock = ({children}) => {
-	const [visibleModal, setVisibleModal] = useState('singleTransition');
-
 	const selectedInstance = {
 		assetTitle: 'Blog1',
 		assetType: 'Blogs Entry',
@@ -45,9 +44,8 @@ const ContainerMock = ({children}) => {
 			<ModalContext.Provider
 				value={{
 					setSingleTransition,
-					setVisibleModal,
 					singleTransition,
-					visibleModal,
+					visibleModal: 'singleTransition',
 				}}
 			>
 				<ToasterProvider>{children}</ToasterProvider>
@@ -56,33 +54,36 @@ const ContainerMock = ({children}) => {
 	);
 };
 
-let getByPlaceholderText, getByTestId, getByText;
-
 const items = [
 	{
 		id: 2,
-		label: 'Test',
-		name: 'test',
+		label: 'Testing',
+		name: 'testing',
 	},
 ];
 
-const clientMock = {
-	get: jest.fn().mockResolvedValueOnce({
-		data: {
+const fetchMock = new FetchMock({
+	GET: {
+		default: fetchMockResponse({
 			items,
 			totalCount: 1,
-		},
-	}),
-	post: jest
-		.fn()
-		.mockRejectedValueOnce(new Error('Request failed'))
-		.mockResolvedValue({data: {items: []}}),
-};
+		}),
+	},
+	POST: {
+		default: [
+			fetchMockResponse({title: 'Request failed'}, false),
+			fetchMockResponse({items: []}),
+		],
+	},
+});
 
 describe('The SingleTransitionModal component should', () => {
-	beforeAll(() => {
+	let getByPlaceholderText;
+	let getByText;
+
+	beforeAll(async () => {
 		const renderResult = render(
-			<MockRouter client={clientMock}>
+			<MockRouter>
 				<SingleTransitionModal />
 			</MockRouter>,
 			{
@@ -91,40 +92,58 @@ describe('The SingleTransitionModal component should', () => {
 		);
 
 		getByPlaceholderText = renderResult.getByPlaceholderText;
-		getByTestId = renderResult.getByTestId;
 		getByText = renderResult.getByText;
 
-		jest.runAllTimers();
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Be rendered when its attribute visible is "true"', () => {
+	beforeEach(() => {
+		fetchMock.mock();
+	});
+
+	afterEach(() => {
+		fetchMock.reset();
+	});
+
+	it('Be rendered when its attribute visible is "true"', () => {
 		const transitionModal = getByText('Test');
 		expect(transitionModal).toBeInTheDocument();
 	});
 
-	test('Change comment field value, click in "Done" button', () => {
+	it('Change comment field value, click in "Done" button', async () => {
 		const commentField = getByPlaceholderText('comment');
-		const doneButton = getByTestId('doneButton');
+		const doneButton = getByText('done');
 
 		fireEvent.change(commentField, {target: {value: 'Comment field test'}});
 
 		expect(commentField).toHaveValue('Comment field test');
 
 		fireEvent.click(doneButton);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Show error alert after failing request and click in "Done" to retry request', () => {
-		const alertError = getByTestId('alertError');
-		expect(alertError).toHaveTextContent(
+	it('Show error alert after failing request and click in "Done" to retry request', async () => {
+		const alertError = getByText(
 			'your-request-has-failed select-done-to-retry'
 		);
+		const doneButton = getByText('done');
 
-		const doneButton = getByTestId('doneButton');
+		expect(alertError).toBeTruthy();
+
 		fireEvent.click(doneButton);
+
+		await act(async () => {
+			jest.runAllTimers();
+		});
 	});
 
-	test('Show success alert message after post request success', () => {
-		const alertToast = getByTestId('alertToast');
+	it('Show success alert message after post request success', () => {
+		const alertToast = document.querySelector('.alert-dismissible');
 
 		expect(alertToast).toHaveTextContent(
 			'the-selected-step-has-transitioned-successfully'

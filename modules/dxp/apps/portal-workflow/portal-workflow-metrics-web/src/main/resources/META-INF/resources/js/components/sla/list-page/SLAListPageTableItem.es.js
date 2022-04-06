@@ -10,6 +10,7 @@
  */
 
 import ClayIcon from '@clayui/icon';
+import ClayLayout from '@clayui/layout';
 import ClayTable from '@clayui/table';
 import React, {useCallback, useContext} from 'react';
 
@@ -20,7 +21,9 @@ import {formatDuration} from '../../../shared/util/duration.es';
 import moment from '../../../shared/util/moment.es';
 import {SLAListPageContext} from './SLAListPage.es';
 
-const Item = ({
+const SPACE = ' ';
+
+export default function Item({
 	dateModified,
 	description,
 	duration,
@@ -28,7 +31,7 @@ const Item = ({
 	name,
 	processId,
 	status,
-}) => {
+}) {
 	const {
 		history,
 		location: {search},
@@ -66,48 +69,42 @@ const Item = ({
 
 	return (
 		<ClayTable.Row>
-			<ClayTable.Cell data-testid="slaName">
+			<ClayTable.Cell>
 				<div className="table-list-title">
 					{blocked && (
 						<ClayIcon
 							className="text-danger"
 							symbol="exclamation-full"
 						/>
-					)}{' '}
+					)}
+
+					{SPACE}
+
 					<ChildLink to={`/sla/${processId}/edit/${id}`}>
 						{name}
 					</ChildLink>
 				</div>
 			</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDescription">
-				{description}
-			</ClayTable.Cell>
+			<ClayTable.Cell>{description}</ClayTable.Cell>
 
-			<ClayTable.Cell
-				className={blockedStatusClass}
-				data-testid="slaStatus"
-			>
+			<ClayTable.Cell className={blockedStatusClass}>
 				{statusText}
 			</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDuration">
-				{durationString}
-			</ClayTable.Cell>
+			<ClayTable.Cell>{durationString}</ClayTable.Cell>
 
-			<ClayTable.Cell data-testid="slaDateModified">
+			<ClayTable.Cell>
 				{moment
 					.utc(dateModified)
 					.format(Liferay.Language.get('mmm-dd'))}
 			</ClayTable.Cell>
 
 			<ClayTable.Cell className="actions">
-				<div className="autofit-col">
+				<ClayLayout.ContentCol>
 					<QuickActionKebab dropDownItems={dropDownItems} />
-				</div>
+				</ClayLayout.ContentCol>
 			</ClayTable.Cell>
 		</ClayTable.Row>
 	);
-};
-
-export {Item};
+}

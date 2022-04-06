@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 
+import com.liferay.headless.delivery.client.dto.v1_0.Field;
 import com.liferay.headless.delivery.client.dto.v1_0.MessageBoardAttachment;
 import com.liferay.headless.delivery.client.http.HttpInvoker;
 import com.liferay.headless.delivery.client.pagination.Page;
@@ -33,7 +34,6 @@ import com.liferay.portal.kernel.json.JSONArray;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
-import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.Group;
@@ -46,15 +46,12 @@ import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.odata.entity.EntityField;
 import com.liferay.portal.odata.entity.EntityModel;
-import com.liferay.portal.test.log.CaptureAppender;
-import com.liferay.portal.test.log.Log4JLoggerTestUtil;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.resource.EntityModelResource;
 
 import java.io.File;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 import java.text.DateFormat;
@@ -73,7 +70,6 @@ import javax.annotation.Generated;
 import javax.ws.rs.core.MultivaluedHashMap;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
-import org.apache.log4j.Level;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -114,7 +110,9 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		MessageBoardAttachmentResource.Builder builder =
 			MessageBoardAttachmentResource.builder();
 
-		messageBoardAttachmentResource = builder.locale(
+		messageBoardAttachmentResource = builder.authentication(
+			"test@liferay.com", "test"
+		).locale(
 			LocaleUtil.getDefault()
 		).build();
 	}
@@ -191,6 +189,7 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 			randomMessageBoardAttachment();
 
 		messageBoardAttachment.setContentUrl(regex);
+		messageBoardAttachment.setContentValue(regex);
 		messageBoardAttachment.setEncodingFormat(regex);
 		messageBoardAttachment.setFileExtension(regex);
 		messageBoardAttachment.setTitle(regex);
@@ -203,6 +202,7 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		messageBoardAttachment = MessageBoardAttachmentSerDes.toDTO(json);
 
 		Assert.assertEquals(regex, messageBoardAttachment.getContentUrl());
+		Assert.assertEquals(regex, messageBoardAttachment.getContentValue());
 		Assert.assertEquals(regex, messageBoardAttachment.getEncodingFormat());
 		Assert.assertEquals(regex, messageBoardAttachment.getFileExtension());
 		Assert.assertEquals(regex, messageBoardAttachment.getTitle());
@@ -259,27 +259,21 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 						})),
 				"JSONObject/data", "Object/deleteMessageBoardAttachment"));
 
-		try (CaptureAppender captureAppender =
-				Log4JLoggerTestUtil.configureLog4JLogger(
-					"graphql.execution.SimpleDataFetcherExceptionHandler",
-					Level.WARN)) {
+		JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
+			invokeGraphQLQuery(
+				new GraphQLField(
+					"messageBoardAttachment",
+					new HashMap<String, Object>() {
+						{
+							put(
+								"messageBoardAttachmentId",
+								messageBoardAttachment.getId());
+						}
+					},
+					new GraphQLField("id"))),
+			"JSONArray/errors");
 
-			JSONArray errorsJSONArray = JSONUtil.getValueAsJSONArray(
-				invokeGraphQLQuery(
-					new GraphQLField(
-						"messageBoardAttachment",
-						new HashMap<String, Object>() {
-							{
-								put(
-									"messageBoardAttachmentId",
-									messageBoardAttachment.getId());
-							}
-						},
-						new GraphQLField("id"))),
-				"JSONArray/errors");
-
-			Assert.assertTrue(errorsJSONArray.length() > 0);
-		}
+		Assert.assertTrue(errorsJSONArray.length() > 0);
 	}
 
 	@Test
@@ -355,19 +349,19 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 	public void testGetMessageBoardMessageMessageBoardAttachmentsPage()
 		throws Exception {
 
-		Page<MessageBoardAttachment> page =
-			messageBoardAttachmentResource.
-				getMessageBoardMessageMessageBoardAttachmentsPage(
-					testGetMessageBoardMessageMessageBoardAttachmentsPage_getMessageBoardMessageId());
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long messageBoardMessageId =
 			testGetMessageBoardMessageMessageBoardAttachmentsPage_getMessageBoardMessageId();
 		Long irrelevantMessageBoardMessageId =
 			testGetMessageBoardMessageMessageBoardAttachmentsPage_getIrrelevantMessageBoardMessageId();
 
-		if ((irrelevantMessageBoardMessageId != null)) {
+		Page<MessageBoardAttachment> page =
+			messageBoardAttachmentResource.
+				getMessageBoardMessageMessageBoardAttachmentsPage(
+					messageBoardMessageId);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantMessageBoardMessageId != null) {
 			MessageBoardAttachment irrelevantMessageBoardAttachment =
 				testGetMessageBoardMessageMessageBoardAttachmentsPage_addMessageBoardAttachment(
 					irrelevantMessageBoardMessageId,
@@ -475,19 +469,19 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 	public void testGetMessageBoardThreadMessageBoardAttachmentsPage()
 		throws Exception {
 
-		Page<MessageBoardAttachment> page =
-			messageBoardAttachmentResource.
-				getMessageBoardThreadMessageBoardAttachmentsPage(
-					testGetMessageBoardThreadMessageBoardAttachmentsPage_getMessageBoardThreadId());
-
-		Assert.assertEquals(0, page.getTotalCount());
-
 		Long messageBoardThreadId =
 			testGetMessageBoardThreadMessageBoardAttachmentsPage_getMessageBoardThreadId();
 		Long irrelevantMessageBoardThreadId =
 			testGetMessageBoardThreadMessageBoardAttachmentsPage_getIrrelevantMessageBoardThreadId();
 
-		if ((irrelevantMessageBoardThreadId != null)) {
+		Page<MessageBoardAttachment> page =
+			messageBoardAttachmentResource.
+				getMessageBoardThreadMessageBoardAttachmentsPage(
+					messageBoardThreadId);
+
+		Assert.assertEquals(0, page.getTotalCount());
+
+		if (irrelevantMessageBoardThreadId != null) {
 			MessageBoardAttachment irrelevantMessageBoardAttachment =
 				testGetMessageBoardThreadMessageBoardAttachmentsPage_addMessageBoardAttachment(
 					irrelevantMessageBoardThreadId,
@@ -599,6 +593,26 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 			"This method needs to be implemented");
 	}
 
+	protected void assertContains(
+		MessageBoardAttachment messageBoardAttachment,
+		List<MessageBoardAttachment> messageBoardAttachments) {
+
+		boolean contains = false;
+
+		for (MessageBoardAttachment item : messageBoardAttachments) {
+			if (equals(messageBoardAttachment, item)) {
+				contains = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(
+			messageBoardAttachments + " does not contain " +
+				messageBoardAttachment,
+			contains);
+	}
+
 	protected void assertHttpResponseStatusCode(
 		int expectedHttpResponseStatusCode,
 		HttpInvoker.HttpResponse actualHttpResponse) {
@@ -663,7 +677,9 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		}
 	}
 
-	protected void assertValid(MessageBoardAttachment messageBoardAttachment) {
+	protected void assertValid(MessageBoardAttachment messageBoardAttachment)
+		throws Exception {
+
 		boolean valid = true;
 
 		if (messageBoardAttachment.getId() == null) {
@@ -675,6 +691,14 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 
 			if (Objects.equals("contentUrl", additionalAssertFieldName)) {
 				if (messageBoardAttachment.getContentUrl() == null) {
+					valid = false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (messageBoardAttachment.getContentValue() == null) {
 					valid = false;
 				}
 
@@ -755,8 +779,8 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 	protected List<GraphQLField> getGraphQLFields() throws Exception {
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field :
-				ReflectionUtil.getDeclaredFields(
+		for (java.lang.reflect.Field field :
+				getDeclaredFields(
 					com.liferay.headless.delivery.dto.v1_0.
 						MessageBoardAttachment.class)) {
 
@@ -772,12 +796,13 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		return graphQLFields;
 	}
 
-	protected List<GraphQLField> getGraphQLFields(Field... fields)
+	protected List<GraphQLField> getGraphQLFields(
+			java.lang.reflect.Field... fields)
 		throws Exception {
 
 		List<GraphQLField> graphQLFields = new ArrayList<>();
 
-		for (Field field : fields) {
+		for (java.lang.reflect.Field field : fields) {
 			com.liferay.portal.vulcan.graphql.annotation.GraphQLField
 				vulcanGraphQLField = field.getAnnotation(
 					com.liferay.portal.vulcan.graphql.annotation.GraphQLField.
@@ -791,7 +816,7 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 				}
 
 				List<GraphQLField> childrenGraphQLFields = getGraphQLFields(
-					ReflectionUtil.getDeclaredFields(clazz));
+					getDeclaredFields(clazz));
 
 				graphQLFields.add(
 					new GraphQLField(field.getName(), childrenGraphQLFields));
@@ -820,6 +845,17 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 				if (!Objects.deepEquals(
 						messageBoardAttachment1.getContentUrl(),
 						messageBoardAttachment2.getContentUrl())) {
+
+					return false;
+				}
+
+				continue;
+			}
+
+			if (Objects.equals("contentValue", additionalAssertFieldName)) {
+				if (!Objects.deepEquals(
+						messageBoardAttachment1.getContentValue(),
+						messageBoardAttachment2.getContentValue())) {
 
 					return false;
 				}
@@ -909,9 +945,24 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 					return false;
 				}
 			}
+
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	protected java.lang.reflect.Field[] getDeclaredFields(Class clazz)
+		throws Exception {
+
+		Stream<java.lang.reflect.Field> stream = Stream.of(
+			ReflectionUtil.getDeclaredFields(clazz));
+
+		return stream.filter(
+			field -> !field.isSynthetic()
+		).toArray(
+			java.lang.reflect.Field[]::new
+		);
 	}
 
 	protected java.util.Collection<EntityField> getEntityFields()
@@ -968,6 +1019,14 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 		if (entityFieldName.equals("contentUrl")) {
 			sb.append("'");
 			sb.append(String.valueOf(messageBoardAttachment.getContentUrl()));
+			sb.append("'");
+
+			return sb.toString();
+		}
+
+		if (entityFieldName.equals("contentValue")) {
+			sb.append("'");
+			sb.append(String.valueOf(messageBoardAttachment.getContentValue()));
 			sb.append("'");
 
 			return sb.toString();
@@ -1062,6 +1121,8 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 			{
 				contentUrl = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
+				contentValue = StringUtil.toLowerCase(
+					RandomTestUtil.randomString());
 				encodingFormat = StringUtil.toLowerCase(
 					RandomTestUtil.randomString());
 				fileExtension = StringUtil.toLowerCase(
@@ -1132,12 +1193,12 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 						_parameterMap.entrySet()) {
 
 					sb.append(entry.getKey());
-					sb.append(":");
+					sb.append(": ");
 					sb.append(entry.getValue());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append(")");
 			}
@@ -1147,10 +1208,10 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 
 				for (GraphQLField graphQLField : _graphQLFields) {
 					sb.append(graphQLField.toString());
-					sb.append(",");
+					sb.append(", ");
 				}
 
-				sb.setLength(sb.length() - 1);
+				sb.setLength(sb.length() - 2);
 
 				sb.append("}");
 			}
@@ -1164,8 +1225,8 @@ public abstract class BaseMessageBoardAttachmentResourceTestCase {
 
 	}
 
-	private static final Log _log = LogFactoryUtil.getLog(
-		BaseMessageBoardAttachmentResourceTestCase.class);
+	private static final com.liferay.portal.kernel.log.Log _log =
+		LogFactoryUtil.getLog(BaseMessageBoardAttachmentResourceTestCase.class);
 
 	private static BeanUtilsBean _beanUtilsBean = new BeanUtilsBean() {
 

@@ -20,11 +20,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -40,16 +43,23 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("MasterPage")
+@GraphQLName(
+	description = "Represents a page with common elements (header, footer, ...) used for all or several pages of a site.",
+	value = "MasterPage"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "MasterPage")
-public class MasterPage {
+public class MasterPage implements Serializable {
 
 	public static MasterPage toDTO(String json) {
 		return ObjectMapperUtil.readValue(MasterPage.class, json);
 	}
 
-	@Schema
+	public static MasterPage unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(MasterPage.class, json);
+	}
+
+	@Schema(description = "The master page's key.")
 	public String getKey() {
 		return key;
 	}
@@ -71,11 +81,11 @@ public class MasterPage {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The master page's key.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String key;
 
-	@Schema
+	@Schema(description = "The master page's name.")
 	public String getName() {
 		return name;
 	}
@@ -97,7 +107,7 @@ public class MasterPage {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The master page's name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String name;
 
@@ -162,15 +172,26 @@ public class MasterPage {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.MasterPage",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -186,14 +207,12 @@ public class MasterPage {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -220,7 +239,7 @@ public class MasterPage {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -228,7 +247,7 @@ public class MasterPage {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -236,5 +255,10 @@ public class MasterPage {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

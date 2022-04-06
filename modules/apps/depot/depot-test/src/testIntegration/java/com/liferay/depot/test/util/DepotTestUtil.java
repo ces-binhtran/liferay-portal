@@ -19,7 +19,6 @@ import com.liferay.depot.model.DepotEntry;
 import com.liferay.petra.function.UnsafeBiConsumer;
 import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeRunnable;
-import com.liferay.portal.configuration.test.util.ConfigurationTemporarySwapper;
 import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.Role;
@@ -34,9 +33,6 @@ import com.liferay.portal.kernel.service.UserLocalServiceUtil;
 import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
 import com.liferay.portal.kernel.test.util.UserTestUtil;
-import com.liferay.portal.kernel.util.HashMapDictionary;
-
-import java.util.Dictionary;
 
 /**
  * @author Alejandro Tardín
@@ -83,36 +79,6 @@ public class DepotTestUtil {
 			unsafeRunnable);
 	}
 
-	public static void withDepotDisabled(
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("enabled", false);
-
-		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
-				new ConfigurationTemporarySwapper(_PID, dictionary)) {
-
-			unsafeRunnable.run();
-		}
-	}
-
-	public static void withDepotEnabled(
-			UnsafeRunnable<Exception> unsafeRunnable)
-		throws Exception {
-
-		Dictionary<String, Object> dictionary = new HashMapDictionary<>();
-
-		dictionary.put("enabled", true);
-
-		try (ConfigurationTemporarySwapper configurationTemporarySwapper =
-				new ConfigurationTemporarySwapper(_PID, dictionary)) {
-
-			unsafeRunnable.run();
-		}
-	}
-
 	public static void withDepotUser(
 			UnsafeBiConsumer<User, Role, Exception> unsafeBiConsumer)
 		throws Exception {
@@ -125,11 +91,9 @@ public class DepotTestUtil {
 			UnsafeRunnable<Exception> unsafeRunnable)
 		throws Exception {
 
-		Role role = RoleLocalServiceUtil.getRole(
-			group.getCompanyId(), roleName);
-
 		RoleTestUtil.addResourcePermission(
-			role, resourceName, ResourceConstants.SCOPE_GROUP,
+			RoleLocalServiceUtil.getRole(group.getCompanyId(), roleName),
+			resourceName, ResourceConstants.SCOPE_GROUP,
 			String.valueOf(group.getGroupId()), actionId);
 
 		try {
@@ -231,8 +195,5 @@ public class DepotTestUtil {
 			UserLocalServiceUtil.deleteUser(user);
 		}
 	}
-
-	private static final String _PID =
-		"com.liferay.depot.web.internal.configuration.FFDepotConfiguration";
 
 }

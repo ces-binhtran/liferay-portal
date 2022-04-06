@@ -14,26 +14,25 @@
 
 package com.liferay.jenkins.results.parser;
 
-import java.io.File;
+import org.json.JSONObject;
 
 /**
  * @author Michael Hashimoto
  */
 public class PortalFixpackReleaseJob extends BasePortalReleaseJob {
 
-	public PortalFixpackReleaseJob(String jobName, String portalBranchName) {
-		super(jobName, portalBranchName);
+	protected PortalFixpackReleaseJob(
+		BuildProfile buildProfile, String jobName,
+		PortalGitWorkingDirectory portalGitWorkingDirectory,
+		String testSuiteName, String upstreamBranchName) {
 
-		GitWorkingDirectory jenkinsGitWorkingDirectory =
-			getJenkinsGitWorkingDirectory();
+		super(
+			buildProfile, jobName, portalGitWorkingDirectory, testSuiteName,
+			upstreamBranchName);
+	}
 
-		jobPropertiesFiles.add(
-			new File(
-				jenkinsGitWorkingDirectory.getWorkingDirectory(),
-				"commands/dependencies" +
-					"/test-portal-fixpack-release.properties"));
-
-		readJobProperties();
+	protected PortalFixpackReleaseJob(JSONObject jsonObject) {
+		super(jsonObject);
 	}
 
 }

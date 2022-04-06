@@ -30,6 +30,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 	implements FriendlyURLEntryLocalService,
 			   ServiceWrapper<FriendlyURLEntryLocalService> {
 
+	public FriendlyURLEntryLocalServiceWrapper() {
+		this(null);
+	}
+
 	public FriendlyURLEntryLocalServiceWrapper(
 		FriendlyURLEntryLocalService friendlyURLEntryLocalService) {
 
@@ -38,6 +42,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 
 	/**
 	 * Adds the friendly url entry to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was added
@@ -120,6 +128,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 	/**
 	 * Deletes the friendly url entry from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was removed
 	 */
@@ -133,6 +145,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 
 	/**
 	 * Deletes the friendly url entry with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntryId the primary key of the friendly url entry
 	 * @return the friendly url entry that was removed
@@ -192,6 +208,13 @@ public class FriendlyURLEntryLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _friendlyURLEntryLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _friendlyURLEntryLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -341,6 +364,15 @@ public class FriendlyURLEntryLocalServiceWrapper
 	}
 
 	@Override
+	public FriendlyURLEntry fetchMainFriendlyURLEntry(
+			long classNameId, long classPK)
+		throws com.liferay.portal.kernel.exception.PortalException {
+
+		return _friendlyURLEntryLocalService.fetchMainFriendlyURLEntry(
+			classNameId, classPK);
+	}
+
+	@Override
 	public com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery
 		getActionableDynamicQuery() {
 
@@ -465,6 +497,17 @@ public class FriendlyURLEntryLocalServiceWrapper
 	@Override
 	public com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 			getFriendlyURLEntryLocalization(
+				long groupId, long classNameId, String urlTitle)
+		throws com.liferay.friendly.url.exception.
+			NoSuchFriendlyURLEntryLocalizationException {
+
+		return _friendlyURLEntryLocalService.getFriendlyURLEntryLocalization(
+			groupId, classNameId, urlTitle);
+	}
+
+	@Override
+	public com.liferay.friendly.url.model.FriendlyURLEntryLocalization
+			getFriendlyURLEntryLocalization(
 				long friendlyURLEntryId, String languageId)
 		throws com.liferay.portal.kernel.exception.PortalException {
 
@@ -543,6 +586,11 @@ public class FriendlyURLEntryLocalServiceWrapper
 		return _friendlyURLEntryLocalService.getPersistedModel(primaryKeyObj);
 	}
 
+	/**
+	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
+	 #getUniqueUrlTitle(long, long, long, String, String)}
+	 */
+	@Deprecated
 	@Override
 	public String getUniqueUrlTitle(
 		long groupId, long classNameId, long classPK, String urlTitle) {
@@ -552,12 +600,25 @@ public class FriendlyURLEntryLocalServiceWrapper
 	}
 
 	@Override
+	public String getUniqueUrlTitle(
+		long groupId, long classNameId, long classPK, String urlTitle,
+		String languageId) {
+
+		return _friendlyURLEntryLocalService.getUniqueUrlTitle(
+			groupId, classNameId, classPK, urlTitle, languageId);
+	}
+
+	@Override
 	public void setMainFriendlyURLEntry(FriendlyURLEntry friendlyURLEntry) {
 		_friendlyURLEntryLocalService.setMainFriendlyURLEntry(friendlyURLEntry);
 	}
 
 	/**
 	 * Updates the friendly url entry in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FriendlyURLEntryLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param friendlyURLEntry the friendly url entry
 	 * @return the friendly url entry that was updated

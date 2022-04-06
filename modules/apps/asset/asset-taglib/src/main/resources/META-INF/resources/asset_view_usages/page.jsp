@@ -54,19 +54,11 @@ AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUs
 					%>
 
 					<c:if test="<%= curLayout != null %>">
-
-						<%
-						Map<String, String> data = HashMapBuilder.put(
-							"href", assetEntryUsagesDisplayContext.getPreviewURL(assetEntryUsage)
-						).build();
-						%>
-
 						<clay:button
-							data="<%= data %>"
-							elementClasses="preview-asset-entry-usage table-action-link"
+							cssClass="preview-asset-entry-usage table-action-link"
+							data-href="<%= assetEntryUsagesDisplayContext.getPreviewURL(assetEntryUsage) %>"
+							displayType="secondary"
 							icon="view"
-							monospaced="<%= true %>"
-							style="secondary"
 						/>
 					</c:if>
 				</c:if>
@@ -81,31 +73,27 @@ AssetEntryUsagesDisplayContext assetEntryUsagesDisplayContext = new AssetEntryUs
 	</liferay-ui:search-container>
 </div>
 
-<aui:script require="metal-dom/src/all/dom as dom">
-	if (document.querySelector('#<portlet:namespace/>assetEntryUsagesList')) {
-		var previewAssetEntryUsagesList = dom.delegate(
-			document.querySelector('#<portlet:namespace/>assetEntryUsagesList'),
+<aui:script require="frontend-js-web/liferay/delegate/delegate.es as delegateModule">
+	if (document.querySelector('#<portlet:namespace />assetEntryUsagesList')) {
+		var delegate = delegateModule.default;
+
+		var previewAssetEntryUsagesList = delegate(
+			document.querySelector('#<portlet:namespace />assetEntryUsagesList'),
 			'click',
 			'.preview-asset-entry-usage',
-			function (event) {
+			(event) => {
 				var delegateTarget = event.delegateTarget;
 
-				Liferay.Util.openWindow({
-					dialog: {
-						destroyOnHide: true,
-						modal: true,
-					},
-					dialogIframe: {
-						bodyCssClass: 'dialog-with-footer article-preview',
-					},
+				Liferay.Util.openModal({
+					iframeBodyCssClass: 'article-preview',
 					title: '<liferay-ui:message key="preview" />',
-					uri: delegateTarget.getAttribute('data-href'),
+					url: delegateTarget.getAttribute('data-href'),
 				});
 			}
 		);
 
 		function removeListener() {
-			previewAssetEntryUsagesList.removeListener();
+			previewAssetEntryUsagesList.dispose();
 
 			Liferay.detach('destroyPortlet', removeListener);
 		}

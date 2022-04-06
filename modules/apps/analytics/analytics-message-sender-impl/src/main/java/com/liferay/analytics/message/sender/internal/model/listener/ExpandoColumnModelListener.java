@@ -16,6 +16,7 @@ package com.liferay.analytics.message.sender.internal.model.listener;
 
 import com.liferay.analytics.message.sender.model.listener.BaseEntityModelListener;
 import com.liferay.analytics.message.sender.model.listener.EntityModelListener;
+import com.liferay.analytics.settings.configuration.AnalyticsConfiguration;
 import com.liferay.expando.kernel.model.ExpandoColumn;
 import com.liferay.expando.kernel.model.ExpandoColumnConstants;
 import com.liferay.expando.kernel.model.ExpandoTableConstants;
@@ -25,7 +26,6 @@ import com.liferay.portal.kernel.dao.orm.DynamicQuery;
 import com.liferay.portal.kernel.dao.orm.ProjectionFactoryUtil;
 import com.liferay.portal.kernel.dao.orm.Property;
 import com.liferay.portal.kernel.dao.orm.PropertyFactoryUtil;
-import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.ModelListenerException;
 import com.liferay.portal.kernel.json.JSONObject;
 import com.liferay.portal.kernel.json.JSONUtil;
@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.model.ModelListener;
 import com.liferay.portal.kernel.model.Organization;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.Validator;
 
 import java.util.Arrays;
@@ -52,12 +53,13 @@ public class ExpandoColumnModelListener
 	extends BaseEntityModelListener<ExpandoColumn> {
 
 	@Override
-	public List<String> getAttributeNames() {
+	public List<String> getAttributeNames(long companyId) {
 		return _attributeNames;
 	}
 
 	@Override
-	public void onBeforeUpdate(ExpandoColumn expandoColumn)
+	public void onBeforeUpdate(
+			ExpandoColumn originalExpandoColumn, ExpandoColumn expandoColumn)
 		throws ModelListenerException {
 
 		if (!analyticsConfigurationTracker.isActive()) {
@@ -76,7 +78,9 @@ public class ExpandoColumnModelListener
 			return;
 		}
 
-		addAnalyticsMessage("update", getAttributeNames(), expandoColumn);
+		addAnalyticsMessage(
+			"update", getAttributeNames(expandoColumn.getCompanyId()),
+			expandoColumn);
 	}
 
 	@Override
@@ -94,8 +98,6 @@ public class ExpandoColumnModelListener
 						_getTableDynamicQuery(
 							classNameLocalService.getClassNameId(
 								Organization.class.getName()),
-							classNameLocalService.getClassNameId(
-								User.class.getName()),
 							ExpandoTableConstants.DEFAULT_TABLE_NAME)));
 			});
 
@@ -115,10 +117,33 @@ public class ExpandoColumnModelListener
 	@Override
 	protected boolean isExcluded(ExpandoColumn expandoColumn) {
 		if (isCustomField(
-				Organization.class.getName(), expandoColumn.getTableId()) ||
-			isCustomField(User.class.getName(), expandoColumn.getTableId())) {
+				Organization.class.getName(), expandoColumn.getTableId())) {
 
 			return false;
+		}
+
+		if (isCustomField(User.class.getName(), expandoColumn.getTableId())) {
+			AnalyticsConfiguration analyticsConfiguration =
+				analyticsConfigurationTracker.getAnalyticsConfiguration(
+					expandoColumn.getCompanyId());
+
+			if (ArrayUtil.isEmpty(
+					analyticsConfiguration.syncedUserFieldNames())) {
+
+				return true;
+			}
+
+			for (String syncedUserFieldName :
+					analyticsConfiguration.syncedUserFieldNames()) {
+
+				if (Objects.equals(
+						expandoColumn.getName(), syncedUserFieldName)) {
+
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		return true;
@@ -148,7 +173,7 @@ public class ExpandoColumnModelListener
 		return JSONUtil.put(
 			"className", className
 		).put(
-			"companyId", expandoColumn.getColumnId()
+			"companyId", expandoColumn.getCompanyId()
 		).put(
 			"dataType", dataType
 		).put(
@@ -165,17 +190,14 @@ public class ExpandoColumnModelListener
 	}
 
 	private DynamicQuery _getTableDynamicQuery(
-		long organizationClassNameId, long userClassNameId, String name) {
+		long organizationClassNameId, String name) {
 
 		DynamicQuery dynamicQuery = expandoTableLocalService.dynamicQuery();
 
 		Property classNameIdProperty = PropertyFactoryUtil.forName(
 			"classNameId");
 
-		dynamicQuery.add(
-			RestrictionsFactoryUtil.or(
-				classNameIdProperty.eq(organizationClassNameId),
-				classNameIdProperty.eq(userClassNameId)));
+		dynamicQuery.add(classNameIdProperty.eq(organizationClassNameId));
 
 		Property nameProperty = PropertyFactoryUtil.forName("name");
 

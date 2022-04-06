@@ -4,14 +4,12 @@
 @import 'components/info-panel';
 @import 'components/navbars';
 @import 'components/sidebar';
-@import 'components/splitter';
 @import 'components/table';
 @import 'components/widget';
 @import 'portlet/portlet';
 @import 'portlet/portlet_decorators';
-@import 'portlet/portlet_hello_world';
 
-@import 'custom_properties';
+@import 'custom_properties/custom_properties_set';
 
 body {
 	header {
@@ -88,16 +86,6 @@ body {
 	}
 }
 
-#content.container-fluid {
-	padding: 0;
-
-	.row {
-		.col-md-12 {
-			padding: 0;
-		}
-	}
-}
-
 .btn-group + .info-panel {
 	@include media-breakpoint-up(sm) {
 		top: auto;
@@ -105,7 +93,6 @@ body {
 }
 
 #footer {
-	background-color: $complementary-color;
 	color: #fff;
 	margin-top: 1rem;
 

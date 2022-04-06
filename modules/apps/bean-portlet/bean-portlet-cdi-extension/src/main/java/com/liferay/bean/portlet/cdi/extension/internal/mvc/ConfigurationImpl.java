@@ -28,7 +28,7 @@ import javax.ws.rs.core.Configuration;
 import javax.ws.rs.core.Feature;
 
 /**
- * @author  Neil Griffin
+ * @author Neil Griffin
  */
 public class ConfigurationImpl implements Configuration {
 
@@ -37,8 +37,6 @@ public class ConfigurationImpl implements Configuration {
 
 	public ConfigurationImpl(
 		PortletConfig portletConfig, PortletContext portletContext) {
-
-		_properties = new HashMap<>();
 
 		Enumeration<String> enumeration = portletConfig.getInitParameterNames();
 
@@ -124,6 +122,6 @@ public class ConfigurationImpl implements Configuration {
 		return false;
 	}
 
-	private final Map<String, Object> _properties;
+	private final Map<String, Object> _properties = new HashMap<>();
 
 }

@@ -22,11 +22,11 @@ import com.liferay.configuration.admin.web.internal.display.ConfigurationEntry;
 import com.liferay.configuration.admin.web.internal.display.ConfigurationModelConfigurationEntry;
 import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContext;
 import com.liferay.configuration.admin.web.internal.display.context.ConfigurationScopeDisplayContextFactory;
+import com.liferay.configuration.admin.web.internal.helper.DDMFormRendererHelper;
 import com.liferay.configuration.admin.web.internal.model.ConfigurationModel;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationEntryRetriever;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationFormRendererRetriever;
 import com.liferay.configuration.admin.web.internal.util.ConfigurationModelRetriever;
-import com.liferay.configuration.admin.web.internal.util.DDMFormRendererHelper;
 import com.liferay.configuration.admin.web.internal.util.ResourceBundleLoaderProvider;
 import com.liferay.dynamic.data.mapping.form.renderer.DDMFormRenderer;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
@@ -53,6 +53,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.service.cm.Configuration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -64,7 +65,7 @@ import org.osgi.service.component.annotations.Reference;
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.INSTANCE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SITE_SETTINGS,
 		"javax.portlet.name=" + ConfigurationAdminPortletKeys.SYSTEM_SETTINGS,
-		"mvc.command.name=/edit_configuration",
+		"mvc.command.name=/configuration_admin/edit_configuration",
 		"service.ranking:Integer=" + (Integer.MAX_VALUE - 1000)
 	},
 	service = MVCRenderCommand.class
@@ -196,6 +197,7 @@ public class EditConfigurationMVCRenderCommand implements MVCRenderCommand {
 				"configuration.pid");
 	}
 
+	@Deactivate
 	protected void deactivate() {
 		_configurationMenuItemsServiceTrackerMap.close();
 	}
@@ -210,7 +212,7 @@ public class EditConfigurationMVCRenderCommand implements MVCRenderCommand {
 	private ServiceTrackerMap<String, List<ConfigurationMenuItem>>
 		_configurationMenuItemsServiceTrackerMap;
 
-	@Reference
+	@Reference(target = "(filter.visibility=*)")
 	private ConfigurationModelRetriever _configurationModelRetriever;
 
 	@Reference

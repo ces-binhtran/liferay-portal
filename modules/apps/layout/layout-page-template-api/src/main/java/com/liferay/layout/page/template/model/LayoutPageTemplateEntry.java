@@ -82,9 +82,6 @@ public interface LayoutPageTemplateEntry
 
 		};
 
-	public String getContent()
-		throws com.liferay.portal.kernel.exception.PortalException;
-
 	public String getImagePreviewURL(
 		com.liferay.portal.kernel.theme.ThemeDisplay themeDisplay);
 

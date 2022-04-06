@@ -18,6 +18,8 @@ import com.liferay.petra.function.UnsafeConsumer;
 import com.liferay.petra.function.UnsafeFunction;
 import com.liferay.portal.kernel.search.Sort;
 import com.liferay.portal.kernel.search.filter.Filter;
+import com.liferay.portal.kernel.service.GroupLocalService;
+import com.liferay.portal.kernel.service.RoleLocalService;
 import com.liferay.portal.vulcan.accept.language.AcceptLanguage;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
@@ -32,9 +34,11 @@ import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Node;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.NodeMetric;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Process;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.ProcessMetric;
+import com.liferay.portal.workflow.metrics.rest.dto.v1_0.ProcessVersion;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.ReindexStatus;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Role;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.SLA;
+import com.liferay.portal.workflow.metrics.rest.dto.v1_0.SLAResult;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.Task;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.TaskBulkSelection;
 import com.liferay.portal.workflow.metrics.rest.dto.v1_0.TimeRange;
@@ -46,9 +50,11 @@ import com.liferay.portal.workflow.metrics.rest.resource.v1_0.NodeMetricResource
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.NodeResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessMetricResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessResource;
+import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ProcessVersionResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.ReindexStatusResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.RoleResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.SLAResource;
+import com.liferay.portal.workflow.metrics.rest.resource.v1_0.SLAResultResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.TaskResource;
 import com.liferay.portal.workflow.metrics.rest.resource.v1_0.TimeRangeResource;
 
@@ -136,6 +142,14 @@ public class Query {
 			processMetricResourceComponentServiceObjects;
 	}
 
+	public static void setProcessVersionResourceComponentServiceObjects(
+		ComponentServiceObjects<ProcessVersionResource>
+			processVersionResourceComponentServiceObjects) {
+
+		_processVersionResourceComponentServiceObjects =
+			processVersionResourceComponentServiceObjects;
+	}
+
 	public static void setReindexStatusResourceComponentServiceObjects(
 		ComponentServiceObjects<ReindexStatusResource>
 			reindexStatusResourceComponentServiceObjects) {
@@ -158,6 +172,14 @@ public class Query {
 
 		_slaResourceComponentServiceObjects =
 			slaResourceComponentServiceObjects;
+	}
+
+	public static void setSLAResultResourceComponentServiceObjects(
+		ComponentServiceObjects<SLAResultResource>
+			slaResultResourceComponentServiceObjects) {
+
+		_slaResultResourceComponentServiceObjects =
+			slaResultResourceComponentServiceObjects;
 	}
 
 	public static void setTaskResourceComponentServiceObjects(
@@ -227,19 +249,21 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstances(assigneeIds: ___, completed: ___, dateEnd: ___, dateStart: ___, page: ___, pageSize: ___, processId: ___, slaStatuses: ___, taskNames: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstances(assigneeIds: ___, classPKs: ___, dateEnd: ___, dateStart: ___, page: ___, pageSize: ___, processId: ___, slaStatuses: ___, sorts: ___, statuses: ___, taskNames: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public InstancePage processInstances(
 			@GraphQLName("processId") Long processId,
 			@GraphQLName("assigneeIds") Long[] assigneeIds,
-			@GraphQLName("completed") Boolean completed,
+			@GraphQLName("classPKs") Long[] classPKs,
 			@GraphQLName("dateEnd") Date dateEnd,
 			@GraphQLName("dateStart") Date dateStart,
 			@GraphQLName("slaStatuses") String[] slaStatuses,
+			@GraphQLName("statuses") String[] statuses,
 			@GraphQLName("taskNames") String[] taskNames,
 			@GraphQLName("pageSize") int pageSize,
-			@GraphQLName("page") int page)
+			@GraphQLName("page") int page,
+			@GraphQLName("sort") String sortsString)
 		throws Exception {
 
 		return _applyComponentServiceObjects(
@@ -247,14 +271,16 @@ public class Query {
 			this::_populateResourceContext,
 			instanceResource -> new InstancePage(
 				instanceResource.getProcessInstancesPage(
-					processId, assigneeIds, completed, dateEnd, dateStart,
-					slaStatuses, taskNames, Pagination.of(page, pageSize))));
+					processId, assigneeIds, classPKs, dateEnd, dateStart,
+					slaStatuses, statuses, taskNames,
+					Pagination.of(page, pageSize),
+					_sortsBiFunction.apply(instanceResource, sortsString))));
 	}
 
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstance(instanceId: ___, processId: ___){assetTitle, assetTitle_i18n, assetType, assetType_i18n, assignees, className, classPK, completed, creator, dateCompletion, dateCreated, dateModified, duration, id, processId, processVersion, slaResults, slaStatus, taskNames, transitions}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processInstance(instanceId: ___, processId: ___){active, assetTitle, assetTitle_i18n, assetType, assetType_i18n, assignees, className, classPK, completed, creator, dateCompletion, dateCreated, dateModified, duration, id, processId, processVersion, slaResults, slaStatus, taskNames, transitions}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public Instance processInstance(
@@ -288,7 +314,7 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processNodeMetrics(completed: ___, dateEnd: ___, dateStart: ___, key: ___, page: ___, pageSize: ___, processId: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processNodeMetrics(completed: ___, dateEnd: ___, dateStart: ___, key: ___, page: ___, pageSize: ___, processId: ___, processVersion: ___, sorts: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
 	public NodeMetricPage processNodeMetrics(
@@ -297,6 +323,7 @@ public class Query {
 			@GraphQLName("dateEnd") Date dateEnd,
 			@GraphQLName("dateStart") Date dateStart,
 			@GraphQLName("key") String key,
+			@GraphQLName("processVersion") String processVersion,
 			@GraphQLName("pageSize") int pageSize,
 			@GraphQLName("page") int page,
 			@GraphQLName("sort") String sortsString)
@@ -308,7 +335,7 @@ public class Query {
 			nodeMetricResource -> new NodeMetricPage(
 				nodeMetricResource.getProcessNodeMetricsPage(
 					processId, completed, dateEnd, dateStart, key,
-					Pagination.of(page, pageSize),
+					processVersion, Pagination.of(page, pageSize),
 					_sortsBiFunction.apply(nodeMetricResource, sortsString))));
 	}
 
@@ -388,15 +415,33 @@ public class Query {
 	/**
 	 * Invoke this method with the command line:
 	 *
-	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {reindexStatus{items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processProcessVersions(processId: ___){items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
 	 */
 	@GraphQLField
-	public ReindexStatusPage reindexStatus() throws Exception {
+	public ProcessVersionPage processProcessVersions(
+			@GraphQLName("processId") Long processId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_processVersionResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			processVersionResource -> new ProcessVersionPage(
+				processVersionResource.getProcessProcessVersionsPage(
+					processId)));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {reindexStatuses{items {__}, page, pageSize, totalCount}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public ReindexStatusPage reindexStatuses() throws Exception {
 		return _applyComponentServiceObjects(
 			_reindexStatusResourceComponentServiceObjects,
 			this::_populateResourceContext,
 			reindexStatusResource -> new ReindexStatusPage(
-				reindexStatusResource.getReindexStatusPage()));
+				reindexStatusResource.getReindexStatusesPage()));
 	}
 
 	/**
@@ -447,6 +492,23 @@ public class Query {
 		return _applyComponentServiceObjects(
 			_slaResourceComponentServiceObjects, this::_populateResourceContext,
 			slaResource -> slaResource.getSLA(slaId));
+	}
+
+	/**
+	 * Invoke this method with the command line:
+	 *
+	 * curl -H 'Content-Type: text/plain; charset=utf-8' -X 'POST' 'http://localhost:8080/o/graphql' -d $'{"query": "query {processLastSLAResult(processId: ___){dateModified, dateOverdue, id, name, onTime, remainingTime, status}}"}' -u 'test@liferay.com:test'
+	 */
+	@GraphQLField
+	public SLAResult processLastSLAResult(
+			@GraphQLName("processId") Long processId)
+		throws Exception {
+
+		return _applyComponentServiceObjects(
+			_slaResultResourceComponentServiceObjects,
+			this::_populateResourceContext,
+			slaResultResource -> slaResultResource.getProcessLastSLAResult(
+				processId));
 	}
 
 	/**
@@ -559,6 +621,99 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Process.class)
+	public class GetProcessLastSLAResultTypeExtension {
+
+		public GetProcessLastSLAResultTypeExtension(Process process) {
+			_process = process;
+		}
+
+		@GraphQLField
+		public SLAResult lastSLAResult() throws Exception {
+			return _applyComponentServiceObjects(
+				_slaResultResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				slaResultResource -> slaResultResource.getProcessLastSLAResult(
+					_process.getId()));
+		}
+
+		private Process _process;
+
+	}
+
+	@GraphQLTypeExtension(Process.class)
+	public class GetProcessHistogramMetricTypeExtension {
+
+		public GetProcessHistogramMetricTypeExtension(Process process) {
+			_process = process;
+		}
+
+		@GraphQLField
+		public HistogramMetric histogramMetric(
+				@GraphQLName("dateEnd") Date dateEnd,
+				@GraphQLName("dateStart") Date dateStart,
+				@GraphQLName("unit") String unit)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_histogramMetricResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				histogramMetricResource ->
+					histogramMetricResource.getProcessHistogramMetric(
+						_process.getId(), dateEnd, dateStart, unit));
+		}
+
+		private Process _process;
+
+	}
+
+	@GraphQLTypeExtension(Process.class)
+	public class GetProcessTasksPageTypeExtension {
+
+		public GetProcessTasksPageTypeExtension(Process process) {
+			_process = process;
+		}
+
+		@GraphQLField
+		public TaskPage tasks() throws Exception {
+			return _applyComponentServiceObjects(
+				_taskResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				taskResource -> new TaskPage(
+					taskResource.getProcessTasksPage(_process.getId())));
+		}
+
+		private Process _process;
+
+	}
+
+	@GraphQLTypeExtension(Process.class)
+	public class GetProcessSLAsPageTypeExtension {
+
+		public GetProcessSLAsPageTypeExtension(Process process) {
+			_process = process;
+		}
+
+		@GraphQLField
+		public SLAPage sLAs(
+				@GraphQLName("status") Integer status,
+				@GraphQLName("pageSize") int pageSize,
+				@GraphQLName("page") int page)
+			throws Exception {
+
+			return _applyComponentServiceObjects(
+				_slaResourceComponentServiceObjects,
+				Query.this::_populateResourceContext,
+				slaResource -> new SLAPage(
+					slaResource.getProcessSLAsPage(
+						_process.getId(), status,
+						Pagination.of(page, pageSize))));
+		}
+
+		private Process _process;
+
+	}
+
+	@GraphQLTypeExtension(Process.class)
 	public class GetProcessRolesPageTypeExtension {
 
 		public GetProcessRolesPageTypeExtension(Process process) {
@@ -627,25 +782,20 @@ public class Query {
 	}
 
 	@GraphQLTypeExtension(Process.class)
-	public class GetProcessHistogramMetricTypeExtension {
+	public class GetProcessProcessVersionsPageTypeExtension {
 
-		public GetProcessHistogramMetricTypeExtension(Process process) {
+		public GetProcessProcessVersionsPageTypeExtension(Process process) {
 			_process = process;
 		}
 
 		@GraphQLField
-		public HistogramMetric histogramMetric(
-				@GraphQLName("dateEnd") Date dateEnd,
-				@GraphQLName("dateStart") Date dateStart,
-				@GraphQLName("unit") String unit)
-			throws Exception {
-
+		public ProcessVersionPage processVersions() throws Exception {
 			return _applyComponentServiceObjects(
-				_histogramMetricResourceComponentServiceObjects,
+				_processVersionResourceComponentServiceObjects,
 				Query.this::_populateResourceContext,
-				histogramMetricResource ->
-					histogramMetricResource.getProcessHistogramMetric(
-						_process.getId(), dateEnd, dateStart, unit));
+				processVersionResource -> new ProcessVersionPage(
+					processVersionResource.getProcessProcessVersionsPage(
+						_process.getId())));
 		}
 
 		private Process _process;
@@ -665,6 +815,7 @@ public class Query {
 				@GraphQLName("dateEnd") Date dateEnd,
 				@GraphQLName("dateStart") Date dateStart,
 				@GraphQLName("key") String key,
+				@GraphQLName("processVersion") String processVersion,
 				@GraphQLName("pageSize") int pageSize,
 				@GraphQLName("page") int page,
 				@GraphQLName("sort") String sortsString)
@@ -676,56 +827,9 @@ public class Query {
 				nodeMetricResource -> new NodeMetricPage(
 					nodeMetricResource.getProcessNodeMetricsPage(
 						_process.getId(), completed, dateEnd, dateStart, key,
-						Pagination.of(page, pageSize),
+						processVersion, Pagination.of(page, pageSize),
 						_sortsBiFunction.apply(
 							nodeMetricResource, sortsString))));
-		}
-
-		private Process _process;
-
-	}
-
-	@GraphQLTypeExtension(Process.class)
-	public class GetProcessTasksPageTypeExtension {
-
-		public GetProcessTasksPageTypeExtension(Process process) {
-			_process = process;
-		}
-
-		@GraphQLField
-		public TaskPage tasks() throws Exception {
-			return _applyComponentServiceObjects(
-				_taskResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				taskResource -> new TaskPage(
-					taskResource.getProcessTasksPage(_process.getId())));
-		}
-
-		private Process _process;
-
-	}
-
-	@GraphQLTypeExtension(Process.class)
-	public class GetProcessSLAsPageTypeExtension {
-
-		public GetProcessSLAsPageTypeExtension(Process process) {
-			_process = process;
-		}
-
-		@GraphQLField
-		public SLAPage sLAs(
-				@GraphQLName("status") Integer status,
-				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
-			throws Exception {
-
-			return _applyComponentServiceObjects(
-				_slaResourceComponentServiceObjects,
-				Query.this::_populateResourceContext,
-				slaResource -> new SLAPage(
-					slaResource.getProcessSLAsPage(
-						_process.getId(), status,
-						Pagination.of(page, pageSize))));
 		}
 
 		private Process _process;
@@ -742,13 +846,15 @@ public class Query {
 		@GraphQLField
 		public InstancePage instances(
 				@GraphQLName("assigneeIds") Long[] assigneeIds,
-				@GraphQLName("completed") Boolean completed,
+				@GraphQLName("classPKs") Long[] classPKs,
 				@GraphQLName("dateEnd") Date dateEnd,
 				@GraphQLName("dateStart") Date dateStart,
 				@GraphQLName("slaStatuses") String[] slaStatuses,
+				@GraphQLName("statuses") String[] statuses,
 				@GraphQLName("taskNames") String[] taskNames,
 				@GraphQLName("pageSize") int pageSize,
-				@GraphQLName("page") int page)
+				@GraphQLName("page") int page,
+				@GraphQLName("sort") String sortsString)
 			throws Exception {
 
 			return _applyComponentServiceObjects(
@@ -756,9 +862,11 @@ public class Query {
 				Query.this::_populateResourceContext,
 				instanceResource -> new InstancePage(
 					instanceResource.getProcessInstancesPage(
-						_process.getId(), assigneeIds, completed, dateEnd,
-						dateStart, slaStatuses, taskNames,
-						Pagination.of(page, pageSize))));
+						_process.getId(), assigneeIds, classPKs, dateEnd,
+						dateStart, slaStatuses, statuses, taskNames,
+						Pagination.of(page, pageSize),
+						_sortsBiFunction.apply(
+							instanceResource, sortsString))));
 		}
 
 		private Process _process;
@@ -770,6 +878,7 @@ public class Query {
 
 		public CalendarPage(Page calendarPage) {
 			actions = calendarPage.getActions();
+
 			items = calendarPage.getItems();
 			lastPage = calendarPage.getLastPage();
 			page = calendarPage.getPage();
@@ -802,6 +911,7 @@ public class Query {
 
 		public HistogramMetricPage(Page histogramMetricPage) {
 			actions = histogramMetricPage.getActions();
+
 			items = histogramMetricPage.getItems();
 			lastPage = histogramMetricPage.getLastPage();
 			page = histogramMetricPage.getPage();
@@ -834,6 +944,7 @@ public class Query {
 
 		public IndexPage(Page indexPage) {
 			actions = indexPage.getActions();
+
 			items = indexPage.getItems();
 			lastPage = indexPage.getLastPage();
 			page = indexPage.getPage();
@@ -866,6 +977,7 @@ public class Query {
 
 		public InstancePage(Page instancePage) {
 			actions = instancePage.getActions();
+
 			items = instancePage.getItems();
 			lastPage = instancePage.getLastPage();
 			page = instancePage.getPage();
@@ -898,6 +1010,7 @@ public class Query {
 
 		public NodePage(Page nodePage) {
 			actions = nodePage.getActions();
+
 			items = nodePage.getItems();
 			lastPage = nodePage.getLastPage();
 			page = nodePage.getPage();
@@ -930,6 +1043,7 @@ public class Query {
 
 		public NodeMetricPage(Page nodeMetricPage) {
 			actions = nodeMetricPage.getActions();
+
 			items = nodeMetricPage.getItems();
 			lastPage = nodeMetricPage.getLastPage();
 			page = nodeMetricPage.getPage();
@@ -962,6 +1076,7 @@ public class Query {
 
 		public ProcessPage(Page processPage) {
 			actions = processPage.getActions();
+
 			items = processPage.getItems();
 			lastPage = processPage.getLastPage();
 			page = processPage.getPage();
@@ -994,6 +1109,7 @@ public class Query {
 
 		public ProcessMetricPage(Page processMetricPage) {
 			actions = processMetricPage.getActions();
+
 			items = processMetricPage.getItems();
 			lastPage = processMetricPage.getLastPage();
 			page = processMetricPage.getPage();
@@ -1021,11 +1137,45 @@ public class Query {
 
 	}
 
+	@GraphQLName("ProcessVersionPage")
+	public class ProcessVersionPage {
+
+		public ProcessVersionPage(Page processVersionPage) {
+			actions = processVersionPage.getActions();
+
+			items = processVersionPage.getItems();
+			lastPage = processVersionPage.getLastPage();
+			page = processVersionPage.getPage();
+			pageSize = processVersionPage.getPageSize();
+			totalCount = processVersionPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map> actions;
+
+		@GraphQLField
+		protected java.util.Collection<ProcessVersion> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	@GraphQLName("ReindexStatusPage")
 	public class ReindexStatusPage {
 
 		public ReindexStatusPage(Page reindexStatusPage) {
 			actions = reindexStatusPage.getActions();
+
 			items = reindexStatusPage.getItems();
 			lastPage = reindexStatusPage.getLastPage();
 			page = reindexStatusPage.getPage();
@@ -1058,6 +1208,7 @@ public class Query {
 
 		public RolePage(Page rolePage) {
 			actions = rolePage.getActions();
+
 			items = rolePage.getItems();
 			lastPage = rolePage.getLastPage();
 			page = rolePage.getPage();
@@ -1090,6 +1241,7 @@ public class Query {
 
 		public SLAPage(Page slaPage) {
 			actions = slaPage.getActions();
+
 			items = slaPage.getItems();
 			lastPage = slaPage.getLastPage();
 			page = slaPage.getPage();
@@ -1117,11 +1269,45 @@ public class Query {
 
 	}
 
+	@GraphQLName("SLAResultPage")
+	public class SLAResultPage {
+
+		public SLAResultPage(Page slaResultPage) {
+			actions = slaResultPage.getActions();
+
+			items = slaResultPage.getItems();
+			lastPage = slaResultPage.getLastPage();
+			page = slaResultPage.getPage();
+			pageSize = slaResultPage.getPageSize();
+			totalCount = slaResultPage.getTotalCount();
+		}
+
+		@GraphQLField
+		protected Map<String, Map> actions;
+
+		@GraphQLField
+		protected java.util.Collection<SLAResult> items;
+
+		@GraphQLField
+		protected long lastPage;
+
+		@GraphQLField
+		protected long page;
+
+		@GraphQLField
+		protected long pageSize;
+
+		@GraphQLField
+		protected long totalCount;
+
+	}
+
 	@GraphQLName("TaskPage")
 	public class TaskPage {
 
 		public TaskPage(Page taskPage) {
 			actions = taskPage.getActions();
+
 			items = taskPage.getItems();
 			lastPage = taskPage.getLastPage();
 			page = taskPage.getPage();
@@ -1154,6 +1340,7 @@ public class Query {
 
 		public TimeRangePage(Page timeRangePage) {
 			actions = timeRangePage.getActions();
+
 			items = timeRangePage.getItems();
 			lastPage = timeRangePage.getLastPage();
 			page = timeRangePage.getPage();
@@ -1209,6 +1396,8 @@ public class Query {
 		calendarResource.setContextHttpServletResponse(_httpServletResponse);
 		calendarResource.setContextUriInfo(_uriInfo);
 		calendarResource.setContextUser(_user);
+		calendarResource.setGroupLocalService(_groupLocalService);
+		calendarResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -1223,6 +1412,8 @@ public class Query {
 			_httpServletResponse);
 		histogramMetricResource.setContextUriInfo(_uriInfo);
 		histogramMetricResource.setContextUser(_user);
+		histogramMetricResource.setGroupLocalService(_groupLocalService);
+		histogramMetricResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(IndexResource indexResource)
@@ -1234,6 +1425,8 @@ public class Query {
 		indexResource.setContextHttpServletResponse(_httpServletResponse);
 		indexResource.setContextUriInfo(_uriInfo);
 		indexResource.setContextUser(_user);
+		indexResource.setGroupLocalService(_groupLocalService);
+		indexResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(InstanceResource instanceResource)
@@ -1245,6 +1438,8 @@ public class Query {
 		instanceResource.setContextHttpServletResponse(_httpServletResponse);
 		instanceResource.setContextUriInfo(_uriInfo);
 		instanceResource.setContextUser(_user);
+		instanceResource.setGroupLocalService(_groupLocalService);
+		instanceResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(NodeResource nodeResource)
@@ -1256,6 +1451,8 @@ public class Query {
 		nodeResource.setContextHttpServletResponse(_httpServletResponse);
 		nodeResource.setContextUriInfo(_uriInfo);
 		nodeResource.setContextUser(_user);
+		nodeResource.setGroupLocalService(_groupLocalService);
+		nodeResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(NodeMetricResource nodeMetricResource)
@@ -1267,6 +1464,8 @@ public class Query {
 		nodeMetricResource.setContextHttpServletResponse(_httpServletResponse);
 		nodeMetricResource.setContextUriInfo(_uriInfo);
 		nodeMetricResource.setContextUser(_user);
+		nodeMetricResource.setGroupLocalService(_groupLocalService);
+		nodeMetricResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(ProcessResource processResource)
@@ -1278,6 +1477,8 @@ public class Query {
 		processResource.setContextHttpServletResponse(_httpServletResponse);
 		processResource.setContextUriInfo(_uriInfo);
 		processResource.setContextUser(_user);
+		processResource.setGroupLocalService(_groupLocalService);
+		processResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -1291,6 +1492,24 @@ public class Query {
 			_httpServletResponse);
 		processMetricResource.setContextUriInfo(_uriInfo);
 		processMetricResource.setContextUser(_user);
+		processMetricResource.setGroupLocalService(_groupLocalService);
+		processMetricResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(
+			ProcessVersionResource processVersionResource)
+		throws Exception {
+
+		processVersionResource.setContextAcceptLanguage(_acceptLanguage);
+		processVersionResource.setContextCompany(_company);
+		processVersionResource.setContextHttpServletRequest(
+			_httpServletRequest);
+		processVersionResource.setContextHttpServletResponse(
+			_httpServletResponse);
+		processVersionResource.setContextUriInfo(_uriInfo);
+		processVersionResource.setContextUser(_user);
+		processVersionResource.setGroupLocalService(_groupLocalService);
+		processVersionResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(
@@ -1304,6 +1523,8 @@ public class Query {
 			_httpServletResponse);
 		reindexStatusResource.setContextUriInfo(_uriInfo);
 		reindexStatusResource.setContextUser(_user);
+		reindexStatusResource.setGroupLocalService(_groupLocalService);
+		reindexStatusResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(RoleResource roleResource)
@@ -1315,6 +1536,8 @@ public class Query {
 		roleResource.setContextHttpServletResponse(_httpServletResponse);
 		roleResource.setContextUriInfo(_uriInfo);
 		roleResource.setContextUser(_user);
+		roleResource.setGroupLocalService(_groupLocalService);
+		roleResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(SLAResource slaResource)
@@ -1326,6 +1549,21 @@ public class Query {
 		slaResource.setContextHttpServletResponse(_httpServletResponse);
 		slaResource.setContextUriInfo(_uriInfo);
 		slaResource.setContextUser(_user);
+		slaResource.setGroupLocalService(_groupLocalService);
+		slaResource.setRoleLocalService(_roleLocalService);
+	}
+
+	private void _populateResourceContext(SLAResultResource slaResultResource)
+		throws Exception {
+
+		slaResultResource.setContextAcceptLanguage(_acceptLanguage);
+		slaResultResource.setContextCompany(_company);
+		slaResultResource.setContextHttpServletRequest(_httpServletRequest);
+		slaResultResource.setContextHttpServletResponse(_httpServletResponse);
+		slaResultResource.setContextUriInfo(_uriInfo);
+		slaResultResource.setContextUser(_user);
+		slaResultResource.setGroupLocalService(_groupLocalService);
+		slaResultResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(TaskResource taskResource)
@@ -1337,6 +1575,8 @@ public class Query {
 		taskResource.setContextHttpServletResponse(_httpServletResponse);
 		taskResource.setContextUriInfo(_uriInfo);
 		taskResource.setContextUser(_user);
+		taskResource.setGroupLocalService(_groupLocalService);
+		taskResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private void _populateResourceContext(TimeRangeResource timeRangeResource)
@@ -1348,6 +1588,8 @@ public class Query {
 		timeRangeResource.setContextHttpServletResponse(_httpServletResponse);
 		timeRangeResource.setContextUriInfo(_uriInfo);
 		timeRangeResource.setContextUser(_user);
+		timeRangeResource.setGroupLocalService(_groupLocalService);
+		timeRangeResource.setRoleLocalService(_roleLocalService);
 	}
 
 	private static ComponentServiceObjects<CalendarResource>
@@ -1366,24 +1608,30 @@ public class Query {
 		_processResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ProcessMetricResource>
 		_processMetricResourceComponentServiceObjects;
+	private static ComponentServiceObjects<ProcessVersionResource>
+		_processVersionResourceComponentServiceObjects;
 	private static ComponentServiceObjects<ReindexStatusResource>
 		_reindexStatusResourceComponentServiceObjects;
 	private static ComponentServiceObjects<RoleResource>
 		_roleResourceComponentServiceObjects;
 	private static ComponentServiceObjects<SLAResource>
 		_slaResourceComponentServiceObjects;
+	private static ComponentServiceObjects<SLAResultResource>
+		_slaResultResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TaskResource>
 		_taskResourceComponentServiceObjects;
 	private static ComponentServiceObjects<TimeRangeResource>
 		_timeRangeResourceComponentServiceObjects;
 
 	private AcceptLanguage _acceptLanguage;
-	private BiFunction<Object, String, Filter> _filterBiFunction;
-	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private com.liferay.portal.kernel.model.Company _company;
-	private com.liferay.portal.kernel.model.User _user;
+	private BiFunction<Object, String, Filter> _filterBiFunction;
+	private GroupLocalService _groupLocalService;
 	private HttpServletRequest _httpServletRequest;
 	private HttpServletResponse _httpServletResponse;
+	private RoleLocalService _roleLocalService;
+	private BiFunction<Object, String, Sort[]> _sortsBiFunction;
 	private UriInfo _uriInfo;
+	private com.liferay.portal.kernel.model.User _user;
 
 }

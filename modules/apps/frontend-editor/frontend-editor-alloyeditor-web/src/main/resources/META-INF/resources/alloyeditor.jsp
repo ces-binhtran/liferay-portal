@@ -66,6 +66,10 @@ if (editorOptions != null) {
 </c:if>
 
 <script data-senna-track="temporary" type="text/javascript">
+	CKEDITOR.ADDITIONAL_RESOURCE_PARAMS = {
+		languageId: themeDisplay.getLanguageId(),
+	};
+
 	CKEDITOR.disableAutoInline = true;
 
 	CKEDITOR.dtd.$removeEmpty.i = 0;
@@ -74,10 +78,22 @@ if (editorOptions != null) {
 	CKEDITOR.env.isCompatible = true;
 </script>
 
+<liferay-util:html-top>
+	<link href="<%= PortalUtil.getStaticResourceURL(request, application.getContextPath() + "/css/main.css") %>" rel="stylesheet" type="text/css" />
+</liferay-util:html-top>
+
 <liferay-util:buffer
 	var="alloyEditor"
 >
-	<div class="alloy-editor alloy-editor-placeholder <%= HtmlUtil.escapeAttribute(cssClass) %>" contenteditable="false" data-placeholder="<%= LanguageUtil.get(request, placeholder) %>" data-required="<%= required %>" id="<%= HtmlUtil.escapeAttribute(name) %>" name="<%= HtmlUtil.escapeAttribute(name) %>"></div>
+	<div class="alloy-editor <%= HtmlUtil.escapeAttribute(cssClass) %>" contenteditable="false" data-placeholder="<%= LanguageUtil.get(request, placeholder) %>" data-required="<%= required %>" id="<%= HtmlUtil.escapeAttribute(name) %>" name="<%= HtmlUtil.escapeAttribute(name) %>"></div>
+
+	<div class="alloy-editor-placeholder <%= HtmlUtil.escapeAttribute(cssClass) %>">
+		<%= LanguageUtil.get(request, placeholder) %>
+
+		<c:if test="<%= Boolean.parseBoolean(required) %>">
+			<span class="text-warning">*</span>
+		</c:if>
+	</div>
 
 	<aui:icon cssClass="alloy-editor-icon" image="text-editor" markupView="lexicon" />
 </liferay-util:buffer>
@@ -98,15 +114,15 @@ if (editorOptions != null) {
 			</div>
 
 			<div class="alloy-editor-switch hide">
-				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "fullscreen") %>' id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
+				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "fullscreen") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Fullscreen" type="button">
 					<aui:icon image="expand" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "dark-theme") %>' id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
+				<button class="btn btn-secondary btn-sm hide lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "dark-theme") %>" id="<%= HtmlUtil.escapeAttribute(name) %>SwitchTheme" type="button">
 					<aui:icon image="moon" markupView="lexicon" />
 				</button>
 
-				<button class="btn btn-secondary btn-sm editor-view lfr-portal-tooltip" data-title='<%= LanguageUtil.get(resourceBundle, "code-view") %>' id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
+				<button class="btn btn-secondary btn-sm editor-view lfr-portal-tooltip" data-title="<%= LanguageUtil.get(resourceBundle, "code-view") %>" id="<%= HtmlUtil.escapeAttribute(name) %>Switch" type="button">
 					<aui:icon image="code" markupView="lexicon" />
 				</button>
 			</div>
@@ -125,16 +141,6 @@ if (editorOptions != null) {
 
 <%
 String modules = "liferay-alloy-editor";
-
-String uploadURL = StringPool.BLANK;
-
-if (editorOptions != null) {
-	uploadURL = editorOptions.getUploadURL();
-
-	if ((data != null) && Validator.isNotNull(uploadURL)) {
-		modules += ",liferay-editor-image-uploader";
-	}
-}
 
 if (showSource) {
 	modules += ",liferay-alloy-editor-source";
@@ -155,27 +161,16 @@ name = HtmlUtil.escapeJS(name);
 	var alloyEditor;
 
 	var documentBrowseLinkCallback = function (editor, linkHref, callback) {
-		Liferay.Loader.require(
-			'frontend-js-web/liferay/ItemSelectorDialog.es',
-			function (ItemSelectorDialog) {
-				var itemSelectorDialog = new ItemSelectorDialog.default({
-					eventName: editor.name + 'selectDocument',
-					singleSelect: true,
-					title: '<liferay-ui:message key="select-item" />',
-					url: linkHref,
-				});
-
-				itemSelectorDialog.open();
-
-				itemSelectorDialog.on('selectedItemChange', function (event) {
-					var selectedItem = event.selectedItem;
-
-					if (selectedItem) {
-						callback(selectedItem);
-					}
-				});
-			}
-		);
+		Liferay.Util.openSelectionModal({
+			onSelect: function (selectedItem) {
+				if (selectedItem) {
+					callback(selectedItem);
+				}
+			},
+			selectEventName: editor.name + 'selectDocument',
+			title: '<liferay-ui:message key="select-item" />',
+			url: linkHref,
+		});
 	};
 
 	var getInitialContent = function () {
@@ -216,7 +211,7 @@ name = HtmlUtil.escapeJS(name);
 		if (editorConfig.extraPlugins) {
 			editorConfig.extraPlugins = A.Array.filter(
 				editorConfig.extraPlugins.split(','),
-				function (item) {
+				(item) => {
 					return item !== 'ae_embed';
 				}
 			).join(',');
@@ -235,7 +230,7 @@ name = HtmlUtil.escapeJS(name);
 			{
 				documentBrowseLinkCallback: documentBrowseLinkCallback,
 				htmlEncodeOutput: true,
-				spritemap: themeDisplay.getPathThemeImages() + '/lexicon/icons.svg',
+				spritemap: themeDisplay.getPathThemeImages() + '/clay/icons.svg',
 				title: false,
 				uiNode: uiNode,
 			},
@@ -244,17 +239,6 @@ name = HtmlUtil.escapeJS(name);
 
 		var plugins = [];
 
-		<c:if test="<%= Validator.isNotNull(data) && Validator.isNotNull(uploadURL) %>">
-			plugins.push({
-				cfg: {
-					uploadItemReturnType:
-						'<%= editorOptions.getUploadItemReturnType() %>',
-					uploadUrl: '<%= uploadURL %>',
-				},
-				fn: A.Plugin.LiferayEditorImageUploader,
-			});
-		</c:if>
-
 		<c:if test="<%= showSource %>">
 			plugins.push(A.Plugin.LiferayAlloyEditorSource);
 		</c:if>
@@ -262,6 +246,10 @@ name = HtmlUtil.escapeJS(name);
 		alloyEditor = new A.LiferayAlloyEditor({
 			contents: '<%= HtmlUtil.escapeJS(contents) %>',
 			editorConfig: editorConfig,
+			editorPaths: [
+				'<%= PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_ALLOYEDITOR) %>',
+				'<%= PortalWebResourcesUtil.getContextPath(PortalWebResourceConstants.RESOURCE_TYPE_EDITOR_CKEDITOR) %>',
+			],
 			namespace: '<%= name %>',
 
 			<c:if test="<%= Validator.isNotNull(onBlurMethod) %>">
@@ -284,11 +272,7 @@ name = HtmlUtil.escapeJS(name);
 			portletId: '<%= portletId %>',
 			textMode: <%= (editorOptions != null) ? editorOptions.isTextMode() : Boolean.FALSE.toString() %>,
 
-			<%
-			boolean useCustomDataProcessor = (editorOptionsDynamicAttributes != null) && GetterUtil.getBoolean(editorOptionsDynamicAttributes.get("useCustomDataProcessor"));
-			%>
-
-			useCustomDataProcessor: <%= useCustomDataProcessor %>,
+			useCustomDataProcessor: <%= (editorOptionsDynamicAttributes != null) && GetterUtil.getBoolean(editorOptionsDynamicAttributes.get("useCustomDataProcessor")) %>,
 		}).render();
 
 		CKEDITOR.dom.selection.prototype.selectElement = function (element) {
@@ -309,7 +293,7 @@ name = HtmlUtil.escapeJS(name);
 
 	var ignoreClass = ['ddm-options-target'];
 
-	var preventImageDragoverHandler = windowNode.on('dragover', function (event) {
+	var preventImageDragoverHandler = windowNode.on('dragover', (event) => {
 		var validDropTarget = event.target.getDOMNode().isContentEditable;
 
 		if (!validDropTarget) {
@@ -317,9 +301,9 @@ name = HtmlUtil.escapeJS(name);
 		}
 	});
 
-	var preventImageDropHandler = windowNode.on('drop', function (event) {
+	var preventImageDropHandler = windowNode.on('drop', (event) => {
 		var node = event.target.getDOMNode();
-		var ignoreNode = node.className.split(' ').filter(function (value) {
+		var ignoreNode = node.className.split(' ').filter((value) => {
 			return ignoreClass.includes(value);
 		});
 		var validDropTarget = ignoreNode.length > 0 ? true : node.isContentEditable;

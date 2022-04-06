@@ -15,8 +15,8 @@
 package com.liferay.exportimport.web.internal.portlet.action;
 
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationSettingsMapFactory;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.exception.LARFileNameException;
 import com.liferay.exportimport.kernel.lar.ExportImportHelper;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
@@ -25,6 +25,7 @@ import com.liferay.exportimport.kernel.service.ExportImportService;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.Group;
 import com.liferay.portal.kernel.portlet.bridges.mvc.BaseMVCActionCommand;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.service.LayoutLocalService;
@@ -34,9 +35,9 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Constants;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
+import com.liferay.portal.kernel.util.SessionTreeJSClicks;
 import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.kernel.util.WebKeys;
-import com.liferay.taglib.ui.util.SessionTreeJSClicks;
 
 import java.io.Serializable;
 
@@ -59,7 +60,7 @@ import org.osgi.service.component.annotations.Reference;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT,
-		"mvc.command.name=exportLayouts"
+		"mvc.command.name=/export_import/export_layouts"
 	},
 	service = MVCActionCommand.class
 )
@@ -97,7 +98,7 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 			SessionErrors.add(actionRequest, exception.getClass());
 
 			if (!(exception instanceof LARFileNameException)) {
-				_log.error(exception, exception);
+				_log.error(exception);
 			}
 		}
 	}
@@ -135,7 +136,7 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 				_exportImportConfigurationSettingsMapFactory.
 					buildExportLayoutSettingsMap(
 						themeDisplay.getUserId(), groupId, privateLayout,
-						getLayoutIds(actionRequest),
+						_getLayoutIds(actionRequest),
 						actionRequest.getParameterMap(),
 						themeDisplay.getLocale(), themeDisplay.getTimeZone());
 		}
@@ -143,13 +144,20 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		String taskName = ParamUtil.getString(actionRequest, "name");
 
 		if (Validator.isNull(taskName)) {
-			if (privateLayout) {
-				taskName = LanguageUtil.get(
-					actionRequest.getLocale(), "private-pages");
+			Group group = themeDisplay.getScopeGroup();
+
+			if (group.isPrivateLayoutsEnabled()) {
+				if (privateLayout) {
+					taskName = LanguageUtil.get(
+						actionRequest.getLocale(), "private-pages");
+				}
+				else {
+					taskName = LanguageUtil.get(
+						actionRequest.getLocale(), "public-pages");
+				}
 			}
 			else {
-				taskName = LanguageUtil.get(
-					actionRequest.getLocale(), "public-pages");
+				taskName = LanguageUtil.get(actionRequest.getLocale(), "pages");
 			}
 		}
 
@@ -158,12 +166,6 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 				themeDisplay.getUserId(), taskName,
 				ExportImportConfigurationConstants.TYPE_EXPORT_LAYOUT,
 				exportLayoutSettingsMap);
-	}
-
-	protected long[] getLayoutIds(PortletRequest portletRequest)
-		throws Exception {
-
-		return _exportImportHelper.getLayoutIds(portletRequest);
 	}
 
 	@Reference(unbind = "-")
@@ -206,6 +208,12 @@ public class ExportLayoutsMVCActionCommand extends BaseMVCActionCommand {
 		LayoutLocalService layoutLocalService) {
 
 		_layoutLocalService = layoutLocalService;
+	}
+
+	private long[] _getLayoutIds(PortletRequest portletRequest)
+		throws Exception {
+
+		return _exportImportHelper.getLayoutIds(portletRequest);
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

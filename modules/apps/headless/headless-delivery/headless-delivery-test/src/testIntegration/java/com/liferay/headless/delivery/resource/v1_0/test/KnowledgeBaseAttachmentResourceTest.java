@@ -22,8 +22,8 @@ import com.liferay.knowledge.base.model.KBFolder;
 import com.liferay.knowledge.base.service.KBArticleLocalServiceUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalServiceUtil;
+import com.liferay.portal.kernel.test.constants.TestDataConstants;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.test.util.TestDataConstants;
 import com.liferay.portal.kernel.util.FileUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.PortalUtil;
@@ -54,6 +54,7 @@ public class KnowledgeBaseAttachmentResourceTest
 		serviceContext.setScopeGroupId(testGroup.getGroupId());
 
 		_kbArticle = KBArticleLocalServiceUtil.addKBArticle(
+			null,
 			UserLocalServiceUtil.getDefaultUserId(testGroup.getCompanyId()),
 			PortalUtil.getClassNameId(KBFolder.class.getName()), 0,
 			RandomTestUtil.randomString(), RandomTestUtil.randomString(),

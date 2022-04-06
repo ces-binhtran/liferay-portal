@@ -31,6 +31,7 @@ import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortalUtil;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import java.lang.reflect.Field;
 
@@ -38,10 +39,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.ResourceBundle;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 
 import org.mockito.Matchers;
@@ -56,12 +58,17 @@ import org.skyscreamer.jsonassert.JSONAssert;
  */
 public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 
+	@ClassRule
+	@Rule
+	public static final LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
+
 	@Before
 	@Override
 	public void setUp() throws Exception {
 		super.setUp();
 
-		setUpDDMFormJSONSerializer();
+		_setUpDDMFormJSONSerializer();
 		setUpPortalUtil();
 	}
 
@@ -71,45 +78,27 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 
 		DDMForm ddmForm = createDDMForm();
 
-		ddmForm.setDDMFormRules(createDDMFormRules());
+		ddmForm.setDDMFormRules(_createDDMFormRules());
 		ddmForm.setDDMFormSuccessPageSettings(
-			createDDMFormSuccessPageSettings());
+			_createDDMFormSuccessPageSettings());
 
 		String actualJSON = serialize(ddmForm);
 
 		JSONAssert.assertEquals(expectedJSON, actualJSON, false);
 	}
 
-	protected List<DDMFormRule> createDDMFormRules() {
-		List<DDMFormRule> ddmFormRules = new ArrayList<>();
+	@Test
+	public void testDDMFormSerializationWithSchemaVersion() throws Exception {
+		String expectedJSON = read(
+			"ddm-form-json-serializer-with-definition-schema-version.json");
 
-		DDMFormRule ddmFormRule1 = new DDMFormRule(
-			Arrays.asList("Action 1", "Action 2"), "Condition 1");
+		DDMForm ddmForm = createDDMForm();
 
-		ddmFormRules.add(ddmFormRule1);
+		ddmForm.setDefinitionSchemaVersion("2.0");
 
-		DDMFormRule ddmFormRule2 = new DDMFormRule(
-			Arrays.asList("Action 3"), "Condition 2");
+		String actualJSON = serialize(ddmForm);
 
-		ddmFormRule2.setEnabled(false);
-
-		ddmFormRules.add(ddmFormRule2);
-
-		return ddmFormRules;
-	}
-
-	protected DDMFormSuccessPageSettings createDDMFormSuccessPageSettings() {
-		LocalizedValue body = new LocalizedValue(LocaleUtil.US);
-
-		body.addString(LocaleUtil.US, "Body Text");
-		body.addString(LocaleUtil.BRAZIL, "Texto");
-
-		LocalizedValue title = new LocalizedValue(LocaleUtil.US);
-
-		title.addString(LocaleUtil.US, "Title Text");
-		title.addString(LocaleUtil.BRAZIL, "Título");
-
-		return new DDMFormSuccessPageSettings(body, title, true);
+		JSONAssert.assertEquals(expectedJSON, actualJSON, false);
 	}
 
 	protected DDMFormFieldTypeServicesTracker
@@ -137,19 +126,17 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 			_defaultDDMFormFieldType
 		);
 
-		Map<String, Object> properties = HashMapBuilder.<String, Object>put(
-			"ddm.form.field.type.icon", "my-icon"
-		).put(
-			"ddm.form.field.type.js.class.name", "myJavaScriptClass"
-		).put(
-			"ddm.form.field.type.js.module", "myJavaScriptModule"
-		).build();
-
 		when(
 			ddmFormFieldTypeServicesTracker.getDDMFormFieldTypeProperties(
 				Matchers.anyString())
 		).thenReturn(
-			properties
+			HashMapBuilder.<String, Object>put(
+				"ddm.form.field.type.icon", "my-icon"
+			).put(
+				"ddm.form.field.type.js.class.name", "myJavaScriptClass"
+			).put(
+				"ddm.form.field.type.js.module", "myJavaScriptModule"
+			).build()
 		);
 
 		return ddmFormFieldTypeServicesTracker;
@@ -163,24 +150,6 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 			_ddmFormJSONSerializer.serialize(builder.build());
 
 		return ddmFormSerializerSerializeResponse.getContent();
-	}
-
-	protected void setUpDDMFormJSONSerializer() throws Exception {
-
-		// DDM form field type services tracker
-
-		Field field = ReflectionUtil.getDeclaredField(
-			DDMFormJSONSerializer.class, "_ddmFormFieldTypeServicesTracker");
-
-		field.set(
-			_ddmFormJSONSerializer, getMockedDDMFormFieldTypeServicesTracker());
-
-		// JSON factory
-
-		field = ReflectionUtil.getDeclaredField(
-			DDMFormJSONSerializer.class, "_jsonFactory");
-
-		field.set(_ddmFormJSONSerializer, new JSONFactoryImpl());
 	}
 
 	protected void setUpDefaultDDMFormFieldType() {
@@ -215,6 +184,56 @@ public class DDMFormJSONSerializerTest extends BaseDDMFormSerializerTestCase {
 		);
 
 		portalUtil.setPortal(portal);
+	}
+
+	private List<DDMFormRule> _createDDMFormRules() {
+		List<DDMFormRule> ddmFormRules = new ArrayList<>();
+
+		DDMFormRule ddmFormRule1 = new DDMFormRule(
+			Arrays.asList("Action 1", "Action 2"), "Condition 1");
+
+		ddmFormRules.add(ddmFormRule1);
+
+		DDMFormRule ddmFormRule2 = new DDMFormRule(
+			Arrays.asList("Action 3"), "Condition 2");
+
+		ddmFormRule2.setEnabled(false);
+
+		ddmFormRules.add(ddmFormRule2);
+
+		return ddmFormRules;
+	}
+
+	private DDMFormSuccessPageSettings _createDDMFormSuccessPageSettings() {
+		LocalizedValue body = new LocalizedValue(LocaleUtil.US);
+
+		body.addString(LocaleUtil.US, "Body Text");
+		body.addString(LocaleUtil.BRAZIL, "Texto");
+
+		LocalizedValue title = new LocalizedValue(LocaleUtil.US);
+
+		title.addString(LocaleUtil.US, "Title Text");
+		title.addString(LocaleUtil.BRAZIL, "Título");
+
+		return new DDMFormSuccessPageSettings(body, title, true);
+	}
+
+	private void _setUpDDMFormJSONSerializer() throws Exception {
+
+		// DDM form field type services tracker
+
+		Field field = ReflectionUtil.getDeclaredField(
+			DDMFormJSONSerializer.class, "_ddmFormFieldTypeServicesTracker");
+
+		field.set(
+			_ddmFormJSONSerializer, getMockedDDMFormFieldTypeServicesTracker());
+
+		// JSON factory
+
+		field = ReflectionUtil.getDeclaredField(
+			DDMFormJSONSerializer.class, "_jsonFactory");
+
+		field.set(_ddmFormJSONSerializer, new JSONFactoryImpl());
 	}
 
 	private final DDMFormJSONSerializer _ddmFormJSONSerializer =

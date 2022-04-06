@@ -37,17 +37,17 @@ public class SegmentsExperienceCacheModel
 	implements CacheModel<SegmentsExperience>, Externalizable, MVCCModel {
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) {
+	public boolean equals(Object object) {
+		if (this == object) {
 			return true;
 		}
 
-		if (!(obj instanceof SegmentsExperienceCacheModel)) {
+		if (!(object instanceof SegmentsExperienceCacheModel)) {
 			return false;
 		}
 
 		SegmentsExperienceCacheModel segmentsExperienceCacheModel =
-			(SegmentsExperienceCacheModel)obj;
+			(SegmentsExperienceCacheModel)object;
 
 		if ((segmentsExperienceId ==
 				segmentsExperienceCacheModel.segmentsExperienceId) &&
@@ -78,10 +78,12 @@ public class SegmentsExperienceCacheModel
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(35);
+		StringBundler sb = new StringBundler(39);
 
 		sb.append("{mvccVersion=");
 		sb.append(mvccVersion);
+		sb.append(", ctCollectionId=");
+		sb.append(ctCollectionId);
 		sb.append(", uuid=");
 		sb.append(uuid);
 		sb.append(", segmentsExperienceId=");
@@ -112,6 +114,8 @@ public class SegmentsExperienceCacheModel
 		sb.append(priority);
 		sb.append(", active=");
 		sb.append(active);
+		sb.append(", typeSettings=");
+		sb.append(typeSettings);
 		sb.append(", lastPublishDate=");
 		sb.append(lastPublishDate);
 		sb.append("}");
@@ -125,6 +129,7 @@ public class SegmentsExperienceCacheModel
 			new SegmentsExperienceImpl();
 
 		segmentsExperienceImpl.setMvccVersion(mvccVersion);
+		segmentsExperienceImpl.setCtCollectionId(ctCollectionId);
 
 		if (uuid == null) {
 			segmentsExperienceImpl.setUuid("");
@@ -182,6 +187,13 @@ public class SegmentsExperienceCacheModel
 		segmentsExperienceImpl.setPriority(priority);
 		segmentsExperienceImpl.setActive(active);
 
+		if (typeSettings == null) {
+			segmentsExperienceImpl.setTypeSettings("");
+		}
+		else {
+			segmentsExperienceImpl.setTypeSettings(typeSettings);
+		}
+
 		if (lastPublishDate == Long.MIN_VALUE) {
 			segmentsExperienceImpl.setLastPublishDate(null);
 		}
@@ -198,6 +210,8 @@ public class SegmentsExperienceCacheModel
 	@Override
 	public void readExternal(ObjectInput objectInput) throws IOException {
 		mvccVersion = objectInput.readLong();
+
+		ctCollectionId = objectInput.readLong();
 		uuid = objectInput.readUTF();
 
 		segmentsExperienceId = objectInput.readLong();
@@ -222,12 +236,15 @@ public class SegmentsExperienceCacheModel
 		priority = objectInput.readInt();
 
 		active = objectInput.readBoolean();
+		typeSettings = objectInput.readUTF();
 		lastPublishDate = objectInput.readLong();
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput objectOutput) throws IOException {
 		objectOutput.writeLong(mvccVersion);
+
+		objectOutput.writeLong(ctCollectionId);
 
 		if (uuid == null) {
 			objectOutput.writeUTF("");
@@ -277,10 +294,19 @@ public class SegmentsExperienceCacheModel
 		objectOutput.writeInt(priority);
 
 		objectOutput.writeBoolean(active);
+
+		if (typeSettings == null) {
+			objectOutput.writeUTF("");
+		}
+		else {
+			objectOutput.writeUTF(typeSettings);
+		}
+
 		objectOutput.writeLong(lastPublishDate);
 	}
 
 	public long mvccVersion;
+	public long ctCollectionId;
 	public String uuid;
 	public long segmentsExperienceId;
 	public long groupId;
@@ -296,6 +322,7 @@ public class SegmentsExperienceCacheModel
 	public String name;
 	public int priority;
 	public boolean active;
+	public String typeSettings;
 	public long lastPublishDate;
 
 }

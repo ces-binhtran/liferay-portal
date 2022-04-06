@@ -9,173 +9,29 @@
  * distribution rights of the Software.
  */
 
-import {cleanup, render, wait} from '@testing-library/react';
+import {render} from '@testing-library/react';
 import React from 'react';
 
 import Navigation from '../../../src/main/resources/META-INF/resources/js/components/Navigation';
+import {ChartStateContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/ChartStateContext';
 import ConnectionContext from '../../../src/main/resources/META-INF/resources/js/context/ConnectionContext';
-import {StoreContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/store';
+import {StoreContextProvider} from '../../../src/main/resources/META-INF/resources/js/context/StoreContext';
 
 import '@testing-library/jest-dom/extend-expect';
 
-const mockApi = {
-	getHistoricalReads: jest.fn(() =>
-		Promise.resolve({
-			analyticsReportsHistoricalReads: {
-				histogram: [
-					{
-						key: '2020-01-27T00:00',
-						previousKey: '2020-01-20T00:00',
-						previousValue: 22.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-28T00:00',
-						previousKey: '2020-01-21T00:00',
-						previousValue: 23.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-29T00:00',
-						previousKey: '2020-01-22T00:00',
-						previousValue: 24.0,
-						value: 34.0,
-					},
-					{
-						key: '2020-01-30T00:00',
-						previousKey: '2020-01-23T00:00',
-						previousValue: 25.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-31T00:00',
-						previousKey: '2020-01-24T00:00',
-						previousValue: 26.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-02-01T00:00',
-						previousKey: '2020-01-25T00:00',
-						previousValue: 27.0,
-						value: 31.0,
-					},
-					{
-						key: '2020-02-02T00:00',
-						previousKey: '2020-01-26T00:00',
-						previousValue: 28.0,
-						value: 30.0,
-					},
-				],
-				previousValue: 175.0,
-				value: 226.0,
-			},
-		})
-	),
-	getHistoricalViews: jest.fn(() =>
-		Promise.resolve({
-			analyticsReportsHistoricalViews: {
-				histogram: [
-					{
-						key: '2020-01-27T00:00',
-						previousKey: '2020-01-20T00:00',
-						previousValue: 22.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-01-28T00:00',
-						previousKey: '2020-01-21T00:00',
-						previousValue: 23.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-29T00:00',
-						previousKey: '2020-01-22T00:00',
-						previousValue: 24.0,
-						value: 34.0,
-					},
-					{
-						key: '2020-01-30T00:00',
-						previousKey: '2020-01-23T00:00',
-						previousValue: 25.0,
-						value: 33.0,
-					},
-					{
-						key: '2020-01-31T00:00',
-						previousKey: '2020-01-24T00:00',
-						previousValue: 26.0,
-						value: 32.0,
-					},
-					{
-						key: '2020-02-01T00:00',
-						previousKey: '2020-01-25T00:00',
-						previousValue: 27.0,
-						value: 31.0,
-					},
-					{
-						key: '2020-02-02T00:00',
-						previousKey: '2020-01-26T00:00',
-						previousValue: 28.0,
-						value: 30.0,
-					},
-				],
-				previousValue: 175.0,
-				value: 225.0,
-			},
-		})
-	),
-	getTotalReads: jest.fn(() => {
-		return Promise.resolve(999);
-	}),
-	getTotalViews: jest.fn(() => {
-		return Promise.resolve(12345);
-	}),
-	getTrafficSourceDetails: jest.fn(() => {
-		return Promise.resolve({
-			data: {
-				helpMessage:
-					'This number refers to the volume of people that find your page through a search engine.',
-				keywords: [
-					{
-						keyword: 'commerce',
-						position: 1,
-						searchVolume: 12300,
-						traffic: 90000,
-					},
-					{
-						keyword: 'e-commerce',
-						position: 2,
-						searchVolume: 9800,
-						traffic: 14800,
-					},
-					{
-						keyword: 'what is commerce',
-						position: 3,
-						searchVolume: 9500,
-						traffic: 14000,
-					},
-					{
-						keyword: 'what is e-commerce',
-						position: 4,
-						searchVolume: 8700,
-						traffic: 12100,
-					},
-					{
-						keyword:
-							'commerce definition for new business strategy',
-						position: 5,
-						searchVolume: 7100,
-						traffic: 10100,
-					},
-				],
-				name: 'organic',
-				share: 0,
-				title: 'Organic',
-				value: 0,
-			},
-			view: 'traffic-source-detail',
-		});
-	}),
+const mockEndpoints = {
+	analyticsReportsHistoricalReadsURL: '/o/analyticsReportsHistoricalReadsURL',
+	analyticsReportsHistoricalViewsURL: '/o/analyticsReportsHistoricalViewsURL',
+	analyticsReportsTotalReadsURL: '/o/analyticsReportsTotalReadsURL',
+	analyticsReportsTotalViewsURL: '/o/analyticsReportsTotalViewsURL',
+	analyticsReportsTrafficSourcesURL: '/o/analyticsReportsTrafficSourcesURL',
 };
+
+const mockLanguageTag = 'en-US';
+
+const mockNamespace = 'namespace';
+
+const mockPage = {plid: 20};
 
 const mockTimeSpanOptions = [
 	{
@@ -186,40 +42,49 @@ const mockTimeSpanOptions = [
 		key: 'last-7-days',
 		label: 'Last 7 Days',
 	},
+];
+
+const mockViewURLs = [
 	{
-		key: 'last-24-hours',
-		label: 'Last 24 Hours',
+		default: true,
+		languageId: 'en-US',
+		languageLabel: 'English (United States)',
+		selected: true,
+		viewURL: 'http://localhost:8080/en/web/guest/-/basic-web-content',
+	},
+	{
+		default: false,
+		languageId: 'es-ES',
+		languageLabel: 'Spanish (Spain)',
+		selected: false,
+		viewURL: 'http://localhost:8080/es/web/guest/-/contenido-web-basico',
 	},
 ];
 
-const mockTrafficSources = [
-	{
-		helpMessage: 'Testing Help Message',
-		name: 'testing',
-		title: 'Testing',
-		value: 32178,
-	},
-	{
-		helpMessage: 'Second Testing Help Message',
-		name: 'second-testing',
-		title: 'Second Testing',
-	},
-];
+const noop = () => {};
 
 describe('Navigation', () => {
+	beforeEach(() => {
+		fetch.mockResponse(JSON.stringify({}));
+	});
+
 	afterEach(() => {
 		jest.clearAllMocks();
-		cleanup();
 	});
 
 	it('displays an alert error message if there is no valid connection', () => {
 		const testProps = {
-			authorName: 'John Tester',
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanKey: 'last-7-days',
-			languageTag: 'en-US',
-			pagePublishDate: 1581957977840,
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
@@ -228,57 +93,136 @@ describe('Navigation', () => {
 					validAnalyticsConnection: false,
 				}}
 			>
-				<Navigation
-					api={{}}
-					authorName={testProps.authorName}
-					defaultTimeRange={testProps.defaultTimeRange}
-					defaultTimeSpanKey={testProps.defaultTimeSpanKey}
-					languageTag={testProps.languageTag}
-					pagePublishDate={testProps.pagePublishDate}
-					pageTitle={testProps.pageTitle}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficSources={mockTrafficSources}
-				/>
+				<StoreContextProvider
+					value={{
+						endpoints: mockEndpoints,
+						languageTag: mockLanguageTag,
+						namespace: mockNamespace,
+						page: mockPage,
+					}}
+				>
+					<ChartStateContextProvider
+						publishDate={testProps.pagePublishDate}
+						timeRange={testProps.timeRange}
+						timeSpanKey={testProps.timeSpanKey}
+					>
+						<Navigation
+							author={testProps.author}
+							canonicalURL={testProps.canonicalURL}
+							endpoints={mockEndpoints}
+							onSelectedLanguageClick={noop}
+							page={testProps.page}
+							pagePublishDate={testProps.pagePublishDate}
+							pageTitle={testProps.pageTitle}
+							timeSpanOptions={mockTimeSpanOptions}
+							viewURLs={mockViewURLs}
+						/>
+					</ChartStateContextProvider>
+				</StoreContextProvider>
 			</ConnectionContext.Provider>
 		);
 
 		expect(getByText('an-unexpected-error-occurred')).toBeInTheDocument();
 	});
 
-	it('displays an alert warning message if some data is temporarily unavailable', async () => {
+	it('displays an alert warning message if some data is temporarily unavailable', () => {
 		const testProps = {
-			authorName: 'John Tester',
-			defaultTimeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
-			defaultTimeSpanKey: 'last-7-days',
-			languageTag: 'en-US',
-			pagePublishDate: 1581957977840,
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
+			pagePublishDate: 'Thu Aug 10 08:17:57 GMT 2020',
 			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
 		};
 
 		const {getByText} = render(
-			<StoreContextProvider>
-				<Navigation
-					api={mockApi}
-					authorName={testProps.authorName}
-					defaultTimeRange={testProps.defaultTimeRange}
-					defaultTimeSpanKey={testProps.defaultTimeSpanKey}
-					languageTag={testProps.languageTag}
-					pagePublishDate={testProps.pagePublishDate}
-					pageTitle={testProps.pageTitle}
-					timeSpanOptions={mockTimeSpanOptions}
-					trafficSources={mockTrafficSources}
-				/>
+			<StoreContextProvider
+				value={{
+					endpoints: mockEndpoints,
+					languageTag: mockLanguageTag,
+					namespace: mockNamespace,
+					page: mockPage,
+					warning: true,
+				}}
+			>
+				<ChartStateContextProvider
+					publishDate={testProps.publishDate}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
+				>
+					<Navigation
+						author={testProps.author}
+						canonicalURL={testProps.canonicalURL}
+						endpoints={mockEndpoints}
+						onSelectedLanguageClick={noop}
+						page={testProps.page}
+						pagePublishDate={testProps.pagePublishDate}
+						pageTitle={testProps.pageTitle}
+						timeSpanOptions={mockTimeSpanOptions}
+						viewURLs={mockViewURLs}
+					/>
+				</ChartStateContextProvider>
 			</StoreContextProvider>
 		);
 
-		await wait(() => expect(mockApi.getTotalReads).toHaveBeenCalled());
-		await wait(() => expect(mockApi.getTotalViews).toHaveBeenCalled());
-
-		await wait(() => expect(mockApi.getHistoricalReads).toHaveBeenCalled());
-		await wait(() => expect(mockApi.getHistoricalViews).toHaveBeenCalled());
-
 		expect(
 			getByText('some-data-is-temporarily-unavailable')
+		).toBeInTheDocument();
+	});
+
+	it('displays an alert info message if the content was published today', () => {
+		const testProps = {
+			author: {
+				authorId: '',
+				name: 'John Tester',
+				url: '',
+			},
+			canonicalURL:
+				'http://localhost:8080/en/web/guest/-/basic-web-content',
+			pagePublishDate: 'Thu Feb 02 08:17:57 GMT 2020',
+			pageTitle: 'A testing page',
+			timeRange: {endDate: '2020-01-27', startDate: '2020-02-02'},
+			timeSpanKey: 'last-7-days',
+		};
+
+		const {getByText} = render(
+			<StoreContextProvider
+				value={{
+					endpoints: mockEndpoints,
+					languageTag: mockLanguageTag,
+					namespace: mockNamespace,
+					page: mockPage,
+					publishedToday: true,
+				}}
+			>
+				<ChartStateContextProvider
+					publishDate={testProps.pagePublishDate}
+					timeRange={testProps.timeRange}
+					timeSpanKey={testProps.timeSpanKey}
+				>
+					<Navigation
+						author={testProps.author}
+						canonicalURL={testProps.canonicalURL}
+						endpoints={mockEndpoints}
+						onSelectedLanguageClick={noop}
+						page={testProps.page}
+						pagePublishDate={testProps.pagePublishDate}
+						pageTitle={testProps.pageTitle}
+						timeSpanOptions={mockTimeSpanOptions}
+						viewURLs={mockViewURLs}
+					/>
+				</ChartStateContextProvider>
+			</StoreContextProvider>
+		);
+
+		expect(getByText('no-data-is-available-yet')).toBeInTheDocument();
+		expect(
+			getByText('content-has-just-been-published')
 		).toBeInTheDocument();
 	});
 });

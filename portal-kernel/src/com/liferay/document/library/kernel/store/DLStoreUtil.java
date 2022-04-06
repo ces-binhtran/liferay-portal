@@ -15,6 +15,7 @@
 package com.liferay.document.library.kernel.store;
 
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.ServiceProxyFactory;
 
 import java.io.File;
 import java.io.InputStream;
@@ -43,22 +44,42 @@ import java.io.InputStream;
  * String dirName = "portlet_name/1234";
  *
  * try {
- * DLStoreUtil.addDirectory(companyId, repositoryId, dirName);
+ *     DLStoreUtil.addDirectory(companyId, repositoryId, dirName);
  * }
  * catch (PortalException pe) {
  * }
  *
  * DLStoreUtil.addFile(
- * companyId, repositoryId, dirName + "/" + fileName, file);
+ *     companyId, repositoryId, dirName + "/" + fileName, file);
  * </code>
  * </pre></p>
  *
  * @author Brian Wing Shun Chan
  * @author Alexander Chow
  * @author Edward Han
+ * @author Raymond Augé
  * @see    DLStoreImpl
  */
 public class DLStoreUtil {
+
+	public static void addFile(DLStoreRequest dlStoreRequest, byte[] bytes)
+		throws PortalException {
+
+		_store.addFile(dlStoreRequest, bytes);
+	}
+
+	public static void addFile(DLStoreRequest dlStoreRequest, File file)
+		throws PortalException {
+
+		_store.addFile(dlStoreRequest, file);
+	}
+
+	public static void addFile(
+			DLStoreRequest dlStoreRequest, InputStream inputStream)
+		throws PortalException {
+
+		_store.addFile(dlStoreRequest, inputStream);
+	}
 
 	/**
 	 * Adds a file based on a byte array.
@@ -75,7 +96,7 @@ public class DLStoreUtil {
 			boolean validateFileExtension, byte[] bytes)
 		throws PortalException {
 
-		getStore().addFile(
+		_store.addFile(
 			companyId, repositoryId, fileName, validateFileExtension, bytes);
 	}
 
@@ -94,7 +115,7 @@ public class DLStoreUtil {
 			boolean validateFileExtension, File file)
 		throws PortalException {
 
-		getStore().addFile(
+		_store.addFile(
 			companyId, repositoryId, fileName, validateFileExtension, file);
 	}
 
@@ -106,15 +127,16 @@ public class DLStoreUtil {
 	 *        {@link com.liferay.portal.kernel.model.CompanyConstants#SYSTEM})
 	 * @param fileName the file name
 	 * @param validateFileExtension whether to validate the file's extension
-	 * @param is the files's data
+	 * @param inputStream the files's data
 	 */
 	public static void addFile(
 			long companyId, long repositoryId, String fileName,
-			boolean validateFileExtension, InputStream is)
+			boolean validateFileExtension, InputStream inputStream)
 		throws PortalException {
 
-		getStore().addFile(
-			companyId, repositoryId, fileName, validateFileExtension, is);
+		_store.addFile(
+			companyId, repositoryId, fileName, validateFileExtension,
+			inputStream);
 	}
 
 	/**
@@ -131,7 +153,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName, byte[] bytes)
 		throws PortalException {
 
-		getStore().addFile(companyId, repositoryId, fileName, bytes);
+		_store.addFile(companyId, repositoryId, fileName, bytes);
 	}
 
 	/**
@@ -148,7 +170,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName, File file)
 		throws PortalException {
 
-		getStore().addFile(companyId, repositoryId, fileName, file);
+		_store.addFile(companyId, repositoryId, fileName, file);
 	}
 
 	/**
@@ -159,13 +181,14 @@ public class DLStoreUtil {
 	 * @param repositoryId the primary key of the data repository (optionally
 	 *        {@link com.liferay.portal.kernel.model.CompanyConstants#SYSTEM})
 	 * @param fileName the file name
-	 * @param is the files's data
+	 * @param inputStream the files's data
 	 */
 	public static void addFile(
-			long companyId, long repositoryId, String fileName, InputStream is)
+			long companyId, long repositoryId, String fileName,
+			InputStream inputStream)
 		throws PortalException {
 
-		getStore().addFile(companyId, repositoryId, fileName, is);
+		_store.addFile(companyId, repositoryId, fileName, inputStream);
 	}
 
 	/**
@@ -183,7 +206,7 @@ public class DLStoreUtil {
 			String fromVersionLabel, String toVersionLabel)
 		throws PortalException {
 
-		getStore().copyFileVersion(
+		_store.copyFileVersion(
 			companyId, repositoryId, fileName, fromVersionLabel,
 			toVersionLabel);
 	}
@@ -199,7 +222,7 @@ public class DLStoreUtil {
 	public static void deleteDirectory(
 		long companyId, long repositoryId, String dirName) {
 
-		getStore().deleteDirectory(companyId, repositoryId, dirName);
+		_store.deleteDirectory(companyId, repositoryId, dirName);
 	}
 
 	/**
@@ -215,7 +238,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		getStore().deleteFile(companyId, repositoryId, fileName);
+		_store.deleteFile(companyId, repositoryId, fileName);
 	}
 
 	/**
@@ -232,7 +255,7 @@ public class DLStoreUtil {
 			String versionLabel)
 		throws PortalException {
 
-		getStore().deleteFile(companyId, repositoryId, fileName, versionLabel);
+		_store.deleteFile(companyId, repositoryId, fileName, versionLabel);
 	}
 
 	/**
@@ -248,7 +271,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		return getStore().getFileAsBytes(companyId, repositoryId, fileName);
+		return _store.getFileAsBytes(companyId, repositoryId, fileName);
 	}
 
 	/**
@@ -266,7 +289,7 @@ public class DLStoreUtil {
 			String versionLabel)
 		throws PortalException {
 
-		return getStore().getFileAsBytes(
+		return _store.getFileAsBytes(
 			companyId, repositoryId, fileName, versionLabel);
 	}
 
@@ -289,7 +312,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		return getStore().getFileAsStream(companyId, repositoryId, fileName);
+		return _store.getFileAsStream(companyId, repositoryId, fileName);
 	}
 
 	/**
@@ -313,7 +336,7 @@ public class DLStoreUtil {
 			String versionLabel)
 		throws PortalException {
 
-		return getStore().getFileAsStream(
+		return _store.getFileAsStream(
 			companyId, repositoryId, fileName, versionLabel);
 	}
 
@@ -330,7 +353,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String dirName)
 		throws PortalException {
 
-		return getStore().getFileNames(companyId, repositoryId, dirName);
+		return _store.getFileNames(companyId, repositoryId, dirName);
 	}
 
 	/**
@@ -346,7 +369,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		return getStore().getFileSize(companyId, repositoryId, fileName);
+		return _store.getFileSize(companyId, repositoryId, fileName);
 	}
 
 	/**
@@ -373,7 +396,7 @@ public class DLStoreUtil {
 			long companyId, long repositoryId, String fileName)
 		throws PortalException {
 
-		return getStore().hasFile(companyId, repositoryId, fileName);
+		return _store.hasFile(companyId, repositoryId, fileName);
 	}
 
 	/**
@@ -392,8 +415,20 @@ public class DLStoreUtil {
 			String versionLabel)
 		throws PortalException {
 
-		return getStore().hasFile(
-			companyId, repositoryId, fileName, versionLabel);
+		return _store.hasFile(companyId, repositoryId, fileName, versionLabel);
+	}
+
+	public static void updateFile(DLStoreRequest dlStoreRequest, File file)
+		throws PortalException {
+
+		_store.updateFile(dlStoreRequest, file);
+	}
+
+	public static void updateFile(
+			DLStoreRequest dlStoreRequest, InputStream inputStream)
+		throws PortalException {
+
+		_store.updateFile(dlStoreRequest, inputStream);
 	}
 
 	/**
@@ -409,8 +444,7 @@ public class DLStoreUtil {
 			String fileName)
 		throws PortalException {
 
-		getStore().updateFile(
-			companyId, repositoryId, newRepositoryId, fileName);
+		_store.updateFile(companyId, repositoryId, newRepositoryId, fileName);
 	}
 
 	/**
@@ -432,7 +466,7 @@ public class DLStoreUtil {
 			String versionLabel, String sourceFileName, File file)
 		throws PortalException {
 
-		getStore().updateFile(
+		_store.updateFile(
 			companyId, repositoryId, fileName, fileExtension,
 			validateFileExtension, versionLabel, sourceFileName, file);
 	}
@@ -448,17 +482,17 @@ public class DLStoreUtil {
 	 * @param validateFileExtension whether to validate the file's extension
 	 * @param versionLabel the file's new version label
 	 * @param sourceFileName the new file's original name
-	 * @param is the new file's data
+	 * @param inputStream the new file's data
 	 */
 	public static void updateFile(
 			long companyId, long repositoryId, String fileName,
 			String fileExtension, boolean validateFileExtension,
-			String versionLabel, String sourceFileName, InputStream is)
+			String versionLabel, String sourceFileName, InputStream inputStream)
 		throws PortalException {
 
-		getStore().updateFile(
+		_store.updateFile(
 			companyId, repositoryId, fileName, fileExtension,
-			validateFileExtension, versionLabel, sourceFileName, is);
+			validateFileExtension, versionLabel, sourceFileName, inputStream);
 	}
 
 	/**
@@ -478,7 +512,7 @@ public class DLStoreUtil {
 			String fromVersionLabel, String toVersionLabel)
 		throws PortalException {
 
-		getStore().updateFileVersion(
+		_store.updateFileVersion(
 			companyId, repositoryId, fileName, fromVersionLabel,
 			toVersionLabel);
 	}
@@ -492,7 +526,7 @@ public class DLStoreUtil {
 	public static void validate(String fileName, boolean validateFileExtension)
 		throws PortalException {
 
-		getStore().validate(fileName, validateFileExtension);
+		_store.validate(fileName, validateFileExtension);
 	}
 
 	/**
@@ -506,7 +540,7 @@ public class DLStoreUtil {
 			String fileName, boolean validateFileExtension, byte[] bytes)
 		throws PortalException {
 
-		getStore().validate(fileName, validateFileExtension, bytes);
+		_store.validate(fileName, validateFileExtension, bytes);
 	}
 
 	/**
@@ -520,7 +554,7 @@ public class DLStoreUtil {
 			String fileName, boolean validateFileExtension, File file)
 		throws PortalException {
 
-		getStore().validate(fileName, validateFileExtension, file);
+		_store.validate(fileName, validateFileExtension, file);
 	}
 
 	/**
@@ -528,13 +562,14 @@ public class DLStoreUtil {
 	 *
 	 * @param fileName the file's name
 	 * @param validateFileExtension whether to validate the file's extension
-	 * @param is the file's data (optionally <code>null</code>)
+	 * @param inputStream the file's data (optionally <code>null</code>)
 	 */
 	public static void validate(
-			String fileName, boolean validateFileExtension, InputStream is)
+			String fileName, boolean validateFileExtension,
+			InputStream inputStream)
 		throws PortalException {
 
-		getStore().validate(fileName, validateFileExtension, is);
+		_store.validate(fileName, validateFileExtension, inputStream);
 	}
 
 	public static void validate(
@@ -542,7 +577,7 @@ public class DLStoreUtil {
 			boolean validateFileExtension)
 		throws PortalException {
 
-		getStore().validate(
+		_store.validate(
 			fileName, fileExtension, sourceFileName, validateFileExtension);
 	}
 
@@ -560,7 +595,7 @@ public class DLStoreUtil {
 			boolean validateFileExtension, File file)
 		throws PortalException {
 
-		getStore().validate(
+		_store.validate(
 			fileName, fileExtension, sourceFileName, validateFileExtension,
 			file);
 	}
@@ -572,27 +607,20 @@ public class DLStoreUtil {
 	 * @param fileExtension the file's extension
 	 * @param sourceFileName the file's original name
 	 * @param validateFileExtension whether to validate the file's extension
-	 * @param is the file's data (optionally <code>null</code>)
+	 * @param inputStream the file's data (optionally <code>null</code>)
 	 */
 	public static void validate(
 			String fileName, String fileExtension, String sourceFileName,
-			boolean validateFileExtension, InputStream is)
+			boolean validateFileExtension, InputStream inputStream)
 		throws PortalException {
 
-		getStore().validate(
-			fileName, fileExtension, sourceFileName, validateFileExtension, is);
+		_store.validate(
+			fileName, fileExtension, sourceFileName, validateFileExtension,
+			inputStream);
 	}
 
-	/**
-	 * Set's the {@link DLStore} object. Used primarily by Spring and should not
-	 * be used by the client.
-	 *
-	 * @param store the {@link DLStore} object
-	 */
-	public void setStore(DLStore store) {
-		_store = store;
-	}
-
-	private static DLStore _store;
+	private static volatile DLStore _store =
+		ServiceProxyFactory.newServiceTrackedInstance(
+			DLStore.class, DLStoreUtil.class, "_store", true);
 
 }

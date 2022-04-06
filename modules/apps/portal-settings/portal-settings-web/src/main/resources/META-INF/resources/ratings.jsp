@@ -24,7 +24,7 @@ CompanyPortletRatingsDefinitionDisplayContext companyPortletRatingsDefinitionDis
 
 <p><liferay-ui:message key="select-the-default-ratings-type-for-the-following-applications" /></p>
 
-<aui:fieldset id='<%= renderResponse.getNamespace() + "ratingsSettingsContainer" %>'>
+<aui:fieldset id='<%= liferayPortletResponse.getNamespace() + "ratingsSettingsContainer" %>'>
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 
 	<%
@@ -79,7 +79,7 @@ CompanyPortletRatingsDefinitionDisplayContext companyPortletRatingsDefinitionDis
 
 	ratingsSettingsContainer.delegate(
 		'change',
-		function (event) {
+		(event) => {
 			ratingsTypeChanged = true;
 		},
 		'select'
@@ -87,7 +87,7 @@ CompanyPortletRatingsDefinitionDisplayContext companyPortletRatingsDefinitionDis
 
 	var form = A.one('#<portlet:namespace />fm');
 
-	form.on('submit', function (event) {
+	form.on('submit', (event) => {
 		if (
 			ratingsTypeChanged &&
 			!confirm(

@@ -394,7 +394,7 @@ public class AnnouncementsEntryFinderImpl
 			return "(AnnouncementsEntry.classNameId = ?) AND (";
 		}
 
-		StringBundler sb = new StringBundler(classPKs.length * 2 + 1);
+		StringBundler sb = new StringBundler((classPKs.length * 2) + 1);
 
 		sb.append("(AnnouncementsEntry.classNameId = ?) AND (");
 
@@ -455,7 +455,7 @@ public class AnnouncementsEntryFinderImpl
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 
@@ -477,7 +477,7 @@ public class AnnouncementsEntryFinderImpl
 			// LPS-52675
 
 			if (_log.isDebugEnabled()) {
-				_log.debug(portalException, portalException);
+				_log.debug(portalException);
 			}
 		}
 

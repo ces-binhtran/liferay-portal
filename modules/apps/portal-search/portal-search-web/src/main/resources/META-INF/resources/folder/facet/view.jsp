@@ -30,9 +30,6 @@ page import="com.liferay.portal.search.web.internal.facet.display.context.Folder
 page import="com.liferay.portal.search.web.internal.facet.display.context.FolderSearchFacetTermDisplayContext" %><%@
 page import="com.liferay.portal.search.web.internal.folder.facet.configuration.FolderFacetPortletInstanceConfiguration" %>
 
-<%@ page import="java.util.List" %><%@
-page import="java.util.Map" %>
-
 <portlet:defineObjects />
 
 <%
@@ -43,14 +40,6 @@ if (folderSearchFacetDisplayContext.isRenderNothing()) {
 }
 
 FolderFacetPortletInstanceConfiguration folderFacetPortletInstanceConfiguration = folderSearchFacetDisplayContext.getFolderFacetPortletInstanceConfiguration();
-
-Map<String, Object> contextObjects = HashMapBuilder.<String, Object>put(
-	"folderSearchFacetDisplayContext", folderSearchFacetDisplayContext
-).put(
-	"namespace", renderResponse.getNamespace()
-).build();
-
-List<FolderSearchFacetTermDisplayContext> folderSearchFacetTermDisplayContexts = folderSearchFacetDisplayContext.getFolderSearchFacetTermDisplayContexts();
 %>
 
 <c:choose>
@@ -58,27 +47,34 @@ List<FolderSearchFacetTermDisplayContext> folderSearchFacetTermDisplayContexts =
 		<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(folderSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= folderSearchFacetDisplayContext.getParameterValue() %>" />
 	</c:when>
 	<c:otherwise>
-		<aui:form method="post" name="fm">
+		<aui:form action="#" method="post" name="fm">
 			<aui:input autocomplete="off" name="<%= HtmlUtil.escapeAttribute(folderSearchFacetDisplayContext.getParameterName()) %>" type="hidden" value="<%= folderSearchFacetDisplayContext.getParameterValue() %>" />
 			<aui:input cssClass="facet-parameter-name" name="facet-parameter-name" type="hidden" value="<%= folderSearchFacetDisplayContext.getParameterName() %>" />
+			<aui:input cssClass="start-parameter-name" name="start-parameter-name" type="hidden" value="<%= folderSearchFacetDisplayContext.getPaginationStartParameterName() %>" />
 
 			<liferay-ddm:template-renderer
 				className="<%= FolderSearchFacetTermDisplayContext.class.getName() %>"
-				contextObjects="<%= contextObjects %>"
+				contextObjects='<%=
+					HashMapBuilder.<String, Object>put(
+						"folderSearchFacetDisplayContext", folderSearchFacetDisplayContext
+					).put(
+						"namespace", liferayPortletResponse.getNamespace()
+					).build()
+				%>'
 				displayStyle="<%= folderFacetPortletInstanceConfiguration.displayStyle() %>"
 				displayStyleGroupId="<%= folderSearchFacetDisplayContext.getDisplayStyleGroupId() %>"
-				entries="<%= folderSearchFacetTermDisplayContexts %>"
+				entries="<%= folderSearchFacetDisplayContext.getFolderSearchFacetTermDisplayContexts() %>"
 			>
 				<liferay-ui:panel-container
 					extended="<%= true %>"
-					id='<%= renderResponse.getNamespace() + "facetFolderPanelContainer" %>'
+					id='<%= liferayPortletResponse.getNamespace() + "facetFolderPanelContainer" %>'
 					markupView="lexicon"
 					persistState="<%= true %>"
 				>
 					<liferay-ui:panel
 						collapsible="<%= true %>"
 						cssClass="search-facet"
-						id='<%= renderResponse.getNamespace() + "facetFolderPanel" %>'
+						id='<%= liferayPortletResponse.getNamespace() + "facetFolderPanel" %>'
 						markupView="lexicon"
 						persistState="<%= true %>"
 						title="folder"
@@ -106,7 +102,7 @@ List<FolderSearchFacetTermDisplayContext> folderSearchFacetTermDisplayContexts =
 													type="checkbox" <%= folderSearchFacetTermDisplayContext.isSelected() ? "checked" : StringPool.BLANK %>
 												/>
 
-												<span class='custom-control-label term-name <%= folderSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>'>
+												<span class="custom-control-label term-name <%= folderSearchFacetTermDisplayContext.isSelected() ? "facet-term-selected" : "facet-term-unselected" %>">
 													<span class="custom-control-label-text">
 														<%= HtmlUtil.escape(folderSearchFacetTermDisplayContext.getDisplayName()) %>
 													</span>

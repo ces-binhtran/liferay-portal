@@ -15,18 +15,18 @@
 package com.liferay.exportimport.web.internal.portlet.action;
 
 import com.liferay.exportimport.constants.ExportImportPortletKeys;
-import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.configuration.ExportImportConfigurationUtil;
+import com.liferay.exportimport.kernel.configuration.constants.ExportImportConfigurationConstants;
 import com.liferay.exportimport.kernel.model.ExportImportConfiguration;
 import com.liferay.exportimport.kernel.staging.StagingUtil;
+import com.liferay.petra.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTask;
-import com.liferay.portal.kernel.backgroundtask.BackgroundTaskConstants;
 import com.liferay.portal.kernel.backgroundtask.BackgroundTaskManagerUtil;
+import com.liferay.portal.kernel.backgroundtask.constants.BackgroundTaskConstants;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
-import com.liferay.portal.kernel.portlet.LiferayPortletResponse;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCActionCommand;
 import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.servlet.SessionMessages;
@@ -43,7 +43,6 @@ import java.util.Map;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
-import javax.portlet.PortletURL;
 
 import org.osgi.service.component.annotations.Component;
 
@@ -54,7 +53,7 @@ import org.osgi.service.component.annotations.Component;
 	immediate = true,
 	property = {
 		"javax.portlet.name=" + ExportImportPortletKeys.EXPORT_IMPORT,
-		"mvc.command.name=editPublishConfiguration"
+		"mvc.command.name=/export_import/edit_publish_configuration"
 	},
 	service = MVCActionCommand.class
 )
@@ -120,7 +119,7 @@ public class EditPublishConfigurationMVCActionCommand
 			if (cmd.equals(Constants.ADD) || cmd.equals(Constants.UPDATE)) {
 				setLayoutIdMap(actionRequest);
 
-				updatePublishConfiguration(actionRequest);
+				_updatePublishConfiguration(actionRequest);
 			}
 			else if (cmd.equals(Constants.DELETE)) {
 				deleteExportImportConfiguration(actionRequest, false);
@@ -129,7 +128,7 @@ public class EditPublishConfigurationMVCActionCommand
 				deleteExportImportConfiguration(actionRequest, true);
 			}
 			else if (cmd.equals(Constants.PUBLISH_TO_LIVE)) {
-				setBackgroundTaskName(
+				_setBackgroundTaskName(
 					actionRequest, exportImportConfigurationId);
 
 				setRedirect(
@@ -138,7 +137,7 @@ public class EditPublishConfigurationMVCActionCommand
 						themeDisplay.getUserId(), exportImportConfigurationId));
 			}
 			else if (cmd.equals(Constants.PUBLISH_TO_REMOTE)) {
-				setBackgroundTaskName(
+				_setBackgroundTaskName(
 					actionRequest, exportImportConfigurationId);
 
 				setRedirect(
@@ -146,7 +145,7 @@ public class EditPublishConfigurationMVCActionCommand
 					StagingUtil.copyRemoteLayouts(exportImportConfigurationId));
 			}
 			else if (cmd.equals(Constants.RELAUNCH)) {
-				relaunchPublishLayoutConfiguration(
+				_relaunchPublishLayoutConfiguration(
 					themeDisplay.getUserId(), actionRequest);
 			}
 			else if (Validator.isNull(cmd)) {
@@ -156,13 +155,28 @@ public class EditPublishConfigurationMVCActionCommand
 			sendRedirect(actionRequest, actionResponse);
 		}
 		catch (Exception exception) {
-			_log.error(exception, exception);
+			_log.error(exception);
 
 			SessionErrors.add(actionRequest, exception.getClass(), exception);
 		}
 	}
 
-	protected void relaunchPublishLayoutConfiguration(
+	protected void setRedirect(
+		ActionRequest actionRequest, ActionResponse actionResponse,
+		long backgroundTaskId) {
+
+		actionRequest.setAttribute(
+			WebKeys.REDIRECT,
+			PortletURLBuilder.createRenderURL(
+				portal.getLiferayPortletResponse(actionResponse)
+			).setMVCPath(
+				"/view_export_import.jsp"
+			).setParameter(
+				"backgroundTaskId", backgroundTaskId
+			).buildString());
+	}
+
+	private void _relaunchPublishLayoutConfiguration(
 			long userId, ActionRequest actionRequest)
 		throws PortalException {
 
@@ -191,7 +205,7 @@ public class EditPublishConfigurationMVCActionCommand
 		}
 	}
 
-	protected void setBackgroundTaskName(
+	private void _setBackgroundTaskName(
 			ActionRequest actionRequest, long exportImportConfigurationId)
 		throws PortalException {
 
@@ -213,31 +227,14 @@ public class EditPublishConfigurationMVCActionCommand
 
 		parameterMap.put("name", new String[] {name});
 
-		String settings = JSONFactoryUtil.serialize(settingsMap);
-
-		exportImportConfiguration.setSettings(settings);
+		exportImportConfiguration.setSettings(
+			JSONFactoryUtil.serialize(settingsMap));
 
 		exportImportConfigurationLocalService.updateExportImportConfiguration(
 			exportImportConfiguration);
 	}
 
-	protected void setRedirect(
-		ActionRequest actionRequest, ActionResponse actionResponse,
-		long backgroundTaskId) {
-
-		LiferayPortletResponse liferayPortletResponse =
-			portal.getLiferayPortletResponse(actionResponse);
-
-		PortletURL renderURL = liferayPortletResponse.createRenderURL();
-
-		renderURL.setParameter("mvcPath", "/view_export_import.jsp");
-		renderURL.setParameter(
-			"backgroundTaskId", String.valueOf(backgroundTaskId));
-
-		actionRequest.setAttribute(WebKeys.REDIRECT, renderURL.toString());
-	}
-
-	protected ExportImportConfiguration updatePublishConfiguration(
+	private ExportImportConfiguration _updatePublishConfiguration(
 			ActionRequest actionRequest)
 		throws Exception {
 

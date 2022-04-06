@@ -14,11 +14,14 @@
 
 package com.liferay.change.tracking.web.internal.display;
 
-import com.liferay.change.tracking.reference.TableReferenceDefinition;
+import com.liferay.change.tracking.constants.CTConstants;
+import com.liferay.change.tracking.spi.reference.TableReferenceDefinition;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
+import com.liferay.petra.lang.SafeCloseable;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.portal.kernel.bean.PortalBeanLocatorUtil;
+import com.liferay.portal.kernel.change.tracking.CTCollectionThreadLocal;
 import com.liferay.portal.kernel.model.BaseModel;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.persistence.BasePersistence;
@@ -30,23 +33,17 @@ import com.liferay.portal.spring.transaction.TransactionExecutor;
 
 import java.io.Serializable;
 
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
-import org.osgi.util.tracker.ServiceTracker;
-import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * @author Preston Crary
@@ -65,20 +62,23 @@ public class BasePersistenceRegistry {
 	}
 
 	public <T extends BaseModel<T>> Map<Serializable, T> fetchBaseModelMap(
-		long classNameId, List<Long> primaryKeys) {
+		long classNameId, Set<Long> primaryKeys) {
 
 		return _applyBasePersistence(
 			classNameId,
 			basePersistence ->
 				(Map<Serializable, T>)basePersistence.fetchByPrimaryKeys(
-					new HashSet<>(primaryKeys)));
+					(Set)primaryKeys));
 	}
 
 	@Activate
 	protected void activate(BundleContext bundleContext) {
 		_tableReferenceDefinitionServiceTrackerMap =
 			ServiceTrackerMapFactory.openSingleValueMap(
-				bundleContext, TableReferenceDefinition.class, null,
+				bundleContext,
+				(Class<TableReferenceDefinition<?>>)
+					(Class<?>)TableReferenceDefinition.class,
+				null,
 				(serviceReference, emitter) -> {
 					TableReferenceDefinition<?> tableReferenceDefinition =
 						bundleContext.getService(serviceReference);
@@ -91,18 +91,21 @@ public class BasePersistenceRegistry {
 							basePersistence.getModelClass()));
 				});
 
-		_transactionExecutorServiceTracker = new ServiceTracker<>(
-			bundleContext, TransactionExecutor.class,
-			new TransactionExecutorServiceTrackerCustomizer(bundleContext));
+		_transactionExecutorServiceTrackerMap =
+			ServiceTrackerMapFactory.openSingleValueMap(
+				bundleContext, TransactionExecutor.class, null,
+				(serviceReference, emitter) -> {
+					Bundle bundle = serviceReference.getBundle();
 
-		_transactionExecutorServiceTracker.open(true);
+					emitter.emit(bundle.getBundleId());
+				});
 	}
 
 	@Deactivate
 	protected void deactivate() {
-		_tableReferenceDefinitionServiceTrackerMap.close();
+		_transactionExecutorServiceTrackerMap.close();
 
-		_transactionExecutorServiceTracker.close();
+		_tableReferenceDefinitionServiceTrackerMap.close();
 	}
 
 	private <T extends BaseModel<T>, R> R _applyBasePersistence(
@@ -119,8 +122,9 @@ public class BasePersistenceRegistry {
 		Bundle bundle = FrameworkUtil.getBundle(basePersistence.getClass());
 
 		if (bundle != null) {
-			transactionExecutor = _transactionExecutorMap.get(
-				bundle.getBundleId());
+			transactionExecutor =
+				_transactionExecutorServiceTrackerMap.getService(
+					bundle.getBundleId());
 
 			if (transactionExecutor == null) {
 				throw new IllegalStateException(
@@ -128,7 +132,10 @@ public class BasePersistenceRegistry {
 			}
 		}
 
-		try {
+		try (SafeCloseable safeCloseable =
+				CTCollectionThreadLocal.setCTCollectionIdWithSafeCloseable(
+					CTConstants.CT_COLLECTION_ID_PRODUCTION)) {
+
 			return transactionExecutor.execute(
 				_transactionAttributeAdapter,
 				() -> function.apply(basePersistence));
@@ -150,55 +157,9 @@ public class BasePersistenceRegistry {
 	@Reference
 	private ClassNameLocalService _classNameLocalService;
 
-	private ServiceTrackerMap<Long, TableReferenceDefinition>
+	private ServiceTrackerMap<Long, TableReferenceDefinition<?>>
 		_tableReferenceDefinitionServiceTrackerMap;
-	private final Map<Object, TransactionExecutor> _transactionExecutorMap =
-		new ConcurrentHashMap<>();
-	private ServiceTracker<TransactionExecutor, ?>
-		_transactionExecutorServiceTracker;
-
-	private class TransactionExecutorServiceTrackerCustomizer
-		implements ServiceTrackerCustomizer<TransactionExecutor, Object> {
-
-		@Override
-		public Object addingService(
-			ServiceReference<TransactionExecutor> serviceReference) {
-
-			Object bundleId = serviceReference.getProperty(
-				Constants.SERVICE_BUNDLEID);
-
-			TransactionExecutor transactionExecutor = _bundleContext.getService(
-				serviceReference);
-
-			_transactionExecutorMap.put(bundleId, transactionExecutor);
-
-			return bundleId;
-		}
-
-		@Override
-		public void modifiedService(
-			ServiceReference<TransactionExecutor> serviceReference,
-			Object bundleId) {
-		}
-
-		@Override
-		public void removedService(
-			ServiceReference<TransactionExecutor> serviceReference,
-			Object bundleId) {
-
-			_transactionExecutorMap.remove(bundleId);
-
-			_bundleContext.ungetService(serviceReference);
-		}
-
-		private TransactionExecutorServiceTrackerCustomizer(
-			BundleContext bundleContext) {
-
-			_bundleContext = bundleContext;
-		}
-
-		private final BundleContext _bundleContext;
-
-	}
+	private ServiceTrackerMap<Long, TransactionExecutor>
+		_transactionExecutorServiceTrackerMap;
 
 }

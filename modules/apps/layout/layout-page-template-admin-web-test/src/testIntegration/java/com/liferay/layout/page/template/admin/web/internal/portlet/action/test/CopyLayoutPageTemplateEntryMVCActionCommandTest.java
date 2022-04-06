@@ -88,7 +88,7 @@ public class CopyLayoutPageTemplateEntryMVCActionCommandTest {
 			_layoutPageTemplateEntryLocalService.addLayoutPageTemplateEntry(
 				TestPropsValues.getUserId(), _group.getGroupId(), 0,
 				StringUtil.randomString(),
-				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT,
+				LayoutPageTemplateEntryTypeConstants.TYPE_MASTER_LAYOUT, 0,
 				WorkflowConstants.STATUS_DRAFT, _serviceContext);
 
 		ServiceContextThreadLocal.pushServiceContext(_serviceContext);
@@ -266,7 +266,7 @@ public class CopyLayoutPageTemplateEntryMVCActionCommandTest {
 		_layoutPageTemplateEntryLocalService;
 
 	@Inject(
-		filter = "mvc.command.name=/layout_page_template/copy_layout_page_template_entry"
+		filter = "mvc.command.name=/layout_page_template_admin/copy_layout_page_template_entry"
 	)
 	private MVCActionCommand _mvcActionCommand;
 

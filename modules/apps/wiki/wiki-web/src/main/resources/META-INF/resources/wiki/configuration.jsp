@@ -24,7 +24,7 @@
 	action="<%= configurationActionURL %>"
 	method="post"
 	name="fm"
-	onSubmit='<%= "event.preventDefault(); " + renderResponse.getNamespace() + "saveConfiguration();" %>'
+	onSubmit='<%= "event.preventDefault(); " + liferayPortletResponse.getNamespace() + "saveConfiguration();" %>'
 >
 	<aui:input name="<%= Constants.CMD %>" type="hidden" value="<%= Constants.UPDATE %>" />
 	<aui:input name="redirect" type="hidden" value="<%= configurationRenderURL %>" />
@@ -48,7 +48,7 @@
 				<aui:input name="preferences--enableHighlighting--" type="checkbox" value="<%= wikiPortletInstanceSettingsHelper.isEnableHighlighting() %>" />
 
 				<div class="display-template">
-					<liferay-ddm:template-selector
+					<liferay-template:template-selector
 						className="<%= WikiPage.class.getName() %>"
 						displayStyle="<%= wikiPortletInstanceSettingsHelper.getDisplayStyle() %>"
 						displayStyleGroupId="<%= wikiPortletInstanceSettingsHelper.getDisplayStyleGroupId() %>"

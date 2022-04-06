@@ -16,14 +16,20 @@ package com.liferay.dynamic.data.mapping.form.web.internal.configuration;
 
 import com.liferay.portal.configuration.metatype.bnd.util.ConfigurableUtil;
 import com.liferay.portal.kernel.util.HashMapDictionary;
+import com.liferay.portal.test.rule.LiferayUnitTestRule;
 
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 /**
  * @author Pedro Queiroz
  */
 public class DDMFormWebConfigurationTest {
+
+	@ClassRule
+	public static LiferayUnitTestRule liferayUnitTestRule =
+		LiferayUnitTestRule.INSTANCE;
 
 	@Test
 	public void testCreateDefaultDDMFormWebConfiguration() {
@@ -36,6 +42,15 @@ public class DDMFormWebConfigurationTest {
 			"enabled-with-warning", ddmFormWebConfiguration.csvExport());
 		Assert.assertEquals(
 			"list", ddmFormWebConfiguration.defaultDisplayView());
+		Assert.assertEquals(
+			"doc, docx, jpeg, jpg, pdf, png, ppt, pptx, tiff, txt, xls, xlsx",
+			ddmFormWebConfiguration.guestUploadFileExtensions());
+		Assert.assertEquals(
+			25, ddmFormWebConfiguration.guestUploadMaximumFileSize());
+		Assert.assertEquals(
+			5, ddmFormWebConfiguration.guestUploadMaximumSubmissions());
+		Assert.assertEquals(
+			5, ddmFormWebConfiguration.maximumRepetitionsForUploadFields());
 	}
 
 }

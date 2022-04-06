@@ -26,12 +26,20 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class FolderLocalServiceWrapper
 	implements FolderLocalService, ServiceWrapper<FolderLocalService> {
 
+	public FolderLocalServiceWrapper() {
+		this(null);
+	}
+
 	public FolderLocalServiceWrapper(FolderLocalService folderLocalService) {
 		_folderLocalService = folderLocalService;
 	}
 
 	/**
 	 * Adds the folder to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param folder the folder
 	 * @return the folder that was added
@@ -78,6 +86,10 @@ public class FolderLocalServiceWrapper
 	/**
 	 * Deletes the folder from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param folder the folder
 	 * @return the folder that was removed
 	 * @throws PortalException
@@ -92,6 +104,10 @@ public class FolderLocalServiceWrapper
 
 	/**
 	 * Deletes the folder with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param folderId the primary key of the folder
 	 * @return the folder that was removed
@@ -125,6 +141,13 @@ public class FolderLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _folderLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _folderLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -335,6 +358,10 @@ public class FolderLocalServiceWrapper
 
 	/**
 	 * Updates the folder in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect FolderLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param folder the folder
 	 * @return the folder that was updated

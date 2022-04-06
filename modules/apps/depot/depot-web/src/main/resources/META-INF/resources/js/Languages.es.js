@@ -23,11 +23,11 @@ import ManageLanguages from './ManageLanguages.es';
 
 import '../css/Languages.scss';
 
-const getLocalesInputValue = (arr) =>
-	arr.map(({localeId}) => localeId).join(',');
+const getLocalesInputValue = (array) =>
+	array.map(({localeId}) => localeId).join(',');
 
-function move(arr, from, to) {
-	const clonedArr = [...arr];
+function move(array, from, to) {
+	const clonedArr = [...array];
 	const removedItem = clonedArr.splice(from, 1)[0];
 	clonedArr.splice(to, 0, removedItem);
 
@@ -90,14 +90,14 @@ const Languages = ({
 		);
 	};
 
-	const handleOnItemDrop = (currentIndex, newIndex) => {
-		moveItem(currentIndex, newIndex);
-	};
-
 	const moveItem = (currentIndex, newIndex) => {
 		setCustomLocales((languages) =>
 			move(languages, currentIndex, newIndex)
 		);
+	};
+
+	const handleOnItemDrop = (currentIndex, newIndex) => {
+		moveItem(currentIndex, newIndex);
 	};
 
 	useEffect(() => {
@@ -109,7 +109,7 @@ const Languages = ({
 	return (
 		<div className="mt-5">
 			<ClayRadioGroup
-				name={`_${portletNamespace}_TypeSettingsProperties--inheritLocales--`}
+				name={`${portletNamespace}TypeSettingsProperties--inheritLocales--`}
 				onSelectedValueChange={setCurrentInheritLocales}
 				selectedValue={currentInheritLocales}
 			>
@@ -136,13 +136,13 @@ const Languages = ({
 			) : (
 				<>
 					<input
-						name={`_${portletNamespace}_TypeSettingsProperties--languageId--`}
+						name={`${portletNamespace}TypeSettingsProperties--languageId--`}
 						type="hidden"
 						value={customDefaultLocaleId}
 					/>
 
 					<input
-						name={`_${portletNamespace}_TypeSettingsProperties--locales--`}
+						name={`${portletNamespace}TypeSettingsProperties--locales--`}
 						type="hidden"
 						value={localesInputValue}
 					/>

@@ -17,6 +17,7 @@ package com.liferay.portal.service.persistence.impl;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.dao.orm.EntityCacheUtil;
+import com.liferay.portal.kernel.dao.orm.FinderCache;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
 import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
@@ -29,9 +30,15 @@ import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.PasswordTracker;
 import com.liferay.portal.kernel.model.PasswordTrackerTable;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.persistence.PasswordTrackerPersistence;
+import com.liferay.portal.kernel.service.persistence.PasswordTrackerUtil;
 import com.liferay.portal.kernel.service.persistence.impl.BasePersistenceImpl;
+import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.OrderByComparator;
+import com.liferay.portal.kernel.util.PropsKeys;
+import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.ProxyUtil;
 import com.liferay.portal.kernel.util.SetUtil;
 import com.liferay.portal.model.impl.PasswordTrackerImpl;
@@ -39,8 +46,10 @@ import com.liferay.portal.model.impl.PasswordTrackerModelImpl;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +179,7 @@ public class PasswordTrackerPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<PasswordTracker>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 
 			if ((list != null) && !list.isEmpty()) {
 				for (PasswordTracker passwordTracker : list) {
@@ -229,10 +238,6 @@ public class PasswordTrackerPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -534,8 +539,7 @@ public class PasswordTrackerPersistenceImpl
 
 		Object[] finderArgs = new Object[] {userId};
 
-		Long count = (Long)FinderCacheUtil.getResult(
-			finderPath, finderArgs, this);
+		Long count = (Long)FinderCacheUtil.getResult(finderPath, finderArgs);
 
 		if (count == null) {
 			StringBundler sb = new StringBundler(2);
@@ -562,8 +566,6 @@ public class PasswordTrackerPersistenceImpl
 				FinderCacheUtil.putResult(finderPath, finderArgs, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(finderPath, finderArgs);
-
 				throw processException(exception);
 			}
 			finally {
@@ -588,7 +590,6 @@ public class PasswordTrackerPersistenceImpl
 
 		setModelImplClass(PasswordTrackerImpl.class);
 		setModelPKClass(long.class);
-		setEntityCacheEnabled(PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED);
 
 		setTable(PasswordTrackerTable.INSTANCE);
 	}
@@ -601,12 +602,11 @@ public class PasswordTrackerPersistenceImpl
 	@Override
 	public void cacheResult(PasswordTracker passwordTracker) {
 		EntityCacheUtil.putResult(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
 			PasswordTrackerImpl.class, passwordTracker.getPrimaryKey(),
 			passwordTracker);
-
-		passwordTracker.resetOriginalValues();
 	}
+
+	private int _valueObjectFinderCacheListThreshold;
 
 	/**
 	 * Caches the password trackers in the entity cache if it is enabled.
@@ -615,16 +615,20 @@ public class PasswordTrackerPersistenceImpl
 	 */
 	@Override
 	public void cacheResult(List<PasswordTracker> passwordTrackers) {
+		if ((_valueObjectFinderCacheListThreshold == 0) ||
+			((_valueObjectFinderCacheListThreshold > 0) &&
+			 (passwordTrackers.size() >
+				 _valueObjectFinderCacheListThreshold))) {
+
+			return;
+		}
+
 		for (PasswordTracker passwordTracker : passwordTrackers) {
 			if (EntityCacheUtil.getResult(
-					PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
 					PasswordTrackerImpl.class,
 					passwordTracker.getPrimaryKey()) == null) {
 
 				cacheResult(passwordTracker);
-			}
-			else {
-				passwordTracker.resetOriginalValues();
 			}
 		}
 	}
@@ -633,57 +637,43 @@ public class PasswordTrackerPersistenceImpl
 	 * Clears the cache for all password trackers.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache() {
 		EntityCacheUtil.clearCache(PasswordTrackerImpl.class);
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PasswordTrackerImpl.class);
 	}
 
 	/**
 	 * Clears the cache for the password tracker.
 	 *
 	 * <p>
-	 * The <code>EntityCache</code> and <code>com.liferay.portal.kernel.dao.orm.FinderCache</code> are both cleared by this method.
+	 * The <code>EntityCache</code> and <code>FinderCache</code> are both cleared by this method.
 	 * </p>
 	 */
 	@Override
 	public void clearCache(PasswordTracker passwordTracker) {
 		EntityCacheUtil.removeResult(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerImpl.class, passwordTracker.getPrimaryKey());
-
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+			PasswordTrackerImpl.class, passwordTracker);
 	}
 
 	@Override
 	public void clearCache(List<PasswordTracker> passwordTrackers) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-
 		for (PasswordTracker passwordTracker : passwordTrackers) {
 			EntityCacheUtil.removeResult(
-				PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-				PasswordTrackerImpl.class, passwordTracker.getPrimaryKey());
+				PasswordTrackerImpl.class, passwordTracker);
 		}
 	}
 
 	@Override
 	public void clearCache(Set<Serializable> primaryKeys) {
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+		FinderCacheUtil.clearCache(PasswordTrackerImpl.class);
 
 		for (Serializable primaryKey : primaryKeys) {
-			EntityCacheUtil.removeResult(
-				PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-				PasswordTrackerImpl.class, primaryKey);
+			EntityCacheUtil.removeResult(PasswordTrackerImpl.class, primaryKey);
 		}
 	}
 
@@ -815,15 +805,28 @@ public class PasswordTrackerPersistenceImpl
 		PasswordTrackerModelImpl passwordTrackerModelImpl =
 			(PasswordTrackerModelImpl)passwordTracker;
 
+		if (isNew && (passwordTracker.getCreateDate() == null)) {
+			ServiceContext serviceContext =
+				ServiceContextThreadLocal.getServiceContext();
+
+			Date date = new Date();
+
+			if (serviceContext == null) {
+				passwordTracker.setCreateDate(date);
+			}
+			else {
+				passwordTracker.setCreateDate(
+					serviceContext.getCreateDate(date));
+			}
+		}
+
 		Session session = null;
 
 		try {
 			session = openSession();
 
-			if (passwordTracker.isNew()) {
+			if (isNew) {
 				session.save(passwordTracker);
-
-				passwordTracker.setNew(false);
 			}
 			else {
 				passwordTracker = (PasswordTracker)session.merge(
@@ -837,49 +840,12 @@ public class PasswordTrackerPersistenceImpl
 			closeSession(session);
 		}
 
-		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-
-		if (!PasswordTrackerModelImpl.COLUMN_BITMASK_ENABLED) {
-			FinderCacheUtil.clearCache(
-				FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
-		}
-		else if (isNew) {
-			Object[] args = new Object[] {passwordTrackerModelImpl.getUserId()};
-
-			FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindByUserId, args);
-
-			FinderCacheUtil.removeResult(
-				_finderPathCountAll, FINDER_ARGS_EMPTY);
-			FinderCacheUtil.removeResult(
-				_finderPathWithoutPaginationFindAll, FINDER_ARGS_EMPTY);
-		}
-		else {
-			if ((passwordTrackerModelImpl.getColumnBitmask() &
-				 _finderPathWithoutPaginationFindByUserId.getColumnBitmask()) !=
-					 0) {
-
-				Object[] args = new Object[] {
-					passwordTrackerModelImpl.getOriginalUserId()
-				};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-
-				args = new Object[] {passwordTrackerModelImpl.getUserId()};
-
-				FinderCacheUtil.removeResult(_finderPathCountByUserId, args);
-				FinderCacheUtil.removeResult(
-					_finderPathWithoutPaginationFindByUserId, args);
-			}
-		}
-
 		EntityCacheUtil.putResult(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerImpl.class, passwordTracker.getPrimaryKey(),
-			passwordTracker, false);
+			PasswordTrackerImpl.class, passwordTrackerModelImpl, false, true);
+
+		if (isNew) {
+			passwordTracker.setNew(false);
+		}
 
 		passwordTracker.resetOriginalValues();
 
@@ -1021,7 +987,7 @@ public class PasswordTrackerPersistenceImpl
 
 		if (useFinderCache) {
 			list = (List<PasswordTracker>)FinderCacheUtil.getResult(
-				finderPath, finderArgs, this);
+				finderPath, finderArgs);
 		}
 
 		if (list == null) {
@@ -1062,10 +1028,6 @@ public class PasswordTrackerPersistenceImpl
 				}
 			}
 			catch (Exception exception) {
-				if (useFinderCache) {
-					FinderCacheUtil.removeResult(finderPath, finderArgs);
-				}
-
 				throw processException(exception);
 			}
 			finally {
@@ -1095,7 +1057,7 @@ public class PasswordTrackerPersistenceImpl
 	@Override
 	public int countAll() {
 		Long count = (Long)FinderCacheUtil.getResult(
-			_finderPathCountAll, FINDER_ARGS_EMPTY, this);
+			_finderPathCountAll, FINDER_ARGS_EMPTY);
 
 		if (count == null) {
 			Session session = null;
@@ -1111,9 +1073,6 @@ public class PasswordTrackerPersistenceImpl
 					_finderPathCountAll, FINDER_ARGS_EMPTY, count);
 			}
 			catch (Exception exception) {
-				FinderCacheUtil.removeResult(
-					_finderPathCountAll, FINDER_ARGS_EMPTY);
-
 				throw processException(exception);
 			}
 			finally {
@@ -1153,56 +1112,61 @@ public class PasswordTrackerPersistenceImpl
 	 * Initializes the password tracker persistence.
 	 */
 	public void afterPropertiesSet() {
+		_valueObjectFinderCacheListThreshold = GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.VALUE_OBJECT_FINDER_CACHE_LIST_THRESHOLD));
+
 		_finderPathWithPaginationFindAll = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED,
-			PasswordTrackerImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findAll", new String[0]);
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathWithoutPaginationFindAll = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED,
-			PasswordTrackerImpl.class,
-			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll",
-			new String[0]);
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findAll", new String[0],
+			new String[0], true);
 
 		_finderPathCountAll = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countAll",
-			new String[0]);
+			new String[0], new String[0], false);
 
 		_finderPathWithPaginationFindByUserId = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED,
-			PasswordTrackerImpl.class, FINDER_CLASS_NAME_LIST_WITH_PAGINATION,
-			"findByUserId",
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUserId",
 			new String[] {
 				Long.class.getName(), Integer.class.getName(),
 				Integer.class.getName(), OrderByComparator.class.getName()
-			});
+			},
+			new String[] {"userId"}, true);
 
 		_finderPathWithoutPaginationFindByUserId = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED,
-			PasswordTrackerImpl.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUserId",
-			new String[] {Long.class.getName()},
-			PasswordTrackerModelImpl.USERID_COLUMN_BITMASK |
-			PasswordTrackerModelImpl.CREATEDATE_COLUMN_BITMASK);
+			new String[] {Long.class.getName()}, new String[] {"userId"}, true);
 
 		_finderPathCountByUserId = new FinderPath(
-			PasswordTrackerModelImpl.ENTITY_CACHE_ENABLED,
-			PasswordTrackerModelImpl.FINDER_CACHE_ENABLED, Long.class,
 			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUserId",
-			new String[] {Long.class.getName()});
+			new String[] {Long.class.getName()}, new String[] {"userId"},
+			false);
+
+		_setPasswordTrackerUtilPersistence(this);
 	}
 
 	public void destroy() {
+		_setPasswordTrackerUtilPersistence(null);
+
 		EntityCacheUtil.removeCache(PasswordTrackerImpl.class.getName());
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_ENTITY);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
-		FinderCacheUtil.removeCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+	}
+
+	private void _setPasswordTrackerUtilPersistence(
+		PasswordTrackerPersistence passwordTrackerPersistence) {
+
+		try {
+			Field field = PasswordTrackerUtil.class.getDeclaredField(
+				"_persistence");
+
+			field.setAccessible(true);
+
+			field.set(null, passwordTrackerPersistence);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
+		}
 	}
 
 	private static final String _SQL_SELECT_PASSWORDTRACKER =
@@ -1230,5 +1194,10 @@ public class PasswordTrackerPersistenceImpl
 
 	private static final Set<String> _badColumnNames = SetUtil.fromArray(
 		new String[] {"password"});
+
+	@Override
+	protected FinderCache getFinderCache() {
+		return FinderCacheUtil.getFinderCache();
+	}
 
 }

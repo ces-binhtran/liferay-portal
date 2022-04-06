@@ -26,6 +26,10 @@ import com.liferay.portal.kernel.service.ServiceWrapper;
 public class SourceServiceWrapper
 	implements ServiceWrapper<SourceService>, SourceService {
 
+	public SourceServiceWrapper() {
+		this(null);
+	}
+
 	public SourceServiceWrapper(SourceService sourceService) {
 		_sourceService = sourceService;
 	}
@@ -75,7 +79,8 @@ public class SourceServiceWrapper
 				long groupId, String name, String driverUrl, boolean andSearch,
 				int start, int end,
 				com.liferay.portal.kernel.util.OrderByComparator
-					orderByComparator)
+					<com.liferay.portal.reports.engine.console.model.Source>
+						orderByComparator)
 			throws com.liferay.portal.kernel.exception.PortalException {
 
 		return _sourceService.getSources(

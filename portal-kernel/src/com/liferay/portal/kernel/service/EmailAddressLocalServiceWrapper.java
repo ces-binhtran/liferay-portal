@@ -25,6 +25,10 @@ public class EmailAddressLocalServiceWrapper
 	implements EmailAddressLocalService,
 			   ServiceWrapper<EmailAddressLocalService> {
 
+	public EmailAddressLocalServiceWrapper() {
+		this(null);
+	}
+
 	public EmailAddressLocalServiceWrapper(
 		EmailAddressLocalService emailAddressLocalService) {
 
@@ -33,6 +37,10 @@ public class EmailAddressLocalServiceWrapper
 
 	/**
 	 * Adds the email address to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EmailAddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param emailAddress the email address
 	 * @return the email address that was added
@@ -83,6 +91,10 @@ public class EmailAddressLocalServiceWrapper
 	/**
 	 * Deletes the email address from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EmailAddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param emailAddress the email address
 	 * @return the email address that was removed
 	 */
@@ -95,6 +107,10 @@ public class EmailAddressLocalServiceWrapper
 
 	/**
 	 * Deletes the email address with the primary key from the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EmailAddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param emailAddressId the primary key of the email address
 	 * @return the email address that was removed
@@ -130,6 +146,13 @@ public class EmailAddressLocalServiceWrapper
 	@Override
 	public <T> T dslQuery(com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
 		return _emailAddressLocalService.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(
+		com.liferay.petra.sql.dsl.query.DSLQuery dslQuery) {
+
+		return _emailAddressLocalService.dslQueryCount(dslQuery);
 	}
 
 	@Override
@@ -369,6 +392,10 @@ public class EmailAddressLocalServiceWrapper
 
 	/**
 	 * Updates the email address in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect EmailAddressLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param emailAddress the email address
 	 * @return the email address that was updated

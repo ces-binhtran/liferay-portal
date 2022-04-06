@@ -49,9 +49,7 @@ public final class AMAttribute<T, V> {
 	 *
 	 * @return the configuration UUID
 	 */
-	public static final <S> AMAttribute<S, String>
-		getConfigurationUuidAMAttribute() {
-
+	public static <S> AMAttribute<S, String> getConfigurationUuidAMAttribute() {
 		return (AMAttribute<S, String>)_AM_ATTRIBUTE_CONFIGURATION_UUID;
 	}
 
@@ -61,7 +59,7 @@ public final class AMAttribute<T, V> {
 	 *
 	 * @return the content length attribute
 	 */
-	public static final <S> AMAttribute<S, Long> getContentLengthAMAttribute() {
+	public static <S> AMAttribute<S, Long> getContentLengthAMAttribute() {
 		return (AMAttribute<S, Long>)_AM_ATTRIBUTE_CONTENT_LENGTH;
 	}
 
@@ -71,7 +69,7 @@ public final class AMAttribute<T, V> {
 	 *
 	 * @return the content type attribute
 	 */
-	public static final <S> AMAttribute<S, String> getContentTypeAMAttribute() {
+	public static <S> AMAttribute<S, String> getContentTypeAMAttribute() {
 		return (AMAttribute<S, String>)_AM_ATTRIBUTE_CONTENT_TYPE;
 	}
 
@@ -81,7 +79,7 @@ public final class AMAttribute<T, V> {
 	 *
 	 * @return the file name attribute
 	 */
-	public static final <S> AMAttribute<S, String> getFileNameAMAttribute() {
+	public static <S> AMAttribute<S, String> getFileNameAMAttribute() {
 		return (AMAttribute<S, String>)_AM_ATTRIBUTE_FILE_NAME;
 	}
 
@@ -90,10 +88,6 @@ public final class AMAttribute<T, V> {
 	 * namespace.
 	 *
 	 * @param name a value that uniquely identifies the attribute
-	 * @param converter a function that converts a <code>String</code> to a
-	 *        value of the correct type; this function should throw an {@link
-	 *        com.liferay.adaptive.media.exception.AMRuntimeException.AMAttributeFormatException}
-	 *        if it cannot convert the <code>String</code>
 	 * @param amDistanceComparator the comparator to order the two arguments
 	 *        based on the distance between their values; it should return a
 	 *        value between {@link Long#MIN_VALUE} and {@link Long#MAX_VALUE}

@@ -20,11 +20,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import com.liferay.petra.function.UnsafeSupplier;
 import com.liferay.petra.string.StringBundler;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
+import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLField;
 import com.liferay.portal.vulcan.graphql.annotation.GraphQLName;
 import com.liferay.portal.vulcan.util.ObjectMapperUtil;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.io.Serializable;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -42,16 +46,22 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @generated
  */
 @Generated("")
-@GraphQLName("Settings")
+@GraphQLName(
+	description = "Represents the settings of a page.", value = "Settings"
+)
 @JsonFilter("Liferay.Vulcan")
 @XmlRootElement(name = "Settings")
-public class Settings {
+public class Settings implements Serializable {
 
 	public static Settings toDTO(String json) {
 		return ObjectMapperUtil.readValue(Settings.class, json);
 	}
 
-	@Schema
+	public static Settings unsafeToDTO(String json) {
+		return ObjectMapperUtil.unsafeReadValue(Settings.class, json);
+	}
+
+	@Schema(description = "The page's color scheme name.")
 	public String getColorSchemeName() {
 		return colorSchemeName;
 	}
@@ -75,11 +85,11 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's color scheme name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String colorSchemeName;
 
-	@Schema
+	@Schema(description = "The page's CSS.")
 	public String getCss() {
 		return css;
 	}
@@ -101,11 +111,11 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's CSS.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String css;
 
-	@Schema
+	@Schema(description = "The page's JavaScript.")
 	public String getJavascript() {
 		return javascript;
 	}
@@ -129,11 +139,11 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's JavaScript.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String javascript;
 
-	@Schema
+	@Schema(description = "The page's master page.")
 	@Valid
 	public MasterPage getMasterPage() {
 		return masterPage;
@@ -158,11 +168,40 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's master page.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected MasterPage masterPage;
 
-	@Schema
+	@Schema(description = "The StyleBook that is applied to the page.")
+	@Valid
+	public StyleBook getStyleBook() {
+		return styleBook;
+	}
+
+	public void setStyleBook(StyleBook styleBook) {
+		this.styleBook = styleBook;
+	}
+
+	@JsonIgnore
+	public void setStyleBook(
+		UnsafeSupplier<StyleBook, Exception> styleBookUnsafeSupplier) {
+
+		try {
+			styleBook = styleBookUnsafeSupplier.get();
+		}
+		catch (RuntimeException re) {
+			throw re;
+		}
+		catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@GraphQLField(description = "The StyleBook that is applied to the page.")
+	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
+	protected StyleBook styleBook;
+
+	@Schema(description = "The page's theme name.")
 	public String getThemeName() {
 		return themeName;
 	}
@@ -186,11 +225,11 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's theme name.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected String themeName;
 
-	@Schema
+	@Schema(description = "The page's theme settings.")
 	@Valid
 	public Object getThemeSettings() {
 		return themeSettings;
@@ -215,7 +254,7 @@ public class Settings {
 		}
 	}
 
-	@GraphQLField
+	@GraphQLField(description = "The page's theme settings.")
 	@JsonProperty(access = JsonProperty.Access.READ_WRITE)
 	protected Object themeSettings;
 
@@ -298,6 +337,16 @@ public class Settings {
 			sb.append(String.valueOf(masterPage));
 		}
 
+		if (styleBook != null) {
+			if (sb.length() > 1) {
+				sb.append(", ");
+			}
+
+			sb.append("\"styleBook\": ");
+
+			sb.append(String.valueOf(styleBook));
+		}
+
 		if (themeName != null) {
 			if (sb.length() > 1) {
 				sb.append(", ");
@@ -319,7 +368,18 @@ public class Settings {
 
 			sb.append("\"themeSettings\": ");
 
-			sb.append(String.valueOf(themeSettings));
+			if (themeSettings instanceof Map) {
+				sb.append(
+					JSONFactoryUtil.createJSONObject((Map<?, ?>)themeSettings));
+			}
+			else if (themeSettings instanceof String) {
+				sb.append("\"");
+				sb.append(_escape((String)themeSettings));
+				sb.append("\"");
+			}
+			else {
+				sb.append(themeSettings);
+			}
 		}
 
 		sb.append("}");
@@ -328,15 +388,26 @@ public class Settings {
 	}
 
 	@Schema(
+		accessMode = Schema.AccessMode.READ_ONLY,
 		defaultValue = "com.liferay.headless.delivery.dto.v1_0.Settings",
 		name = "x-class-name"
 	)
 	public String xClassName;
 
 	private static String _escape(Object object) {
-		String string = String.valueOf(object);
+		return StringUtil.replace(
+			String.valueOf(object), _JSON_ESCAPE_STRINGS[0],
+			_JSON_ESCAPE_STRINGS[1]);
+	}
 
-		return string.replaceAll("\"", "\\\\\"");
+	private static boolean _isArray(Object value) {
+		if (value == null) {
+			return false;
+		}
+
+		Class<?> clazz = value.getClass();
+
+		return clazz.isArray();
 	}
 
 	private static String _toJSON(Map<String, ?> map) {
@@ -352,14 +423,12 @@ public class Settings {
 			Map.Entry<String, ?> entry = iterator.next();
 
 			sb.append("\"");
-			sb.append(entry.getKey());
-			sb.append("\":");
+			sb.append(_escape(entry.getKey()));
+			sb.append("\": ");
 
 			Object value = entry.getValue();
 
-			Class<?> clazz = value.getClass();
-
-			if (clazz.isArray()) {
+			if (_isArray(value)) {
 				sb.append("[");
 
 				Object[] valueArray = (Object[])value;
@@ -386,7 +455,7 @@ public class Settings {
 			}
 			else if (value instanceof String) {
 				sb.append("\"");
-				sb.append(value);
+				sb.append(_escape(value));
 				sb.append("\"");
 			}
 			else {
@@ -394,7 +463,7 @@ public class Settings {
 			}
 
 			if (iterator.hasNext()) {
-				sb.append(",");
+				sb.append(", ");
 			}
 		}
 
@@ -402,5 +471,10 @@ public class Settings {
 
 		return sb.toString();
 	}
+
+	private static final String[][] _JSON_ESCAPE_STRINGS = {
+		{"\\", "\"", "\b", "\f", "\n", "\r", "\t"},
+		{"\\\\", "\\\"", "\\b", "\\f", "\\n", "\\r", "\\t"}
+	};
 
 }

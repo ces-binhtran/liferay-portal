@@ -14,33 +14,61 @@
 
 package com.liferay.change.tracking.web.internal.display;
 
-import com.liferay.change.tracking.display.CTDisplayRenderer;
-import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.change.tracking.spi.display.BaseCTDisplayRenderer;
+import com.liferay.portal.kernel.dao.orm.ORMException;
 import com.liferay.portal.kernel.model.BaseModel;
-import com.liferay.portal.kernel.util.HtmlUtil;
+import com.liferay.portal.kernel.model.change.tracking.CTModel;
+import com.liferay.portal.kernel.service.change.tracking.CTService;
+import com.liferay.portal.kernel.util.CamelCaseUtil;
 
-import java.io.Writer;
+import java.io.InputStream;
+
+import java.sql.Blob;
+import java.sql.SQLException;
 
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 /**
  * @author Samuel Trong Tran
  */
 public class CTModelDisplayRendererAdapter<T extends BaseModel<T>>
-	implements CTDisplayRenderer<T> {
+	extends BaseCTDisplayRenderer<T> {
 
-	@SuppressWarnings("unchecked")
-	public static <T extends BaseModel<T>> CTDisplayRenderer<T> getInstance() {
-		return (CTDisplayRenderer<T>)_INSTANCE;
+	public CTModelDisplayRendererAdapter(
+		CTDisplayRendererRegistry ctDisplayRendererRegistry) {
+
+		_ctDisplayRendererRegistry = ctDisplayRendererRegistry;
 	}
 
 	@Override
-	public String getEditURL(HttpServletRequest httpServletRequest, T model) {
+	public InputStream getDownloadInputStream(T model, String key) {
+		if (model instanceof CTModel<?>) {
+			CTModel<?> ctModel = (CTModel<?>)model;
+
+			CTService<?> ctService = _ctDisplayRendererRegistry.getCTService(
+				ctModel);
+
+			return ctService.updateWithUnsafeFunction(
+				ctPersistence -> {
+					Map<String, Function<T, Object>> attributeGetterFunctions =
+						model.getAttributeGetterFunctions();
+
+					Function<T, Object> function = attributeGetterFunctions.get(
+						CamelCaseUtil.toCamelCase(key));
+
+					Blob blob = (Blob)function.apply(model);
+
+					try {
+						return blob.getBinaryStream();
+					}
+					catch (SQLException sqlException) {
+						throw new ORMException(sqlException);
+					}
+				});
+		}
+
 		return null;
 	}
 
@@ -50,56 +78,15 @@ public class CTModelDisplayRendererAdapter<T extends BaseModel<T>>
 	}
 
 	@Override
-	public String getTitle(Locale locale, T model) throws PortalException {
+	public String getTitle(Locale locale, T model) {
 		return null;
 	}
 
 	@Override
-	public String getTypeName(Locale locale) {
-		return null;
+	public boolean isHideable(T model) {
+		return true;
 	}
 
-	@Override
-	public void render(
-			HttpServletRequest httpServletRequest,
-			HttpServletResponse httpServletResponse, T model)
-		throws Exception {
-
-		Writer writer = httpServletResponse.getWriter();
-
-		writer.write("<div class=\"table-responsive\"><table class=\"table\">");
-
-		Map<String, Function<T, Object>> attributeGetterFunctions =
-			model.getAttributeGetterFunctions();
-
-		for (Map.Entry<String, Function<T, Object>> entry :
-				attributeGetterFunctions.entrySet()) {
-
-			Function<T, Object> function = entry.getValue();
-
-			writer.write("<tr><td>");
-			writer.write(entry.getKey());
-			writer.write("</td><td>");
-
-			Object attributeValue = function.apply(model);
-
-			if (attributeValue instanceof String) {
-				writer.write(HtmlUtil.escape(attributeValue.toString()));
-			}
-			else {
-				writer.write(String.valueOf(attributeValue));
-			}
-
-			writer.write("</td></tr>");
-		}
-
-		writer.write("</table></div>");
-	}
-
-	private CTModelDisplayRendererAdapter() {
-	}
-
-	private static final CTDisplayRenderer<?> _INSTANCE =
-		new CTModelDisplayRendererAdapter<>();
+	private final CTDisplayRendererRegistry _ctDisplayRendererRegistry;
 
 }

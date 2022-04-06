@@ -40,16 +40,20 @@ import com.liferay.portal.kernel.util.OrderByComparator;
 import com.liferay.portal.kernel.util.PortalUtil;
 import com.liferay.portal.workflow.kaleo.forms.model.KaleoProcessLink;
 import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalService;
+import com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalServiceUtil;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessFinder;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessLinkPersistence;
 import com.liferay.portal.workflow.kaleo.forms.service.persistence.KaleoProcessPersistence;
 
 import java.io.Serializable;
 
+import java.lang.reflect.Field;
+
 import java.util.List;
 
 import javax.sql.DataSource;
 
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 
 /**
@@ -71,11 +75,15 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 *
-	 * Never modify or reference this class directly. Use <code>KaleoProcessLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>com.liferay.portal.workflow.kaleo.forms.service.KaleoProcessLinkLocalServiceUtil</code>.
+	 * Never modify or reference this class directly. Use <code>KaleoProcessLinkLocalService</code> via injection or a <code>org.osgi.util.tracker.ServiceTracker</code> or use <code>KaleoProcessLinkLocalServiceUtil</code>.
 	 */
 
 	/**
 	 * Adds the kaleo process link to the database. Also notifies the appropriate model listeners.
+	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
 	 *
 	 * @param kaleoProcessLink the kaleo process link
 	 * @return the kaleo process link that was added
@@ -105,6 +113,10 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/**
 	 * Deletes the kaleo process link with the primary key from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoProcessLinkId the primary key of the kaleo process link
 	 * @return the kaleo process link that was removed
 	 * @throws PortalException if a kaleo process link with the primary key could not be found
@@ -120,6 +132,10 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/**
 	 * Deletes the kaleo process link from the database. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoProcessLink the kaleo process link
 	 * @return the kaleo process link that was removed
 	 */
@@ -134,6 +150,13 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	@Override
 	public <T> T dslQuery(DSLQuery dslQuery) {
 		return kaleoProcessLinkPersistence.dslQuery(dslQuery);
+	}
+
+	@Override
+	public int dslQueryCount(DSLQuery dslQuery) {
+		Long count = dslQuery(dslQuery);
+
+		return count.intValue();
 	}
 
 	@Override
@@ -290,6 +313,7 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/**
 	 * @throws PortalException
 	 */
+	@Override
 	public PersistedModel createPersistedModel(Serializable primaryKeyObj)
 		throws PortalException {
 
@@ -308,6 +332,7 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 			(KaleoProcessLink)persistedModel);
 	}
 
+	@Override
 	public BasePersistence<KaleoProcessLink> getBasePersistence() {
 		return kaleoProcessLinkPersistence;
 	}
@@ -351,6 +376,10 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	/**
 	 * Updates the kaleo process link in the database or adds it if it does not yet exist. Also notifies the appropriate model listeners.
 	 *
+	 * <p>
+	 * <strong>Important:</strong> Inspect KaleoProcessLinkLocalServiceImpl for overloaded versions of the method. If provided, use these entry points to the API, as the implementation logic may require the additional parameters defined there.
+	 * </p>
+	 *
 	 * @param kaleoProcessLink the kaleo process link
 	 * @return the kaleo process link that was updated
 	 */
@@ -360,6 +389,11 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 		KaleoProcessLink kaleoProcessLink) {
 
 		return kaleoProcessLinkPersistence.update(kaleoProcessLink);
+	}
+
+	@Deactivate
+	protected void deactivate() {
+		_setLocalServiceUtilService(null);
 	}
 
 	@Override
@@ -373,6 +407,8 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 	@Override
 	public void setAopProxy(Object aopProxy) {
 		kaleoProcessLinkLocalService = (KaleoProcessLinkLocalService)aopProxy;
+
+		_setLocalServiceUtilService(kaleoProcessLinkLocalService);
 	}
 
 	/**
@@ -414,6 +450,23 @@ public abstract class KaleoProcessLinkLocalServiceBaseImpl
 		}
 		catch (Exception exception) {
 			throw new SystemException(exception);
+		}
+	}
+
+	private void _setLocalServiceUtilService(
+		KaleoProcessLinkLocalService kaleoProcessLinkLocalService) {
+
+		try {
+			Field field =
+				KaleoProcessLinkLocalServiceUtil.class.getDeclaredField(
+					"_service");
+
+			field.setAccessible(true);
+
+			field.set(null, kaleoProcessLinkLocalService);
+		}
+		catch (ReflectiveOperationException reflectiveOperationException) {
+			throw new RuntimeException(reflectiveOperationException);
 		}
 	}
 

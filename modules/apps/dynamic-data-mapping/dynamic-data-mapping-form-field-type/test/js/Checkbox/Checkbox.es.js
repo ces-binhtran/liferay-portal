@@ -12,169 +12,216 @@
  * details.
  */
 
-import Checkbox from '../../../src/main/resources/META-INF/resources/Checkbox/Checkbox.es';
+import '@testing-library/jest-dom/extend-expect';
+import {cleanup, render} from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import React from 'react';
 
-let component;
-const spritemap = 'icons.svg';
+import Checkbox from '../../../src/main/resources/META-INF/resources/Checkbox/Checkbox';
 
 describe('Field Checkbox', () => {
-	beforeEach(() => {
-		jest.useFakeTimers();
-	});
+	afterEach(cleanup);
 
-	afterEach(() => {
-		if (component) {
-			component.dispose();
-		}
-	});
+	it('is not editable', () => {
+		const {container} = render(<Checkbox readOnly />);
 
-	it('is not edidable', () => {
-		component = new Checkbox({
-			readOnly: false,
-			spritemap,
-		});
-
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has a helptext', () => {
-		component = new Checkbox({
-			spritemap,
-			tip: 'Type something',
-		});
+		const {container} = render(<Checkbox tip="Type something" />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has an id', () => {
-		component = new Checkbox({
-			id: 'ID',
-			spritemap,
-		});
+		const {container} = render(<Checkbox id="ID" />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has a label', () => {
-		component = new Checkbox({
-			label: 'label',
-			spritemap,
-		});
+		const {container} = render(<Checkbox label="label" />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has a predefined Value', () => {
-		component = new Checkbox({
-			placeholder: 'Option 1',
-			spritemap,
-		});
+		const {container} = render(<Checkbox placeholder="Option 1" />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('is not required', () => {
-		component = new Checkbox({
-			required: false,
-			spritemap,
-		});
+		const {container} = render(<Checkbox required={false} />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('is shown as a switcher', () => {
-		component = new Checkbox({
-			showAsSwitcher: true,
-			spritemap,
-		});
+		const {container} = render(<Checkbox showAsSwitcher />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('is shown as checkbox', () => {
-		component = new Checkbox({
-			showAsSwitcher: false,
-			spritemap,
-		});
+		const {container} = render(<Checkbox showAsSwitcher={false} />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('renders Label if showLabel is true', () => {
-		component = new Checkbox({
-			label: 'text',
-			showLabel: true,
-			spritemap,
-		});
+		const {container} = render(<Checkbox label showLabel />);
 
-		expect(component).toMatchSnapshot();
-	});
-
-	it('has a spritemap', () => {
-		component = new Checkbox({
-			spritemap,
-		});
-
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has a value', () => {
-		component = new Checkbox({
-			spritemap,
-			value: true,
-		});
+		const {container} = render(<Checkbox value />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
 	it('has a key', () => {
-		component = new Checkbox({
-			key: 'key',
-			spritemap,
-		});
+		const {container} = render(<Checkbox key="key" value />);
 
-		expect(component).toMatchSnapshot();
+		expect(container).toMatchSnapshot();
 	});
 
-	it('emits field edit event on field change', (done) => {
+	it('call the onChange callback on the field change', () => {
 		const handleFieldEdited = jest.fn();
 
-		const events = {fieldEdited: handleFieldEdited};
+		render(<Checkbox onChange={handleFieldEdited} />);
 
-		component = new Checkbox({
-			events,
-			spritemap,
-		});
+		userEvent.click(document.body.querySelector('input'));
 
-		component.on('fieldEdited', () => {
-			expect(handleFieldEdited).toHaveBeenCalled();
-
-			done();
-		});
-
-		component.handleInputChangeEvent({
-			delegateTarget: {
-				checked: true,
-			},
-		});
-
-		jest.runAllTimers();
+		expect(handleFieldEdited).toHaveBeenCalled();
 	});
 
-	it('propagates the field edit event on field change', () => {
-		component = new Checkbox({
-			spritemap,
+	describe('Maximum Repetitions Info', () => {
+		it('does not show the maximum repetitions info', () => {
+			const {container} = render(<Checkbox value />);
+
+			const ddmInfo = container.querySelector('.ddm-info');
+
+			expect(ddmInfo).toBeNull();
 		});
 
-		const spy = jest.spyOn(component, 'emit');
+		it('does not show the maximum repetitions info if the value is false', () => {
+			const {container} = render(
+				<Checkbox showMaximumRepetitionsInfo value={false} />
+			);
 
-		component.handleInputChangeEvent({
-			delegateTarget: {
-				checked: true,
-			},
+			const ddmInfo = container.querySelector('.ddm-info');
+
+			expect(ddmInfo).toBeNull();
 		});
 
-		expect(spy).toHaveBeenCalled();
-		expect(spy).toHaveBeenCalledWith('fieldEdited', expect.any(Object));
+		it('shows the maximum repetitions info', () => {
+			const {container} = render(
+				<Checkbox showMaximumRepetitionsInfo value />
+			);
+
+			const ddmInfo = container.querySelector('.ddm-info');
+
+			expect(ddmInfo).not.toBeNull();
+		});
+	});
+
+	describe('Boolean Field', () => {
+		it('check if the boolean field is not checked if he has predefinedValue false', () => {
+			const {queryByLabelText} = render(
+				<Checkbox label="Boolean" predefinedValue={['false']} />
+			);
+
+			expect(queryByLabelText('Boolean')).not.toBeChecked();
+		});
+
+		it('check if the boolean field is checked if he has predefinedValue true', () => {
+			const {queryByLabelText} = render(
+				<Checkbox label="Boolean" predefinedValue={['true']} />
+			);
+
+			expect(queryByLabelText('Boolean')).toBeChecked();
+		});
+
+		it('check that with false predefinedValue the boolean field is checked when we enable it', () => {
+			const onChange = jest.fn();
+
+			const {queryByLabelText} = render(
+				<Checkbox
+					label="Boolean"
+					onChange={onChange}
+					predefinedValue={['false']}
+				/>
+			);
+
+			const input = queryByLabelText('Boolean');
+			userEvent.click(input);
+			expect(onChange).toHaveBeenLastCalledWith({target: {value: true}});
+		});
+
+		it('check that with true predefinedValue the boolean field is not checked when we disabled it', () => {
+			const onChange = jest.fn();
+			const {queryByLabelText} = render(
+				<Checkbox
+					label="Boolean"
+					onChange={onChange}
+					predefinedValue={['true']}
+				/>
+			);
+
+			const input = queryByLabelText('Boolean');
+			userEvent.click(input);
+			expect(onChange).toHaveBeenLastCalledWith({target: {value: false}});
+		});
+
+		it('check it shows the label when we set it up', () => {
+			const {queryByLabelText} = render(
+				<Checkbox label="Boolean" showLabel />
+			);
+
+			expect(queryByLabelText('Boolean')).toBeInTheDocument();
+		});
+
+		it('check if the required icon appears when the field is required', () => {
+			render(<Checkbox required />);
+
+			const requiredIcon = document.querySelector(
+				'.lexicon-icon-asterisk'
+			);
+
+			expect(requiredIcon).toBeInTheDocument();
+		});
+
+		it('check if the required icon do not appears when the field is not required', () => {
+			render(<Checkbox />);
+
+			const requiredIcon = document.querySelector(
+				'.lexicon-icon-asterisk'
+			);
+
+			expect(requiredIcon).not.toBeInTheDocument();
+		});
+
+		it('verify if the switcher do not appears when he is disabled in boolean field', () => {
+			render(<Checkbox showAsSwitcher={false} />);
+
+			const swithcerIcon = document.querySelector(
+				'.toggle-switch-handle'
+			);
+
+			expect(swithcerIcon).not.toBeInTheDocument();
+		});
+
+		it('verify if the switcher appears when he is enabled in boolean field', () => {
+			render(<Checkbox />);
+
+			const swithcerIcon = document.querySelector(
+				'.toggle-switch-handle'
+			);
+
+			expect(swithcerIcon).toBeInTheDocument();
+		});
 	});
 });

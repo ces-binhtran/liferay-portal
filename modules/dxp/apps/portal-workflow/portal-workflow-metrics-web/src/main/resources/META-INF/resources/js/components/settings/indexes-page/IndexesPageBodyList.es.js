@@ -12,57 +12,59 @@
 import ClayButton from '@clayui/button';
 import ClayList from '@clayui/list';
 import ClayProgressBar from '@clayui/progress-bar';
-import React, {useMemo} from 'react';
+import React from 'react';
 
-const Item = ({
+function Item({
 	btnLabel,
 	disabled,
 	handleReindex,
 	item: {completionPercentage = 0, key, label, reindexing},
-}) => (
-	<ClayList.Item className="autofit-row-center reindex-action" flex key={key}>
-		<ClayList.ItemField data-testid="indexLabel" expand>
-			{label}
-		</ClayList.ItemField>
+}) {
+	return (
+		<ClayList.Item
+			className="autofit-row-center reindex-action"
+			flex
+			key={key}
+		>
+			<ClayList.ItemField expand>{label}</ClayList.ItemField>
 
-		<ClayList.ItemField data-testid="indexAction">
-			{reindexing ? (
-				<ClayProgressBar value={completionPercentage} />
-			) : (
-				<ClayButton
-					disabled={disabled}
-					displayType="secondary"
-					onClick={() => handleReindex(key, label)}
-					small
-				>
-					{btnLabel}
-				</ClayButton>
-			)}
-		</ClayList.ItemField>
-	</ClayList.Item>
-);
+			<ClayList.ItemField>
+				{reindexing ? (
+					<ClayProgressBar value={completionPercentage} />
+				) : (
+					<ClayButton
+						disabled={disabled}
+						displayType="secondary"
+						onClick={() => handleReindex(key, label)}
+						small
+					>
+						{btnLabel}
+					</ClayButton>
+				)}
+			</ClayList.ItemField>
+		</ClayList.Item>
+	);
+}
 
-const List = ({
+function List({
 	indexes = [],
 	getReindexStatus,
 	isReindexing,
 	label,
 	...otherProps
-}) => {
-	const items = useMemo(() => {
-		return indexes.map((item) => {
-			const status = getReindexStatus(item.key);
+}) {
+	const items = indexes.map((item) => {
+		const status = getReindexStatus(item.key);
 
-			return {
-				...item,
-				reindexing: isReindexing(item.key),
-				...status,
-			};
-		});
-	}, [indexes, isReindexing, getReindexStatus]);
+		return {
+			...item,
+			reindexing: isReindexing(item.key),
+			...status,
+		};
+	});
 
 	return (
-		<ClayList data-testid="indexesList">
+		<ClayList>
 			<ClayList.Header>{label}</ClayList.Header>
 
 			{items.map((item, index) => (
@@ -79,8 +81,8 @@ const List = ({
 			))}
 		</ClayList>
 	);
-};
+}
 
 List.Item = Item;
 
-export {List};
+export default List;
