@@ -53,7 +53,14 @@ portletURL.setParameter("curFolder", currentFolder);
 portletURL.setParameter("deltaFolder", deltaFolder);
 portletURL.setParameter("folderId", String.valueOf(folderId));
 
-SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", SearchContainer.DEFAULT_DELTA, portletURL, null, null);
+int defaultDelta;
+if (StringPool.BLANK.equals(deltaFolder)) {
+	defaultDelta = dlPortletInstanceSettings.getEntriesPerPage();
+} else {
+	defaultDelta = GetterUtil.getInteger(deltaFolder);
+}
+
+SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", defaultDelta, portletURL, null, null);
 
 EntriesChecker entriesChecker = new EntriesChecker(liferayPortletRequest, liferayPortletResponse);
 
@@ -503,7 +510,7 @@ if (portletTitleBasedNavigation && (folderId != DLFolderConstants.DEFAULT_PARENT
 									actionJspServletContext="<%= application %>"
 									resultRow="<%= row %>"
 									rowChecker="<%= entriesChecker %>"
-									text="<%= HtmlUtil.escape(curFolder.getName()) %>"
+									text="<%= curFolder.getName() %>"
 									url="<%= rowURL.toString() %>"
 								>
 									<liferay-frontend:horizontal-card-col>
