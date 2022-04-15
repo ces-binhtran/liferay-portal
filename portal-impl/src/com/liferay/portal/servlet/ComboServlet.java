@@ -17,7 +17,6 @@ package com.liferay.portal.servlet;
 import com.liferay.portal.kernel.cache.PortalCache;
 import com.liferay.portal.kernel.cache.SingleVMPoolUtil;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
-import com.liferay.portal.kernel.exception.NoSuchPortletException;
 import com.liferay.portal.kernel.language.LanguageUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
@@ -387,20 +386,7 @@ public class ComboServlet extends HttpServlet {
 
 		Portlet portlet = PortletLocalServiceUtil.getPortletById(portletId);
 
-		if (portlet == null) {
-
-			StringBundler msg = new StringBundler(4);
-
-			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
-
-			msg.append("portletId=");
-			msg.append(portletId);
-
-			msg.append(StringPool.CLOSE_CURLY_BRACE);
-			throw new NoSuchPortletException(msg.toString());
-		}
-
-		if (portlet.isUndeployedPortlet()) {
+		if (portlet == null || portlet.isUndeployedPortlet()) {
 			return null;
 		}
 
@@ -451,8 +437,6 @@ public class ComboServlet extends HttpServlet {
 
 		return validModuleExtension;
 	}
-
-	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No Portlet exists with the key {";
 
 	private static final String _CSS_EXTENSION = "css";
 
