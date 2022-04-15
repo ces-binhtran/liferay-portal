@@ -21,6 +21,7 @@ String navigation = ParamUtil.getString(request, "navigation", "home");
 
 String currentFolder = ParamUtil.getString(request, "curFolder");
 String deltaFolder = ParamUtil.getString(request, "deltaFolder");
+String deltaEntry = ParamUtil.getString(request, "deltaEntry");
 
 long folderId = GetterUtil.getLong((String)request.getAttribute("view.jsp-folderId"));
 
@@ -53,14 +54,14 @@ portletURL.setParameter("curFolder", currentFolder);
 portletURL.setParameter("deltaFolder", deltaFolder);
 portletURL.setParameter("folderId", String.valueOf(folderId));
 
-int defaultDelta;
-if (StringPool.BLANK.equals(deltaFolder)) {
-	defaultDelta = dlPortletInstanceSettings.getEntriesPerPage();
+int delta;
+if (StringPool.BLANK.equals(deltaEntry)) {
+	delta = dlPortletInstanceSettings.getEntriesPerPage();
 } else {
-	defaultDelta = GetterUtil.getInteger(deltaFolder);
+	delta = GetterUtil.getInteger(deltaEntry);
 }
 
-SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", defaultDelta, portletURL, null, null);
+SearchContainer dlSearchContainer = new SearchContainer(liferayPortletRequest, null, null, "curEntry", delta, portletURL, null, null);
 
 EntriesChecker entriesChecker = new EntriesChecker(liferayPortletRequest, liferayPortletResponse);
 
