@@ -1750,11 +1750,11 @@ public class PortalUtil {
 	}
 
 	public static String getSiteAdminURL(
-			Company company, Group group, String ppid,
+			ThemeDisplay themeDisplay, Group group, String ppid,
 			Map<String, String[]> params)
 		throws PortalException {
-
-		return getPortal().getSiteAdminURL(company, group, ppid, params);
+		Portal portal = getPortal();
+		return themeDisplay.getPortalURL() + portal.getSiteAdminURL(null, group, ppid, params);
 	}
 
 	/**

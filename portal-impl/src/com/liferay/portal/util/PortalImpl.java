@@ -4988,10 +4988,12 @@ public class PortalImpl implements Portal {
 
 		StringBundler sb = new StringBundler(7);
 
-		sb.append(
-			getPortalURL(
-				company.getVirtualHostname(), getPortalServerPort(false),
-				false));
+		if (company != null) {			
+			sb.append(
+					getPortalURL(
+							company.getVirtualHostname(), getPortalServerPort(false),
+							false));
+		}
 
 		sb.append(getPathFriendlyURLPrivateGroup());
 
