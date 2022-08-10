@@ -14,6 +14,7 @@
 
 package com.liferay.portal.servlet.filters.header;
 
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.servlet.HttpHeaders;
 import com.liferay.portal.kernel.util.FastDateFormatFactoryUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
@@ -27,16 +28,18 @@ import com.liferay.portal.kernel.util.Validator;
 import com.liferay.portal.servlet.filters.BasePortalFilter;
 import com.liferay.portal.util.PropsValues;
 
-import java.text.Format;
-
-import java.util.Enumeration;
-import java.util.Set;
-
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.text.Format;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Brian Wing Shun Chan
@@ -119,6 +122,24 @@ public class HeaderFilter extends BasePortalFilter {
 					}
 				}
 			}
+
+			String cacheControlString = httpServletResponse.getHeader(
+				HttpHeaders.CACHE_CONTROL);
+
+			if ((cacheControlString == null) ||
+				StringUtil.equals(cacheControlString, StringPool.BLANK)) {
+
+				httpServletResponse.setHeader(name, value);
+
+				return;
+			}
+
+			httpServletResponse.setHeader(
+				name,
+				StringUtil.merge(
+					_getCacheControlValues(value, cacheControlString)));
+
+			return;
 		}
 		else if (StringUtil.equalsIgnoreCase(name, HttpHeaders.EXPIRES)) {
 			if (_isNewSession(httpServletRequest)) {
@@ -131,9 +152,45 @@ public class HeaderFilter extends BasePortalFilter {
 				value = _dateFormat.format(
 					System.currentTimeMillis() + (seconds * Time.SECOND));
 			}
+
+			httpServletResponse.setHeader(name, value);
+
+			return;
 		}
 
 		httpServletResponse.addHeader(name, value);
+	}
+
+	private List<String> _getCacheControlValues(
+		String newValue, String existedValues) {
+
+		Stream<String> existedValuesStream = Arrays.stream(
+			existedValues.split(StringPool.COMMA));
+
+		List<String> cacheControlValues = existedValuesStream.map(
+			String::trim
+		).collect(
+			Collectors.toList()
+		);
+
+		Stream<String> newValuesStream = Arrays.stream(
+			newValue.split(StringPool.COMMA));
+
+		List<String> values = newValuesStream.map(
+			String::trim
+		).collect(
+			Collectors.toList()
+		);
+
+		for (String value : values) {
+			if (cacheControlValues.contains(value)) {
+				continue;
+			}
+
+			cacheControlValues.add(value);
+		}
+
+		return cacheControlValues;
 	}
 
 	private boolean _isNewSession(HttpServletRequest httpServletRequest) {
