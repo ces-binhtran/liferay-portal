@@ -547,9 +547,11 @@ public class LayoutStagedModelDataHandler
 		String uuid = layout.getUuid();
 		String friendlyURL = layout.getFriendlyURL();
 
+		Map<String, String[]> parameterMap =
+			portletDataContext.getParameterMap();
+
 		String layoutsImportMode = MapUtil.getString(
-			portletDataContext.getParameterMap(),
-			PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE,
+			parameterMap, PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE,
 			PortletDataHandlerKeys.LAYOUTS_IMPORT_MODE_MERGE_BY_LAYOUT_UUID);
 
 		if (layoutsImportMode.equals(
@@ -727,6 +729,14 @@ public class LayoutStagedModelDataHandler
 
 			importedLayout.setLayoutSet(
 				_layoutSetLocalService.getLayoutSet(groupId, privateLayout));
+
+			String cmd = MapUtil.getString(parameterMap, Constants.CMD);
+
+			if (Objects.equals(Constants.PUBLISH_TO_LIVE, cmd) ||
+				Objects.equals(Constants.PUBLISH_TO_REMOTE, cmd)) {
+
+				importedLayout.setPublishDate(new Date());
+			}
 		}
 		else {
 			importedLayout = existingLayout;
