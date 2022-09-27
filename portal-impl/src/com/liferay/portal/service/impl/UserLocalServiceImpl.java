@@ -5630,8 +5630,6 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 			return Authenticator.FAILURE;
 		}
 
-		user = _checkPasswordPolicy(user);
-
 		if (!user.isPasswordEncrypted()) {
 			user.setPassword(PasswordEncryptorUtil.encrypt(user.getPassword()));
 			user.setPasswordEncrypted(true);
@@ -5681,6 +5679,8 @@ public class UserLocalServiceImpl extends UserLocalServiceBaseImpl {
 					headerMap, parameterMap);
 			}
 		}
+
+		user = _checkPasswordPolicy(user);
 
 		if (authResult == Authenticator.SUCCESS) {
 
