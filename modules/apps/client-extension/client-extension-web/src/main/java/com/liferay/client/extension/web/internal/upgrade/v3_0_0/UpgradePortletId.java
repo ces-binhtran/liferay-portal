@@ -19,6 +19,7 @@ import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.upgrade.BasePortletIdUpgradeProcess;
+import com.liferay.portal.kernel.util.Validator;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -40,8 +41,9 @@ public class UpgradePortletId extends BasePortletIdUpgradeProcess {
 					"ClientExtensionEntry")) {
 
 			while (resultSet.next()) {
-				String externalReferenceCode = resultSet.getString(
-					"externalReferenceCode");
+				String externalReferenceCode =
+					_replaceNonwordCharacterToUnderline(
+						resultSet.getString("externalReferenceCode"));
 
 				runSQL(
 					StringBundler.concat(
@@ -84,8 +86,9 @@ public class UpgradePortletId extends BasePortletIdUpgradeProcess {
 					"ClientExtensionEntry")) {
 
 			while (resultSet.next()) {
-				String externalReferenceCode = resultSet.getString(
-					"externalReferenceCode");
+				String externalReferenceCode =
+					_replaceNonwordCharacterToUnderline(
+						resultSet.getString("externalReferenceCode"));
 
 				portletIds.add(
 					new String[] {
@@ -101,6 +104,17 @@ public class UpgradePortletId extends BasePortletIdUpgradeProcess {
 		}
 
 		return portletIds.toArray(new String[0][0]);
+	}
+
+	private String _replaceNonwordCharacterToUnderline(
+		String externalReferenceCode) {
+
+		if (Validator.isNotNull(externalReferenceCode)) {
+			return externalReferenceCode.replaceAll(
+				"\\W", StringPool.UNDERLINE);
+		}
+
+		return externalReferenceCode;
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(
