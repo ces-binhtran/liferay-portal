@@ -57,6 +57,11 @@ public class ClientExtensionWebUpgradeStepRegistrator
 			"2.0.0", "3.0.0",
 			new com.liferay.client.extension.web.internal.upgrade.v3_0_0.
 				UpgradePortletId());
+
+		registry.register(
+			"3.0.0", "3.0.1",
+			new com.liferay.client.extension.web.internal.upgrade.v3_0_1.
+				UpgradePortletId());
 	}
 
 	@Reference(
