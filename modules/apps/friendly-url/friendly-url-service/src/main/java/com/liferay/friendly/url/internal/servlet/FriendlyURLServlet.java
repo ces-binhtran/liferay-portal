@@ -61,6 +61,7 @@ import com.liferay.portal.kernel.util.FriendlyURLNormalizer;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HttpComponentsUtil;
+import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.LocaleUtil;
 import com.liferay.portal.kernel.util.ParamUtil;
 import com.liferay.portal.kernel.util.Portal;
@@ -148,6 +149,14 @@ public class FriendlyURLServlet extends HttpServlet {
 
 			if ((redirectProviderRedirect != null) &&
 				!_isSkipRedirect(httpServletRequest)) {
+
+				Redirect circularRedirect = _getCircularRedirect(
+					httpServletRequest, groupFriendlyURL, group, locale,
+					layoutFriendlyURL, redirectProviderRedirect);
+
+				if (circularRedirect != null) {
+					return circularRedirect;
+				}
 
 				return redirectProviderRedirect;
 			}
@@ -749,6 +758,52 @@ public class FriendlyURLServlet extends HttpServlet {
 		}
 
 		return alternativeSiteFriendlyURL;
+	}
+
+	private Redirect _getCircularRedirect(
+		HttpServletRequest httpServletRequest, String groupFriendlyURL,
+		Group group, Locale locale, String layoutFriendlyURL,
+		Redirect redirectProviderRedirect) {
+
+		String destinationURL = redirectProviderRedirect.getPath();
+		String portalURL = portal.getPortalURL(httpServletRequest);
+
+		if (StringUtil.startsWith(destinationURL, portalURL)) {
+			String destinationPath = StringUtil.removeSubstring(
+				destinationURL, portalURL);
+
+			int groupPos = StringUtil.indexOfAny(
+				destinationPath, groupFriendlyURL.toCharArray());
+
+			if (groupPos >= 0) {
+				String destinationLayoutFriendlyURL = StringUtil.extractLast(
+					destinationPath, groupFriendlyURL);
+
+				Layout layout = layoutLocalService.fetchLayoutByFriendlyURL(
+					group.getGroupId(), _private, layoutFriendlyURL);
+
+				List<LayoutFriendlyURL> layoutFriendlyURLs =
+					layoutFriendlyURLLocalService.getLayoutFriendlyURLs(
+						layout.getPlid(), destinationLayoutFriendlyURL, 0, 1);
+
+				if (ListUtil.isNotEmpty(layoutFriendlyURLs)) {
+					LayoutFriendlyURL redirectedLayoutFriendlyURL =
+						layoutFriendlyURLs.get(0);
+
+					Locale redirectedLocale = LocaleUtil.fromLanguageId(
+						redirectedLayoutFriendlyURL.getLanguageId());
+
+					String redirect = portal.getLocalizedFriendlyURL(
+						httpServletRequest, layout, redirectedLocale, locale);
+
+					return new Redirect(
+						redirect, true,
+						_isPermanentRedirect(group.getCompanyId()));
+				}
+			}
+		}
+
+		return null;
 	}
 
 	private Group _getGroup(String path, String friendlyURL, long companyId)
