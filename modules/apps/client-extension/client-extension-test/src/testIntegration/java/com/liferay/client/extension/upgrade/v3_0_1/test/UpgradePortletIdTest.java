@@ -49,7 +49,6 @@ import javax.portlet.Portlet;
 
 import org.junit.Assert;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,7 +69,6 @@ public class UpgradePortletIdTest {
 	public static final LiferayIntegrationTestRule liferayIntegrationTestRule =
 		new LiferayIntegrationTestRule();
 
-	@Ignore
 	@Test
 	public void testDoUpgrade() throws Exception {
 		//UserTestUtil.setUser(TestPropsValues.getUser());
