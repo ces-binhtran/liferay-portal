@@ -37,16 +37,16 @@ if (Validator.isNull(icon)) {
 <div class="dropdown lfr-icon-menu <%= cssClass %>" <%= AUIUtil.buildData(data) %>>
 	<c:choose>
 		<c:when test='<%= triggerType.equals("button") %>'>
-			<button aria-expanded="false" aria-haspopup="true" class="btn btn-monospaced btn-secondary direction-<%= direction %> dropdown-toggle <%= triggerCssClass %>" id="<%= id %>" <%= ((message != null) && !message.isEmpty()) ? "title=\"" + message + "\"" : StringPool.BLANK %> type="button">
+			<button aria-expanded="false" aria-haspopup="true" class="btn btn-monospaced btn-secondary direction-<%= direction %> dropdown-toggle <%= HtmlUtil.escapeJS(triggerCssClass) %>" id="<%= id %>" <%= ((message != null) && !message.isEmpty()) ? "title=\"" + message + "\"" : StringPool.BLANK %> type="button">
 				<aui:icon cssClass="inline-item" image="<%= icon %>" markupView="lexicon" />
 
 				<c:if test="<%= Validator.isNotNull(triggerLabel) %>">
-					<span class="btn-section"><%= triggerLabel %></span>
+					<span class="btn-section"><%= HtmlUtil.escapeJS(triggerLabel) %></span>
 				</c:if>
 			</button>
 		</c:when>
 		<c:otherwise>
-			<a aria-expanded="false" aria-haspopup="true" class="component-action direction-<%= direction %> dropdown-toggle <%= triggerCssClass %>" href="javascript:void(0);" id="<%= id %>" role="button" <%= ((message != null) && !message.isEmpty()) ? "title=\"" + message + "\"" : StringPool.BLANK %>>
+			<a aria-expanded="false" aria-haspopup="true" class="component-action direction-<%= direction %> dropdown-toggle <%= HtmlUtil.escapeJS(triggerCssClass) %>" href="javascript:void(0);" id="<%= id %>" role="button" <%= ((message != null) && !message.isEmpty()) ? "title=\"" + message + "\"" : StringPool.BLANK %>>
 				<aui:icon image="<%= icon %>" markupView="lexicon" />
 			</a>
 		</c:otherwise>
