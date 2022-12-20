@@ -18,6 +18,11 @@
 	var iframe = A.one('#embeddedIframe');
 
 	if (iframe) {
+		iframe.set(
+			'src',
+			'<%= HtmlUtil.escapeHREF(typeSettingsUnicodeProperties.getProperty("embeddedLayoutURL")) %>'
+		);
+
 		iframe.plug(A.Plugin.AutosizeIframe);
 
 		iframe.on('load', () => {
