@@ -20,6 +20,7 @@ import com.liferay.calendar.service.CalendarLocalService;
 import com.liferay.calendar.service.CalendarService;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.service.GroupLocalService;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 
@@ -47,7 +48,13 @@ public class CalendarDisplayContext {
 		List<Calendar> otherCalendars = new ArrayList<>();
 
 		for (long calendarId : calendarIds) {
-			Calendar calendar = _calendarService.fetchCalendar(calendarId);
+			
+			Calendar calendar = null;
+			try {
+				calendar = _calendarService.fetchCalendar(calendarId);
+			} catch (PrincipalException pe) {
+				continue;
+			}
 
 			if (calendar == null) {
 				continue;
